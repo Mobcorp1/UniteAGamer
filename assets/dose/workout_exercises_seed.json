@@ -1,0 +1,1399 @@
+[
+  {
+    "id": "hw-001",
+    "title": "Wall Push-Ups",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["None"],
+    "primaryTargets": ["Chest", "Arms"],
+    "instructions": [
+      "Stand facing a wall.",
+      "Place palms flat at shoulder height.",
+      "Lower chest toward wall slowly.",
+      "Push back to start."
+    ],
+    "formTips": [
+      "Keep core tight.",
+      "Move slow and controlled."
+    ],
+    "whyBullets": [
+      "Activates upper body muscles safely.",
+      "Boosts blood flow and energy.",
+      "Improves confidence through movement."
+    ],
+    "imageAsset": "assets/images/exercises/hw-001.png",
+    "safetyNotes": [
+      "Stop if you feel shoulder pain.",
+      "Keep wrists aligned."
+    ]
+  },
+  {
+    "id": "hw-002",
+    "title": "Chair Sit-to-Stand",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["Chair"],
+    "primaryTargets": ["Legs", "Glutes"],
+    "instructions": [
+      "Sit tall on a chair with feet flat.",
+      "Stand up without using hands if possible.",
+      "Lower back down slowly.",
+      "Repeat steadily."
+    ],
+    "formTips": [
+      "Keep knees in line with toes.",
+      "Control the lowering phase."
+    ],
+    "whyBullets": [
+      "Strengthens legs for everyday function.",
+      "Improves circulation after long sitting.",
+      "Builds lower-body endurance."
+    ],
+    "imageAsset": "assets/images/exercises/hw-002.png",
+    "safetyNotes": [
+      "Use hands if balance feels unstable.",
+      "Avoid locking knees."
+    ]
+  },
+  {
+    "id": "hw-003",
+    "title": "Standing Shoulder Rolls",
+    "level": "Beginner",
+    "durationMinutes": 3,
+    "equipment": ["None"],
+    "primaryTargets": ["Shoulders", "Upper Back"],
+    "instructions": [
+      "Stand tall or sit upright.",
+      "Roll shoulders up, back and down slowly.",
+      "Reverse direction after 30 seconds."
+    ],
+    "formTips": [
+      "Breathe deeply.",
+      "Move smoothly, not sharply."
+    ],
+    "whyBullets": [
+      "Reduces neck and shoulder tension.",
+      "Improves posture awareness.",
+      "Helps reset stress response."
+    ],
+    "imageAsset": "assets/images/exercises/hw-003.png",
+    "safetyNotes": [
+      "Avoid fast jerking motions.",
+      "Stop if dizziness occurs."
+    ]
+  },
+  {
+    "id": "hw-004",
+    "title": "Bodyweight Squats",
+    "level": "Beginner",
+    "durationMinutes": 8,
+    "equipment": ["None"],
+    "primaryTargets": ["Legs", "Glutes"],
+    "instructions": [
+      "Stand with feet shoulder-width apart.",
+      "Push hips back and bend knees.",
+      "Lower until thighs are comfortable.",
+      "Push through heels to stand."
+    ],
+    "formTips": [
+      "Keep chest lifted.",
+      "Knees track over toes."
+    ],
+    "whyBullets": [
+      "Builds full lower-body strength.",
+      "Boosts endorphins through compound movement.",
+      "Improves stability and mobility."
+    ],
+    "imageAsset": "assets/images/exercises/hw-004.png",
+    "safetyNotes": [
+      "Avoid rounding your back.",
+      "Do not force depth."
+    ]
+  },
+  {
+    "id": "hw-005",
+    "title": "Wall Calf Raises",
+    "level": "Beginner",
+    "durationMinutes": 4,
+    "equipment": ["None"],
+    "primaryTargets": ["Calves"],
+    "instructions": [
+      "Stand upright holding wall for balance.",
+      "Raise heels off the floor.",
+      "Lower slowly and repeat."
+    ],
+    "formTips": [
+      "Move through full range.",
+      "Pause briefly at top."
+    ],
+    "whyBullets": [
+      "Improves circulation in lower legs.",
+      "Helps reduce stiffness from sitting.",
+      "Supports ankle stability."
+    ],
+    "imageAsset": "assets/images/exercises/hw-005.png",
+    "safetyNotes": [
+      "Hold support if needed.",
+      "Avoid bouncing."
+    ]
+  },
+  {
+    "id": "hw-006",
+    "title": "Plank Hold",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Core"],
+    "instructions": [
+      "Start in forearm plank position.",
+      "Keep body in straight line.",
+      "Hold for 20-40 seconds.",
+      "Rest and repeat."
+    ],
+    "formTips": [
+      "Engage core and glutes.",
+      "Avoid sagging hips."
+    ],
+    "whyBullets": [
+      "Strengthens deep core stabilisers.",
+      "Improves posture and spinal support.",
+      "Builds mental resilience."
+    ],
+    "imageAsset": "assets/images/exercises/hw-006.png",
+    "safetyNotes": [
+      "Stop if lower back pain occurs.",
+      "Keep neck neutral."
+    ]
+  },
+  {
+    "id": "hw-007",
+    "title": "Lunges",
+    "level": "Intermediate",
+    "durationMinutes": 10,
+    "equipment": ["None"],
+    "primaryTargets": ["Legs", "Glutes"],
+    "instructions": [
+      "Step forward with one leg.",
+      "Lower back knee toward floor.",
+      "Push back to standing.",
+      "Alternate legs."
+    ],
+    "formTips": [
+      "Keep front knee aligned.",
+      "Maintain upright torso."
+    ],
+    "whyBullets": [
+      "Builds balance and coordination.",
+      "Strengthens single-leg control.",
+      "Improves athletic movement."
+    ],
+    "imageAsset": "assets/images/exercises/hw-007.png",
+    "safetyNotes": [
+      "Avoid knee collapsing inward.",
+      "Reduce depth if unstable."
+    ]
+  },
+  {
+    "id": "hw-008",
+    "title": "Incline Push-Ups (Counter)",
+    "level": "Beginner",
+    "durationMinutes": 6,
+    "equipment": ["Counter", "None"],
+    "primaryTargets": ["Chest", "Arms", "Shoulders"],
+    "instructions": [
+      "Place hands on a stable counter or desk edge.",
+      "Step feet back into a straight line.",
+      "Lower chest toward the edge under control.",
+      "Press back up and repeat."
+    ],
+    "formTips": [
+      "Keep elbows about 45 degrees.",
+      "Brace your core so hips don't sag."
+    ],
+    "whyBullets": [
+      "Builds pushing strength with a lower load than floor push-ups.",
+      "Improves upper-body endurance for posture and daily movement.",
+      "Quick sets create a confidence and energy boost."
+    ],
+    "imageAsset": "assets/images/exercises/hw-008.png",
+    "safetyNotes": [
+      "Use a stable surface that won't slip.",
+      "Stop if you feel wrist pain; adjust hand position."
+    ]
+  },
+  {
+    "id": "hw-009",
+    "title": "Knee Push-Ups",
+    "level": "Beginner",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Chest", "Arms"],
+    "instructions": [
+      "Start in a plank position then drop knees to the floor.",
+      "Keep a straight line from shoulders to knees.",
+      "Lower chest toward the floor slowly.",
+      "Press back up and repeat."
+    ],
+    "formTips": [
+      "Keep hands under shoulders.",
+      "Move slowly; no bouncing."
+    ],
+    "whyBullets": [
+      "Strengthens chest and arms with reduced intensity.",
+      "Improves control and stability through the shoulders.",
+      "Helps build momentum toward full push-ups."
+    ],
+    "imageAsset": "assets/images/exercises/hw-009.png",
+    "safetyNotes": [
+      "Place a towel under knees if needed.",
+      "Stop if shoulder pain appears."
+    ]
+  },
+  {
+    "id": "hw-010",
+    "title": "Glute Bridge",
+    "level": "Beginner",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Glutes", "Core"],
+    "instructions": [
+      "Lie on your back with knees bent and feet flat.",
+      "Brace core and squeeze glutes.",
+      "Lift hips until body forms a straight line shoulders-to-knees.",
+      "Lower slowly and repeat."
+    ],
+    "formTips": [
+      "Drive through heels.",
+      "Don't over-arch lower back."
+    ],
+    "whyBullets": [
+      "Activates glutes to counter long periods of sitting.",
+      "Supports lower-back comfort through better hip strength.",
+      "Improves circulation and posture control."
+    ],
+    "imageAsset": "assets/images/exercises/hw-010.png",
+    "safetyNotes": [
+      "Stop if you feel sharp lower-back pain.",
+      "Keep movement controlled."
+    ]
+  },
+  {
+    "id": "hw-011",
+    "title": "Dead Bug",
+    "level": "Beginner",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Core"],
+    "instructions": [
+      "Lie on your back with arms up and knees bent at 90 degrees.",
+      "Slowly extend one leg and the opposite arm toward the floor.",
+      "Return to start and switch sides.",
+      "Repeat with slow control."
+    ],
+    "formTips": [
+      "Keep lower back gently pressed to the floor.",
+      "Move slowly; control beats speed."
+    ],
+    "whyBullets": [
+      "Builds deep core stability for posture and back support.",
+      "Improves coordination and movement control.",
+      "Low-impact core work can reduce stress tension."
+    ],
+    "imageAsset": "assets/images/exercises/hw-011.png",
+    "safetyNotes": [
+      "Stop if your back arches and you can't control it.",
+      "Reduce range of motion if needed."
+    ]
+  },
+  {
+    "id": "hw-012",
+    "title": "Bird Dog",
+    "level": "Beginner",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Core", "Lower Back"],
+    "instructions": [
+      "Start on hands and knees.",
+      "Extend one arm forward and the opposite leg back.",
+      "Hold briefly, then return to start.",
+      "Switch sides and repeat."
+    ],
+    "formTips": [
+      "Keep hips square to the floor.",
+      "Reach long, not high."
+    ],
+    "whyBullets": [
+      "Improves core stability and spinal control.",
+      "Builds balance and coordination.",
+      "Helps reduce stiffness from long sitting sessions."
+    ],
+    "imageAsset": "assets/images/exercises/hw-012.png",
+    "safetyNotes": [
+      "Stop if wrist pain occurs; try fists or forearms.",
+      "Keep movement slow and controlled."
+    ]
+  },
+  {
+    "id": "hw-013",
+    "title": "Standing March (High Knees Light)",
+    "level": "Beginner",
+    "durationMinutes": 4,
+    "equipment": ["None"],
+    "primaryTargets": ["Cardio", "Hips"],
+    "instructions": [
+      "Stand tall with feet hip-width apart.",
+      "Lift one knee to a comfortable height.",
+      "Lower and switch legs rhythmically.",
+      "Continue at a steady pace."
+    ],
+    "formTips": [
+      "Keep chest up and breathe steadily.",
+      "Swing arms naturally."
+    ],
+    "whyBullets": [
+      "Raises heart rate quickly without equipment.",
+      "Improves hip mobility and circulation.",
+      "Short cardio bursts can boost alertness and mood."
+    ],
+    "imageAsset": "assets/images/exercises/hw-013.png",
+    "safetyNotes": [
+      "Hold a wall or chair if balance is shaky.",
+      "Keep steps soft to protect joints."
+    ]
+  },
+  {
+    "id": "hw-014",
+    "title": "Wall Slide (Shoulder Mobility)",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["Wall"],
+    "primaryTargets": ["Shoulders", "Upper Back"],
+    "instructions": [
+      "Stand with back against a wall, elbows bent like goalposts.",
+      "Keep wrists and elbows near the wall.",
+      "Slowly slide arms up as high as comfortable.",
+      "Slide back down and repeat."
+    ],
+    "formTips": [
+      "Keep ribs down; don't flare chest.",
+      "Move slowly and stay controlled."
+    ],
+    "whyBullets": [
+      "Improves shoulder mobility and posture control.",
+      "Activates upper-back muscles that support healthy sitting.",
+      "Helps relieve tension from gaming posture."
+    ],
+    "imageAsset": "assets/images/exercises/hw-014.png",
+    "safetyNotes": [
+      "Stop if shoulder pain occurs.",
+      "Work within a pain-free range."
+    ]
+  },
+  {
+    "id": "hw-015",
+    "title": "Hip Hinge (Good Morning)",
+    "level": "Beginner",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Hamstrings", "Glutes"],
+    "instructions": [
+      "Stand with feet hip-width apart, knees soft.",
+      "Push hips back while keeping back flat.",
+      "Lower torso until you feel a stretch in hamstrings.",
+      "Stand tall by squeezing glutes."
+    ],
+    "formTips": [
+      "Keep spine neutral; chest proud.",
+      "Hinge at hips, not the lower back."
+    ],
+    "whyBullets": [
+      "Strengthens posterior chain to counter sitting posture.",
+      "Improves hip mechanics and back comfort.",
+      "Builds body awareness and movement confidence."
+    ],
+    "imageAsset": "assets/images/exercises/hw-015.png",
+    "safetyNotes": [
+      "Avoid rounding your back.",
+      "Move slowly and stop if pain appears."
+    ]
+  },
+  {
+    "id": "hw-016",
+    "title": "Side Plank (Knee)",
+    "level": "Beginner",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Core", "Obliques"],
+    "instructions": [
+      "Lie on your side and prop up on your forearm.",
+      "Bend knees and lift hips off the floor.",
+      "Hold 15-30 seconds.",
+      "Switch sides and repeat."
+    ],
+    "formTips": [
+      "Keep shoulders stacked.",
+      "Lift from the hips, not the neck."
+    ],
+    "whyBullets": [
+      "Strengthens side core for better posture.",
+      "Improves stability and spinal support.",
+      "Builds resilience with a simple hold."
+    ],
+    "imageAsset": "assets/images/exercises/hw-016.png",
+    "safetyNotes": [
+      "Stop if shoulder discomfort builds.",
+      "Keep neck relaxed."
+    ]
+  },
+  {
+    "id": "hw-017",
+    "title": "Reverse Lunge (Step Back)",
+    "level": "Intermediate",
+    "durationMinutes": 10,
+    "equipment": ["None"],
+    "primaryTargets": ["Legs", "Glutes"],
+    "instructions": [
+      "Stand tall with feet hip-width apart.",
+      "Step one leg back and lower into a lunge.",
+      "Push through front heel to return to start.",
+      "Alternate legs."
+    ],
+    "formTips": [
+      "Keep torso upright.",
+      "Front knee stays over the mid-foot."
+    ],
+    "whyBullets": [
+      "Strengthens legs and glutes with less knee stress than forward lunges.",
+      "Improves balance and coordination.",
+      "Boosts lower-body power and stability."
+    ],
+    "imageAsset": "assets/images/exercises/hw-017.png",
+    "safetyNotes": [
+      "Hold a wall if balance is unstable.",
+      "Avoid banging the back knee on the floor."
+    ]
+  },
+  {
+    "id": "hw-018",
+    "title": "Step-Ups (Stairs)",
+    "level": "Intermediate",
+    "durationMinutes": 10,
+    "equipment": ["Stairs", "Chair"],
+    "primaryTargets": ["Legs", "Glutes"],
+    "instructions": [
+      "Use a stable step or bottom stair.",
+      "Step up with one foot and stand tall.",
+      "Step down under control.",
+      "Alternate legs."
+    ],
+    "formTips": [
+      "Drive through the whole foot.",
+      "Control the step down."
+    ],
+    "whyBullets": [
+      "Builds practical leg strength and stability.",
+      "Improves circulation and endurance quickly.",
+      "Supports better posture and hip strength."
+    ],
+    "imageAsset": "assets/images/exercises/hw-018.png",
+    "safetyNotes": [
+      "Use a stable step surface.",
+      "Hold a rail/wall if needed."
+    ]
+  },
+  {
+    "id": "hw-019",
+    "title": "Wall Sit",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["Wall"],
+    "primaryTargets": ["Legs", "Glutes"],
+    "instructions": [
+      "Lean back against a wall and slide down.",
+      "Stop when knees are at a comfortable bend.",
+      "Hold 20-45 seconds.",
+      "Stand up, rest, and repeat."
+    ],
+    "formTips": [
+      "Keep back flat on the wall.",
+      "Knees track over toes."
+    ],
+    "whyBullets": [
+      "Builds leg endurance with minimal movement.",
+      "Creates a strong burn that boosts endorphins.",
+      "Improves mental toughness through controlled holds."
+    ],
+    "imageAsset": "assets/images/exercises/hw-019.png",
+    "safetyNotes": [
+      "Don't force knees past comfort range.",
+      "Stop if knee pain occurs."
+    ]
+  },
+  {
+    "id": "hw-020",
+    "title": "Mountain Climbers (Slow)",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Core", "Cardio"],
+    "instructions": [
+      "Start in a high plank position.",
+      "Bring one knee toward chest slowly.",
+      "Switch legs under control.",
+      "Keep rhythm steady."
+    ],
+    "formTips": [
+      "Hands under shoulders.",
+      "Keep hips level."
+    ],
+    "whyBullets": [
+      "Combines core stability with light cardio.",
+      "Boosts circulation and alertness fast.",
+      "Improves shoulder and hip control."
+    ],
+    "imageAsset": "assets/images/exercises/hw-020.png",
+    "safetyNotes": [
+      "Stop if wrists hurt; try fists or incline.",
+      "Avoid bouncing hips."
+    ]
+  },
+  {
+    "id": "hw-021",
+    "title": "Glute Bridge March",
+    "level": "Intermediate",
+    "durationMinutes": 8,
+    "equipment": ["None"],
+    "primaryTargets": ["Glutes", "Core"],
+    "instructions": [
+      "Start in a glute bridge with hips lifted.",
+      "Lift one foot a few inches while keeping hips level.",
+      "Place it down and switch sides.",
+      "Continue alternating slowly."
+    ],
+    "formTips": [
+      "Keep hips steady and level.",
+      "Squeeze glutes throughout."
+    ],
+    "whyBullets": [
+      "Strengthens glutes and core together.",
+      "Improves pelvic stability and posture.",
+      "Helps counter hip tightness from sitting."
+    ],
+    "imageAsset": "assets/images/exercises/hw-021.png",
+    "safetyNotes": [
+      "Stop if lower back takes over.",
+      "Keep movement small if needed."
+    ]
+  },
+  {
+    "id": "hw-022",
+    "title": "Standing Hip Circles",
+    "level": "Beginner",
+    "durationMinutes": 4,
+    "equipment": ["None"],
+    "primaryTargets": ["Hips", "Mobility"],
+    "instructions": [
+      "Stand with feet hip-width apart.",
+      "Place hands on hips.",
+      "Circle hips slowly in one direction for 30 seconds.",
+      "Reverse direction for 30 seconds."
+    ],
+    "formTips": [
+      "Keep movement smooth and controlled.",
+      "Breathe normally."
+    ],
+    "whyBullets": [
+      "Improves hip mobility and reduces stiffness.",
+      "Encourages blood flow after long sitting.",
+      "Quick mobility can ease tension and stress."
+    ],
+    "imageAsset": "assets/images/exercises/hw-022.png",
+    "safetyNotes": [
+      "Avoid forcing range of motion.",
+      "Stop if you feel sharp pain."
+    ]
+  },
+  {
+    "id": "hw-023",
+    "title": "Ankle Pumps (Seated)",
+    "level": "Beginner",
+    "durationMinutes": 3,
+    "equipment": ["Chair"],
+    "primaryTargets": ["Calves", "Circulation"],
+    "instructions": [
+      "Sit upright with feet flat.",
+      "Lift toes up, then press toes down.",
+      "Repeat steadily for 60-90 seconds.",
+      "Rest briefly and repeat."
+    ],
+    "formTips": [
+      "Move through full ankle range.",
+      "Keep knees relaxed."
+    ],
+    "whyBullets": [
+      "Boosts lower-leg circulation during long sessions.",
+      "Helps reduce stiffness and restlessness.",
+      "Low-effort movement supports focus and comfort."
+    ],
+    "imageAsset": "assets/images/exercises/hw-023.png",
+    "safetyNotes": [
+      "Stop if cramping becomes painful.",
+      "Keep movement gentle."
+    ]
+  },
+  {
+    "id": "hw-024",
+    "title": "Neck Chin Tucks",
+    "level": "Beginner",
+    "durationMinutes": 4,
+    "equipment": ["None"],
+    "primaryTargets": ["Neck", "Posture"],
+    "instructions": [
+      "Sit or stand tall.",
+      "Gently tuck chin straight back (make a double-chin).",
+      "Hold 2 seconds, then relax.",
+      "Repeat slowly."
+    ],
+    "formTips": [
+      "Move straight back, not down.",
+      "Keep shoulders relaxed."
+    ],
+    "whyBullets": [
+      "Strengthens neck posture muscles for screen time.",
+      "Can reduce tension headaches linked to forward head posture.",
+      "Small corrections improve comfort and focus."
+    ],
+    "imageAsset": "assets/images/exercises/hw-024.png",
+    "safetyNotes": [
+      "Keep it gentle; no force.",
+      "Stop if you feel dizziness."
+    ]
+  },
+  {
+    "id": "hw-025",
+    "title": "Scapular Retractions (Wall)",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["Wall"],
+    "primaryTargets": ["Upper Back", "Shoulders"],
+    "instructions": [
+      "Stand with back against a wall.",
+      "Place elbows and forearms against the wall if possible.",
+      "Squeeze shoulder blades down and back.",
+      "Relax and repeat."
+    ],
+    "formTips": [
+      "Keep ribs down.",
+      "Think 'pockets' with shoulder blades."
+    ],
+    "whyBullets": [
+      "Activates upper-back muscles that support posture.",
+      "Helps reverse rounded-shoulder gaming posture.",
+      "Improves shoulder comfort and stability."
+    ],
+    "imageAsset": "assets/images/exercises/hw-025.png",
+    "safetyNotes": [
+      "Stop if shoulder pain increases.",
+      "Work within a comfortable range."
+    ]
+  },
+  {
+    "id": "hw-026",
+    "title": "Towel Row (Isometric)",
+    "level": "Intermediate",
+    "durationMinutes": 8,
+    "equipment": ["Towel"],
+    "primaryTargets": ["Upper Back", "Arms"],
+    "instructions": [
+      "Hold a towel with both hands in front of you.",
+      "Pull hands apart to create tension in the towel.",
+      "Hold 10-20 seconds while squeezing upper back.",
+      "Relax and repeat for several rounds."
+    ],
+    "formTips": [
+      "Keep shoulders down away from ears.",
+      "Squeeze shoulder blades together."
+    ],
+    "whyBullets": [
+      "Strengthens pulling muscles without weights.",
+      "Balances pushing work and improves posture.",
+      "Isometrics build control and body awareness."
+    ],
+    "imageAsset": "assets/images/exercises/hw-026.png",
+    "safetyNotes": [
+      "Avoid shrugging shoulders.",
+      "Stop if elbow or shoulder pain occurs."
+    ]
+  },
+  {
+    "id": "hw-027",
+    "title": "Superman Hold (Short)",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Lower Back", "Glutes"],
+    "instructions": [
+      "Lie face down with arms forward.",
+      "Lift chest and legs slightly off the floor.",
+      "Hold 5-10 seconds.",
+      "Lower and repeat."
+    ],
+    "formTips": [
+      "Keep neck neutral.",
+      "Lift small; control is the goal."
+    ],
+    "whyBullets": [
+      "Strengthens back-body muscles for posture support.",
+      "Counters slumped sitting and improves spinal endurance.",
+      "Short holds build confidence and control."
+    ],
+    "imageAsset": "assets/images/exercises/hw-027.png",
+    "safetyNotes": [
+      "Stop if lower-back pain occurs.",
+      "Keep movement small and controlled."
+    ]
+  },
+  {
+    "id": "hw-028",
+    "title": "Hamstring Stretch (Doorway)",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["Wall", "Doorway"],
+    "primaryTargets": ["Hamstrings", "Mobility"],
+    "instructions": [
+      "Lie near a doorway or wall.",
+      "Place one leg up against the wall/doorframe.",
+      "Keep the other leg relaxed on the floor.",
+      "Hold 30-45 seconds and switch sides."
+    ],
+    "formTips": [
+      "Keep hips square.",
+      "Relax and breathe."
+    ],
+    "whyBullets": [
+      "Reduces hamstring tightness from long sitting.",
+      "Improves comfort for hips and lower back.",
+      "Calm stretching can downshift stress."
+    ],
+    "imageAsset": "assets/images/exercises/hw-028.png",
+    "safetyNotes": [
+      "Don't force the stretch; keep it gentle.",
+      "Stop if you feel nerve-like pain."
+    ]
+  },
+  {
+    "id": "hw-029",
+    "title": "Couch Stretch (Hip Flexor)",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["Chair", "Couch"],
+    "primaryTargets": ["Hips", "Mobility"],
+    "instructions": [
+      "Kneel with one knee near a couch or chair.",
+      "Place the back foot on the couch edge if comfortable.",
+      "Keep torso tall and gently squeeze glute of the back leg.",
+      "Hold 20-40 seconds and switch sides."
+    ],
+    "formTips": [
+      "Keep ribs down; don't arch lower back.",
+      "Squeeze glute for a better stretch."
+    ],
+    "whyBullets": [
+      "Opens hip flexors tightened by long sitting.",
+      "Can reduce anterior hip and low-back tension.",
+      "Improves stride mechanics and posture."
+    ],
+    "imageAsset": "assets/images/exercises/hw-029.png",
+    "safetyNotes": [
+      "Use padding under knee.",
+      "Stop if knee pain occurs."
+    ]
+  },
+  {
+    "id": "hw-030",
+    "title": "Bear Hover (Knees Under Hips)",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Core", "Shoulders"],
+    "instructions": [
+      "Start on hands and knees.",
+      "Tuck toes and lift knees 1-2 inches off the floor.",
+      "Hold 10-20 seconds.",
+      "Lower, rest, and repeat."
+    ],
+    "formTips": [
+      "Keep back flat and core braced.",
+      "Press the floor away with hands."
+    ],
+    "whyBullets": [
+      "Builds full-body tension and core stability.",
+      "Strengthens shoulders and posture muscles.",
+      "Short holds develop resilience and focus."
+    ],
+    "imageAsset": "assets/images/exercises/hw-030.png",
+    "safetyNotes": [
+      "Stop if wrist pain occurs; try fists.",
+      "Keep holds short and controlled."
+    ]
+  },
+  {
+    "id": "hw-031",
+    "title": "Jumping Jacks (Low Impact)",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["None"],
+    "primaryTargets": ["Cardio"],
+    "instructions": [
+      "Stand tall with arms at sides.",
+      "Step one foot out while raising arms overhead.",
+      "Step back to center while lowering arms.",
+      "Alternate sides at a steady rhythm."
+    ],
+    "formTips": [
+      "Keep steps light and controlled.",
+      "Breathe steadily."
+    ],
+    "whyBullets": [
+      "Raises heart rate without heavy joint impact.",
+      "Improves circulation and alertness fast.",
+      "Movement bursts can reduce anxious restlessness."
+    ],
+    "imageAsset": "assets/images/exercises/hw-031.png",
+    "safetyNotes": [
+      "Avoid if ankle/knee pain flares.",
+      "Keep range of motion comfortable."
+    ]
+  },
+  {
+    "id": "hw-032",
+    "title": "Shadow Boxing (30-60s Rounds)",
+    "level": "Intermediate",
+    "durationMinutes": 8,
+    "equipment": ["None"],
+    "primaryTargets": ["Cardio", "Arms"],
+    "instructions": [
+      "Stand in a relaxed stance with hands up.",
+      "Throw light jabs and crosses into the air.",
+      "Add gentle slips or steps if comfortable.",
+      "Work in short rounds with brief rests."
+    ],
+    "formTips": [
+      "Stay relaxed; speed comes from looseness.",
+      "Keep shoulders down."
+    ],
+    "whyBullets": [
+      "Boosts heart rate and energy quickly.",
+      "Improves coordination and stress release.",
+      "Creates a strong endorphin lift with minimal setup."
+    ],
+    "imageAsset": "assets/images/exercises/hw-032.png",
+    "safetyNotes": [
+      "Avoid locking elbows on punches.",
+      "Stop if dizziness occurs."
+    ]
+  },
+  {
+    "id": "hw-033",
+    "title": "Doorway Chest Stretch",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["Doorway"],
+    "primaryTargets": ["Chest", "Mobility"],
+    "instructions": [
+      "Stand in a doorway with forearm on the frame.",
+      "Step forward slowly until you feel a chest stretch.",
+      "Hold 20-40 seconds.",
+      "Switch sides and repeat."
+    ],
+    "formTips": [
+      "Keep shoulder down away from ear.",
+      "Breathe slowly into the stretch."
+    ],
+    "whyBullets": [
+      "Opens chest to counter rounded shoulders.",
+      "Improves posture and shoulder comfort.",
+      "Gentle stretching can reduce stress tension."
+    ],
+    "imageAsset": "assets/images/exercises/hw-033.png",
+    "safetyNotes": [
+      "Don't force the stretch; keep it mild.",
+      "Stop if shoulder pain increases."
+    ]
+  },
+  {
+    "id": "hw-034",
+    "title": "Thoracic Twist (Seated)",
+    "level": "Beginner",
+    "durationMinutes": 4,
+    "equipment": ["Chair"],
+    "primaryTargets": ["Upper Back", "Mobility"],
+    "instructions": [
+      "Sit tall with feet flat.",
+      "Place one hand on opposite knee.",
+      "Gently rotate torso to one side.",
+      "Hold briefly, return, and switch sides."
+    ],
+    "formTips": [
+      "Rotate from upper back, not hips.",
+      "Keep breathing."
+    ],
+    "whyBullets": [
+      "Improves upper-back mobility for posture.",
+      "Helps reduce stiffness from desk/gaming time.",
+      "Small mobility breaks improve comfort and focus."
+    ],
+    "imageAsset": "assets/images/exercises/hw-034.png",
+    "safetyNotes": [
+      "Avoid forcing rotation.",
+      "Stop if sharp back pain occurs."
+    ]
+  },
+  {
+    "id": "hw-035",
+    "title": "Reverse Snow Angels (Floor)",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Upper Back", "Shoulders"],
+    "instructions": [
+      "Lie face down with forehead supported on hands or towel.",
+      "Lift arms slightly off the floor.",
+      "Sweep arms in a wide arc from hips toward overhead.",
+      "Return and repeat slowly."
+    ],
+    "formTips": [
+      "Keep neck relaxed.",
+      "Move slowly with control."
+    ],
+    "whyBullets": [
+      "Strengthens upper-back muscles for better posture.",
+      "Improves shoulder control and stability.",
+      "Counters rounded shoulders from screen time."
+    ],
+    "imageAsset": "assets/images/exercises/hw-035.png",
+    "safetyNotes": [
+      "Keep movement small if shoulders are tight.",
+      "Stop if shoulder pinching occurs."
+    ]
+  },
+  {
+    "id": "hw-036",
+    "title": "Tricep Dips (Chair, Assisted)",
+    "level": "Intermediate",
+    "durationMinutes": 8,
+    "equipment": ["Chair"],
+    "primaryTargets": ["Arms", "Shoulders"],
+    "instructions": [
+      "Place hands on chair edge behind you.",
+      "Slide hips forward with knees bent.",
+      "Lower slightly by bending elbows.",
+      "Press back up and repeat."
+    ],
+    "formTips": [
+      "Keep elbows pointing back.",
+      "Keep shoulders down."
+    ],
+    "whyBullets": [
+      "Builds tricep strength with minimal equipment.",
+      "Improves pushing endurance and upper-body confidence.",
+      "Short strength sets boost energy and mood."
+    ],
+    "imageAsset": "assets/images/exercises/hw-036.png",
+    "safetyNotes": [
+      "Stop if shoulder pain occurs.",
+      "Keep range small and controlled."
+    ]
+  },
+  {
+    "id": "hw-037",
+    "title": "Wall Hand Push (Isometric)",
+    "level": "Beginner",
+    "durationMinutes": 4,
+    "equipment": ["Wall"],
+    "primaryTargets": ["Chest", "Arms"],
+    "instructions": [
+      "Stand facing a wall with palms on the wall.",
+      "Push into the wall hard without moving.",
+      "Hold 10-20 seconds.",
+      "Relax and repeat."
+    ],
+    "formTips": [
+      "Keep shoulders down.",
+      "Brace core while you push."
+    ],
+    "whyBullets": [
+      "Builds strength and muscle activation without joint strain.",
+      "Isometrics create a quick confidence boost.",
+      "Great low-energy option to build momentum."
+    ],
+    "imageAsset": "assets/images/exercises/hw-037.png",
+    "safetyNotes": [
+      "Do not hold your breath.",
+      "Stop if you feel shoulder discomfort."
+    ]
+  },
+  {
+    "id": "hw-038",
+    "title": "Side Steps (Mini Squat)",
+    "level": "Intermediate",
+    "durationMinutes": 8,
+    "equipment": ["None"],
+    "primaryTargets": ["Glutes", "Legs"],
+    "instructions": [
+      "Stand with feet hip-width apart and soften knees.",
+      "Sit back slightly into a mini squat.",
+      "Step to the side, then bring feet back under hips.",
+      "Repeat both directions."
+    ],
+    "formTips": [
+      "Keep knees tracking over toes.",
+      "Stay low but comfortable."
+    ],
+    "whyBullets": [
+      "Strengthens glute stabilisers for hip and knee support.",
+      "Improves lateral movement and balance.",
+      "Good for posture and reducing sitting stiffness."
+    ],
+    "imageAsset": "assets/images/exercises/hw-038.png",
+    "safetyNotes": [
+      "Avoid knee pain; reduce depth if needed.",
+      "Keep steps controlled."
+    ]
+  },
+  {
+    "id": "hw-039",
+    "title": "Single-Leg Balance (30s)",
+    "level": "Beginner",
+    "durationMinutes": 5,
+    "equipment": ["None"],
+    "primaryTargets": ["Balance", "Ankles"],
+    "instructions": [
+      "Stand near a wall for support.",
+      "Lift one foot slightly off the floor.",
+      "Hold 20-30 seconds.",
+      "Switch sides and repeat."
+    ],
+    "formTips": [
+      "Fix eyes on a point ahead.",
+      "Keep hips level."
+    ],
+    "whyBullets": [
+      "Improves balance and ankle stability.",
+      "Supports better movement control and injury prevention.",
+      "Simple focus work can calm the nervous system."
+    ],
+    "imageAsset": "assets/images/exercises/hw-039.png",
+    "safetyNotes": [
+      "Hold the wall if needed.",
+      "Stop if you feel dizzy."
+    ]
+  },
+  {
+    "id": "hw-040",
+    "title": "Single-Leg Calf Raises",
+    "level": "Intermediate",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Calves"],
+    "instructions": [
+      "Stand near a wall for balance.",
+      "Lift one foot off the floor.",
+      "Rise onto toes of standing foot.",
+      "Lower slowly and repeat, then switch legs."
+    ],
+    "formTips": [
+      "Move slowly through full range.",
+      "Keep knee softly bent."
+    ],
+    "whyBullets": [
+      "Builds calf strength and ankle stability.",
+      "Improves circulation and lower-leg endurance.",
+      "Supports comfort during long sitting sessions."
+    ],
+    "imageAsset": "assets/images/exercises/hw-040.png",
+    "safetyNotes": [
+      "Hold support to prevent falls.",
+      "Stop if you feel sharp Achilles pain."
+    ]
+  },
+  {
+    "id": "hw-041",
+    "title": "Hollow Hold (Tucked)",
+    "level": "Advanced",
+    "durationMinutes": 6,
+    "equipment": ["None"],
+    "primaryTargets": ["Core"],
+    "instructions": [
+      "Lie on your back with knees tucked toward chest.",
+      "Lift shoulders slightly off the floor.",
+      "Keep lower back gently pressed down.",
+      "Hold 10-20 seconds and repeat."
+    ],
+    "formTips": [
+      "Keep breathing; don't brace with your neck.",
+      "Hold a smaller position if needed."
+    ],
+    "whyBullets": [
+      "Builds deep core tension for strong posture.",
+      "Improves control and stability under pressure.",
+      "Short challenging holds build mental toughness."
+    ],
+    "imageAsset": "assets/images/exercises/hw-041.png",
+    "safetyNotes": [
+      "Stop if lower back pain occurs.",
+      "Keep holds short and controlled."
+    ]
+  },
+  {
+    "id": "hw-042",
+    "title": "Push-Up (Full)",
+    "level": "Advanced",
+    "durationMinutes": 10,
+    "equipment": ["None"],
+    "primaryTargets": ["Chest", "Arms", "Shoulders"],
+    "instructions": [
+      "Start in a high plank with hands under shoulders.",
+      "Lower chest toward the floor with control.",
+      "Keep body in a straight line.",
+      "Press back up and repeat."
+    ],
+    "formTips": [
+      "Brace core and squeeze glutes.",
+      "Keep elbows about 30-45 degrees."
+    ],
+    "whyBullets": [
+      "Builds full upper-body pushing strength.",
+      "Improves shoulder stability and core tension.",
+      "Strong compound effort boosts endorphins and confidence."
+    ],
+    "imageAsset": "assets/images/exercises/hw-042.png",
+    "safetyNotes": [
+      "Stop if wrist or shoulder pain occurs.",
+      "Use incline or knees if form breaks."
+    ]
+  },
+  {
+    "id": "hw-043",
+    "title": "Squat to Calf Raise",
+    "level": "Intermediate",
+    "durationMinutes": 10,
+    "equipment": ["None"],
+    "primaryTargets": ["Legs", "Glutes", "Calves"],
+    "instructions": [
+      "Perform a controlled bodyweight squat.",
+      "Stand up and rise onto toes at the top.",
+      "Lower heels and repeat."
+    ],
+    "formTips": [
+      "Keep chest lifted during the squat.",
+      "Move smoothly between squat and calf raise."
+    ],
+    "whyBullets": [
+      "Combines strength and circulation in one movement.",
+      "Improves leg endurance and blood flow.",
+      "Great quick-hit exercise for energy and focus."
+    ],
+    "imageAsset": "assets/images/exercises/hw-043.png",
+    "safetyNotes": [
+      "Avoid forcing squat depth.",
+      "Hold a wall if balance is unstable."
+    ]
+  },
+  {
+    "id": "hw-044",
+    "title": "Split Squat (Static Lunge)",
+    "level": "Advanced",
+    "durationMinutes": 10,
+    "equipment": ["None"],
+    "primaryTargets": ["Legs", "Glutes"],
+    "instructions": [
+      "Stand in a split stance (one foot forward, one back).",
+      "Lower straight down under control.",
+      "Press through front heel to rise.",
+      "Repeat then switch stance."
+    ],
+    "formTips": [
+      "Keep torso upright.",
+      "Control the lowering phase."
+    ],
+    "whyBullets": [
+      "Builds strong single-leg strength and stability.",
+      "Improves balance and athletic movement control.",
+      "Challenging work boosts endorphins and confidence."
+    ],
+    "imageAsset": "assets/images/exercises/hw-044.png",
+    "safetyNotes": [
+      "Reduce range if knee discomfort appears.",
+      "Hold a wall for stability if needed."
+    ]
+  },
+  {
+    "id": "hw-045",
+    "title": "Backpack Romanian Deadlift",
+    "level": "Advanced",
+    "durationMinutes": 12,
+    "equipment": ["Backpack"],
+    "primaryTargets": ["Hamstrings", "Glutes", "Lower Back"],
+    "instructions": [
+      "Hold a backpack close to your body.",
+      "Soften knees and hinge hips back with a flat back.",
+      "Lower until you feel hamstrings stretch.",
+      "Stand tall by squeezing glutes."
+    ],
+    "formTips": [
+      "Keep weight close to your body.",
+      "Hinge at hips; don't round spine."
+    ],
+    "whyBullets": [
+      "Builds posterior-chain strength for posture and back support.",
+      "Improves hip mechanics and stability.",
+      "Strength work increases confidence and resilience."
+    ],
+    "imageAsset": "assets/images/exercises/hw-045.png",
+    "safetyNotes": [
+      "Stop if lower-back pain occurs.",
+      "Use light weight and perfect form."
+    ]
+  },
+  {
+    "id": "hw-046",
+    "title": "Backpack Overhead Press",
+    "level": "Advanced",
+    "durationMinutes": 10,
+    "equipment": ["Backpack"],
+    "primaryTargets": ["Shoulders", "Arms"],
+    "instructions": [
+      "Hold a backpack at shoulder height.",
+      "Brace core and press overhead.",
+      "Lower under control.",
+      "Repeat steadily."
+    ],
+    "formTips": [
+      "Keep ribs down (no back arch).",
+      "Press straight up, not forward."
+    ],
+    "whyBullets": [
+      "Builds shoulder strength with simple equipment.",
+      "Improves upper-body stability and posture.",
+      "Strength progress boosts confidence and motivation."
+    ],
+    "imageAsset": "assets/images/exercises/hw-046.png",
+    "safetyNotes": [
+      "Use a light backpack weight first.",
+      "Stop if shoulder pinching occurs."
+    ]
+  },
+  {
+    "id": "hw-047",
+    "title": "Backpack Bent-Over Row",
+    "level": "Advanced",
+    "durationMinutes": 12,
+    "equipment": ["Backpack"],
+    "primaryTargets": ["Upper Back", "Arms"],
+    "instructions": [
+      "Hold a backpack by the top handle(s).",
+      "Hinge hips back with a flat back.",
+      "Row the backpack toward your ribs.",
+      "Lower slowly and repeat."
+    ],
+    "formTips": [
+      "Pull elbows back, not up.",
+      "Keep neck neutral."
+    ],
+    "whyBullets": [
+      "Strengthens pulling muscles to balance posture.",
+      "Supports shoulder health and stability.",
+      "Improves upper-back endurance for long sitting."
+    ],
+    "imageAsset": "assets/images/exercises/hw-047.png",
+    "safetyNotes": [
+      "Avoid rounding your back.",
+      "Use manageable weight to protect form."
+    ]
+  },
+  {
+    "id": "hw-048",
+    "title": "Burpees (No Push-Up)",
+    "level": "Advanced",
+    "durationMinutes": 10,
+    "equipment": ["None"],
+    "primaryTargets": ["Cardio", "Full Body"],
+    "instructions": [
+      "Stand tall, then squat and place hands on the floor.",
+      "Step feet back into a plank (no push-up).",
+      "Step feet forward to squat position.",
+      "Stand up and add a small jump if comfortable."
+    ],
+    "formTips": [
+      "Keep core braced in plank.",
+      "Move smoothly; don't rush sloppy reps."
+    ],
+    "whyBullets": [
+      "Full-body movement boosts heart rate quickly.",
+      "Strong endorphin hit improves mood and energy.",
+      "Builds resilience and conditioning with no gear."
+    ],
+    "imageAsset": "assets/images/exercises/hw-048.png",
+    "safetyNotes": [
+      "Step instead of jumping if joints are sensitive.",
+      "Stop if dizziness or sharp pain occurs."
+    ]
+  },
+  {
+    "id": "hw-049",
+    "title": "Plank Shoulder Taps (Slow)",
+    "level": "Advanced",
+    "durationMinutes": 8,
+    "equipment": ["None"],
+    "primaryTargets": ["Core", "Shoulders"],
+    "instructions": [
+      "Start in a high plank.",
+      "Tap one shoulder with opposite hand.",
+      "Place hand back down and switch sides.",
+      "Keep hips steady and move slowly."
+    ],
+    "formTips": [
+      "Widen feet for more stability.",
+      "Keep hips as still as possible."
+    ],
+    "whyBullets": [
+      "Builds anti-rotation core strength for posture.",
+      "Improves shoulder stability and control.",
+      "Develops focus and calm through slow control."
+    ],
+    "imageAsset": "assets/images/exercises/hw-049.png",
+    "safetyNotes": [
+      "Stop if wrist pain occurs; try incline.",
+      "Keep reps slow to protect form."
+    ]
+  },
+  {
+    "id": "hw-050",
+    "title": "Sprint in Place (20s Rounds)",
+    "level": "Advanced",
+    "durationMinutes": 8,
+    "equipment": ["None"],
+    "primaryTargets": ["Cardio"],
+    "instructions": [
+      "Stand tall and begin running in place.",
+      "Pump arms and keep steps light.",
+      "Work for 15-20 seconds.",
+      "Rest 20-40 seconds and repeat."
+    ],
+    "formTips": [
+      "Stay tall; avoid leaning back.",
+      "Land softly to protect joints."
+    ],
+    "whyBullets": [
+      "Rapid cardio burst boosts alertness fast.",
+      "Improves circulation after long sitting sessions.",
+      "Creates a strong endorphin lift and momentum."
+    ],
+    "imageAsset": "assets/images/exercises/hw-050.png",
+    "safetyNotes": [
+      "Reduce intensity if you feel lightheaded.",
+      "Avoid if you have acute joint pain."
+    ]
+  }
+]

@@ -1,0 +1,235 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function hasOnlyKeys(allowedKeys) {
+      return request.resource.data.keys().hasOnly(allowedKeys);
+    }
+
+    function offerStatusValid(status) {
+      return status in ['pending', 'accepted', 'declined', 'cancelled'];
+    }
+
+    function sessionStatusValid(status) {
+      return status in ['pending', 'scheduled', 'ready', 'completed', 'no_show', 'betrayal', 'cancelled'];
+    }
+
+    function listingCreateKeysValid() {
+      return hasOnlyKeys([
+        'id','ownerUid','traderName','gamerTag','preferredPlatform','title','offeredItem','wantedText',
+        'offeredBlueprintNames','wantedBlueprintNames','offeredAssetNames','wantedAssetNames','listingType',
+        'riskLevel','completedTrades','noShows','betrayalFlags','region','playWindow','smallBundles',
+        'mediumBundles','largeBundles','seedTotalOffered','acceptsBlueprints','acceptsSeeds','acceptsResources',
+        'seriousOffersOnly','tradeAsBundle','allowPartialOffers','expiresAt','notes','active','createdAt','updatedAt'
+      ]);
+    }
+
+    function offerCreateKeysValid() {
+      return hasOnlyKeys([
+        'id','listingId','senderUid','receiverUid','senderName','senderGamerTag','senderPlatform',
+        'offeredBlueprintText','smallBundles','mediumBundles','largeBundles','seedTotal','includesResources',
+        'resourcesText','note','status','createdAt','updatedAt'
+      ]);
+    }
+
+    function sessionCreateKeysValid() {
+      return hasOnlyKeys([
+        'id','listingId','offerId','traderOneUid','traderTwoUid','traderOneName','traderTwoName','scheduledAt',
+        'timezone','protocolType','status','traderOneEmbarkId','traderTwoEmbarkId','traderOneSharedEmbarkId',
+        'traderTwoSharedEmbarkId','traderOneReady','traderTwoReady','dropOrderAssigned','firstDropUid',
+        'traderOneMarkedComplete','traderTwoMarkedComplete','traderOneMarkedNoShow','traderTwoMarkedNoShow',
+        'traderOneMarkedBetrayal','traderTwoMarkedBetrayal','createdAt','updatedAt'
+      ]);
+    }
+
+    function notificationCreateKeysValid() {
+      return hasOnlyKeys([
+        'id','targetUid','actorUid','title','body','type','listingId','offerId','sessionId','read','createdAt','updatedAt'
+      ]);
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /arc_blueprints/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /trading_activity/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /notification_tokens/{tokenId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    match /arc_blueprint_drop_reports/{reportId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
+
+    match /beta_feedback/{feedbackId} {
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+
+    match /system_counters/{counterId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /trading_notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.targetUid == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.id == notificationId
+        && request.resource.data.targetUid is string
+        && request.resource.data.read == false
+        && notificationCreateKeysValid();
+
+      allow update: if isSignedIn()
+        && resource.data.targetUid == request.auth.uid
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.targetUid == resource.data.targetUid
+        && request.resource.data.actorUid == resource.data.actorUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.body == resource.data.body
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.listingId == resource.data.listingId
+        && request.resource.data.offerId == resource.data.offerId
+        && request.resource.data.sessionId == resource.data.sessionId
+        && notificationCreateKeysValid();
+
+      allow delete: if false;
+    }
+
+    match /trading_listings/{listingId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.id == listingId
+        && request.resource.data.active == true
+        && listingCreateKeysValid();
+
+      allow update: if isSignedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if isSignedIn()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /trading_offers/{offerId} {
+      allow read: if isSignedIn()
+        && (
+          resource.data.senderUid == request.auth.uid ||
+          resource.data.receiverUid == request.auth.uid
+        );
+
+      allow create: if isSignedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.receiverUid != request.auth.uid
+        && request.resource.data.id == offerId
+        && request.resource.data.status == 'pending'
+        && offerCreateKeysValid();
+
+      allow update: if isSignedIn()
+        && offerCreateKeysValid()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.listingId == resource.data.listingId
+        && request.resource.data.senderUid == resource.data.senderUid
+        && request.resource.data.receiverUid == resource.data.receiverUid
+        && request.resource.data.senderName == resource.data.senderName
+        && request.resource.data.senderGamerTag == resource.data.senderGamerTag
+        && request.resource.data.senderPlatform == resource.data.senderPlatform
+        && request.resource.data.offeredBlueprintText == resource.data.offeredBlueprintText
+        && request.resource.data.smallBundles == resource.data.smallBundles
+        && request.resource.data.mediumBundles == resource.data.mediumBundles
+        && request.resource.data.largeBundles == resource.data.largeBundles
+        && request.resource.data.seedTotal == resource.data.seedTotal
+        && request.resource.data.includesResources == resource.data.includesResources
+        && request.resource.data.resourcesText == resource.data.resourcesText
+        && request.resource.data.note == resource.data.note
+        && request.resource.data.createdAt == resource.data.createdAt
+        && offerStatusValid(request.resource.data.status)
+        && (
+          (
+            resource.data.receiverUid == request.auth.uid
+            && resource.data.status == 'pending'
+            && request.resource.data.status in ['accepted', 'declined']
+          )
+          ||
+          (
+            resource.data.senderUid == request.auth.uid
+            && resource.data.status == 'pending'
+            && request.resource.data.status == 'cancelled'
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    match /trading_sessions/{sessionId} {
+      allow read: if isSignedIn()
+        && (
+          resource.data.traderOneUid == request.auth.uid ||
+          resource.data.traderTwoUid == request.auth.uid
+        );
+
+      allow create: if isSignedIn()
+        && (
+          request.resource.data.traderOneUid == request.auth.uid ||
+          request.resource.data.traderTwoUid == request.auth.uid
+        )
+        && request.resource.data.traderOneUid != request.resource.data.traderTwoUid
+        && request.resource.data.id == sessionId
+        && sessionCreateKeysValid()
+        && sessionStatusValid(request.resource.data.status);
+
+      allow update: if isSignedIn()
+        && sessionCreateKeysValid()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.listingId == resource.data.listingId
+        && request.resource.data.offerId == resource.data.offerId
+        && request.resource.data.traderOneUid == resource.data.traderOneUid
+        && request.resource.data.traderTwoUid == resource.data.traderTwoUid
+        && request.resource.data.traderOneName == resource.data.traderOneName
+        && request.resource.data.traderTwoName == resource.data.traderTwoName
+        && request.resource.data.createdAt == resource.data.createdAt
+        && sessionStatusValid(request.resource.data.status)
+        && (
+          resource.data.traderOneUid == request.auth.uid ||
+          resource.data.traderTwoUid == request.auth.uid
+        );
+
+      allow delete: if false;
+    }
+
+    match /arc_trade_listings/{listingId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /arc_trade_sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+  }
+}

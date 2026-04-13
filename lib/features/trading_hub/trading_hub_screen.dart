@@ -1,0 +1,73 @@
+import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/trading_hub_feature_card.dart';
+import 'package:uag_traders_hub/widgets/dose_section_card.dart';
+import 'package:uag_traders_hub/widgets/static_watermark.dart';
+import 'package:uag_traders_hub/widgets/theme.dart';
+
+class TradingHubScreen extends StatelessWidget {
+  static const routeName = '/trading-hub';
+
+  const TradingHubScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(
+        title: Text(
+          'UAG Traders Hub',
+          style: AppTheme.neonTextStyle(
+            fontSize: 25,
+            color: AppTheme.neonCyan,
+            isBold: true,
+          ),
+        ),
+      ),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: StaticWatermark()),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spaceL),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TradingHubFeatureCard(
+                        title: 'ARC Raiders Trading',
+                        icon: Icons.swap_horiz,
+                        description:
+                            'Trade blueprints, seeds and resources with other players using structured offers, safer swap guidance and reputation tracking.',
+                        backgroundImagePath:
+                            'assets/arc_raiders/banners/arc_raiders_hub_banner.webp',
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            ArcRaidersHubScreen.routeName,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: AppTheme.spaceL),
+                      DoseSectionCard(
+                        title: 'More Games Coming',
+                        icon: Icons.extension,
+                        child: Text(
+                          'Dying Light, Dying Light: The Beast, Dead Island and more trading hubs can be added here later using the same system.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
