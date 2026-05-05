@@ -28,5 +28,14 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
+      - name: Deploy to Firebase Hosting
+        if: github.event_name == 'push'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: YOUR_FIREBASE_PROJECT_ID
+          channelId: live
+
       - name: Build Android APK
         run: flutter build apk --debug
