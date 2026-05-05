@@ -10,65 +10,120 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    function hasOnlyKeys(allowedKeys) {
-      return request.resource.data.keys().hasOnly(allowedKeys);
+    function isAdminOrDev() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDev == true
+        );
     }
 
-    function offerStatusValid(status) {
-      return status in ['pending', 'accepted', 'declined', 'cancelled'];
+    function ownsExistingDocByOwnerUid() {
+      return isSignedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
-    function sessionStatusValid(status) {
-      return status in ['pending', 'scheduled', 'ready', 'completed', 'no_show', 'betrayal', 'cancelled'];
+    function ownsIncomingDocByOwnerUid() {
+      return isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
     }
 
-    function listingCreateKeysValid() {
-      return hasOnlyKeys([
-        'id','ownerUid','traderName','gamerTag','preferredPlatform','title','offeredItem','wantedText',
-        'offeredBlueprintNames','wantedBlueprintNames','offeredAssetNames','wantedAssetNames','listingType',
-        'riskLevel','completedTrades','noShows','betrayalFlags','region','playWindow','smallBundles',
-        'mediumBundles','largeBundles','seedTotalOffered','acceptsBlueprints','acceptsSeeds','acceptsResources',
-        'seriousOffersOnly','tradeAsBundle','allowPartialOffers','expiresAt','notes','active','createdAt','updatedAt'
-      ]);
+    function ownsExistingDocByUserId() {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    function offerCreateKeysValid() {
-      return hasOnlyKeys([
-        'id','listingId','senderUid','receiverUid','senderName','senderGamerTag','senderPlatform',
-        'offeredBlueprintText','smallBundles','mediumBundles','largeBundles','seedTotal','includesResources',
-        'resourcesText','note','status','createdAt','updatedAt'
-      ]);
+    function ownsIncomingDocByUserId() {
+      return isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 
-    function sessionCreateKeysValid() {
-      return hasOnlyKeys([
-        'id','listingId','offerId','traderOneUid','traderTwoUid','traderOneName','traderTwoName','scheduledAt',
-        'timezone','protocolType','status','traderOneEmbarkId','traderTwoEmbarkId','traderOneSharedEmbarkId',
-        'traderTwoSharedEmbarkId','traderOneReady','traderTwoReady','dropOrderAssigned','firstDropUid',
-        'traderOneMarkedComplete','traderTwoMarkedComplete','traderOneMarkedNoShow','traderTwoMarkedNoShow',
-        'traderOneMarkedBetrayal','traderTwoMarkedBetrayal','createdAt','updatedAt'
-      ]);
+    function ownsExistingDocByUid() {
+      return isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
-    function notificationCreateKeysValid() {
-      return hasOnlyKeys([
-        'id','targetUid','actorUid','title','body','type','listingId','offerId','sessionId','read','createdAt','updatedAt'
-      ]);
+    function ownsIncomingDocByUid() {
+      return isSignedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    function isTradingOfferParticipant() {
+      return isSignedIn()
+        && (
+          resource.data.senderUid == request.auth.uid
+          || resource.data.receiverUid == request.auth.uid
+        );
+    }
+
+    function isIncomingTradingOfferSender() {
+      return isSignedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.receiverUid != request.auth.uid;
+    }
+
+    function isTradingSessionParticipant() {
+      return isSignedIn()
+        && (
+          resource.data.traderOneUid == request.auth.uid
+          || resource.data.traderTwoUid == request.auth.uid
+        );
+    }
+
+    function isIncomingTradingSessionParticipant() {
+      return isSignedIn()
+        && request.resource.data.traderOneUid != request.resource.data.traderTwoUid
+        && (
+          request.resource.data.traderOneUid == request.auth.uid
+          || request.resource.data.traderTwoUid == request.auth.uid
+        );
+    }
+
+    function isMatchInviteParticipant() {
+      return isSignedIn()
+        && (
+          resource.data.senderUid == request.auth.uid
+          || resource.data.recipientUid == request.auth.uid
+        );
+    }
+
+    function isIncomingMatchInviteSender() {
+      return isSignedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.recipientUid != request.auth.uid;
+    }
+
+    function isNotificationTarget() {
+      return isSignedIn() && resource.data.targetUid == request.auth.uid;
+    }
+
+    function isIncomingNotificationActor() {
+      return isSignedIn()
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.targetUid is string
+        && request.resource.data.targetUid != '';
     }
 
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, create, update, delete: if isOwner(userId);
 
       match /arc_blueprints/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      match /arc_blueprint_targets/{docId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      match /arc_scrappy_items/{docId} {
+        allow read, create, update, delete: if isOwner(userId);
       }
 
       match /trading_activity/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId);
       }
 
       match /notification_tokens/{tokenId} {
-        allow read, write: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      match /{document=**} {
+        allow read, create, update, delete: if isOwner(userId);
       }
     }
 
@@ -76,160 +131,217 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update: if isSignedIn();
-      allow delete: if false;
+      allow delete: if isAdminOrDev();
     }
 
-
-    match /beta_feedback/{feedbackId} {
-      allow create: if isSignedIn()
-        && request.resource.data.uid == request.auth.uid;
-      allow read, update, delete: if false;
+    match /arc_blueprint_demand/{blueprintId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdminOrDev();
     }
 
-    match /system_counters/{counterId} {
-      allow read, write: if isSignedIn();
+    match /arc_trader_profiles/{profileUid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(profileUid)
+        || ownsIncomingDocByUid()
+        || ownsIncomingDocByUserId();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
     }
 
-    match /trading_notifications/{notificationId} {
-      allow read: if isSignedIn() && resource.data.targetUid == request.auth.uid;
+    match /arc_trader_availability/{profileUid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(profileUid)
+        || ownsIncomingDocByUid()
+        || ownsIncomingDocByUserId();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
+    }
 
-      allow create: if isSignedIn()
-        && request.resource.data.actorUid == request.auth.uid
-        && request.resource.data.id == notificationId
-        && request.resource.data.targetUid is string
-        && request.resource.data.read == false
-        && notificationCreateKeysValid();
-
-      allow update: if isSignedIn()
-        && resource.data.targetUid == request.auth.uid
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.targetUid == resource.data.targetUid
-        && request.resource.data.actorUid == resource.data.actorUid
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.title == resource.data.title
-        && request.resource.data.body == resource.data.body
-        && request.resource.data.type == resource.data.type
-        && request.resource.data.listingId == resource.data.listingId
-        && request.resource.data.offerId == resource.data.offerId
-        && request.resource.data.sessionId == resource.data.sessionId
-        && notificationCreateKeysValid();
-
-      allow delete: if false;
+    match /arc_trader_away/{profileUid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(profileUid)
+        || ownsIncomingDocByUid()
+        || ownsIncomingDocByUserId();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
     }
 
     match /trading_listings/{listingId} {
       allow read: if isSignedIn();
-
-      allow create: if isSignedIn()
-        && request.resource.data.ownerUid == request.auth.uid
+      allow create: if ownsIncomingDocByOwnerUid()
         && request.resource.data.id == listingId
-        && request.resource.data.active == true
-        && listingCreateKeysValid();
-
-      allow update: if isSignedIn()
-        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.active == true;
+      allow update: if ownsExistingDocByOwnerUid()
         && request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.createdAt == resource.data.createdAt;
-
-      allow delete: if isSignedIn()
-        && resource.data.ownerUid == request.auth.uid;
+        && request.resource.data.id == resource.data.id;
+      allow delete: if ownsExistingDocByOwnerUid();
     }
 
     match /trading_offers/{offerId} {
-      allow read: if isSignedIn()
-        && (
-          resource.data.senderUid == request.auth.uid ||
-          resource.data.receiverUid == request.auth.uid
-        );
-
-      allow create: if isSignedIn()
-        && request.resource.data.senderUid == request.auth.uid
-        && request.resource.data.receiverUid != request.auth.uid
-        && request.resource.data.id == offerId
-        && request.resource.data.status == 'pending'
-        && offerCreateKeysValid();
-
-      allow update: if isSignedIn()
-        && offerCreateKeysValid()
+      allow read: if isTradingOfferParticipant();
+      allow create: if isIncomingTradingOfferSender()
+        && request.resource.data.id == offerId;
+      allow update: if isTradingOfferParticipant()
         && request.resource.data.id == resource.data.id
         && request.resource.data.listingId == resource.data.listingId
         && request.resource.data.senderUid == resource.data.senderUid
-        && request.resource.data.receiverUid == resource.data.receiverUid
-        && request.resource.data.senderName == resource.data.senderName
-        && request.resource.data.senderGamerTag == resource.data.senderGamerTag
-        && request.resource.data.senderPlatform == resource.data.senderPlatform
-        && request.resource.data.offeredBlueprintText == resource.data.offeredBlueprintText
-        && request.resource.data.smallBundles == resource.data.smallBundles
-        && request.resource.data.mediumBundles == resource.data.mediumBundles
-        && request.resource.data.largeBundles == resource.data.largeBundles
-        && request.resource.data.seedTotal == resource.data.seedTotal
-        && request.resource.data.includesResources == resource.data.includesResources
-        && request.resource.data.resourcesText == resource.data.resourcesText
-        && request.resource.data.note == resource.data.note
-        && request.resource.data.createdAt == resource.data.createdAt
-        && offerStatusValid(request.resource.data.status)
-        && (
-          (
-            resource.data.receiverUid == request.auth.uid
-            && resource.data.status == 'pending'
-            && request.resource.data.status in ['accepted', 'declined']
-          )
-          ||
-          (
-            resource.data.senderUid == request.auth.uid
-            && resource.data.status == 'pending'
-            && request.resource.data.status == 'cancelled'
-          )
-        );
-
+        && request.resource.data.receiverUid == resource.data.receiverUid;
       allow delete: if false;
     }
 
     match /trading_sessions/{sessionId} {
-      allow read: if isSignedIn()
-        && (
-          resource.data.traderOneUid == request.auth.uid ||
-          resource.data.traderTwoUid == request.auth.uid
-        );
-
-      allow create: if isSignedIn()
-        && (
-          request.resource.data.traderOneUid == request.auth.uid ||
-          request.resource.data.traderTwoUid == request.auth.uid
-        )
-        && request.resource.data.traderOneUid != request.resource.data.traderTwoUid
-        && request.resource.data.id == sessionId
-        && sessionCreateKeysValid()
-        && sessionStatusValid(request.resource.data.status);
-
-      allow update: if isSignedIn()
-        && sessionCreateKeysValid()
+      allow read: if isTradingSessionParticipant();
+      allow create: if isIncomingTradingSessionParticipant()
+        && request.resource.data.id == sessionId;
+      allow update: if isTradingSessionParticipant()
         && request.resource.data.id == resource.data.id
-        && request.resource.data.listingId == resource.data.listingId
-        && request.resource.data.offerId == resource.data.offerId
         && request.resource.data.traderOneUid == resource.data.traderOneUid
-        && request.resource.data.traderTwoUid == resource.data.traderTwoUid
-        && request.resource.data.traderOneName == resource.data.traderOneName
-        && request.resource.data.traderTwoName == resource.data.traderTwoName
-        && request.resource.data.createdAt == resource.data.createdAt
-        && sessionStatusValid(request.resource.data.status)
-        && (
-          resource.data.traderOneUid == request.auth.uid ||
-          resource.data.traderTwoUid == request.auth.uid
-        );
+        && request.resource.data.traderTwoUid == resource.data.traderTwoUid;
+      allow delete: if false;
+    }
 
+    match /trading_notifications/{notificationId} {
+      allow read: if isNotificationTarget();
+      allow create: if isIncomingNotificationActor()
+        && request.resource.data.id == notificationId;
+      allow update: if isNotificationTarget()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.targetUid == resource.data.targetUid
+        && request.resource.data.actorUid == resource.data.actorUid;
+      allow delete: if isNotificationTarget();
+    }
+
+    match /arc_match_rider_profiles/{profileUid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(profileUid)
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if isOwner(profileUid);
+    }
+
+    match /arc_match_rider_invites/{inviteId} {
+      allow read: if isMatchInviteParticipant();
+      allow create: if isIncomingMatchInviteSender()
+        && request.resource.data.id == inviteId;
+      allow update: if isMatchInviteParticipant()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.senderUid == resource.data.senderUid
+        && request.resource.data.recipientUid == resource.data.recipientUid;
       allow delete: if false;
     }
 
     match /arc_trade_listings/{listingId} {
       allow read: if isSignedIn();
-      allow write: if false;
+      allow create: if ownsIncomingDocByUserId()
+        && request.resource.data.id == listingId;
+      allow update: if ownsExistingDocByUserId()
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.id == resource.data.id;
+      allow delete: if ownsExistingDocByUserId();
     }
 
     match /arc_trade_sessions/{sessionId} {
       allow read: if isSignedIn();
-      allow write: if false;
+      allow create: if isSignedIn()
+        && (
+          request.resource.data.traderOneUid == request.auth.uid
+          || request.resource.data.traderTwoUid == request.auth.uid
+          || request.resource.data.userId == request.auth.uid
+          || request.resource.data.ownerUid == request.auth.uid
+        );
+      allow update: if isSignedIn()
+        && (
+          resource.data.traderOneUid == request.auth.uid
+          || resource.data.traderTwoUid == request.auth.uid
+          || resource.data.userId == request.auth.uid
+          || resource.data.ownerUid == request.auth.uid
+        );
+      allow delete: if false;
+    }
+
+    match /beta_feedback/{feedbackId} {
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn()
+        && (
+          resource.data.uid == request.auth.uid
+          || isAdminOrDev()
+        );
+      allow update: if isAdminOrDev();
+      allow delete: if false;
+
+      match /replies/{replyId} {
+        allow read: if isSignedIn()
+          && (
+            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
+            || isAdminOrDev()
+          );
+        allow create: if isSignedIn()
+          && (
+            isAdminOrDev()
+            || get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
+          );
+        allow update, delete: if false;
+      }
+    }
+
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdminOrDev();
+      allow delete: if false;
+    }
+
+    match /system_counters/{counterId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && counterId == 'arc_trader_ids'
+        && request.resource.data.lastIssuedNumber is int
+        && request.resource.data.lastIssuedNumber >= 0
+        && request.resource.data.lastIssuedNumber <= 400000000;
+      allow delete: if false;
+    }
+
+    match /referral_codes/{code} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.code == code
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isSignedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if false;
+    }
+
+    match /uag_ids/{uagId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.uagId == uagId;
+      allow update: if isSignedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.uagId == resource.data.uagId;
+      allow delete: if false;
+    }
+
+    match /public_profiles/{profileUid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(profileUid)
+        || ownsIncomingDocByUid()
+        || ownsIncomingDocByUserId();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
+    }
+
+    match /dose_tasks/{taskId} {
+      allow read, create, update, delete: if isSignedIn()
+        && (
+          request.resource.data.uid == request.auth.uid
+          || resource.data.uid == request.auth.uid
+          || request.resource.data.userId == request.auth.uid
+          || resource.data.userId == request.auth.uid
+        );
+    }
+
+    match /wall_of_legends/{docId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdminOrDev();
     }
   }
 }

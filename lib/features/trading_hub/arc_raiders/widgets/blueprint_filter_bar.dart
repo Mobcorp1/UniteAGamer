@@ -34,65 +34,90 @@ class BlueprintFilterBar extends StatelessWidget {
     return '$label (${counts[filter] ?? 0})';
   }
 
+  Widget _buildViewField() {
+    return ElectricChargeBorder(
+      active: true,
+      radius: 14,
+      child: DropdownButtonFormField<ArcBlueprintFilter>(
+        initialValue: selectedFilter,
+        decoration: AppTheme.tradingInputDecoration(label: 'View'),
+        dropdownColor: AppTheme.cardBackgroundAlt,
+        items: _filters
+            .map(
+              (entry) => DropdownMenuItem<ArcBlueprintFilter>(
+                value: entry.key,
+                child: Text(_filterLabel(entry.key)),
+              ),
+            )
+            .toList(growable: false),
+        onChanged: (value) {
+          if (value != null) {
+            onFilterSelected(value);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildSelectionField() {
+    if (!selectionMode) {
+      return OutlinedButton.icon(
+        onPressed: onEnterSelectionMode,
+        icon: const Icon(Icons.bolt_rounded),
+        label: const Text('Select'),
+      );
+    }
+
+    return ElectricChargeBorder(
+      active: true,
+      radius: 14,
+      child: DropdownButtonFormField<String>(
+        initialValue: null,
+        decoration: AppTheme.tradingInputDecoration(label: 'Select'),
+        dropdownColor: AppTheme.cardBackgroundAlt,
+        items: const [
+          DropdownMenuItem(value: 'all', child: Text('Select all visible')),
+          DropdownMenuItem(value: 'row', child: Text('Select row')),
+          DropdownMenuItem(value: 'column', child: Text('Select column')),
+          DropdownMenuItem(value: 'clear', child: Text('Clear selection')),
+        ],
+        onChanged: (value) {
+          if (value != null) {
+            onSelectionToolSelected?.call(value);
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 700;
-        final children = [
-          Expanded(
-            child: ElectricChargeBorder(
-              active: true,
-              radius: 14,
-              child: DropdownButtonFormField<ArcBlueprintFilter>(
-                initialValue: selectedFilter,
-                decoration: AppTheme.tradingInputDecoration(label: 'View'),
-                dropdownColor: AppTheme.cardBackgroundAlt,
-                items: _filters
-                    .map(
-                      (entry) => DropdownMenuItem<ArcBlueprintFilter>(
-                        value: entry.key,
-                        child: Text(_filterLabel(entry.key)),
-                      ),
-                    )
-                    .toList(growable: false),
-                onChanged: (value) {
-                  if (value != null) onFilterSelected(value);
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: AppTheme.spaceM, height: AppTheme.spaceM),
-          Expanded(
-            child: selectionMode
-                ? ElectricChargeBorder(
-                    active: true,
-                    radius: 14,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: null,
-                      decoration: AppTheme.tradingInputDecoration(label: 'Select'),
-                      dropdownColor: AppTheme.cardBackgroundAlt,
-                      items: const [
-                        DropdownMenuItem(value: 'all', child: Text('Select all visible')),
-                        DropdownMenuItem(value: 'row', child: Text('Select row')),
-                        DropdownMenuItem(value: 'column', child: Text('Select column')),
-                        DropdownMenuItem(value: 'clear', child: Text('Clear selection')),
-                      ],
-                      onChanged: (value) {
-                        if (value != null && onSelectionToolSelected != null) {
-                          onSelectionToolSelected!(value);
-                        }
-                      },
-                    ),
-                  )
-                : OutlinedButton.icon(
-                    onPressed: onEnterSelectionMode,
-                    icon: const Icon(Icons.bolt_rounded),
-                    label: const Text('Select'),
-                  ),
-          ),
-        ];
-        return compact ? Column(children: children) : Row(children: children);
+        final viewField = _buildViewField();
+        final selectionField = _buildSelectionField();
+
+        if (compact) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              viewField,
+              const SizedBox(height: AppTheme.spaceM),
+              selectionField,
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: viewField),
+            const SizedBox(width: AppTheme.spaceM),
+            Expanded(child: selectionField),
+          ],
+        );
       },
     );
   }

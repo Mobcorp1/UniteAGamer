@@ -1,107 +1,61 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-class StaticWatermark extends StatefulWidget {
+class StaticWatermark extends StatelessWidget {
   const StaticWatermark({super.key});
 
   @override
-  State<StaticWatermark> createState() => _StaticWatermarkState();
-}
-
-class _StaticWatermarkState extends State<StaticWatermark> {
-  static ui.Image? _cachedImage;
-  static Future<ui.Image>? _loadingFuture;
-
-  ui.Image? _image;
-
-  @override
-  void initState() {
-    super.initState();
-
-    if (_cachedImage != null) {
-      _image = _cachedImage;
-      return;
-    }
-
-    _loadingFuture ??= _loadAssetImage(
-      'assets/icon/uag_traders_icon_transparent.webp',
-    );
-
-    _attachLoader();
-  }
-
-  Future<void> _attachLoader() async {
-    try {
-      final image = await _loadingFuture!;
-      _cachedImage = image;
-
-      if (!mounted) return;
-
-      setState(() {
-        _image = image;
-      });
-    } catch (_) {
-      if (!mounted) return;
-
-      setState(() {
-        _image = null;
-      });
-    }
-  }
-
-  Future<ui.Image> _loadAssetImage(String asset) async {
-    final byteData = await rootBundle.load(asset);
-    final codec = await ui.instantiateImageCodec(byteData.buffer.asUint8List());
-    final frame = await codec.getNextFrame();
-    return frame.image;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final image = _image ?? _cachedImage;
+    return IgnorePointer(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.of(context).size.width;
+          final height = constraints.maxHeight.isFinite
+              ? constraints.maxHeight
+              : MediaQuery.of(context).size.height;
 
-    if (image == null) {
-      return const SizedBox.shrink();
-    }
+          final shortestSide = width < height ? width : height;
 
-    return CustomPaint(
-      painter: StaticWatermarkPainter(image),
-      size: Size.infinite,
+          // Tighter, denser pattern with smaller logos and reduced gaps.
+          final logoWidth = (shortestSide / 5.8).clamp(64.0, 124.0);
+          final logoHeight = logoWidth;
+          final xStep = logoWidth * 0.92;
+          final yStep = logoHeight * 0.86;
+          final rowOffset = logoWidth * 0.46;
+
+          final columns = ((width + logoWidth) / xStep).ceil() + 3;
+          final rows = ((height + logoHeight) / yStep).ceil() + 3;
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              for (int row = 0; row < rows; row++)
+                for (int col = 0; col < columns; col++)
+                  Positioned(
+                    left:
+                        (-logoWidth * 0.45) +
+                        (col * xStep) +
+                        ((row.isOdd) ? rowOffset : 0.0),
+                    top: (-logoHeight * 0.4) + (row * yStep),
+                    child: Opacity(
+                      opacity: 0.06,
+                      child: SizedBox(
+                        width: logoWidth,
+                        height: logoHeight,
+                        child: Image.asset(
+                          'assets/icon/uag_traders_icon_transparent.webp',
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.low,
+                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                  ),
+            ],
+          );
+        },
+      ),
     );
-  }
-}
-
-class StaticWatermarkPainter extends CustomPainter {
-  const StaticWatermarkPainter(this.image);
-
-  final ui.Image image;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color.fromRGBO(255, 255, 255, 0.24);
-
-    final logoWidth = (size.shortestSide / 4.6).clamp(86.0, 168.0);
-    final logoHeight = logoWidth * (image.height / image.width);
-    final xStep = logoWidth * 1.12;
-    final yStep = logoHeight * 1.08;
-
-    for (double y = -logoHeight * 0.3; y < size.height + logoHeight; y += yStep) {
-      final rowOffset = (((y / yStep).round()).isOdd) ? logoWidth * 0.42 : 0.0;
-      for (double x = -logoWidth * 0.25; x < size.width + logoWidth; x += xStep) {
-        canvas.drawImageRect(
-          image,
-          Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-          Rect.fromLTWH(x + rowOffset, y, logoWidth, logoHeight),
-          paint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant StaticWatermarkPainter oldDelegate) {
-    return oldDelegate.image != image;
   }
 }

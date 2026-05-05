@@ -3,10 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_traders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_traders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_traders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_traders_hub/widgets/uag_form_dropdown_field.dart';
 
 class AuthScreen extends StatefulWidget {
   static const String routeName = '/auth';
@@ -22,6 +25,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firebase = FirebaseAuth.instance;
+  final LocalAuthentication _localAuth = LocalAuthentication();
 
   late bool _isLogin;
 
@@ -34,12 +38,17 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _privacyAccepted = false;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _rememberEmail = true;
+  bool _biometricsAvailable = false;
+  bool _biometricLoginEnabled = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _resetEmailController = TextEditingController();
   final TextEditingController _emailFieldController = TextEditingController();
-  final TextEditingController _passwordFieldController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _passwordFieldController =
+      TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _referralCodeController = TextEditingController();
 
   String _selectedCountry = 'United Kingdom';
@@ -98,6 +107,7 @@ class _AuthScreenState extends State<AuthScreen> {
   void initState() {
     super.initState();
     _isLogin = widget.initialIsLogin;
+    _loadSavedLoginPreferences();
 
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 2));
@@ -123,6 +133,92 @@ class _AuthScreenState extends State<AuthScreen> {
     _confirmPasswordController.dispose();
     _referralCodeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadSavedLoginPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedEmail = prefs.getString('uag_last_login_email') ?? '';
+      final rememberEmail = prefs.getBool('uag_remember_email') ?? true;
+      final biometricEnabled =
+          prefs.getBool('uag_biometric_login_enabled') ?? false;
+      final supported = await _localAuth.isDeviceSupported();
+      final canCheck = await _localAuth.canCheckBiometrics;
+
+      if (!mounted) return;
+      setState(() {
+        _rememberEmail = rememberEmail;
+        _biometricLoginEnabled = biometricEnabled;
+        _biometricsAvailable = supported && canCheck;
+        if (savedEmail.isNotEmpty) {
+          _emailFieldController.text = savedEmail;
+          _email = savedEmail;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _biometricsAvailable = false;
+        _biometricLoginEnabled = false;
+      });
+    }
+  }
+
+  Future<void> _persistLoginPreferences(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('uag_remember_email', _rememberEmail);
+    if (_rememberEmail) {
+      await prefs.setString('uag_last_login_email', email.trim());
+    } else {
+      await prefs.remove('uag_last_login_email');
+    }
+    await prefs.setBool('uag_biometric_login_enabled', _biometricLoginEnabled);
+  }
+
+  Future<void> _tryBiometricUnlock() async {
+    if (!_biometricsAvailable || !_biometricLoginEnabled) return;
+
+    final currentUser = _firebase.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Biometric unlock is available after you log in once on this device.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Unlock UAG Traders Hub',
+        biometricOnly: true,
+      );
+
+      if (!authenticated || !mounted) return;
+
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Biometric unlock failed: $error')),
+      );
+    }
+  }
+
+  String? _validatePassword(String? value) {
+    final password = value?.trim() ?? '';
+    if (password.length < 6) return 'Minimum 6 characters';
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'Add at least one capital letter';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(password)) {
+      return 'Add at least one number';
+    }
+    return null;
   }
 
   Future<void> _submit() async {
@@ -152,8 +248,10 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _email.trim(),
           password: _password,
         );
+        await _persistLoginPreferences(_email.trim());
 
         if (!mounted) return;
+
         await showDialog<void>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -179,8 +277,11 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         );
 
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+        if (!mounted) return;
+
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
       } else {
         final cred = await _firebase.createUserWithEmailAndPassword(
           email: _email.trim(),
@@ -243,9 +344,13 @@ class _AuthScreenState extends State<AuthScreen> {
           },
         }, SetOptions(merge: true));
 
+        await _persistLoginPreferences(_email.trim());
+
         if (!mounted) return;
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -256,9 +361,9 @@ class _AuthScreenState extends State<AuthScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not complete sign in: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not complete sign in: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -266,8 +371,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _showResetPasswordDialog() async {
     final currentTypedEmail = _emailFieldController.text.trim();
-    _resetEmailController.text =
-        currentTypedEmail.isNotEmpty ? currentTypedEmail : _email.trim();
+    _resetEmailController.text = currentTypedEmail.isNotEmpty
+        ? currentTypedEmail
+        : _email.trim();
 
     await showDialog(
       context: context,
@@ -332,14 +438,126 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _openTerms() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TermsOfUseScreen()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TermsOfUseScreen()));
   }
 
   Future<void> _openPrivacy() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required bool isVisible,
+    required VoidCallback onToggle,
+    String? Function(String?)? validator,
+    FormFieldSetter<String>? onSaved,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: !isVisible,
+      decoration: _inputDecoration(
+        label,
+        suffixIcon: IconButton(
+          onPressed: onToggle,
+          icon: Icon(
+            isVisible
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+          ),
+        ),
+      ),
+      onSaved: onSaved,
+      validator: validator,
+    );
+  }
+
+  Widget _buildSignupFields() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _nameController,
+          decoration: _inputDecoration('Display name'),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Display name is required'
+              : null,
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedCountry,
+          label: 'Country',
+          items: _countries,
+          decoration: _inputDecoration('Country'),
+          onChanged: (value) => setState(() {
+            _selectedCountry = value ?? _selectedCountry;
+          }),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedPlatform,
+          label: 'Platform',
+          items: _platforms,
+          decoration: _inputDecoration('Platform'),
+          onChanged: (value) => setState(() {
+            _selectedPlatform = value ?? _selectedPlatform;
+          }),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedTimeZone,
+          label: 'Timezone',
+          items: _timeZones,
+          decoration: _inputDecoration('Timezone'),
+          onChanged: (value) => setState(() {
+            _selectedTimeZone = value ?? _selectedTimeZone;
+          }),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        TextFormField(
+          controller: _referralCodeController,
+          decoration: _inputDecoration('Referral Code (optional)'),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedPayoutMethod,
+          label: 'Preferred payout method',
+          items: _payoutMethods,
+          decoration: _inputDecoration('Preferred payout method'),
+          onChanged: (value) => setState(() {
+            _selectedPayoutMethod = value ?? _selectedPayoutMethod;
+          }),
+        ),
+        SwitchListTile(
+          value: _applyForAffiliate,
+          onChanged: (value) => setState(() => _applyForAffiliate = value),
+          title: const Text('Apply for affiliate programme'),
+        ),
+        CheckboxListTile(
+          value: _termsAccepted,
+          onChanged: (value) => setState(() => _termsAccepted = value ?? false),
+          controlAffinity: ListTileControlAffinity.leading,
+          title: const Text('I agree to the Terms of Use'),
+          subtitle: TextButton(
+            onPressed: _openTerms,
+            child: const Text('Read Terms of Use'),
+          ),
+        ),
+        CheckboxListTile(
+          value: _privacyAccepted,
+          onChanged: (value) =>
+              setState(() => _privacyAccepted = value ?? false),
+          controlAffinity: ListTileControlAffinity.leading,
+          title: const Text('I agree to the Privacy Policy'),
+          subtitle: TextButton(
+            onPressed: _openPrivacy,
+            child: const Text('Read Privacy Policy'),
+          ),
+        ),
+      ],
     );
   }
 
@@ -377,17 +595,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         displayFullTextOnTap: true,
                       ),
                       const SizedBox(height: AppTheme.spaceL),
-                      if (!_isLogin) ...[
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: _inputDecoration('Display name'),
-                          validator: (value) =>
-                              value == null || value.trim().isEmpty
-                                  ? 'Display name is required'
-                                  : null,
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                      ],
+                      if (!_isLogin) _buildSignupFields(),
                       TextFormField(
                         controller: _emailFieldController,
                         keyboardType: TextInputType.emailAddress,
@@ -395,143 +603,68 @@ class _AuthScreenState extends State<AuthScreen> {
                         onSaved: (value) => _email = value?.trim() ?? '',
                         validator: (value) =>
                             value == null || !value.contains('@')
-                                ? 'Enter a valid email'
-                                : null,
+                            ? 'Enter a valid email'
+                            : null,
                       ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      TextFormField(
-                        controller: _passwordFieldController,
-                        obscureText: !_showPassword,
-                        decoration: _inputDecoration(
-                          'Password',
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() => _showPassword = !_showPassword);
-                            },
-                            icon: Icon(
-                              _showPassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                            ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      CheckboxListTile(
+                        value: _rememberEmail,
+                        onChanged: (value) =>
+                            setState(() => _rememberEmail = value ?? true),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Remember my email on this device'),
+                      ),
+                      if (_isLogin && _biometricsAvailable) ...[
+                        SwitchListTile(
+                          value: _biometricLoginEnabled,
+                          onChanged: (value) =>
+                              setState(() => _biometricLoginEnabled = value),
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text(
+                            'Enable biometric unlock after login',
+                          ),
+                          subtitle: const Text(
+                            'Uses your device fingerprint/face unlock when an account session is already saved.',
                           ),
                         ),
+                        if (_biometricLoginEnabled)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: _tryBiometricUnlock,
+                              icon: const Icon(Icons.fingerprint),
+                              label: const Text('Unlock with biometrics'),
+                            ),
+                          ),
+                      ],
+                      const SizedBox(height: AppTheme.spaceM),
+                      _buildPasswordField(
+                        controller: _passwordFieldController,
+                        label: 'Password',
+                        isVisible: _showPassword,
+                        onToggle: () {
+                          setState(() => _showPassword = !_showPassword);
+                        },
                         onSaved: (value) => _password = value?.trim() ?? '',
-                        validator: (value) =>
-                            value == null || value.trim().length < 6
-                                ? 'Minimum 6 characters'
-                                : null,
+                        validator: _validatePassword,
                       ),
                       if (!_isLogin) ...[
                         const SizedBox(height: AppTheme.spaceM),
-                        TextFormField(
+                        _buildPasswordField(
                           controller: _confirmPasswordController,
-                          obscureText: !_showConfirmPassword,
-                          decoration: _inputDecoration(
-                            'Confirm Password',
-                            suffixIcon: IconButton(
-                              onPressed: () {
-                                setState(() => _showConfirmPassword = !_showConfirmPassword);
-                              },
-                              icon: Icon(
-                                _showConfirmPassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                              ),
-                            ),
-                          ),
+                          label: 'Confirm Password',
+                          isVisible: _showConfirmPassword,
+                          onToggle: () {
+                            setState(
+                              () =>
+                                  _showConfirmPassword = !_showConfirmPassword,
+                            );
+                          },
                           validator: (value) =>
                               value != _passwordFieldController.text
-                                  ? 'Passwords do not match'
-                                  : null,
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedCountry,
-                          decoration: _inputDecoration('Country'),
-                          items: _countries
-                              .map((e) => DropdownMenuItem<String>(
-                                    value: e,
-                                    child: Text(e),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedCountry = value ?? _selectedCountry;
-                          }),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedPlatform,
-                          decoration: _inputDecoration('Platform'),
-                          items: _platforms
-                              .map((e) => DropdownMenuItem<String>(
-                                    value: e,
-                                    child: Text(e),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedPlatform = value ?? _selectedPlatform;
-                          }),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedTimeZone,
-                          decoration: _inputDecoration('Timezone'),
-                          items: _timeZones
-                              .map((e) => DropdownMenuItem<String>(
-                                    value: e,
-                                    child: Text(e),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedTimeZone = value ?? _selectedTimeZone;
-                          }),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        TextFormField(
-                          controller: _referralCodeController,
-                          decoration: _inputDecoration('Referral Code (optional)'),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedPayoutMethod,
-                          decoration: _inputDecoration('Preferred payout method'),
-                          items: _payoutMethods
-                              .map((e) => DropdownMenuItem<String>(
-                                    value: e,
-                                    child: Text(e),
-                                  ))
-                              .toList(),
-                          onChanged: (value) => setState(() {
-                            _selectedPayoutMethod = value ?? _selectedPayoutMethod;
-                          }),
-                        ),
-                        SwitchListTile(
-                          value: _applyForAffiliate,
-                          onChanged: (value) =>
-                              setState(() => _applyForAffiliate = value),
-                          title: const Text('Apply for affiliate programme'),
-                        ),
-                        CheckboxListTile(
-                          value: _termsAccepted,
-                          onChanged: (value) =>
-                              setState(() => _termsAccepted = value ?? false),
-                          controlAffinity: ListTileControlAffinity.leading,
-                          title: const Text('I agree to the Terms of Use'),
-                          subtitle: TextButton(
-                            onPressed: _openTerms,
-                            child: const Text('Read Terms of Use'),
-                          ),
-                        ),
-                        CheckboxListTile(
-                          value: _privacyAccepted,
-                          onChanged: (value) =>
-                              setState(() => _privacyAccepted = value ?? false),
-                          controlAffinity: ListTileControlAffinity.leading,
-                          title: const Text('I agree to the Privacy Policy'),
-                          subtitle: TextButton(
-                            onPressed: _openPrivacy,
-                            child: const Text('Read Privacy Policy'),
-                          ),
+                              ? 'Passwords do not match'
+                              : null,
                         ),
                       ],
                       const SizedBox(height: AppTheme.spaceL),

@@ -9,25 +9,33 @@ class ScrappyProgressHeader extends StatelessWidget {
     required this.ownedCount,
     required this.totalCount,
     required this.landscape,
+    this.title = 'ARC Raiders Scrappy Tracker',
+    this.description,
+    this.footer,
+    this.accentColor = AppTheme.neonPink,
   });
 
   final double completion;
   final int ownedCount;
   final int totalCount;
   final bool landscape;
+  final String title;
+  final String? description;
+  final String? footer;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: AppTheme.sectionCardPadding,
       decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.22),
+        borderColor: accentColor.withValues(alpha: 0.22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ARC Raiders Scrappy Tracker',
+            title,
             style: AppTheme.tradingHeading(
               fontSize: 26,
               color: AppTheme.neonCyan,
@@ -35,30 +43,32 @@ class ScrappyProgressHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            landscape
-                ? 'Track your scrappy materials the same way as the blueprint grid. Tap a missing item for the requirement, tap or hold an owned item to edit dupes.'
-                : 'Portrait is supported, but landscape gives you a roomier tracker view for quick updates.',
+            description ??
+                (landscape
+                    ? 'Track your scrappy materials the same way as the blueprint grid. Tap a missing item for the requirement, tap or hold an owned item to edit dupes.'
+                    : 'Portrait is supported, but landscape gives you a roomier tracker view for quick updates.'),
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium
                 ?.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Use this to log collection progress and extras you could trade later once the wider resource system is added.',
-            style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.35),
+          Text(
+            footer ??
+                'Use this to log collection progress and extras you could trade later once the wider resource system is added.',
+            style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.35),
           ),
           const SizedBox(height: AppTheme.spaceM),
           LinearProgressIndicator(
-            value: completion,
+            value: completion.clamp(0.0, 1.0),
             minHeight: 10,
             borderRadius: BorderRadius.circular(999),
             backgroundColor: Colors.white.withValues(alpha: 0.07),
-            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.neonPink),
+            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / $totalCount scrappy items logged',
+            '$ownedCount / $totalCount items complete',
             style: Theme.of(context)
                 .textTheme
                 .bodySmall

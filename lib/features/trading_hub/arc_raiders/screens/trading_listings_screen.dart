@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
@@ -13,7 +16,10 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 class TradingListingsScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/listings';
 
-  const TradingListingsScreen({super.key});
+  const TradingListingsScreen({super.key, this.showAppBar = true, this.embedProfileSummary = false});
+
+  final bool showAppBar;
+  final bool embedProfileSummary;
 
   @override
   State<TradingListingsScreen> createState() => _TradingListingsScreenState();
@@ -22,6 +28,7 @@ class TradingListingsScreen extends StatefulWidget {
 class _TradingListingsScreenState extends State<TradingListingsScreen> {
   final TradingRepository _repository = TradingRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
+  final ArcTraderProfileRepository _profileRepository = ArcTraderProfileRepository();
   final TextEditingController _searchController = TextEditingController();
 
   bool _showOpenToOffersOnly = false;
@@ -253,6 +260,72 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
     );
   }
 
+
+  Widget _profileSummaryCard(BuildContext context, ArcTraderProfile profile) {
+    final statusColor = profile.isProfileComplete ? AppTheme.neonCyan : AppTheme.warningAmber;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+      padding: AppTheme.sectionCardPadding,
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: statusColor.withValues(alpha: 0.24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.uagName.trim().isEmpty ? 'Trader Profile' : profile.uagName,
+                      style: AppTheme.tradingHeading(fontSize: 20, color: Colors.white),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      profile.uagId.trim().isEmpty ? 'Set up your trading identity and visibility.' : profile.uagId,
+                      style: TextStyle(color: AppTheme.tradingMutedText),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: AppTheme.pillPadding,
+                decoration: AppTheme.tradingPillDecoration(color: statusColor),
+                child: Text(
+                  profile.isProfileComplete ? 'Ready' : 'Needs setup',
+                  style: TextStyle(color: statusColor, fontWeight: FontWeight.w700, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _metaChip(profile.region.isEmpty ? 'Region not set' : profile.region),
+              _metaChip(profile.platform.isEmpty ? 'Platform not set' : profile.platform),
+              _metaChip(profile.visibleInSearch ? 'Visible in search' : 'Hidden in search'),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed(TradingProfileScreen.routeName);
+              },
+              icon: const Icon(Icons.person_outline_rounded),
+              label: const Text('Open Trader Profile'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _buildEmptyState(bool hasMissingBlueprints) {
     return Center(
       child: Text(
@@ -317,12 +390,12 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
+      appBar: widget.showAppBar ? AppBar(
         title: Text(
-          'Browse Listings',
+          'Market',
           style: AppTheme.tradingHeading(fontSize: 25),
         ),
-      ),
+      ) : null,
       body: Stack(
         children: [
           const Positioned.fill(child: StaticWatermark()),
@@ -342,6 +415,14 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
 
                       return Column(
                         children: [
+                          if (widget.embedProfileSummary)
+                            StreamBuilder<ArcTraderProfile>(
+                              stream: _profileRepository.watchProfile(),
+                              builder: (context, profileSnapshot) {
+                                final profile = profileSnapshot.data ?? ArcTraderProfile.empty(_profileRepository.currentUid ?? '');
+                                return _profileSummaryCard(context, profile);
+                              },
+                            ),
                           TextField(
                             controller: _searchController,
                             onChanged: (_) => setState(() {}),

@@ -193,18 +193,30 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                             ],
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Image.asset(
-                            widget.item.imageAsset,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.inventory_2_rounded,
-                                color: widget.tierColor,
-                                size: 28,
-                              );
-                            },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(13),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: SizedBox.expand(
+                              child: Image.asset(
+                                widget.item.imageAsset,
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.contain,
+                                alignment: Alignment.center,
+                                filterQuality: FilterQuality.high,
+                                isAntiAlias: true,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Center(
+                                    child: Icon(
+                                      Icons.inventory_2_rounded,
+                                      color: widget.tierColor,
+                                      size: 28,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
                         ),
                       ),

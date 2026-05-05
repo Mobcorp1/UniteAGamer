@@ -42,7 +42,7 @@ class TradingHubScreen extends StatelessWidget {
                         description:
                             'Trade blueprints, seeds and resources with other players using structured offers, safer swap guidance and reputation tracking.',
                         backgroundImagePath:
-                            'assets/arc_raiders/banners/arc_raiders_hub_banner.webp',
+                            'assets/arc_raiders/banners/arc_raiders_hub_banner_2.webp',
                         onTap: () {
                           Navigator.pushNamed(
                             context,

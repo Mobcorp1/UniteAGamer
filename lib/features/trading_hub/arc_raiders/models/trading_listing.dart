@@ -25,6 +25,11 @@ class TradingListing {
   final List<String> wantedBlueprintNames;
   final List<String> offeredAssetNames;
   final List<String> wantedAssetNames;
+  final List<String> offeredTradeItemIds;
+  final List<String> wantedTradeItemIds;
+  final List<String> offeredTradeItemNames;
+  final List<String> wantedTradeItemNames;
+  final bool wantsNothing;
   final TradingListingType listingType;
   final TradingRiskLevel riskLevel;
   final int completedTrades;
@@ -57,10 +62,15 @@ class TradingListing {
     required this.title,
     required this.offeredItem,
     required this.wantedText,
-    required this.offeredBlueprintNames,
-    required this.wantedBlueprintNames,
-    required this.offeredAssetNames,
-    required this.wantedAssetNames,
+    this.offeredBlueprintNames = const <String>[],
+    this.wantedBlueprintNames = const <String>[],
+    this.offeredAssetNames = const <String>[],
+    this.wantedAssetNames = const <String>[],
+    this.offeredTradeItemIds = const <String>[],
+    this.wantedTradeItemIds = const <String>[],
+    this.offeredTradeItemNames = const <String>[],
+    this.wantedTradeItemNames = const <String>[],
+    this.wantsNothing = false,
     required this.listingType,
     required this.riskLevel,
     required this.completedTrades,
@@ -100,6 +110,11 @@ class TradingListing {
       wantedBlueprintNames: const [],
       offeredAssetNames: const [],
       wantedAssetNames: const [],
+      offeredTradeItemIds: const [],
+      wantedTradeItemIds: const [],
+      offeredTradeItemNames: const [],
+      wantedTradeItemNames: const [],
+      wantsNothing: false,
       listingType: TradingListingType.specificWant,
       riskLevel: TradingRiskLevel.medium,
       completedTrades: 0,
@@ -125,14 +140,46 @@ class TradingListing {
     );
   }
 
+  static String _readString(dynamic value, [String fallback = '']) {
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? fallback : text;
+  }
+
+  static int _readInt(dynamic value, [int fallback = 0]) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? fallback;
+  }
+
+  static bool _readBool(dynamic value, [bool fallback = false]) {
+    if (value is bool) return value;
+    final normalized = value?.toString().trim().toLowerCase();
+    if (normalized == 'true') return true;
+    if (normalized == 'false') return false;
+    return fallback;
+  }
+
+  static DateTime? _readDate(dynamic value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
+  }
+
   static List<String> _readStringList(dynamic value) {
     if (value is List) {
       return value
           .map((item) => item?.toString().trim() ?? '')
           .where((item) => item.isNotEmpty)
-          .toList();
+          .toList(growable: false);
     }
-    return const [];
+    final text = value?.toString().trim() ?? '';
+    if (text.isEmpty) return const <String>[];
+    return text
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
   }
 
   String get listingTypeLabel {
@@ -143,6 +190,10 @@ class TradingListing {
         return 'Open to Offers';
     }
   }
+
+  bool get isFreeGiveaway => wantsNothing;
+
+  String get giveawayLabel => wantsNothing ? 'Free Giveaway' : listingTypeLabel;
 
   String get riskLabel {
     switch (riskLevel) {
@@ -186,10 +237,14 @@ class TradingListing {
   }
 
   String get acceptedTradeTypesLabel {
+    if (wantsNothing) return 'Free giveaway • no return wanted';
     final types = <String>[];
     if (acceptsBlueprints) types.add('Blueprints');
     if (acceptsSeeds) types.add('Seeds');
     if (acceptsResources) types.add('Resources');
+    if (wantedTradeItemNames.isNotEmpty || wantedTradeItemIds.isNotEmpty) {
+      types.add('Trade Items');
+    }
     return types.isEmpty ? 'None set' : types.join(' • ');
   }
 
@@ -210,6 +265,7 @@ class TradingListing {
     final items = <String>[];
     items.addAll(offeredBlueprintNames);
     items.addAll(offeredAssetNames);
+    items.addAll(offeredTradeItemNames);
     if (offeredItem.trim().isNotEmpty && !items.contains(offeredItem.trim())) {
       items.add(offeredItem.trim());
     }
@@ -222,7 +278,9 @@ class TradingListing {
   List<String> get allWantedItems {
     final items = <String>[];
     items.addAll(wantedBlueprintNames);
+    if (wantsNothing) return const ['Free giveaway'];
     items.addAll(wantedAssetNames);
+    items.addAll(wantedTradeItemNames);
     if (wantedText.trim().isNotEmpty && !items.contains(wantedText.trim())) {
       items.add(wantedText.trim());
     }
@@ -239,6 +297,7 @@ class TradingListing {
   }
 
   String get wantedSummary {
+    if (wantsNothing) return 'Nothing wanted • free giveaway';
     if (allWantedItems.isEmpty) return wantedText.trim().isNotEmpty ? wantedText.trim() : 'Open to offers';
     return allWantedItems.join(', ');
   }
@@ -257,6 +316,11 @@ class TradingListing {
       'wantedBlueprintNames': wantedBlueprintNames,
       'offeredAssetNames': offeredAssetNames,
       'wantedAssetNames': wantedAssetNames,
+      'offeredTradeItemIds': offeredTradeItemIds,
+      'wantedTradeItemIds': wantedTradeItemIds,
+      'offeredTradeItemNames': offeredTradeItemNames,
+      'wantedTradeItemNames': wantedTradeItemNames,
+      'wantsNothing': wantsNothing,
       'listingType': listingType.name,
       'riskLevel': riskLevel.name,
       'completedTrades': completedTrades,
@@ -284,18 +348,27 @@ class TradingListing {
 
   factory TradingListing.fromMap(Map<String, dynamic> map) {
     return TradingListing(
-      id: (map['id'] ?? '') as String,
-      ownerUid: (map['ownerUid'] ?? '') as String,
-      traderName: (map['traderName'] ?? 'New Trader') as String,
-      gamerTag: (map['gamerTag'] ?? '') as String,
-      preferredPlatform: (map['preferredPlatform'] ?? '') as String,
-      title: (map['title'] ?? '') as String,
-      offeredItem: (map['offeredItem'] ?? '') as String,
-      wantedText: (map['wantedText'] ?? '') as String,
+      id: _readString(map['id']),
+      ownerUid: _readString(map['ownerUid']),
+      traderName: _readString(map['traderName'], 'New Trader'),
+      gamerTag: _readString(map['gamerTag']),
+      preferredPlatform: _readString(map['preferredPlatform']),
+      title: _readString(map['title']),
+      offeredItem: _readString(map['offeredItem']),
+      wantedText: _readString(map['wantedText']),
       offeredBlueprintNames: _readStringList(map['offeredBlueprintNames']),
       wantedBlueprintNames: _readStringList(map['wantedBlueprintNames']),
       offeredAssetNames: _readStringList(map['offeredAssetNames']),
       wantedAssetNames: _readStringList(map['wantedAssetNames']),
+      offeredTradeItemIds: _readStringList(map['offeredTradeItemIds']),
+      wantedTradeItemIds: _readStringList(map['wantedTradeItemIds']),
+      offeredTradeItemNames: _readStringList(map['offeredTradeItemNames']).isNotEmpty
+          ? _readStringList(map['offeredTradeItemNames'])
+          : _readStringList(map['offeredAssetNames']),
+      wantedTradeItemNames: _readStringList(map['wantedTradeItemNames']).isNotEmpty
+          ? _readStringList(map['wantedTradeItemNames'])
+          : _readStringList(map['wantedAssetNames']),
+      wantsNothing: _readBool(map['wantsNothing']),
       listingType: TradingListingType.values.firstWhere(
         (value) => value.name == (map['listingType'] ?? ''),
         orElse: () => TradingListingType.specificWant,
@@ -304,26 +377,26 @@ class TradingListing {
         (value) => value.name == (map['riskLevel'] ?? ''),
         orElse: () => TradingRiskLevel.medium,
       ),
-      completedTrades: (map['completedTrades'] ?? 0) as int,
-      noShows: (map['noShows'] ?? 0) as int,
-      betrayalFlags: (map['betrayalFlags'] ?? 0) as int,
-      region: (map['region'] ?? 'Flexible') as String,
-      playWindow: (map['playWindow'] ?? 'Flexible') as String,
-      smallBundles: (map['smallBundles'] ?? 0) as int,
-      mediumBundles: (map['mediumBundles'] ?? 0) as int,
-      largeBundles: (map['largeBundles'] ?? 0) as int,
-      seedTotalOffered: (map['seedTotalOffered'] ?? 0) as int,
-      acceptsBlueprints: (map['acceptsBlueprints'] ?? true) as bool,
-      acceptsSeeds: (map['acceptsSeeds'] ?? false) as bool,
-      acceptsResources: (map['acceptsResources'] ?? false) as bool,
-      seriousOffersOnly: (map['seriousOffersOnly'] ?? false) as bool,
-      tradeAsBundle: (map['tradeAsBundle'] ?? true) as bool,
-      allowPartialOffers: (map['allowPartialOffers'] ?? false) as bool,
-      expiresAt: (map['expiresAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      notes: (map['notes'] ?? '') as String,
-      active: (map['active'] ?? true) as bool,
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
-      updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
+      completedTrades: _readInt(map['completedTrades']),
+      noShows: _readInt(map['noShows']),
+      betrayalFlags: _readInt(map['betrayalFlags']),
+      region: _readString(map['region'], 'Flexible'),
+      playWindow: _readString(map['playWindow'], 'Flexible'),
+      smallBundles: _readInt(map['smallBundles']),
+      mediumBundles: _readInt(map['mediumBundles']),
+      largeBundles: _readInt(map['largeBundles']),
+      seedTotalOffered: _readInt(map['seedTotalOffered']),
+      acceptsBlueprints: _readBool(map['acceptsBlueprints'], true),
+      acceptsSeeds: _readBool(map['acceptsSeeds']),
+      acceptsResources: _readBool(map['acceptsResources']),
+      seriousOffersOnly: _readBool(map['seriousOffersOnly']),
+      tradeAsBundle: _readBool(map['tradeAsBundle'], true),
+      allowPartialOffers: _readBool(map['allowPartialOffers']),
+      expiresAt: _readDate(map['expiresAt']) ?? DateTime.now(),
+      notes: _readString(map['notes']),
+      active: _readBool(map['active'], true),
+      createdAt: _readDate(map['createdAt']),
+      updatedAt: _readDate(map['updatedAt']),
     );
   }
 }

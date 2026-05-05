@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
+import 'package:uag_traders_hub/build/app_bar.dart';
+import 'package:uag_traders_hub/build/app_drawer.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_traders_hub/features/feature_access_gate.dart';
+import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
@@ -107,32 +107,58 @@ class ArcRaidersHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tiles = <({String title, IconData icon, String routeName})>[
-      (title: 'Market Intel', icon: Icons.insights_rounded, routeName: ArcMarketIntelligenceScreen.routeName),
-      (title: 'Blueprint Grid', icon: Icons.grid_view_rounded, routeName: BlueprintGridScreen.routeName),
-      (title: 'Scrappy Tracker', icon: Icons.widgets_rounded, routeName: ScrappyGridScreen.routeName),
-      (title: 'Browse Listings', icon: Icons.view_list_rounded, routeName: TradingListingsScreen.routeName),
-      (title: 'Create Listing', icon: Icons.add_circle_outline, routeName: TradingCreateListingScreen.routeName),
-      (title: 'My Listings', icon: Icons.inventory_2_outlined, routeName: TradingMyListingsScreen.routeName),
-      (title: 'My Offers', icon: Icons.local_offer_outlined, routeName: TradingMyOffersScreen.routeName),
-      (title: 'Notifications', icon: Icons.notifications_active_outlined, routeName: TradingNotificationsScreen.routeName),
-      (title: 'Trade Sessions', icon: Icons.handshake_outlined, routeName: TradingTradeSessionsScreen.routeName),
-      (title: 'Trader Profile', icon: Icons.person_outline, routeName: TradingProfileScreen.routeName),
+    final tiles = <({String title, IconData icon, String routeName, String? flag})>[
+      (
+        title: 'Intel Snapshot',
+        icon: Icons.insights_rounded,
+        routeName: ArcMarketIntelligenceScreen.routeName,
+        flag: null,
+      ),
+      (
+        title: 'Blueprint Grid',
+        icon: Icons.grid_view_rounded,
+        routeName: BlueprintGridScreen.routeName,
+        flag: null,
+      ),
+      (
+        title: 'Raid Planner',
+        icon: Icons.route_rounded,
+        routeName: RaidPlannerScreen.routeName,
+        flag: null,
+      ),
+      (
+        title: 'Scrappy Tracker',
+        icon: Icons.widgets_rounded,
+        routeName: ScrappyGridScreen.routeName,
+        flag: FeatureAccessFlag.scrappyTracker,
+      ),
+      (
+        title: 'Trader Hub',
+        icon: Icons.storefront_rounded,
+        routeName: TraderHubScreen.routeName,
+        flag: FeatureAccessFlag.traderHub,
+      ),
+      (
+        title: 'Match-a-Raider',
+        icon: Icons.groups_2_outlined,
+        routeName: ArcMatchRiderScreen.routeName,
+        flag: FeatureAccessFlag.matchRaider,
+      ),
+      (
+        title: 'Play Like a Pro',
+        icon: Icons.psychology_outlined,
+        routeName: PlayLikeAProScreen.routeName,
+        flag: FeatureAccessFlag.playLockerPro,
+      ),
     ];
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        title: Text(
-          'ARC Raiders Hub',
-          style: AppTheme.neonTextStyle(
-            fontSize: 25,
-            color: AppTheme.neonCyan,
-            isBold: true,
-          ),
-        ),
-        centerTitle: false,
+      appBar: const UagAppBar(
+        title: 'ARC Raiders Hub',
+        subtitle: 'High-level tools for tracking, intel, trading, teaming and performance.',
       ),
+      drawer: const AppDrawer(),
       body: Stack(
         children: [
           const Positioned.fill(child: StaticWatermark()),
@@ -146,8 +172,15 @@ class ArcRaidersHubScreen extends StatelessWidget {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final width = constraints.maxWidth;
-                        final crossAxisCount = (width / 180).floor().clamp(2, 4);
-                        final childAspectRatio = width >= 760 ? 2.35 : width >= 520 ? 1.9 : 1.5;
+                        final crossAxisCount = (width / 180).floor().clamp(
+                          2,
+                          4,
+                        );
+                        final childAspectRatio = width >= 760
+                            ? 2.35
+                            : width >= 520
+                            ? 1.9
+                            : 1.5;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -165,27 +198,46 @@ class ArcRaidersHubScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: AppTheme.spaceS),
                             Text(
-                              'Blueprint tracking, drop intel, trading, offers, sessions and trader profile tools.',
+                              'Blueprint tracking, personalised intel, trader flow, teammate matching and performance tools.',
                               textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.white70),
                             ),
                             const SizedBox(height: 20),
                             GridView.builder(
                               itemCount: tiles.length,
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                mainAxisSpacing: 14,
-                                crossAxisSpacing: 14,
-                                childAspectRatio: childAspectRatio,
-                              ),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    mainAxisSpacing: 14,
+                                    crossAxisSpacing: 14,
+                                    childAspectRatio: childAspectRatio,
+                                  ),
                               itemBuilder: (context, index) {
                                 final tile = tiles[index];
                                 return _buildHubCard(
                                   title: tile.title,
                                   icon: tile.icon,
-                                  onTap: () => Navigator.pushNamed(context, tile.routeName),
+                                  onTap: () async {
+                                    if (tile.flag != null) {
+                                      final hasAccess = await FeatureAccess.hasAccess(
+                                        tile.flag!,
+                                      );
+                                      if (!context.mounted) return;
+                                      if (!hasAccess) {
+                                        await FeatureAccess.showLockedDialog(
+                                          context,
+                                          title: tile.title,
+                                        );
+                                        return;
+                                      }
+                                    }
+
+                                    if (!context.mounted) return;
+                                    Navigator.pushNamed(context, tile.routeName);
+                                  },
                                 );
                               },
                             ),

@@ -24,19 +24,19 @@ class ArcScrappyFoodQueueData {
       imageAsset: 'assets/arc_raiders/scrappy_resources/agave.webp',
     ),
     ArcScrappyFoodQueueItem(
-      id: 'apricot',
-      name: 'Apricot',
-      imageAsset: 'assets/arc_raiders/scrappy_resources/apricot.webp',
+      id: 'apricots',
+      name: 'Apricots',
+      imageAsset: 'assets/arc_raiders/scrappy_resources/apricots.webp',
     ),
     ArcScrappyFoodQueueItem(
-      id: 'lemon',
-      name: 'Lemon',
-      imageAsset: 'assets/arc_raiders/scrappy_resources/lemon.webp',
+      id: 'lemons',
+      name: 'Lemons',
+      imageAsset: 'assets/arc_raiders/scrappy_resources/lemons.webp',
     ),
     ArcScrappyFoodQueueItem(
-      id: 'prickly-pear',
-      name: 'Prickly Pear',
-      imageAsset: 'assets/arc_raiders/scrappy_resources/prickly_pear.webp',
+      id: 'prickly-pears',
+      name: 'Prickly Pears',
+      imageAsset: 'assets/arc_raiders/scrappy_resources/prickly_pears.webp',
     ),
   ];
 }

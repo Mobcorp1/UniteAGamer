@@ -19,6 +19,8 @@ class ArcTraderProfileRepository {
   static const int _referralCodeLength = 8;
   static const int _maxReferralAttempts = 20;
   static const int _maxUagNumericId = 400000000;
+  static const int _uagNumericPadding = 9;
+  static const String _uagPrefix = 'UAG';
 
   String? get currentUid => _auth.currentUser?.uid;
 
@@ -36,6 +38,12 @@ class ArcTraderProfileRepository {
 
   DocumentReference<Map<String, dynamic>> _referralCodeDoc(String code) =>
       _firestore.collection('referral_codes').doc(code);
+
+  DocumentReference<Map<String, dynamic>> _uagIdDoc(String uagId) =>
+      _firestore.collection('uag_ids').doc(uagId);
+
+  DocumentReference<Map<String, dynamic>> get _uagCounterDoc =>
+      _firestore.collection('system_counters').doc('arc_trader_ids');
 
   String _string(dynamic value, [String fallback = '']) {
     if (value == null) return fallback;
@@ -60,30 +68,164 @@ class ArcTraderProfileRepository {
     return fallback;
   }
 
+  String _formatUagId(int number) =>
+      '$_uagPrefix${number.toString().padLeft(_uagNumericPadding, '0')}';
 
-  Future<String> _ensureNumericUagIdForUid(String uid) async {
+  int? _extractUagNumber(String rawValue) {
+    final normalized = _normalizeUagId(rawValue);
+    if (normalized.isEmpty) return null;
+    return int.tryParse(normalized.substring(_uagPrefix.length));
+  }
+
+  String _normalizeUagId(String rawValue) {
+    final cleaned = rawValue.trim().toUpperCase().replaceAll(RegExp(r'\s+'), '');
+    if (cleaned.isEmpty) return '';
+    if (!cleaned.startsWith(_uagPrefix)) return '';
+
+    final numericPart = cleaned.substring(_uagPrefix.length);
+    if (numericPart.isEmpty || !RegExp(r'^\d+$').hasMatch(numericPart)) {
+      return '';
+    }
+
+    final numericValue = int.tryParse(numericPart);
+    if (numericValue == null ||
+        numericValue <= 0 ||
+        numericValue > _maxUagNumericId) {
+      return '';
+    }
+
+    return _formatUagId(numericValue);
+  }
+
+  String _candidateUagIdFromUserData(
+    Map<String, dynamic> userData,
+    Map<String, dynamic> profileData,
+  ) {
+    final traderProfile = userData['traderProfile'] is Map<String, dynamic>
+        ? userData['traderProfile'] as Map<String, dynamic>
+        : <String, dynamic>{};
+
+    final candidates = <String>[
+      _string(profileData['uagId']),
+      _string(traderProfile['uagId']),
+      _string(userData['uagId']),
+      _string(profileData['gamerTag']),
+    ];
+
+    for (final candidate in candidates) {
+      final normalized = _normalizeUagId(candidate);
+      if (normalized.isNotEmpty) return normalized;
+    }
+
+    return '';
+  }
+
+  Future<void> _syncUagIdAcrossUserDocs(String uid, String uagId) async {
+    final now = FieldValue.serverTimestamp();
+    await _userDoc(uid).set({
+      'uagId': uagId,
+      'updatedAt': now,
+      'traderProfile': {
+        'uagId': uagId,
+      },
+    }, SetOptions(merge: true));
+
+    await profileDoc(uid).set({
+      'uagId': uagId,
+      'gamerTag': uagId,
+      'updatedAt': now,
+      'lastActiveAt': now,
+    }, SetOptions(merge: true));
+  }
+
+  Future<String> _ensureReservedUagIdForUid(
+    String uid, {
+    String? preferredUagId,
+  }) async {
     final existingProfile = await profileDoc(uid).get();
-    final existingId = _string(existingProfile.data()?['uagId']);
-    if (existingId.isNotEmpty) return existingId;
+    final existingProfileId = _normalizeUagId(
+      _string(existingProfile.data()?['uagId']),
+    );
 
-    final counterRef = _firestore.collection('system_counters').doc('arc_trader_ids');
-    late final String nextId;
+    if (existingProfileId.isNotEmpty) {
+      final existingReservation = await _uagIdDoc(existingProfileId).get();
+      if (!existingReservation.exists ||
+          _string(existingReservation.data()?['uid']) == uid) {
+        if (!existingReservation.exists) {
+          final number = _extractUagNumber(existingProfileId)!;
+          await _uagIdDoc(existingProfileId).set({
+            'uagId': existingProfileId,
+            'uid': uid,
+            'number': number,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
+        await _syncUagIdAcrossUserDocs(uid, existingProfileId);
+        return existingProfileId;
+      }
+    }
+
+    final normalizedPreferred = _normalizeUagId(preferredUagId ?? '');
+    late final String resolvedUagId;
 
     await _firestore.runTransaction((transaction) async {
-      final counterSnap = await transaction.get(counterRef);
-      final current = ((counterSnap.data() ?? const <String, dynamic>{})['lastIssuedNumber'] ?? 0) as num;
-      final next = current.toInt() + 1;
-      if (next > _maxUagNumericId) {
-        throw StateError('UAG numeric ID limit reached.');
+      final counterSnap = await transaction.get(_uagCounterDoc);
+      final current =
+          ((counterSnap.data() ?? const <String, dynamic>{})['lastIssuedNumber'] ??
+                  0)
+              as num;
+      var lastIssuedNumber = current.toInt();
+
+      String candidateId;
+      late int candidateNumber;
+
+      if (normalizedPreferred.isNotEmpty) {
+        candidateId = normalizedPreferred;
+        candidateNumber = _extractUagNumber(candidateId)!;
+      } else {
+        candidateNumber = lastIssuedNumber + 1;
+        if (candidateNumber > _maxUagNumericId) {
+          throw StateError('UAG numeric ID limit reached.');
+        }
+        candidateId = _formatUagId(candidateNumber);
       }
-      nextId = next.toString().padLeft(9, '0');
-      transaction.set(counterRef, {
-        'lastIssuedNumber': next,
+
+      final uagIdRef = _uagIdDoc(candidateId);
+      final uagIdSnap = await transaction.get(uagIdRef);
+      if (uagIdSnap.exists) {
+        final ownerUid = _string(uagIdSnap.data()?['uid']);
+        if (ownerUid != uid) {
+          throw StateError('UAG ID $candidateId is already reserved.');
+        }
+      }
+
+      lastIssuedNumber = max(lastIssuedNumber, candidateNumber);
+
+      transaction.set(
+        _uagCounterDoc,
+        {
+          'lastIssuedNumber': lastIssuedNumber,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      transaction.set(uagIdRef, {
+        'uagId': candidateId,
+        'uid': uid,
+        'number': candidateNumber,
+        'createdAt': uagIdSnap.exists
+            ? (uagIdSnap.data()?['createdAt'] ?? FieldValue.serverTimestamp())
+            : FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      resolvedUagId = candidateId;
     });
 
-    return nextId;
+    await _syncUagIdAcrossUserDocs(uid, resolvedUagId);
+    return resolvedUagId;
   }
 
   String _generateReferralCode() {
@@ -185,6 +327,14 @@ class ArcTraderProfileRepository {
       ),
     );
 
+    final serverPreference = _string(
+      profileData['serverPreference'],
+      _string(
+        traderProfile['serverPreference'],
+        _string(userData['serverPreference'], 'Automatic'),
+      ),
+    );
+
     final platform = _string(
       profileData['platform'],
       _string(
@@ -230,6 +380,7 @@ class ArcTraderProfileRepository {
       uagName: uagName,
       embarkId: _string(profileData['embarkId']),
       region: region,
+      serverPreference: serverPreference,
       platform: platform,
       timezone: timezone,
       visibleInSearch: _bool(profileData['visibleInSearch'], true),
@@ -278,12 +429,16 @@ class ArcTraderProfileRepository {
       'uagName': profile.uagName.trim(),
       'embarkId': profile.embarkId.trim(),
       'region': profile.region.trim(),
+      'serverPreference': profile.serverPreference.trim().isEmpty
+          ? 'Automatic'
+          : profile.serverPreference.trim(),
       'platform': profile.platform.trim(),
       'timezone': profile.timezone.trim(),
       'visibleInSearch': profile.visibleInSearch,
       'micOk': profile.micOk,
       'crossRegionOk': profile.crossRegionOk,
       'crossPlatformOk': profile.crossPlatformOk,
+      'crossplayEnabled': profile.crossPlatformOk,
       'isProfileComplete': isComplete,
       'referralCode': profile.referralCode.trim(),
       'referredByCode': profile.referredByCode.trim(),
@@ -322,42 +477,44 @@ class ArcTraderProfileRepository {
     final userData = userSnap.data() ?? <String, dynamic>{};
 
     final profileSnapshot = await profileDoc(uid).get();
+    final profileData = profileSnapshot.data() ?? <String, dynamic>{};
+    final preferredUagId = _candidateUagIdFromUserData(userData, profileData);
+    final resolvedUagId = await _ensureReservedUagIdForUid(
+      uid,
+      preferredUagId: preferredUagId,
+    );
+
     if (!profileSnapshot.exists) {
       final referralCode = await _ensureReferralCodeForUid(uid);
-      final generatedUagId = await _ensureNumericUagIdForUid(uid);
       final profile = _profileFromMaps(
         uid: uid,
         userData: userData,
         profileData: const <String, dynamic>{},
-      ).copyWith(referralCode: referralCode, uagId: generatedUagId);
+      ).copyWith(referralCode: referralCode, uagId: resolvedUagId);
 
       await profileDoc(uid).set(
         _arcProfileToUnifiedMap(profile, serverNow: now),
         SetOptions(merge: true),
       );
     } else {
-      final data = profileSnapshot.data() ?? const <String, dynamic>{};
-      final updates = <String, dynamic>{'updatedAt': now, 'lastActiveAt': now};
+      final updates = <String, dynamic>{
+        'updatedAt': now,
+        'lastActiveAt': now,
+        'uagId': resolvedUagId,
+        'gamerTag': resolvedUagId,
+      };
 
-      if (_string(data['referralCode']).isEmpty) {
+      if (_string(profileData['referralCode']).isEmpty) {
         updates['referralCode'] = await _ensureReferralCodeForUid(uid);
       }
 
-      if (_string(data['uagId']).isEmpty) {
-        updates['uagId'] = await _ensureNumericUagIdForUid(uid);
+      if (_string(profileData['displayName']).isEmpty &&
+          _string(profileData['uagName']).isNotEmpty) {
+        updates['displayName'] = _string(profileData['uagName']);
       }
-
-      if (_string(data['displayName']).isEmpty &&
-          _string(data['uagName']).isNotEmpty) {
-        updates['displayName'] = _string(data['uagName']);
-      }
-      if (_string(data['gamerTag']).isEmpty &&
-          _string(data['uagId']).isNotEmpty) {
-        updates['gamerTag'] = _string(data['uagId']);
-      }
-      if (_string(data['preferredPlatform']).isEmpty &&
-          _string(data['platform']).isNotEmpty) {
-        updates['preferredPlatform'] = _string(data['platform']);
+      if (_string(profileData['preferredPlatform']).isEmpty &&
+          _string(profileData['platform']).isNotEmpty) {
+        updates['preferredPlatform'] = _string(profileData['platform']);
       }
 
       await profileDoc(uid).set(updates, SetOptions(merge: true));
@@ -412,9 +569,10 @@ class ArcTraderProfileRepository {
     final referralCode = profile.referralCode.trim().isEmpty
         ? await _ensureReferralCodeForUid(profile.uid)
         : profile.referralCode.trim();
-    final uagId = profile.uagId.trim().isEmpty
-        ? await _ensureNumericUagIdForUid(profile.uid)
-        : profile.uagId.trim();
+    final uagId = await _ensureReservedUagIdForUid(
+      profile.uid,
+      preferredUagId: profile.uagId.trim(),
+    );
 
     await profileDoc(profile.uid).set(
       _arcProfileToUnifiedMap(
@@ -429,6 +587,8 @@ class ArcTraderProfileRepository {
       ),
       SetOptions(merge: true),
     );
+
+    await _syncUagIdAcrossUserDocs(profile.uid, uagId);
   }
 
   Future<ArcAvailability> getAvailability() async {

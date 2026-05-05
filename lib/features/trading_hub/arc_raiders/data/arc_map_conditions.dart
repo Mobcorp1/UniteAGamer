@@ -40,6 +40,7 @@ class ArcMapConditions {
   static const String stellaMontisMap = 'Stella Montis';
   static const String blueGateMap = 'The Blue Gate';
   static const String spaceportMap = 'Spaceport';
+  static const String rivenTidesMap = 'Riven Tides';
 
   static const ArcMapCondition noSpecialCondition = ArcMapCondition(
     id: 'none',
@@ -151,6 +152,22 @@ class ArcMapConditions {
     supportedMaps: [spaceportMap],
   );
 
+  static const ArcMapCondition beachcombing = ArcMapCondition(
+    id: 'beachcombing',
+    label: 'Beachcombing',
+    type: ArcMapConditionType.event,
+    isMapSpecific: true,
+    supportedMaps: [rivenTidesMap],
+  );
+
+  static const ArcMapCondition lastResort = ArcMapCondition(
+    id: 'last_resort',
+    label: 'Last Resort',
+    type: ArcMapConditionType.event,
+    isMapSpecific: true,
+    supportedMaps: [rivenTidesMap],
+  );
+
   static const List<ArcMapCondition> _allConditions = [
     noSpecialCondition,
     nightRaid,
@@ -169,6 +186,8 @@ class ArcMapConditions {
     lockedGate,
     hiddenBunker,
     launchTowerLoot,
+    beachcombing,
+    lastResort,
   ];
 
   static List<ArcMapCondition> combinedOptionsForMap(String mapName) {

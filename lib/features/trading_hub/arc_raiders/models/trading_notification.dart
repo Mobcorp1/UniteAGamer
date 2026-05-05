@@ -12,6 +12,7 @@ enum TradingNotificationType {
   duplicateMatch,
   mutualMatch,
   collectionRequest,
+  feedbackReply,
 }
 
 class TradingNotification {
@@ -67,6 +68,8 @@ class TradingNotification {
         return 'Mutual Match';
       case TradingNotificationType.collectionRequest:
         return 'Collection Request';
+      case TradingNotificationType.feedbackReply:
+        return 'Feedback Reply';
     }
   }
 

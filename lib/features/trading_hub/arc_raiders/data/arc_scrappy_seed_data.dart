@@ -94,14 +94,14 @@ class ArcScrappySeedData {
       helperText: 'Tier 4 apricot target is 12 total.',
     ),
     ArcScrappyItem(
-      id: 'very-comfortable-pillow',
-      name: 'Very Comfortable Pillow',
+      id: 'very-comfortable-pillows',
+      name: 'Very Comfortable Pillows',
       category: 'Materials',
       group: 'Tier 4',
       sortOrder: 9,
       tier: ArcScrappyTier.tier4,
       neededCount: 3,
-      imageAsset: 'assets/arc_raiders/scrappy_resources/very_comfortable_pillow.webp',
+      imageAsset: 'assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp',
       helperText: 'Need 3 total. Extra pillows become tradeable surplus.',
     ),
   ];

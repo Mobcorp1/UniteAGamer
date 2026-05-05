@@ -42,19 +42,26 @@ class ScrappyFeedQueueSection extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    width: 52,
-                    height: 52,
-                    padding: const EdgeInsets.all(6),
+                    width: 50,
+                    height: 50,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.white12),
                     ),
+                    clipBehavior: Clip.antiAlias,
                     child: Image.asset(
                       item.imageAsset,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.restaurant_rounded,
-                        color: Colors.white38,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                      filterQuality: FilterQuality.high,
+                      isAntiAlias: true,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(
+                          Icons.restaurant_rounded,
+                          color: Colors.white38,
+                        ),
                       ),
                     ),
                   ),

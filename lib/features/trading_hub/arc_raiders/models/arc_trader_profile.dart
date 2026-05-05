@@ -6,6 +6,7 @@ class ArcTraderProfile {
   final String uagName;
   final String embarkId;
   final String region;
+  final String serverPreference;
   final String platform;
   final String timezone;
   final bool visibleInSearch;
@@ -28,6 +29,7 @@ class ArcTraderProfile {
     required this.uagName,
     required this.embarkId,
     required this.region,
+    required this.serverPreference,
     required this.platform,
     required this.timezone,
     required this.visibleInSearch,
@@ -52,6 +54,7 @@ class ArcTraderProfile {
       uagName: '',
       embarkId: '',
       region: 'UK',
+      serverPreference: 'Automatic',
       platform: '',
       timezone: 'Europe/London',
       visibleInSearch: true,
@@ -102,12 +105,14 @@ class ArcTraderProfile {
       'uagName': uagName,
       'embarkId': embarkId,
       'region': region,
+      'serverPreference': serverPreference,
       'platform': platform,
       'timezone': timezone,
       'visibleInSearch': visibleInSearch,
       'micOk': micOk,
       'crossRegionOk': crossRegionOk,
       'crossPlatformOk': crossPlatformOk,
+      'crossplayEnabled': crossPlatformOk,
       'isProfileComplete': isProfileComplete,
       'referralCode': referralCode,
       'referredByCode': referredByCode,
@@ -128,12 +133,15 @@ class ArcTraderProfile {
       uagName: _string(map['uagName']),
       embarkId: _string(map['embarkId']),
       region: _string(map['region'], 'UK'),
+      serverPreference: _string(map['serverPreference'], 'Automatic'),
       platform: _string(map['platform']),
       timezone: _string(map['timezone'], 'Europe/London'),
       visibleInSearch: _bool(map['visibleInSearch'], true),
       micOk: _bool(map['micOk'], true),
       crossRegionOk: _bool(map['crossRegionOk']),
-      crossPlatformOk: _bool(map['crossPlatformOk'], true),
+      crossPlatformOk: map.containsKey('crossplayEnabled')
+          ? _bool(map['crossplayEnabled'], true)
+          : _bool(map['crossPlatformOk'], true),
       isProfileComplete: _bool(map['isProfileComplete']),
       referralCode: _string(map['referralCode']),
       referredByCode: _string(map['referredByCode']),
@@ -152,6 +160,7 @@ class ArcTraderProfile {
     String? uagName,
     String? embarkId,
     String? region,
+    String? serverPreference,
     String? platform,
     String? timezone,
     bool? visibleInSearch,
@@ -174,6 +183,7 @@ class ArcTraderProfile {
       uagName: uagName ?? this.uagName,
       embarkId: embarkId ?? this.embarkId,
       region: region ?? this.region,
+      serverPreference: serverPreference ?? this.serverPreference,
       platform: platform ?? this.platform,
       timezone: timezone ?? this.timezone,
       visibleInSearch: visibleInSearch ?? this.visibleInSearch,

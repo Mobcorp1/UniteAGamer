@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
@@ -14,7 +14,9 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 class TradingCreateListingScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/create';
 
-  const TradingCreateListingScreen({super.key});
+  const TradingCreateListingScreen({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   State<TradingCreateListingScreen> createState() => _TradingCreateListingScreenState();
@@ -26,10 +28,11 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
   final TextEditingController _notesController = TextEditingController();
 
   late final List<ArcBlueprint> _blueprints;
-  late final List<ArcTradeCatalogItem> _tradeCatalog;
+  late final List<ArcTradeItem> _tradeCatalog;
 
   bool _isSaving = false;
   bool _openToOffers = false;
+  bool _wantsNothing = false;
   bool _acceptsBlueprints = true;
   bool _acceptsSeeds = false;
   bool _acceptsResources = true;
@@ -46,8 +49,8 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
 
   final List<ArcBlueprint> _selectedOfferingBlueprints = <ArcBlueprint>[];
   final List<ArcBlueprint> _selectedWantedBlueprints = <ArcBlueprint>[];
-  final List<ArcTradeCatalogItem> _selectedOfferingAssets = <ArcTradeCatalogItem>[];
-  final List<ArcTradeCatalogItem> _selectedWantedAssets = <ArcTradeCatalogItem>[];
+  final List<ArcTradeItem> _selectedOfferingAssets = <ArcTradeItem>[];
+  final List<ArcTradeItem> _selectedWantedAssets = <ArcTradeItem>[];
 
   Map<String, ArcBlueprintState> _states = const <String, ArcBlueprintState>{};
 
@@ -56,7 +59,14 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
     super.initState();
     _blueprints = List<ArcBlueprint>.from(ArcBlueprintSeedData.blueprints)
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    _tradeCatalog = ArcTradeCatalog.sortedItems;
+    _tradeCatalog = List<ArcTradeItem>.from(ArcTradeItemsData.items.where((item) => item.category != ArcTradeItemCategory.containerIntel))
+      ..sort((a, b) {
+        final valueCompare = b.tradeValue.index.compareTo(a.tradeValue.index);
+        if (valueCompare != 0) return valueCompare;
+        final categoryCompare = a.categoryLabel.toLowerCase().compareTo(b.categoryLabel.toLowerCase());
+        if (categoryCompare != 0) return categoryCompare;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
   }
 
   @override
@@ -333,17 +343,20 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
     );
   }
 
-  Future<List<ArcTradeCatalogItem>?> _showAssetMultiPicker({
+  Future<List<ArcTradeItem>?> _showAssetMultiPicker({
     required String title,
-    required List<ArcTradeCatalogItem> initiallySelected,
+    required List<ArcTradeItem> initiallySelected,
   }) async {
     final controller = TextEditingController();
     final selectedIds = initiallySelected.map((item) => item.id).toSet();
-    var filtered = List<ArcTradeCatalogItem>.from(_tradeCatalog);
+    var filtered = List<ArcTradeItem>.from(_tradeCatalog);
     String categoryFilter = 'All';
-    const categories = <String>['All', 'Weapon', 'Weapon Mod', 'Key', 'Material', 'Legendary Material', 'Rare Material', 'Epic Material', 'Currency'];
+    final categories = <String>[
+      'All',
+      ...{for (final item in _tradeCatalog) item.categoryLabel},
+    ];
 
-    return showModalBottomSheet<List<ArcTradeCatalogItem>>(
+    return showModalBottomSheet<List<ArcTradeItem>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppTheme.cardBackgroundDeep,
@@ -355,12 +368,14 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
               final query = controller.text.trim().toLowerCase();
               setModalState(() {
                 filtered = _tradeCatalog.where((item) {
-                  final matchesCategory = categoryFilter == 'All' || item.category == categoryFilter;
+                  final matchesCategory = categoryFilter == 'All' || item.categoryLabel == categoryFilter;
                   final matchesQuery = query.isEmpty ||
                       item.name.toLowerCase().contains(query) ||
-                      item.group.toLowerCase().contains(query) ||
-                      item.category.toLowerCase().contains(query) ||
-                      item.tags.any((tag) => tag.toLowerCase().contains(query));
+                      item.id.toLowerCase().contains(query) ||
+                      item.categoryLabel.toLowerCase().contains(query) ||
+                      item.tradeValueLabel.toLowerCase().contains(query) ||
+                      item.rarityLabel.toLowerCase().contains(query) ||
+                      item.sourceHints.any((hint) => hint.toLowerCase().contains(query));
                   return matchesCategory && matchesQuery;
                 }).toList(growable: false);
               });
@@ -444,7 +459,7 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
                                         Expanded(
                                           child: Text(item.name, style: const TextStyle(color: Colors.white)),
                                         ),
-                                        if (item.highDemand)
+                                        if (item.tradeValue == ArcTradeValueTier.elite || item.rarity == ArcTradeItemRarity.legendary)
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                             decoration: AppTheme.tradingPillDecoration(color: AppTheme.neonPink),
@@ -456,7 +471,7 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
                                       ],
                                     ),
                                     subtitle: Text(
-                                      '${item.category} • ${item.group}',
+                                      '${item.categoryLabel} • ${item.rarityLabel} • ${item.tradeValueLabel} value',
                                       style: const TextStyle(color: Colors.white60),
                                     ),
                                     onChanged: (_) {
@@ -526,6 +541,7 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
   }
 
   String _buildWantedSummary() {
+    if (_wantsNothing) return 'Nothing wanted • free giveaway';
     if (_openToOffers) return 'Open to offers';
     final pieces = <String>[
       ..._selectedWantedBlueprints.map((item) => item.name),
@@ -547,6 +563,7 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
     if (offeringNames.isEmpty) return 'Trade Listing';
 
     final lead = offeringNames.first;
+    if (_wantsNothing) return '$lead • Free Giveaway';
     if (_openToOffers) {
       return _tradeAsBundle ? '$lead bundle • Open Offer' : '$lead • Open Offer';
     }
@@ -567,13 +584,13 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
       );
       return;
     }
-    if (!_openToOffers && !_hasAnyWantedSelection) {
+    if (!_openToOffers && !_wantsNothing && !_hasAnyWantedSelection) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Add at least one wanted blueprint or trade asset.')),
       );
       return;
     }
-    if (!_acceptsBlueprints && !_acceptsSeeds && !_acceptsResources) {
+    if (!_wantsNothing && !_acceptsBlueprints && !_acceptsSeeds && !_acceptsResources) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Select at least one accepted trade type.')),
       );
@@ -589,7 +606,7 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
       await _repository.createListing(
         offeredItem: _buildOfferSummary(),
         wantedText: _buildWantedSummary(),
-        listingType: _openToOffers ? TradingListingType.openToOffers : TradingListingType.specificWant,
+        listingType: (_openToOffers || _wantsNothing) ? TradingListingType.openToOffers : TradingListingType.specificWant,
         playWindow: _selectedPlayWindow,
         smallBundles: _smallBundles,
         mediumBundles: _mediumBundles,
@@ -604,6 +621,11 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
         wantedBlueprintNames: _selectedWantedBlueprints.map((item) => item.name).toList(growable: false),
         offeredAssetNames: _selectedOfferingAssets.map((item) => item.name).toList(growable: false),
         wantedAssetNames: _selectedWantedAssets.map((item) => item.name).toList(growable: false),
+        offeredTradeItemIds: _selectedOfferingAssets.map((item) => item.id).toList(growable: false),
+        wantedTradeItemIds: _selectedWantedAssets.map((item) => item.id).toList(growable: false),
+        offeredTradeItemNames: _selectedOfferingAssets.map((item) => item.name).toList(growable: false),
+        wantedTradeItemNames: _selectedWantedAssets.map((item) => item.name).toList(growable: false),
+        wantsNothing: _wantsNothing,
         tradeAsBundle: _tradeAsBundle,
         allowPartialOffers: _allowPartialOffers,
       );
@@ -657,9 +679,14 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        title: Text('Create Listing', style: AppTheme.tradingHeading(fontSize: 25)),
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: Text(
+                'Create Listing',
+                style: AppTheme.tradingHeading(fontSize: 25),
+              ),
+            )
+          : null,
       body: Stack(
         children: [
           const Positioned.fill(child: StaticWatermark()),
@@ -722,7 +749,7 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
                                   _selectorTile(
                                     label: 'Offering Trade Assets',
                                     value: _selectionSummary(_selectedOfferingAssets.length, 'asset'),
-                                    helper: '${_tradeCatalog.length} up-to-date trade assets loaded for this pass.',
+                                    helper: '${_tradeCatalog.length} tradeable weapons, ammo, attachments, ARC components, trinkets, materials, boss drops, and Riven Tides items loaded.',
                                     onTap: () async {
                                       final picked = await _showAssetMultiPicker(
                                         title: 'Select offering trade assets',
@@ -793,15 +820,44 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
                                     },
                                   ),
                                   const SizedBox(height: AppTheme.spaceS),
+                                  SwitchListTile(
+                                    value: _wantsNothing,
+                                    contentPadding: EdgeInsets.zero,
+                                    activeThumbColor: AppTheme.neonCyan,
+                                    title: const Text('Free giveaway / nothing wanted back', style: TextStyle(color: Colors.white)),
+                                    subtitle: const Text(
+                                      'Use this when you are giving the offered items away and only need someone to claim them.',
+                                      style: TextStyle(color: Colors.white60),
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _wantsNothing = value;
+                                        if (value) {
+                                          _openToOffers = true;
+                                          _selectedWantedBlueprints.clear();
+                                          _selectedWantedAssets.clear();
+                                          _acceptsBlueprints = false;
+                                          _acceptsSeeds = false;
+                                          _acceptsResources = false;
+                                        } else {
+                                          _acceptsBlueprints = true;
+                                          _acceptsResources = true;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: AppTheme.spaceS),
                                   _selectorTile(
                                     label: 'Wanted Blueprints',
-                                    value: _openToOffers
-                                        ? 'Open to offers enabled'
-                                        : _selectionSummary(_selectedWantedBlueprints.length, 'blueprint'),
-                                    helper: _openToOffers
-                                        ? 'Disabled while open to offers is on.'
+                                    value: _wantsNothing
+                                        ? 'Giveaway enabled'
+                                        : _openToOffers
+                                            ? 'Open to offers enabled'
+                                            : _selectionSummary(_selectedWantedBlueprints.length, 'blueprint'),
+                                    helper: _openToOffers || _wantsNothing
+                                        ? 'Disabled while open to offers or giveaway mode is on.'
                                         : '${missingBlueprints.length} missing blueprints available',
-                                    onTap: _openToOffers || missingBlueprints.isEmpty
+                                    onTap: _openToOffers || _wantsNothing || missingBlueprints.isEmpty
                                         ? null
                                         : () async {
                                             final picked = await _showBlueprintMultiPicker(
@@ -822,13 +878,15 @@ class _TradingCreateListingScreenState extends State<TradingCreateListingScreen>
                                   const SizedBox(height: AppTheme.spaceM),
                                   _selectorTile(
                                     label: 'Wanted Trade Assets',
-                                    value: _openToOffers
-                                        ? 'Open to offers enabled'
-                                        : _selectionSummary(_selectedWantedAssets.length, 'asset'),
-                                    helper: _openToOffers
-                                        ? 'Disabled while open to offers is on.'
+                                    value: _wantsNothing
+                                        ? 'Giveaway enabled'
+                                        : _openToOffers
+                                            ? 'Open to offers enabled'
+                                            : _selectionSummary(_selectedWantedAssets.length, 'asset'),
+                                    helper: _openToOffers || _wantsNothing
+                                        ? 'Disabled while open to offers or giveaway mode is on.'
                                         : 'Use this for keys, KCs, reactors, guns, and other resources you want back.',
-                                    onTap: _openToOffers
+                                    onTap: _openToOffers || _wantsNothing
                                         ? null
                                         : () async {
                                             final picked = await _showAssetMultiPicker(

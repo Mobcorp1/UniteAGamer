@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -8,6 +9,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_profile.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
 
 class TradingRepository {
   TradingRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -81,7 +83,7 @@ class TradingRepository {
     if (session.traderOneReady && session.traderTwoReady) {
       return TradingSessionStatus.ready;
     }
-    if (session.scheduledAt != null) {
+    if (session.selectedBooking != null || session.scheduledAt != null) {
       return TradingSessionStatus.scheduled;
     }
     return TradingSessionStatus.pending;
@@ -89,6 +91,54 @@ class TradingRepository {
 
   String _sessionStatusValue(TradingSessionStatus status) {
     return status == TradingSessionStatus.noShow ? 'no_show' : status.name;
+  }
+
+  String _otherTraderUid(TradingSession session, String uid) {
+    if (uid == session.traderOneUid) return session.traderTwoUid;
+    if (uid == session.traderTwoUid) return session.traderOneUid;
+    throw Exception('You are not part of this trade session.');
+  }
+
+  void _ensureSessionParticipant(TradingSession session, String? uid) {
+    if (uid == null) throw Exception('You must be signed in.');
+    if (uid != session.traderOneUid && uid != session.traderTwoUid) {
+      throw Exception('You are not part of this trade session.');
+    }
+  }
+
+  Map<String, dynamic>? _buildNotificationPayload({
+    required String targetUid,
+    required TradingNotificationType type,
+    required String title,
+    required String body,
+    String listingId = '',
+    String offerId = '',
+    String sessionId = '',
+    DateTime? now,
+  }) {
+    final actorUid = currentUid;
+    if (actorUid == null || targetUid.isEmpty || targetUid == actorUid) {
+      return null;
+    }
+
+    final ref = _notificationsCollection.doc();
+    final createdAt = now ?? DateTime.now();
+    final notification = TradingNotification(
+      id: ref.id,
+      targetUid: targetUid,
+      actorUid: actorUid,
+      title: title,
+      body: body,
+      type: type,
+      listingId: listingId,
+      offerId: offerId,
+      sessionId: sessionId,
+      read: false,
+      createdAt: createdAt,
+      updatedAt: createdAt,
+    );
+
+    return {'id': ref.id, 'data': notification.toMap()};
   }
 
   Future<void> _safeNotify({
@@ -100,29 +150,23 @@ class TradingRepository {
     String offerId = '',
     String sessionId = '',
   }) async {
-    final actorUid = currentUid;
-    if (actorUid == null || targetUid.isEmpty || targetUid == actorUid) return;
+    final payload = _buildNotificationPayload(
+      targetUid: targetUid,
+      type: type,
+      title: title,
+      body: body,
+      listingId: listingId,
+      offerId: offerId,
+      sessionId: sessionId,
+    );
+    if (payload == null) return;
 
     try {
-      final ref = _notificationsCollection.doc();
-      final now = DateTime.now();
-      final notification = TradingNotification(
-        id: ref.id,
-        targetUid: targetUid,
-        actorUid: actorUid,
-        title: title,
-        body: body,
-        type: type,
-        listingId: listingId,
-        offerId: offerId,
-        sessionId: sessionId,
-        read: false,
-        createdAt: now,
-        updatedAt: now,
-      );
-      await ref.set(notification.toMap());
+      await _notificationsCollection
+          .doc(payload['id'] as String)
+          .set(payload['data'] as Map<String, dynamic>);
     } catch (_) {
-      // Notification failures should never block trading actions.
+      // Best effort only. Notifications must never break the core trading flow.
     }
   }
 
@@ -231,6 +275,18 @@ class TradingRepository {
     return TradingProfile.fromMap(snap.data() ?? <String, dynamic>{});
   }
 
+  Future<String> getPreferredEmbarkIdForSession(TradingSession session) async {
+    final uid = currentUid;
+    _ensureSessionParticipant(session, uid);
+
+    final profile = await getTradingProfile();
+    if (profile.embarkId.trim().isNotEmpty) return profile.embarkId.trim();
+
+    return uid == session.traderOneUid
+        ? session.traderOneEmbarkId.trim()
+        : session.traderTwoEmbarkId.trim();
+  }
+
   Future<void> saveEmbarkId(String embarkId) async {
     final uid = currentUid;
     if (uid == null) return;
@@ -284,9 +340,11 @@ class TradingRepository {
         .where('targetUid', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TradingNotification.fromMap(doc.data()))
-            .toList(growable: false));
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TradingNotification.fromMap(doc.data()))
+              .toList(growable: false),
+        );
   }
 
   Future<void> markNotificationRead(String notificationId) async {
@@ -294,6 +352,10 @@ class TradingRepository {
       'read': true,
       'updatedAt': Timestamp.fromDate(DateTime.now()),
     }, SetOptions(merge: true));
+  }
+
+  Future<void> deleteNotification(String notificationId) async {
+    await _notificationsCollection.doc(notificationId).delete();
   }
 
   Future<TradingSession?> getSessionForOffer(String offerId) async {
@@ -306,13 +368,14 @@ class TradingRepository {
   }
 
   String buildSessionInviteText(TradingSession session) {
-    final when = session.scheduledAt == null
+    final effectiveScheduled = session.selectedBooking ?? session.scheduledAt;
+    final when = effectiveScheduled == null
         ? 'Time still to be confirmed'
-        : '${session.scheduledAt!.day.toString().padLeft(2, '0')}/'
-            '${session.scheduledAt!.month.toString().padLeft(2, '0')}/'
-            '${session.scheduledAt!.year} '
-            '${session.scheduledAt!.hour.toString().padLeft(2, '0')}:'
-            '${session.scheduledAt!.minute.toString().padLeft(2, '0')}';
+        : '${effectiveScheduled.day.toString().padLeft(2, '0')}/'
+              '${effectiveScheduled.month.toString().padLeft(2, '0')}/'
+              '${effectiveScheduled.year} '
+              '${effectiveScheduled.hour.toString().padLeft(2, '0')}:'
+              '${effectiveScheduled.minute.toString().padLeft(2, '0')}';
 
     return 'ARC Raiders trade invite\n\n'
         'Traders: ${session.traderOneName} ↔ ${session.traderTwoName}\n'
@@ -344,6 +407,11 @@ class TradingRepository {
     List<String> wantedBlueprintNames = const <String>[],
     List<String> offeredAssetNames = const <String>[],
     List<String> wantedAssetNames = const <String>[],
+    List<String> offeredTradeItemIds = const <String>[],
+    List<String> wantedTradeItemIds = const <String>[],
+    List<String> offeredTradeItemNames = const <String>[],
+    List<String> wantedTradeItemNames = const <String>[],
+    bool wantsNothing = false,
     bool tradeAsBundle = true,
     bool allowPartialOffers = false,
   }) async {
@@ -359,9 +427,11 @@ class TradingRepository {
     final seedTotal =
         (smallBundles * 10) + (mediumBundles * 50) + (largeBundles * 100);
 
-    final title = listingType == TradingListingType.openToOffers
-        ? '$offeredItem • Open Offer'
-        : '$offeredItem for $wantedText';
+    final title = wantsNothing
+        ? '$offeredItem • Free Giveaway'
+        : listingType == TradingListingType.openToOffers
+            ? '$offeredItem • Open Offer'
+            : '$offeredItem for $wantedText';
 
     final listing = TradingListing(
       id: listingRef.id,
@@ -376,7 +446,12 @@ class TradingRepository {
       wantedBlueprintNames: wantedBlueprintNames,
       offeredAssetNames: offeredAssetNames,
       wantedAssetNames: wantedAssetNames,
-      listingType: listingType,
+      offeredTradeItemIds: offeredTradeItemIds,
+      wantedTradeItemIds: wantedTradeItemIds,
+      offeredTradeItemNames: offeredTradeItemNames.isNotEmpty ? offeredTradeItemNames : offeredAssetNames,
+      wantedTradeItemNames: wantedTradeItemNames.isNotEmpty ? wantedTradeItemNames : wantedAssetNames,
+      wantsNothing: wantsNothing,
+      listingType: wantsNothing ? TradingListingType.openToOffers : listingType,
       riskLevel: profile.riskLevel,
       completedTrades: profile.completedTrades,
       noShows: profile.noShows,
@@ -428,9 +503,11 @@ class TradingRepository {
         .where('ownerUid', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TradingListing.fromMap(doc.data()))
-            .toList(growable: false));
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TradingListing.fromMap(doc.data()))
+              .toList(growable: false),
+        );
   }
 
   Future<void> closeListing(String listingId) async {
@@ -451,7 +528,6 @@ class TradingRepository {
     await _listingsCollection.doc(listingId).delete();
   }
 
-
   Future<void> requestCollectionView(TradingListing listing) async {
     final uid = currentUid;
     if (uid == null) throw Exception('You must be signed in.');
@@ -471,6 +547,12 @@ class TradingRepository {
     );
   }
 
+  Future<TradingListing?> getListingById(String listingId) async {
+    final snap = await _listingsCollection.doc(listingId).get();
+    if (!snap.exists) return null;
+    return TradingListing.fromMap(snap.data()!);
+  }
+
   Future<void> createOffer({
     required TradingListing listing,
     required String offeredBlueprintText,
@@ -480,6 +562,9 @@ class TradingRepository {
     required bool includesResources,
     required String resourcesText,
     required String note,
+    List<String> offeredTradeItemIds = const <String>[],
+    List<String> offeredTradeItemNames = const <String>[],
+    bool isGiveawayClaim = false,
   }) async {
     final uid = currentUid;
     if (uid == null) return;
@@ -507,6 +592,9 @@ class TradingRepository {
       seedTotal: seedTotal,
       includesResources: includesResources,
       resourcesText: resourcesText.trim(),
+      offeredTradeItemIds: offeredTradeItemIds,
+      offeredTradeItemNames: offeredTradeItemNames,
+      isGiveawayClaim: isGiveawayClaim || listing.wantsNothing,
       note: note.trim(),
       status: TradingOfferStatus.pending,
       createdAt: now,
@@ -518,8 +606,10 @@ class TradingRepository {
     await _safeNotify(
       targetUid: listing.ownerUid,
       type: TradingNotificationType.offerReceived,
-      title: 'New offer received',
-      body: '${profile.displayName} sent an offer for ${listing.offeredItem}.',
+      title: listing.wantsNothing ? 'Giveaway claim received' : 'New offer received',
+      body: listing.wantsNothing
+          ? '${profile.displayName} claimed your giveaway for ${listing.offeredItem}.'
+          : '${profile.displayName} sent an offer for ${listing.offeredItem}.',
       listingId: listing.id,
       offerId: offer.id,
     );
@@ -547,11 +637,6 @@ class TradingRepository {
     }
 
     final now = DateTime.now();
-    final pendingOffers = await _offersCollection
-        .where('listingId', isEqualTo: offer.listingId)
-        .where('status', isEqualTo: TradingOfferStatus.pending.name)
-        .get();
-
     final sessionRef = _sessionsCollection.doc();
     final session = TradingSession(
       id: sessionRef.id,
@@ -561,7 +646,7 @@ class TradingRepository {
       traderTwoUid: offer.senderUid,
       traderOneName: listing.traderName,
       traderTwoName: offer.senderName,
-      scheduledAt: now.add(const Duration(days: 1)),
+      scheduledAt: null,
       timezone: 'Europe/London',
       protocolType: TradingProtocolType.sequentialSafePocketSwap,
       status: TradingSessionStatus.pending,
@@ -579,46 +664,64 @@ class TradingRepository {
       traderTwoMarkedNoShow: false,
       traderOneMarkedBetrayal: false,
       traderTwoMarkedBetrayal: false,
+      bookingOptions: const <TradingBookingOption>[],
+      selectedBooking: null,
+      bookingProposedByUid: '',
+      bookingProposedAt: null,
       createdAt: now,
       updatedAt: now,
     );
 
-    final batch = _firestore.batch();
-    batch.update(_offersCollection.doc(offer.id), {
+    await _offersCollection.doc(offer.id).update({
       'status': TradingOfferStatus.accepted.name,
       'updatedAt': Timestamp.fromDate(now),
     });
 
-    for (final pendingDoc in pendingOffers.docs) {
-      if (pendingDoc.id == offer.id) continue;
-      batch.update(pendingDoc.reference, {
-        'status': TradingOfferStatus.declined.name,
-        'updatedAt': Timestamp.fromDate(now),
-      });
-    }
-
-    batch.set(_listingsCollection.doc(offer.listingId), {
+    await _listingsCollection.doc(offer.listingId).set({
       'active': false,
       'updatedAt': Timestamp.fromDate(now),
     }, SetOptions(merge: true));
 
-    batch.set(sessionRef, session.toMap());
-    await batch.commit();
+    await sessionRef.set(session.toMap());
+
+    try {
+      final pendingOffers = await _offersCollection
+          .where('listingId', isEqualTo: offer.listingId)
+          .where('status', isEqualTo: TradingOfferStatus.pending.name)
+          .get();
+
+      for (final pendingDoc in pendingOffers.docs) {
+        if (pendingDoc.id == offer.id) continue;
+        try {
+          await pendingDoc.reference.update({
+            'status': TradingOfferStatus.declined.name,
+            'updatedAt': Timestamp.fromDate(now),
+          });
+        } catch (_) {
+          // Best effort only.
+        }
+      }
+    } catch (_) {
+      // Best effort only.
+    }
 
     await _safeNotify(
       targetUid: offer.senderUid,
       type: TradingNotificationType.offerAccepted,
       title: 'Offer accepted',
-      body: '${listing.traderName} accepted your offer and created a trade session.',
+      body:
+          '${listing.traderName} accepted your offer and created a trade session.',
       listingId: offer.listingId,
       offerId: offer.id,
       sessionId: session.id,
     );
+
     await _safeNotify(
       targetUid: listing.ownerUid,
       type: TradingNotificationType.sessionCreated,
       title: 'Trade session created',
-      body: 'Your accepted trade is now live. Book a time and share Embark IDs.',
+      body:
+          'Your accepted trade is now live. Book a time and share Embark IDs.',
       listingId: offer.listingId,
       offerId: offer.id,
       sessionId: session.id,
@@ -648,7 +751,8 @@ class TradingRepository {
       targetUid: offer.senderUid,
       type: TradingNotificationType.offerDeclined,
       title: 'Offer declined',
-      body: '${offer.receiverUid == uid ? 'The listing owner' : 'A trader'} declined your offer.',
+      body:
+          '${offer.receiverUid == uid ? 'The listing owner' : 'A trader'} declined your offer.',
       listingId: offer.listingId,
       offerId: offer.id,
     );
@@ -697,14 +801,20 @@ class TradingRepository {
         .where('receiverUid', isEqualTo: uid)
         .orderBy('createdAt', descending: true);
 
-    return senderQuery.snapshots().asyncMap((senderSnap) async {
-      final receiverSnap = await receiverQuery.get();
+    late StreamController<List<TradingOffer>> controller;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? senderSub;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? receiverSub;
+
+    QuerySnapshot<Map<String, dynamic>>? senderLatest;
+    QuerySnapshot<Map<String, dynamic>>? receiverLatest;
+
+    List<TradingOffer> buildCombined() {
       final combined = <String, TradingOffer>{};
 
-      for (final doc in senderSnap.docs) {
+      for (final doc in senderLatest?.docs ?? const []) {
         combined[doc.id] = TradingOffer.fromMap(doc.data());
       }
-      for (final doc in receiverSnap.docs) {
+      for (final doc in receiverLatest?.docs ?? const []) {
         combined[doc.id] = TradingOffer.fromMap(doc.data());
       }
 
@@ -716,7 +826,35 @@ class TradingRepository {
         });
 
       return offers;
-    });
+    }
+
+    void emitIfReady() {
+      if (senderLatest == null ||
+          receiverLatest == null ||
+          controller.isClosed) {
+        return;
+      }
+      controller.add(buildCombined());
+    }
+
+    controller = StreamController<List<TradingOffer>>.broadcast(
+      onListen: () {
+        senderSub = senderQuery.snapshots().listen((snapshot) {
+          senderLatest = snapshot;
+          emitIfReady();
+        }, onError: controller.addError);
+        receiverSub = receiverQuery.snapshots().listen((snapshot) {
+          receiverLatest = snapshot;
+          emitIfReady();
+        }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await senderSub?.cancel();
+        await receiverSub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
 
   Stream<List<TradingSession>> watchMySessions() {
@@ -733,32 +871,71 @@ class TradingRepository {
         .where('traderTwoUid', isEqualTo: uid)
         .orderBy('createdAt', descending: true);
 
-    return traderOneQuery.snapshots().asyncMap((traderOneSnap) async {
-      final traderTwoSnap = await traderTwoQuery.get();
+    late StreamController<List<TradingSession>> controller;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? traderOneSub;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? traderTwoSub;
 
+    QuerySnapshot<Map<String, dynamic>>? traderOneLatest;
+    QuerySnapshot<Map<String, dynamic>>? traderTwoLatest;
+
+    List<TradingSession> buildCombined() {
       final combined = <String, TradingSession>{};
 
-      for (final doc in traderOneSnap.docs) {
+      for (final doc in traderOneLatest?.docs ?? const []) {
         combined[doc.id] = TradingSession.fromMap(doc.data());
       }
-      for (final doc in traderTwoSnap.docs) {
+      for (final doc in traderTwoLatest?.docs ?? const []) {
         combined[doc.id] = TradingSession.fromMap(doc.data());
       }
 
       final sessions = combined.values.toList()
         ..sort((a, b) {
-          final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final aDate =
+              a.updatedAt ??
+              a.createdAt ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate =
+              b.updatedAt ??
+              b.createdAt ??
+              DateTime.fromMillisecondsSinceEpoch(0);
           return bDate.compareTo(aDate);
         });
 
       return sessions;
-    });
+    }
+
+    void emitIfReady() {
+      if (traderOneLatest == null ||
+          traderTwoLatest == null ||
+          controller.isClosed) {
+        return;
+      }
+      controller.add(buildCombined());
+    }
+
+    controller = StreamController<List<TradingSession>>.broadcast(
+      onListen: () {
+        traderOneSub = traderOneQuery.snapshots().listen((snapshot) {
+          traderOneLatest = snapshot;
+          emitIfReady();
+        }, onError: controller.addError);
+        traderTwoSub = traderTwoQuery.snapshots().listen((snapshot) {
+          traderTwoLatest = snapshot;
+          emitIfReady();
+        }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await traderOneSub?.cancel();
+        await traderTwoSub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
 
-  Future<void> updateSessionSchedule({
+  Future<void> submitBookingOptions({
     required TradingSession session,
-    required DateTime scheduledAt,
+    required List<TradingBookingOption> bookingOptions,
     String timezone = 'Europe/London',
   }) async {
     final uid = currentUid;
@@ -766,25 +943,130 @@ class TradingRepository {
     if (uid != session.traderOneUid && uid != session.traderTwoUid) {
       throw Exception('You are not part of this trade session.');
     }
+    if (bookingOptions.length != 3) {
+      throw Exception('Provide exactly 3 booking days.');
+    }
+    for (final option in bookingOptions) {
+      if (option.times.length != 3) {
+        throw Exception(
+          'Each booking day must contain exactly 3 time options.',
+        );
+      }
+    }
 
-    await _sessionsCollection.doc(session.id).update({
-      'scheduledAt': Timestamp.fromDate(scheduledAt),
+    final normalizedDays = bookingOptions
+        .map(
+          (option) =>
+              DateTime(option.day.year, option.day.month, option.day.day),
+        )
+        .toSet();
+    if (normalizedDays.length != 3) {
+      throw Exception('Each booking option day must be unique.');
+    }
+
+    final now = DateTime.now();
+    final targetUid = _otherTraderUid(session, uid);
+
+    final batch = _firestore.batch();
+    batch.update(_sessionsCollection.doc(session.id), {
+      'bookingOptions': bookingOptions.map((option) => option.toMap()).toList(),
+      'selectedBooking': null,
+      'scheduledAt': null,
+      'bookingProposedByUid': uid,
+      'bookingProposedAt': Timestamp.fromDate(now),
       'timezone': timezone,
+      'status': TradingSessionStatus.pending.name,
+      'traderOneReady': false,
+      'traderTwoReady': false,
+      'updatedAt': Timestamp.fromDate(now),
+    });
+
+    await batch.commit();
+
+    await _safeNotify(
+      targetUid: targetUid,
+      type: TradingNotificationType.sessionUpdated,
+      title: 'Trade times proposed',
+      body: 'Your trading partner proposed 9 booking options for the session.',
+      listingId: session.listingId,
+      offerId: session.offerId,
+      sessionId: session.id,
+    );
+  }
+
+  Future<void> selectBookingOption({
+    required TradingSession session,
+    required DateTime selected,
+  }) async {
+    final uid = currentUid;
+    _ensureSessionParticipant(session, uid);
+
+    if (session.bookingProposedByUid.isNotEmpty &&
+        session.bookingProposedByUid == uid) {
+      throw Exception(
+        'Wait for the other trader to choose one of your proposed slots.',
+      );
+    }
+
+    final allowedTimes = session.bookingOptions
+        .expand((option) => option.times)
+        .map((value) => value.millisecondsSinceEpoch)
+        .toSet();
+
+    if (!allowedTimes.contains(selected.millisecondsSinceEpoch)) {
+      throw Exception('That booking option is no longer available.');
+    }
+
+    final targetUid = _otherTraderUid(session, uid!);
+
+    final batch = _firestore.batch();
+    batch.update(_sessionsCollection.doc(session.id), {
+      'selectedBooking': Timestamp.fromDate(selected),
+      'scheduledAt': Timestamp.fromDate(selected),
       'status': TradingSessionStatus.scheduled.name,
       'updatedAt': Timestamp.fromDate(DateTime.now()),
     });
 
-    final targetUid = uid == session.traderOneUid
-        ? session.traderTwoUid
-        : session.traderOneUid;
+    await batch.commit();
+
     await _safeNotify(
       targetUid: targetUid,
       type: TradingNotificationType.sessionUpdated,
-      title: 'Trade time booked',
-      body: 'A trade window was booked for your active ARC Raiders session.',
+      title: 'Trade time confirmed',
+      body: 'A booking slot has been locked in for your trade session.',
       listingId: session.listingId,
       offerId: session.offerId,
       sessionId: session.id,
+    );
+
+    try {
+      final otherTraderName = targetUid == session.traderOneUid
+          ? session.traderOneName
+          : session.traderTwoName;
+
+      await TradingPushService.instance.scheduleTradeReminder(
+        sessionId: session.id,
+        scheduledAt: selected,
+        otherTraderName: otherTraderName,
+      );
+    } catch (_) {
+      // Never break the booking flow if reminder scheduling fails.
+    }
+  }
+
+  Future<void> updateSessionSchedule({
+    required TradingSession session,
+    required DateTime scheduledAt,
+    String timezone = 'Europe/London',
+  }) async {
+    await selectBookingOption(
+      session: session.copyWith(
+        bookingOptions: const <TradingBookingOption>[],
+        selectedBooking: scheduledAt,
+        scheduledAt: scheduledAt,
+        timezone: timezone,
+      ),
+      selected: scheduledAt,
     );
   }
 
@@ -806,32 +1088,39 @@ class TradingRepository {
 
   Future<void> shareMyEmbarkId(TradingSession session, String embarkId) async {
     final uid = currentUid;
-    if (uid == null) throw Exception('You must be signed in.');
+    _ensureSessionParticipant(session, uid);
 
-    final updates = <String, dynamic>{
-      'updatedAt': Timestamp.fromDate(DateTime.now()),
-    };
+    final trimmedEmbarkId = embarkId.trim();
+    final now = DateTime.now();
+    final updates = <String, dynamic>{'updatedAt': Timestamp.fromDate(now)};
 
     if (uid == session.traderOneUid) {
-      updates['traderOneEmbarkId'] = embarkId.trim();
-      updates['traderOneSharedEmbarkId'] = embarkId.trim().isNotEmpty;
-    } else if (uid == session.traderTwoUid) {
-      updates['traderTwoEmbarkId'] = embarkId.trim();
-      updates['traderTwoSharedEmbarkId'] = embarkId.trim().isNotEmpty;
+      updates['traderOneEmbarkId'] = trimmedEmbarkId;
+      updates['traderOneSharedEmbarkId'] = trimmedEmbarkId.isNotEmpty;
     } else {
-      throw Exception('You are not part of this trade session.');
+      updates['traderTwoEmbarkId'] = trimmedEmbarkId;
+      updates['traderTwoSharedEmbarkId'] = trimmedEmbarkId.isNotEmpty;
     }
 
     await _sessionsCollection.doc(session.id).update(updates);
 
-    final targetUid = uid == session.traderOneUid
-        ? session.traderTwoUid
-        : session.traderOneUid;
+    if (trimmedEmbarkId.isNotEmpty) {
+      try {
+        final profile = await getTradingProfile();
+        if (profile.embarkId.trim().isEmpty) {
+          await saveEmbarkId(trimmedEmbarkId);
+        }
+      } catch (_) {
+        // Best effort only. Session share should still succeed.
+      }
+    }
+
     await _safeNotify(
-      targetUid: targetUid,
+      targetUid: _otherTraderUid(session, uid!),
       type: TradingNotificationType.sessionUpdated,
       title: 'Embark ID shared',
-      body: 'Your trading partner shared their Embark ID for the active session.',
+      body:
+          'Your trading partner shared their Embark ID for the active session.',
       listingId: session.listingId,
       offerId: session.offerId,
       sessionId: session.id,
@@ -840,24 +1129,24 @@ class TradingRepository {
 
   Future<void> setMyReadyState(TradingSession session, bool ready) async {
     final uid = currentUid;
-    if (uid == null) throw Exception('You must be signed in.');
+    _ensureSessionParticipant(session, uid);
 
     final nextSession = uid == session.traderOneUid
         ? session.copyWith(traderOneReady: ready, updatedAt: DateTime.now())
-        : uid == session.traderTwoUid
-            ? session.copyWith(traderTwoReady: ready, updatedAt: DateTime.now())
-            : (throw Exception('You are not part of this trade session.'));
+        : session.copyWith(traderTwoReady: ready, updatedAt: DateTime.now());
 
-    await _sessionsCollection.doc(session.id).update({
+    final now = DateTime.now();
+    final targetUid = _otherTraderUid(session, uid!);
+
+    final batch = _firestore.batch();
+    batch.update(_sessionsCollection.doc(session.id), {
       if (uid == session.traderOneUid) 'traderOneReady': ready,
       if (uid == session.traderTwoUid) 'traderTwoReady': ready,
       'status': _sessionStatusValue(_deriveSessionStatus(nextSession)),
-      'updatedAt': Timestamp.fromDate(DateTime.now()),
+      'updatedAt': Timestamp.fromDate(now),
     });
+    await batch.commit();
 
-    final targetUid = uid == session.traderOneUid
-        ? session.traderTwoUid
-        : session.traderOneUid;
     await _safeNotify(
       targetUid: targetUid,
       type: TradingNotificationType.sessionReady,
@@ -876,20 +1165,36 @@ class TradingRepository {
     required String firstDropUid,
   }) async {
     final uid = currentUid;
-    if (uid == null) throw Exception('You must be signed in.');
-    if (uid != session.traderOneUid && uid != session.traderTwoUid) {
-      throw Exception('You are not part of this trade session.');
-    }
+    _ensureSessionParticipant(session, uid);
     if (firstDropUid != session.traderOneUid &&
         firstDropUid != session.traderTwoUid) {
       throw Exception('First drop must be one of the session traders.');
     }
 
-    await _sessionsCollection.doc(session.id).update({
+    final now = DateTime.now();
+    final chosenName = firstDropUid == session.traderOneUid
+        ? session.traderOneName
+        : session.traderTwoName;
+    final targetUid = _otherTraderUid(session, uid!);
+
+    final batch = _firestore.batch();
+    batch.update(_sessionsCollection.doc(session.id), {
       'dropOrderAssigned': true,
       'firstDropUid': firstDropUid,
-      'updatedAt': Timestamp.fromDate(DateTime.now()),
+      'updatedAt': Timestamp.fromDate(now),
     });
+    await batch.commit();
+
+    await _safeNotify(
+      targetUid: targetUid,
+      type: TradingNotificationType.sessionUpdated,
+      title: 'First drop assigned',
+      body:
+          '$chosenName is set to make the first drop in the active trade session.',
+      listingId: session.listingId,
+      offerId: session.offerId,
+      sessionId: session.id,
+    );
   }
 
   Future<void> markMySessionOutcome({
@@ -909,15 +1214,13 @@ class TradingRepository {
     if (uid == session.traderOneUid) {
       updates['traderOneMarkedComplete'] =
           outcome == TradingSessionStatus.completed;
-      updates['traderOneMarkedNoShow'] =
-          outcome == TradingSessionStatus.noShow;
+      updates['traderOneMarkedNoShow'] = outcome == TradingSessionStatus.noShow;
       updates['traderOneMarkedBetrayal'] =
           outcome == TradingSessionStatus.betrayal;
     } else {
       updates['traderTwoMarkedComplete'] =
           outcome == TradingSessionStatus.completed;
-      updates['traderTwoMarkedNoShow'] =
-          outcome == TradingSessionStatus.noShow;
+      updates['traderTwoMarkedNoShow'] = outcome == TradingSessionStatus.noShow;
       updates['traderTwoMarkedBetrayal'] =
           outcome == TradingSessionStatus.betrayal;
     }
@@ -939,16 +1242,18 @@ class TradingRepository {
     final derivedStatus = _deriveSessionStatus(merged);
     updates['status'] = _sessionStatusValue(derivedStatus);
 
-    await _sessionsCollection.doc(session.id).update(updates);
+    final targetUid = _otherTraderUid(session, uid);
 
-    final targetUid = uid == session.traderOneUid
-        ? session.traderTwoUid
-        : session.traderOneUid;
+    final batch = _firestore.batch();
+    batch.update(_sessionsCollection.doc(session.id), updates);
+    await batch.commit();
+
     await _safeNotify(
       targetUid: targetUid,
       type: TradingNotificationType.sessionOutcome,
       title: 'Trade session updated',
-      body: 'Your trading partner recorded a ${outcome.name} outcome for the session.',
+      body:
+          'Your trading partner recorded a ${outcome.name} outcome for the session.',
       listingId: session.listingId,
       offerId: session.offerId,
       sessionId: session.id,

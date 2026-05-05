@@ -135,6 +135,7 @@ class ArcPoiDataStore {
   static const String stellaMontis = 'Stella Montis';
   static const String blueGate = 'The Blue Gate';
   static const String spaceport = 'Spaceport';
+  static const String rivenTides = 'Riven Tides';
 
   /// Buried City sources
   static const List<ArcPoiData> buriedCityPois = [
@@ -1492,6 +1493,108 @@ class ArcPoiDataStore {
     ),
   ];
 
+  static const List<ArcPoiData> rivenTidesPois = [
+    ArcPoiData(
+      id: 'riven_tides_tennis_court',
+      mapName: rivenTides,
+      name: 'Tennis Court',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.commercial, ArcBuildingType.oldWorld],
+      notes: 'Riven Tides named POI.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_azzurro_beach',
+      mapName: rivenTides,
+      name: 'Azzurro Beach',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.nature, ArcBuildingType.oldWorld],
+      notes: 'Riven Tides beach route and Beachcombing report area.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_seabed',
+      mapName: rivenTides,
+      name: 'Seabed',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.nature, ArcBuildingType.oldWorld],
+      notes: 'Riven Tides exposed seabed route.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_wreckage',
+      mapName: rivenTides,
+      name: 'Wreckage',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.mechanical],
+      notes: 'Riven Tides wreckage/debris route.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_wavebreaker',
+      mapName: rivenTides,
+      name: 'Wavebreaker',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.mechanical],
+      notes: 'Riven Tides wavebreaker route.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_weighing_checkpoint',
+      mapName: rivenTides,
+      name: 'Weighing Checkpoint',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.oldWorld],
+      notes: 'Riven Tides checkpoint route.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_transfer_depot',
+      mapName: rivenTides,
+      name: 'Transfer Depot',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.exodus],
+      notes: 'Riven Tides depot route.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_port_authority_building',
+      mapName: rivenTides,
+      name: 'Port Authority Building',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.commercial],
+      notes: 'Riven Tides high-loot area.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_hotel_panorama_azzurro',
+      mapName: rivenTides,
+      name: 'Hotel Panorama Azzurro',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.commercial, ArcBuildingType.residential],
+      notes: 'Riven Tides high-loot hotel/resort area.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_customs_house',
+      mapName: rivenTides,
+      name: 'Customs House',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.commercial],
+      notes: 'Riven Tides high-loot customs area.',
+    ),
+    ArcPoiData(
+      id: 'riven_tides_stacking_yard',
+      mapName: rivenTides,
+      name: 'Stacking Yard',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.mechanical],
+      notes: 'Riven Tides high-loot container/yard route.',
+    ),
+  ];
+
 
   static const List<ArcEnemySource> commonEnemySources = [
     ArcEnemySource(id: 'enemy_surveyor', name: 'Surveyor'),
@@ -1499,6 +1602,7 @@ class ArcPoiDataStore {
     ArcEnemySource(id: 'enemy_turret', name: 'Turret'),
     ArcEnemySource(id: 'enemy_drone', name: 'Drone'),
     ArcEnemySource(id: 'enemy_assessor', name: 'Assessor'),
+    ArcEnemySource(id: 'enemy_turbine', name: 'ARC Turbine'),
   ];
 
   static const Map<String, List<ArcPoiData>> poisByMap = {
@@ -1507,6 +1611,7 @@ class ArcPoiDataStore {
     stellaMontis: [...stellaMontisPois, ...stellaWeaponCachePois],
     blueGate: [...blueGatePois, ...blueGateWeaponCachePois],
     spaceport: [...spaceportPois, ...spaceportWeaponCachePois],
+    rivenTides: [...rivenTidesPois],
   };
 
   static List<String> get availableMaps =>

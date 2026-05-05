@@ -205,6 +205,13 @@ class ArcContainerTypes {
     isPrimaryBlueprintSource: false,
   );
 
+
+  static const ArcContainerType assessor = ArcContainerType(
+    id: 'assessor',
+    label: 'Assessor',
+    description: 'Legendary Assessor breach/search source.',
+  );
+
   static const ArcContainerType unknown = ArcContainerType(
     id: 'unknown',
     label: 'Unknown Container',
@@ -213,6 +220,7 @@ class ArcContainerTypes {
   );
 
   static const List<ArcContainerType> reportable = [
+    assessor,
     ammoCase,
     backpack,
     breachableDoor,

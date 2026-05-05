@@ -69,6 +69,7 @@ class _ArcBlueprintDropReportSheetState
     );
     _notesController = TextEditingController();
     _owned = widget.initialState.owned;
+    _applyBlueprintDefaults();
   }
 
   @override
@@ -136,6 +137,21 @@ class _ArcBlueprintDropReportSheetState
     return _timeOfDay == ArcTimeOfDay.night
         ? ArcRaidMode.nightRaid
         : ArcRaidMode.dayRaid;
+  }
+
+  bool get _usesAssessorFlow => widget.blueprint.id == 'dolabra';
+
+  void _applyBlueprintDefaults() {
+    final blueprintId = widget.blueprint.id;
+
+    if (blueprintId == 'surge_coil') {
+      _selectedMapEvent = ArcMapConditions.electromagneticStorm;
+    } else if (blueprintId == 'canto') {
+      _selectedMapEvent = ArcMapConditions.hurricane;
+    } else if (blueprintId == 'dolabra') {
+      _selectedMapEvent = ArcMapConditions.closeScrutiny;
+      _selectedContainerType = ArcContainerTypes.assessor;
+    }
   }
 
   Future<void> _saveStateOnly() async {
@@ -223,12 +239,15 @@ class _ArcBlueprintDropReportSheetState
         required String poiName,
         required ArcContainerType containerType,
       }) {
+        final isDolabra = blueprint.id == 'dolabra';
         return widget.repository.addDropReport(
           blueprintId: blueprint.id,
           mapName: _selectedMap!,
-          sourceType: ArcDropSourceType.poi,
-          poiId: poiId,
-          poiName: poiName,
+          sourceType: isDolabra ? ArcDropSourceType.enemy : ArcDropSourceType.poi,
+          poiId: isDolabra ? null : poiId,
+          poiName: isDolabra ? null : poiName,
+          enemySourceId: isDolabra ? 'enemy_assessor' : null,
+          enemySourceName: isDolabra ? 'Assessor' : null,
           containerTypeId: containerType.id,
           containerTypeLabel: containerType.label,
           mapEventId: _selectedMapEvent?.id,
@@ -453,6 +472,7 @@ class _ArcBlueprintDropReportSheetState
       _entryTime = null;
       _timeOfDay = null;
       _additionalReports.clear();
+      _applyBlueprintDefaults();
     });
     _scrollToNextStep();
   }
@@ -888,8 +908,8 @@ class _ArcBlueprintDropReportSheetState
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
                     label: 'Map Event *',
-                    value: _selectedMapEvent?.label ?? 'Select Map Event',
-                    onTap: _selectedMap == null ? null : _pickMapEvent,
+                    value: _selectedMapEvent?.label ?? (widget.blueprint.id == 'surge_coil' ? 'Electromagnetic Storm' : widget.blueprint.id == 'canto' ? 'Hurricane' : _usesAssessorFlow ? 'Close Scrutiny' : 'Select Map Event'),
+                    onTap: _selectedMap == null || _usesAssessorFlow || widget.blueprint.id == 'surge_coil' || widget.blueprint.id == 'canto' ? null : _pickMapEvent,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
@@ -903,8 +923,8 @@ class _ArcBlueprintDropReportSheetState
                   _buildSelectorField(
                     label: 'Container Type *',
                     value:
-                        _selectedContainerType?.label ?? 'Select Container Type',
-                    onTap: _selectedPoiId == null ? null : _pickContainerType,
+                        _selectedContainerType?.label ?? (_usesAssessorFlow ? 'Assessor' : 'Select Container Type'),
+                    onTap: _selectedPoiId == null || _usesAssessorFlow ? null : _pickContainerType,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(

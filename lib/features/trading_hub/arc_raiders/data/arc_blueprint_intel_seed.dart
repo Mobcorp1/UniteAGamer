@@ -1,9 +1,6 @@
 import 'package:flutter/foundation.dart';
-
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
-
 enum ArcIntelConfidence { starter, community, confirmed }
-
 @immutable
 class ArcBlueprintHintData {
   const ArcBlueprintHintData({
@@ -27,7 +24,7 @@ class ArcBlueprintHintData {
   String get confidenceLabel {
     switch (confidence) {
       case ArcIntelConfidence.starter:
-        return 'Starter Hint';
+        return 'Seeded Rule';
       case ArcIntelConfidence.community:
         return 'Community Led';
       case ArcIntelConfidence.confirmed:
@@ -35,7 +32,6 @@ class ArcBlueprintHintData {
     }
   }
 }
-
 @immutable
 class _HintSeed {
   const _HintSeed({
@@ -54,9 +50,10 @@ class _HintSeed {
   final String? specialSource;
   final ArcIntelConfidence? confidence;
 }
-
 class ArcBlueprintIntelLibrary {
   ArcBlueprintIntelLibrary._();
+
+  static const List<String> allMapMarker = <String>['All maps'];
 
   static ArcBlueprintHintData resolve(ArcBlueprint blueprint) {
     final categorySeed = _categorySeeds[blueprint.category] ?? const _HintSeed();
@@ -64,25 +61,26 @@ class ArcBlueprintIntelLibrary {
 
     return ArcBlueprintHintData(
       blueprintId: blueprint.id,
-      tip: specificSeed?.tip ?? blueprint.intelHint,
-      likelyContainers: _mergeUnique(
-        categorySeed.likelyContainers,
-        specificSeed?.likelyContainers,
-      ),
-      likelyMaps: _mergeUnique(
-        categorySeed.likelyMaps,
-        specificSeed?.likelyMaps,
-      ),
-      bestConditions: _mergeUnique(
-        categorySeed.bestConditions,
-        specificSeed?.bestConditions,
-      ),
+      tip: specificSeed?.tip ?? categorySeed.tip ?? blueprint.intelHint,
+      likelyContainers: _mergeUnique(categorySeed.likelyContainers, specificSeed?.likelyContainers),
+      likelyMaps: _mergeUnique(categorySeed.likelyMaps, specificSeed?.likelyMaps),
+      bestConditions: _mergeUnique(categorySeed.bestConditions, specificSeed?.bestConditions),
       specialSource: specificSeed?.specialSource ?? categorySeed.specialSource,
-      confidence:
-          specificSeed?.confidence ??
-          categorySeed.confidence ??
-          ArcIntelConfidence.starter,
+      confidence: specificSeed?.confidence ?? categorySeed.confidence ?? ArcIntelConfidence.starter,
     );
+  }
+
+  static bool isAllMaps(List<String> maps) {
+    return maps.isEmpty || maps.any((map) => map.toLowerCase() == 'all maps' || map.toLowerCase() == 'all');
+  }
+
+  static bool isAnyCondition(String condition) {
+    final value = condition.toLowerCase();
+    return value == 'any' || value == 'any condition' || value == 'day raid';
+  }
+
+  static List<String> playableConditions(List<String> conditions) {
+    return conditions.where((condition) => !isAnyCondition(condition) && condition.toLowerCase() != 'quest').toList(growable: false);
   }
 
   static List<String> _mergeUnique(List<String> base, List<String>? overrides) {
@@ -95,181 +93,674 @@ class ArcBlueprintIntelLibrary {
 
   static const Map<String, _HintSeed> _categorySeeds = {
     'Attachments': _HintSeed(
-      likelyContainers: ['Weapon Cases', 'Weapon Lockers', 'Duffel Bags', 'Residential Containers'],
-      likelyMaps: ['Blue Gate', 'Buried City', 'Dam Battlegrounds'],
-      bestConditions: ['Night Raid', 'Cold Snap', 'Electromagnetic Storm'],
+      tip: 'Attachment baseline. Use seeded container/category rules first, then let community intel narrow the best map and route.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Weapons': _HintSeed(
-      likelyContainers: ['Raider Caches', 'Weapon Cases', 'Locked Rooms', 'High-Value Containers'],
-      likelyMaps: ['Dam Battlegrounds', 'Blue Gate', 'Spaceport'],
-      bestConditions: ['Night Raid', 'Matriarch', 'Harvester'],
+      tip: 'Weapon baseline. Use seeded raider-container rules first, then let community intel narrow the best route.',
+      likelyContainers: <String>['Raider Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Gadgets': _HintSeed(
-      likelyContainers: ['Military Crates', 'Tool Lockers', 'Industrial Containers'],
-      likelyMaps: ['Dam Battlegrounds', 'Spaceport', 'Stella Montis'],
-      bestConditions: ['Night Raid', 'Electromagnetic Storm'],
+      tip: 'Gadget baseline. Use seeded industrial/general loot rules first, then let community intel narrow the best route.',
+      likelyContainers: <String>['Industrial Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Utility': _HintSeed(
-      likelyContainers: ['Lockers', 'Duffel Bags', 'Trash Containers', 'Civilian Containers'],
-      likelyMaps: ['Blue Gate', 'Buried City', 'Dam Battlegrounds'],
-      bestConditions: ['Night Raid', 'Cold Snap'],
+      tip: 'Utility baseline. Broad loot until community intel narrows it.',
+      likelyContainers: <String>['General Containers', 'Utility Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Consumables': _HintSeed(
-      likelyContainers: ['Medical Cabinets', 'Support Containers', 'Clinic Rooms'],
-      likelyMaps: ['Buried City', 'Stella Montis', 'Blue Gate'],
-      bestConditions: ['Night Raid', 'Cold Snap'],
+      tip: 'Consumable baseline. Search medical/support containers first.',
+      likelyContainers: <String>['Medical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Support': _HintSeed(
-      likelyContainers: ['Medical Cabinets', 'Support Containers', 'Clinic Rooms'],
-      likelyMaps: ['Buried City', 'Stella Montis'],
-      bestConditions: ['Night Raid', 'Cold Snap'],
+      tip: 'Support baseline. Search medical/support containers first.',
+      likelyContainers: <String>['Medical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Parts': _HintSeed(
-      likelyContainers: ['Industrial Crates', 'Tool Lockers', 'Mechanical Containers'],
-      likelyMaps: ['Dam Battlegrounds', 'Spaceport', 'Stella Montis'],
-      bestConditions: ['Electromagnetic Storm', 'Hurricane', 'Night Raid'],
+      tip: 'Parts baseline. Search raider and weapon-part containers first.',
+      likelyContainers: <String>['Raider Containers', 'Weapon Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Grenades': _HintSeed(
-      likelyContainers: ['Military Crates', 'Tactical Cases', 'Industrial Containers'],
-      likelyMaps: ['Dam Battlegrounds', 'Spaceport', 'Buried City'],
-      bestConditions: ['Night Raid', 'Matriarch'],
+      tip: 'Grenade baseline. Search industrial/electrical/tactical loot first depending on grenade type.',
+      likelyContainers: <String>['Industrial Containers', 'Electrical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'Deployables': _HintSeed(
+      tip: 'Deployable baseline. Use the seeded condition rule first, then let community intel narrow exact containers.',
+      likelyContainers: <String>['General Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Tactical Mods': _HintSeed(
-      likelyContainers: ['Support Containers', 'Weapon Cases', 'Locked Rooms'],
-      likelyMaps: ['Blue Gate', 'Dam Battlegrounds', 'Stella Montis'],
-      bestConditions: ['Night Raid', 'Cold Snap'],
+      tip: 'Mk.3 tactical baseline. Prioritise high-tier medical/security routes, especially during Night Raid.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Combat Mods': _HintSeed(
-      likelyContainers: ['Weapon Cases', 'Locked Rooms', 'Raider Caches'],
-      likelyMaps: ['Dam Battlegrounds', 'Blue Gate', 'Spaceport'],
-      bestConditions: ['Night Raid', 'Electromagnetic Storm'],
+      tip: 'Mk.3 combat baseline. Prioritise high-tier medical/security routes, especially during Night Raid.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
       confidence: ArcIntelConfidence.starter,
     ),
     'Looting Mods': _HintSeed(
-      likelyContainers: ['Locked Rooms', 'Raider Caches', 'High-Value Containers'],
-      likelyMaps: ['Blue Gate', 'Spaceport', 'Dam Battlegrounds'],
-      bestConditions: ['Night Raid', 'Matriarch', 'Harvester'],
+      tip: 'Mk.3 looting baseline. Search medical/security routes and high-tier containers, with Night Raid as the safest seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'Riven Tides': _HintSeed(
+      tip: 'Riven Tides baseline. Keep map-linked to Riven Tides; Beachcombing is a boost, not a requirement.',
+      likelyContainers: <String>['Standard Loot Containers', 'Crates', 'Cabinets', 'Drawers', 'Green Containers'],
+      likelyMaps: <String>['Riven Tides'],
+      bestConditions: <String>['Beachcombing'],
       confidence: ArcIntelConfidence.starter,
     ),
   };
 
   static const Map<String, _HintSeed> _specificSeeds = {
-    'stable-stock-iii': _HintSeed(
-      tip: 'Likely attachment-pool drop. Test residential containers, lockers, and weapon cases first, then compare Night Raid runs against Cold Snap routes.',
-      likelyContainers: ['Residential Containers', 'Lockers', 'Weapon Cases'],
-      likelyMaps: ['Blue Gate', 'Buried City', 'Dam Battlegrounds'],
-      bestConditions: ['Night Raid', 'Cold Snap'],
-      confidence: ArcIntelConfidence.community,
+    'angled-grip-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'aphelion': _HintSeed(
-      tip: 'This one is boss-linked rather than general loot-pool hunting. Prioritize Matriarch event runs and secure the boss core immediately.',
-      likelyMaps: ['Blue Gate', 'Dam Battlegrounds', 'Spaceport'],
-      bestConditions: ['Matriarch'],
-      specialSource: 'Matriarch boss core. Known Matriarch locations include The Breach, Launch Towers, and the Blue Gate area between Ridgeline and Warehouse Complex.',
-      confidence: ArcIntelConfidence.confirmed,
+    'angled-grip-iii': _HintSeed(
+      tip: 'Condition-boosted attachment blueprint. Start with residential/attachment loot and prioritise storm, locked-gate, and night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
     ),
     'anvil': _HintSeed(
-      tip: 'Best tested route is the raider container pocket on Dam Battlegrounds. If that route is contested, Buried City backup runs are worth testing.',
-      likelyContainers: ['Raider Containers', 'Weapon Cases', 'Raider Backpacks'],
-      likelyMaps: ['Dam Battlegrounds', 'Buried City'],
-      bestConditions: ['Night Raid'],
-      specialSource: 'Strong reported route: Dam Battlegrounds under the raised highway between Raider Outpost East and East Broken Bridge. Alt lead: Marano Station on Buried City.',
-      confidence: ArcIntelConfidence.confirmed,
+      tip: 'Weapon blueprint baseline. Search raider containers on any map.',
+      likelyContainers: <String>['Raider Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'shotgun-silencer': _HintSeed(
-      tip: 'Can still be tracked through community reports, but there is also a project-reward path worth prioritizing if you are progressing permanent unlocks.',
-      likelyMaps: ['Spaceport', 'Buried City', 'Stella Montis'],
-      specialSource: 'Also appears as a Trophy Display project reward.',
-      confidence: ArcIntelConfidence.confirmed,
+    'aphelion': _HintSeed(
+      tip: 'Stella Montis baseline. Treat as Stella Montis-only until community reports prove otherwise.',
+      likelyContainers: <String>['General Containers', 'High-Value Containers'],
+      likelyMaps: <String>['Stella Montis'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'light-gun-parts': _HintSeed(
-      tip: 'Industrial and weapon-part routes are still worth testing, but keep project rewards in mind because this one has a progression unlock path too.',
-      specialSource: 'Also appears as a Trophy Display project reward.',
-      confidence: ArcIntelConfidence.confirmed,
+    'barricade-kit': _HintSeed(
+      tip: 'Electrical utility baseline. Search electrical containers on any map.',
+      likelyContainers: <String>['Electrical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'snap-hook': _HintSeed(
-      tip: 'Keep this flagged as both a utility-route chase and a progression reward. If report volume is low, lean on the project path first.',
-      likelyMaps: ['Blue Gate', 'Dam Battlegrounds'],
-      bestConditions: ['Electromagnetic Storm'],
-      specialSource: 'Also appears as a Trophy Display project reward.',
-      confidence: ArcIntelConfidence.confirmed,
+    'bettina': _HintSeed(
+      tip: 'Weapon blueprint baseline. Search raider containers on any map.',
+      likelyContainers: <String>['Raider Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'wolfpack': _HintSeed(
-      tip: 'Prioritize Night Raid testing and compare rare weapon routes rather than broad container farming. This one is worth validating through community finds.',
-      bestConditions: ['Night Raid'],
-      confidence: ArcIntelConfidence.community,
+    'blaze-grenade': _HintSeed(
+      tip: 'Industrial grenade baseline. Search industrial containers on any map.',
+      likelyContainers: <String>['Industrial Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'equalizer': _HintSeed(
-      tip: 'Treat this as a high-end chase blueprint. Focus boss/event-heavy sessions and only commit hard grind time when stronger community reports stack up.',
-      likelyMaps: ['Dam Battlegrounds', 'Spaceport'],
-      bestConditions: ['Harvester', 'Matriarch'],
-      confidence: ArcIntelConfidence.community,
+    'blue-light-stick': _HintSeed(
+      tip: 'Common utility baseline. Can appear broadly, so planner should not force a single map or event.',
+      likelyContainers: <String>['General Containers', 'Utility Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'jupiter': _HintSeed(
-      tip: 'This one is worth tracking through event-heavy weapon routes. If you get Matriarch-linked reports, prioritize them over generic weapon-case runs.',
-      likelyMaps: ['Blue Gate', 'Dam Battlegrounds', 'Spaceport'],
-      bestConditions: ['Matriarch'],
-      confidence: ArcIntelConfidence.community,
+    'bobcat': _HintSeed(
+      tip: 'Condition-linked weapon baseline. Prioritise Hurricane and Locked Gate windows; First Wave Cache is a strong source when available.',
+      likelyContainers: <String>['First Wave Cache', 'General Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Hurricane', 'Locked Gate'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'vita-spray': _HintSeed(
-      tip: 'Start with medical and support interiors. Compare hospital-style spaces against cleaner high-value research routes, especially on Night Raid.',
-      likelyContainers: ['Medical Cabinets', 'Support Containers', 'Clinic Rooms'],
-      likelyMaps: ['Buried City', 'Stella Montis'],
-      bestConditions: ['Night Raid', 'Cold Snap'],
-      confidence: ArcIntelConfidence.community,
+    'burletta': _HintSeed(
+      tip: 'Quest baseline. Treat as quest/progression source rather than normal loot until app intel confirms repeat drops.',
+      likelyContainers: <String>['Quest Reward'],
+      likelyMaps: <String>[],
+      bestConditions: <String>['Quest'],
+      specialSource: 'Industrial Espionage quest.',
+      confidence: ArcIntelConfidence.starter,
     ),
-    'defibrillator': _HintSeed(
-      tip: 'Best treated as a support/medical chase. Test medical cabinets and support rooms before broad container routes.',
-      likelyContainers: ['Medical Cabinets', 'Support Containers'],
-      likelyMaps: ['Buried City', 'Stella Montis'],
-      bestConditions: ['Night Raid', 'Cold Snap'],
-      confidence: ArcIntelConfidence.community,
+    'canto': _HintSeed(
+      tip: 'Hurricane baseline. Prioritise Hurricane windows and First Wave Cache routes.',
+      likelyContainers: <String>['First Wave Cache'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Hurricane'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'combat-mk-3-aggressive': _HintSeed(
+      tip: 'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'combat-mk-3-flanking': _HintSeed(
+      tip: 'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'compensator-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'compensator-iii': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
     ),
     'complex-gun-parts': _HintSeed(
-      tip: 'Aim at industrial and mechanical loot routes first. This one is a good benchmark for Dam and Spaceport comparison testing.',
-      likelyContainers: ['Industrial Crates', 'Tool Lockers', 'Mechanical Containers'],
-      likelyMaps: ['Dam Battlegrounds', 'Spaceport', 'Stella Montis'],
-      bestConditions: ['Electromagnetic Storm', 'Hurricane'],
-      confidence: ArcIntelConfidence.community,
+      tip: 'Gun-parts baseline. Search raider/weapon-part routes on any map.',
+      likelyContainers: <String>['Raider Containers', 'Weapon Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
-    'medium-gun-parts': _HintSeed(
-      tip: 'Good test item for route quality. Run short industrial loops and compare Dam versus Spaceport before widening the search.',
-      confidence: ArcIntelConfidence.community,
+    'crash-mat': _HintSeed(
+      tip: 'Riven Tides baseline. Map-linked to Riven Tides; Beachcombing is a useful boost, not a requirement.',
+      likelyContainers: <String>['Standard Loot Containers', 'Crates', 'Cabinets', 'Drawers', 'Green Containers'],
+      likelyMaps: <String>['Riven Tides'],
+      bestConditions: <String>['Beachcombing'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'deadline': _HintSeed(
+      tip: 'Stella Montis baseline. Treat as Stella Montis-only until community reports prove otherwise.',
+      likelyContainers: <String>['General Containers', 'High-Value Containers'],
+      likelyMaps: <String>['Stella Montis'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'defibrillator': _HintSeed(
+      tip: 'Medical support baseline. Search medical containers on any map.',
+      likelyContainers: <String>['Medical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'dolabra': _HintSeed(
+      tip: 'Close Scrutiny baseline. This is source-linked to ARC Assessor during Close Scrutiny; do not route it through normal generic loot.',
+      likelyContainers: <String>['ARC Assessor'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Close Scrutiny'],
+      specialSource: 'ARC Assessor source during Close Scrutiny.',
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'equalizer': _HintSeed(
+      tip: 'Harvester-linked baseline. Prioritise Harvester windows and Harvester sources.',
+      likelyContainers: <String>['Harvester'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Harvester'],
+      specialSource: 'Harvester source.',
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'explosive-mine': _HintSeed(
+      tip: 'Industrial gadget baseline. Search industrial containers on any map.',
+      likelyContainers: <String>['Industrial Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'extended-barrel': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'extended-light-mag-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'extended-light-mag-iii': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'extended-medium-mag-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map; Night Raid can still be used as a general boost.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'extended-medium-mag-iii': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'extended-shotgun-mag-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'extended-shotgun-mag-iii': _HintSeed(
+      tip: 'Condition-boosted attachment blueprint. Use the seeded baseline first: residential/attachment loot, then prioritise active storm, locked-gate, or night windows until community reports narrow it.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'fireworks-box': _HintSeed(
+      tip: 'Cold Snap baseline. Prioritise Cold Snap when available; otherwise keep this as broad utility intel until reports narrow it.',
+      likelyContainers: <String>['General Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Cold Snap'],
+      specialSource: 'Also appears via Test Case quest.',
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'gas-mine': _HintSeed(
+      tip: 'Stella Montis baseline. Treat as Stella Montis-only until community reports prove otherwise.',
+      likelyContainers: <String>['General Containers', 'High-Value Containers'],
+      likelyMaps: <String>['Stella Montis'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'green-light-stick': _HintSeed(
+      tip: 'Common utility baseline. Can appear broadly, so planner should not force a single map or event.',
+      likelyContainers: <String>['General Containers', 'Utility Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
     'heavy-gun-parts': _HintSeed(
-      tip: 'Stick to industrial and mechanical interiors. If you are not seeing parts there, your route is probably too broad.',
-      confidence: ArcIntelConfidence.community,
+      tip: 'Gun-parts baseline. Search raider/weapon-part routes on any map.',
+      likelyContainers: <String>['Raider Containers', 'Weapon Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
     'hullcracker': _HintSeed(
-      tip: 'Legendary chase. Focus rare-weapon routes, Raider caches, and event-active sessions rather than normal broad looting.',
-      likelyMaps: ['Dam Battlegrounds', 'Blue Gate', 'Spaceport'],
-      bestConditions: ['Matriarch', 'Harvester', 'Night Raid'],
-      confidence: ArcIntelConfidence.community,
-    ),
-    'showstopper': _HintSeed(
-      tip: 'Another high-end weapon chase. Only trust stronger report clusters and keep rare cache routes at the center of your testing.',
-      confidence: ArcIntelConfidence.community,
-    ),
-    'venator': _HintSeed(
-      tip: 'Treat as a confidence-based chase item. Event-active runs and confirmed cache reports matter more than generic weapon-case farming.',
-      confidence: ArcIntelConfidence.community,
-    ),
-    'vulcano': _HintSeed(
-      tip: 'High-tier weapon route. Test rare loot zones and boss/event sessions first, then compare against locked-room runs.',
-      confidence: ArcIntelConfidence.community,
+      tip: 'Quest baseline. Treat as quest/progression source rather than normal loot until app intel confirms repeat drops.',
+      likelyContainers: <String>['Quest Reward'],
+      likelyMaps: <String>[],
+      bestConditions: <String>['Quest'],
+      specialSource: 'The Major’s Footlocker quest.',
+      confidence: ArcIntelConfidence.starter,
     ),
     'il-toro': _HintSeed(
-      tip: 'Heavy legendary chase. Start with the best rare-weapon routes you know and only broaden out after a few event sessions.',
-      confidence: ArcIntelConfidence.community,
+      tip: 'Weapon blueprint baseline. Search raider containers on any map.',
+      likelyContainers: <String>['Raider Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'jolt-mine': _HintSeed(
+      tip: 'Industrial gadget baseline. Search industrial containers on any map.',
+      likelyContainers: <String>['Industrial Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'jupiter': _HintSeed(
+      tip: 'Harvester-linked baseline. Prioritise Harvester windows and Harvester sources.',
+      likelyContainers: <String>['Harvester'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Harvester'],
+      specialSource: 'Harvester source.',
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'light-gun-parts': _HintSeed(
+      tip: 'Gun-parts baseline. Search raider/weapon-part routes on any map.',
+      likelyContainers: <String>['Raider Containers', 'Weapon Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'lightweight-stock': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'looting-mk-3-safekeeper': _HintSeed(
+      tip: 'Mk.3 looting augment baseline. Search medical/security containers on any map, with Night Raid as a useful seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'looting-mk-3-survivor': _HintSeed(
+      tip: 'Mk.3 looting augment baseline. Search medical/security containers on any map, with Night Raid as a useful seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'lure-grenade': _HintSeed(
+      tip: 'Quest baseline. Treat as quest/progression source rather than normal loot until app intel confirms repeat drops.',
+      likelyContainers: <String>['Quest Reward'],
+      likelyMaps: <String>[],
+      bestConditions: <String>['Quest'],
+      specialSource: 'Greasing Her Palms quest.',
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'medium-gun-parts': _HintSeed(
+      tip: 'Gun-parts baseline. Search raider/weapon-part routes on any map.',
+      likelyContainers: <String>['Raider Containers', 'Weapon Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'muzzle-brake-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'muzzle-brake-iii': _HintSeed(
+      tip: 'Condition-boosted attachment blueprint. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'osprey': _HintSeed(
+      tip: 'Weapon blueprint baseline. Search raider containers on any map.',
+      likelyContainers: <String>['Raider Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'padded-stock': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, night, or hidden bunker windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid', 'Hidden Bunker'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'powered-descender': _HintSeed(
+      tip: 'Riven Tides baseline. Map-linked to Riven Tides; Beachcombing is a useful boost, not a requirement.',
+      likelyContainers: <String>['Standard Loot Containers', 'Crates', 'Cabinets', 'Drawers', 'Green Containers'],
+      likelyMaps: <String>['Riven Tides'],
+      bestConditions: <String>['Beachcombing'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'pulse-mine': _HintSeed(
+      tip: 'Stella Montis baseline. Treat as a Stella Montis blueprint until community reports prove wider drops.',
+      likelyContainers: <String>['General Containers', 'High-Value Containers'],
+      likelyMaps: <String>['Stella Montis'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'red-light-stick': _HintSeed(
+      tip: 'Common utility baseline. Can appear broadly, so planner should not force a single map or event.',
+      likelyContainers: <String>['General Containers', 'Utility Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'remote-raider-flare': _HintSeed(
+      tip: 'Electrical utility baseline. Search electrical containers on any map.',
+      likelyContainers: <String>['Electrical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'seeker-grenade': _HintSeed(
+      tip: 'Stella Montis baseline. Treat as Stella Montis-only until community reports prove otherwise.',
+      likelyContainers: <String>['General Containers', 'High-Value Containers'],
+      likelyMaps: <String>['Stella Montis'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'shotgun-choke-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'shotgun-choke-iii': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'shotgun-silencer': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, night, or hidden bunker windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid', 'Hidden Bunker'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'showstopper': _HintSeed(
+      tip: 'Industrial gadget baseline. Search industrial containers on any map.',
+      likelyContainers: <String>['Industrial Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'silencer-i': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'silencer-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map, then let community reports refine the best route.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'smoke-grenade': _HintSeed(
+      tip: 'Residential utility baseline. Search residential containers on any map.',
+      likelyContainers: <String>['Residential Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'snap-hook': _HintSeed(
+      tip: 'Electromagnetic Storm baseline. Prioritise storm windows on any map.',
+      likelyContainers: <String>['General Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'stable-stock-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'stable-stock-iii': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'surge-coil': _HintSeed(
+      tip: 'Electromagnetic Storm baseline. Prioritise storm windows; exact container should remain community-driven until confirmed by app reports.',
+      likelyContainers: <String>['General Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'tactical-mk-3-defensive': _HintSeed(
+      tip: 'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'tactical-mk-3-healing': _HintSeed(
+      tip: 'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'tactical-mk-3-revival': _HintSeed(
+      tip: 'Mk.3 augment baseline. Prioritise Stella Montis and Blue Gate, with Night Raid as the best seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'tactical-mk-3-smoke': _HintSeed(
+      tip: 'Mk.3 smoke baseline. Treat as high-tier Mk.3 loot, not Riven-only. Prioritise Stella Montis and Blue Gate with Night Raid as the strongest seeded boost.',
+      likelyContainers: <String>['Medical Containers', 'Security Containers', 'High-Tier Containers'],
+      likelyMaps: <String>['Stella Montis', 'The Blue Gate'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'tagging-grenade': _HintSeed(
+      tip: 'Electrical utility baseline. Search electrical containers on any map.',
+      likelyContainers: <String>['Electrical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'tempest': _HintSeed(
+      tip: 'Condition-linked weapon baseline. Prioritise Night Raid and Hurricane windows; First Wave Cache is a strong source when available.',
+      likelyContainers: <String>['Residential Containers', 'First Wave Cache'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Night Raid', 'Hurricane'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'torrente': _HintSeed(
+      tip: 'Weapon blueprint baseline. Search raider containers on any map.',
+      likelyContainers: <String>['Raider Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'trailblazer': _HintSeed(
+      tip: 'Stella Montis baseline. Treat as Stella Montis-only until community reports prove otherwise.',
+      likelyContainers: <String>['General Containers', 'High-Value Containers'],
+      likelyMaps: <String>['Stella Montis'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'trigger-nade': _HintSeed(
+      tip: 'Grenade baseline. Search broad grenade/tactical loot first; keep Sparks Fly quest as a progression source.',
+      likelyContainers: <String>['General Containers', 'Grenade Containers', 'Tactical Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      specialSource: 'Also appears via Sparks Fly quest.',
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'venator': _HintSeed(
+      tip: 'Weapon blueprint baseline. Search raider containers on any map.',
+      likelyContainers: <String>['Raider Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'vertical-grip-ii': _HintSeed(
+      tip: 'Standard attachment baseline. Search residential/attachment containers on any map.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'vertical-grip-iii': _HintSeed(
+      tip: 'Condition-boosted attachment baseline. Search residential/attachment containers during storm, locked-gate, or night windows.',
+      likelyContainers: <String>['Residential Containers', 'Attachment Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Electromagnetic Storm', 'Locked Gate', 'Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'vita-shot': _HintSeed(
+      tip: 'Medical consumable baseline. Search medical containers and ARC Surveyor sources on any map.',
+      likelyContainers: <String>['Medical Containers', 'ARC Surveyor'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'vita-spray': _HintSeed(
+      tip: 'Medical consumable baseline. Search medical containers and ARC Surveyor sources; any map unless community intel narrows it.',
+      likelyContainers: <String>['Medical Containers', 'ARC Surveyor'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      specialSource: 'Also appears via Worth Your Salt quest.',
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'vulcano': _HintSeed(
+      tip: 'Condition-linked weapon baseline. Prioritise Hurricane and Hidden Bunker windows.',
+      likelyContainers: <String>['First Wave Cache', 'High-Value Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Hurricane', 'Hidden Bunker'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'white-flag': _HintSeed(
+      tip: 'Riven Tides baseline. Map-linked to Riven Tides; Beachcombing is a useful boost, not a requirement.',
+      likelyContainers: <String>['Standard Loot Containers', 'Crates', 'Cabinets', 'Drawers', 'Green Containers'],
+      likelyMaps: <String>['Riven Tides'],
+      bestConditions: <String>['Beachcombing'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'wolfpack': _HintSeed(
+      tip: 'Night Raid baseline. Prioritise Night Raid residential routes.',
+      likelyContainers: <String>['Residential Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Night Raid'],
+      confidence: ArcIntelConfidence.starter,
+    ),
+    'yellow-light-stick': _HintSeed(
+      tip: 'Common utility baseline. Can appear broadly, so planner should not force a single map or event.',
+      likelyContainers: <String>['General Containers', 'Utility Containers'],
+      likelyMaps: <String>['All maps'],
+      bestConditions: <String>['Any'],
+      confidence: ArcIntelConfidence.starter,
     ),
   };
 }

@@ -8,7 +8,9 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 class TradingMyListingsScreen extends StatelessWidget {
   static const routeName = '/trading-hub/arc-raiders/my-listings';
 
-  const TradingMyListingsScreen({super.key});
+  const TradingMyListingsScreen({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   Widget _statusChip(TradingListing listing) {
     final color = listing.active ? AppTheme.neonCyan : Colors.white54;
@@ -83,51 +85,59 @@ class TradingMyListingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildBody(BuildContext context, TradingRepository repository) {
+    return Stack(
+      children: [
+        const Positioned.fill(child: StaticWatermark()),
+        SafeArea(
+          child: StreamBuilder<List<TradingListing>>(
+            stream: repository.watchMyListings(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: AppTheme.neonCyan));
+              }
+
+              final items = snapshot.data ?? const <TradingListing>[];
+              if (items.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: AppTheme.pagePadding,
+                    child: Text(
+                      'No listings yet. Create your first listing from the Trader Hub.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.tradingMutedText, fontSize: 16),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView(
+                padding: AppTheme.pagePadding,
+                children: [
+                  for (final item in items) _listingCard(context, repository, item),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final repository = TradingRepository();
+
+    if (!showAppBar) {
+      return _buildBody(context, repository);
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text('My Listings', style: AppTheme.tradingHeading(fontSize: 25)),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: StreamBuilder<List<TradingListing>>(
-              stream: repository.watchMyListings(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: AppTheme.neonCyan));
-                }
-
-                final items = snapshot.data ?? const <TradingListing>[];
-                if (items.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: AppTheme.pagePadding,
-                      child: Text(
-                        'No listings yet. Create your first listing from the ARC Raiders Hub.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.tradingMutedText, fontSize: 16),
-                      ),
-                    ),
-                  );
-                }
-
-                return ListView(
-                  padding: AppTheme.pagePadding,
-                  children: [
-                    for (final item in items) _listingCard(context, repository, item),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+      body: _buildBody(context, repository),
     );
   }
 }

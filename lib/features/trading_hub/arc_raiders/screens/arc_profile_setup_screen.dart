@@ -32,6 +32,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
   bool _crossPlatformOk = true;
   bool _affiliateEnabled = false;
   bool _isSaving = false;
+  bool _isLoadingProfile = true;
   String _payoutMethod = 'Bank Transfer';
 
   static const List<String> _payoutMethods = <String>[
@@ -51,6 +52,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
     _platformController = TextEditingController();
     _timezoneController = TextEditingController(text: 'Europe/London');
     _referredByController = TextEditingController();
+    _loadProfile();
   }
 
   @override
@@ -63,6 +65,35 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
     _timezoneController.dispose();
     _referredByController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await _repository.getProfile();
+      if (!mounted) return;
+
+      _uagIdController.text = profile.uagId;
+      _uagNameController.text = profile.uagName;
+      _embarkIdController.text = profile.embarkId;
+      _regionController.text = profile.region.isEmpty ? 'UK' : profile.region;
+      _platformController.text = profile.platform;
+      _timezoneController.text =
+          profile.timezone.isEmpty ? 'Europe/London' : profile.timezone;
+      _referredByController.text = profile.referredByCode;
+      _visibleInSearch = profile.visibleInSearch;
+      _micOk = profile.micOk;
+      _crossRegionOk = profile.crossRegionOk;
+      _crossPlatformOk = profile.crossPlatformOk;
+      _affiliateEnabled = profile.affiliateEnabled;
+      _payoutMethod = profile.payoutMethod.isEmpty
+          ? 'Bank Transfer'
+          : profile.payoutMethod;
+
+      setState(() => _isLoadingProfile = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingProfile = false);
+    }
   }
 
   Future<void> _save() async {
@@ -130,7 +161,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
               _field(
                 _uagIdController,
                 'UAG ID',
-                helperText: 'Auto-assigned numeric trader ID',
+                helperText: _isLoadingProfile
+                    ? 'Loading reserved UAG ID...'
+                    : 'Auto-assigned reserved trader ID',
                 enabled: false,
               ),
               _field(

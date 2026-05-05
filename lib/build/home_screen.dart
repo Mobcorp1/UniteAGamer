@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: AnimatedTextKit(
               animatedTexts: [
                 AppTheme.animatedText(
-                  'UAG Traders Hub',
+                  'UAG Raiders Hub',
                   Theme.of(context).appBarTheme.titleTextStyle,
                 ),
               ],
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       AnimatedTextKit(
                         animatedTexts: [
                           TypewriterAnimatedText(
-                            'UAG Traders Hub',
+                            'UAG Raiders Hub',
                             textStyle: _heroStyle(screenWidth),
                             speed: const Duration(milliseconds: 85),
                           ),

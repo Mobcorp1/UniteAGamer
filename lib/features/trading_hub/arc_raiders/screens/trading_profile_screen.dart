@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:uag_traders_hub/build/app_bar.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
@@ -13,7 +14,9 @@ import '../screens/arc_profile_setup_screen.dart';
 class TradingProfileScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile';
 
-  const TradingProfileScreen({super.key});
+  const TradingProfileScreen({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   State<TradingProfileScreen> createState() => _TradingProfileScreenState();
@@ -109,7 +112,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     if (_initError != null) {
       return Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        appBar: AppBar(title: const Text('Trader Profile')),
+        appBar: widget.showAppBar ? const UagAppBar(title: 'Trader Profile', subtitle: 'Identity, visibility, availability and referral tools.') : null,
         body: Center(
           child: Container(
             margin: const EdgeInsets.all(AppTheme.spaceL),
@@ -141,7 +144,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Trader Profile')),
+      appBar: widget.showAppBar ? const UagAppBar(title: 'Trader Profile', subtitle: 'Identity, visibility, availability and referral tools.') : null,
       body: SafeArea(
         child: StreamBuilder<ArcTraderProfile>(
           stream: _repository.watchProfile(),

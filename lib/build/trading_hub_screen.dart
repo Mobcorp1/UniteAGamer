@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_traders_hub/build/app_bar.dart';
+import 'package:uag_traders_hub/build/app_drawer.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
@@ -48,16 +50,11 @@ class TradingHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        title: Text(
-          'UAG Traders Hub',
-          style: AppTheme.neonTextStyle(
-            fontSize: 25,
-            color: AppTheme.neonCyan,
-            isBold: true,
-          ),
-        ),
+      appBar: const UagAppBar(
+        title: 'UAG Traders Hub',
+        subtitle: 'Choose a live game hub and keep the app shell consistent across the project.',
       ),
+      drawer: const AppDrawer(),
       body: Stack(
         children: [
           const Positioned.fill(child: StaticWatermark()),

@@ -32,70 +32,80 @@ class ScrappyTile extends StatelessWidget {
     final accent = owned ? tierColor : Colors.white24;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
         decoration: AppTheme.tradingCardDecoration(
-          radius: 14,
-          borderColor: accent.withValues(alpha: owned ? 0.55 : 0.14),
+          radius: 12,
+          borderColor: accent.withValues(alpha: owned ? 0.52 : 0.14),
           backgroundColor: owned
               ? AppTheme.cardBackgroundAlt
               : AppTheme.cardBackgroundDeep,
         ),
         child: Padding(
-          padding: EdgeInsets.all(landscape ? 6 : 8),
+          padding: const EdgeInsets.all(6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Container(
+                  width: double.infinity,
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: accent.withValues(alpha: 0.24)),
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(color: accent.withValues(alpha: 0.22)),
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppTheme.cardBackgroundAlt, AppTheme.cardBackgroundDeep],
+                      colors: [
+                        AppTheme.cardBackgroundAlt,
+                        AppTheme.cardBackgroundDeep,
+                      ],
                     ),
                   ),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Image.asset(
-                        item.imageAsset,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.inventory_2_rounded,
-                            color: owned ? accent : Colors.white38,
-                            size: landscape ? 26 : 34,
-                          );
-                        },
-                      ),
-                    ),
+                  child: Image.asset(
+                    item.imageAsset,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    filterQuality: FilterQuality.high,
+                    isAntiAlias: true,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Center(
+                        child: Icon(
+                          Icons.inventory_2_rounded,
+                          color: owned ? accent : Colors.white38,
+                          size: landscape ? 22 : 28,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
-              SizedBox(height: landscape ? 4 : 8),
+              const SizedBox(height: 5),
               Text(
                 item.name,
-                maxLines: landscape ? 1 : 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTheme.tradingHeading(
-                  fontSize: landscape ? 10 : 14,
+                  fontSize: landscape ? 10 : 12,
                   color: owned ? Colors.white : Colors.white70,
                 ),
               ),
-              SizedBox(height: landscape ? 3 : 6),
-              if (!landscape)
-                Text(
-                  '${item.group} • Need ${item.neededCount} • Collected ${state.collectedCount}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11),
+              const SizedBox(height: 2),
+              Text(
+                _compactGroupLabel(item.group),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: tierColor.withValues(alpha: 0.84),
+                  fontSize: landscape ? 9 : 10,
+                  fontWeight: FontWeight.w700,
                 ),
-              SizedBox(height: landscape ? 3 : 6),
+              ),
+              const SizedBox(height: 5),
               Wrap(
                 spacing: 4,
                 runSpacing: 4,
@@ -131,6 +141,14 @@ class ScrappyTile extends StatelessWidget {
       ),
     );
   }
+
+  String _compactGroupLabel(String group) {
+    final tierMatch = RegExp(r'Tier\s+(\d+)', caseSensitive: false).firstMatch(group);
+    if (tierMatch != null && group.length > 16) {
+      return 'Tier ${tierMatch.group(1)}';
+    }
+    return group;
+  }
 }
 
 class _MiniTag extends StatelessWidget {
@@ -142,13 +160,13 @@ class _MiniTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: AppTheme.tradingPillDecoration(color: color),
       child: Text(
         text,
         style: TextStyle(
           color: color,
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: FontWeight.w700,
         ),
       ),

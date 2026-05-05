@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -39,6 +40,7 @@ class TradingPushService {
   );
 
   bool _initialized = false;
+  final Map<String, Timer> _reminderTimers = <String, Timer>{};
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -160,6 +162,11 @@ class TradingPushService {
       return;
     }
 
+    if (type == 'tradeReminder') {
+      _openRoute(TradingTradeSessionsScreen.routeName);
+      return;
+    }
+
     if ((data['sessionId'] ?? '').toString().isNotEmpty ||
         type == 'sessionCreated' ||
         type == 'sessionUpdated' ||
@@ -176,6 +183,42 @@ class TradingPushService {
     final navigator = navigatorKey.currentState;
     if (navigator == null) return;
     navigator.pushNamed(routeName);
+  }
+
+
+  Future<void> scheduleTradeReminder({
+    required String sessionId,
+    required DateTime scheduledAt,
+    required String otherTraderName,
+  }) async {
+    if (kIsWeb) return;
+
+    _reminderTimers[sessionId]?.cancel();
+
+    final reminderAt = scheduledAt.subtract(const Duration(minutes: 30));
+    final delay = reminderAt.difference(DateTime.now());
+    if (delay.isNegative) return;
+
+    _reminderTimers[sessionId] = Timer(delay, () async {
+      await _localNotifications.show(
+        sessionId.hashCode,
+        'Trade starting soon',
+        'Your trade with $otherTraderName starts in 30 minutes. Open the session to confirm or rearrange.',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'trading_alerts',
+            'Trading Alerts',
+            channelDescription: 'Offer, session, booking and match notifications.',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+        payload: jsonEncode(<String, dynamic>{
+          'type': 'tradeReminder',
+          'sessionId': sessionId,
+        }),
+      );
+    });
   }
 
   Future<void> _saveCurrentToken() async {

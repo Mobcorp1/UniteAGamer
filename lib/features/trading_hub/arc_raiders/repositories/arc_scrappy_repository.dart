@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 
@@ -43,15 +44,22 @@ class ArcScrappyRepository {
     ArcScrappyState state, {
     int? neededCount,
   }) async {
-    final resolvedNeeded = neededCount ??
-        ArcScrappySeedData.items
-            .firstWhere((item) => item.id == state.itemId)
-            .neededCount;
+    final resolvedNeeded = neededCount ?? _neededCountFor(state.itemId);
 
     await _statesRef.doc(state.itemId).set(
           state.copyWith(updatedAt: DateTime.now()).toJson(neededCount: resolvedNeeded),
           SetOptions(merge: true),
         );
+  }
+
+  int _neededCountFor(String itemId) {
+    for (final item in ArcScrappySeedData.items) {
+      if (item.id == itemId) return item.neededCount;
+    }
+    for (final item in ArcBenchUpgradeSeedData.items) {
+      if (item.id == itemId) return item.neededCount;
+    }
+    return 1;
   }
 
   Future<void> resetAllScrappyStates(Iterable<String> itemIds) async {

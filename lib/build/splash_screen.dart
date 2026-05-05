@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'UAG Traders Hub',
+                    'UAG Raiders Hub',
                     textAlign: TextAlign.center,
                     style: AppTheme.heroTextStyle(
                       fontSize: screenWidth * 0.09,

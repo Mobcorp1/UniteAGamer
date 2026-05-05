@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_traders_hub/features/feature_access_gate.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_actions_menu.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_filter_bar.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_progress_header.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_traders_hub/widgets/uag_dialogs.dart';
 
 class BlueprintGridScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/blueprints';
@@ -26,20 +31,40 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   final ArcBlueprintRepository _repository = ArcBlueprintRepository();
   final TextEditingController _searchController = TextEditingController();
 
-  ArcBlueprintFilter _selectedFilter = ArcBlueprintFilter.missing;
+  ArcBlueprintFilter _selectedFilter = ArcBlueprintFilter.all;
   bool _selectionMode = false;
-  bool _showTrackerHeader = true;
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
 
   static const int _gridColumns = 10;
   static const double _landscapeSpacing = 6;
   static const double _portraitSpacing = 10;
+  static bool _introDialogShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showIntroDialogIfNeeded();
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showIntroDialogIfNeeded() async {
+    if (_introDialogShown || !mounted) return;
+    _introDialogShown = true;
+
+    await UagDialogs.info(
+      context: context,
+      title: 'Blueprint Tracker',
+      message:
+          'Tap a missing blueprint to mark it as owned. Tap an owned blueprint to add a drop report or update duplicates. Long press a tile to enter multi-select mode.',
+    );
   }
 
   List<ArcBlueprint> _applyFilter(
@@ -48,28 +73,31 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   ) {
     final normalizedQuery = _searchQuery.trim().toLowerCase();
 
-    return blueprints.where((blueprint) {
-      final state = states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+    return blueprints
+        .where((blueprint) {
+          final state =
+              states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
 
-      final matchesFilter = switch (_selectedFilter) {
-        ArcBlueprintFilter.all => true,
-        ArcBlueprintFilter.owned => state.owned,
-        ArcBlueprintFilter.missing => !state.owned,
-        ArcBlueprintFilter.duplicates => state.hasDuplicates,
-      };
+          final matchesFilter = switch (_selectedFilter) {
+            ArcBlueprintFilter.all => true,
+            ArcBlueprintFilter.owned => state.owned,
+            ArcBlueprintFilter.missing => !state.owned,
+            ArcBlueprintFilter.duplicates => state.hasDuplicates,
+          };
 
-      if (!matchesFilter) return false;
-      if (normalizedQuery.isEmpty) return true;
+          if (!matchesFilter) return false;
+          if (normalizedQuery.isEmpty) return true;
 
-      final haystack = [
-        blueprint.name,
-        blueprint.category,
-        blueprint.group,
-        blueprint.rarityLabel,
-      ].join(' ').toLowerCase();
+          final haystack = [
+            blueprint.name,
+            blueprint.category,
+            blueprint.group,
+            blueprint.rarityLabel,
+          ].join(' ').toLowerCase();
 
-      return haystack.contains(normalizedQuery);
-    }).toList(growable: false);
+          return haystack.contains(normalizedQuery);
+        })
+        .toList(growable: false);
   }
 
   Map<ArcBlueprintFilter, int> _buildCounts(
@@ -79,7 +107,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     int countWhere(bool Function(ArcBlueprintState state) predicate) {
       var count = 0;
       for (final blueprint in blueprints) {
-        final state = states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+        final state =
+            states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
         if (predicate(state)) count++;
       }
       return count;
@@ -110,10 +139,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     }
   }
 
-  void _enterSelectionMode(String blueprintId) {
+  void _enterSelectionMode([String? blueprintId]) {
     setState(() {
       _selectionMode = true;
-      _selectedBlueprintIds.add(blueprintId);
+      if (blueprintId != null) {
+        _selectedBlueprintIds.add(blueprintId);
+      }
     });
   }
 
@@ -147,31 +178,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   }
 
   Future<void> _selectRow(List<ArcBlueprint> filtered) async {
+    if (filtered.isEmpty) return;
+
     final rowCount = (filtered.length / _gridColumns).ceil();
-    final rowIndex = await showDialog<int>(
+    final rowIndex = await UagDialogs.chooseIndex(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          title: Text(
-            'Select Row',
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          content: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(rowCount, (index) {
-              return ActionChip(
-                label: Text('Row ${index + 1}'),
-                onPressed: () => Navigator.of(dialogContext).pop(index),
-              );
-            }),
-          ),
-        );
-      },
+      title: 'Select Row',
+      itemCount: rowCount,
+      labelBuilder: (index) => 'Row ${index + 1}',
     );
 
     if (rowIndex == null) return;
@@ -189,30 +203,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   }
 
   Future<void> _selectColumn(List<ArcBlueprint> filtered) async {
-    final columnIndex = await showDialog<int>(
+    if (filtered.isEmpty) return;
+
+    final columnIndex = await UagDialogs.chooseIndex(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          title: Text(
-            'Select Column',
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          content: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(_gridColumns, (index) {
-              return ActionChip(
-                label: Text('Col ${index + 1}'),
-                onPressed: () => Navigator.of(dialogContext).pop(index),
-              );
-            }),
-          ),
-        );
-      },
+      title: 'Select Column',
+      itemCount: _gridColumns,
+      labelBuilder: (index) => 'Col ${index + 1}',
     );
 
     if (columnIndex == null) return;
@@ -236,38 +233,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     String yesLabel = 'Yes',
     String noLabel = 'No',
   }) {
-    return showDialog<bool>(
+    return UagDialogs.confirm(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.20)),
-          ),
-          title: Text(
-            title,
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          content: Text(
-            message,
-            style: const TextStyle(color: Colors.white70, height: 1.35),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(noLabel),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(yesLabel),
-            ),
-          ],
-        );
-      },
+      title: title,
+      message: message,
+      confirmLabel: yesLabel,
+      cancelLabel: noLabel,
+      borderColor: AppTheme.neonCyan,
     );
   }
 
@@ -314,14 +286,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     }
   }
 
-  Future<void> _applyBulkOwned(
-    List<ArcBlueprint> allBlueprints,
-    Map<String, ArcBlueprintState> states,
-  ) async {
-    final updates = _selectedBlueprintIds.map((id) {
-      final current = states[id] ?? ArcBlueprintState.empty(id);
-      return current.copyWith(owned: true);
-    }).toList(growable: false);
+  Future<void> _applyBulkOwned(Map<String, ArcBlueprintState> states) async {
+    final updates = _selectedBlueprintIds
+        .map((id) {
+          final current = states[id] ?? ArcBlueprintState.empty(id);
+          return current.copyWith(owned: true);
+        })
+        .toList(growable: false);
 
     await _repository.saveBlueprintStates(updates);
     if (!mounted) return;
@@ -331,14 +302,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     _clearSelection();
   }
 
-  Future<void> _applyBulkDupes(
-    List<ArcBlueprint> allBlueprints,
-    Map<String, ArcBlueprintState> states,
-  ) async {
-    final updates = _selectedBlueprintIds.map((id) {
-      final current = states[id] ?? ArcBlueprintState.empty(id);
-      return current.copyWith(dupesOwned: current.dupesOwned + 1);
-    }).toList(growable: false);
+  Future<void> _applyBulkDupes(Map<String, ArcBlueprintState> states) async {
+    final updates = _selectedBlueprintIds
+        .map((id) {
+          final current = states[id] ?? ArcBlueprintState.empty(id);
+          return current.copyWith(dupesOwned: current.dupesOwned + 1);
+        })
+        .toList(growable: false);
 
     await _repository.saveBlueprintStates(updates);
     if (!mounted) return;
@@ -348,13 +318,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     _clearSelection();
   }
 
-  Future<void> _applyBulkClear(
-    List<ArcBlueprint> allBlueprints,
-    Map<String, ArcBlueprintState> states,
-  ) async {
+  Future<void> _applyBulkClear() async {
     final updates = _selectedBlueprintIds
         .map(
-          (id) => ArcBlueprintState.empty(id).copyWith(updatedAt: DateTime.now()),
+          (id) =>
+              ArcBlueprintState.empty(id).copyWith(updatedAt: DateTime.now()),
         )
         .toList(growable: false);
 
@@ -370,42 +338,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     ArcBlueprint blueprint,
     ArcBlueprintState currentState,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await UagDialogs.confirm(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.32)),
-          ),
-          title: Text(
-            'Clear ${blueprint.name}?',
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: Colors.redAccent,
-            ),
-          ),
-          content: const Text(
-            'This will remove the owned state and dupes for this single blueprint and reset it back to missing.',
-            style: TextStyle(color: Colors.white70, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.black,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Clear'),
-            ),
-          ],
-        );
-      },
+      title: 'Clear ${blueprint.name}?',
+      message:
+          'This will remove the owned state and dupes for this single blueprint and reset it back to missing.',
+      titleColor: Colors.redAccent,
+      confirmLabel: 'Clear',
+      confirmBackgroundColor: Colors.redAccent,
+      confirmForegroundColor: Colors.black,
+      borderColor: Colors.redAccent,
     );
 
     if (confirmed != true) return;
@@ -416,9 +358,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${blueprint.name} cleared.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${blueprint.name} cleared.')));
       setState(() {});
     } catch (e) {
       if (!mounted) return;
@@ -429,42 +371,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   }
 
   Future<void> _confirmResetGrid() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await UagDialogs.confirm(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.32)),
-          ),
-          title: Text(
-            'Reset Blueprint Grid?',
-            style: AppTheme.tradingHeading(
-              fontSize: 24,
-              color: Colors.redAccent,
-            ),
-          ),
-          content: const Text(
-            'This will remove all owned blueprint progress and dupes from the grid, like starting a fresh expedition run. Your grid positions and blueprint list will remain.',
-            style: TextStyle(color: Colors.white70, height: 1.45),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.black,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Confirm Reset'),
-            ),
-          ],
-        );
-      },
+      title: 'Reset Blueprint Grid?',
+      message:
+          'This will remove all owned blueprint progress and dupes from the grid, like starting a fresh expedition run. Your grid positions and blueprint list will remain.',
+      titleColor: Colors.redAccent,
+      confirmLabel: 'Confirm Reset',
+      confirmBackgroundColor: Colors.redAccent,
+      confirmForegroundColor: Colors.black,
+      borderColor: Colors.redAccent,
     );
 
     if (confirmed != true) return;
@@ -475,15 +391,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Blueprint grid reset.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Blueprint grid reset.')));
+      _clearSelection();
       setState(() {});
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not reset grid: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not reset grid: $e')));
     }
   }
 
@@ -504,9 +421,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           rarityColor: _rarityColor(blueprint.rarity),
           onSaved: () {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${blueprint.name} saved.')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('${blueprint.name} saved.')));
             setState(() {});
           },
           onClear: () => _confirmClearSingleBlueprint(blueprint, initialState),
@@ -519,154 +436,434 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     }
   }
 
-  PreferredSizeWidget _buildAppBar(
-    List<ArcBlueprint> allBlueprints,
-    List<ArcBlueprint> filtered,
-    Map<String, ArcBlueprintState> states,
-  ) {
-    if (_selectionMode) {
-      return AppBar(
-        title: Text(
-          '${_selectedBlueprintIds.length} selected',
-          style: AppTheme.tradingHeading(fontSize: 23),
+  Widget _buildSearchAppBarTitle() {
+    return SizedBox(
+      height: 42,
+      child: TextField(
+        controller: _searchController,
+        style: const TextStyle(color: Colors.white, fontSize: 15),
+        onChanged: (value) => setState(() => _searchQuery = value),
+        decoration: InputDecoration(
+          hintText: 'Search blueprints',
+          hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
+          prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70),
+          suffixIcon: _searchQuery.trim().isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Clear search',
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                ),
+          isDense: true,
+          filled: true,
+          fillColor: AppTheme.cardBackgroundAlt.withValues(alpha: 0.9),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 10,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: AppTheme.neonCyan.withValues(alpha: 0.18),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: AppTheme.neonPink.withValues(alpha: 0.55),
+            ),
+          ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: _clearSelection,
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Mark owned',
-            onPressed: _selectedBlueprintIds.isEmpty
-                ? null
-                : () => _applyBulkOwned(allBlueprints, states),
-            icon: const Icon(Icons.check_circle_rounded),
-          ),
-          IconButton(
-            tooltip: 'Add 1 dupe',
-            onPressed: _selectedBlueprintIds.isEmpty
-                ? null
-                : () => _applyBulkDupes(allBlueprints, states),
-            icon: const Icon(Icons.add_circle_outline_rounded),
-          ),
-          IconButton(
-            tooltip: 'Clear selected',
-            onPressed: _selectedBlueprintIds.isEmpty
-                ? null
-                : () => _applyBulkClear(allBlueprints, states),
-            icon: const Icon(Icons.delete_outline_rounded),
-          ),
-        ],
-      );
-    }
-
-    return AppBar(
-      title: Text(
-        'Blueprint Grid',
-        style: AppTheme.tradingHeading(fontSize: 25),
       ),
-      actions: [
-        IconButton(
-          tooltip: 'Select multiple',
-          onPressed: () {
-            setState(() {
-              _selectionMode = true;
-              _selectedBlueprintIds.clear();
-            });
-          },
-          icon: const Icon(Icons.select_all_rounded),
-        ),
-        BlueprintActionsMenu(onResetGrid: _confirmResetGrid),
-      ],
     );
   }
 
-  Future<void> _handleSelectionTool(String value, List<ArcBlueprint> filtered) async {
-    if (value == 'all') {
-      _selectAll(filtered);
-    } else if (value == 'row') {
-      await _selectRow(filtered);
-    } else if (value == 'column') {
-      await _selectColumn(filtered);
-    } else if (value == 'clear') {
-      _clearSelection();
+  Future<void> _openDockDestination({
+    required String routeName,
+    String? flag,
+    required String title,
+  }) async {
+    if (flag != null) {
+      final hasAccess = await FeatureAccess.hasAccess(flag);
+      if (!mounted) return;
+      if (!hasAccess) {
+        await FeatureAccess.showLockedDialog(context, title: title);
+        return;
+      }
     }
+
+    if (!mounted) return;
+    if (routeName == BlueprintGridScreen.routeName) return;
+    Navigator.of(context).pushReplacementNamed(routeName);
   }
 
-  Widget _buildFilterAndSearchBar(Map<ArcBlueprintFilter, int> counts, List<ArcBlueprint> filtered) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final showSideBySide = constraints.maxWidth >= 760;
-
-        final searchField = SizedBox(
-          width: showSideBySide ? 260 : double.infinity,
-          child: TextField(
-            controller: _searchController,
-            style: const TextStyle(color: Colors.white),
-            onChanged: (value) => setState(() => _searchQuery = value),
-            decoration: AppTheme.tradingInputDecoration(
-              label: 'Search blueprints',
-            ).copyWith(
-              prefixIcon: const Icon(
-                Icons.search_rounded,
-                color: Colors.white70,
-              ),
-              suffixIcon: _searchQuery.trim().isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Clear search',
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        color: Colors.white70,
-                      ),
-                    ),
+  Widget _buildQuickDock() {
+    Widget item({
+      required IconData icon,
+      required String label,
+      required bool selected,
+      required VoidCallback onTap,
+    }) {
+      final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
+      return Expanded(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: color,
+                    isBold: selected,
+                  ),
+                ),
+              ],
             ),
           ),
-        );
+        ),
+      );
+    }
 
-        if (!showSideBySide) {
-          return Column(
-            children: [
-              BlueprintFilterBar(
-                selectedFilter: _selectedFilter,
-                counts: counts,
-                selectionMode: _selectionMode,
-                onEnterSelectionMode: () => setState(() { _selectionMode = true; _selectedBlueprintIds.clear(); }),
-                onSelectionToolSelected: (value) => _handleSelectionTool(value, filtered),
-                onFilterSelected: (filter) {
-                  setState(() => _selectedFilter = filter);
-                },
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-              searchField,
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.14)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
           children: [
-            Expanded(
-              child: BlueprintFilterBar(
-                selectedFilter: _selectedFilter,
-                counts: counts,
-                selectionMode: _selectionMode,
-                onEnterSelectionMode: () => setState(() { _selectionMode = true; _selectedBlueprintIds.clear(); }),
-                onSelectionToolSelected: (value) => _handleSelectionTool(value, filtered),
-                onFilterSelected: (filter) {
-                  setState(() => _selectedFilter = filter);
-                },
+            item(
+              icon: Icons.home_rounded,
+              label: 'Hub',
+              selected: false,
+              onTap: () => _openDockDestination(
+                routeName: ArcRaidersHubScreen.routeName,
+                title: 'ARC Raiders Hub',
               ),
             ),
-            const SizedBox(width: AppTheme.spaceM),
-            searchField,
+            item(
+              icon: Icons.insights_rounded,
+              label: 'Intel',
+              selected: false,
+              onTap: () => _openDockDestination(
+                routeName: ArcMarketIntelligenceScreen.routeName,
+                title: 'Intel Snapshot',
+              ),
+            ),
+            item(
+              icon: Icons.grid_view_rounded,
+              label: 'Blueprints',
+              selected: true,
+              onTap: () {},
+            ),
+            item(
+              icon: Icons.widgets_rounded,
+              label: 'Scrappy',
+              selected: false,
+              onTap: () => _openDockDestination(
+                routeName: ScrappyGridScreen.routeName,
+                flag: FeatureAccessFlag.scrappyTracker,
+                title: 'Scrappy Tracker',
+              ),
+            ),
+            item(
+              icon: Icons.route_rounded,
+              label: 'Planner',
+              selected: false,
+              onTap: () => _openDockDestination(
+                routeName: RaidPlannerScreen.routeName,
+                title: 'Raid Planner',
+              ),
+            ),
+            item(
+              icon: Icons.storefront_rounded,
+              label: 'Trader',
+              selected: false,
+              onTap: () => _openDockDestination(
+                routeName: TraderHubScreen.routeName,
+                flag: FeatureAccessFlag.traderHub,
+                title: 'Trader Hub',
+              ),
+            ),
           ],
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomControls(
+    List<ArcBlueprint> allBlueprints,
+    List<ArcBlueprint> filtered,
+    Map<String, ArcBlueprintState> states,
+    Map<ArcBlueprintFilter, int> counts,
+  ) {
+    final ownedCount = counts[ArcBlueprintFilter.owned] ?? 0;
+    final missingCount = counts[ArcBlueprintFilter.missing] ?? 0;
+    final dupesCount = counts[ArcBlueprintFilter.duplicates] ?? 0;
+    final completion = allBlueprints.isEmpty
+        ? 0.0
+        : ownedCount / allBlueprints.length;
+
+    Widget miniButton({
+      required String label,
+      required VoidCallback? onPressed,
+      bool selected = false,
+      bool energized = false,
+      double radius = 12,
+    }) {
+      final borderColor = selected ? AppTheme.neonPink : AppTheme.neonCyan;
+      final backgroundColor = selected
+          ? AppTheme.neonPink.withValues(alpha: 0.14)
+          : Colors.transparent;
+      final textColor = selected ? AppTheme.neonPink : AppTheme.neonCyan;
+
+      return ElectricChargeBorder(
+        active: energized || selected,
+        radius: radius,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(radius),
+          onTap: onPressed,
+          child: AnimatedContainer(
+            duration: AppTheme.fastAnimation,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: onPressed == null
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : backgroundColor,
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(
+                color: onPressed == null
+                    ? Colors.white.withValues(alpha: 0.10)
+                    : borderColor.withValues(alpha: 0.75),
+              ),
+            ),
+            child: Text(
+              label,
+              style: AppTheme.buttonTextStyle(
+                color: onPressed == null ? Colors.white38 : textColor,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget toolButton({
+      required String label,
+      required VoidCallback? onTap,
+      required Color color,
+      bool energized = false,
+    }) {
+      return ElectricChargeBorder(
+        active: energized,
+        radius: 999,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: onTap == null
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: onTap == null
+                    ? Colors.white.withValues(alpha: 0.10)
+                    : color.withValues(alpha: 0.40),
+              ),
+            ),
+            child: Text(
+              label,
+              style: AppTheme.buttonTextStyle(
+                color: onTap == null ? Colors.white38 : color,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppTheme.neonCyan.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              miniButton(
+                label: 'All (${counts[ArcBlueprintFilter.all] ?? 0})',
+                selected: _selectedFilter == ArcBlueprintFilter.all,
+                onPressed: () =>
+                    setState(() => _selectedFilter = ArcBlueprintFilter.all),
+              ),
+              miniButton(
+                label: 'Owned ($ownedCount)',
+                selected: _selectedFilter == ArcBlueprintFilter.owned,
+                onPressed: () =>
+                    setState(() => _selectedFilter = ArcBlueprintFilter.owned),
+              ),
+              miniButton(
+                label: 'Missing ($missingCount)',
+                selected: _selectedFilter == ArcBlueprintFilter.missing,
+                onPressed: () =>
+                    setState(() => _selectedFilter = ArcBlueprintFilter.missing),
+              ),
+              miniButton(
+                label: 'Dupes ($dupesCount)',
+                selected: _selectedFilter == ArcBlueprintFilter.duplicates,
+                onPressed: () => setState(
+                  () => _selectedFilter = ArcBlueprintFilter.duplicates,
+                ),
+              ),
+              miniButton(
+                label: _selectionMode ? 'Selecting' : 'Select Multiple',
+                selected: _selectionMode,
+                energized: _selectionMode,
+                onPressed: () => _enterSelectionMode(),
+              ),
+              miniButton(
+                label: 'Reset All',
+                onPressed: () => _confirmResetGrid(),
+              ),
+              Tooltip(
+                message:
+                    'Tap missing to mark owned. Tap owned to edit reports or duplicates. Long press to select quickly.',
+                child: const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white70,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: completion,
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppTheme.neonCyan,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$ownedCount / ${allBlueprints.length} owned • $missingCount missing • $dupesCount with dupes',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.3,
+            ),
+          ),
+          if (_selectionMode) ...[
+            const SizedBox(height: 12),
+            Text(
+              '${_selectedBlueprintIds.length} selected',
+              style: AppTheme.tradingHeading(
+                fontSize: 18,
+                color: AppTheme.neonPink,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                toolButton(
+                  label: 'Select All',
+                  onTap: filtered.isEmpty ? null : () => _selectAll(filtered),
+                  color: AppTheme.neonCyan,
+                  energized: filtered.isNotEmpty,
+                ),
+                toolButton(
+                  label: 'Select Row',
+                  onTap: filtered.isEmpty ? null : () => _selectRow(filtered),
+                  color: AppTheme.neonCyan,
+                  energized: filtered.isNotEmpty,
+                ),
+                toolButton(
+                  label: 'Select Column',
+                  onTap: filtered.isEmpty ? null : () => _selectColumn(filtered),
+                  color: AppTheme.neonCyan,
+                  energized: filtered.isNotEmpty,
+                ),
+                toolButton(
+                  label: 'Mark Owned',
+                  onTap: _selectedBlueprintIds.isEmpty
+                      ? null
+                      : () => _applyBulkOwned(states),
+                  color: AppTheme.neonPink,
+                  energized: _selectedBlueprintIds.isNotEmpty,
+                ),
+                toolButton(
+                  label: 'Add 1 Dupe',
+                  onTap: _selectedBlueprintIds.isEmpty
+                      ? null
+                      : () => _applyBulkDupes(states),
+                  color: AppTheme.neonPink,
+                  energized: _selectedBlueprintIds.isNotEmpty,
+                ),
+                toolButton(
+                  label: 'Clear Selected',
+                  onTap: _selectedBlueprintIds.isEmpty
+                      ? null
+                      : _applyBulkClear,
+                  color: Colors.redAccent,
+                  energized: _selectedBlueprintIds.isNotEmpty,
+                ),
+                toolButton(
+                  label: 'Exit Selection',
+                  onTap: _clearSelection,
+                  color: Colors.white70,
+                  energized: true,
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -758,6 +955,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: _buildSearchAppBarTitle(),
+        ),
+      ),
+      bottomNavigationBar: _buildQuickDock(),
       body: Stack(
         children: [
           const Positioned.fill(child: StaticWatermark()),
@@ -769,53 +974,22 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 final filtered = _applyFilter(allBlueprints, states);
                 final counts = _buildCounts(allBlueprints, states);
 
-                final ownedCount = counts[ArcBlueprintFilter.owned] ?? 0;
-                final completion = allBlueprints.isEmpty
-                    ? 0.0
-                    : ownedCount / allBlueprints.length;
-                final landscape =
-                    MediaQuery.of(context).orientation == Orientation.landscape;
-
-                return Scaffold(
-                  backgroundColor: Colors.transparent,
-                  appBar: _buildAppBar(allBlueprints, filtered, states),
-                  body: ListView(
-                    padding: AppTheme.pagePadding,
-                    children: [
-                      _buildFilterAndSearchBar(counts, filtered),
-                      const SizedBox(height: AppTheme.spaceS),
-                      if (_showTrackerHeader)
-                        BlueprintProgressHeader(
-                          completion: completion,
-                          ownedCount: ownedCount,
-                          missingCount: counts[ArcBlueprintFilter.missing] ?? 0,
-                          dupesCount: counts[ArcBlueprintFilter.duplicates] ?? 0,
-                          totalCount: allBlueprints.length,
-                          landscape: landscape,
-                          onClose: () =>
-                              setState(() => _showTrackerHeader = false),
-                        ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      if (_selectionMode)
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.spaceM),
-                          decoration: AppTheme.tradingCardDecoration(
-                            borderColor: AppTheme.neonPink.withValues(
-                              alpha: 0.18,
-                            ),
-                          ),
-                          child: const Text(
-                            'Long press to start selecting, then use the top-right tools to select all visible, a full row, or a full column.',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: AppTheme.spaceL),
-                      _buildGrid(context, filtered, states),
-                    ],
+                return ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    AppTheme.pagePadding.left,
+                    8,
+                    AppTheme.pagePadding.right,
+                    AppTheme.pagePadding.bottom,
                   ),
+                  children: [
+                    _buildGrid(context, filtered, states),
+                    _buildBottomControls(
+                      allBlueprints,
+                      filtered,
+                      states,
+                      counts,
+                    ),
+                  ],
                 );
               },
             ),
