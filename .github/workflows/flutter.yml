@@ -2,11 +2,16 @@ name: Flutter CI/CD
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -19,6 +24,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
 
       - name: Build web
         run: flutter build web --release
