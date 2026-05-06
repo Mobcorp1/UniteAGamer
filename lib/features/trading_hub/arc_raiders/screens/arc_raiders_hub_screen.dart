@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:uag_traders_hub/build/app_bar.dart';
 import 'package:uag_traders_hub/build/app_drawer.dart';
 import 'package:uag_traders_hub/features/feature_access_gate.dart';
@@ -20,37 +19,50 @@ class ArcRaidersHubScreen extends StatelessWidget {
 
   const ArcRaidersHubScreen({super.key});
 
-  Widget _buildBanner() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppTheme.neonCyan.withValues(alpha: 0.22),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.08),
-            blurRadius: 12,
-            spreadRadius: 0.4,
+  Widget _buildBanner(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isCompact = width < 520;
+        final aspectRatio = width >= 760 ? 16 / 4.8 : isCompact ? 16 / 7.4 : 16 / 6;
+        final maxHeight = width >= 760 ? 190.0 : isCompact ? 118.0 : 150.0;
+
+        return Container(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.22),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.neonCyan.withValues(alpha: 0.08),
+                blurRadius: 12,
+                spreadRadius: 0.4,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: AspectRatio(
-          aspectRatio: 16 / 6,
-          child: Image.asset(
-            'assets/arc_raiders/banners/arc_raiders_hub_banner.webp',
-            fit: BoxFit.cover,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: AspectRatio(
+              aspectRatio: aspectRatio,
+              child: Image.asset(
+                'assets/arc_raiders/banners/arc_raiders_hub_banner.webp',
+                width: double.infinity,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildHubCard({
     required String title,
+    required String subtitle,
     required IconData icon,
     required VoidCallback onTap,
   }) {
@@ -63,27 +75,35 @@ class ArcRaidersHubScreen extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(18),
           child: Container(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
+            padding: const EdgeInsets.all(AppTheme.spaceM),
             decoration: AppTheme.tradingCardDecoration(radius: 18),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(icon, color: AppTheme.neonCyan, size: 30),
-                const SizedBox(height: AppTheme.spaceM),
-                Expanded(
-                  child: Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        style: AppTheme.neonTextStyle(
-                          fontSize: 18,
-                          color: AppTheme.neonCyan,
-                          isBold: true,
-                        ),
-                      ),
+                Icon(icon, color: AppTheme.neonCyan, size: 26),
+                const SizedBox(height: AppTheme.spaceS),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.neonTextStyle(
+                    fontSize: 16,
+                    color: AppTheme.neonCyan,
+                    isBold: true,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Flexible(
+                  child: Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 11,
+                      color: AppTheme.tradingMutedText,
                     ),
                   ),
                 ),
@@ -135,6 +155,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final tiles = <({
       String title,
+      String subtitle,
       IconData icon,
       String routeName,
       String? flag,
@@ -142,6 +163,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
     })>[
       (
         title: 'Intel Snapshot',
+        subtitle: 'Community drop signals and best current chances.',
         icon: Icons.insights_rounded,
         routeName: ArcMarketIntelligenceScreen.routeName,
         flag: null,
@@ -149,6 +171,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
       ),
       (
         title: 'Blueprint Grid',
+        subtitle: 'Track owned, missing, dupes and wanted blueprints.',
         icon: Icons.grid_view_rounded,
         routeName: BlueprintGridScreen.routeName,
         flag: null,
@@ -156,6 +179,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
       ),
       (
         title: 'Raid Planner',
+        subtitle: 'Plan raids around missing targets and seeded rules.',
         icon: Icons.route_rounded,
         routeName: RaidPlannerScreen.routeName,
         flag: null,
@@ -163,13 +187,15 @@ class ArcRaidersHubScreen extends StatelessWidget {
       ),
       (
         title: 'Scrappy Tracker',
+        subtitle: 'Scrappy, bench and quest materials in one place.',
         icon: Icons.widgets_rounded,
         routeName: ScrappyGridScreen.routeName,
         flag: FeatureAccessFlag.scrappyTracker,
         comingSoonWhenLocked: false,
       ),
       (
-        title: 'Trader Hub',
+        title: 'Trade Hub',
+        subtitle: 'Listings, offers, resources, giveaways and sessions.',
         icon: Icons.storefront_rounded,
         routeName: TraderHubScreen.routeName,
         flag: FeatureAccessFlag.traderHub,
@@ -177,6 +203,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
       ),
       (
         title: 'Match Raider',
+        subtitle: 'Find players by vibe, platform and play window.',
         icon: Icons.groups_2_outlined,
         routeName: ArcMatchRiderScreen.routeName,
         flag: FeatureAccessFlag.matchRaider,
@@ -184,6 +211,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
       ),
       (
         title: 'Play Like a Pro',
+        subtitle: 'Pre-game, tilt reset and performance routines.',
         icon: Icons.psychology_outlined,
         routeName: PlayLikeAProScreen.routeName,
         flag: FeatureAccessFlag.playLockerPro,
@@ -191,6 +219,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
       ),
       (
         title: 'Trader Profile',
+        subtitle: 'Availability, identity and trading preferences.',
         icon: Icons.person_pin_circle_outlined,
         routeName: TradingProfileScreen.routeName,
         flag: FeatureAccessFlag.traderHub,
@@ -202,8 +231,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
         title: 'ARC Raiders Hub',
-        subtitle:
-            'High-level tools for tracking, intel, trading, teaming and performance.',
+        subtitle: 'Track, plan, trade, team up and improve your raids.',
       ),
       drawer: const AppDrawer(),
       body: Stack(
@@ -211,99 +239,110 @@ class ArcRaidersHubScreen extends StatelessWidget {
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 940),
-                  child: SingleChildScrollView(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final width = constraints.maxWidth;
-                        final crossAxisCount = (width / 180).floor().clamp(
-                          2,
-                          4,
-                        );
-                        final childAspectRatio = width >= 760
-                            ? 2.35
-                            : width >= 520
-                            ? 1.9
-                            : 1.5;
+              child: LayoutBuilder(
+                builder: (context, viewport) {
+                  final viewportWidth = viewport.maxWidth;
+                  final horizontalPadding = viewportWidth < 430
+                      ? AppTheme.spaceM
+                      : AppTheme.spaceL;
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _buildBanner(),
-                            const SizedBox(height: 18),
-                            Text(
-                              'ARC Raiders Hub',
-                              textAlign: TextAlign.center,
-                              style: AppTheme.neonTextStyle(
-                                fontSize: 28,
-                                color: AppTheme.neonCyan,
-                                isBold: true,
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.all(horizontalPadding),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1040),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final width = constraints.maxWidth;
+                          final crossAxisCount = width >= 900
+                              ? 4
+                              : width >= 620
+                                  ? 3
+                                  : 2;
+                          final childAspectRatio = width >= 900
+                              ? 1.48
+                              : width >= 620
+                                  ? 1.38
+                                  : 1.05;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              _buildBanner(context),
+                              const SizedBox(height: AppTheme.spaceL),
+                              Text(
+                                'ARC Raiders Hub',
+                                textAlign: TextAlign.center,
+                                style: AppTheme.neonTextStyle(
+                                  fontSize: width < 430 ? 24 : 28,
+                                  color: AppTheme.neonCyan,
+                                  isBold: true,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: AppTheme.spaceS),
-                            Text(
-                              'Blueprint tracking, personalised intel, trader flow, teammate matching and performance tools.',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.white70),
-                            ),
-                            const SizedBox(height: 20),
-                            GridView.builder(
-                              itemCount: tiles.length,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    mainAxisSpacing: 14,
-                                    crossAxisSpacing: 14,
-                                    childAspectRatio: childAspectRatio,
-                                  ),
-                              itemBuilder: (context, index) {
-                                final tile = tiles[index];
-                                return _buildHubCard(
-                                  title: tile.title,
-                                  icon: tile.icon,
-                                  onTap: () async {
-                                    if (tile.flag != null) {
-                                      final hasAccess =
-                                          await FeatureAccess.hasAccess(
-                                            tile.flag!,
-                                          );
-                                      if (!context.mounted) return;
-                                      if (!hasAccess) {
-                                        if (tile.comingSoonWhenLocked) {
-                                          await _showComingSoon(
-                                            context,
-                                            tile.title,
-                                          );
-                                        } else {
-                                          await FeatureAccess.showLockedDialog(
-                                            context,
-                                            title: tile.title,
-                                          );
+                              const SizedBox(height: AppTheme.spaceS),
+                              Text(
+                                'Blueprint tracking, intel, raid planning, trading, teammate matching and performance tools.',
+                                textAlign: TextAlign.center,
+                                style: AppTheme.bodyTextStyle(
+                                  fontSize: width < 430 ? 13 : 14,
+                                  color: AppTheme.tradingMutedText,
+                                ),
+                              ),
+                              const SizedBox(height: AppTheme.spaceL),
+                              GridView.builder(
+                                itemCount: tiles.length,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  mainAxisSpacing: AppTheme.spaceM,
+                                  crossAxisSpacing: AppTheme.spaceM,
+                                  childAspectRatio: childAspectRatio,
+                                ),
+                                itemBuilder: (context, index) {
+                                  final tile = tiles[index];
+                                  return _buildHubCard(
+                                    title: tile.title,
+                                    subtitle: tile.subtitle,
+                                    icon: tile.icon,
+                                    onTap: () async {
+                                      if (tile.flag != null) {
+                                        final hasAccess =
+                                            await FeatureAccess.hasAccess(
+                                          tile.flag!,
+                                        );
+                                        if (!context.mounted) return;
+
+                                        if (!hasAccess) {
+                                          if (tile.comingSoonWhenLocked) {
+                                            await _showComingSoon(
+                                              context,
+                                              tile.title,
+                                            );
+                                          } else {
+                                            await FeatureAccess.showLockedDialog(
+                                              context,
+                                              title: tile.title,
+                                            );
+                                          }
+                                          return;
                                         }
-                                        return;
                                       }
-                                    }
-                                    if (!context.mounted) return;
-                                    Navigator.pushNamed(
-                                      context,
-                                      tile.routeName,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
+
+                                      if (!context.mounted) return;
+                                      Navigator.pushNamed(context, tile.routeName);
+                                    },
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: AppTheme.spaceXL),
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
