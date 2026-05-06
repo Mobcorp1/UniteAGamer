@@ -21,8 +21,21 @@ enum ArcScrappyTrackerMode { scrappy, bench, quest }
 
 class ScrappyGridScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/scrappy';
+  static const benchRouteName = '/trading-hub/arc-raiders/bench';
+  static const questRouteName = '/trading-hub/arc-raiders/quests';
 
-  const ScrappyGridScreen({super.key});
+  const ScrappyGridScreen({
+    super.key,
+    this.initialMode = ArcScrappyTrackerMode.scrappy,
+  });
+
+  const ScrappyGridScreen.bench({super.key})
+      : initialMode = ArcScrappyTrackerMode.bench;
+
+  const ScrappyGridScreen.quest({super.key})
+      : initialMode = ArcScrappyTrackerMode.quest;
+
+  final ArcScrappyTrackerMode initialMode;
 
   @override
   State<ScrappyGridScreen> createState() => _ScrappyGridScreenState();
@@ -33,19 +46,32 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   final Set<String> _expandedSections = <String>{};
 
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.missing;
-  ArcScrappyTrackerMode _mode = ArcScrappyTrackerMode.scrappy;
+  late ArcScrappyTrackerMode _mode;
+
+  @override
+  void initState() {
+    super.initState();
+    _mode = widget.initialMode;
+  }
+
+  @override
+  void didUpdateWidget(covariant ScrappyGridScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialMode != widget.initialMode) {
+      _mode = widget.initialMode;
+      _selectedFilter = ArcScrappyFilter.missing;
+      _expandedSections.clear();
+    }
+  }
 
   List<ArcScrappyItem> get _allItems {
     final items = switch (_mode) {
-      ArcScrappyTrackerMode.scrappy => <ArcScrappyItem>[
-          ...ArcScrappySeedData.items,
-        ],
-      ArcScrappyTrackerMode.bench => <ArcScrappyItem>[
-          ...ArcBenchUpgradeSeedData.items,
-        ],
-      ArcScrappyTrackerMode.quest => <ArcScrappyItem>[
-          ...ArcQuestRequirementSeedData.items,
-        ],
+      ArcScrappyTrackerMode.scrappy =>
+        ArcScrappySeedData.items.whereType<ArcScrappyItem>().toList(),
+      ArcScrappyTrackerMode.bench =>
+        ArcBenchUpgradeSeedData.items.whereType<ArcScrappyItem>().toList(),
+      ArcScrappyTrackerMode.quest =>
+        ArcQuestRequirementSeedData.items.whereType<ArcScrappyItem>().toList(),
     };
     items.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return items;
@@ -56,9 +82,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       case ArcScrappyTrackerMode.scrappy:
         return 'Scrappy Tracker';
       case ArcScrappyTrackerMode.bench:
-        return 'Bench Upgrade Tracker';
+        return 'Bench Tracker';
       case ArcScrappyTrackerMode.quest:
-        return 'Quest Item Tracker';
+        return 'Quest Tracker';
     }
   }
 
@@ -67,9 +93,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       case ArcScrappyTrackerMode.scrappy:
         return 'ARC Raiders Scrappy Tracker';
       case ArcScrappyTrackerMode.bench:
-        return 'ARC Raiders Bench Upgrade Tracker';
+        return 'ARC Raiders Bench Tracker';
       case ArcScrappyTrackerMode.quest:
-        return 'ARC Raiders Quest Item Tracker';
+        return 'ARC Raiders Quest Tracker';
     }
   }
 
@@ -137,7 +163,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       (item, state) => state.ownedFor(item.neededCount),
     );
 
-    return <ArcScrappyFilter, int>{
+    return {
       ArcScrappyFilter.all: items.length,
       ArcScrappyFilter.owned: ownedCount,
       ArcScrappyFilter.missing: items.length - ownedCount,
@@ -261,7 +287,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         currentState.copyWith(collectedCount: 0, updatedAt: DateTime.now()),
         neededCount: item.neededCount,
       );
-
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -337,7 +362,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
     try {
       await _repository.resetAllScrappyStates(items.map((item) => item.id));
-
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -407,26 +431,19 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
-  Widget _buildModeToggle() {
+  Widget _buildModeNavigation() {
     Widget button({
       required ArcScrappyTrackerMode mode,
       required String label,
       required IconData icon,
+      required String routeName,
     }) {
       final selected = _mode == mode;
       final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
-
       return Expanded(
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            if (_mode == mode) return;
-            setState(() {
-              _mode = mode;
-              _selectedFilter = ArcScrappyFilter.missing;
-              _expandedSections.clear();
-            });
-          },
+          onTap: selected ? null : () => Navigator.pushReplacementNamed(context, routeName),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(
@@ -469,18 +486,21 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           mode: ArcScrappyTrackerMode.scrappy,
           label: 'Scrappy',
           icon: Icons.pets_rounded,
+          routeName: ScrappyGridScreen.routeName,
         ),
         const SizedBox(width: AppTheme.spaceS),
         button(
           mode: ArcScrappyTrackerMode.bench,
           label: 'Bench',
           icon: Icons.handyman_rounded,
+          routeName: ScrappyGridScreen.benchRouteName,
         ),
         const SizedBox(width: AppTheme.spaceS),
         button(
           mode: ArcScrappyTrackerMode.quest,
           label: 'Quests',
           icon: Icons.assignment_turned_in_rounded,
+          routeName: ScrappyGridScreen.questRouteName,
         ),
       ],
     );
@@ -493,7 +513,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final maxTileWidth = isLandscape ? 124.0 : 118.0;
     final minTileWidth = isLandscape ? 104.0 : 96.0;
-    final spacing = AppTheme.spaceS;
+    const spacing = AppTheme.spaceS;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -573,7 +593,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          key: PageStorageKey<String>(id),
+          key: PageStorageKey(id),
           initiallyExpanded: expanded,
           onExpansionChanged: (value) {
             setState(() {
@@ -664,9 +684,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         for (final category in categories)
           _buildCategorySection(
             category: category,
-            items: filtered
-                .where((item) => item.category == category)
-                .toList(growable: false),
+            items: filtered.where((item) => item.category == category).toList(growable: false),
             states: states,
           ),
       ],
@@ -703,9 +721,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
               id: '${_mode.name}-$category-$group',
               title: _displayGroupTitle(category, group),
               color: _groupColor(items, group),
-              items: items
-                  .where((item) => item.group == group)
-                  .toList(growable: false),
+              items: items.where((item) => item.group == group).toList(growable: false),
               states: states,
               subtitle: _mode == ArcScrappyTrackerMode.quest
                   ? 'Quest collection items'
@@ -760,13 +776,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 final counts = _buildCounts(allItems, states);
                 final ownedCount = counts[ArcScrappyFilter.owned] ?? 0;
                 final completion = allItems.isEmpty ? 0.0 : ownedCount / allItems.length;
-                final landscape =
-                    MediaQuery.of(context).orientation == Orientation.landscape;
+                final landscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
                 return ListView(
                   padding: AppTheme.pagePadding,
                   children: [
-                    _buildModeToggle(),
+                    _buildModeNavigation(),
                     const SizedBox(height: AppTheme.spaceL),
                     ScrappyProgressHeader(
                       completion: completion,
