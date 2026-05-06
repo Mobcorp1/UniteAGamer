@@ -8,19 +8,19 @@ class ArcScrappyFoodQueueData {
       id: 'lemons',
       name: 'Lemons',
       imageAsset: '$_assetRoot/lemons.webp',
-      hint: 'Nature / food spawns. Keep for Scrappy Level 3.',
+      hint: 'Blue Gate • Village. Keep for Scrappy Level 3.',
     ),
     ArcScrappyFoodQueueItem(
       id: 'apricots',
       name: 'Apricots',
       imageAsset: '$_assetRoot/apricots.webp',
-      hint: 'Nature / food spawns. Used for Scrappy Level 3 and Level 5.',
+      hint: 'Blue Gate • Village. Used for Scrappy Level 3 and Level 5.',
     ),
     ArcScrappyFoodQueueItem(
       id: 'prickly-pears',
       name: 'Prickly Pears',
       imageAsset: '$_assetRoot/prickly_pears.webp',
-      hint: 'Nature / cactus-style food spawns. Keep for Scrappy Level 4.',
+      hint: 'Dam Battlegrounds • Pattern House. Keep for Scrappy Level 4.',
     ),
     ArcScrappyFoodQueueItem(
       id: 'olives',
@@ -32,19 +32,20 @@ class ArcScrappyFoodQueueData {
       id: 'mushrooms',
       name: 'Mushrooms',
       imageAsset: '$_assetRoot/mushrooms.webp',
-      hint: 'Nature / damp organic areas. Keep for Scrappy Level 5.',
+      hint: 'Rivern Tides • Dried Riverbed. Keep for Scrappy Level 5.',
     ),
     ArcScrappyFoodQueueItem(
       id: 'fruit-mix',
       name: 'Fruit Mix',
       imageAsset: '$_assetRoot/fruit_mix.webp',
-      hint: 'General food loot. Queue for feeding when found.',
+      hint:
+          'Craft Topside 1 x Lemon, 1 x Apricot + 1 x Prickly Pear. Queue for feeding when made.',
     ),
     ArcScrappyFoodQueueItem(
       id: 'agave',
       name: 'Agave',
       imageAsset: '$_assetRoot/agave.webp',
-      hint: 'Nature / plant spawn. Queue for feeding when found.',
+      hint: 'Dam Battlegrounds • Pattern House. Queue for feeding when found.',
     ),
   ];
 }
