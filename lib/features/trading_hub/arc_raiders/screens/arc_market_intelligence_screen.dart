@@ -109,8 +109,9 @@ class _ArcMarketIntelligenceScreenState
 
     final blueprints = [...ArcBlueprintSeedData.blueprints]
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final scrappyItems = [...ArcScrappySeedData.items]
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final List<ArcScrappyItem> scrappyItems =
+        ArcScrappySeedData.items.whereType<ArcScrappyItem>().toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     final intelByBlueprintId = _buildIntelMap(reports);
     final priorityBlueprints = _resolvePriorityBlueprints(
