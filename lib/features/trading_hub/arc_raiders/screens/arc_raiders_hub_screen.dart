@@ -176,14 +176,14 @@ class ArcRaidersHubScreen extends StatelessWidget {
         comingSoonWhenLocked: false,
       ),
       (
-        title: 'Match-a-Raider',
+        title: 'Match Raider',
         icon: Icons.groups_2_outlined,
         routeName: ArcMatchRiderScreen.routeName,
         flag: FeatureAccessFlag.matchRaider,
         comingSoonWhenLocked: true,
       ),
       (
-        title: 'PlayLocker Pro',
+        title: 'Play Like a Pro',
         icon: Icons.psychology_outlined,
         routeName: PlayLikeAProScreen.routeName,
         flag: FeatureAccessFlag.playLockerPro,
