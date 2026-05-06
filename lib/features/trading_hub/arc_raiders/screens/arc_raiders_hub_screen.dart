@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:uag_traders_hub/build/app_bar.dart';
 import 'package:uag_traders_hub/build/app_drawer.dart';
 import 'package:uag_traders_hub/features/feature_access_gate.dart';
@@ -25,7 +26,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: AppTheme.neonCyan.withValues(alpha: 0.22),
-          width: 1.0,
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
@@ -94,70 +95,106 @@ class ArcRaidersHubScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _openTile(
-    BuildContext context,
-    _ArcHubTile tile,
-  ) async {
-    if (tile.flag != null) {
-      final hasAccess = await FeatureAccess.hasAccess(tile.flag!);
-      if (!context.mounted) return;
-      if (!hasAccess) {
-        await FeatureAccess.showLockedDialog(context, title: tile.title);
-        return;
-      }
-    }
-
-    if (!context.mounted) return;
-    Navigator.pushNamed(context, tile.routeName);
+  Future<void> _showComingSoon(BuildContext context, String title) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.cardBackgroundDeep,
+          shape: AppTheme.tradingDialogShape(),
+          title: Text(
+            '$title — Coming Soon',
+            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+          ),
+          content: Text(
+            'This feature is not available in the current beta build yet.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 14,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'OK',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: AppTheme.neonCyan,
+                  isBold: true,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final tiles = <_ArcHubTile>[
-      const _ArcHubTile(
+    final tiles = <({
+      String title,
+      IconData icon,
+      String routeName,
+      String? flag,
+      bool comingSoonWhenLocked,
+    })>[
+      (
         title: 'Intel Snapshot',
         icon: Icons.insights_rounded,
         routeName: ArcMarketIntelligenceScreen.routeName,
+        flag: null,
+        comingSoonWhenLocked: false,
       ),
-      const _ArcHubTile(
+      (
         title: 'Blueprint Grid',
         icon: Icons.grid_view_rounded,
         routeName: BlueprintGridScreen.routeName,
+        flag: null,
+        comingSoonWhenLocked: false,
       ),
-      const _ArcHubTile(
+      (
         title: 'Raid Planner',
         icon: Icons.route_rounded,
         routeName: RaidPlannerScreen.routeName,
+        flag: null,
+        comingSoonWhenLocked: false,
       ),
-      const _ArcHubTile(
+      (
         title: 'Scrappy Tracker',
         icon: Icons.widgets_rounded,
         routeName: ScrappyGridScreen.routeName,
         flag: FeatureAccessFlag.scrappyTracker,
+        comingSoonWhenLocked: false,
       ),
-      const _ArcHubTile(
+      (
         title: 'Trader Hub',
         icon: Icons.storefront_rounded,
         routeName: TraderHubScreen.routeName,
         flag: FeatureAccessFlag.traderHub,
+        comingSoonWhenLocked: false,
       ),
-      const _ArcHubTile(
+      (
         title: 'Match-a-Raider',
         icon: Icons.groups_2_outlined,
         routeName: ArcMatchRiderScreen.routeName,
         flag: FeatureAccessFlag.matchRaider,
+        comingSoonWhenLocked: true,
       ),
-      const _ArcHubTile(
-        title: 'Play Like a Pro',
+      (
+        title: 'PlayLocker Pro',
         icon: Icons.psychology_outlined,
         routeName: PlayLikeAProScreen.routeName,
         flag: FeatureAccessFlag.playLockerPro,
+        comingSoonWhenLocked: true,
       ),
-      const _ArcHubTile(
+      (
         title: 'Trader Profile',
-        icon: Icons.person_outline_rounded,
+        icon: Icons.person_pin_circle_outlined,
         routeName: TradingProfileScreen.routeName,
         flag: FeatureAccessFlag.traderHub,
+        comingSoonWhenLocked: false,
       ),
     ];
 
@@ -165,7 +202,8 @@ class ArcRaidersHubScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
         title: 'ARC Raiders Hub',
-        subtitle: 'High-level tools for tracking, intel, trading, teaming and performance.',
+        subtitle:
+            'High-level tools for tracking, intel, trading, teaming and performance.',
       ),
       drawer: const AppDrawer(),
       body: Stack(
@@ -181,12 +219,15 @@ class ArcRaidersHubScreen extends StatelessWidget {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final width = constraints.maxWidth;
-                        final crossAxisCount = (width / 180).floor().clamp(2, 4);
+                        final crossAxisCount = (width / 180).floor().clamp(
+                          2,
+                          4,
+                        );
                         final childAspectRatio = width >= 760
                             ? 2.35
                             : width >= 520
-                                ? 1.9
-                                : 1.5;
+                            ? 1.9
+                            : 1.5;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -206,27 +247,54 @@ class ArcRaidersHubScreen extends StatelessWidget {
                             Text(
                               'Blueprint tracking, personalised intel, trader flow, teammate matching and performance tools.',
                               textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white70,
-                                  ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.white70),
                             ),
                             const SizedBox(height: 20),
                             GridView.builder(
                               itemCount: tiles.length,
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                mainAxisSpacing: 14,
-                                crossAxisSpacing: 14,
-                                childAspectRatio: childAspectRatio,
-                              ),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    mainAxisSpacing: 14,
+                                    crossAxisSpacing: 14,
+                                    childAspectRatio: childAspectRatio,
+                                  ),
                               itemBuilder: (context, index) {
                                 final tile = tiles[index];
                                 return _buildHubCard(
                                   title: tile.title,
                                   icon: tile.icon,
-                                  onTap: () => _openTile(context, tile),
+                                  onTap: () async {
+                                    if (tile.flag != null) {
+                                      final hasAccess =
+                                          await FeatureAccess.hasAccess(
+                                            tile.flag!,
+                                          );
+                                      if (!context.mounted) return;
+                                      if (!hasAccess) {
+                                        if (tile.comingSoonWhenLocked) {
+                                          await _showComingSoon(
+                                            context,
+                                            tile.title,
+                                          );
+                                        } else {
+                                          await FeatureAccess.showLockedDialog(
+                                            context,
+                                            title: tile.title,
+                                          );
+                                        }
+                                        return;
+                                      }
+                                    }
+                                    if (!context.mounted) return;
+                                    Navigator.pushNamed(
+                                      context,
+                                      tile.routeName,
+                                    );
+                                  },
                                 );
                               },
                             ),
@@ -243,18 +311,4 @@ class ArcRaidersHubScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ArcHubTile {
-  const _ArcHubTile({
-    required this.title,
-    required this.icon,
-    required this.routeName,
-    this.flag,
-  });
-
-  final String title;
-  final IconData icon;
-  final String routeName;
-  final String? flag;
 }
