@@ -96,9 +96,15 @@ class _TradingTradeSessionsScreenState
   }) async {
     try {
       await action();
-      _showSnack(successMessage);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(successMessage)));
     } catch (error) {
-      _showSnack('$errorPrefix$error');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$errorPrefix$error')));
     }
   }
 
@@ -157,8 +163,12 @@ class _TradingTradeSessionsScreenState
   }
 
   Future<void> _shareEmbarkId(TradingSession session) async {
-    final initialValue = await _repository.getPreferredEmbarkIdForSession(session);
+    final initialValue = await _repository.getPreferredEmbarkIdForSession(
+      session,
+    );
     final controller = TextEditingController(text: initialValue);
+
+    if (!mounted) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -175,7 +185,10 @@ class _TradingTradeSessionsScreenState
             children: [
               TextField(
                 controller: controller,
-                style: AppTheme.bodyTextStyle(fontSize: 15, color: Colors.white),
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 15,
+                  color: Colors.white,
+                ),
                 decoration: AppTheme.tradingInputDecoration(label: 'Embark ID'),
               ),
               const SizedBox(height: 10),
