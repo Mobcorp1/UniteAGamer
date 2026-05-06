@@ -39,16 +39,17 @@ class ScrappyTile extends StatelessWidget {
         decoration: AppTheme.tradingCardDecoration(
           radius: 12,
           borderColor: accent.withValues(alpha: owned ? 0.52 : 0.14),
-          backgroundColor: owned
-              ? AppTheme.cardBackgroundAlt
-              : AppTheme.cardBackgroundDeep,
+          backgroundColor:
+              owned ? AppTheme.cardBackgroundAlt : AppTheme.cardBackgroundDeep,
         ),
         child: Padding(
           padding: const EdgeInsets.all(6),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
+              AspectRatio(
+                aspectRatio: 1,
                 child: Container(
                   width: double.infinity,
                   clipBehavior: Clip.antiAlias,
@@ -64,33 +65,37 @@ class ScrappyTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  child: Image.asset(
-                    item.imageAsset,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
-                    filterQuality: FilterQuality.high,
-                    isAntiAlias: true,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Center(
-                        child: Icon(
-                          Icons.inventory_2_rounded,
-                          color: owned ? accent : Colors.white38,
-                          size: landscape ? 22 : 28,
-                        ),
-                      );
-                    },
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: Image.asset(
+                      item.imageAsset,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      filterQuality: FilterQuality.high,
+                      isAntiAlias: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Icon(
+                            Icons.inventory_2_rounded,
+                            color: owned ? accent : Colors.white38,
+                            size: landscape ? 22 : 26,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 item.name,
-                maxLines: 1,
+                maxLines: 2,
+                textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: AppTheme.tradingHeading(
-                  fontSize: landscape ? 10 : 12,
+                  fontSize: landscape ? 10 : 11,
                   color: owned ? Colors.white : Colors.white70,
                 ),
               ),
@@ -98,15 +103,17 @@ class ScrappyTile extends StatelessWidget {
               Text(
                 _compactGroupLabel(item.group),
                 maxLines: 1,
+                textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: tierColor.withValues(alpha: 0.84),
-                  fontSize: landscape ? 9 : 10,
+                  fontSize: landscape ? 8 : 9,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 5),
               Wrap(
+                alignment: WrapAlignment.center,
                 spacing: 4,
                 runSpacing: 4,
                 children: [
@@ -117,20 +124,17 @@ class ScrappyTile extends StatelessWidget {
                         : Colors.lightGreenAccent,
                   ),
                   if (surplus > 0)
-                    _MiniTag(
-                      text: '$surplus spare',
-                      color: Colors.amberAccent,
-                    )
+                    _MiniTag(text: '$surplus spare', color: Colors.amberAccent)
                   else
                     _MiniTag(
-                      text: 'Collected ${state.collectedCount}',
+                      text: 'Got ${state.collectedCount}',
                       color: owned ? AppTheme.neonCyan : Colors.white54,
                     ),
                   if (wanted)
                     const _MiniTag(text: 'Wanted', color: AppTheme.neonPink),
                   if (tradeable)
                     const _MiniTag(
-                      text: 'Tradeable',
+                      text: 'Trade',
                       color: Colors.lightGreenAccent,
                     ),
                 ],
@@ -143,10 +147,16 @@ class ScrappyTile extends StatelessWidget {
   }
 
   String _compactGroupLabel(String group) {
-    final tierMatch = RegExp(r'Tier\s+(\d+)', caseSensitive: false).firstMatch(group);
-    if (tierMatch != null && group.length > 16) {
-      return 'Tier ${tierMatch.group(1)}';
-    }
+    final tierMatch = RegExp(
+      r'Tier\s+(\d+)',
+      caseSensitive: false,
+    ).firstMatch(group);
+    if (tierMatch != null) return 'Tier ${tierMatch.group(1)}';
+    final levelMatch = RegExp(
+      r'Lv\.?\s*(\d+)',
+      caseSensitive: false,
+    ).firstMatch(group);
+    if (levelMatch != null) return 'Tier ${levelMatch.group(1)}';
     return group;
   }
 }

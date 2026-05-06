@@ -30,14 +30,22 @@ class ScrappyGridScreen extends StatefulWidget {
 
 class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   final ArcScrappyRepository _repository = ArcScrappyRepository();
+  final Set<String> _expandedSections = <String>{};
+
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.missing;
   ArcScrappyTrackerMode _mode = ArcScrappyTrackerMode.scrappy;
 
   List<ArcScrappyItem> get _allItems {
     final items = switch (_mode) {
-      ArcScrappyTrackerMode.scrappy => [...ArcScrappySeedData.items],
-      ArcScrappyTrackerMode.bench => [...ArcBenchUpgradeSeedData.items],
-      ArcScrappyTrackerMode.quest => [...ArcQuestRequirementSeedData.items],
+      ArcScrappyTrackerMode.scrappy => <ArcScrappyItem>[
+          ...ArcScrappySeedData.items,
+        ],
+      ArcScrappyTrackerMode.bench => <ArcScrappyItem>[
+          ...ArcBenchUpgradeSeedData.items,
+        ],
+      ArcScrappyTrackerMode.quest => <ArcScrappyItem>[
+          ...ArcQuestRequirementSeedData.items,
+        ],
     };
     items.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return items;
@@ -68,11 +76,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   String get _headerDescription {
     switch (_mode) {
       case ArcScrappyTrackerMode.scrappy:
-        return 'Track Scrappy training materials, completion progress, and surplus items for future trading.';
+        return 'Track Scrappy upgrade items by tier. Expand only the tier you are working on to keep the screen clean.';
       case ArcScrappyTrackerMode.bench:
-        return 'Track every material needed by exact station and tier across Gunsmith, Gear Bench, Medical Lab, Explosives Station, Utility Station, and Refiner.';
+        return 'Track materials by exact station and tier. Scrappy upgrade items are excluded from this view.';
       case ArcScrappyTrackerMode.quest:
-        return 'Track regular quest collection items by trader and quest. Fixed-location special quest items are intentionally excluded because they only appear when the quest is active.';
+        return 'Track regular quest collection items by trader and quest. Fixed-location special quest items are excluded.';
     }
   }
 
@@ -158,20 +166,40 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
-  String _tierLabel(ArcScrappyTier tier) {
-    if (_mode == ArcScrappyTrackerMode.bench) {
-      switch (tier) {
-        case ArcScrappyTier.tier1:
-          return 'Bench Level 1 Materials';
-        case ArcScrappyTier.tier2:
-          return 'Bench Level 2 Materials';
-        case ArcScrappyTier.tier3:
-          return 'Bench Level 3 Materials';
-        case ArcScrappyTier.tier4:
-          return 'Final Upgrade Materials';
-      }
+  Color _modeAccent() {
+    switch (_mode) {
+      case ArcScrappyTrackerMode.scrappy:
+        return AppTheme.neonPink;
+      case ArcScrappyTrackerMode.bench:
+        return AppTheme.neonCyan;
+      case ArcScrappyTrackerMode.quest:
+        return Colors.amberAccent;
     }
+  }
 
+  String _sectionSubtitle(
+    List<ArcScrappyItem> items,
+    Map<String, ArcScrappyState> states,
+  ) {
+    final completed = _completedCount(items, states);
+    final totalRequired = items.fold<int>(
+      0,
+      (total, item) => total + item.neededCount,
+    );
+    return '$completed / ${items.length} complete • $totalRequired total needed';
+  }
+
+  int _completedCount(
+    List<ArcScrappyItem> items,
+    Map<String, ArcScrappyState> states,
+  ) {
+    return items.where((item) {
+      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+      return state.ownedFor(item.neededCount);
+    }).length;
+  }
+
+  String _tierLabel(ArcScrappyTier tier) {
     switch (tier) {
       case ArcScrappyTier.tier1:
         return 'Tier 1';
@@ -205,7 +233,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             ),
           ),
           content: Text(
-            'This will remove the collected amount for this single ${switch (_mode) { ArcScrappyTrackerMode.scrappy => 'scrappy', ArcScrappyTrackerMode.bench => 'bench', ArcScrappyTrackerMode.quest => 'quest' }} item and reset it back to zero.',
+            'This will remove the collected amount for this ${_modeWord()} item and reset it back to zero.',
             style: const TextStyle(color: Colors.white70, height: 1.4),
           ),
           actions: [
@@ -247,6 +275,17 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
+  String _modeWord() {
+    switch (_mode) {
+      case ArcScrappyTrackerMode.scrappy:
+        return 'scrappy';
+      case ArcScrappyTrackerMode.bench:
+        return 'bench';
+      case ArcScrappyTrackerMode.quest:
+        return 'quest';
+    }
+  }
+
   Future<void> _confirmResetGrid() async {
     final items = _allItems;
     final confirmed = await showDialog<bool>(
@@ -267,9 +306,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           ),
           content: Text(
             switch (_mode) {
-              ArcScrappyTrackerMode.scrappy => 'This will remove all collected scrappy progress and surplus from the Scrappy tracker only.',
-              ArcScrappyTrackerMode.bench => 'This will remove all collected bench upgrade material progress from the Bench tracker only.',
-              ArcScrappyTrackerMode.quest => 'This will remove all collected quest item progress from the Quest tracker only.',
+              ArcScrappyTrackerMode.scrappy =>
+                'This will remove all collected Scrappy progress and surplus from the Scrappy tracker only.',
+              ArcScrappyTrackerMode.bench =>
+                'This will remove all collected bench upgrade material progress from the Bench tracker only.',
+              ArcScrappyTrackerMode.quest =>
+                'This will remove all collected quest item progress from the Quest tracker only.',
             },
             style: const TextStyle(color: Colors.white70, height: 1.45),
           ),
@@ -382,26 +424,26 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             setState(() {
               _mode = mode;
               _selectedFilter = ArcScrappyFilter.missing;
+              _expandedSections.clear();
             });
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spaceM,
+              horizontal: AppTheme.spaceS,
               vertical: AppTheme.spaceM,
             ),
             decoration: AppTheme.tradingCardDecoration(
               radius: 16,
               borderColor: color.withValues(alpha: selected ? 0.64 : 0.20),
-              backgroundColor: selected
-                  ? AppTheme.cardBackgroundAlt
-                  : AppTheme.cardBackgroundDeep,
+              backgroundColor:
+                  selected ? AppTheme.cardBackgroundAlt : AppTheme.cardBackgroundDeep,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, color: color, size: 18),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     label,
@@ -428,13 +470,13 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           label: 'Scrappy',
           icon: Icons.pets_rounded,
         ),
-        const SizedBox(width: AppTheme.spaceM),
+        const SizedBox(width: AppTheme.spaceS),
         button(
           mode: ArcScrappyTrackerMode.bench,
           label: 'Bench',
           icon: Icons.handyman_rounded,
         ),
-        const SizedBox(width: AppTheme.spaceM),
+        const SizedBox(width: AppTheme.spaceS),
         button(
           mode: ArcScrappyTrackerMode.quest,
           label: 'Quests',
@@ -444,202 +486,164 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
-  Widget _buildTierHeader(
-    ArcScrappyTier tier,
+  Widget _buildAdaptiveTileWrap(
     List<ArcScrappyItem> items,
     Map<String, ArcScrappyState> states,
   ) {
-    final color = _tierColor(tier);
-    final completedCount = items.where((item) {
-      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
-      return state.ownedFor(item.neededCount);
-    }).length;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final maxTileWidth = isLandscape ? 124.0 : 118.0;
+    final minTileWidth = isLandscape ? 104.0 : 96.0;
+    final spacing = AppTheme.spaceS;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceM,
-        vertical: AppTheme.spaceM,
-      ),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: 16,
-        borderColor: color.withValues(alpha: 0.22),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              _tierLabel(tier),
-              style: AppTheme.tradingHeading(fontSize: 20, color: color),
-            ),
-          ),
-          Text(
-            '$completedCount / ${items.length}',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final targetWidth = isLandscape ? 116.0 : 108.0;
+        final rawColumns = (constraints.maxWidth / targetWidth).floor();
+        final columns = rawColumns.clamp(2, isLandscape ? 6 : 3);
+        final usableWidth = constraints.maxWidth - (spacing * (columns - 1));
+        final tileWidth = (usableWidth / columns).clamp(minTileWidth, maxTileWidth);
 
-  Widget _buildTierGrid(
-    List<ArcScrappyItem> items,
-    Map<String, ArcScrappyState> states,
-  ) {
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
-    final crossAxisCount = isLandscape ? 5 : 3;
-    final childAspectRatio = isLandscape ? 0.86 : 0.64;
-
-    return GridView.builder(
-      itemCount: items.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: AppTheme.spaceM,
-        mainAxisSpacing: AppTheme.spaceM,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final state = states[item.id] ?? ArcScrappyState.empty(item.id);
-
-        return ScrappyTile(
-          item: item,
-          state: state,
-          landscape: isLandscape,
-          tierColor: _tierColor(item.tier),
-          onTap: () {
-            if (state.collectedCount > 0) {
-              _openItemEditor(item, state);
-            } else {
-              _showMissingItemInfo(item, state);
-            }
-          },
-          onLongPress: () => _openItemEditor(item, state),
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          alignment: WrapAlignment.start,
+          children: [
+            for (final item in items)
+              SizedBox(
+                width: tileWidth,
+                child: ScrappyTile(
+                  item: item,
+                  state: states[item.id] ?? ArcScrappyState.empty(item.id),
+                  landscape: isLandscape,
+                  tierColor: _tierColor(item.tier),
+                  onTap: () {
+                    final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+                    if (state.collectedCount > 0) {
+                      _openItemEditor(item, state);
+                    } else {
+                      _showMissingItemInfo(item, state);
+                    }
+                  },
+                  onLongPress: () {
+                    final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+                    _openItemEditor(item, state);
+                  },
+                ),
+              ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildTierSection(
-    ArcScrappyTier tier,
-    List<ArcScrappyItem> items,
-    Map<String, ArcScrappyState> states,
-  ) {
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTierHeader(tier, items, states),
-        _buildTierGrid(items, states),
-        const SizedBox(height: AppTheme.spaceL),
-      ],
+  Widget _buildEmptyState() {
+    return Container(
+      padding: AppTheme.sectionCardPadding,
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
+      ),
+      child: Text(
+        _emptyMessage,
+        style: const TextStyle(color: Colors.white70, height: 1.35),
+      ),
     );
   }
 
-  Widget _buildTieredList(
-    List<ArcScrappyItem> filtered,
-    Map<String, ArcScrappyState> states,
-  ) {
-    if (filtered.isEmpty) {
-      return Container(
-        padding: AppTheme.sectionCardPadding,
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
-        ),
-        child: Text(
-          _emptyMessage,
-          style: const TextStyle(color: Colors.white70, height: 1.35),
-        ),
-      );
-    }
-
-    final tier1Items = filtered
-        .where((item) => item.tier == ArcScrappyTier.tier1)
-        .toList(growable: false);
-    final tier2Items = filtered
-        .where((item) => item.tier == ArcScrappyTier.tier2)
-        .toList(growable: false);
-    final tier3Items = filtered
-        .where((item) => item.tier == ArcScrappyTier.tier3)
-        .toList(growable: false);
-    final tier4Items = filtered
-        .where((item) => item.tier == ArcScrappyTier.tier4)
-        .toList(growable: false);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildTierSection(ArcScrappyTier.tier1, tier1Items, states),
-        _buildTierSection(ArcScrappyTier.tier2, tier2Items, states),
-        _buildTierSection(ArcScrappyTier.tier3, tier3Items, states),
-        _buildTierSection(ArcScrappyTier.tier4, tier4Items, states),
-      ],
-    );
-  }
-
-
-  Widget _buildGroupHeader({
+  Widget _buildExpansionSection({
+    required String id,
     required String title,
+    required Color color,
     required List<ArcScrappyItem> items,
     required Map<String, ArcScrappyState> states,
-    required Color color,
     String? subtitle,
+    Widget? child,
   }) {
-    final completedCount = items.where((item) {
-      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
-      return state.ownedFor(item.neededCount);
-    }).length;
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final expanded = _expandedSections.contains(id);
+    final completed = _completedCount(items, states);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceM,
-        vertical: AppTheme.spaceM,
-      ),
       decoration: AppTheme.tradingCardDecoration(
-        radius: 16,
-        borderColor: color.withValues(alpha: 0.24),
+        radius: 18,
+        borderColor: color.withValues(alpha: expanded ? 0.42 : 0.20),
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTheme.tradingHeading(fontSize: 20, color: color),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(color: Colors.white60, fontSize: 12),
-                  ),
-                ],
-              ],
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: PageStorageKey<String>(id),
+          initiallyExpanded: expanded,
+          onExpansionChanged: (value) {
+            setState(() {
+              if (value) {
+                _expandedSections.add(id);
+              } else {
+                _expandedSections.remove(id);
+              }
+            });
+          },
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spaceM,
+            vertical: AppTheme.spaceXS,
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppTheme.spaceM,
+            0,
+            AppTheme.spaceM,
+            AppTheme.spaceM,
+          ),
+          iconColor: color,
+          collapsedIconColor: color,
+          title: Text(
+            title,
+            style: AppTheme.tradingHeading(fontSize: 19, color: color),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Text(
+              subtitle ?? _sectionSubtitle(items, states),
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
             ),
           ),
-          Text(
-            '$completedCount / ${items.length}',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ProgressPill(text: '$completed / ${items.length}', color: color),
+              const SizedBox(width: 4),
+              Icon(expanded ? Icons.expand_less : Icons.expand_more, color: color),
+            ],
           ),
-        ],
+          children: [child ?? _buildAdaptiveTileWrap(items, states)],
+        ),
       ),
+    );
+  }
+
+  Widget _buildScrappyList(
+    List<ArcScrappyItem> filtered,
+    Map<String, ArcScrappyState> states,
+  ) {
+    if (filtered.isEmpty) return _buildEmptyState();
+
+    final tierGroups = <ArcScrappyTier, List<ArcScrappyItem>>{};
+    for (final item in filtered) {
+      tierGroups.putIfAbsent(item.tier, () => <ArcScrappyItem>[]).add(item);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final tier in ArcScrappyTier.values)
+          _buildExpansionSection(
+            id: 'scrappy-${tier.name}',
+            title: _tierLabel(tier),
+            color: _tierColor(tier),
+            items: tierGroups[tier] ?? const <ArcScrappyItem>[],
+            states: states,
+          ),
+      ],
     );
   }
 
@@ -647,18 +651,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     List<ArcScrappyItem> filtered,
     Map<String, ArcScrappyState> states,
   ) {
-    if (filtered.isEmpty) {
-      return Container(
-        padding: AppTheme.sectionCardPadding,
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
-        ),
-        child: Text(
-          _emptyMessage,
-          style: const TextStyle(color: Colors.white70, height: 1.35),
-        ),
-      );
-    }
+    if (filtered.isEmpty) return _buildEmptyState();
 
     final categories = <String>[];
     for (final item in filtered) {
@@ -668,83 +661,78 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final category in categories) ...[
-          _buildStationOrTraderSection(
+        for (final category in categories)
+          _buildCategorySection(
             category: category,
             items: filtered
                 .where((item) => item.category == category)
                 .toList(growable: false),
             states: states,
           ),
-          const SizedBox(height: AppTheme.spaceL),
-        ],
       ],
     );
   }
 
-  Widget _buildStationOrTraderSection({
+  Widget _buildCategorySection({
     required String category,
     required List<ArcScrappyItem> items,
     required Map<String, ArcScrappyState> states,
   }) {
-    final sectionColor = _mode == ArcScrappyTrackerMode.quest
+    final color = _mode == ArcScrappyTrackerMode.quest
         ? Colors.amberAccent
         : AppTheme.neonCyan;
-
     final groups = <String>[];
     for (final item in items) {
       if (!groups.contains(item.group)) groups.add(item.group);
     }
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: 22,
-        borderColor: sectionColor.withValues(alpha: 0.18),
-        backgroundColor: AppTheme.cardBackground.withValues(alpha: 0.72),
-      ),
+    return _buildExpansionSection(
+      id: '${_mode.name}-category-$category',
+      title: category,
+      color: color,
+      items: items,
+      states: states,
+      subtitle: _mode == ArcScrappyTrackerMode.quest
+          ? '${items.length} tracked items across ${groups.length} quests'
+          : '${items.length} materials across ${groups.length} tiers',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            category,
-            style: AppTheme.tradingHeading(fontSize: 25, color: sectionColor),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          for (final group in groups) ...[
-            Builder(
-              builder: (context) {
-                final groupItems = items
-                    .where((item) => item.group == group)
-                    .toList(growable: false);
-                final displayTitle = _mode == ArcScrappyTrackerMode.bench
-                    ? group.replaceFirst('$category Lv.', 'Tier ')
-                    : group;
-                final subtitle = _mode == ArcScrappyTrackerMode.bench
-                    ? '$category upgrade materials'
-                    : '$category quest collection items';
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildGroupHeader(
-                      title: displayTitle,
-                      subtitle: subtitle,
-                      items: groupItems,
-                      states: states,
-                      color: _mode == ArcScrappyTrackerMode.quest
-                          ? Colors.amberAccent
-                          : _tierColor(groupItems.first.tier),
-                    ),
-                    _buildTierGrid(groupItems, states),
-                    const SizedBox(height: AppTheme.spaceL),
-                  ],
-                );
-              },
+          for (final group in groups)
+            _buildExpansionSection(
+              id: '${_mode.name}-$category-$group',
+              title: _displayGroupTitle(category, group),
+              color: _groupColor(items, group),
+              items: items
+                  .where((item) => item.group == group)
+                  .toList(growable: false),
+              states: states,
+              subtitle: _mode == ArcScrappyTrackerMode.quest
+                  ? 'Quest collection items'
+                  : '$category upgrade materials',
             ),
-          ],
         ],
       ),
     );
+  }
+
+  Color _groupColor(List<ArcScrappyItem> items, String group) {
+    final groupItem = items.firstWhere(
+      (item) => item.group == group,
+      orElse: () => items.first,
+    );
+    return _mode == ArcScrappyTrackerMode.quest
+        ? Colors.amberAccent
+        : _tierColor(groupItem.tier);
+  }
+
+  String _displayGroupTitle(String category, String group) {
+    if (_mode == ArcScrappyTrackerMode.bench) {
+      return group
+          .replaceFirst('$category Lv.', 'Tier ')
+          .replaceFirst('$category Tier ', 'Tier ');
+    }
+    return group;
   }
 
   @override
@@ -770,11 +758,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 final states = snapshot.data ?? <String, ArcScrappyState>{};
                 final filtered = _applyFilter(allItems, states);
                 final counts = _buildCounts(allItems, states);
-
                 final ownedCount = counts[ArcScrappyFilter.owned] ?? 0;
-                final completion = allItems.isEmpty
-                    ? 0.0
-                    : ownedCount / allItems.length;
+                final completion = allItems.isEmpty ? 0.0 : ownedCount / allItems.length;
                 final landscape =
                     MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -791,15 +776,14 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       title: _headerTitle,
                       description: _headerDescription,
                       footer: switch (_mode) {
-                        ArcScrappyTrackerMode.scrappy => 'Scrappy materials stay separate from bench and quest totals, but surplus can feed future resource trading.',
-                        ArcScrappyTrackerMode.bench => 'Bench materials are split by exact station and tier so you know what to keep before selling or trading spares.',
-                        ArcScrappyTrackerMode.quest => 'Quest tracker includes regular collection items only. Special fixed-location quest items are excluded by design.',
+                        ArcScrappyTrackerMode.scrappy =>
+                          'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
+                        ArcScrappyTrackerMode.bench =>
+                          'Bench materials are grouped by station then tier. Expand only the station you are upgrading.',
+                        ArcScrappyTrackerMode.quest =>
+                          'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
                       },
-                      accentColor: switch (_mode) {
-                        ArcScrappyTrackerMode.scrappy => AppTheme.neonPink,
-                        ArcScrappyTrackerMode.bench => AppTheme.neonCyan,
-                        ArcScrappyTrackerMode.quest => Colors.amberAccent,
-                      },
+                      accentColor: _modeAccent(),
                     ),
                     const SizedBox(height: AppTheme.spaceL),
                     ScrappyFilterBar(
@@ -811,7 +795,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     ),
                     const SizedBox(height: AppTheme.spaceL),
                     _mode == ArcScrappyTrackerMode.scrappy
-                        ? _buildTieredList(filtered, states)
+                        ? _buildScrappyList(filtered, states)
                         : _buildGroupedList(filtered, states),
                     if (_mode == ArcScrappyTrackerMode.scrappy) ...[
                       const SizedBox(height: AppTheme.spaceL),
@@ -824,6 +808,29 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProgressPill extends StatelessWidget {
+  const _ProgressPill({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
