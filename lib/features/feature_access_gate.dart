@@ -16,7 +16,7 @@ class FeatureAccessFlag {
 class FeatureAccess {
   const FeatureAccess._();
 
-  static const Map<String, String> _globalFieldMap = <String, String>{
+  static const Map<String, String> _globalFieldMap = {
     FeatureAccessFlag.scrappyTracker: 'scrappyTrackerEnabled',
     FeatureAccessFlag.traderHub: 'traderHubEnabled',
     FeatureAccessFlag.matchRaider: 'matchRaiderEnabled',
@@ -26,7 +26,7 @@ class FeatureAccess {
   static Stream<bool> watchFlag(String flag) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return Stream<bool>.value(false);
+      return Stream.value(false);
     }
 
     return FirebaseFirestore.instance
@@ -34,7 +34,7 @@ class FeatureAccess {
         .doc(user.uid)
         .snapshots()
         .asyncMap((snapshot) async {
-      final data = snapshot.data() ?? <String, dynamic>{};
+      final data = snapshot.data() ?? {};
       if (data['isAdmin'] == true || data['isDev'] == true || data[flag] == true) {
         return true;
       }
@@ -46,7 +46,7 @@ class FeatureAccess {
           .collection('config')
           .doc('feature_access')
           .get();
-      final configData = configSnapshot.data() ?? <String, dynamic>{};
+      final configData = configSnapshot.data() ?? {};
       return configData[globalField] == true;
     });
   }
@@ -59,7 +59,7 @@ class FeatureAccess {
         .collection('users')
         .doc(user.uid)
         .get();
-    final data = snapshot.data() ?? <String, dynamic>{};
+    final data = snapshot.data() ?? {};
     if (data['isAdmin'] == true || data['isDev'] == true || data[flag] == true) {
       return true;
     }
@@ -71,7 +71,7 @@ class FeatureAccess {
         .collection('config')
         .doc('feature_access')
         .get();
-    final configData = configSnapshot.data() ?? <String, dynamic>{};
+    final configData = configSnapshot.data() ?? {};
     return configData[globalField] == true;
   }
 
@@ -81,7 +81,7 @@ class FeatureAccess {
   }) async {
     await showDialog<void>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: AppTheme.cardBackground,
           shape: RoundedRectangleBorder(
@@ -91,16 +91,19 @@ class FeatureAccess {
             ),
           ),
           title: Text(
-            title,
-            style: AppTheme.tradingHeading(fontSize: 22),
+            'Coming Soon',
+            style: AppTheme.tradingHeading(
+              fontSize: 22,
+              color: AppTheme.neonPink,
+            ),
           ),
           content: Text(
-            'We\'ll be releasing testing slots for this area shortly. Thanks for being early.',
+            '$title is not available yet. We\'ll open this area when it is ready for testing.',
             style: const TextStyle(color: Colors.white70, height: 1.4),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Close'),
             ),
           ],
@@ -124,7 +127,7 @@ class FeatureLockedScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: UagAppBar(
         title: title,
-        subtitle: 'Private testing only for now.',
+        subtitle: 'Coming soon.',
       ),
       drawer: const AppDrawer(),
       body: Stack(
@@ -156,10 +159,10 @@ class FeatureLockedScreen extends StatelessWidget {
                         style: AppTheme.tradingHeading(fontSize: 26),
                       ),
                       const SizedBox(height: AppTheme.spaceS),
-                      const Text(
-                        'We\'ll be releasing testing slots for this area shortly. Thanks for being early.',
+                      Text(
+                        '$title is not available yet. We\'ll open this area when it is ready for testing.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70, height: 1.4),
+                        style: const TextStyle(color: Colors.white70, height: 1.4),
                       ),
                     ],
                   ),

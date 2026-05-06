@@ -1,14 +1,21 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-import 'package:uag_traders_hub/widgets/theme.dart';
 import 'package:uag_traders_hub/build/auth/auth_landing_screen.dart';
 import 'package:uag_traders_hub/build/home_screen.dart';
-import 'package:uag_traders_hub/build/trading_hub_screen.dart';
+import 'package:uag_traders_hub/features/feature_access_gate.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_traders_hub/screens/build/admin_console_screen.dart';
 import 'package:uag_traders_hub/screens/build/feedback_screen.dart';
+import 'package:uag_traders_hub/widgets/theme.dart';
 import 'package:uag_traders_hub/widgets/uag_drawer_nav_tile.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -20,8 +27,7 @@ class AppDrawer extends StatefulWidget {
   State<AppDrawer> createState() => _AppDrawerState();
 }
 
-class _AppDrawerState extends State<AppDrawer>
-    with SingleTickerProviderStateMixin {
+class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<Color?> _colorAnimation;
 
@@ -103,24 +109,65 @@ class _AppDrawerState extends State<AppDrawer>
 
   List<_DrawerItem> _buildItems(bool isLoggedIn) {
     return <_DrawerItem>[
-      _DrawerItem('Home', Icons.home_outlined, HomeScreen.routeName),
-      _DrawerItem(
-        'Trading Hub',
-        Icons.hub_outlined,
-        TradingHubScreen.routeName,
-      ),
-      _DrawerItem(
+      const _DrawerItem('Home', Icons.home_outlined, HomeScreen.routeName),
+      const _DrawerItem(
         'ARC Raiders Hub',
         Icons.rocket_launch_outlined,
         ArcRaidersHubScreen.routeName,
       ),
-      _DrawerItem(
+      const _DrawerItem(
+        'Intel Snapshot',
+        Icons.insights_rounded,
+        ArcMarketIntelligenceScreen.routeName,
+      ),
+      const _DrawerItem(
+        'Blueprint Grid',
+        Icons.grid_view_rounded,
+        BlueprintGridScreen.routeName,
+      ),
+      const _DrawerItem(
+        'Raid Planner',
+        Icons.route_rounded,
+        RaidPlannerScreen.routeName,
+      ),
+      const _DrawerItem(
+        'Scrappy Tracker',
+        Icons.widgets_rounded,
+        ScrappyGridScreen.routeName,
+        flag: FeatureAccessFlag.scrappyTracker,
+      ),
+      const _DrawerItem(
         'Trader Hub',
         Icons.storefront_rounded,
         TraderHubScreen.routeName,
+        flag: FeatureAccessFlag.traderHub,
+      ),
+      const _DrawerItem(
+        'Match-a-Raider',
+        Icons.groups_2_outlined,
+        ArcMatchRiderScreen.routeName,
+        flag: FeatureAccessFlag.matchRaider,
+      ),
+      const _DrawerItem(
+        'Play Like a Pro',
+        Icons.psychology_outlined,
+        PlayLikeAProScreen.routeName,
+        flag: FeatureAccessFlag.playLockerPro,
+      ),
+      const _DrawerItem(
+        'Trader Profile',
+        Icons.person_outline_rounded,
+        TradingProfileScreen.routeName,
+        flag: FeatureAccessFlag.traderHub,
       ),
       if (isLoggedIn)
-        _DrawerItem(
+        const _DrawerItem(
+          'Admin Console',
+          Icons.admin_panel_settings_outlined,
+          AdminConsoleScreen.routeName,
+        ),
+      if (isLoggedIn)
+        const _DrawerItem(
           'Beta Feedback',
           Icons.rate_review_outlined,
           FeedbackScreen.routeName,
@@ -128,12 +175,23 @@ class _AppDrawerState extends State<AppDrawer>
     ];
   }
 
-  void _openRoute(BuildContext context, String routeName) {
+  Future<void> _openRoute(BuildContext context, _DrawerItem item) async {
     final navigator = Navigator.of(context);
     navigator.pop();
+
     final currentRoute = ModalRoute.of(context)?.settings.name;
-    if (currentRoute == routeName) return;
-    navigator.pushNamedAndRemoveUntil(routeName, (route) => route.isFirst);
+    if (currentRoute == item.routeName) return;
+
+    if (item.flag != null) {
+      final hasAccess = await FeatureAccess.hasAccess(item.flag!);
+      if (!mounted) return;
+      if (!hasAccess) {
+        await FeatureAccess.showLockedDialog(context, title: item.title);
+        return;
+      }
+    }
+
+    navigator.pushNamedAndRemoveUntil(item.routeName, (route) => route.isFirst);
   }
 
   @override
@@ -178,7 +236,7 @@ class _AppDrawerState extends State<AppDrawer>
                           title: item.title,
                           icon: item.icon,
                           selected: currentRoute == item.routeName,
-                          onTap: () => _openRoute(context, item.routeName),
+                          onTap: () => _openRoute(context, item),
                         );
                       },
                     ),
@@ -210,9 +268,10 @@ class _AppDrawerState extends State<AppDrawer>
 }
 
 class _DrawerItem {
-  const _DrawerItem(this.title, this.icon, this.routeName);
+  const _DrawerItem(this.title, this.icon, this.routeName, {this.flag});
 
   final String title;
   final IconData icon;
   final String routeName;
+  final String? flag;
 }
