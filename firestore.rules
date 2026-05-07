@@ -1,7 +1,7 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -10,12 +10,16 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function currentUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function isAdminOrDev() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDev == true
+          currentUserData().isAdmin == true ||
+          currentUserData().isDev == true
         );
     }
 
@@ -46,8 +50,8 @@ service cloud.firestore {
     function isTradingOfferParticipant() {
       return isSignedIn()
         && (
-          resource.data.senderUid == request.auth.uid
-          || resource.data.receiverUid == request.auth.uid
+          resource.data.senderUid == request.auth.uid ||
+          resource.data.receiverUid == request.auth.uid
         );
     }
 
@@ -60,8 +64,8 @@ service cloud.firestore {
     function isTradingSessionParticipant() {
       return isSignedIn()
         && (
-          resource.data.traderOneUid == request.auth.uid
-          || resource.data.traderTwoUid == request.auth.uid
+          resource.data.traderOneUid == request.auth.uid ||
+          resource.data.traderTwoUid == request.auth.uid
         );
     }
 
@@ -69,16 +73,16 @@ service cloud.firestore {
       return isSignedIn()
         && request.resource.data.traderOneUid != request.resource.data.traderTwoUid
         && (
-          request.resource.data.traderOneUid == request.auth.uid
-          || request.resource.data.traderTwoUid == request.auth.uid
+          request.resource.data.traderOneUid == request.auth.uid ||
+          request.resource.data.traderTwoUid == request.auth.uid
         );
     }
 
     function isMatchInviteParticipant() {
       return isSignedIn()
         && (
-          resource.data.senderUid == request.auth.uid
-          || resource.data.recipientUid == request.auth.uid
+          resource.data.senderUid == request.auth.uid ||
+          resource.data.recipientUid == request.auth.uid
         );
     }
 
@@ -122,6 +126,24 @@ service cloud.firestore {
         allow read, create, update, delete: if isOwner(userId);
       }
 
+      match /usage_counters/{periodId} {
+        allow read: if isOwner(userId) || isAdminOrDev();
+        allow create, update: if isOwner(userId)
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.periodKey == periodId;
+        allow delete: if isAdminOrDev();
+      }
+
+      match /subscription_events/{eventId} {
+        allow read: if isOwner(userId) || isAdminOrDev();
+        allow write: if false;
+      }
+
+      match /referral_wallet/{walletDocId} {
+        allow read: if isOwner(userId) || isAdminOrDev();
+        allow write: if false;
+      }
+
       match /{document=**} {
         allow read, create, update, delete: if isOwner(userId);
       }
@@ -142,25 +164,19 @@ service cloud.firestore {
 
     match /arc_trader_profiles/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid)
-        || ownsIncomingDocByUid()
-        || ownsIncomingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
       allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
     }
 
     match /arc_trader_availability/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid)
-        || ownsIncomingDocByUid()
-        || ownsIncomingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
       allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
     }
 
     match /arc_trader_away/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid)
-        || ownsIncomingDocByUid()
-        || ownsIncomingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
       allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
     }
 
@@ -241,17 +257,17 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create: if isSignedIn()
         && (
-          request.resource.data.traderOneUid == request.auth.uid
-          || request.resource.data.traderTwoUid == request.auth.uid
-          || request.resource.data.userId == request.auth.uid
-          || request.resource.data.ownerUid == request.auth.uid
+          request.resource.data.traderOneUid == request.auth.uid ||
+          request.resource.data.traderTwoUid == request.auth.uid ||
+          request.resource.data.userId == request.auth.uid ||
+          request.resource.data.ownerUid == request.auth.uid
         );
       allow update: if isSignedIn()
         && (
-          resource.data.traderOneUid == request.auth.uid
-          || resource.data.traderTwoUid == request.auth.uid
-          || resource.data.userId == request.auth.uid
-          || resource.data.ownerUid == request.auth.uid
+          resource.data.traderOneUid == request.auth.uid ||
+          resource.data.traderTwoUid == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          resource.data.ownerUid == request.auth.uid
         );
       allow delete: if false;
     }
@@ -261,8 +277,8 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid;
       allow read: if isSignedIn()
         && (
-          resource.data.uid == request.auth.uid
-          || isAdminOrDev()
+          resource.data.uid == request.auth.uid ||
+          isAdminOrDev()
         );
       allow update: if isAdminOrDev();
       allow delete: if false;
@@ -270,19 +286,25 @@ service cloud.firestore {
       match /replies/{replyId} {
         allow read: if isSignedIn()
           && (
-            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
-            || isAdminOrDev()
+            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid ||
+            isAdminOrDev()
           );
         allow create: if isSignedIn()
           && (
-            isAdminOrDev()
-            || get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
+            isAdminOrDev() ||
+            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
           );
         allow update, delete: if false;
       }
     }
 
     match /config/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdminOrDev();
+      allow delete: if false;
+    }
+
+    match /monetisation_config/{docId} {
       allow read: if isSignedIn();
       allow create, update: if isAdminOrDev();
       allow delete: if false;
@@ -309,6 +331,30 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /referral_events/{eventId} {
+      allow read: if isAdminOrDev()
+        || (isSignedIn() && resource.data.referrerUid == request.auth.uid)
+        || (isSignedIn() && resource.data.referredUid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /payout_requests/{requestId} {
+      allow read: if isAdminOrDev()
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.amountPence is int
+        && request.resource.data.amountPence >= 2500;
+      allow update: if isAdminOrDev();
+      allow delete: if false;
+    }
+
+    match /stripe_customers/{uid} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow write: if false;
+    }
+
     match /uag_ids/{uagId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn()
@@ -323,19 +369,17 @@ service cloud.firestore {
 
     match /public_profiles/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid)
-        || ownsIncomingDocByUid()
-        || ownsIncomingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
       allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
     }
 
     match /dose_tasks/{taskId} {
       allow read, create, update, delete: if isSignedIn()
         && (
-          request.resource.data.uid == request.auth.uid
-          || resource.data.uid == request.auth.uid
-          || request.resource.data.userId == request.auth.uid
-          || resource.data.userId == request.auth.uid
+          request.resource.data.uid == request.auth.uid ||
+          resource.data.uid == request.auth.uid ||
+          request.resource.data.userId == request.auth.uid ||
+          resource.data.userId == request.auth.uid
         );
     }
 

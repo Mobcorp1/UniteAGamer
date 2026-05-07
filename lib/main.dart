@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'package:uag_traders_hub/build/auth/auth_screen.dart';
 import 'package:uag_traders_hub/build/home_screen.dart';
 import 'package:uag_traders_hub/features/feature_access_gate.dart';
+import 'package:uag_traders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
@@ -35,7 +36,6 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   if (!kIsWeb) {
     try {
       await TradingPushService.instance.initialize();
@@ -44,7 +44,6 @@ Future<void> main() async {
       debugPrintStack(stackTrace: st);
     }
   }
-
   runApp(const UAGTradersHubApp());
 }
 
@@ -67,6 +66,11 @@ class UAGTradersHubApp extends StatelessWidget {
       case HomeScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const AppEntryGate(),
+          settings: settings,
+        );
+      case MonetisationScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const MonetisationScreen(),
           settings: settings,
         );
       case TradingHubScreen.routeName:
@@ -112,24 +116,6 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
-      case ScrappyGridScreen.benchRouteName:
-        return MaterialPageRoute(
-          builder: (_) => const FeatureAccessRouteGate(
-            flag: FeatureAccessFlag.scrappyTracker,
-            title: 'Bench Tracker',
-            child: ScrappyGridScreen.bench(),
-          ),
-          settings: settings,
-        );
-      case ScrappyGridScreen.questRouteName:
-        return MaterialPageRoute(
-          builder: (_) => const FeatureAccessRouteGate(
-            flag: FeatureAccessFlag.scrappyTracker,
-            title: 'Quest Tracker',
-            child: ScrappyGridScreen.quest(),
-          ),
-          settings: settings,
-        );
       case PlayLikeAProScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -149,7 +135,7 @@ class UAGTradersHubApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trade Hub',
+            title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 0),
           ),
           settings: settings,
@@ -158,7 +144,7 @@ class UAGTradersHubApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trade Hub',
+            title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 1),
           ),
           settings: settings,
@@ -168,7 +154,7 @@ class UAGTradersHubApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trade Hub',
+            title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 2, initialActivityTab: 0),
           ),
           settings: settings,
@@ -177,7 +163,7 @@ class UAGTradersHubApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trade Hub',
+            title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 2, initialActivityTab: 1),
           ),
           settings: settings,
@@ -186,7 +172,7 @@ class UAGTradersHubApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trade Hub',
+            title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 3),
           ),
           settings: settings,
@@ -195,7 +181,7 @@ class UAGTradersHubApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trade Hub',
+            title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 4),
           ),
           settings: settings,
@@ -204,14 +190,14 @@ class UAGTradersHubApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trade Hub',
+            title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 5),
           ),
           settings: settings,
         );
       case FeedbackScreen.routeName:
         final args = settings.arguments is FeedbackScreenArgs
-            ? settings.arguments as FeedbackScreenArgs
+            ? settings.arguments! as FeedbackScreenArgs
             : const FeedbackScreenArgs();
         return MaterialPageRoute(
           builder: (_) => FeedbackScreen(initialTabIndex: args.initialTabIndex),

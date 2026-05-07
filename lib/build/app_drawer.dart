@@ -1,9 +1,11 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/build/app_entry_gate.dart';
 import 'package:uag_traders_hub/build/auth/auth_landing_screen.dart';
-import 'package:uag_traders_hub/build/home_screen.dart';
 import 'package:uag_traders_hub/features/feature_access_gate.dart';
+import 'package:uag_traders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
@@ -18,7 +20,7 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 import 'package:uag_traders_hub/widgets/uag_drawer_nav_tile.dart';
 
 class AppDrawer extends StatefulWidget {
-  const AppDrawer({super.key, this.drawerWidth = 320});
+  const AppDrawer({super.key, this.drawerWidth = 300});
 
   final double drawerWidth;
 
@@ -61,9 +63,8 @@ class _AppDrawerState extends State<AppDrawer>
   Widget _buildDrawerHeader(Color dynamicColor) {
     return SafeArea(
       minimum: const EdgeInsets.only(top: 8),
-      bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+        padding: const EdgeInsets.all(8),
         child: Row(
           children: [
             Container(
@@ -81,8 +82,8 @@ class _AppDrawerState extends State<AppDrawer>
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
                   'assets/icon/uag_traders_icon_transparent.webp',
-                  width: 54,
-                  height: 54,
+                  width: 56,
+                  height: 56,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -92,9 +93,9 @@ class _AppDrawerState extends State<AppDrawer>
               child: AnimatedTextKit(
                 animatedTexts: [
                   AppTheme.animatedText(
-                    'UAG Traders Hub',
+                    'UAG Raiders Hub',
                     AppTheme.heroTextStyle(
-                      fontSize: 23,
+                      fontSize: 24,
                       color: AppTheme.neonCyan,
                     ),
                   ),
@@ -108,76 +109,80 @@ class _AppDrawerState extends State<AppDrawer>
     );
   }
 
-  List<_DrawerItem> _buildItems(bool isLoggedIn) {
+  List<_DrawerItem> _buildItems(bool isLoggedIn, bool adminMode) {
     return <_DrawerItem>[
-      const _DrawerItem(
-        title: 'Home',
-        icon: Icons.home_outlined,
-        routeName: HomeScreen.routeName,
+      _DrawerItem('Home', Icons.home_outlined, AppEntryGate.routeName),
+      _DrawerItem(
+        'Intel Snapshot',
+        Icons.insights_rounded,
+        ArcMarketIntelligenceScreen.routeName,
       ),
-      const _DrawerItem(
-        title: 'Intel Snapshot',
-        icon: Icons.insights_rounded,
-        routeName: ArcMarketIntelligenceScreen.routeName,
+      _DrawerItem(
+        'Blueprint Grid',
+        Icons.grid_view_rounded,
+        BlueprintGridScreen.routeName,
       ),
-      const _DrawerItem(
-        title: 'Blueprint Grid',
-        icon: Icons.grid_view_rounded,
-        routeName: BlueprintGridScreen.routeName,
+      _DrawerItem(
+        'Raid Planner',
+        Icons.route_rounded,
+        RaidPlannerScreen.routeName,
       ),
-      const _DrawerItem(
-        title: 'Raid Planner',
-        icon: Icons.route_rounded,
-        routeName: RaidPlannerScreen.routeName,
+      _DrawerItem(
+        'Scrappy Tracker',
+        Icons.widgets_rounded,
+        ScrappyGridScreen.routeName,
+        accessFlag: FeatureAccessFlag.scrappyTracker,
       ),
-      const _DrawerItem(
-        title: 'Scrappy Tracker',
-        icon: Icons.widgets_rounded,
-        routeName: ScrappyGridScreen.routeName,
-        flag: FeatureAccessFlag.scrappyTracker,
+      _DrawerItem(
+        'Trader Hub',
+        Icons.storefront_rounded,
+        TraderHubScreen.routeName,
+        accessFlag: FeatureAccessFlag.traderHub,
       ),
-      const _DrawerItem(
-        title: 'Trade Hub',
-        icon: Icons.storefront_rounded,
-        routeName: TraderHubScreen.routeName,
-        flag: FeatureAccessFlag.traderHub,
-      ),
-      const _DrawerItem(
-        title: 'Match Raider',
-        icon: Icons.groups_2_outlined,
-        routeName: ArcMatchRiderScreen.routeName,
-        flag: FeatureAccessFlag.matchRaider,
+      _DrawerItem(
+        'Match Raider',
+        Icons.groups_2_outlined,
+        ArcMatchRiderScreen.routeName,
+        accessFlag: FeatureAccessFlag.matchRaider,
         comingSoonWhenLocked: true,
       ),
-      const _DrawerItem(
-        title: 'Play Like a Pro',
-        icon: Icons.psychology_outlined,
-        routeName: PlayLikeAProScreen.routeName,
-        flag: FeatureAccessFlag.playLockerPro,
+      _DrawerItem(
+        'Play Like a Pro',
+        Icons.psychology_outlined,
+        PlayLikeAProScreen.routeName,
+        accessFlag: FeatureAccessFlag.playLockerPro,
         comingSoonWhenLocked: true,
-      ),
-      const _DrawerItem(
-        title: 'Trader Profile',
-        icon: Icons.person_pin_circle_outlined,
-        routeName: TradingProfileScreen.routeName,
-        flag: FeatureAccessFlag.traderHub,
-      ),
-      const _DrawerItem(
-        title: 'Admin Console',
-        icon: Icons.admin_panel_settings_outlined,
-        routeName: AdminConsoleScreen.routeName,
       ),
       if (isLoggedIn)
-        const _DrawerItem(
-          title: 'Beta Feedback',
-          icon: Icons.rate_review_outlined,
-          routeName: FeedbackScreen.routeName,
+        _DrawerItem(
+          'Trader Profile',
+          Icons.person_pin_circle_outlined,
+          TradingProfileScreen.routeName,
+          accessFlag: FeatureAccessFlag.traderHub,
+        ),
+      if (isLoggedIn)
+        _DrawerItem(
+          'Plans & Referrals',
+          Icons.workspace_premium_outlined,
+          MonetisationScreen.routeName,
+        ),
+      if (adminMode)
+        _DrawerItem(
+          'Admin Console',
+          Icons.admin_panel_settings_outlined,
+          AdminConsoleScreen.routeName,
+        ),
+      if (isLoggedIn)
+        _DrawerItem(
+          'Beta Feedback',
+          Icons.rate_review_outlined,
+          FeedbackScreen.routeName,
         ),
     ];
   }
 
   Future<void> _showComingSoon(BuildContext context, String title) async {
-    await showDialog<void>(
+    await showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -212,140 +217,124 @@ class _AppDrawerState extends State<AppDrawer>
     );
   }
 
-  Future<void> _openItem(BuildContext context, _DrawerItem item) async {
+  Future<void> _openRoute(
+    BuildContext context,
+    String routeName, {
+    String? accessFlag,
+    String? title,
+    bool comingSoonWhenLocked = false,
+  }) async {
     final navigator = Navigator.of(context);
-    final currentRoute = ModalRoute.of(context)?.settings.name;
-
-    if (item.routeName == currentRoute) {
-      navigator.pop();
-      return;
-    }
-
-    if (item.flag != null) {
-      final hasAccess = await FeatureAccess.hasAccess(item.flag!);
+    navigator.pop();
+    if (accessFlag != null) {
+      final hasAccess = await FeatureAccess.hasAccess(accessFlag);
       if (!context.mounted) return;
-
       if (!hasAccess) {
-        navigator.pop();
-        if (item.comingSoonWhenLocked) {
-          await _showComingSoon(context, item.title);
+        if (comingSoonWhenLocked) {
+          await _showComingSoon(context, title ?? 'Coming Soon');
         } else {
-          await FeatureAccess.showLockedDialog(context, title: item.title);
+          await FeatureAccess.showLockedDialog(
+            context,
+            title: title ?? 'Coming Soon',
+          );
         }
         return;
       }
     }
-
-    navigator.pop();
-    navigator.pushNamedAndRemoveUntil(item.routeName, (route) => route.isFirst);
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          onPressed: () => _logout(context),
-          icon: const Icon(Icons.logout, size: 18),
-          label: const Text('Logout'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.neonPink,
-            side: const BorderSide(color: AppTheme.neonPink),
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          ),
-        ),
-      ),
-    );
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    if (currentRoute == routeName) return;
+    navigator.pushNamedAndRemoveUntil(routeName, (route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
     final dynamicColor = _colorAnimation.value ?? Colors.white;
-    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    final user = FirebaseAuth.instance.currentUser;
+    final isLoggedIn = user != null;
     final currentRoute = ModalRoute.of(context)?.settings.name;
-    final items = _buildItems(isLoggedIn);
-    final media = MediaQuery.of(context);
-    final drawerWidth = widget.drawerWidth.clamp(280.0, media.size.width * 0.92);
 
     return AnimatedBuilder(
       animation: _colorAnimation,
       builder: (context, child) {
         return Align(
           alignment: Alignment.centerLeft,
-          child: SafeArea(
-            left: false,
-            right: false,
-            top: false,
-            bottom: false,
-            child: Container(
-              width: drawerWidth,
-              decoration: BoxDecoration(
-                border: Border.all(color: dynamicColor, width: 3),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: dynamicColor.withValues(alpha: 0.7),
-                    blurRadius: 25,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Drawer(
-                child: Column(
-                  children: [
-                    _buildDrawerHeader(dynamicColor),
-                    Divider(
-                      color: dynamicColor.withValues(alpha: 0.7),
-                      thickness: 1.5,
-                      height: 1,
-                    ),
-                    Expanded(
-                      child: ListView.separated(
-                        padding: EdgeInsets.only(
-                          top: 4,
-                          bottom: isLoggedIn
-                              ? 8
-                              : media.padding.bottom + AppTheme.spaceL,
-                        ),
-                        itemCount: items.length,
-                        separatorBuilder: (context, index) {
-                          final item = items[index];
-                          final next = index + 1 < items.length
-                              ? items[index + 1]
-                              : null;
-
-                          if (item.title == 'Home' ||
-                              item.title == 'Trader Profile' ||
-                              next?.title == 'Admin Console') {
-                            return Divider(
-                              color: AppTheme.tradingDivider,
-                              height: 1,
-                            );
-                          }
-
-                          return const SizedBox.shrink();
-                        },
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          return UagDrawerNavTile(
-                            title: item.title,
-                            icon: item.icon,
-                            selected: currentRoute == item.routeName,
-                            onTap: () => _openItem(context, item),
-                          );
-                        },
-                      ),
-                    ),
-                    if (isLoggedIn)
-                      SafeArea(
-                        top: false,
-                        minimum: const EdgeInsets.only(bottom: 12),
-                        child: _buildLogoutButton(context),
-                      ),
-                  ],
+          child: Container(
+            width: widget.drawerWidth,
+            decoration: BoxDecoration(
+              border: Border.all(color: dynamicColor, width: 3),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: dynamicColor.withValues(alpha: 0.7),
+                  blurRadius: 25,
+                  spreadRadius: 5,
                 ),
+              ],
+            ),
+            child: Drawer(
+              child: Column(
+                children: [
+                  _buildDrawerHeader(dynamicColor),
+                  Divider(
+                    color: dynamicColor.withValues(alpha: 0.7),
+                    thickness: 1.5,
+                  ),
+                  Expanded(
+                    child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      future: user == null
+                          ? null
+                          : FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(user.uid)
+                              .get(),
+                      builder: (context, snapshot) {
+                        final userData = snapshot.data?.data() ?? {};
+                        final adminMode = userData['isAdmin'] == true ||
+                            userData['isDev'] == true;
+                        final items = _buildItems(isLoggedIn, adminMode);
+                        return ListView.builder(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom + 12,
+                          ),
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            return UagDrawerNavTile(
+                              title: item.title,
+                              icon: item.icon,
+                              selected: currentRoute == item.routeName,
+                              onTap: () => _openRoute(
+                                context,
+                                item.routeName,
+                                accessFlag: item.accessFlag,
+                                title: item.title,
+                                comingSoonWhenLocked:
+                                    item.comingSoonWhenLocked,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  if (isLoggedIn)
+                    SafeArea(
+                      top: false,
+                      minimum: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _logout(context),
+                          icon: const Icon(Icons.logout),
+                          label: const Text('Logout'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.neonPink,
+                            side: const BorderSide(color: AppTheme.neonPink),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -356,17 +345,17 @@ class _AppDrawerState extends State<AppDrawer>
 }
 
 class _DrawerItem {
-  const _DrawerItem({
-    required this.title,
-    required this.icon,
-    required this.routeName,
-    this.flag,
+  const _DrawerItem(
+    this.title,
+    this.icon,
+    this.routeName, {
+    this.accessFlag,
     this.comingSoonWhenLocked = false,
   });
 
   final String title;
   final IconData icon;
   final String routeName;
-  final String? flag;
+  final String? accessFlag;
   final bool comingSoonWhenLocked;
 }

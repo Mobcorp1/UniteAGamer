@@ -1,0 +1,44 @@
+{
+  "plans": {
+    "free": {
+      "monthlyPricePence": 0,
+      "yearlyPricePence": 0,
+      "weeklyTrades": 1,
+      "weeklyMatchmakingSearches": 1,
+      "weeklyIntelHints": 1,
+      "prioritySlots": 1,
+      "ads": "full",
+      "referralDiscountPercent": 0,
+      "referralCommissionPercent": 0
+    },
+    "essential": {
+      "monthlyPricePence": 599,
+      "yearlyPricePence": 4999,
+      "weeklyTrades": 5,
+      "weeklyMatchmakingSearches": 5,
+      "weeklyIntelHints": 5,
+      "prioritySlots": 5,
+      "ads": "reduced",
+      "creatorOnboardingDiscountPercent": 30,
+      "followerReferralDiscountPercent": 10,
+      "referralCommissionPercent": 10
+    },
+    "premium": {
+      "monthlyPricePence": 1099,
+      "yearlyPricePence": 9499,
+      "weeklyTrades": null,
+      "weeklyMatchmakingSearches": null,
+      "weeklyIntelHints": null,
+      "prioritySlots": 99,
+      "ads": "none",
+      "creatorOnboardingDiscountPercent": 30,
+      "followerReferralDiscountPercent": 20,
+      "referralCommissionPercent": 20
+    }
+  },
+  "wallet": {
+    "payoutThresholdPence": 2500,
+    "pendingReleaseDays": 30,
+    "payoutCycle": "monthly"
+  }
+}
