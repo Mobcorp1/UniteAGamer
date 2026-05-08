@@ -10,16 +10,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    function currentUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
     function isAdminOrDev() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && (
-          currentUserData().isAdmin == true ||
-          currentUserData().isDev == true
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDev == true
         );
     }
 
@@ -49,10 +45,7 @@ service cloud.firestore {
 
     function isTradingOfferParticipant() {
       return isSignedIn()
-        && (
-          resource.data.senderUid == request.auth.uid ||
-          resource.data.receiverUid == request.auth.uid
-        );
+        && (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
     }
 
     function isIncomingTradingOfferSender() {
@@ -63,27 +56,21 @@ service cloud.firestore {
 
     function isTradingSessionParticipant() {
       return isSignedIn()
-        && (
-          resource.data.traderOneUid == request.auth.uid ||
-          resource.data.traderTwoUid == request.auth.uid
-        );
+        && (resource.data.traderOneUid == request.auth.uid || resource.data.traderTwoUid == request.auth.uid);
     }
 
     function isIncomingTradingSessionParticipant() {
       return isSignedIn()
         && request.resource.data.traderOneUid != request.resource.data.traderTwoUid
         && (
-          request.resource.data.traderOneUid == request.auth.uid ||
-          request.resource.data.traderTwoUid == request.auth.uid
+          request.resource.data.traderOneUid == request.auth.uid
+          || request.resource.data.traderTwoUid == request.auth.uid
         );
     }
 
     function isMatchInviteParticipant() {
       return isSignedIn()
-        && (
-          resource.data.senderUid == request.auth.uid ||
-          resource.data.recipientUid == request.auth.uid
-        );
+        && (resource.data.senderUid == request.auth.uid || resource.data.recipientUid == request.auth.uid);
     }
 
     function isIncomingMatchInviteSender() {
@@ -104,55 +91,36 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, create, update, delete: if isOwner(userId);
+      allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
 
       match /arc_blueprints/{docId} {
-        allow read, create, update, delete: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
-
       match /arc_blueprint_targets/{docId} {
-        allow read, create, update, delete: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
-
       match /arc_scrappy_items/{docId} {
-        allow read, create, update, delete: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
-
       match /trading_activity/{docId} {
-        allow read, create, update, delete: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
-
       match /notification_tokens/{tokenId} {
-        allow read, create, update, delete: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
-
-      match /usage_counters/{periodId} {
+      match /monetisation_usage/{usageId} {
         allow read: if isOwner(userId) || isAdminOrDev();
-        allow create, update: if isOwner(userId)
-          && request.resource.data.uid == request.auth.uid
-          && request.resource.data.periodKey == periodId;
+        allow create, update: if isOwner(userId) || isAdminOrDev();
         allow delete: if isAdminOrDev();
       }
-
-      match /subscription_events/{eventId} {
-        allow read: if isOwner(userId) || isAdminOrDev();
-        allow write: if false;
-      }
-
-      match /referral_wallet/{walletDocId} {
-        allow read: if isOwner(userId) || isAdminOrDev();
-        allow write: if false;
-      }
-
       match /{document=**} {
-        allow read, create, update, delete: if isOwner(userId);
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
     }
 
     match /arc_blueprint_drop_reports/{reportId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
+      allow create, update: if isSignedIn();
       allow delete: if isAdminOrDev();
     }
 
@@ -164,38 +132,35 @@ service cloud.firestore {
 
     match /arc_trader_profiles/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
-      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId() || isAdminOrDev();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /arc_trader_availability/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
-      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId() || isAdminOrDev();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /arc_trader_away/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
-      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId() || isAdminOrDev();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /trading_listings/{listingId} {
       allow read: if isSignedIn();
-      allow create: if ownsIncomingDocByOwnerUid()
-        && request.resource.data.id == listingId
-        && request.resource.data.active == true;
+      allow create: if ownsIncomingDocByOwnerUid() && request.resource.data.id == listingId;
       allow update: if ownsExistingDocByOwnerUid()
         && request.resource.data.ownerUid == resource.data.ownerUid
         && request.resource.data.id == resource.data.id;
-      allow delete: if ownsExistingDocByOwnerUid();
+      allow delete: if ownsExistingDocByOwnerUid() || isAdminOrDev();
     }
 
     match /trading_offers/{offerId} {
-      allow read: if isTradingOfferParticipant();
-      allow create: if isIncomingTradingOfferSender()
-        && request.resource.data.id == offerId;
-      allow update: if isTradingOfferParticipant()
+      allow read: if isTradingOfferParticipant() || isAdminOrDev();
+      allow create: if isIncomingTradingOfferSender() && request.resource.data.id == offerId;
+      allow update: if (isTradingOfferParticipant() || isAdminOrDev())
         && request.resource.data.id == resource.data.id
         && request.resource.data.listingId == resource.data.listingId
         && request.resource.data.senderUid == resource.data.senderUid
@@ -204,10 +169,9 @@ service cloud.firestore {
     }
 
     match /trading_sessions/{sessionId} {
-      allow read: if isTradingSessionParticipant();
-      allow create: if isIncomingTradingSessionParticipant()
-        && request.resource.data.id == sessionId;
-      allow update: if isTradingSessionParticipant()
+      allow read: if isTradingSessionParticipant() || isAdminOrDev();
+      allow create: if isIncomingTradingSessionParticipant() && request.resource.data.id == sessionId;
+      allow update: if (isTradingSessionParticipant() || isAdminOrDev())
         && request.resource.data.id == resource.data.id
         && request.resource.data.traderOneUid == resource.data.traderOneUid
         && request.resource.data.traderTwoUid == resource.data.traderTwoUid;
@@ -215,28 +179,25 @@ service cloud.firestore {
     }
 
     match /trading_notifications/{notificationId} {
-      allow read: if isNotificationTarget();
-      allow create: if isIncomingNotificationActor()
-        && request.resource.data.id == notificationId;
-      allow update: if isNotificationTarget()
+      allow read: if isNotificationTarget() || isAdminOrDev();
+      allow create: if isIncomingNotificationActor() && request.resource.data.id == notificationId;
+      allow update: if (isNotificationTarget() || isAdminOrDev())
         && request.resource.data.id == resource.data.id
         && request.resource.data.targetUid == resource.data.targetUid
         && request.resource.data.actorUid == resource.data.actorUid;
-      allow delete: if isNotificationTarget();
+      allow delete: if isNotificationTarget() || isAdminOrDev();
     }
 
     match /arc_match_rider_profiles/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid)
-        && request.resource.data.uid == request.auth.uid;
-      allow delete: if isOwner(profileUid);
+      allow create, update: if (isOwner(profileUid) && request.resource.data.uid == request.auth.uid) || isAdminOrDev();
+      allow delete: if isOwner(profileUid) || isAdminOrDev();
     }
 
     match /arc_match_rider_invites/{inviteId} {
-      allow read: if isMatchInviteParticipant();
-      allow create: if isIncomingMatchInviteSender()
-        && request.resource.data.id == inviteId;
-      allow update: if isMatchInviteParticipant()
+      allow read: if isMatchInviteParticipant() || isAdminOrDev();
+      allow create: if isIncomingMatchInviteSender() && request.resource.data.id == inviteId;
+      allow update: if (isMatchInviteParticipant() || isAdminOrDev())
         && request.resource.data.id == resource.data.id
         && request.resource.data.senderUid == resource.data.senderUid
         && request.resource.data.recipientUid == resource.data.recipientUid;
@@ -245,66 +206,55 @@ service cloud.firestore {
 
     match /arc_trade_listings/{listingId} {
       allow read: if isSignedIn();
-      allow create: if ownsIncomingDocByUserId()
-        && request.resource.data.id == listingId;
+      allow create: if ownsIncomingDocByUserId() && request.resource.data.id == listingId;
       allow update: if ownsExistingDocByUserId()
         && request.resource.data.userId == resource.data.userId
         && request.resource.data.id == resource.data.id;
-      allow delete: if ownsExistingDocByUserId();
+      allow delete: if ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /arc_trade_sessions/{sessionId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn()
         && (
-          request.resource.data.traderOneUid == request.auth.uid ||
-          request.resource.data.traderTwoUid == request.auth.uid ||
-          request.resource.data.userId == request.auth.uid ||
-          request.resource.data.ownerUid == request.auth.uid
+          request.resource.data.traderOneUid == request.auth.uid
+          || request.resource.data.traderTwoUid == request.auth.uid
+          || request.resource.data.userId == request.auth.uid
+          || request.resource.data.ownerUid == request.auth.uid
         );
       allow update: if isSignedIn()
         && (
-          resource.data.traderOneUid == request.auth.uid ||
-          resource.data.traderTwoUid == request.auth.uid ||
-          resource.data.userId == request.auth.uid ||
-          resource.data.ownerUid == request.auth.uid
+          resource.data.traderOneUid == request.auth.uid
+          || resource.data.traderTwoUid == request.auth.uid
+          || resource.data.userId == request.auth.uid
+          || resource.data.ownerUid == request.auth.uid
+          || isAdminOrDev()
         );
       allow delete: if false;
     }
 
     match /beta_feedback/{feedbackId} {
-      allow create: if isSignedIn()
-        && request.resource.data.uid == request.auth.uid;
-      allow read: if isSignedIn()
-        && (
-          resource.data.uid == request.auth.uid ||
-          isAdminOrDev()
-        );
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
       allow update: if isAdminOrDev();
       allow delete: if false;
 
       match /replies/{replyId} {
         allow read: if isSignedIn()
           && (
-            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid ||
-            isAdminOrDev()
+            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
+            || isAdminOrDev()
           );
         allow create: if isSignedIn()
           && (
-            isAdminOrDev() ||
-            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
+            isAdminOrDev()
+            || get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
           );
         allow update, delete: if false;
       }
     }
 
     match /config/{docId} {
-      allow read: if isSignedIn();
-      allow create, update: if isAdminOrDev();
-      allow delete: if false;
-    }
-
-    match /monetisation_config/{docId} {
       allow read: if isSignedIn();
       allow create, update: if isAdminOrDev();
       allow delete: if false;
@@ -331,28 +281,28 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    match /referral_events/{eventId} {
-      allow read: if isAdminOrDev()
-        || (isSignedIn() && resource.data.referrerUid == request.auth.uid)
-        || (isSignedIn() && resource.data.referredUid == request.auth.uid);
-      allow create, update, delete: if false;
-    }
-
-    match /payout_requests/{requestId} {
-      allow read: if isAdminOrDev()
-        || (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isSignedIn()
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && request.resource.data.amountPence is int
-        && request.resource.data.amountPence >= 2500;
-      allow update: if isAdminOrDev();
-      allow delete: if false;
-    }
-
-    match /stripe_customers/{uid} {
+    match /referral_wallets/{uid} {
       allow read: if isOwner(uid) || isAdminOrDev();
-      allow write: if false;
+      allow create, update, delete: if isAdminOrDev();
+      match /ledger/{ledgerId} {
+        allow read: if isOwner(uid) || isAdminOrDev();
+        allow create, update, delete: if isAdminOrDev();
+      }
+    }
+
+    match /impact_pots/{potId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /monetisation_events/{eventId} {
+      allow read: if isAdminOrDev();
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /monetisation_checkout_sessions/{sessionId} {
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
+      allow create, update, delete: if isAdminOrDev();
     }
 
     match /uag_ids/{uagId} {
@@ -369,17 +319,18 @@ service cloud.firestore {
 
     match /public_profiles/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId();
-      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId();
+      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId() || isAdminOrDev();
+      allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /dose_tasks/{taskId} {
       allow read, create, update, delete: if isSignedIn()
         && (
-          request.resource.data.uid == request.auth.uid ||
-          resource.data.uid == request.auth.uid ||
-          request.resource.data.userId == request.auth.uid ||
-          resource.data.userId == request.auth.uid
+          request.resource.data.uid == request.auth.uid
+          || resource.data.uid == request.auth.uid
+          || request.resource.data.userId == request.auth.uid
+          || resource.data.userId == request.auth.uid
+          || isAdminOrDev()
         );
     }
 
