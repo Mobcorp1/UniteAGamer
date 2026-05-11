@@ -1,0 +1,2620 @@
+[
+  {
+    "name": "Acoustic Guitar",
+    "key": "acoustic guitar",
+    "url": "https://arcraiders.wiki/w/images/5/50/Acoustic_Guitar.png",
+    "page_url": "https://arcraiders.wiki/wiki/Acoustic_Guitar",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Adrenaline Shot",
+    "key": "adrenaline shot",
+    "url": "https://arcraiders.wiki/w/images/1/1b/Adrenaline_Shot.png",
+    "page_url": "https://arcraiders.wiki/wiki/Adrenaline_Shot",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Advanced ARC Powercell",
+    "key": "advanced powercell",
+    "url": "https://arcraiders.wiki/w/images/3/31/Advanced_ARC_Powercell.png",
+    "page_url": "https://arcraiders.wiki/wiki/Advanced_ARC_Powercell",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Advanced Electrical Components",
+    "key": "advanced electrical components",
+    "url": "https://arcraiders.wiki/w/images/9/9b/Advanced_Electrical_Components.png",
+    "page_url": "https://arcraiders.wiki/wiki/Advanced_Electrical_Components",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Advanced Mechanical Components",
+    "key": "advanced mechanical components",
+    "url": "https://arcraiders.wiki/w/images/2/25/Advanced_Mechanical_Components.png",
+    "page_url": "https://arcraiders.wiki/wiki/Advanced_Mechanical_Components",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Agave Juice",
+    "key": "agave juice",
+    "url": "https://arcraiders.wiki/w/images/a/a8/Agave_Juice.png",
+    "page_url": "https://arcraiders.wiki/wiki/Agave_Juice",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Agave",
+    "key": "agave",
+    "url": "https://arcraiders.wiki/w/images/4/47/Agave.png",
+    "page_url": "https://arcraiders.wiki/wiki/Agave",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Air Freshener",
+    "key": "air freshener",
+    "url": "https://arcraiders.wiki/w/images/0/03/Air_Freshener.png",
+    "page_url": "https://arcraiders.wiki/wiki/Air_Freshener",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Alarm Clock",
+    "key": "alarm clock",
+    "url": "https://arcraiders.wiki/w/images/9/95/Alarm_Clock.png",
+    "page_url": "https://arcraiders.wiki/wiki/Alarm_Clock",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Alien Duck",
+    "key": "alien duck",
+    "url": "https://arcraiders.wiki/w/images/3/3e/Alien_Duck.png",
+    "page_url": "https://arcraiders.wiki/wiki/Alien_Duck",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Angled Grip I",
+    "key": "angled grip i",
+    "url": "https://arcraiders.wiki/w/images/b/b5/Angled_Grip_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Angled_Grip_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Angled Grip II",
+    "key": "angled grip ii",
+    "url": "https://arcraiders.wiki/w/images/2/2b/Angled_Grip_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Angled_Grip_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Angled Grip III",
+    "key": "angled grip iii",
+    "url": "https://arcraiders.wiki/w/images/0/0f/Angled_Grip_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Angled_Grip_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Antiseptic",
+    "key": "antiseptic",
+    "url": "https://arcraiders.wiki/w/images/f/f5/Antiseptic.png",
+    "page_url": "https://arcraiders.wiki/wiki/Antiseptic",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Anvil Splitter",
+    "key": "anvil splitter",
+    "url": "https://arcraiders.wiki/w/images/e/ef/Anvil_Splitter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Anvil_Splitter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Apricot",
+    "key": "apricot",
+    "url": "https://arcraiders.wiki/w/images/f/fc/Apricot.png",
+    "page_url": "https://arcraiders.wiki/wiki/Apricot",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Alloy",
+    "key": "alloy",
+    "url": "https://arcraiders.wiki/w/images/a/a6/ARC_Alloy.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Alloy",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Circuitry",
+    "key": "circuitry",
+    "url": "https://arcraiders.wiki/w/images/d/dc/ARC_Circuitry.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Circuitry",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Coolant",
+    "key": "coolant",
+    "url": "https://arcraiders.wiki/w/images/e/e9/ARC_Coolant.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Coolant",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Flex Rubber",
+    "key": "flex rubber",
+    "url": "https://arcraiders.wiki/w/images/2/29/ARC_Flex_Rubber.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Flex_Rubber",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Motion Core",
+    "key": "motion core",
+    "url": "https://arcraiders.wiki/w/images/a/ad/ARC_Motion_Core.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Motion_Core",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Performance Steel",
+    "key": "performance steel",
+    "url": "https://arcraiders.wiki/w/images/0/02/ARC_Performance_Steel.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Performance_Steel",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Powercell",
+    "key": "powercell",
+    "url": "https://arcraiders.wiki/w/images/d/df/ARC_Powercell.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Powercell",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Synthetic Resin",
+    "key": "synthetic resin",
+    "url": "https://arcraiders.wiki/w/images/7/72/ARC_Synthetic_Resin.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Synthetic_Resin",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "ARC Thermo Lining",
+    "key": "thermo lining",
+    "url": "https://arcraiders.wiki/w/images/0/0f/ARC_Thermo_Lining.png",
+    "page_url": "https://arcraiders.wiki/wiki/ARC_Thermo_Lining",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Assessor Matrix",
+    "key": "assessor matrix",
+    "url": "https://arcraiders.wiki/w/images/1/18/Assessor_Matrix.png",
+    "page_url": "https://arcraiders.wiki/wiki/Assessor_Matrix",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Assorted Seeds",
+    "key": "assorted seeds",
+    "url": "https://arcraiders.wiki/w/images/5/51/Assorted_Seeds.png",
+    "page_url": "https://arcraiders.wiki/wiki/Assorted_Seeds",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Bandage",
+    "key": "bandage",
+    "url": "https://arcraiders.wiki/w/images/0/0c/Bandage.png",
+    "page_url": "https://arcraiders.wiki/wiki/Bandage",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Barricade Kit",
+    "key": "barricade kit",
+    "url": "https://arcraiders.wiki/w/images/c/cb/Barricade_Kit.png",
+    "page_url": "https://arcraiders.wiki/wiki/Barricade_Kit",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Bastion Cell",
+    "key": "bastion cell",
+    "url": "https://arcraiders.wiki/w/images/0/06/Bastion_Cell.png",
+    "page_url": "https://arcraiders.wiki/wiki/Bastion_Cell",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Battery",
+    "key": "battery",
+    "url": "https://arcraiders.wiki/w/images/6/6d/Battery.png",
+    "page_url": "https://arcraiders.wiki/wiki/Battery",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Bicycle Pump",
+    "key": "bicycle pump",
+    "url": "https://arcraiders.wiki/w/images/f/fa/Bicycle_Pump.png",
+    "page_url": "https://arcraiders.wiki/wiki/Bicycle_Pump",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Binoculars",
+    "key": "binoculars",
+    "url": "https://arcraiders.wiki/w/images/7/74/Binoculars.png",
+    "page_url": "https://arcraiders.wiki/wiki/Binoculars",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Integrated Binoculars",
+    "key": "integrated binoculars",
+    "url": "https://arcraiders.wiki/w/images/7/74/Binoculars.png",
+    "page_url": "https://arcraiders.wiki/wiki/Integrated_Binoculars",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Blaze Grenade Trap",
+    "key": "blaze grenade trap",
+    "url": "https://arcraiders.wiki/w/images/a/af/Blaze_Grenade_Trap.png",
+    "page_url": "https://arcraiders.wiki/wiki/Blaze_Grenade_Trap",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Blaze Grenade",
+    "key": "blaze grenade",
+    "url": "https://arcraiders.wiki/w/images/2/24/Blaze_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Blaze_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Bloated Tuna Can",
+    "key": "bloated tuna can",
+    "url": "https://arcraiders.wiki/w/images/0/01/Bloated_Tuna_Can.png",
+    "page_url": "https://arcraiders.wiki/wiki/Bloated_Tuna_Can",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Blue Gate Cellar Key",
+    "key": "blue gate cellar key",
+    "url": "https://arcraiders.wiki/w/images/7/7c/Blue_Gate_Key_Variant_1.png",
+    "page_url": "https://arcraiders.wiki/wiki/Blue_Gate_Cellar_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Blue Gate Village Key",
+    "key": "blue gate village key",
+    "url": "https://arcraiders.wiki/w/images/7/7c/Blue_Gate_Key_Variant_1.png",
+    "page_url": "https://arcraiders.wiki/wiki/Blue_Gate_Village_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Blue Gate Communication Tower Key",
+    "key": "blue gate communication tower key",
+    "url": "https://arcraiders.wiki/w/images/d/de/Blue_Gate_Key_Variant_2.png",
+    "page_url": "https://arcraiders.wiki/wiki/Blue_Gate_Communication_Tower_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Blue Gate Confiscation Room Key",
+    "key": "blue gate confiscation room key",
+    "url": "https://arcraiders.wiki/w/images/d/de/Blue_Gate_Key_Variant_2.png",
+    "page_url": "https://arcraiders.wiki/wiki/Blue_Gate_Confiscation_Room_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Blue Light Stick",
+    "key": "blue light stick",
+    "url": "https://arcraiders.wiki/w/images/c/cc/Blue_Light_Stick.png",
+    "page_url": "https://arcraiders.wiki/wiki/Blue_Light_Stick",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Bombardier Cell",
+    "key": "bombardier cell",
+    "url": "https://arcraiders.wiki/w/images/4/46/Bombardier_Cell.png",
+    "page_url": "https://arcraiders.wiki/wiki/Bombardier_Cell",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Breathtaking Snow Globe",
+    "key": "breathtaking snow globe",
+    "url": "https://arcraiders.wiki/w/images/6/63/Breathtaking_Snow_Globe.png",
+    "page_url": "https://arcraiders.wiki/wiki/Breathtaking_Snow_Globe",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Broken Flashlight",
+    "key": "broken flashlight",
+    "url": "https://arcraiders.wiki/w/images/1/17/Broken_Flashlight.png",
+    "page_url": "https://arcraiders.wiki/wiki/Broken_Flashlight",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Broken Guidance System",
+    "key": "broken guidance system",
+    "url": "https://arcraiders.wiki/w/images/9/93/Broken_Guidance_System.png",
+    "page_url": "https://arcraiders.wiki/wiki/Broken_Guidance_System",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Broken Handheld Radio",
+    "key": "broken handheld radio",
+    "url": "https://arcraiders.wiki/w/images/3/3b/Broken_Handheld_Radio.png",
+    "page_url": "https://arcraiders.wiki/wiki/Broken_Handheld_Radio",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Broken Taser",
+    "key": "broken taser",
+    "url": "https://arcraiders.wiki/w/images/1/18/Broken_Taser.png",
+    "page_url": "https://arcraiders.wiki/wiki/Broken_Taser",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Buried City Hospital Key",
+    "key": "buried city hospital key",
+    "url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Buried_City_Hospital_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Buried City JKV Employee Access Card",
+    "key": "buried city jkv employee access card",
+    "url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Buried_City_JKV_Employee_Access_Card",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Buried City Residential Master Key",
+    "key": "buried city residential master key",
+    "url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Buried_City_Residential_Master_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Buried City Town Hall Key",
+    "key": "buried city town hall key",
+    "url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Buried_City_Town_Hall_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Burned ARC Circuitry",
+    "key": "burned circuitry",
+    "url": "https://arcraiders.wiki/w/images/3/35/Burned_ARC_Circuitry.png",
+    "page_url": "https://arcraiders.wiki/wiki/Burned_ARC_Circuitry",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Burnt-Out Candles",
+    "key": "burnt out candles",
+    "url": "https://arcraiders.wiki/w/images/0/0a/Burnt-Out_Candles.png",
+    "page_url": "https://arcraiders.wiki/wiki/Burnt-Out_Candles",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Camera Lens",
+    "key": "camera lens",
+    "url": "https://arcraiders.wiki/w/images/a/a6/Camera_Lens.png",
+    "page_url": "https://arcraiders.wiki/wiki/Camera_Lens",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Candle Holder",
+    "key": "candle holder",
+    "url": "https://arcraiders.wiki/w/images/5/58/Candle_Holder.png",
+    "page_url": "https://arcraiders.wiki/wiki/Candle_Holder",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Candleberries",
+    "key": "candleberries",
+    "url": "https://arcraiders.wiki/w/images/9/9e/Candleberries.png",
+    "page_url": "https://arcraiders.wiki/wiki/Candleberries",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Canister",
+    "key": "canister",
+    "url": "https://arcraiders.wiki/w/images/5/5f/Canister.png",
+    "page_url": "https://arcraiders.wiki/wiki/Canister",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Cat Bed",
+    "key": "cat bed",
+    "url": "https://arcraiders.wiki/w/images/8/82/Cat_Bed.png",
+    "page_url": "https://arcraiders.wiki/wiki/Cat_Bed",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Chemicals",
+    "key": "chemicals",
+    "url": "https://arcraiders.wiki/w/images/9/92/Chemicals.png",
+    "page_url": "https://arcraiders.wiki/wiki/Chemicals",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Coffee Pot",
+    "key": "coffee pot",
+    "url": "https://arcraiders.wiki/w/images/3/33/Coffee_Pot.png",
+    "page_url": "https://arcraiders.wiki/wiki/Coffee_Pot",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Combat Mk. 1",
+    "key": "combat mk 1",
+    "url": "https://arcraiders.wiki/w/images/1/14/Combat_Mk._1.png",
+    "page_url": "https://arcraiders.wiki/wiki/Combat_Mk._1",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Combat Mk. 2",
+    "key": "combat mk 2",
+    "url": "https://arcraiders.wiki/w/images/5/54/Combat_Mk._2.png",
+    "page_url": "https://arcraiders.wiki/wiki/Combat_Mk._2",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Combat Mk. 3 (Aggressive)",
+    "key": "combat mk 3 aggressive",
+    "url": "https://arcraiders.wiki/w/images/a/a4/Combat_Mk._3_%28Aggressive%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Combat_Mk._3_(Aggressive)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Combat Mk. 3 (Flanking)",
+    "key": "combat mk 3 flanking",
+    "url": "https://arcraiders.wiki/w/images/7/73/Combat_Mk._3_%28Flanking%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Combat_Mk._3_(Flanking)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Comet Igniter",
+    "key": "comet igniter",
+    "url": "https://arcraiders.wiki/w/images/c/c8/Comet_Igniter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Comet_Igniter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Compensator I",
+    "key": "compensator i",
+    "url": "https://arcraiders.wiki/w/images/5/5f/Compensator_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Compensator_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Compensator II",
+    "key": "compensator ii",
+    "url": "https://arcraiders.wiki/w/images/0/0a/Compensator_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Compensator_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Compensator III",
+    "key": "compensator iii",
+    "url": "https://arcraiders.wiki/w/images/a/af/Compensator_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Compensator_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Complex Gun Parts",
+    "key": "complex gun parts",
+    "url": "https://arcraiders.wiki/w/images/3/3d/Complex_Gun_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Complex_Gun_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Coolant",
+    "key": "coolant",
+    "url": "https://arcraiders.wiki/w/images/4/40/Coolant.png",
+    "page_url": "https://arcraiders.wiki/wiki/Coolant",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Cooling Coil",
+    "key": "cooling coil",
+    "url": "https://arcraiders.wiki/w/images/7/7f/Cooling_Coil.png",
+    "page_url": "https://arcraiders.wiki/wiki/Cooling_Coil",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Cooling Fan",
+    "key": "cooling fan",
+    "url": "https://arcraiders.wiki/w/images/1/13/Cooling_Fan.png",
+    "page_url": "https://arcraiders.wiki/wiki/Cooling_Fan",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Cracked Bioscanner",
+    "key": "cracked bioscanner",
+    "url": "https://arcraiders.wiki/w/images/9/9a/Cracked_Bioscanner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Cracked_Bioscanner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Crash Mat",
+    "key": "crash mat",
+    "url": "https://arcraiders.wiki/w/images/7/75/Crash_Mat.png",
+    "page_url": "https://arcraiders.wiki/wiki/Crash_Mat",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Crude Explosives",
+    "key": "crude explosives",
+    "url": "https://arcraiders.wiki/w/images/f/fc/Crude_Explosives.png",
+    "page_url": "https://arcraiders.wiki/wiki/Crude_Explosives",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Crumpled Plastic Bottle",
+    "key": "crumpled plastic bottle",
+    "url": "https://arcraiders.wiki/w/images/8/8e/Crumpled_Plastic_Bottle.png",
+    "page_url": "https://arcraiders.wiki/wiki/Crumpled_Plastic_Bottle",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dam Control Tower Key",
+    "key": "dam control tower key",
+    "url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dam_Control_Tower_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dam Controlled Access Zone Key",
+    "key": "dam controlled access zone key",
+    "url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dam_Controlled_Access_Zone_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dam Staff Room Key",
+    "key": "dam staff room key",
+    "url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dam_Staff_Room_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dam Surveillance Key",
+    "key": "dam surveillance key",
+    "url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dam_Surveillance_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dam Testing Annex Key",
+    "key": "dam testing annex key",
+    "url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dam_Testing_Annex_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dam Utility Key",
+    "key": "dam utility key",
+    "url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dam_Utility_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged ARC Motion Core",
+    "key": "damaged motion core",
+    "url": "https://arcraiders.wiki/w/images/9/9e/Damaged_ARC_Motion_Core.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_ARC_Motion_Core",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged ARC Powercell",
+    "key": "damaged powercell",
+    "url": "https://arcraiders.wiki/w/images/5/58/Damaged_ARC_Powercell.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_ARC_Powercell",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Fireball Burner",
+    "key": "damaged fireball burner",
+    "url": "https://arcraiders.wiki/w/images/d/d8/Damaged_Fireball_Burner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Fireball_Burner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Heat Sink",
+    "key": "damaged heat sink",
+    "url": "https://arcraiders.wiki/w/images/1/1f/Damaged_Heat_Sink.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Heat_Sink",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Hornet Driver",
+    "key": "damaged hornet driver",
+    "url": "https://arcraiders.wiki/w/images/9/96/Damaged_Hornet_Driver.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Hornet_Driver",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Leaper Pulse Unit",
+    "key": "damaged leaper pulse unit",
+    "url": "https://arcraiders.wiki/w/images/0/0a/Damaged_Leaper_Pulse_Unit.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Leaper_Pulse_Unit",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Rocketeer Driver",
+    "key": "damaged rocketeer driver",
+    "url": "https://arcraiders.wiki/w/images/3/3a/Damaged_Rocketeer_Driver.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Rocketeer_Driver",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Snitch Scanner",
+    "key": "damaged snitch scanner",
+    "url": "https://arcraiders.wiki/w/images/8/83/Damaged_Snitch_Scanner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Snitch_Scanner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Tick Pod",
+    "key": "damaged tick pod",
+    "url": "https://arcraiders.wiki/w/images/d/d6/Damaged_Tick_Pod.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Tick_Pod",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Damaged Wasp Driver",
+    "key": "damaged wasp driver",
+    "url": "https://arcraiders.wiki/w/images/e/e6/Damaged_Wasp_Driver.png",
+    "page_url": "https://arcraiders.wiki/wiki/Damaged_Wasp_Driver",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dart Board",
+    "key": "dart board",
+    "url": "https://arcraiders.wiki/w/images/4/4d/Dart_Board.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dart_Board",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Deadline",
+    "key": "deadline",
+    "url": "https://arcraiders.wiki/w/images/c/c7/Deadline.png",
+    "page_url": "https://arcraiders.wiki/wiki/Deadline",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Defibrillator",
+    "key": "defibrillator",
+    "url": "https://arcraiders.wiki/w/images/5/5f/Defibrillator.png",
+    "page_url": "https://arcraiders.wiki/wiki/Defibrillator",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Integrated Defibrillator",
+    "key": "integrated defibrillator",
+    "url": "https://arcraiders.wiki/w/images/5/5f/Defibrillator.png",
+    "page_url": "https://arcraiders.wiki/wiki/Integrated_Defibrillator",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Deflated Football",
+    "key": "deflated football",
+    "url": "https://arcraiders.wiki/w/images/7/7c/Deflated_Football.png",
+    "page_url": "https://arcraiders.wiki/wiki/Deflated_Football",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Degraded ARC Rubber",
+    "key": "degraded rubber",
+    "url": "https://arcraiders.wiki/w/images/3/37/Degraded_ARC_Rubber.png",
+    "page_url": "https://arcraiders.wiki/wiki/Degraded_ARC_Rubber",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Diving Goggles",
+    "key": "diving goggles",
+    "url": "https://arcraiders.wiki/w/images/1/1a/Diving_Goggles.png",
+    "page_url": "https://arcraiders.wiki/wiki/Diving_Goggles",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dockmaster's Detector",
+    "key": "dockmasters detector",
+    "url": "https://arcraiders.wiki/w/images/4/41/Dockmaster%27s_Detector.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dockmaster%27s_Detector",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dog Collar",
+    "key": "dog collar",
+    "url": "https://arcraiders.wiki/w/images/c/c5/Dog_Collar.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dog_Collar",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Doodly Duck",
+    "key": "doodly duck",
+    "url": "https://arcraiders.wiki/w/images/9/91/Doodly_Duck.png",
+    "page_url": "https://arcraiders.wiki/wiki/Doodly_Duck",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Door Blocker",
+    "key": "door blocker",
+    "url": "https://arcraiders.wiki/w/images/6/68/Door_Blocker.png",
+    "page_url": "https://arcraiders.wiki/wiki/Door_Blocker",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Dried-Out ARC Resin",
+    "key": "dried out resin",
+    "url": "https://arcraiders.wiki/w/images/0/0b/Dried-Out_ARC_Resin.png",
+    "page_url": "https://arcraiders.wiki/wiki/Dried-Out_ARC_Resin",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Duct Tape",
+    "key": "duct tape",
+    "url": "https://arcraiders.wiki/w/images/4/4e/Duct_Tape.png",
+    "page_url": "https://arcraiders.wiki/wiki/Duct_Tape",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Durable Cloth",
+    "key": "durable cloth",
+    "url": "https://arcraiders.wiki/w/images/2/25/Durable_Cloth.png",
+    "page_url": "https://arcraiders.wiki/wiki/Durable_Cloth",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Electrical Components",
+    "key": "electrical components",
+    "url": "https://arcraiders.wiki/w/images/0/06/Electrical_Components.png",
+    "page_url": "https://arcraiders.wiki/wiki/Electrical_Components",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Empty Wine Bottle",
+    "key": "empty wine bottle",
+    "url": "https://arcraiders.wiki/w/images/e/e1/Empty_Wine_Bottle.png",
+    "page_url": "https://arcraiders.wiki/wiki/Empty_Wine_Bottle",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Energy Clip",
+    "key": "energy clip",
+    "url": "https://arcraiders.wiki/w/images/0/08/Energy_Clip.png",
+    "page_url": "https://arcraiders.wiki/wiki/Energy_Clip",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Exodus Modules",
+    "key": "exodus modules",
+    "url": "https://arcraiders.wiki/w/images/1/1b/Exodus_Modules.png",
+    "page_url": "https://arcraiders.wiki/wiki/Exodus_Modules",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Expired Pasta",
+    "key": "expired pasta",
+    "url": "https://arcraiders.wiki/w/images/9/91/Expired_Pasta.png",
+    "page_url": "https://arcraiders.wiki/wiki/Expired_Pasta",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Expired Respirator",
+    "key": "expired respirator",
+    "url": "https://arcraiders.wiki/w/images/b/ba/Expired_Respirator.png",
+    "page_url": "https://arcraiders.wiki/wiki/Expired_Respirator",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Explosive Compound",
+    "key": "explosive compound",
+    "url": "https://arcraiders.wiki/w/images/1/11/Explosive_Compound.png",
+    "page_url": "https://arcraiders.wiki/wiki/Explosive_Compound",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Explosive Mine",
+    "key": "explosive mine",
+    "url": "https://arcraiders.wiki/w/images/2/22/Explosive_Mine.png",
+    "page_url": "https://arcraiders.wiki/wiki/Explosive_Mine",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Barrel",
+    "key": "extended barrel",
+    "url": "https://arcraiders.wiki/w/images/2/2f/Extended_Barrel.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Barrel",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Light Mag I",
+    "key": "extended light mag i",
+    "url": "https://arcraiders.wiki/w/images/2/23/Extended_Light_Mag_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Light_Mag_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Light Mag II",
+    "key": "extended light mag ii",
+    "url": "https://arcraiders.wiki/w/images/c/cf/Extended_Light_Mag_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Light_Mag_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Light Mag III",
+    "key": "extended light mag iii",
+    "url": "https://arcraiders.wiki/w/images/4/40/Extended_Light_Mag_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Light_Mag_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Medium Mag I",
+    "key": "extended medium mag i",
+    "url": "https://arcraiders.wiki/w/images/4/44/Extended_Medium_Mag_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Medium_Mag_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Medium Mag II",
+    "key": "extended medium mag ii",
+    "url": "https://arcraiders.wiki/w/images/5/50/Extended_Medium_Mag_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Medium_Mag_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Medium Mag III",
+    "key": "extended medium mag iii",
+    "url": "https://arcraiders.wiki/w/images/a/a1/Extended_Medium_Mag_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Medium_Mag_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Shotgun Mag I",
+    "key": "extended shotgun mag i",
+    "url": "https://arcraiders.wiki/w/images/9/9b/Extended_Shotgun_Mag_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Shotgun_Mag_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Shotgun Mag II",
+    "key": "extended shotgun mag ii",
+    "url": "https://arcraiders.wiki/w/images/4/4f/Extended_Shotgun_Mag_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Shotgun_Mag_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Extended Shotgun Mag III",
+    "key": "extended shotgun mag iii",
+    "url": "https://arcraiders.wiki/w/images/7/77/Extended_Shotgun_Mag_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Extended_Shotgun_Mag_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fabric",
+    "key": "fabric",
+    "url": "https://arcraiders.wiki/w/images/2/2b/Fabric.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fabric",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Faded Photograph",
+    "key": "faded photograph",
+    "url": "https://arcraiders.wiki/w/images/0/0c/Faded_Photograph.png",
+    "page_url": "https://arcraiders.wiki/wiki/Faded_Photograph",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Familiar Duck",
+    "key": "familiar duck",
+    "url": "https://arcraiders.wiki/w/images/4/4f/Familiar_Duck.png",
+    "page_url": "https://arcraiders.wiki/wiki/Familiar_Duck",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fertilizer",
+    "key": "fertilizer",
+    "url": "https://arcraiders.wiki/w/images/2/25/Fertilizer.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fertilizer",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Film Reel",
+    "key": "film reel",
+    "url": "https://arcraiders.wiki/w/images/4/44/Film_Reel.png",
+    "page_url": "https://arcraiders.wiki/wiki/Film_Reel",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fine Wristwatch",
+    "key": "fine wristwatch",
+    "url": "https://arcraiders.wiki/w/images/9/94/Fine_Wristwatch.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fine_Wristwatch",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fireball Burner",
+    "key": "fireball burner",
+    "url": "https://arcraiders.wiki/w/images/8/8b/Fireball_Burner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fireball_Burner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Firecracker",
+    "key": "firecracker",
+    "url": "https://arcraiders.wiki/w/images/8/86/Firecracker.png",
+    "page_url": "https://arcraiders.wiki/wiki/Firecracker",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Firefly Burner",
+    "key": "firefly burner",
+    "url": "https://arcraiders.wiki/w/images/0/04/Firefly_Burner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Firefly_Burner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fireworks Box",
+    "key": "fireworks box",
+    "url": "https://arcraiders.wiki/w/images/0/0f/Fireworks_Box.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fireworks_Box",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Flame Spray",
+    "key": "flame spray",
+    "url": "https://arcraiders.wiki/w/images/7/73/Flame_Spray.png",
+    "page_url": "https://arcraiders.wiki/wiki/Flame_Spray",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Flashy Duck",
+    "key": "flashy duck",
+    "url": "https://arcraiders.wiki/w/images/f/f1/Flashy_Duck.png",
+    "page_url": "https://arcraiders.wiki/wiki/Flashy_Duck",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Flow Controller",
+    "key": "flow controller",
+    "url": "https://arcraiders.wiki/w/images/b/b6/Flow_Controller.png",
+    "page_url": "https://arcraiders.wiki/wiki/Flow_Controller",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fossilized Lightning",
+    "key": "fossilized lightning",
+    "url": "https://arcraiders.wiki/w/images/8/81/Fossilized_Lightning.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fossilized_Lightning",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Free Loadout Augment",
+    "key": "free loadout augment",
+    "url": "https://arcraiders.wiki/w/images/c/cf/Free_Loadout_Augment.png",
+    "page_url": "https://arcraiders.wiki/wiki/Free_Loadout_Augment",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Frequency Modulation Box",
+    "key": "frequency modulation box",
+    "url": "https://arcraiders.wiki/w/images/3/36/Frequency_Modulation_Box.png",
+    "page_url": "https://arcraiders.wiki/wiki/Frequency_Modulation_Box",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fried Motherboard",
+    "key": "fried motherboard",
+    "url": "https://arcraiders.wiki/w/images/2/29/Fried_Motherboard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fried_Motherboard",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Fruit Mix",
+    "key": "fruit mix",
+    "url": "https://arcraiders.wiki/w/images/5/5a/Fruit_Mix.png",
+    "page_url": "https://arcraiders.wiki/wiki/Fruit_Mix",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Frying Pan",
+    "key": "frying pan",
+    "url": "https://arcraiders.wiki/w/images/7/74/Frying_Pan.png",
+    "page_url": "https://arcraiders.wiki/wiki/Frying_Pan",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Garlic Press",
+    "key": "garlic press",
+    "url": "https://arcraiders.wiki/w/images/8/88/Garlic_Press.png",
+    "page_url": "https://arcraiders.wiki/wiki/Garlic_Press",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Gas Grenade Trap",
+    "key": "gas grenade trap",
+    "url": "https://arcraiders.wiki/w/images/3/33/Gas_Grenade_Trap.png",
+    "page_url": "https://arcraiders.wiki/wiki/Gas_Grenade_Trap",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Gas Grenade",
+    "key": "gas grenade",
+    "url": "https://arcraiders.wiki/w/images/f/fe/Gas_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Gas_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Gas Mine",
+    "key": "gas mine",
+    "url": "https://arcraiders.wiki/w/images/c/ce/Gas_Mine.png",
+    "page_url": "https://arcraiders.wiki/wiki/Gas_Mine",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Geiger Counter",
+    "key": "geiger counter",
+    "url": "https://arcraiders.wiki/w/images/3/37/Geiger_Counter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Geiger_Counter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Gentle Duck",
+    "key": "gentle duck",
+    "url": "https://arcraiders.wiki/w/images/c/c4/Gentle_Duck.png",
+    "page_url": "https://arcraiders.wiki/wiki/Gentle_Duck",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Great Mullein",
+    "key": "great mullein",
+    "url": "https://arcraiders.wiki/w/images/0/0d/Great_Mullein.png",
+    "page_url": "https://arcraiders.wiki/wiki/Great_Mullein",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Green Light Stick",
+    "key": "green light stick",
+    "url": "https://arcraiders.wiki/w/images/2/27/Green_Light_Stick.png",
+    "page_url": "https://arcraiders.wiki/wiki/Green_Light_Stick",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Headphones",
+    "key": "headphones",
+    "url": "https://arcraiders.wiki/w/images/0/0f/Headphones.png",
+    "page_url": "https://arcraiders.wiki/wiki/Headphones",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Heavy Ammo",
+    "key": "heavy ammo",
+    "url": "https://arcraiders.wiki/w/images/6/6f/Heavy_Ammo.png",
+    "page_url": "https://arcraiders.wiki/wiki/Heavy_Ammo",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Heavy Fuze Grenade",
+    "key": "heavy fuze grenade",
+    "url": "https://arcraiders.wiki/w/images/e/ea/Heavy_Fuze_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Heavy_Fuze_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Heavy Gun Parts",
+    "key": "heavy gun parts",
+    "url": "https://arcraiders.wiki/w/images/3/33/Heavy_Gun_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Heavy_Gun_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Heavy Shield",
+    "key": "heavy shield",
+    "url": "https://arcraiders.wiki/w/images/f/f9/Heavy_Shield.png",
+    "page_url": "https://arcraiders.wiki/wiki/Heavy_Shield",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Herbal Bandage",
+    "key": "herbal bandage",
+    "url": "https://arcraiders.wiki/w/images/c/c5/Herbal_Bandage.png",
+    "page_url": "https://arcraiders.wiki/wiki/Herbal_Bandage",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Horizontal Grip",
+    "key": "horizontal grip",
+    "url": "https://arcraiders.wiki/w/images/8/89/Horizontal_Grip.png",
+    "page_url": "https://arcraiders.wiki/wiki/Horizontal_Grip",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Hornet Driver",
+    "key": "hornet driver",
+    "url": "https://arcraiders.wiki/w/images/b/bb/Hornet_Driver.png",
+    "page_url": "https://arcraiders.wiki/wiki/Hornet_Driver",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Household Cleaner",
+    "key": "household cleaner",
+    "url": "https://arcraiders.wiki/w/images/3/36/Household_Cleaner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Household_Cleaner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Humidifier",
+    "key": "humidifier",
+    "url": "https://arcraiders.wiki/w/images/4/4b/Humidifier.png",
+    "page_url": "https://arcraiders.wiki/wiki/Humidifier",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ice Cream Scooper",
+    "key": "ice cream scooper",
+    "url": "https://arcraiders.wiki/w/images/c/c9/Ice_Cream_Scooper.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ice_Cream_Scooper",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Impure ARC Coolant",
+    "key": "impure coolant",
+    "url": "https://arcraiders.wiki/w/images/a/a0/Impure_ARC_Coolant.png",
+    "page_url": "https://arcraiders.wiki/wiki/Impure_ARC_Coolant",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Industrial Battery",
+    "key": "industrial battery",
+    "url": "https://arcraiders.wiki/w/images/c/c9/Industrial_Battery.png",
+    "page_url": "https://arcraiders.wiki/wiki/Industrial_Battery",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Industrial Charger",
+    "key": "industrial charger",
+    "url": "https://arcraiders.wiki/w/images/6/66/Industrial_Charger.png",
+    "page_url": "https://arcraiders.wiki/wiki/Industrial_Charger",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Industrial Magnet",
+    "key": "industrial magnet",
+    "url": "https://arcraiders.wiki/w/images/3/38/Industrial_Magnet.png",
+    "page_url": "https://arcraiders.wiki/wiki/Industrial_Magnet",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Integrated Shield Recharger",
+    "key": "integrated shield recharger",
+    "url": "https://arcraiders.wiki/w/images/a/a7/Integrated_Shield_Recharger.png",
+    "page_url": "https://arcraiders.wiki/wiki/Integrated_Shield_Recharger",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ion Sputter",
+    "key": "ion sputter",
+    "url": "https://arcraiders.wiki/w/images/e/e7/Ion_Sputter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ion_Sputter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Jolt Mine",
+    "key": "jolt mine",
+    "url": "https://arcraiders.wiki/w/images/5/5a/Jolt_Mine.png",
+    "page_url": "https://arcraiders.wiki/wiki/Jolt_Mine",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Kinetic Converter",
+    "key": "kinetic converter",
+    "url": "https://arcraiders.wiki/w/images/7/71/Kinetic_Converter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Kinetic_Converter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Laboratory Reagents",
+    "key": "laboratory reagents",
+    "url": "https://arcraiders.wiki/w/images/e/e5/Laboratory_Reagents.png",
+    "page_url": "https://arcraiders.wiki/wiki/Laboratory_Reagents",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Lance's Mixtape (5th Edition)",
+    "key": "lances mixtape 5th edition",
+    "url": "https://arcraiders.wiki/w/images/1/15/Lance%27s_Mixtape_%285th_Edition%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Lance%27s_Mixtape_(5th_Edition)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Launcher Ammo",
+    "key": "launcher ammo",
+    "url": "https://arcraiders.wiki/w/images/9/99/Launcher_Ammo.png",
+    "page_url": "https://arcraiders.wiki/wiki/Launcher_Ammo",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Leaper Pulse Unit",
+    "key": "leaper pulse unit",
+    "url": "https://arcraiders.wiki/w/images/a/a0/Leaper_Pulse_Unit.png",
+    "page_url": "https://arcraiders.wiki/wiki/Leaper_Pulse_Unit",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Lemon",
+    "key": "lemon",
+    "url": "https://arcraiders.wiki/w/images/3/35/Lemon.png",
+    "page_url": "https://arcraiders.wiki/wiki/Lemon",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "\"Leviathan's Crown\" Ship Model",
+    "key": "leviathans crown ship model",
+    "url": "https://arcraiders.wiki/w/images/7/71/Leviathan%27s_Crown_Ship_Model.png",
+    "page_url": "https://arcraiders.wiki/wiki/%22Leviathan%27s_Crown%22_Ship_Model",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Li'l Smoke Grenade",
+    "key": "lil smoke grenade",
+    "url": "https://arcraiders.wiki/w/images/0/0d/Li%27l_Smoke_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Li%27l_Smoke_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Light Ammo",
+    "key": "light ammo",
+    "url": "https://arcraiders.wiki/w/images/2/22/Light_Ammo.png",
+    "page_url": "https://arcraiders.wiki/wiki/Light_Ammo",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Light Gun Parts",
+    "key": "light gun parts",
+    "url": "https://arcraiders.wiki/w/images/c/c9/Light_Gun_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Light_Gun_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Light Impact Grenade",
+    "key": "light impact grenade",
+    "url": "https://arcraiders.wiki/w/images/4/4c/Light_Impact_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Light_Impact_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Light Shield",
+    "key": "light shield",
+    "url": "https://arcraiders.wiki/w/images/4/40/Light_Shield.png",
+    "page_url": "https://arcraiders.wiki/wiki/Light_Shield",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Lightweight Stock",
+    "key": "lightweight stock",
+    "url": "https://arcraiders.wiki/w/images/c/cb/Lightweight_Stock.png",
+    "page_url": "https://arcraiders.wiki/wiki/Lightweight_Stock",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Light Bulb",
+    "key": "light bulb",
+    "url": "https://arcraiders.wiki/w/images/2/2c/Light_Bulb.png",
+    "page_url": "https://arcraiders.wiki/wiki/Light_Bulb",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Looting Mk. 1",
+    "key": "looting mk 1",
+    "url": "https://arcraiders.wiki/w/images/2/27/Looting_Mk._1.png",
+    "page_url": "https://arcraiders.wiki/wiki/Looting_Mk._1",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Looting Mk. 2",
+    "key": "looting mk 2",
+    "url": "https://arcraiders.wiki/w/images/7/7c/Looting_Mk._2.png",
+    "page_url": "https://arcraiders.wiki/wiki/Looting_Mk._2",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Looting Mk. 3 (Cautious)",
+    "key": "looting mk 3 cautious",
+    "url": "https://arcraiders.wiki/w/images/6/68/Looting_Mk._3_%28Cautious%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Looting_Mk._3_(Cautious)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Looting Mk. 3 (Safekeeper)",
+    "key": "looting mk 3 safekeeper",
+    "url": "https://arcraiders.wiki/w/images/c/c6/Looting_Mk._3_%28Safekeeper%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Looting_Mk._3_(Safekeeper)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Looting Mk. 3 (Survivor)",
+    "key": "looting mk 3 survivor",
+    "url": "https://arcraiders.wiki/w/images/7/74/Looting_Mk._3_%28Survivor%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Looting_Mk._3_(Survivor)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Lure Grenade Trap",
+    "key": "lure grenade trap",
+    "url": "https://arcraiders.wiki/w/images/9/92/Lure_Grenade_Trap.png",
+    "page_url": "https://arcraiders.wiki/wiki/Lure_Grenade_Trap",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Lure Grenade",
+    "key": "lure grenade",
+    "url": "https://arcraiders.wiki/w/images/7/77/Lure_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Lure_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Magnet",
+    "key": "magnet",
+    "url": "https://arcraiders.wiki/w/images/8/8c/Magnet.png",
+    "page_url": "https://arcraiders.wiki/wiki/Magnet",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Magnetic Accelerator",
+    "key": "magnetic accelerator",
+    "url": "https://arcraiders.wiki/w/images/5/5e/Magnetic_Accelerator.png",
+    "page_url": "https://arcraiders.wiki/wiki/Magnetic_Accelerator",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Magnetron",
+    "key": "magnetron",
+    "url": "https://arcraiders.wiki/w/images/a/a2/Magnetron.png",
+    "page_url": "https://arcraiders.wiki/wiki/Magnetron",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Matriarch Reactor",
+    "key": "matriarch reactor",
+    "url": "https://arcraiders.wiki/w/images/2/24/Matriarch_Reactor.png",
+    "page_url": "https://arcraiders.wiki/wiki/Matriarch_Reactor",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Mechanical Components",
+    "key": "mechanical components",
+    "url": "https://arcraiders.wiki/w/images/9/94/Mechanical_Components.png",
+    "page_url": "https://arcraiders.wiki/wiki/Mechanical_Components",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Medium Ammo",
+    "key": "medium ammo",
+    "url": "https://arcraiders.wiki/w/images/d/d3/Medium_Ammo.png",
+    "page_url": "https://arcraiders.wiki/wiki/Medium_Ammo",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Medium Gun Parts",
+    "key": "medium gun parts",
+    "url": "https://arcraiders.wiki/w/images/9/9a/Medium_Gun_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Medium_Gun_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Medium Shield",
+    "key": "medium shield",
+    "url": "https://arcraiders.wiki/w/images/4/41/Medium_Shield.png",
+    "page_url": "https://arcraiders.wiki/wiki/Medium_Shield",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Metal Brackets",
+    "key": "metal brackets",
+    "url": "https://arcraiders.wiki/w/images/6/62/Metal_Brackets.png",
+    "page_url": "https://arcraiders.wiki/wiki/Metal_Brackets",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Metal Parts",
+    "key": "metal parts",
+    "url": "https://arcraiders.wiki/w/images/8/89/Metal_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Metal_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Microscope",
+    "key": "microscope",
+    "url": "https://arcraiders.wiki/w/images/2/2c/Microscope.png",
+    "page_url": "https://arcraiders.wiki/wiki/Microscope",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Mini Centrifuge",
+    "key": "mini centrifuge",
+    "url": "https://arcraiders.wiki/w/images/9/9f/Mini_Centrifuge.png",
+    "page_url": "https://arcraiders.wiki/wiki/Mini_Centrifuge",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Mod Components",
+    "key": "mod components",
+    "url": "https://arcraiders.wiki/w/images/0/0f/Mod_Components.png",
+    "page_url": "https://arcraiders.wiki/wiki/Mod_Components",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Moss",
+    "key": "moss",
+    "url": "https://arcraiders.wiki/w/images/6/64/Moss.png",
+    "page_url": "https://arcraiders.wiki/wiki/Moss",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Motor",
+    "key": "motor",
+    "url": "https://arcraiders.wiki/w/images/0/0f/Motor.png",
+    "page_url": "https://arcraiders.wiki/wiki/Motor",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Mushroom",
+    "key": "mushroom",
+    "url": "https://arcraiders.wiki/w/images/8/8c/Mushroom.png",
+    "page_url": "https://arcraiders.wiki/wiki/Mushroom",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Music Album",
+    "key": "music album",
+    "url": "https://arcraiders.wiki/w/images/9/90/Music_Album.png",
+    "page_url": "https://arcraiders.wiki/wiki/Music_Album",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Music Box",
+    "key": "music box",
+    "url": "https://arcraiders.wiki/w/images/7/74/Music_Box.png",
+    "page_url": "https://arcraiders.wiki/wiki/Music_Box",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Muzzle Brake I",
+    "key": "muzzle brake i",
+    "url": "https://arcraiders.wiki/w/images/4/4f/Muzzle_Brake_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Muzzle_Brake_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Muzzle Brake II",
+    "key": "muzzle brake ii",
+    "url": "https://arcraiders.wiki/w/images/2/23/Muzzle_Brake_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Muzzle_Brake_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Muzzle Brake III",
+    "key": "muzzle brake iii",
+    "url": "https://arcraiders.wiki/w/images/a/a2/Muzzle_Brake_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Muzzle_Brake_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Noisemaker",
+    "key": "noisemaker",
+    "url": "https://arcraiders.wiki/w/images/5/5c/Noisemaker.png",
+    "page_url": "https://arcraiders.wiki/wiki/Noisemaker",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Number Plate",
+    "key": "number plate",
+    "url": "https://arcraiders.wiki/w/images/5/51/Number_Plate.png",
+    "page_url": "https://arcraiders.wiki/wiki/Number_Plate",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Oil",
+    "key": "oil",
+    "url": "https://arcraiders.wiki/w/images/0/06/Oil.png",
+    "page_url": "https://arcraiders.wiki/wiki/Oil",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Olives",
+    "key": "olives",
+    "url": "https://arcraiders.wiki/w/images/f/f3/Olives.png",
+    "page_url": "https://arcraiders.wiki/wiki/Olives",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Padded Stock",
+    "key": "padded stock",
+    "url": "https://arcraiders.wiki/w/images/4/4b/Padded_Stock.png",
+    "page_url": "https://arcraiders.wiki/wiki/Padded_Stock",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Painted Box",
+    "key": "painted box",
+    "url": "https://arcraiders.wiki/w/images/5/53/Painted_Box.png",
+    "page_url": "https://arcraiders.wiki/wiki/Painted_Box",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Patrol Car Key",
+    "key": "patrol car key",
+    "url": "https://arcraiders.wiki/w/images/b/b0/Patrol_Car_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Patrol_Car_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Photoelectric Cloak",
+    "key": "photoelectric cloak",
+    "url": "https://arcraiders.wiki/w/images/0/06/Photoelectric_Cloak.png",
+    "page_url": "https://arcraiders.wiki/wiki/Photoelectric_Cloak",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Plastic Parts",
+    "key": "plastic parts",
+    "url": "https://arcraiders.wiki/w/images/c/c9/Plastic_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Plastic_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Playing Cards",
+    "key": "playing cards",
+    "url": "https://arcraiders.wiki/w/images/e/e2/Playing_Cards.png",
+    "page_url": "https://arcraiders.wiki/wiki/Playing_Cards",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Polluted Air Filter",
+    "key": "polluted air filter",
+    "url": "https://arcraiders.wiki/w/images/6/6e/Polluted_Air_Filter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Polluted_Air_Filter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Pop Trigger",
+    "key": "pop trigger",
+    "url": "https://arcraiders.wiki/w/images/c/c6/Pop_Trigger.png",
+    "page_url": "https://arcraiders.wiki/wiki/Pop_Trigger",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Portable TV",
+    "key": "portable tv",
+    "url": "https://arcraiders.wiki/w/images/5/5f/Portable_TV.png",
+    "page_url": "https://arcraiders.wiki/wiki/Portable_TV",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Poster Of Natural Wonders",
+    "key": "poster natural wonders",
+    "url": "https://arcraiders.wiki/w/images/2/2b/Poster_Of_Natural_Wonders.png",
+    "page_url": "https://arcraiders.wiki/wiki/Poster_Of_Natural_Wonders",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Pottery",
+    "key": "pottery",
+    "url": "https://arcraiders.wiki/w/images/c/c0/Pottery.png",
+    "page_url": "https://arcraiders.wiki/wiki/Pottery",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Power Bank",
+    "key": "power bank",
+    "url": "https://arcraiders.wiki/w/images/7/77/Power_Bank.png",
+    "page_url": "https://arcraiders.wiki/wiki/Power_Bank",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Power Cable",
+    "key": "power cable",
+    "url": "https://arcraiders.wiki/w/images/f/f8/Power_Cable.png",
+    "page_url": "https://arcraiders.wiki/wiki/Power_Cable",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Powered Descender",
+    "key": "powered descender",
+    "url": "https://arcraiders.wiki/w/images/2/21/Powered_Descender.png",
+    "page_url": "https://arcraiders.wiki/wiki/Powered_Descender",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Power Rod",
+    "key": "power rod",
+    "url": "https://arcraiders.wiki/w/images/3/31/Power_Rod.png",
+    "page_url": "https://arcraiders.wiki/wiki/Power_Rod",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Prickly Pear",
+    "key": "prickly pear",
+    "url": "https://arcraiders.wiki/w/images/8/80/Prickly_Pear.png",
+    "page_url": "https://arcraiders.wiki/wiki/Prickly_Pear",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Processor",
+    "key": "processor",
+    "url": "https://arcraiders.wiki/w/images/4/4e/Processor.png",
+    "page_url": "https://arcraiders.wiki/wiki/Processor",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Projector",
+    "key": "projector",
+    "url": "https://arcraiders.wiki/w/images/0/04/Projector.png",
+    "page_url": "https://arcraiders.wiki/wiki/Projector",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Pulse Mine",
+    "key": "pulse mine",
+    "url": "https://arcraiders.wiki/w/images/a/af/Pulse_Mine.png",
+    "page_url": "https://arcraiders.wiki/wiki/Pulse_Mine",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Queen Reactor",
+    "key": "queen reactor",
+    "url": "https://arcraiders.wiki/w/images/6/6b/Queen_Reactor.png",
+    "page_url": "https://arcraiders.wiki/wiki/Queen_Reactor",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Radio Relay",
+    "key": "radio relay",
+    "url": "https://arcraiders.wiki/w/images/b/b6/Radio_Relay.png",
+    "page_url": "https://arcraiders.wiki/wiki/Radio_Relay",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Radio",
+    "key": "radio",
+    "url": "https://arcraiders.wiki/w/images/3/31/Radio.png",
+    "page_url": "https://arcraiders.wiki/wiki/Radio",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Raider Hatch Key",
+    "key": "raider hatch key",
+    "url": "https://arcraiders.wiki/w/images/6/68/Raider_Hatch_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Raider_Hatch_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Recorder",
+    "key": "recorder",
+    "url": "https://arcraiders.wiki/w/images/6/6d/Recorder.png",
+    "page_url": "https://arcraiders.wiki/wiki/Recorder",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Red Coral Jewelry",
+    "key": "red coral jewelry",
+    "url": "https://arcraiders.wiki/w/images/1/1a/Red_Coral_Jewelry.png",
+    "page_url": "https://arcraiders.wiki/wiki/Red_Coral_Jewelry",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Red Light Stick",
+    "key": "red light stick",
+    "url": "https://arcraiders.wiki/w/images/9/93/Red_Light_Stick.png",
+    "page_url": "https://arcraiders.wiki/wiki/Red_Light_Stick",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Remote Control",
+    "key": "remote control",
+    "url": "https://arcraiders.wiki/w/images/f/f4/Remote_Control.png",
+    "page_url": "https://arcraiders.wiki/wiki/Remote_Control",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Remote Raider Flare",
+    "key": "remote raider flare",
+    "url": "https://arcraiders.wiki/w/images/f/ff/Remote_Raider_Flare.png",
+    "page_url": "https://arcraiders.wiki/wiki/Remote_Raider_Flare",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Resin",
+    "key": "resin",
+    "url": "https://arcraiders.wiki/w/images/2/2c/Resin.png",
+    "page_url": "https://arcraiders.wiki/wiki/Resin",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ripped Safety Vest",
+    "key": "ripped safety vest",
+    "url": "https://arcraiders.wiki/w/images/a/a8/Ripped_Safety_Vest.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ripped_Safety_Vest",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Classified Records Keycard",
+    "key": "riven tides classified records keycard",
+    "url": "https://arcraiders.wiki/w/images/a/af/Riven_Tides_Classified_Records_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Classified_Records_Keycard",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Crane House Keycard",
+    "key": "riven tides crane house keycard",
+    "url": "https://arcraiders.wiki/w/images/5/5b/Riven_Tides_Crane_House_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Crane_House_Keycard",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Hotel Keycard No. 102",
+    "key": "riven tides hotel keycard no 102",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Riven_Tides_Hotel_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Hotel_Keycard_No._102",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Hotel Keycard No. 107",
+    "key": "riven tides hotel keycard no 107",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Riven_Tides_Hotel_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Hotel_Keycard_No._107",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Hotel Keycard No. 113",
+    "key": "riven tides hotel keycard no 113",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Riven_Tides_Hotel_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Hotel_Keycard_No._113",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Hotel Keycard No. 205",
+    "key": "riven tides hotel keycard no 205",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Riven_Tides_Hotel_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Hotel_Keycard_No._205",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Hotel Keycard No. 208",
+    "key": "riven tides hotel keycard no 208",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Riven_Tides_Hotel_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Hotel_Keycard_No._208",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Hotel Keycard No. 311",
+    "key": "riven tides hotel keycard no 311",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Riven_Tides_Hotel_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Hotel_Keycard_No._311",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Hotel Keycard No. 404",
+    "key": "riven tides hotel keycard no 404",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Riven_Tides_Hotel_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Hotel_Keycard_No._404",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Riven Tides Secure Storage Keycard",
+    "key": "riven tides secure storage keycard",
+    "url": "https://arcraiders.wiki/w/images/6/6d/Riven_Tides_Secure_Storage_Keycard.png",
+    "page_url": "https://arcraiders.wiki/wiki/Riven_Tides_Secure_Storage_Keycard",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rocket Thruster",
+    "key": "rocket thruster",
+    "url": "https://arcraiders.wiki/w/images/8/8a/Rocket_Thruster.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rocket_Thruster",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rocketeer Driver",
+    "key": "rocketeer driver",
+    "url": "https://arcraiders.wiki/w/images/e/ef/Rocketeer_Driver.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rocketeer_Driver",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Roots",
+    "key": "roots",
+    "url": "https://arcraiders.wiki/w/images/5/57/Roots.png",
+    "page_url": "https://arcraiders.wiki/wiki/Roots",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rope",
+    "key": "rope",
+    "url": "https://arcraiders.wiki/w/images/b/b4/Rope.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rope",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rosary",
+    "key": "rosary",
+    "url": "https://arcraiders.wiki/w/images/7/77/Rosary.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rosary",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rotary Encoder",
+    "key": "rotary encoder",
+    "url": "https://arcraiders.wiki/w/images/e/e4/Rotary_Encoder.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rotary_Encoder",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rubber Duck",
+    "key": "rubber duck",
+    "url": "https://arcraiders.wiki/w/images/d/df/Rubber_Duck.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rubber_Duck",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rubber Pad",
+    "key": "rubber pad",
+    "url": "https://arcraiders.wiki/w/images/1/1a/Rubber_Pad.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rubber_Pad",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rubber Parts",
+    "key": "rubber parts",
+    "url": "https://arcraiders.wiki/w/images/9/93/Rubber_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rubber_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ruined Accordion",
+    "key": "ruined accordion",
+    "url": "https://arcraiders.wiki/w/images/a/a6/Ruined_Accordion.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ruined_Accordion",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ruined Augment",
+    "key": "ruined augment",
+    "url": "https://arcraiders.wiki/w/images/a/aa/Ruined_Augment.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ruined_Augment",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ruined Baton",
+    "key": "ruined baton",
+    "url": "https://arcraiders.wiki/w/images/e/ee/Ruined_Baton.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ruined_Baton",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ruined Handcuffs",
+    "key": "ruined handcuffs",
+    "url": "https://arcraiders.wiki/w/images/7/7c/Ruined_Handcuffs.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ruined_Handcuffs",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ruined Parachute",
+    "key": "ruined parachute",
+    "url": "https://arcraiders.wiki/w/images/5/5c/Ruined_Parachute.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ruined_Parachute",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ruined Riot Shield",
+    "key": "ruined riot shield",
+    "url": "https://arcraiders.wiki/w/images/c/cb/Ruined_Riot_Shield.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ruined_Riot_Shield",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ruined Tactical Vest",
+    "key": "ruined tactical vest",
+    "url": "https://arcraiders.wiki/w/images/c/c2/Ruined_Tactical_Vest.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ruined_Tactical_Vest",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rusted Bolts",
+    "key": "rusted bolts",
+    "url": "https://arcraiders.wiki/w/images/b/bf/Rusted_Bolts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rusted_Bolts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rusted Gear",
+    "key": "rusted gear",
+    "url": "https://arcraiders.wiki/w/images/c/cf/Rusted_Gear.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rusted_Gear",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rusted Shut Medical Kit",
+    "key": "rusted shut medical kit",
+    "url": "https://arcraiders.wiki/w/images/1/1a/Rusted_Shut_Medical_Kit.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rusted_Shut_Medical_Kit",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rusted Tools",
+    "key": "rusted tools",
+    "url": "https://arcraiders.wiki/w/images/3/30/Rusted_Tools.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rusted_Tools",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Rusty ARC Steel",
+    "key": "rusty steel",
+    "url": "https://arcraiders.wiki/w/images/3/33/Rusty_ARC_Steel.png",
+    "page_url": "https://arcraiders.wiki/wiki/Rusty_ARC_Steel",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Sample Cleaner",
+    "key": "sample cleaner",
+    "url": "https://arcraiders.wiki/w/images/d/d8/Sample_Cleaner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Sample_Cleaner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Ancient Fort Security Code",
+    "key": "ancient fort security code",
+    "url": "https://arcraiders.wiki/w/images/1/1d/Security_Code.png",
+    "page_url": "https://arcraiders.wiki/wiki/Ancient_Fort_Security_Code",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Pilgrim's Peak Security Code",
+    "key": "pilgrims peak security code",
+    "url": "https://arcraiders.wiki/w/images/1/1d/Security_Code.png",
+    "page_url": "https://arcraiders.wiki/wiki/Pilgrim%27s_Peak_Security_Code",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Raider's Refuge Security Code",
+    "key": "refuge security code",
+    "url": "https://arcraiders.wiki/w/images/1/1d/Security_Code.png",
+    "page_url": "https://arcraiders.wiki/wiki/Raider%27s_Refuge_Security_Code",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Reinforced Reception Security Code",
+    "key": "reinforced reception security code",
+    "url": "https://arcraiders.wiki/w/images/1/1d/Security_Code.png",
+    "page_url": "https://arcraiders.wiki/wiki/Reinforced_Reception_Security_Code",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Seeker Grenade",
+    "key": "seeker grenade",
+    "url": "https://arcraiders.wiki/w/images/3/35/Seeker_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Seeker_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Sensors",
+    "key": "sensors",
+    "url": "https://arcraiders.wiki/w/images/9/9c/Sensors.png",
+    "page_url": "https://arcraiders.wiki/wiki/Sensors",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Sentinel Firing Core",
+    "key": "sentinel firing core",
+    "url": "https://arcraiders.wiki/w/images/9/91/Sentinel_Firing_Core.png",
+    "page_url": "https://arcraiders.wiki/wiki/Sentinel_Firing_Core",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shaker",
+    "key": "shaker",
+    "url": "https://arcraiders.wiki/w/images/2/22/Shaker.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shaker",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shield Recharger",
+    "key": "shield recharger",
+    "url": "https://arcraiders.wiki/w/images/4/44/Shield_Recharger.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shield_Recharger",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shotgun Ammo",
+    "key": "shotgun ammo",
+    "url": "https://arcraiders.wiki/w/images/6/61/Shotgun_Ammo.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shotgun_Ammo",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shotgun Choke I",
+    "key": "shotgun choke i",
+    "url": "https://arcraiders.wiki/w/images/0/07/Shotgun_Choke_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shotgun_Choke_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shotgun Choke II",
+    "key": "shotgun choke ii",
+    "url": "https://arcraiders.wiki/w/images/6/63/Shotgun_Choke_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shotgun_Choke_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shotgun Choke III",
+    "key": "shotgun choke iii",
+    "url": "https://arcraiders.wiki/w/images/3/36/Shotgun_Choke_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shotgun_Choke_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shotgun Silencer",
+    "key": "shotgun silencer",
+    "url": "https://arcraiders.wiki/w/images/4/4d/Shotgun_Silencer.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shotgun_Silencer",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Showstopper",
+    "key": "showstopper",
+    "url": "https://arcraiders.wiki/w/images/1/18/Showstopper.png",
+    "page_url": "https://arcraiders.wiki/wiki/Showstopper",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shrapnel Grenade",
+    "key": "shrapnel grenade",
+    "url": "https://arcraiders.wiki/w/images/5/5f/Shrapnel_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shrapnel_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Shredder Gyro",
+    "key": "shredder gyro",
+    "url": "https://arcraiders.wiki/w/images/9/96/Shredder_Gyro.png",
+    "page_url": "https://arcraiders.wiki/wiki/Shredder_Gyro",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Signal Amplifier",
+    "key": "signal amplifier",
+    "url": "https://arcraiders.wiki/w/images/d/de/Signal_Amplifier.png",
+    "page_url": "https://arcraiders.wiki/wiki/Signal_Amplifier",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Silencer I",
+    "key": "silencer i",
+    "url": "https://arcraiders.wiki/w/images/f/f7/Silencer_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Silencer_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Silencer II",
+    "key": "silencer ii",
+    "url": "https://arcraiders.wiki/w/images/c/c0/Silencer_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Silencer_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Silencer III",
+    "key": "silencer iii",
+    "url": "https://arcraiders.wiki/w/images/3/3e/Silencer_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Silencer_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Silver Teaspoon Set",
+    "key": "silver teaspoon set",
+    "url": "https://arcraiders.wiki/w/images/9/90/Silver_Teaspoon_Set.png",
+    "page_url": "https://arcraiders.wiki/wiki/Silver_Teaspoon_Set",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Simple Gun Parts",
+    "key": "simple gun parts",
+    "url": "https://arcraiders.wiki/w/images/d/da/Simple_Gun_Parts.png",
+    "page_url": "https://arcraiders.wiki/wiki/Simple_Gun_Parts",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "\"Sirena Dorata\" Ship Model",
+    "key": "sirena dorata ship model",
+    "url": "https://arcraiders.wiki/w/images/1/1e/Sirena_Dorata_Ship_Model.png",
+    "page_url": "https://arcraiders.wiki/wiki/%22Sirena_Dorata%22_Ship_Model",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Smoke Grenade Trap",
+    "key": "smoke grenade trap",
+    "url": "https://arcraiders.wiki/w/images/a/ac/Smoke_Grenade_Trap.png",
+    "page_url": "https://arcraiders.wiki/wiki/Smoke_Grenade_Trap",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Smoke Grenade",
+    "key": "smoke grenade",
+    "url": "https://arcraiders.wiki/w/images/d/d5/Smoke_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Smoke_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Snap Blast Grenade",
+    "key": "snap blast grenade",
+    "url": "https://arcraiders.wiki/w/images/7/77/Snap_Blast_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Snap_Blast_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Snap Hook",
+    "key": "snap hook",
+    "url": "https://arcraiders.wiki/w/images/5/56/Snap_Hook.png",
+    "page_url": "https://arcraiders.wiki/wiki/Snap_Hook",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Snitch Scanner",
+    "key": "snitch scanner",
+    "url": "https://arcraiders.wiki/w/images/e/e5/Snitch_Scanner.png",
+    "page_url": "https://arcraiders.wiki/wiki/Snitch_Scanner",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Snowball",
+    "key": "snowball",
+    "url": "https://arcraiders.wiki/w/images/0/04/Snowball.png",
+    "page_url": "https://arcraiders.wiki/wiki/Snowball",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spaceport Container Storage Key",
+    "key": "spaceport container storage key",
+    "url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spaceport_Container_Storage_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spaceport Control Tower Key",
+    "key": "spaceport control tower key",
+    "url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spaceport_Control_Tower_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spaceport Trench Tower Key",
+    "key": "spaceport trench tower key",
+    "url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spaceport_Trench_Tower_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spaceport Warehouse Key",
+    "key": "spaceport warehouse key",
+    "url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spaceport_Warehouse_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Speaker Component",
+    "key": "speaker component",
+    "url": "https://arcraiders.wiki/w/images/e/ee/Speaker_Component.png",
+    "page_url": "https://arcraiders.wiki/wiki/Speaker_Component",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spectrometer",
+    "key": "spectrometer",
+    "url": "https://arcraiders.wiki/w/images/0/0e/Spectrometer.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spectrometer",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spectrum Analyzer",
+    "key": "spectrum analyzer",
+    "url": "https://arcraiders.wiki/w/images/0/0a/Spectrum_Analyzer.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spectrum_Analyzer",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spotter Relay",
+    "key": "spotter relay",
+    "url": "https://arcraiders.wiki/w/images/5/58/Spotter_Relay.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spotter_Relay",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Spring Cushion",
+    "key": "spring cushion",
+    "url": "https://arcraiders.wiki/w/images/2/26/Spring_Cushion.png",
+    "page_url": "https://arcraiders.wiki/wiki/Spring_Cushion",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Stable Stock I",
+    "key": "stable stock i",
+    "url": "https://arcraiders.wiki/w/images/8/8d/Stable_Stock_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Stable_Stock_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Stable Stock II",
+    "key": "stable stock ii",
+    "url": "https://arcraiders.wiki/w/images/b/b4/Stable_Stock_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Stable_Stock_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Stable Stock III",
+    "key": "stable stock iii",
+    "url": "https://arcraiders.wiki/w/images/e/eb/Stable_Stock_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Stable_Stock_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Statuette",
+    "key": "statuette",
+    "url": "https://arcraiders.wiki/w/images/8/8a/Statuette.png",
+    "page_url": "https://arcraiders.wiki/wiki/Statuette",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Steel Spring",
+    "key": "steel spring",
+    "url": "https://arcraiders.wiki/w/images/d/db/Steel_Spring.png",
+    "page_url": "https://arcraiders.wiki/wiki/Steel_Spring",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Stella Montis Assembly Admin Key",
+    "key": "stella montis assembly admin key",
+    "url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Stella_Montis_Assembly_Admin_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Stella Montis Medical Storage Key",
+    "key": "stella montis medical storage key",
+    "url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Stella_Montis_Medical_Storage_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Stella Montis Security Checkpoint Key",
+    "key": "stella montis security checkpoint key",
+    "url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Stella_Montis_Security_Checkpoint_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Stella Montis Archives Key",
+    "key": "stella montis archives key",
+    "url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
+    "page_url": "https://arcraiders.wiki/wiki/Stella_Montis_Archives_Key",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Sterilized Bandage",
+    "key": "sterilized bandage",
+    "url": "https://arcraiders.wiki/w/images/9/99/Sterilized_Bandage.png",
+    "page_url": "https://arcraiders.wiki/wiki/Sterilized_Bandage",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Surge Coil",
+    "key": "surge coil",
+    "url": "https://arcraiders.wiki/w/images/5/5b/Surge_Coil.png",
+    "page_url": "https://arcraiders.wiki/wiki/Surge_Coil",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Surge Shield Recharger",
+    "key": "surge shield recharger",
+    "url": "https://arcraiders.wiki/w/images/c/c9/Surge_Shield_Recharger.png",
+    "page_url": "https://arcraiders.wiki/wiki/Surge_Shield_Recharger",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Surveyor Vault",
+    "key": "surveyor vault",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Surveyor_Vault.png",
+    "page_url": "https://arcraiders.wiki/wiki/Surveyor_Vault",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Synthesized Fuel",
+    "key": "synthesized fuel",
+    "url": "https://arcraiders.wiki/w/images/8/8e/Synthesized_Fuel.png",
+    "page_url": "https://arcraiders.wiki/wiki/Synthesized_Fuel",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Syringe",
+    "key": "syringe",
+    "url": "https://arcraiders.wiki/w/images/1/17/Syringe.png",
+    "page_url": "https://arcraiders.wiki/wiki/Syringe",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tactical Mk. 1",
+    "key": "tactical mk 1",
+    "url": "https://arcraiders.wiki/w/images/1/18/Tactical_Mk._1.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tactical_Mk._1",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tactical Mk. 2",
+    "key": "tactical mk 2",
+    "url": "https://arcraiders.wiki/w/images/6/6c/Tactical_Mk._2.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tactical_Mk._2",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tactical Mk. 3 (Defensive)",
+    "key": "tactical mk 3 defensive",
+    "url": "https://arcraiders.wiki/w/images/a/a9/Tactical_Mk._3_%28Defensive%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tactical_Mk._3_(Defensive)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tactical Mk. 3 (Healing)",
+    "key": "tactical mk 3 healing",
+    "url": "https://arcraiders.wiki/w/images/1/12/Tactical_Mk._3_%28Healing%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tactical_Mk._3_(Healing)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tactical Mk. 3 (Revival)",
+    "key": "tactical mk 3 revival",
+    "url": "https://arcraiders.wiki/w/images/e/e0/Tactical_Mk._3_%28Revival%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tactical_Mk._3_(Revival)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tactical Mk. 3 (Smoke)",
+    "key": "tactical mk 3 smoke",
+    "url": "https://arcraiders.wiki/w/images/d/d6/Tactical_Mk._3_%28Smoke%29.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tactical_Mk._3_(Smoke)",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tagging Grenade",
+    "key": "tagging grenade",
+    "url": "https://arcraiders.wiki/w/images/e/e5/Tagging_Grenade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tagging_Grenade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tattered ARC Lining",
+    "key": "tattered lining",
+    "url": "https://arcraiders.wiki/w/images/3/35/Tattered_ARC_Lining.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tattered_ARC_Lining",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tattered Clothes",
+    "key": "tattered clothes",
+    "url": "https://arcraiders.wiki/w/images/c/c4/Tattered_Clothes.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tattered_Clothes",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Telemetry Transceiver",
+    "key": "telemetry transceiver",
+    "url": "https://arcraiders.wiki/w/images/a/a8/Telemetry_Transceiver.png",
+    "page_url": "https://arcraiders.wiki/wiki/Telemetry_Transceiver",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Thermostat",
+    "key": "thermostat",
+    "url": "https://arcraiders.wiki/w/images/9/9a/Thermostat.png",
+    "page_url": "https://arcraiders.wiki/wiki/Thermostat",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tick Pod",
+    "key": "tick pod",
+    "url": "https://arcraiders.wiki/w/images/9/95/Tick_Pod.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tick_Pod",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Toaster",
+    "key": "toaster",
+    "url": "https://arcraiders.wiki/w/images/5/50/Toaster.png",
+    "page_url": "https://arcraiders.wiki/wiki/Toaster",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Torn Blanket",
+    "key": "torn blanket",
+    "url": "https://arcraiders.wiki/w/images/a/af/Torn_Blanket.png",
+    "page_url": "https://arcraiders.wiki/wiki/Torn_Blanket",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Torn Book",
+    "key": "torn book",
+    "url": "https://arcraiders.wiki/w/images/c/cc/Torn_Book.png",
+    "page_url": "https://arcraiders.wiki/wiki/Torn_Book",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Trailblazer",
+    "key": "trailblazer",
+    "url": "https://arcraiders.wiki/w/images/8/89/Trailblazer.png",
+    "page_url": "https://arcraiders.wiki/wiki/Trailblazer",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Trigger 'Nade",
+    "key": "trigger nade",
+    "url": "https://arcraiders.wiki/w/images/c/cc/Trigger_%27Nade.png",
+    "page_url": "https://arcraiders.wiki/wiki/Trigger_%27Nade",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Tropical Duck",
+    "key": "tropical duck",
+    "url": "https://arcraiders.wiki/w/images/c/cc/Tropical_Duck.png",
+    "page_url": "https://arcraiders.wiki/wiki/Tropical_Duck",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Turbine Compressor",
+    "key": "turbine compressor",
+    "url": "https://arcraiders.wiki/w/images/d/d4/Turbine_Compressor.png",
+    "page_url": "https://arcraiders.wiki/wiki/Turbine_Compressor",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Turbo Pump",
+    "key": "turbo pump",
+    "url": "https://arcraiders.wiki/w/images/f/f1/Turbo_Pump.png",
+    "page_url": "https://arcraiders.wiki/wiki/Turbo_Pump",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "\"Twilight Compass\" Ship Model",
+    "key": "twilight compass ship model",
+    "url": "https://arcraiders.wiki/w/images/1/18/Twilight_Compass_Ship_Model.png",
+    "page_url": "https://arcraiders.wiki/wiki/%22Twilight_Compass%22_Ship_Model",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Unusable Weapon",
+    "key": "unusable weapon",
+    "url": "https://arcraiders.wiki/w/images/3/37/Unusable_Weapon.png",
+    "page_url": "https://arcraiders.wiki/wiki/Unusable_Weapon",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Vaporizer Regulator",
+    "key": "vaporizer regulator",
+    "url": "https://arcraiders.wiki/w/images/b/b8/Vaporizer_Regulator.png",
+    "page_url": "https://arcraiders.wiki/wiki/Vaporizer_Regulator",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Vase",
+    "key": "vase",
+    "url": "https://arcraiders.wiki/w/images/6/6e/Vase.png",
+    "page_url": "https://arcraiders.wiki/wiki/Vase",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "\"Velocity\" Ship Model",
+    "key": "velocity ship model",
+    "url": "https://arcraiders.wiki/w/images/c/c4/Velocity_Ship_Model.png",
+    "page_url": "https://arcraiders.wiki/wiki/%22Velocity%22_Ship_Model",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Vertical Grip I",
+    "key": "vertical grip i",
+    "url": "https://arcraiders.wiki/w/images/4/4d/Vertical_Grip_I.png",
+    "page_url": "https://arcraiders.wiki/wiki/Vertical_Grip_I",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Vertical Grip II",
+    "key": "vertical grip ii",
+    "url": "https://arcraiders.wiki/w/images/3/3c/Vertical_Grip_II.png",
+    "page_url": "https://arcraiders.wiki/wiki/Vertical_Grip_II",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Vertical Grip III",
+    "key": "vertical grip iii",
+    "url": "https://arcraiders.wiki/w/images/2/20/Vertical_Grip_III.png",
+    "page_url": "https://arcraiders.wiki/wiki/Vertical_Grip_III",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Very Comfortable Pillow",
+    "key": "very comfortable pillow",
+    "url": "https://arcraiders.wiki/w/images/a/a4/Very_Comfortable_Pillow.png",
+    "page_url": "https://arcraiders.wiki/wiki/Very_Comfortable_Pillow",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Vita Shot",
+    "key": "vita shot",
+    "url": "https://arcraiders.wiki/w/images/7/7d/Vita_Shot.png",
+    "page_url": "https://arcraiders.wiki/wiki/Vita_Shot",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Vita Spray",
+    "key": "vita spray",
+    "url": "https://arcraiders.wiki/w/images/1/1d/Vita_Spray.png",
+    "page_url": "https://arcraiders.wiki/wiki/Vita_Spray",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Volcanic Rock",
+    "key": "volcanic rock",
+    "url": "https://arcraiders.wiki/w/images/2/26/Volcanic_Rock.png",
+    "page_url": "https://arcraiders.wiki/wiki/Volcanic_Rock",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Voltage Converter",
+    "key": "voltage converter",
+    "url": "https://arcraiders.wiki/w/images/c/c7/Voltage_Converter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Voltage_Converter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Wasp Driver",
+    "key": "wasp driver",
+    "url": "https://arcraiders.wiki/w/images/3/30/Wasp_Driver.png",
+    "page_url": "https://arcraiders.wiki/wiki/Wasp_Driver",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Water Filter",
+    "key": "water filter",
+    "url": "https://arcraiders.wiki/w/images/4/48/Water_Filter.png",
+    "page_url": "https://arcraiders.wiki/wiki/Water_Filter",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Water Pump",
+    "key": "water pump",
+    "url": "https://arcraiders.wiki/w/images/2/28/Water_Pump.png",
+    "page_url": "https://arcraiders.wiki/wiki/Water_Pump",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "White Flag",
+    "key": "white flag",
+    "url": "https://arcraiders.wiki/w/images/4/43/White_Flag.png",
+    "page_url": "https://arcraiders.wiki/wiki/White_Flag",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "\"Wind Sprite\" Ship Model",
+    "key": "wind sprite ship model",
+    "url": "https://arcraiders.wiki/w/images/9/95/Wind_Sprite_Ship_Model.png",
+    "page_url": "https://arcraiders.wiki/wiki/%22Wind_Sprite%22_Ship_Model",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Wires",
+    "key": "wires",
+    "url": "https://arcraiders.wiki/w/images/3/39/Wires.png",
+    "page_url": "https://arcraiders.wiki/wiki/Wires",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Wolfpack",
+    "key": "wolfpack",
+    "url": "https://arcraiders.wiki/w/images/2/24/Wolfpack.png",
+    "page_url": "https://arcraiders.wiki/wiki/Wolfpack",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Yellow Light Stick",
+    "key": "yellow light stick",
+    "url": "https://arcraiders.wiki/w/images/1/1f/Yellow_Light_Stick.png",
+    "page_url": "https://arcraiders.wiki/wiki/Yellow_Light_Stick",
+    "source": "arcraiders.wiki/loot"
+  },
+  {
+    "name": "Zipline",
+    "key": "zipline",
+    "url": "https://arcraiders.wiki/w/images/f/f9/Zipline.png",
+    "page_url": "https://arcraiders.wiki/wiki/Zipline",
+    "source": "arcraiders.wiki/loot"
+  }
+]

@@ -1,1 +1,48 @@
-{}
+{
+  "e8e25d0bb7acbe244914d312f8d27781071d680f50468ebf2b7db5153fac46a9": [
+    "assets/arc_raiders/items/motors.webp",
+    "assets/arc_raiders/items/motor.webp"
+  ],
+  "5c79a4de3fee247d21e097b100c2650f28b96c8f1cadf2d4fd285a91b445d8f5": [
+    "assets/arc_raiders/items/ancient_fort_security_code.webp",
+    "assets/arc_raiders/items/reinforced_reception_security_code.webp"
+  ],
+  "1832458af3e8068ea1141b77807e4285debd10e65f585ec2d4c8bc2175f46ffc": [
+    "assets/arc_raiders/items/blue_gate_cellar_key.webp",
+    "assets/arc_raiders/items/blue_gate_village_key.webp"
+  ],
+  "32bf9e98e63429a289a961c01de0839d5c9e450511d1cc5d87ffa23ea91106d4": [
+    "assets/arc_raiders/items/blue_gate_communication_tower_key.webp",
+    "assets/arc_raiders/items/blue_gate_confiscation_room_key.webp"
+  ],
+  "fa3c88788fabb6a337ff96fbd0eed11efab4e77f18b5f9457f61726b946c9d02": [
+    "assets/arc_raiders/items/buried_city_hospital_key.webp",
+    "assets/arc_raiders/items/buried_city_jkv_employee_access_card.webp",
+    "assets/arc_raiders/items/buried_city_residential_master_key.webp",
+    "assets/arc_raiders/items/buried_city_town_hall_key.webp"
+  ],
+  "85c6bf4d8a52d56abd0d8c837729d7128163d40bf9d979c20982c9d6c704bdbc": [
+    "assets/arc_raiders/items/dam_control_tower_key.webp",
+    "assets/arc_raiders/items/dam_controlled_access_zone_key.webp",
+    "assets/arc_raiders/items/dam_staff_room_key.webp",
+    "assets/arc_raiders/items/dam_surveillance_key.webp",
+    "assets/arc_raiders/items/dam_testing_annex_key.webp",
+    "assets/arc_raiders/items/dam_utility_key.webp"
+  ],
+  "2cfa52872d1cc6b9621a3443e74dfe8083190abff3ed1f5a42bd056ca03d5826": [
+    "assets/arc_raiders/items/spaceport_container_storage_key.webp",
+    "assets/arc_raiders/items/spaceport_control_tower_key.webp",
+    "assets/arc_raiders/items/spaceport_trench_tower_key.webp",
+    "assets/arc_raiders/items/spaceport_warehouse_key.webp"
+  ],
+  "7d0de055c0aea98897c362f0de701f4fe0e5cb7df9bb6997b09f02bd243b653e": [
+    "assets/arc_raiders/items/steel_spring.webp",
+    "assets/arc_raiders/items/steel_springs.webp"
+  ],
+  "bf0ccdb4f143f4196e621fa59bf33801b6ba037141ed3fe9626b9eabbe7b8249": [
+    "assets/arc_raiders/items/stella_montis_archives_key.webp",
+    "assets/arc_raiders/items/stella_montis_assembly_admin_key.webp",
+    "assets/arc_raiders/items/stella_montis_medical_storage_key.webp",
+    "assets/arc_raiders/items/stella_montis_security_checkpoint_key.webp"
+  ]
+}

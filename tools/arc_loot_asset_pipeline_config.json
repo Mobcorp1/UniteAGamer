@@ -1,0 +1,60 @@
+{
+  "repo_raw_base": "https://raw.githubusercontent.com/Mobcorp1/UniteAGamer/main",
+  "primary_source_url": "https://arcraiders.wiki/wiki/Loot",
+  "fallback_source_urls": [
+    "https://arcdb.gg/items",
+    "https://arc-raiders.fandom.com/wiki/Items",
+    "https://arctracker.io/items"
+  ],
+  "project_data_files": [
+    "lib/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart",
+    "lib/features/trading_hub/arc_raiders/data/trade_items_data.dart"
+  ],
+  "output_main_folder": "assets/arc_raiders/items",
+  "legacy_mirror_folder": "assets/arc_raiders/scrappy_resources",
+  "manual_override_folder": "assets/arc_raiders/manual_overrides",
+  "backup_folder": "assets/arc_raiders/_legacy_item_assets",
+  "placeholder_folder": "assets/arc_raiders/placeholders",
+  "final_canvas_size": 512,
+  "webp_quality": 92,
+  "padding_ratio": 0.06,
+  "mirror_all_to_scrappy_resources": true,
+  "mirror_to_existing_asset_paths": true,
+  "auto_patch_pubspec": true,
+  "exclude_asset_paths_containing": [
+    "/blueprints/",
+    "blueprint"
+  ],
+  "name_aliases": {
+    "fruit_mix": ["Fruit Mix", "Mixed Fruit", "Fruit"],
+    "mixed_fruit": ["Mixed Fruit", "Fruit Mix", "Fruit"],
+    "agave": ["Agave"],
+    "lemons": ["Lemon", "Lemons"],
+    "apricots": ["Apricot", "Apricots"],
+    "prickly_pears": ["Prickly Pear", "Prickly Pears"],
+    "mushrooms": ["Mushroom", "Mushrooms"],
+    "very_comfortable_pillows": ["Very Comfortable Pillow", "Very Comfortable Pillows"],
+    "industrial_batteries": ["Industrial Battery", "Industrial Batteries"],
+    "power_cables": ["Power Cable", "Power Cables"],
+    "pop_triggers": ["Pop Trigger", "Pop Triggers"],
+    "explosive_compounds": ["Explosive Compound", "Explosive Compounds"],
+    "sentinel_firing_cores": ["Sentinel Firing Core", "Sentinel Firing Cores"],
+    "arc_powercells": ["ARC Powercell", "ARC Powercells"],
+    "arc_motion_cores": ["ARC Motion Core", "ARC Motion Cores"],
+    "bombardier_cells": ["Bombardier Cell", "Bombardier Cells"],
+    "fireball_burners": ["Fireball Burner", "Fireball Burners"],
+    "rocketeer_drivers": ["Rocketeer Driver", "Rocketeer Drivers"],
+    "wasp_drivers": ["Wasp Driver", "Wasp Drivers"],
+    "hornet_drivers": ["Hornet Driver", "Hornet Drivers"],
+    "tick_pods": ["Tick Pod", "Tick Pods"],
+    "surveyors_vaults": ["Surveyor Vault", "Surveyor Vaults"],
+    "surveyor_vaults": ["Surveyor Vault", "Surveyor Vaults"],
+    "cracked_bioscanners": ["Cracked Bioscanner", "Cracked Bioscanners"],
+    "rusted_shut_medical_kits": ["Rusted Shut Medical Kit", "Rusted Shut Medical Kits"],
+    "damaged_heat_sinks": ["Damaged Heat Sink", "Damaged Heat Sinks"],
+    "fried_motherboards": ["Fried Motherboard", "Fried Motherboards"]
+  }
+}

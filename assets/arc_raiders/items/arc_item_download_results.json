@@ -1,261 +1,116 @@
 [
   {
-    "id": "fireworks-box",
-    "name": "Fireworks Box",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/fireworks_box.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "bicycle-pump",
-    "name": "Bicycle Pump",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/bicycle_pump.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "camera-lens",
-    "name": "Camera Lens",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/camera_lens.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "coffee-pot",
-    "name": "Coffee Pot",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/coffee_pot.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "deflated-football",
-    "name": "Deflated Football",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/deflated_football.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "empty-wine-bottle",
-    "name": "Empty Wine Bottle",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/empty_wine_bottle.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "espresso-machine-parts",
-    "name": "Espresso Machine Parts",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/espresso_machine_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "film-reel",
-    "name": "Film Reel",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/film_reel.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "firefly-burner",
-    "name": "Firefly Burner",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/firefly_burner.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "light-impact-grenade",
-    "name": "Light Impact Grenade",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/light_impact_grenade.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "oil",
-    "name": "Oil",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/oil.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "portable-tv",
-    "name": "Portable TV",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/portable_tv.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "recorder",
-    "name": "Recorder",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/recorder.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "stack-of-movie-tapes",
-    "name": "Stack Of Movie Tapes",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/stack_of_movie_tapes.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "power-rod",
-    "name": "Power Rod",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/power_rod.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "arc-alloy",
-    "name": "ARC Alloy",
-    "matched_name": "ARC Alloy",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_alloy.png",
-    "main_asset_path": "assets/arc_raiders/items/arc_alloy.webp",
+    "id": "apricots-tier-2",
+    "name": "Apricots",
+    "matched_name": "Apricot",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/f/fc/Apricot.png",
+    "main_asset_path": "assets/arc_raiders/items/apricots.webp",
     "mirrored_paths": [
-      "assets/arc_raiders/scrappy_resources/arc_alloy.webp"
+      "assets/arc_raiders/items/apricots_tier_2.webp",
+      "assets/arc_raiders/scrappy_resources/apricots.webp",
+      "assets/arc_raiders/scrappy_resources/apricots_tier_2.webp"
     ],
     "status": "ok",
     "reason": ""
   },
   {
-    "id": "rocketeer-drivers",
-    "name": "Rocketeer Drivers",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/rocketeer_drivers.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "cat-bed",
+    "name": "Cat Bed",
+    "matched_name": "Cat Bed",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/82/Cat_Bed.png",
+    "main_asset_path": "assets/arc_raiders/items/cat_bed.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/cat_bed.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "chemicals",
-    "name": "Chemicals",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/chemicals.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "dog-collar",
+    "name": "Dog Collar",
+    "matched_name": "Dog Collar",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c5/Dog_Collar.png",
+    "main_asset_path": "assets/arc_raiders/items/dog_collar.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dog_collar.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "crude-explosives",
-    "name": "Crude Explosives",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/crude_explosives.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "lemons",
+    "name": "Lemons",
+    "matched_name": "Lemon",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/35/Lemon.png",
+    "main_asset_path": "assets/arc_raiders/items/lemons.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/lemons.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "explosive-compounds",
-    "name": "Explosive Compounds",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/explosive_compounds.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "mushrooms",
+    "name": "Mushrooms",
+    "matched_name": "Mushroom",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/8c/Mushroom.png",
+    "main_asset_path": "assets/arc_raiders/items/mushrooms.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/mushrooms.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "laboratory-reagents",
-    "name": "Laboratory Reagents",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/laboratory_reagents.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "olives",
+    "name": "Olives",
+    "matched_name": "Olives",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/f/f3/Olives.png",
+    "main_asset_path": "assets/arc_raiders/items/olives.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/olives.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "pop-triggers",
-    "name": "Pop Triggers",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/pop_triggers.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "prickly-pears",
+    "name": "Prickly Pears",
+    "matched_name": "Prickly Pear",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/80/Prickly_Pear.png",
+    "main_asset_path": "assets/arc_raiders/items/prickly_pears.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/prickly_pears.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "synthesized-fuel",
-    "name": "Synthesized Fuel",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/synthesized_fuel.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "electrical-components",
-    "name": "Electrical Components",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/electrical_components.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "hornet-drivers",
-    "name": "Hornet Drivers",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/hornet_drivers.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "very-comfortable-pillows",
+    "name": "Very Comfortable Pillows",
+    "matched_name": "Very Comfortable Pillow",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a4/Very_Comfortable_Pillow.png",
+    "main_asset_path": "assets/arc_raiders/items/very_comfortable_pillows.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "advanced-electrical-components",
     "name": "Advanced Electrical Components",
     "matched_name": "Advanced Electrical Components",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/advanced_electrical_components.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/9b/Advanced_Electrical_Components.png",
     "main_asset_path": "assets/arc_raiders/items/advanced_electrical_components.webp",
     "mirrored_paths": [
       "assets/arc_raiders/scrappy_resources/advanced_electrical_components.webp"
@@ -264,274 +119,11 @@
     "reason": ""
   },
   {
-    "id": "bastion-cells",
-    "name": "Bastion Cells",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/bastion_cells.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "fabric",
-    "name": "Fabric",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/fabric.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "industrial-batteries",
-    "name": "Industrial Batteries",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/industrial_batteries.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "plastic-parts",
-    "name": "Plastic Parts",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/plastic_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "power-cables",
-    "name": "Power Cables",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/power_cables.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "wasp-drivers",
-    "name": "Wasp Drivers",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/wasp_drivers.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "advanced-mechanical-components",
-    "name": "Advanced Mechanical Components",
-    "matched_name": "Advanced Mechanical Components",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/advanced_mechanical_components.png",
-    "main_asset_path": "assets/arc_raiders/items/advanced_mechanical_components.webp",
-    "mirrored_paths": [
-      "assets/arc_raiders/scrappy_resources/advanced_mechanical_components.webp"
-    ],
-    "status": "ok",
-    "reason": ""
-  },
-  {
-    "id": "mechanical-components",
-    "name": "Mechanical Components",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/mechanical_components.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "metal-parts",
-    "name": "Metal Parts",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/metal_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "rubber-parts",
-    "name": "Rubber Parts",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/rubber_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "rusted-gears",
-    "name": "Rusted Gears",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/rusted_gears.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "rusted-tools",
-    "name": "Rusted Tools",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/rusted_tools.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "sentinel-firing-cores",
-    "name": "Sentinel Firing Cores",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/sentinel_firing_cores.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "vita-shot",
-    "name": "Vita Shot",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/vita_shot.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "faded-photograph",
-    "name": "Faded Photograph",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/faded_photograph.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "great-mullein",
-    "name": "Great Mullein",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/great_mullein.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "rubber-duck",
-    "name": "Rubber Duck",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/rubber_duck.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "syringe",
-    "name": "Syringe",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/syringe.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "apricots-tier-2",
-    "name": "Apricots",
-    "matched_name": "Apricot",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/apricot.png",
-    "main_asset_path": "assets/arc_raiders/items/apricots.webp",
-    "mirrored_paths": [
-      "assets/arc_raiders/scrappy_resources/apricots.webp"
-    ],
-    "status": "ok",
-    "reason": ""
-  },
-  {
-    "id": "cat-bed",
-    "name": "Cat Bed",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/cat_bed.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "dog-collar",
-    "name": "Dog Collar",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/dog_collar.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "lemons",
-    "name": "Lemons",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/lemons.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "mushrooms",
-    "name": "Mushrooms",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/mushrooms.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "olives",
-    "name": "Olives",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/olives.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "prickly-pears",
-    "name": "Prickly Pears",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/prickly_pears.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "very-comfortable-pillows",
-    "name": "Very Comfortable Pillows",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/very_comfortable_pillows.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
     "id": "antiseptic",
     "name": "Antiseptic",
     "matched_name": "Antiseptic",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/antiseptic.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/f/f5/Antiseptic.png",
     "main_asset_path": "assets/arc_raiders/items/antiseptic.webp",
     "mirrored_paths": [
       "assets/arc_raiders/scrappy_resources/antiseptic.webp"
@@ -540,70 +132,180 @@
     "reason": ""
   },
   {
+    "id": "arc-alloy",
+    "name": "ARC Alloy",
+    "matched_name": "ARC Alloy",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a6/ARC_Alloy.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_alloy.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_alloy.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "bastion-cells",
+    "name": "Bastion Cells",
+    "matched_name": "Bastion Cell",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/06/Bastion_Cell.png",
+    "main_asset_path": "assets/arc_raiders/items/bastion_cells.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/bastion_cells.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
     "id": "durable-cloth",
     "name": "Durable Cloth",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Durable Cloth",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/25/Durable_Cloth.png",
     "main_asset_path": "assets/arc_raiders/items/durable_cloth.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/durable_cloth.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "surveyor-vaults",
-    "name": "Surveyor Vaults",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/surveyor_vaults.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "cracked-bioscanners",
-    "name": "Cracked Bioscanners",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/cracked_bioscanners.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "rusted-shut-medical-kits",
-    "name": "Rusted Shut Medical Kits",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/rusted_shut_medical_kits.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "tick-pods",
-    "name": "Tick Pods",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/tick_pods.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "electrical-components",
+    "name": "Electrical Components",
+    "matched_name": "Electrical Components",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/06/Electrical_Components.png",
+    "main_asset_path": "assets/arc_raiders/items/electrical_components.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/electrical_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "fireball-burners",
     "name": "Fireball Burners",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Fireball Burner",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/8b/Fireball_Burner.png",
     "main_asset_path": "assets/arc_raiders/items/fireball_burners.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fireball_burners.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "hornet-drivers",
+    "name": "Hornet Drivers",
+    "matched_name": "Hornet Driver",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/b/bb/Hornet_Driver.png",
+    "main_asset_path": "assets/arc_raiders/items/hornet_drivers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/hornet_drivers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "leaper-pulse-units",
+    "name": "Leaper Pulse Units",
+    "matched_name": "Leaper Pulse Unit",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a0/Leaper_Pulse_Unit.png",
+    "main_asset_path": "assets/arc_raiders/items/leaper_pulse_units.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/leaper_pulse_units.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rocketeer-drivers",
+    "name": "Rocketeer Drivers",
+    "matched_name": "Rocketeer Driver",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/e/ef/Rocketeer_Driver.png",
+    "main_asset_path": "assets/arc_raiders/items/rocketeer_drivers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rocketeer_drivers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "snitch-scanners",
+    "name": "Snitch Scanners",
+    "matched_name": "Snitch Scanner",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/e/e5/Snitch_Scanner.png",
+    "main_asset_path": "assets/arc_raiders/items/snitch_scanners.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/snitch_scanners.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "surveyor-vaults",
+    "name": "Surveyor Vaults",
+    "matched_name": "Surveyor Vault",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a9/Surveyor_Vault.png",
+    "main_asset_path": "assets/arc_raiders/items/surveyor_vaults.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/surveyor_vaults.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "tick-pods",
+    "name": "Tick Pods",
+    "matched_name": "Tick Pod",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/95/Tick_Pod.png",
+    "main_asset_path": "assets/arc_raiders/items/tick_pods.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/tick_pods.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "wasp-drivers",
+    "name": "Wasp Drivers",
+    "matched_name": "Wasp Driver",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/30/Wasp_Driver.png",
+    "main_asset_path": "assets/arc_raiders/items/wasp_drivers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/wasp_drivers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "advanced-mechanical-components",
+    "name": "Advanced Mechanical Components",
+    "matched_name": "Advanced Mechanical Components",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/25/Advanced_Mechanical_Components.png",
+    "main_asset_path": "assets/arc_raiders/items/advanced_mechanical_components.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/advanced_mechanical_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "arc-circuitry",
     "name": "ARC Circuitry",
     "matched_name": "ARC Circuitry",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_circuitry.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/dc/ARC_Circuitry.png",
     "main_asset_path": "assets/arc_raiders/items/arc_circuitry.webp",
     "mirrored_paths": [
       "assets/arc_raiders/scrappy_resources/arc_circuitry.webp"
@@ -614,140 +316,633 @@
   {
     "id": "arc-motion-cores",
     "name": "ARC Motion Cores",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "ARC Motion Core",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/ad/ARC_Motion_Core.png",
     "main_asset_path": "assets/arc_raiders/items/arc_motion_cores.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_motion_cores.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "arc-powercells",
     "name": "ARC Powercells",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "ARC Powercell",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/df/ARC_Powercell.png",
     "main_asset_path": "assets/arc_raiders/items/arc_powercells.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_powercells.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "bombardier-cells",
     "name": "Bombardier Cells",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Bombardier Cell",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/46/Bombardier_Cell.png",
     "main_asset_path": "assets/arc_raiders/items/bombardier_cells.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/bombardier_cells.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "motors",
-    "name": "Motors",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/motors.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "chemicals",
+    "name": "Chemicals",
+    "matched_name": "Chemicals",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/92/Chemicals.png",
+    "main_asset_path": "assets/arc_raiders/items/chemicals.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/chemicals.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "toasters",
-    "name": "Toasters",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/toasters.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "cracked-bioscanners",
+    "name": "Cracked Bioscanners",
+    "matched_name": "Cracked Bioscanner",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/9a/Cracked_Bioscanner.png",
+    "main_asset_path": "assets/arc_raiders/items/cracked_bioscanners.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/cracked_bioscanners.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
-    "id": "battery",
-    "name": "Battery",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/battery.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "tick-pod",
-    "name": "Tick Pod",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/tick_pod.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "sensors",
-    "name": "Sensors",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/sensors.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "wires",
-    "name": "Wires",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/wires.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "leaper-pulse-units",
-    "name": "Leaper Pulse Units",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/leaper_pulse_units.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "snitch-scanners",
-    "name": "Snitch Scanners",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/snitch_scanners.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "id": "crude-explosives",
+    "name": "Crude Explosives",
+    "matched_name": "Crude Explosives",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/f/fc/Crude_Explosives.png",
+    "main_asset_path": "assets/arc_raiders/items/crude_explosives.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/crude_explosives.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "damaged-heat-sinks",
     "name": "Damaged Heat Sinks",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Damaged Heat Sink",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/1f/Damaged_Heat_Sink.png",
     "main_asset_path": "assets/arc_raiders/items/damaged_heat_sinks.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/damaged_heat_sinks.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "explosive-compounds",
+    "name": "Explosive Compounds",
+    "matched_name": "Explosive Compound",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/11/Explosive_Compound.png",
+    "main_asset_path": "assets/arc_raiders/items/explosive_compounds.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/explosive_compounds.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "fabric",
+    "name": "Fabric",
+    "matched_name": "Fabric",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/2b/Fabric.png",
+    "main_asset_path": "assets/arc_raiders/items/fabric.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fabric.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "fried-motherboards",
     "name": "Fried Motherboards",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Fried Motherboard",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/29/Fried_Motherboard.png",
     "main_asset_path": "assets/arc_raiders/items/fried_motherboards.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fried_motherboards.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "industrial-batteries",
+    "name": "Industrial Batteries",
+    "matched_name": "Industrial Battery",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c9/Industrial_Battery.png",
+    "main_asset_path": "assets/arc_raiders/items/industrial_batteries.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/industrial_batteries.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "laboratory-reagents",
+    "name": "Laboratory Reagents",
+    "matched_name": "Laboratory Reagents",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/e/e5/Laboratory_Reagents.png",
+    "main_asset_path": "assets/arc_raiders/items/laboratory_reagents.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/laboratory_reagents.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "mechanical-components",
+    "name": "Mechanical Components",
+    "matched_name": "Mechanical Components",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/94/Mechanical_Components.png",
+    "main_asset_path": "assets/arc_raiders/items/mechanical_components.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/mechanical_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "metal-parts",
+    "name": "Metal Parts",
+    "matched_name": "Metal Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/89/Metal_Parts.png",
+    "main_asset_path": "assets/arc_raiders/items/metal_parts.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/metal_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "motors",
+    "name": "Motors",
+    "matched_name": "Motor",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0f/Motor.png",
+    "main_asset_path": "assets/arc_raiders/items/motors.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/motors.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "plastic-parts",
+    "name": "Plastic Parts",
+    "matched_name": "Plastic Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c9/Plastic_Parts.png",
+    "main_asset_path": "assets/arc_raiders/items/plastic_parts.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/plastic_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "pop-triggers",
+    "name": "Pop Triggers",
+    "matched_name": "Pop Trigger",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c6/Pop_Trigger.png",
+    "main_asset_path": "assets/arc_raiders/items/pop_triggers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/pop_triggers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "power-cables",
+    "name": "Power Cables",
+    "matched_name": "Power Cable",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/f/f8/Power_Cable.png",
+    "main_asset_path": "assets/arc_raiders/items/power_cables.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/power_cables.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rubber-parts",
+    "name": "Rubber Parts",
+    "matched_name": "Rubber Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/93/Rubber_Parts.png",
+    "main_asset_path": "assets/arc_raiders/items/rubber_parts.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rubber_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rusted-gears",
+    "name": "Rusted Gears",
+    "matched_name": "Rusted Gear",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/cf/Rusted_Gear.png",
+    "main_asset_path": "assets/arc_raiders/items/rusted_gears.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rusted_gears.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rusted-shut-medical-kits",
+    "name": "Rusted Shut Medical Kits",
+    "matched_name": "Rusted Shut Medical Kit",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/1a/Rusted_Shut_Medical_Kit.png",
+    "main_asset_path": "assets/arc_raiders/items/rusted_shut_medical_kits.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rusted_shut_medical_kits.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rusted-tools",
+    "name": "Rusted Tools",
+    "matched_name": "Rusted Tools",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/30/Rusted_Tools.png",
+    "main_asset_path": "assets/arc_raiders/items/rusted_tools.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rusted_tools.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "sentinel-firing-cores",
+    "name": "Sentinel Firing Cores",
+    "matched_name": "Sentinel Firing Core",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/91/Sentinel_Firing_Core.png",
+    "main_asset_path": "assets/arc_raiders/items/sentinel_firing_cores.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/sentinel_firing_cores.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "synthesized-fuel",
+    "name": "Synthesized Fuel",
+    "matched_name": "Synthesized Fuel",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/8e/Synthesized_Fuel.png",
+    "main_asset_path": "assets/arc_raiders/items/synthesized_fuel.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/synthesized_fuel.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "toasters",
+    "name": "Toasters",
+    "matched_name": "Toaster",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/50/Toaster.png",
+    "main_asset_path": "assets/arc_raiders/items/toasters.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/toasters.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "fireworks-box",
+    "name": "Fireworks Box",
+    "matched_name": "Fireworks Box",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0f/Fireworks_Box.png",
+    "main_asset_path": "assets/arc_raiders/items/fireworks_box.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fireworks_box.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "vita-shot",
+    "name": "Vita Shot",
+    "matched_name": "Vita Shot",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/7d/Vita_Shot.png",
+    "main_asset_path": "assets/arc_raiders/items/vita_shot.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/vita_shot.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "battery",
+    "name": "Battery",
+    "matched_name": "Battery",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/6/6d/Battery.png",
+    "main_asset_path": "assets/arc_raiders/items/battery.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/battery.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "bicycle-pump",
+    "name": "Bicycle Pump",
+    "matched_name": "Bicycle Pump",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/f/fa/Bicycle_Pump.png",
+    "main_asset_path": "assets/arc_raiders/items/bicycle_pump.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/bicycle_pump.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "camera-lens",
+    "name": "Camera Lens",
+    "matched_name": "Camera Lens",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a6/Camera_Lens.png",
+    "main_asset_path": "assets/arc_raiders/items/camera_lens.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/camera_lens.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "coffee-pot",
+    "name": "Coffee Pot",
+    "matched_name": "Coffee Pot",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/33/Coffee_Pot.png",
+    "main_asset_path": "assets/arc_raiders/items/coffee_pot.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/coffee_pot.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "deflated-football",
+    "name": "Deflated Football",
+    "matched_name": "Deflated Football",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/7c/Deflated_Football.png",
+    "main_asset_path": "assets/arc_raiders/items/deflated_football.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/deflated_football.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "empty-wine-bottle",
+    "name": "Empty Wine Bottle",
+    "matched_name": "Empty Wine Bottle",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/e/e1/Empty_Wine_Bottle.png",
+    "main_asset_path": "assets/arc_raiders/items/empty_wine_bottle.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/empty_wine_bottle.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "espresso-machine-parts",
+    "name": "Espresso Machine Parts",
+    "matched_name": null,
+    "source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/espresso_machine_parts.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
+  },
+  {
+    "id": "faded-photograph",
+    "name": "Faded Photograph",
+    "matched_name": "Faded Photograph",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0c/Faded_Photograph.png",
+    "main_asset_path": "assets/arc_raiders/items/faded_photograph.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/faded_photograph.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "film-reel",
+    "name": "Film Reel",
+    "matched_name": "Film Reel",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/44/Film_Reel.png",
+    "main_asset_path": "assets/arc_raiders/items/film_reel.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/film_reel.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "firefly-burner",
+    "name": "Firefly Burner",
+    "matched_name": "Firefly Burner",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/04/Firefly_Burner.png",
+    "main_asset_path": "assets/arc_raiders/items/firefly_burner.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/firefly_burner.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "great-mullein",
+    "name": "Great Mullein",
+    "matched_name": "Great Mullein",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0d/Great_Mullein.png",
+    "main_asset_path": "assets/arc_raiders/items/great_mullein.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/great_mullein.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "light-impact-grenade",
+    "name": "Light Impact Grenade",
+    "matched_name": "Light Impact Grenade",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4c/Light_Impact_Grenade.png",
+    "main_asset_path": "assets/arc_raiders/items/light_impact_grenade.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/light_impact_grenade.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "oil",
+    "name": "Oil",
+    "matched_name": "Oil",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/06/Oil.png",
+    "main_asset_path": "assets/arc_raiders/items/oil.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/oil.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "portable-tv",
+    "name": "Portable TV",
+    "matched_name": "Portable TV",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/5f/Portable_TV.png",
+    "main_asset_path": "assets/arc_raiders/items/portable_tv.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/portable_tv.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "power-rod",
+    "name": "Power Rod",
+    "matched_name": "Power Rod",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/31/Power_Rod.png",
+    "main_asset_path": "assets/arc_raiders/items/power_rod.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/power_rod.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "recorder",
+    "name": "Recorder",
+    "matched_name": "Recorder",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/6/6d/Recorder.png",
+    "main_asset_path": "assets/arc_raiders/items/recorder.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/recorder.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rubber-duck",
+    "name": "Rubber Duck",
+    "matched_name": "Rubber Duck",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/df/Rubber_Duck.png",
+    "main_asset_path": "assets/arc_raiders/items/rubber_duck.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rubber_duck.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "sensors",
+    "name": "Sensors",
+    "matched_name": "Sensors",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/9c/Sensors.png",
+    "main_asset_path": "assets/arc_raiders/items/sensors.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/sensors.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stack-of-movie-tapes",
+    "name": "Stack Of Movie Tapes",
+    "matched_name": null,
+    "source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/stack_of_movie_tapes.webp",
+    "mirrored_paths": [],
+    "status": "missing",
+    "reason": "No safe match found on arcraiders.wiki Loot."
+  },
+  {
+    "id": "syringe",
+    "name": "Syringe",
+    "matched_name": "Syringe",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/17/Syringe.png",
+    "main_asset_path": "assets/arc_raiders/items/syringe.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/syringe.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "wires",
+    "name": "Wires",
+    "matched_name": "Wires",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/39/Wires.png",
+    "main_asset_path": "assets/arc_raiders/items/wires.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/wires.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "acoustic-guitar",
     "name": "Acoustic Guitar",
     "matched_name": "Acoustic Guitar",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/acoustic_guitar.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/50/Acoustic_Guitar.png",
     "main_asset_path": "assets/arc_raiders/items/acoustic_guitar.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/acoustic_guitar.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -755,9 +950,12 @@
     "id": "adrenaline-shot",
     "name": "Adrenaline Shot",
     "matched_name": "Adrenaline Shot",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/adrenaline_shot.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/1b/Adrenaline_Shot.png",
     "main_asset_path": "assets/arc_raiders/items/adrenaline_shot.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/adrenaline_shot.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -765,9 +963,12 @@
     "id": "advanced-arc-powercell",
     "name": "Advanced ARC Powercell",
     "matched_name": "Advanced ARC Powercell",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/advanced_arc_powercell.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/31/Advanced_ARC_Powercell.png",
     "main_asset_path": "assets/arc_raiders/items/advanced_arc_powercell.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/advanced_arc_powercell.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -775,9 +976,12 @@
     "id": "agave",
     "name": "Agave",
     "matched_name": "Agave",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/agave.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/47/Agave.png",
     "main_asset_path": "assets/arc_raiders/items/agave.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/agave.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -785,9 +989,12 @@
     "id": "agave-juice",
     "name": "Agave Juice",
     "matched_name": "Agave Juice",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/agave_juice.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a8/Agave_Juice.png",
     "main_asset_path": "assets/arc_raiders/items/agave_juice.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/agave_juice.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -795,9 +1002,12 @@
     "id": "alien-duck",
     "name": "Alien Duck",
     "matched_name": "Alien Duck",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/alien_duck.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/3e/Alien_Duck.png",
     "main_asset_path": "assets/arc_raiders/items/alien_duck.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/alien_duck.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -805,9 +1015,12 @@
     "id": "ancient-fort-security-code",
     "name": "Ancient Fort Security Code",
     "matched_name": "Ancient Fort Security Code",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/ancient_fort_security_code.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/1d/Security_Code.png",
     "main_asset_path": "assets/arc_raiders/items/ancient_fort_security_code.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/ancient_fort_security_code.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -815,9 +1028,12 @@
     "id": "angled-grip-i",
     "name": "Angled Grip I",
     "matched_name": "Angled Grip I",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/angled_grip_i.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/b/b5/Angled_Grip_I.png",
     "main_asset_path": "assets/arc_raiders/items/angled_grip_i.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/angled_grip_i.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -825,9 +1041,12 @@
     "id": "angled-grip-ii",
     "name": "Angled Grip II",
     "matched_name": "Angled Grip II",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/angled_grip_ii.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/2b/Angled_Grip_II.png",
     "main_asset_path": "assets/arc_raiders/items/angled_grip_ii.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/angled_grip_ii.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -835,9 +1054,12 @@
     "id": "angled-grip-iii",
     "name": "Angled Grip III",
     "matched_name": "Angled Grip III",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/angled_grip_iii.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0f/Angled_Grip_III.png",
     "main_asset_path": "assets/arc_raiders/items/angled_grip_iii.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/angled_grip_iii.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -845,39 +1067,47 @@
     "id": "anvil",
     "name": "Anvil",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/anvil.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "anvil-splitter",
     "name": "Anvil Splitter",
     "matched_name": "Anvil Splitter",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/anvil_splitter.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/e/ef/Anvil_Splitter.png",
     "main_asset_path": "assets/arc_raiders/items/anvil_splitter.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/anvil_splitter.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
   {
     "id": "aphelion",
     "name": "Aphelion",
-    "matched_name": "Aphelion",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/aphelion.png",
+    "matched_name": null,
+    "source": null,
+    "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/aphelion.webp",
     "mirrored_paths": [],
-    "status": "ok",
-    "reason": ""
+    "status": "missing",
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "arc-coolant",
     "name": "ARC Coolant",
     "matched_name": "ARC Coolant",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_coolant.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/e/e9/ARC_Coolant.png",
     "main_asset_path": "assets/arc_raiders/items/arc_coolant.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_coolant.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -885,1519 +1115,1739 @@
     "id": "arc-flex-rubber",
     "name": "ARC Flex Rubber",
     "matched_name": "ARC Flex Rubber",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_flex_rubber.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/29/ARC_Flex_Rubber.png",
     "main_asset_path": "assets/arc_raiders/items/arc_flex_rubber.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_flex_rubber.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
   {
-    "id": "arc-motion-core",
-    "name": "ARC Motion Core",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/arc_motion_core.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
     "id": "arc-performance-steel",
     "name": "ARC Performance Steel",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "ARC Performance Steel",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/02/ARC_Performance_Steel.png",
     "main_asset_path": "assets/arc_raiders/items/arc_performance_steel.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "arc-powercell",
-    "name": "ARC Powercell",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/arc_powercell.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_performance_steel.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "arc-synthetic-resin",
     "name": "ARC Synthetic Resin",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "ARC Synthetic Resin",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/72/ARC_Synthetic_Resin.png",
     "main_asset_path": "assets/arc_raiders/items/arc_synthetic_resin.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_synthetic_resin.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "arc-thermo-lining",
     "name": "ARC Thermo Lining",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "ARC Thermo Lining",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0f/ARC_Thermo_Lining.png",
     "main_asset_path": "assets/arc_raiders/items/arc_thermo_lining.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_thermo_lining.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "arpeggio",
     "name": "Arpeggio",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/arpeggio.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "assessor-matrix",
     "name": "Assessor Matrix",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Assessor Matrix",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/18/Assessor_Matrix.png",
     "main_asset_path": "assets/arc_raiders/items/assessor_matrix.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/assessor_matrix.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "assorted-seeds",
     "name": "Assorted Seeds",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Assorted Seeds",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/51/Assorted_Seeds.png",
     "main_asset_path": "assets/arc_raiders/items/assorted_seeds.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/assorted_seeds.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "bandage",
     "name": "Bandage",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Bandage",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0c/Bandage.png",
     "main_asset_path": "assets/arc_raiders/items/bandage.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/bandage.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "beachcombing-cache",
     "name": "Beachcombing Cache",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/beachcombing_cache.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "bettina",
     "name": "Bettina",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/bettina.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "blue-gate-cellar-key",
     "name": "Blue Gate Cellar Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Blue Gate Cellar Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/7c/Blue_Gate_Key_Variant_1.png",
     "main_asset_path": "assets/arc_raiders/items/blue_gate_cellar_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/blue_gate_cellar_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "blue-gate-communication-tower-key",
     "name": "Blue Gate Communication Tower Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Blue Gate Communication Tower Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/de/Blue_Gate_Key_Variant_2.png",
     "main_asset_path": "assets/arc_raiders/items/blue_gate_communication_tower_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/blue_gate_communication_tower_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "blue-gate-confiscation-room-key",
     "name": "Blue Gate Confiscation Room Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Blue Gate Confiscation Room Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/de/Blue_Gate_Key_Variant_2.png",
     "main_asset_path": "assets/arc_raiders/items/blue_gate_confiscation_room_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/blue_gate_confiscation_room_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "blue-gate-village-key",
     "name": "Blue Gate Village Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Blue Gate Village Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/7c/Blue_Gate_Key_Variant_1.png",
     "main_asset_path": "assets/arc_raiders/items/blue_gate_village_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/blue_gate_village_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "bobcat",
     "name": "Bobcat",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/bobcat.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "bombardier-cell",
-    "name": "Bombardier Cell",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/bombardier_cell.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "breach-room",
     "name": "Breach Room",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/breach_room.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "breach-room-key",
     "name": "Breach Room Key",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/breach_room_key.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "buried-city-hospital-key",
     "name": "Buried City Hospital Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Buried City Hospital Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
     "main_asset_path": "assets/arc_raiders/items/buried_city_hospital_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/buried_city_hospital_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "buried-city-jkv-employee-access-card",
     "name": "Buried City JKV Employee Access Card",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Buried City JKV Employee Access Card",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
     "main_asset_path": "assets/arc_raiders/items/buried_city_jkv_employee_access_card.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/buried_city_jkv_employee_access_card.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "buried-city-residential-master-key",
     "name": "Buried City Residential Master Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Buried City Residential Master Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
     "main_asset_path": "assets/arc_raiders/items/buried_city_residential_master_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/buried_city_residential_master_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "buried-city-town-hall-key",
     "name": "Buried City Town Hall Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Buried City Town Hall Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/11/Buried_City_Key.png",
     "main_asset_path": "assets/arc_raiders/items/buried_city_town_hall_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/buried_city_town_hall_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "burletta",
     "name": "Burletta",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/burletta.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "canister",
     "name": "Canister",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Canister",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/5f/Canister.png",
     "main_asset_path": "assets/arc_raiders/items/canister.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/canister.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "canto",
     "name": "Canto",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/canto.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "chip-pods",
     "name": "Chip Pods",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/chip_pods.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "comet-igniter",
     "name": "Comet Igniter",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Comet Igniter",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c8/Comet_Igniter.png",
     "main_asset_path": "assets/arc_raiders/items/comet_igniter.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/comet_igniter.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "compensator-i",
     "name": "Compensator I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Compensator I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/5f/Compensator_I.png",
     "main_asset_path": "assets/arc_raiders/items/compensator_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/compensator_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "compensator-ii",
     "name": "Compensator II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Compensator II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0a/Compensator_II.png",
     "main_asset_path": "assets/arc_raiders/items/compensator_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/compensator_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "compensator-iii",
     "name": "Compensator III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Compensator III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/af/Compensator_III.png",
     "main_asset_path": "assets/arc_raiders/items/compensator_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/compensator_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "complex-gun-parts",
     "name": "Complex Gun Parts",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Complex Gun Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/3d/Complex_Gun_Parts.png",
     "main_asset_path": "assets/arc_raiders/items/complex_gun_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/complex_gun_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "cool-box-on-wheels",
     "name": "Cool Box on Wheels",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/cool_box_on_wheels.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "dam-control-tower-key",
     "name": "Dam Control Tower Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Dam Control Tower Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
     "main_asset_path": "assets/arc_raiders/items/dam_control_tower_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dam_control_tower_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "dam-controlled-access-zone-key",
     "name": "Dam Controlled Access Zone Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Dam Controlled Access Zone Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
     "main_asset_path": "assets/arc_raiders/items/dam_controlled_access_zone_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dam_controlled_access_zone_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "dam-staff-room-key",
     "name": "Dam Staff Room Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Dam Staff Room Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
     "main_asset_path": "assets/arc_raiders/items/dam_staff_room_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dam_staff_room_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "dam-surveillance-key",
     "name": "Dam Surveillance Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Dam Surveillance Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
     "main_asset_path": "assets/arc_raiders/items/dam_surveillance_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dam_surveillance_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "dam-testing-annex-key",
     "name": "Dam Testing Annex Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Dam Testing Annex Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
     "main_asset_path": "assets/arc_raiders/items/dam_testing_annex_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dam_testing_annex_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "dam-utility-key",
     "name": "Dam Utility Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Dam Utility Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/49/Dam_Battlegrounds_Key.png",
     "main_asset_path": "assets/arc_raiders/items/dam_utility_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "damaged-heat-sink",
-    "name": "Damaged Heat Sink",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/damaged_heat_sink.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dam_utility_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "dolabra",
     "name": "Dolabra",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/dolabra.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "duct-tape",
     "name": "Duct Tape",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Duct Tape",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4e/Duct_Tape.png",
     "main_asset_path": "assets/arc_raiders/items/duct_tape.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/duct_tape.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "energy-ammo",
     "name": "Energy Ammo",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/energy_ammo.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "equalizer",
     "name": "Equalizer",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/equalizer.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "exodus-module",
     "name": "Exodus Module",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Exodus Modules",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/1b/Exodus_Modules.png",
     "main_asset_path": "assets/arc_raiders/items/exodus_module.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "explosive-compound",
-    "name": "Explosive Compound",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/explosive_compound.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/exodus_module.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-barrel",
     "name": "Extended Barrel",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Barrel",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/2f/Extended_Barrel.png",
     "main_asset_path": "assets/arc_raiders/items/extended_barrel.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_barrel.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-light-mag-i",
     "name": "Extended Light Mag I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Light Mag I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/23/Extended_Light_Mag_I.png",
     "main_asset_path": "assets/arc_raiders/items/extended_light_mag_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_light_mag_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-light-mag-ii",
     "name": "Extended Light Mag II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Light Mag II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/cf/Extended_Light_Mag_II.png",
     "main_asset_path": "assets/arc_raiders/items/extended_light_mag_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_light_mag_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-light-mag-iii",
     "name": "Extended Light Mag III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Light Mag III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/40/Extended_Light_Mag_III.png",
     "main_asset_path": "assets/arc_raiders/items/extended_light_mag_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_light_mag_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-medium-mag-i",
     "name": "Extended Medium Mag I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Medium Mag I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/44/Extended_Medium_Mag_I.png",
     "main_asset_path": "assets/arc_raiders/items/extended_medium_mag_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_medium_mag_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-medium-mag-ii",
     "name": "Extended Medium Mag II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Medium Mag II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/50/Extended_Medium_Mag_II.png",
     "main_asset_path": "assets/arc_raiders/items/extended_medium_mag_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_medium_mag_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-medium-mag-iii",
     "name": "Extended Medium Mag III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Medium Mag III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a1/Extended_Medium_Mag_III.png",
     "main_asset_path": "assets/arc_raiders/items/extended_medium_mag_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_medium_mag_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-shotgun-mag-i",
     "name": "Extended Shotgun Mag I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Shotgun Mag I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/9b/Extended_Shotgun_Mag_I.png",
     "main_asset_path": "assets/arc_raiders/items/extended_shotgun_mag_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_shotgun_mag_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-shotgun-mag-ii",
     "name": "Extended Shotgun Mag II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Shotgun Mag II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4f/Extended_Shotgun_Mag_II.png",
     "main_asset_path": "assets/arc_raiders/items/extended_shotgun_mag_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_shotgun_mag_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "extended-shotgun-mag-iii",
     "name": "Extended Shotgun Mag III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Extended Shotgun Mag III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/77/Extended_Shotgun_Mag_III.png",
     "main_asset_path": "assets/arc_raiders/items/extended_shotgun_mag_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/extended_shotgun_mag_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "ferro",
     "name": "Ferro",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/ferro.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "fertiliser",
     "name": "Fertiliser",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/fertiliser.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "fertilizer",
     "name": "Fertilizer",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Fertilizer",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/25/Fertilizer.png",
     "main_asset_path": "assets/arc_raiders/items/fertilizer.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fertilizer.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "fine-wristwatch",
     "name": "Fine Wristwatch",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Fine Wristwatch",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/94/Fine_Wristwatch.png",
     "main_asset_path": "assets/arc_raiders/items/fine_wristwatch.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fine_wristwatch.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "flow-controller",
     "name": "Flow Controller",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Flow Controller",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/b/b6/Flow_Controller.png",
     "main_asset_path": "assets/arc_raiders/items/flow_controller.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/flow_controller.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "frequency-modulation-box",
     "name": "Frequency Modulation Box",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Frequency Modulation Box",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/36/Frequency_Modulation_Box.png",
     "main_asset_path": "assets/arc_raiders/items/frequency_modulation_box.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "fried-motherboard",
-    "name": "Fried Motherboard",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/fried_motherboard.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/frequency_modulation_box.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "hairpin",
     "name": "Hairpin",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/hairpin.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "harvester-components",
     "name": "Harvester Components",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/harvester_components.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "heavy-gun-parts",
     "name": "Heavy Gun Parts",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Heavy Gun Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/33/Heavy_Gun_Parts.png",
     "main_asset_path": "assets/arc_raiders/items/heavy_gun_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/heavy_gun_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "high-durability-weapon",
     "name": "High Durability Weapon",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/high_durability_weapon.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "high-security-key",
     "name": "High Security Key",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/high_security_key.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "horizontal-grip",
     "name": "Horizontal Grip",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Horizontal Grip",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/89/Horizontal_Grip.png",
     "main_asset_path": "assets/arc_raiders/items/horizontal_grip.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/horizontal_grip.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "hullcracker",
     "name": "Hullcracker",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/hullcracker.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "il-toro",
     "name": "Il Toro",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/il_toro.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "industrial-battery",
-    "name": "Industrial Battery",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/industrial_battery.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "jupiter",
     "name": "Jupiter",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/jupiter.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "kettle",
     "name": "Kettle",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/kettle.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "kinetic-converter",
     "name": "Kinetic Converter",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Kinetic Converter",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/71/Kinetic_Converter.png",
     "main_asset_path": "assets/arc_raiders/items/kinetic_converter.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/kinetic_converter.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "l4-weapon",
     "name": "L4 Weapon",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/l4_weapon.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "leviathans-crown-ship-model",
     "name": "Leviathan\u2019s Crown Ship Model",
     "matched_name": "\"Leviathan's Crown\" Ship Model",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/leviathans_crown_ship_model.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/71/Leviathan%27s_Crown_Ship_Model.png",
     "main_asset_path": "assets/arc_raiders/items/leviathans_crown_ship_model.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/leviathans_crown_ship_model.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
   {
     "id": "light-gun-parts",
     "name": "Light Gun Parts",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Light Gun Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c9/Light_Gun_Parts.png",
     "main_asset_path": "assets/arc_raiders/items/light_gun_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/light_gun_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "lightweight-stock",
     "name": "Lightweight Stock",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Lightweight Stock",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/cb/Lightweight_Stock.png",
     "main_asset_path": "assets/arc_raiders/items/lightweight_stock.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/lightweight_stock.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "locked-room",
     "name": "Locked Room",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/locked_room.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "locked-room-key",
     "name": "Locked Room Key",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/locked_room_key.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "magnet",
     "name": "Magnet",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Magnet",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/8c/Magnet.png",
     "main_asset_path": "assets/arc_raiders/items/magnet.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/magnet.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "magnetic-accelerator",
     "name": "Magnetic Accelerator",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Magnetic Accelerator",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/5e/Magnetic_Accelerator.png",
     "main_asset_path": "assets/arc_raiders/items/magnetic_accelerator.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/magnetic_accelerator.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "matriarch-components",
     "name": "Matriarch Components",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/matriarch_components.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "matriarch-reactor",
     "name": "Matriarch Reactor",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Matriarch Reactor",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/24/Matriarch_Reactor.png",
     "main_asset_path": "assets/arc_raiders/items/matriarch_reactor.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/matriarch_reactor.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "medical-kit",
     "name": "Medical Kit",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/medical_kit.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "medium-gun-parts",
     "name": "Medium Gun Parts",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Medium Gun Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/9a/Medium_Gun_Parts.png",
     "main_asset_path": "assets/arc_raiders/items/medium_gun_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/medium_gun_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "micro-arc-reactor",
     "name": "Micro ARC Reactor",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/micro_arc_reactor.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "mod-components",
     "name": "Mod Components",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Mod Components",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0f/Mod_Components.png",
     "main_asset_path": "assets/arc_raiders/items/mod_components.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/mod_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "modded-weapon",
     "name": "Modded Weapon",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/modded_weapon.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "moss",
     "name": "Moss",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Moss",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/6/64/Moss.png",
     "main_asset_path": "assets/arc_raiders/items/moss.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/moss.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "motor",
     "name": "Motor",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Motor",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/0f/Motor.png",
     "main_asset_path": "assets/arc_raiders/items/motor.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "mushroom",
-    "name": "Mushroom",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/mushroom.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/motor.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "music-box",
     "name": "Music Box",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Music Box",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/7/74/Music_Box.png",
     "main_asset_path": "assets/arc_raiders/items/music_box.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/music_box.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "muzzle-brake-i",
     "name": "Muzzle Brake I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Muzzle Brake I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4f/Muzzle_Brake_I.png",
     "main_asset_path": "assets/arc_raiders/items/muzzle_brake_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/muzzle_brake_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "muzzle-brake-ii",
     "name": "Muzzle Brake II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Muzzle Brake II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/23/Muzzle_Brake_II.png",
     "main_asset_path": "assets/arc_raiders/items/muzzle_brake_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/muzzle_brake_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "muzzle-brake-iii",
     "name": "Muzzle Brake III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Muzzle Brake III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/a/a2/Muzzle_Brake_III.png",
     "main_asset_path": "assets/arc_raiders/items/muzzle_brake_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/muzzle_brake_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "osprey",
     "name": "Osprey",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/osprey.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "padded-stock",
     "name": "Padded Stock",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Padded Stock",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4b/Padded_Stock.png",
     "main_asset_path": "assets/arc_raiders/items/padded_stock.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/padded_stock.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "patrol-car-key",
     "name": "Patrol Car Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Patrol Car Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/b/b0/Patrol_Car_Key.png",
     "main_asset_path": "assets/arc_raiders/items/patrol_car_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "pop-trigger",
-    "name": "Pop Trigger",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/pop_trigger.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "power-cable",
-    "name": "Power Cable",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/power_cable.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/patrol_car_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "power-clips",
     "name": "Power Clips",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/power_clips.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "processor",
     "name": "Processor",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Processor",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4e/Processor.png",
     "main_asset_path": "assets/arc_raiders/items/processor.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/processor.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "queen-reactor",
     "name": "Queen Reactor",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Queen Reactor",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/6/6b/Queen_Reactor.png",
     "main_asset_path": "assets/arc_raiders/items/queen_reactor.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/queen_reactor.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "raider-cache",
     "name": "Raider Cache",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/raider_cache.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "pilgrims-peak-security-code",
     "name": "Raider Hatch Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Raider Hatch Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/6/68/Raider_Hatch_Key.png",
     "main_asset_path": "assets/arc_raiders/items/raider_hatch_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/items/pilgrims_peak_security_code.webp",
+      "assets/arc_raiders/scrappy_resources/raider_hatch_key.webp",
+      "assets/arc_raiders/scrappy_resources/pilgrims_peak_security_code.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "rattler",
     "name": "Rattler",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/rattler.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "red-coral-jewelry",
     "name": "Red Coral Jewelry",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Red Coral Jewelry",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/1a/Red_Coral_Jewelry.png",
     "main_asset_path": "assets/arc_raiders/items/red_coral_jewelry.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/red_coral_jewelry.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "raiders-refuge-security-code",
     "name": "Reinforced Reception Security Code",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Reinforced Reception Security Code",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/1d/Security_Code.png",
     "main_asset_path": "assets/arc_raiders/items/reinforced_reception_security_code.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/items/raiders_refuge_security_code.webp",
+      "assets/arc_raiders/scrappy_resources/reinforced_reception_security_code.webp",
+      "assets/arc_raiders/scrappy_resources/raiders_refuge_security_code.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "renegade",
     "name": "Renegade",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/renegade.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "roots",
     "name": "Roots",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Roots",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/5/57/Roots.png",
     "main_asset_path": "assets/arc_raiders/items/roots.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "rusted-shut-medical-kit",
-    "name": "Rusted Shut Medical Kit",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/rusted_shut_medical_kit.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/roots.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "rusty-arc-steel",
     "name": "Rusty ARC Steel",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Rusty ARC Steel",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/33/Rusty_ARC_Steel.png",
     "main_asset_path": "assets/arc_raiders/items/rusty_arc_steel.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rusty_arc_steel.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "sample-cleaner",
     "name": "Sample Cleaner",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Sample Cleaner",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/d8/Sample_Cleaner.png",
     "main_asset_path": "assets/arc_raiders/items/sample_cleaner.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
-  },
-  {
-    "id": "sentinel-firing-core",
-    "name": "Sentinel Firing Core",
-    "matched_name": null,
-    "source_url": null,
-    "main_asset_path": "assets/arc_raiders/items/sentinel_firing_core.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/sample_cleaner.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "shotgun-choke-i",
     "name": "Shotgun Choke I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Shotgun Choke I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/0/07/Shotgun_Choke_I.png",
     "main_asset_path": "assets/arc_raiders/items/shotgun_choke_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/shotgun_choke_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "shotgun-choke-ii",
     "name": "Shotgun Choke II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Shotgun Choke II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/6/63/Shotgun_Choke_II.png",
     "main_asset_path": "assets/arc_raiders/items/shotgun_choke_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/shotgun_choke_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "shotgun-choke-iii",
     "name": "Shotgun Choke III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Shotgun Choke III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/36/Shotgun_Choke_III.png",
     "main_asset_path": "assets/arc_raiders/items/shotgun_choke_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/shotgun_choke_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "shotgun-silencer",
     "name": "Shotgun Silencer",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Shotgun Silencer",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4d/Shotgun_Silencer.png",
     "main_asset_path": "assets/arc_raiders/items/shotgun_silencer.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/shotgun_silencer.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "shredder-gyro",
     "name": "Shredder Gyro",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Shredder Gyro",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/96/Shredder_Gyro.png",
     "main_asset_path": "assets/arc_raiders/items/shredder_gyro.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/shredder_gyro.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "silencer-i",
     "name": "Silencer I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Silencer I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/f/f7/Silencer_I.png",
     "main_asset_path": "assets/arc_raiders/items/silencer_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/silencer_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "silencer-ii",
     "name": "Silencer II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Silencer II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c0/Silencer_II.png",
     "main_asset_path": "assets/arc_raiders/items/silencer_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/silencer_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "silencer-iii",
     "name": "Silencer III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Silencer III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/3e/Silencer_III.png",
     "main_asset_path": "assets/arc_raiders/items/silencer_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/silencer_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "simple-gun-parts",
     "name": "Simple Gun Parts",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Simple Gun Parts",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/da/Simple_Gun_Parts.png",
     "main_asset_path": "assets/arc_raiders/items/simple_gun_parts.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/simple_gun_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "sorena-dorata-ship-model",
     "name": "Sorena Dorata Ship Model",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/sorena_dorata_ship_model.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "spaceport-container-storage-key",
     "name": "Spaceport Container Storage Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Spaceport Container Storage Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
     "main_asset_path": "assets/arc_raiders/items/spaceport_container_storage_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/spaceport_container_storage_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "spaceport-control-tower-key",
     "name": "Spaceport Control Tower Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Spaceport Control Tower Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
     "main_asset_path": "assets/arc_raiders/items/spaceport_control_tower_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/spaceport_control_tower_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "spaceport-trench-tower-key",
     "name": "Spaceport Trench Tower Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Spaceport Trench Tower Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
     "main_asset_path": "assets/arc_raiders/items/spaceport_trench_tower_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/spaceport_trench_tower_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "spaceport-warehouse-key",
     "name": "Spaceport Warehouse Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Spaceport Warehouse Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/98/Spaceport_Key.png",
     "main_asset_path": "assets/arc_raiders/items/spaceport_warehouse_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/spaceport_warehouse_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stable-stock-i",
     "name": "Stable Stock I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Stable Stock I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/8d/Stable_Stock_I.png",
     "main_asset_path": "assets/arc_raiders/items/stable_stock_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stable_stock_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stable-stock-ii",
     "name": "Stable Stock II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Stable Stock II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/b/b4/Stable_Stock_II.png",
     "main_asset_path": "assets/arc_raiders/items/stable_stock_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stable_stock_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stable-stock-iii",
     "name": "Stable Stock III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Stable Stock III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/e/eb/Stable_Stock_III.png",
     "main_asset_path": "assets/arc_raiders/items/stable_stock_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stable_stock_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "standard-ammo",
     "name": "Standard Ammo",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/standard_ammo.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "statuette",
     "name": "Statuette",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Statuette",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/8/8a/Statuette.png",
     "main_asset_path": "assets/arc_raiders/items/statuette.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/statuette.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "steel-spring",
     "name": "Steel Spring",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Steel Spring",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/db/Steel_Spring.png",
     "main_asset_path": "assets/arc_raiders/items/steel_spring.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/steel_spring.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "steel-springs",
     "name": "Steel Springs",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Steel Spring",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/db/Steel_Spring.png",
     "main_asset_path": "assets/arc_raiders/items/steel_springs.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/steel_springs.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stella-montis-archives-key",
     "name": "Stella Montis Archives Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Stella Montis Archives Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
     "main_asset_path": "assets/arc_raiders/items/stella_montis_archives_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stella_montis_archives_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stella-montis-assembly-admin-key",
     "name": "Stella Montis Assembly Admin Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Stella Montis Assembly Admin Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
     "main_asset_path": "assets/arc_raiders/items/stella_montis_assembly_admin_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stella_montis_assembly_admin_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stella-montis-medical-storage-key",
     "name": "Stella Montis Medical Storage Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Stella Montis Medical Storage Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
     "main_asset_path": "assets/arc_raiders/items/stella_montis_medical_storage_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stella_montis_medical_storage_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stella-montis-security-checkpoint-key",
     "name": "Stella Montis Security Checkpoint Key",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Stella Montis Security Checkpoint Key",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/19/Stella_Montis_Key.png",
     "main_asset_path": "assets/arc_raiders/items/stella_montis_security_checkpoint_key.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stella_montis_security_checkpoint_key.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "stitcher",
     "name": "Stitcher",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/stitcher.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "suitcase",
     "name": "Suitcase",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/suitcase.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "tempest",
     "name": "Tempest",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/tempest.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "tick-pod-canister",
     "name": "Tick Pod Canister",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/tick_pod_canister.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "torrente",
     "name": "Torrente",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/torrente.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "turbine-compressor",
     "name": "Turbine Compressor",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Turbine Compressor",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/d/d4/Turbine_Compressor.png",
     "main_asset_path": "assets/arc_raiders/items/turbine_compressor.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/turbine_compressor.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "twilight-compass-ship-model",
     "name": "Twilight Compass Ship Model",
     "matched_name": "\"Twilight Compass\" Ship Model",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/twilight_compass_ship_model.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/1/18/Twilight_Compass_Ship_Model.png",
     "main_asset_path": "assets/arc_raiders/items/twilight_compass_ship_model.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/twilight_compass_ship_model.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
   {
     "id": "vaporizer-regulator",
     "name": "Vaporizer Regulator",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Vaporizer Regulator",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/b/b8/Vaporizer_Regulator.png",
     "main_asset_path": "assets/arc_raiders/items/vaporizer_regulator.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/vaporizer_regulator.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "vase",
     "name": "Vase",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Vase",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/6/6e/Vase.png",
     "main_asset_path": "assets/arc_raiders/items/vase.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/vase.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "velocity-ship-model",
     "name": "Velocity Ship Model",
     "matched_name": "\"Velocity\" Ship Model",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/velocity_ship_model.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c4/Velocity_Ship_Model.png",
     "main_asset_path": "assets/arc_raiders/items/velocity_ship_model.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/velocity_ship_model.webp"
+    ],
     "status": "ok",
     "reason": ""
   },
@@ -2405,99 +2855,121 @@
     "id": "venator",
     "name": "Venator",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/venator.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "vertical-grip-i",
     "name": "Vertical Grip I",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Vertical Grip I",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/4d/Vertical_Grip_I.png",
     "main_asset_path": "assets/arc_raiders/items/vertical_grip_i.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/vertical_grip_i.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "vertical-grip-ii",
     "name": "Vertical Grip II",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Vertical Grip II",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/3/3c/Vertical_Grip_II.png",
     "main_asset_path": "assets/arc_raiders/items/vertical_grip_ii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/vertical_grip_ii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "vertical-grip-iii",
     "name": "Vertical Grip III",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Vertical Grip III",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/2/20/Vertical_Grip_III.png",
     "main_asset_path": "assets/arc_raiders/items/vertical_grip_iii.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/vertical_grip_iii.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "voltage-converter",
     "name": "Voltage Converter",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Voltage Converter",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/c/c7/Voltage_Converter.png",
     "main_asset_path": "assets/arc_raiders/items/voltage_converter.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/voltage_converter.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "vortex-components",
     "name": "Vortex Components",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/vortex_components.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "vulcano",
     "name": "Vulcano",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/vulcano.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "water-filter",
     "name": "Water Filter",
-    "matched_name": null,
-    "source_url": null,
+    "matched_name": "Water Filter",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/4/48/Water_Filter.png",
     "main_asset_path": "assets/arc_raiders/items/water_filter.webp",
-    "mirrored_paths": [],
-    "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/water_filter.webp"
+    ],
+    "status": "ok",
+    "reason": ""
   },
   {
     "id": "weapon-case",
     "name": "Weapon Case",
     "matched_name": null,
+    "source": null,
     "source_url": null,
     "main_asset_path": "assets/arc_raiders/items/weapon_case.webp",
     "mirrored_paths": [],
     "status": "missing",
-    "reason": "No safe exact/fuzzy match found on ARCTracker."
+    "reason": "No safe match found on arcraiders.wiki Loot."
   },
   {
     "id": "wind-sprite-ship-model",
     "name": "Wind Sprite Ship Model",
     "matched_name": "\"Wind Sprite\" Ship Model",
-    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/wind_sprite_ship_model.png",
+    "source": "arcraiders.wiki/loot",
+    "source_url": "https://arcraiders.wiki/w/images/9/95/Wind_Sprite_Ship_Model.png",
     "main_asset_path": "assets/arc_raiders/items/wind_sprite_ship_model.webp",
-    "mirrored_paths": [],
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/wind_sprite_ship_model.webp"
+    ],
     "status": "ok",
     "reason": ""
   }
