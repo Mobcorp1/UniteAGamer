@@ -183,20 +183,9 @@ class _ArcBlueprintDropReportSheetState
   }) {
     if (isPrimary) {
       final manualDupes = _currentDupes;
-      if (current.owned || _owned || manualDupes > 0) {
-        final nextDupes = manualDupes > current.dupesOwned
-            ? manualDupes
-            : current.dupesOwned + 1;
-        return current.copyWith(
-          owned: true,
-          dupesOwned: nextDupes,
-          updatedAt: DateTime.now(),
-        );
-      }
-
       return current.copyWith(
         owned: true,
-        dupesOwned: 0,
+        dupesOwned: manualDupes,
         updatedAt: DateTime.now(),
       );
     }
