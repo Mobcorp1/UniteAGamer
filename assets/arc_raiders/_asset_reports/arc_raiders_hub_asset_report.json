@@ -1,0 +1,2031 @@
+{
+  "source_url": "https://arcraidershub.com/needed-items-recycling-guide",
+  "downloaded_count": 180,
+  "failure_count": 2,
+  "missing_required_count": 38,
+  "scraped_count": 148,
+  "required_count": 72,
+  "downloaded": [
+    {
+      "name": "Marathon",
+      "file": "assets\\arc_raiders\\items\\marathon.webp",
+      "source": "https://arcraidershub.com/images/MARATHON_LOGO_EN_SIMPLIFIED.png"
+    },
+    {
+      "name": "Burned ARC Circuitry",
+      "file": "assets\\arc_raiders\\items\\burned_arc_circuitry.webp",
+      "source": "https://arcraidershub.com/images/items/burned-arc-circuitry.webp"
+    },
+    {
+      "name": "Candle Holder",
+      "file": "assets\\arc_raiders\\items\\candle_holder.webp",
+      "source": "https://arcraidershub.com/images/items/candle-holder.webp"
+    },
+    {
+      "name": "Crumpled Plastic Bottle",
+      "file": "assets\\arc_raiders\\items\\crumpled_plastic_bottle.webp",
+      "source": "https://arcraidershub.com/images/items/crumpled-plastic-bottle.webp"
+    },
+    {
+      "name": "Damaged ARC Motion Core",
+      "file": "assets\\arc_raiders\\items\\damaged_arc_motion_core.webp",
+      "source": "https://arcraidershub.com/images/items/damaged-arc-motion-core.webp"
+    },
+    {
+      "name": "Damaged ARC Powercell",
+      "file": "assets\\arc_raiders\\items\\damaged_arc_powercell.webp",
+      "source": "https://arcraidershub.com/images/items/damaged-arc-powercell.webp"
+    },
+    {
+      "name": "Dried Out ARC Resin",
+      "file": "assets\\arc_raiders\\items\\dried_out_arc_resin.webp",
+      "source": "https://arcraidershub.com/images/items/dried-out-arc-resin.webp"
+    },
+    {
+      "name": "Garlic Press",
+      "file": "assets\\arc_raiders\\items\\garlic_press.webp",
+      "source": "https://arcraidershub.com/images/items/garlic-press.webp"
+    },
+    {
+      "name": "Ice Cream Scooper",
+      "file": "assets\\arc_raiders\\items\\ice_cream_scooper.webp",
+      "source": "https://arcraidershub.com/images/items/ice-cream-scooper.webp"
+    },
+    {
+      "name": "Household Cleaner",
+      "file": "assets\\arc_raiders\\items\\household_cleaner.webp",
+      "source": "https://arcraidershub.com/images/items/household-cleaner.webp"
+    },
+    {
+      "name": "Impure ARC Coolant",
+      "file": "assets\\arc_raiders\\items\\impure_arc_coolant.webp",
+      "source": "https://arcraidershub.com/images/items/impure-arc-coolant.webp"
+    },
+    {
+      "name": "Metal Brackets",
+      "file": "assets\\arc_raiders\\items\\metal_brackets.webp",
+      "source": "https://arcraidershub.com/images/items/metal-brackets.webp"
+    },
+    {
+      "name": "Number Plate",
+      "file": "assets\\arc_raiders\\items\\number_plate.webp",
+      "source": "https://arcraidershub.com/images/items/number-plate.webp"
+    },
+    {
+      "name": "Ripped Safety Vest",
+      "file": "assets\\arc_raiders\\items\\ripped_safety_vest.webp",
+      "source": "https://arcraidershub.com/images/items/ripped-safety-vest.webp"
+    },
+    {
+      "name": "Ruined Baton",
+      "file": "assets\\arc_raiders\\items\\ruined_baton.webp",
+      "source": "https://arcraidershub.com/images/items/ruined-baton.webp"
+    },
+    {
+      "name": "Ruined Handcuffs",
+      "file": "assets\\arc_raiders\\items\\ruined_handcuffs.webp",
+      "source": "https://arcraidershub.com/images/items/ruined-handcuffs.webp"
+    },
+    {
+      "name": "Ruined Parachute",
+      "file": "assets\\arc_raiders\\items\\ruined_parachute.webp",
+      "source": "https://arcraidershub.com/images/items/ruined-parachute.webp"
+    },
+    {
+      "name": "Ruined Tactical Vest",
+      "file": "assets\\arc_raiders\\items\\ruined_tactical_vest.webp",
+      "source": "https://arcraidershub.com/images/items/ruined-tactical-vest.webp"
+    },
+    {
+      "name": "Rusty ARC Steel",
+      "file": "assets\\arc_raiders\\items\\rusty_arc_steel.webp",
+      "source": "https://arcraidershub.com/images/items/rusty-arc-steel.webp"
+    },
+    {
+      "name": "Tattered ARC Lining",
+      "file": "assets\\arc_raiders\\items\\tattered_arc_lining.webp",
+      "source": "https://arcraidershub.com/images/items/tattered-arc-lining.webp"
+    },
+    {
+      "name": "Tattered Clothes",
+      "file": "assets\\arc_raiders\\items\\tattered_clothes.webp",
+      "source": "https://arcraidershub.com/images/items/tattered-clothes.webp"
+    },
+    {
+      "name": "Alarm Clock",
+      "file": "assets\\arc_raiders\\items\\alarm_clock.webp",
+      "source": "https://arcraidershub.com/images/items/alarm-clock.webp"
+    },
+    {
+      "name": "Damaged Tick Pod",
+      "file": "assets\\arc_raiders\\items\\damaged_tick_pod.webp",
+      "source": "https://arcraidershub.com/images/items/damaged-tick-pod.webp"
+    },
+    {
+      "name": "ARC Thermo Lining",
+      "file": "assets\\arc_raiders\\items\\arc_thermo_lining.webp",
+      "source": "https://arcraidershub.com/images/items/arc-thermo-lining.webp"
+    },
+    {
+      "name": "Broken Flashlight",
+      "file": "assets\\arc_raiders\\items\\broken_flashlight.webp",
+      "source": "https://arcraidershub.com/images/items/broken-flashlight.webp"
+    },
+    {
+      "name": "Broken Guidance System",
+      "file": "assets\\arc_raiders\\items\\broken_guidance_system.webp",
+      "source": "https://arcraidershub.com/images/items/broken-guidance-system.webp"
+    },
+    {
+      "name": "Broken Handheld Radio",
+      "file": "assets\\arc_raiders\\items\\broken_handheld_radio.webp",
+      "source": "https://arcraidershub.com/images/items/broken-handheld-radio.webp"
+    },
+    {
+      "name": "Broken Taser",
+      "file": "assets\\arc_raiders\\items\\broken_taser.webp",
+      "source": "https://arcraidershub.com/images/items/broken-taser.webp"
+    },
+    {
+      "name": "Coolant",
+      "file": "assets\\arc_raiders\\items\\coolant.webp",
+      "source": "https://arcraidershub.com/images/items/coolant.webp"
+    },
+    {
+      "name": "Diving Goggles",
+      "file": "assets\\arc_raiders\\items\\diving_goggles.webp",
+      "source": "https://arcraidershub.com/images/items/diving-googles.webp"
+    },
+    {
+      "name": "Frying Pan",
+      "file": "assets\\arc_raiders\\items\\frying_pan.webp",
+      "source": "https://arcraidershub.com/images/items/frying-pan.webp"
+    },
+    {
+      "name": "Headphones",
+      "file": "assets\\arc_raiders\\items\\headphones.webp",
+      "source": "https://arcraidershub.com/images/items/headphones.webp"
+    },
+    {
+      "name": "Industrial Charger",
+      "file": "assets\\arc_raiders\\items\\industrial_charger.webp",
+      "source": "https://arcraidershub.com/images/items/industrial-charger.webp"
+    },
+    {
+      "name": "Industrial Magnet",
+      "file": "assets\\arc_raiders\\items\\industrial_magnet.webp",
+      "source": "https://arcraidershub.com/images/items/industrial-magnet.webp"
+    },
+    {
+      "name": "Polluted Air Filter",
+      "file": "assets\\arc_raiders\\items\\polluted_air_filter.webp",
+      "source": "https://arcraidershub.com/images/items/polluted-air-filter.webp"
+    },
+    {
+      "name": "Power Bank",
+      "file": "assets\\arc_raiders\\items\\power_bank.webp",
+      "source": "https://arcraidershub.com/images/items/power-bank.webp"
+    },
+    {
+      "name": "Projector",
+      "file": "assets\\arc_raiders\\items\\projector.webp",
+      "source": "https://arcraidershub.com/images/items/projector.webp"
+    },
+    {
+      "name": "Radio",
+      "file": "assets\\arc_raiders\\items\\radio.webp",
+      "source": "https://arcraidershub.com/images/items/radio.webp"
+    },
+    {
+      "name": "Remote Control",
+      "file": "assets\\arc_raiders\\items\\remote_control.webp",
+      "source": "https://arcraidershub.com/images/items/remote-control.webp"
+    },
+    {
+      "name": "Rubber Pad",
+      "file": "assets\\arc_raiders\\items\\rubber_pad.webp",
+      "source": "https://arcraidershub.com/images/items/rubber-pad.webp"
+    },
+    {
+      "name": "Ruined Accordion",
+      "file": "assets\\arc_raiders\\items\\ruined_accordion.webp",
+      "source": "https://arcraidershub.com/images/items/ruined-accordion.webp"
+    },
+    {
+      "name": "Ruined Riot Shield",
+      "file": "assets\\arc_raiders\\items\\ruined_riot_shield.webp",
+      "source": "https://arcraidershub.com/images/items/ruined-riot-shield.webp"
+    },
+    {
+      "name": "Spring Cushion",
+      "file": "assets\\arc_raiders\\items\\spring_cushion.webp",
+      "source": "https://arcraidershub.com/images/items/spring-cushion.webp"
+    },
+    {
+      "name": "Thermostat",
+      "file": "assets\\arc_raiders\\items\\thermostat.webp",
+      "source": "https://arcraidershub.com/images/items/thermostat.webp"
+    },
+    {
+      "name": "Torn Blanket",
+      "file": "assets\\arc_raiders\\items\\torn_blanket.webp",
+      "source": "https://arcraidershub.com/images/items/torn-blanket.webp"
+    },
+    {
+      "name": "Turbo Pump",
+      "file": "assets\\arc_raiders\\items\\turbo_pump.webp",
+      "source": "https://arcraidershub.com/images/items/turbo-pump.webp"
+    },
+    {
+      "name": "Water Filter",
+      "file": "assets\\arc_raiders\\items\\water_filter.webp",
+      "source": "https://arcraidershub.com/images/items/water-filter.webp"
+    },
+    {
+      "name": "Broken Riot Shield",
+      "file": "assets\\arc_raiders\\items\\broken_riot_shield.webp",
+      "source": "https://arcraidershub.com/images/items/broken-riot-shield.webp"
+    },
+    {
+      "name": "Damaged Rocketeer Driver",
+      "file": "assets\\arc_raiders\\items\\damaged_rocketeer_driver.webp",
+      "source": "https://arcraidershub.com/images/items/damaged-rocketeer-part.webp"
+    },
+    {
+      "name": "Damaged Fireball Burner",
+      "file": "assets\\arc_raiders\\items\\damaged_fireball_burner.webp",
+      "source": "https://arcraidershub.com/images/items/damaged-fireball-burner.webp"
+    },
+    {
+      "name": "Mini Centrifuge",
+      "file": "assets\\arc_raiders\\items\\mini_centrifuge.webp",
+      "source": "https://arcraidershub.com/images/items/mini-centrifuge.webp"
+    },
+    {
+      "name": "Microscope",
+      "file": "assets\\arc_raiders\\items\\microscope.webp",
+      "source": "https://arcraidershub.com/images/items/microscope.webp"
+    },
+    {
+      "name": "Radio Relay",
+      "file": "assets\\arc_raiders\\items\\radio_relay.webp",
+      "source": "https://arcraidershub.com/images/items/radio-relay.webp"
+    },
+    {
+      "name": "Sample Cleaner",
+      "file": "assets\\arc_raiders\\items\\sample_cleaner.webp",
+      "source": "https://arcraidershub.com/images/items/sample-cleaner.webp"
+    },
+    {
+      "name": "Signal Amplifier",
+      "file": "assets\\arc_raiders\\items\\signal_amplifier.webp",
+      "source": "https://arcraidershub.com/images/items/signal-amplifier.webp"
+    },
+    {
+      "name": "Spectrometer",
+      "file": "assets\\arc_raiders\\items\\spectrometer.webp",
+      "source": "https://arcraidershub.com/images/items/spectrometer.webp"
+    },
+    {
+      "name": "Spectrum Analyzer",
+      "file": "assets\\arc_raiders\\items\\spectrum_analyzer.webp",
+      "source": "https://arcraidershub.com/images/items/spectrum-analyzer.webp"
+    },
+    {
+      "name": "Telemetry Transceiver",
+      "file": "assets\\arc_raiders\\items\\telemetry_transceiver.webp",
+      "source": "https://arcraidershub.com/images/items/telemetry-transceiver.webp"
+    },
+    {
+      "name": "Unusable Weapon",
+      "file": "assets\\arc_raiders\\items\\unusable_weapon.webp",
+      "source": "https://arcraidershub.com/images/items/unusable-weapon.webp"
+    },
+    {
+      "name": "Degraded ARC Rubber",
+      "file": "assets\\arc_raiders\\items\\degraded_arc_rubber.webp",
+      "source": "https://arcraidershub.com/images/items/degraded-arc-rubber.webp"
+    },
+    {
+      "name": "Vaporizer Regulator",
+      "file": "assets\\arc_raiders\\items\\vaporizer_regulator.webp",
+      "source": "https://arcraidershub.com/images/items/vaporizer-regulator.webp"
+    },
+    {
+      "name": "Assessor Matrix",
+      "file": "assets\\arc_raiders\\items\\assessor_matrix.webp",
+      "source": "https://arcraidershub.com/images/items/assessor-matrix.webp"
+    },
+    {
+      "name": "Wires",
+      "file": "assets\\arc_raiders\\items\\wires.webp",
+      "source": "https://arcraidershub.com/images/items/wires.webp"
+    },
+    {
+      "name": "ARC Flex Rubber",
+      "file": "assets\\arc_raiders\\items\\arc_flex_rubber.webp",
+      "source": "https://arcraidershub.com/images/items/arc-flex-rubber.webp"
+    },
+    {
+      "name": "Battery",
+      "file": "assets\\arc_raiders\\items\\battery.webp",
+      "source": "https://arcraidershub.com/images/items/battery.webp"
+    },
+    {
+      "name": "ARC Alloy",
+      "file": "assets\\arc_raiders\\items\\arc_alloy.webp",
+      "source": "https://arcraidershub.com/images/items/arc-alloy.webp"
+    },
+    {
+      "name": "Antiseptic",
+      "file": "assets\\arc_raiders\\items\\antiseptic.webp",
+      "source": "https://arcraidershub.com/images/items/antiseptic.webp"
+    },
+    {
+      "name": "Syringe",
+      "file": "assets\\arc_raiders\\items\\syringe.webp",
+      "source": "https://arcraidershub.com/images/items/syringe.webp"
+    },
+    {
+      "name": "Durable Cloth",
+      "file": "assets\\arc_raiders\\items\\durable_cloth.webp",
+      "source": "https://arcraidershub.com/images/items/durable-cloth.webp"
+    },
+    {
+      "name": "Rotary Encoder",
+      "file": "assets\\arc_raiders\\items\\rotary_encoder.webp",
+      "source": "https://arcraidershub.com/images/items/rotary-encoder.webp"
+    },
+    {
+      "name": "Portable TV",
+      "file": "assets\\arc_raiders\\items\\portable_tv.webp",
+      "source": "https://arcraidershub.com/images/items/portable-television.webp"
+    },
+    {
+      "name": "Deflated Football",
+      "file": "assets\\arc_raiders\\items\\deflated_football.webp",
+      "source": "https://arcraidershub.com/images/items/deflated-football.webp"
+    },
+    {
+      "name": "Bicycle Pump",
+      "file": "assets\\arc_raiders\\items\\bicycle_pump.webp",
+      "source": "https://arcraidershub.com/images/items/bicycle-pump.webp"
+    },
+    {
+      "name": "ARC Coolant",
+      "file": "assets\\arc_raiders\\items\\arc_coolant.webp",
+      "source": "https://arcraidershub.com/images/items/arc-coolant.webp"
+    },
+    {
+      "name": "Great Mullein",
+      "file": "assets\\arc_raiders\\items\\great_mullein.webp",
+      "source": "https://arcraidershub.com/images/items/great-muullein.webp"
+    },
+    {
+      "name": "Surveyor Vault",
+      "file": "assets\\arc_raiders\\items\\surveyor_vaults.webp",
+      "source": "https://arcraidershub.com/images/items/surveyor-vault.webp"
+    },
+    {
+      "name": "Rocketeer Driver",
+      "file": "assets\\arc_raiders\\items\\rocketeer_drivers.webp",
+      "source": "https://arcraidershub.com/images/items/rocketeer-part.webp"
+    },
+    {
+      "name": "Flow Controller",
+      "file": "assets\\arc_raiders\\items\\flow_controller.webp",
+      "source": "https://arcraidershub.com/images/items/flow-controller.webp"
+    },
+    {
+      "name": "Magnetron",
+      "file": "assets\\arc_raiders\\items\\magnetron.webp",
+      "source": "https://arcraidershub.com/images/items/magnetron.webp"
+    },
+    {
+      "name": "Snitch Scanner",
+      "file": "assets\\arc_raiders\\items\\snitch_scanners.webp",
+      "source": "https://arcraidershub.com/images/items/snitch-scanner.webp"
+    },
+    {
+      "name": "Wasp Driver",
+      "file": "assets\\arc_raiders\\items\\wasp_drivers.webp",
+      "source": "https://arcraidershub.com/images/items/wasp-driver.webp"
+    },
+    {
+      "name": "Hornet Driver",
+      "file": "assets\\arc_raiders\\items\\hornet_drivers.webp",
+      "source": "https://arcraidershub.com/images/items/hornet-driver.webp"
+    },
+    {
+      "name": "Power Rod",
+      "file": "assets\\arc_raiders\\items\\power_rod.webp",
+      "source": "https://arcraidershub.com/images/items/power-rod.webp"
+    },
+    {
+      "name": "Water Pump",
+      "file": "assets\\arc_raiders\\items\\water_pump.webp",
+      "source": "https://arcraidershub.com/images/items/water-pump.webp"
+    },
+    {
+      "name": "Dog Collar",
+      "file": "assets\\arc_raiders\\items\\dog_collar.webp",
+      "source": "https://arcraidershub.com/images/items/dog-collar.webp"
+    },
+    {
+      "name": "Lemon",
+      "file": "assets\\arc_raiders\\items\\lemons.webp",
+      "source": "https://arcraidershub.com/images/items/lemon.webp"
+    },
+    {
+      "name": "Apricot",
+      "file": "assets\\arc_raiders\\items\\apricots.webp",
+      "source": "https://arcraidershub.com/images/items/apricot.webp"
+    },
+    {
+      "name": "Prickly Pear",
+      "file": "assets\\arc_raiders\\items\\prickly_pears.webp",
+      "source": "https://arcraidershub.com/images/items/prickly-pear.webp"
+    },
+    {
+      "name": "Rusted Tools",
+      "file": "assets\\arc_raiders\\items\\rusted_tools.webp",
+      "source": "https://arcraidershub.com/images/items/rusted-tools.webp"
+    },
+    {
+      "name": "Mechanical Components",
+      "file": "assets\\arc_raiders\\items\\mechanical_components.webp",
+      "source": "https://arcraidershub.com/images/items/mechanical-components.webp"
+    },
+    {
+      "name": "Rusted Gear",
+      "file": "assets\\arc_raiders\\items\\rusted_gear.webp",
+      "source": "https://arcraidershub.com/images/items/rusted-gear.webp"
+    },
+    {
+      "name": "Advanced Mechanical Components",
+      "file": "assets\\arc_raiders\\items\\advanced_mechanical_components.webp",
+      "source": "https://arcraidershub.com/images/items/advanced-mechanical-components.webp"
+    },
+    {
+      "name": "Sentinel Firing Core",
+      "file": "assets\\arc_raiders\\items\\sentinel_firing_core.webp",
+      "source": "https://arcraidershub.com/images/items/sentinel-part.webp"
+    },
+    {
+      "name": "Power Cable",
+      "file": "assets\\arc_raiders\\items\\power_cable.webp",
+      "source": "https://arcraidershub.com/images/items/power-cable.webp"
+    },
+    {
+      "name": "Electrical Components",
+      "file": "assets\\arc_raiders\\items\\electrical_components.webp",
+      "source": "https://arcraidershub.com/images/items/electrical-components.webp"
+    },
+    {
+      "name": "Industrial Battery",
+      "file": "assets\\arc_raiders\\items\\industrial_battery.webp",
+      "source": "https://arcraidershub.com/images/items/industrial-battery.webp"
+    },
+    {
+      "name": "Advanced Electrical Components",
+      "file": "assets\\arc_raiders\\items\\advanced_electrical_components.webp",
+      "source": "https://arcraidershub.com/images/items/advanced-electrical-components.webp"
+    },
+    {
+      "name": "Bastion Cell",
+      "file": "assets\\arc_raiders\\items\\bastion_cells.webp",
+      "source": "https://arcraidershub.com/images/items/bastion-part.webp"
+    },
+    {
+      "name": "Cracked Bioscanner",
+      "file": "assets\\arc_raiders\\items\\cracked_bioscanner.webp",
+      "source": "https://arcraidershub.com/images/items/cracked-bioscanner.webp"
+    },
+    {
+      "name": "Tick Pod",
+      "file": "assets\\arc_raiders\\items\\tick_pods.webp",
+      "source": "https://arcraidershub.com/images/items/tick-pod.webp"
+    },
+    {
+      "name": "Rusted Shut Medical Kit",
+      "file": "assets\\arc_raiders\\items\\rusted_shut_medical_kit.webp",
+      "source": "https://arcraidershub.com/images/items/rusted-shut-medical-kit.webp"
+    },
+    {
+      "name": "Toaster",
+      "file": "assets\\arc_raiders\\items\\toaster.webp",
+      "source": "https://arcraidershub.com/images/items/toaster.webp"
+    },
+    {
+      "name": "ARC Motion Core",
+      "file": "assets\\arc_raiders\\items\\arc_motion_core.webp",
+      "source": "https://arcraidershub.com/images/items/arc-motion-core.webp"
+    },
+    {
+      "name": "Fireball Burner",
+      "file": "assets\\arc_raiders\\items\\fireball_burners.webp",
+      "source": "https://arcraidershub.com/images/items/fireball-burner.webp"
+    },
+    {
+      "name": "Motor",
+      "file": "assets\\arc_raiders\\items\\motor.webp",
+      "source": "https://arcraidershub.com/images/items/motor.webp"
+    },
+    {
+      "name": "ARC Circuitry",
+      "file": "assets\\arc_raiders\\items\\arc_circuitry.webp",
+      "source": "https://arcraidershub.com/images/items/arc-circuitry.webp"
+    },
+    {
+      "name": "Bombardier Cell",
+      "file": "assets\\arc_raiders\\items\\bombardier_cell.webp",
+      "source": "https://arcraidershub.com/images/items/bombardier-cell.webp"
+    },
+    {
+      "name": "Synthesized Fuel",
+      "file": "assets\\arc_raiders\\items\\synthesized_fuel.webp",
+      "source": "https://arcraidershub.com/images/items/synthesized-fuel.webp"
+    },
+    {
+      "name": "Crude Explosives",
+      "file": "assets\\arc_raiders\\items\\crude_explosives.webp",
+      "source": "https://arcraidershub.com/images/items/crude-explosives.webp"
+    },
+    {
+      "name": "Pop Trigger",
+      "file": "assets\\arc_raiders\\items\\pop_trigger.webp",
+      "source": "https://arcraidershub.com/images/items/pop-trigger.webp"
+    },
+    {
+      "name": "Laboratory Reagents",
+      "file": "assets\\arc_raiders\\items\\laboratory_reagents.webp",
+      "source": "https://arcraidershub.com/images/items/laboratory-reagents.webp"
+    },
+    {
+      "name": "Explosive Compound",
+      "file": "assets\\arc_raiders\\items\\explosive_compound.webp",
+      "source": "https://arcraidershub.com/images/items/explosive-compound.webp"
+    },
+    {
+      "name": "Damaged Heat Sink",
+      "file": "assets\\arc_raiders\\items\\damaged_heat_sink.webp",
+      "source": "https://arcraidershub.com/images/items/damaged-heat-sink.webp"
+    },
+    {
+      "name": "Fried Motherboard",
+      "file": "assets\\arc_raiders\\items\\fried_motherboard.webp",
+      "source": "https://arcraidershub.com/images/items/fried-motherboard.webp"
+    },
+    {
+      "name": "Steel Spring",
+      "file": "assets\\arc_raiders\\items\\steel_spring.webp",
+      "source": "https://arcraidershub.com/images/items/spring.webp"
+    },
+    {
+      "name": "Camera Lens",
+      "file": "assets\\arc_raiders\\items\\camera_lens.webp",
+      "source": "https://arcraidershub.com/images/items/camera-lens.webp"
+    },
+    {
+      "name": "Cooling Fan",
+      "file": "assets\\arc_raiders\\items\\cooling_fan.webp",
+      "source": "https://arcraidershub.com/images/items/cooling-fan.webp"
+    },
+    {
+      "name": "Cooling Coil",
+      "file": "assets\\arc_raiders\\items\\cooling_coil.webp",
+      "source": "https://arcraidershub.com/images/items/cooling-coil.webp"
+    },
+    {
+      "name": "Expired Respirator",
+      "file": "assets\\arc_raiders\\items\\expired_respirator.webp",
+      "source": "https://arcraidershub.com/images/items/expired-respirator.webp"
+    },
+    {
+      "name": "Rusted Bolts",
+      "file": "assets\\arc_raiders\\items\\rusted_bolts.webp",
+      "source": "https://arcraidershub.com/images/items/rusted-bolts.webp"
+    },
+    {
+      "name": "ARC Performance Steel",
+      "file": "assets\\arc_raiders\\items\\arc_performance_steel.webp",
+      "source": "https://arcraidershub.com/images/items/arc-performance-steel.webp"
+    },
+    {
+      "name": "ARC Synthetic Resin",
+      "file": "assets\\arc_raiders\\items\\arc_synthetic_resin.webp",
+      "source": "https://arcraidershub.com/images/items/arc-synthetic-resin.webp"
+    },
+    {
+      "name": "Spotter Relay",
+      "file": "assets\\arc_raiders\\items\\spotter_relay.webp",
+      "source": "https://arcraidershub.com/images/items/spotter-relay.webp"
+    },
+    {
+      "name": "Shredder Gyro",
+      "file": "assets\\arc_raiders\\items\\shredder_gyro.webp",
+      "source": "https://arcraidershub.com/images/items/shredder-gyro.webp"
+    },
+    {
+      "name": "Geiger Counter",
+      "file": "assets\\arc_raiders\\items\\geiger_counter.webp",
+      "source": "https://arcraidershub.com/images/items/geiger-counter.webp"
+    },
+    {
+      "name": "Frequency Modulation Box",
+      "file": "assets\\arc_raiders\\items\\frequency_modulation_box.webp",
+      "source": "https://arcraidershub.com/images/items/frequency-modulation-box.webp"
+    },
+    {
+      "name": "Ion Sputter",
+      "file": "assets\\arc_raiders\\items\\ion_sputter.webp",
+      "source": "https://arcraidershub.com/images/items/ion-sputter.webp"
+    },
+    {
+      "name": "Sensors",
+      "file": "assets\\arc_raiders\\items\\sensors.webp",
+      "source": "https://arcraidershub.com/images/items/sensors-recipe.webp"
+    },
+    {
+      "name": "Exodus Modules",
+      "file": "assets\\arc_raiders\\items\\exodus_modules.webp",
+      "source": "https://arcraidershub.com/images/items/exodus-modules.webp"
+    },
+    {
+      "name": "Humidifier",
+      "file": "assets\\arc_raiders\\items\\humidifier.webp",
+      "source": "https://arcraidershub.com/images/items/humidifier.webp"
+    },
+    {
+      "name": "Magnetic Accelerator",
+      "file": "assets\\arc_raiders\\items\\magnetic_accelerator.webp",
+      "source": "https://arcraidershub.com/images/items/magnetic-accelerator.webp"
+    },
+    {
+      "name": "Processor",
+      "file": "assets\\arc_raiders\\items\\processor.webp",
+      "source": "https://arcraidershub.com/images/items/processor.webp"
+    },
+    {
+      "name": "Advanced ARC Powercell",
+      "file": "assets\\arc_raiders\\items\\advanced_arc_powercell.webp",
+      "source": "https://arcraidershub.com/images/items/advanced-arc-powercell.webp"
+    },
+    {
+      "name": "Canister",
+      "file": "assets\\arc_raiders\\items\\canister.webp",
+      "source": "https://arcraidershub.com/images/items/canister.webp"
+    },
+    {
+      "name": "Complex Gun Parts",
+      "file": "assets\\arc_raiders\\items\\complex_gun_parts.webp",
+      "source": "https://arcraidershub.com/images/items/complex-gun-parts.webp"
+    },
+    {
+      "name": "Simple Gun Parts",
+      "file": "assets\\arc_raiders\\items\\simple_gun_parts.webp",
+      "source": "https://arcraidershub.com/images/items/simple-gun-parts.webp"
+    },
+    {
+      "name": "Voltage Converter",
+      "file": "assets\\arc_raiders\\items\\voltage_converter.webp",
+      "source": "https://arcraidershub.com/images/items/voltage-converter.webp"
+    },
+    {
+      "name": "Mod Components",
+      "file": "assets\\arc_raiders\\items\\mod_components.webp",
+      "source": "https://arcraidershub.com/images/items/mod-components.webp"
+    },
+    {
+      "name": "Medium Gun Parts",
+      "file": "assets\\arc_raiders\\items\\medium_gun_parts.webp",
+      "source": "https://arcraidershub.com/images/items/medium-gun-parts.webp"
+    },
+    {
+      "name": "Magnet",
+      "file": "assets\\arc_raiders\\items\\magnet.webp",
+      "source": "https://arcraidershub.com/images/items/magnet.webp"
+    },
+    {
+      "name": "Light Gun Parts",
+      "file": "assets\\arc_raiders\\items\\light_gun_parts.webp",
+      "source": "https://arcraidershub.com/images/items/light-gun-parts.webp"
+    },
+    {
+      "name": "Heavy Gun Parts",
+      "file": "assets\\arc_raiders\\items\\heavy_gun_parts.webp",
+      "source": "https://arcraidershub.com/images/items/heavy-gun-parts.webp"
+    },
+    {
+      "name": "Matriarch Reactor",
+      "file": "assets\\arc_raiders\\items\\matriarch_reactor.webp",
+      "source": "https://arcraidershub.com/images/items/matriarch-reactor.webp"
+    },
+    {
+      "name": "Queen Reactor",
+      "file": "assets\\arc_raiders\\items\\queen_reactor.webp",
+      "source": "https://arcraidershub.com/images/items/queen-reactor.webp"
+    },
+    {
+      "name": "Duct Tape",
+      "file": "assets\\arc_raiders\\items\\duct_tape.webp",
+      "source": "https://arcraidershub.com/images/items/duct-tape.webp"
+    },
+    {
+      "name": "Language Picker",
+      "file": "assets\\arc_raiders\\items\\language_picker.webp",
+      "source": "https://s.nitropay.com/cmp/lang.png"
+    },
+    {
+      "name": "Close Language Picker",
+      "file": "assets\\arc_raiders\\items\\close_language_picker.webp",
+      "source": "https://s.nitropay.com/cmp/cancel.png"
+    },
+    {
+      "name": "Advanced Electrical Components",
+      "file": "assets\\arc_raiders\\scrappy_resources\\advanced_electrical_components.webp",
+      "source": "https://arcraidershub.com/images/items/advanced-electrical-components.webp"
+    },
+    {
+      "name": "Advanced Mechanical Components",
+      "file": "assets\\arc_raiders\\scrappy_resources\\advanced_mechanical_components.webp",
+      "source": "https://arcraidershub.com/images/items/advanced-mechanical-components.webp"
+    },
+    {
+      "name": "Antiseptic",
+      "file": "assets\\arc_raiders\\scrappy_resources\\antiseptic.webp",
+      "source": "https://arcraidershub.com/images/items/antiseptic.webp"
+    },
+    {
+      "name": "Apricot",
+      "file": "assets\\arc_raiders\\scrappy_resources\\apricots.webp",
+      "source": "https://arcraidershub.com/images/items/apricot.webp"
+    },
+    {
+      "name": "ARC Alloy",
+      "file": "assets\\arc_raiders\\scrappy_resources\\arc_alloy.webp",
+      "source": "https://arcraidershub.com/images/items/arc-alloy.webp"
+    },
+    {
+      "name": "ARC Circuitry",
+      "file": "assets\\arc_raiders\\scrappy_resources\\arc_circuitry.webp",
+      "source": "https://arcraidershub.com/images/items/arc-circuitry.webp"
+    },
+    {
+      "name": "Bastion Cell",
+      "file": "assets\\arc_raiders\\scrappy_resources\\bastion_cells.webp",
+      "source": "https://arcraidershub.com/images/items/bastion-part.webp"
+    },
+    {
+      "name": "Battery",
+      "file": "assets\\arc_raiders\\scrappy_resources\\battery.webp",
+      "source": "https://arcraidershub.com/images/items/battery.webp"
+    },
+    {
+      "name": "Bicycle Pump",
+      "file": "assets\\arc_raiders\\scrappy_resources\\bicycle_pump.webp",
+      "source": "https://arcraidershub.com/images/items/bicycle-pump.webp"
+    },
+    {
+      "name": "Camera Lens",
+      "file": "assets\\arc_raiders\\scrappy_resources\\camera_lens.webp",
+      "source": "https://arcraidershub.com/images/items/camera-lens.webp"
+    },
+    {
+      "name": "Crude Explosives",
+      "file": "assets\\arc_raiders\\scrappy_resources\\crude_explosives.webp",
+      "source": "https://arcraidershub.com/images/items/crude-explosives.webp"
+    },
+    {
+      "name": "Deflated Football",
+      "file": "assets\\arc_raiders\\scrappy_resources\\deflated_football.webp",
+      "source": "https://arcraidershub.com/images/items/deflated-football.webp"
+    },
+    {
+      "name": "Dog Collar",
+      "file": "assets\\arc_raiders\\scrappy_resources\\dog_collar.webp",
+      "source": "https://arcraidershub.com/images/items/dog-collar.webp"
+    },
+    {
+      "name": "Durable Cloth",
+      "file": "assets\\arc_raiders\\scrappy_resources\\durable_cloth.webp",
+      "source": "https://arcraidershub.com/images/items/durable-cloth.webp"
+    },
+    {
+      "name": "Electrical Components",
+      "file": "assets\\arc_raiders\\scrappy_resources\\electrical_components.webp",
+      "source": "https://arcraidershub.com/images/items/electrical-components.webp"
+    },
+    {
+      "name": "Fireball Burner",
+      "file": "assets\\arc_raiders\\scrappy_resources\\fireball_burners.webp",
+      "source": "https://arcraidershub.com/images/items/fireball-burner.webp"
+    },
+    {
+      "name": "Great Mullein",
+      "file": "assets\\arc_raiders\\scrappy_resources\\great_mullein.webp",
+      "source": "https://arcraidershub.com/images/items/great-muullein.webp"
+    },
+    {
+      "name": "Hornet Driver",
+      "file": "assets\\arc_raiders\\scrappy_resources\\hornet_drivers.webp",
+      "source": "https://arcraidershub.com/images/items/hornet-driver.webp"
+    },
+    {
+      "name": "Laboratory Reagents",
+      "file": "assets\\arc_raiders\\scrappy_resources\\laboratory_reagents.webp",
+      "source": "https://arcraidershub.com/images/items/laboratory-reagents.webp"
+    },
+    {
+      "name": "Lemon",
+      "file": "assets\\arc_raiders\\scrappy_resources\\lemons.webp",
+      "source": "https://arcraidershub.com/images/items/lemon.webp"
+    },
+    {
+      "name": "Mechanical Components",
+      "file": "assets\\arc_raiders\\scrappy_resources\\mechanical_components.webp",
+      "source": "https://arcraidershub.com/images/items/mechanical-components.webp"
+    },
+    {
+      "name": "Portable TV",
+      "file": "assets\\arc_raiders\\scrappy_resources\\portable_tv.webp",
+      "source": "https://arcraidershub.com/images/items/portable-television.webp"
+    },
+    {
+      "name": "Power Rod",
+      "file": "assets\\arc_raiders\\scrappy_resources\\power_rod.webp",
+      "source": "https://arcraidershub.com/images/items/power-rod.webp"
+    },
+    {
+      "name": "Prickly Pear",
+      "file": "assets\\arc_raiders\\scrappy_resources\\prickly_pears.webp",
+      "source": "https://arcraidershub.com/images/items/prickly-pear.webp"
+    },
+    {
+      "name": "Rocketeer Driver",
+      "file": "assets\\arc_raiders\\scrappy_resources\\rocketeer_drivers.webp",
+      "source": "https://arcraidershub.com/images/items/rocketeer-part.webp"
+    },
+    {
+      "name": "Rusted Tools",
+      "file": "assets\\arc_raiders\\scrappy_resources\\rusted_tools.webp",
+      "source": "https://arcraidershub.com/images/items/rusted-tools.webp"
+    },
+    {
+      "name": "Snitch Scanner",
+      "file": "assets\\arc_raiders\\scrappy_resources\\snitch_scanners.webp",
+      "source": "https://arcraidershub.com/images/items/snitch-scanner.webp"
+    },
+    {
+      "name": "Surveyor Vault",
+      "file": "assets\\arc_raiders\\scrappy_resources\\surveyor_vaults.webp",
+      "source": "https://arcraidershub.com/images/items/surveyor-vault.webp"
+    },
+    {
+      "name": "Synthesized Fuel",
+      "file": "assets\\arc_raiders\\scrappy_resources\\synthesized_fuel.webp",
+      "source": "https://arcraidershub.com/images/items/synthesized-fuel.webp"
+    },
+    {
+      "name": "Syringe",
+      "file": "assets\\arc_raiders\\scrappy_resources\\syringe.webp",
+      "source": "https://arcraidershub.com/images/items/syringe.webp"
+    },
+    {
+      "name": "Tick Pod",
+      "file": "assets\\arc_raiders\\scrappy_resources\\tick_pods.webp",
+      "source": "https://arcraidershub.com/images/items/tick-pod.webp"
+    },
+    {
+      "name": "Wasp Driver",
+      "file": "assets\\arc_raiders\\scrappy_resources\\wasp_drivers.webp",
+      "source": "https://arcraidershub.com/images/items/wasp-driver.webp"
+    },
+    {
+      "name": "Wires",
+      "file": "assets\\arc_raiders\\scrappy_resources\\wires.webp",
+      "source": "https://arcraidershub.com/images/items/wires.webp"
+    }
+  ],
+  "failures": [
+    {
+      "name": "Arc Raiders Hub",
+      "file": "arc_raiders_hub.webp",
+      "source": "https://www.facebook.com/tr?id=1444191539742058&ev=PageView&noscript=1",
+      "error": "cannot identify image file <_io.BytesIO object at 0x0000013D1D5ABC40>"
+    },
+    {
+      "name": "Sensors",
+      "file": "sensors.webp",
+      "source": "https://arcraidershub.com/images/items/sensors-recipe.webp",
+      "error": "APIRequestContext.get: getaddrinfo ENOTFOUND arcraidershub.com\nCall log:\n  - \u2192 GET https://arcraidershub.com/images/items/sensors-recipe.webp\n    - user-agent: Mozilla/5.0\n    - accept: */*\n    - accept-encoding: gzip,deflate,br\n"
+    }
+  ],
+  "missing_required": [
+    {
+      "display_name": "ARC Motion Cores",
+      "normalized_name": "arc motion cores",
+      "file_name": "arc_motion_cores.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/arc_motion_cores.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "ARC Powercells",
+      "normalized_name": "arc powercells",
+      "file_name": "arc_powercells.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/arc_powercells.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Bombardier Cells",
+      "normalized_name": "bombardier cells",
+      "file_name": "bombardier_cells.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/bombardier_cells.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Cat Bed",
+      "normalized_name": "cat bed",
+      "file_name": "cat_bed.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/cat_bed.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+      "usage": "arc_scrappy_seed_data"
+    },
+    {
+      "display_name": "Chemicals",
+      "normalized_name": "chemicals",
+      "file_name": "chemicals.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/chemicals.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Coffee Pot",
+      "normalized_name": "coffee pot",
+      "file_name": "coffee_pot.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/coffee_pot.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Cracked Bioscanners",
+      "normalized_name": "cracked bioscanners",
+      "file_name": "cracked_bioscanners.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/cracked_bioscanners.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Damaged Heat Sinks",
+      "normalized_name": "damaged heat sinks",
+      "file_name": "damaged_heat_sinks.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/damaged_heat_sinks.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Empty Wine Bottle",
+      "normalized_name": "empty wine bottle",
+      "file_name": "empty_wine_bottle.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/empty_wine_bottle.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Espresso Machine Parts",
+      "normalized_name": "espresso machine parts",
+      "file_name": "espresso_machine_parts.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/espresso_machine_parts.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Explosive Compounds",
+      "normalized_name": "explosive compounds",
+      "file_name": "explosive_compounds.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/explosive_compounds.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Fabric",
+      "normalized_name": "fabric",
+      "file_name": "fabric.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/fabric.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Faded Photograph",
+      "normalized_name": "faded photograph",
+      "file_name": "faded_photograph.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/faded_photograph.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Film Reel",
+      "normalized_name": "film reel",
+      "file_name": "film_reel.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/film_reel.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Firefly Burner",
+      "normalized_name": "firefly burner",
+      "file_name": "firefly_burner.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/firefly_burner.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Fireworks Box",
+      "normalized_name": "fireworks box",
+      "file_name": "fireworks_box.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/fireworks_box.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Fried Motherboards",
+      "normalized_name": "fried motherboards",
+      "file_name": "fried_motherboards.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/fried_motherboards.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Industrial Batteries",
+      "normalized_name": "industrial batteries",
+      "file_name": "industrial_batteries.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/industrial_batteries.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Leaper Pulse Units",
+      "normalized_name": "leaper pulse units",
+      "file_name": "leaper_pulse_units.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/leaper_pulse_units.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Light Impact Grenade",
+      "normalized_name": "light impact grenade",
+      "file_name": "light_impact_grenade.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/light_impact_grenade.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Metal Parts",
+      "normalized_name": "metal parts",
+      "file_name": "metal_parts.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/metal_parts.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Motors",
+      "normalized_name": "motors",
+      "file_name": "motors.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/motors.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Mushrooms",
+      "normalized_name": "mushrooms",
+      "file_name": "mushrooms.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/mushrooms.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+      "usage": "arc_scrappy_seed_data"
+    },
+    {
+      "display_name": "Oil",
+      "normalized_name": "oil",
+      "file_name": "oil.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/oil.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Olives",
+      "normalized_name": "olives",
+      "file_name": "olives.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/olives.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+      "usage": "arc_scrappy_seed_data"
+    },
+    {
+      "display_name": "Plastic Parts",
+      "normalized_name": "plastic parts",
+      "file_name": "plastic_parts.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/plastic_parts.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Pop Triggers",
+      "normalized_name": "pop triggers",
+      "file_name": "pop_triggers.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/pop_triggers.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Power Cables",
+      "normalized_name": "power cables",
+      "file_name": "power_cables.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/power_cables.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Recorder",
+      "normalized_name": "recorder",
+      "file_name": "recorder.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/recorder.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Rubber Duck",
+      "normalized_name": "rubber duck",
+      "file_name": "rubber_duck.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/rubber_duck.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Rubber Parts",
+      "normalized_name": "rubber parts",
+      "file_name": "rubber_parts.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/rubber_parts.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Rusted Gears",
+      "normalized_name": "rusted gears",
+      "file_name": "rusted_gears.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/rusted_gears.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Rusted Shut Medical Kits",
+      "normalized_name": "rusted shut medical kits",
+      "file_name": "rusted_shut_medical_kits.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/rusted_shut_medical_kits.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Sentinel Firing Cores",
+      "normalized_name": "sentinel firing cores",
+      "file_name": "sentinel_firing_cores.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/sentinel_firing_cores.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Stack Of Movie Tapes",
+      "normalized_name": "stack of movie tapes",
+      "file_name": "stack_of_movie_tapes.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/stack_of_movie_tapes.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    },
+    {
+      "display_name": "Toasters",
+      "normalized_name": "toasters",
+      "file_name": "toasters.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/toasters.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+      "usage": "arc_bench_upgrade_seed_data"
+    },
+    {
+      "display_name": "Very Comfortable Pillows",
+      "normalized_name": "very comfortable pillows",
+      "file_name": "very_comfortable_pillows.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+      "usage": "arc_scrappy_seed_data"
+    },
+    {
+      "display_name": "Vita Shot",
+      "normalized_name": "vita shot",
+      "file_name": "vita_shot.webp",
+      "asset_path": "assets/arc_raiders/scrappy_resources/vita_shot.webp",
+      "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+      "usage": "arc_quest_requirement_seed_data"
+    }
+  ],
+  "unmatched_scraped": [
+    {
+      "name": "Marathon",
+      "normalized_name": "marathon",
+      "src": "https://arcraidershub.com/images/MARATHON_LOGO_EN_SIMPLIFIED.png",
+      "page_section": null,
+      "text": "Guides\nMaps NEW\nEvents NEW\nSkill tree\nLoadouts\nWeapons\nItems/recycling NEW\nWeekly Trials NEW\nEnglish\n\ud55c\uad6d\uc5b4"
+    },
+    {
+      "name": "Burned ARC Circuitry",
+      "normalized_name": "burned arc circuitry",
+      "src": "https://arcraidershub.com/images/items/burned-arc-circuitry.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Burned ARC Circuitry\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Candle Holder",
+      "normalized_name": "candle holder",
+      "src": "https://arcraidershub.com/images/items/candle-holder.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Candle Holder\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Crumpled Plastic Bottle",
+      "normalized_name": "crumpled plastic bottle",
+      "src": "https://arcraidershub.com/images/items/crumpled-plastic-bottle.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Crumpled Plastic Bottle\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Damaged ARC Motion Core",
+      "normalized_name": "damaged arc motion core",
+      "src": "https://arcraidershub.com/images/items/damaged-arc-motion-core.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Damaged ARC Motion Core\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Damaged ARC Powercell",
+      "normalized_name": "damaged arc powercell",
+      "src": "https://arcraidershub.com/images/items/damaged-arc-powercell.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Damaged ARC Powercell\n                            Common \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Dried Out ARC Resin",
+      "normalized_name": "dried out arc resin",
+      "src": "https://arcraidershub.com/images/items/dried-out-arc-resin.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Dried-Out ARC Resin\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Garlic Press",
+      "normalized_name": "garlic press",
+      "src": "https://arcraidershub.com/images/items/garlic-press.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Garlic Press\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ice Cream Scooper",
+      "normalized_name": "ice cream scooper",
+      "src": "https://arcraidershub.com/images/items/ice-cream-scooper.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ice Cream Scooper\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Household Cleaner",
+      "normalized_name": "household cleaner",
+      "src": "https://arcraidershub.com/images/items/household-cleaner.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Household Cleaner\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Impure ARC Coolant",
+      "normalized_name": "impure arc coolant",
+      "src": "https://arcraidershub.com/images/items/impure-arc-coolant.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Impure ARC Coolant\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Metal Brackets",
+      "normalized_name": "metal brackets",
+      "src": "https://arcraidershub.com/images/items/metal-brackets.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Metal Brackets\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Number Plate",
+      "normalized_name": "number plate",
+      "src": "https://arcraidershub.com/images/items/number-plate.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Number Plate\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ripped Safety Vest",
+      "normalized_name": "ripped safety vest",
+      "src": "https://arcraidershub.com/images/items/ripped-safety-vest.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ripped Safety Vest\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ruined Baton",
+      "normalized_name": "ruined baton",
+      "src": "https://arcraidershub.com/images/items/ruined-baton.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ruined Baton\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ruined Handcuffs",
+      "normalized_name": "ruined handcuffs",
+      "src": "https://arcraidershub.com/images/items/ruined-handcuffs.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ruined Handcuffs\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ruined Parachute",
+      "normalized_name": "ruined parachute",
+      "src": "https://arcraidershub.com/images/items/ruined-parachute.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ruined Parachute\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ruined Tactical Vest",
+      "normalized_name": "ruined tactical vest",
+      "src": "https://arcraidershub.com/images/items/ruined-tactical-vest.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ruined Tactical Vest\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Rusty ARC Steel",
+      "normalized_name": "rusty arc steel",
+      "src": "https://arcraidershub.com/images/items/rusty-arc-steel.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Rusty ARC Steel\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Tattered ARC Lining",
+      "normalized_name": "tattered arc lining",
+      "src": "https://arcraidershub.com/images/items/tattered-arc-lining.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Tattered ARC Lining\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Tattered Clothes",
+      "normalized_name": "tattered clothes",
+      "src": "https://arcraidershub.com/images/items/tattered-clothes.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Tattered Clothes\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Alarm Clock",
+      "normalized_name": "alarm clock",
+      "src": "https://arcraidershub.com/images/items/alarm-clock.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Alarm Clock\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Damaged Tick Pod",
+      "normalized_name": "damaged tick pod",
+      "src": "https://arcraidershub.com/images/items/damaged-tick-pod.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Damaged Tick Pod\n                            Common \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "ARC Thermo Lining",
+      "normalized_name": "arc thermo lining",
+      "src": "https://arcraidershub.com/images/items/arc-thermo-lining.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            ARC Thermo Lining\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Broken Flashlight",
+      "normalized_name": "broken flashlight",
+      "src": "https://arcraidershub.com/images/items/broken-flashlight.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Broken Flashlight\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Broken Guidance System",
+      "normalized_name": "broken guidance system",
+      "src": "https://arcraidershub.com/images/items/broken-guidance-system.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Broken Guidance System\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Broken Handheld Radio",
+      "normalized_name": "broken handheld radio",
+      "src": "https://arcraidershub.com/images/items/broken-handheld-radio.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Broken Handheld Radio\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Broken Taser",
+      "normalized_name": "broken taser",
+      "src": "https://arcraidershub.com/images/items/broken-taser.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Broken Taser\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Coolant",
+      "normalized_name": "coolant",
+      "src": "https://arcraidershub.com/images/items/coolant.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Coolant\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Diving Goggles",
+      "normalized_name": "diving goggles",
+      "src": "https://arcraidershub.com/images/items/diving-googles.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Diving Goggles\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Frying Pan",
+      "normalized_name": "frying pan",
+      "src": "https://arcraidershub.com/images/items/frying-pan.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Frying Pan\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Headphones",
+      "normalized_name": "headphones",
+      "src": "https://arcraidershub.com/images/items/headphones.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Headphones\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Industrial Charger",
+      "normalized_name": "industrial charger",
+      "src": "https://arcraidershub.com/images/items/industrial-charger.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Industrial Charger\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Industrial Magnet",
+      "normalized_name": "industrial magnet",
+      "src": "https://arcraidershub.com/images/items/industrial-magnet.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Industrial Magnet\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Polluted Air Filter",
+      "normalized_name": "polluted air filter",
+      "src": "https://arcraidershub.com/images/items/polluted-air-filter.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Polluted Air Filter\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Power Bank",
+      "normalized_name": "power bank",
+      "src": "https://arcraidershub.com/images/items/power-bank.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Power Bank\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Projector",
+      "normalized_name": "projector",
+      "src": "https://arcraidershub.com/images/items/projector.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Projector\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Radio",
+      "normalized_name": "radio",
+      "src": "https://arcraidershub.com/images/items/radio.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Radio\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Remote Control",
+      "normalized_name": "remote control",
+      "src": "https://arcraidershub.com/images/items/remote-control.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Remote Control\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Rubber Pad",
+      "normalized_name": "rubber pad",
+      "src": "https://arcraidershub.com/images/items/rubber-pad.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Rubber Pad\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ruined Accordion",
+      "normalized_name": "ruined accordion",
+      "src": "https://arcraidershub.com/images/items/ruined-accordion.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ruined Accordion\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ruined Riot Shield",
+      "normalized_name": "ruined riot shield",
+      "src": "https://arcraidershub.com/images/items/ruined-riot-shield.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ruined Riot Shield\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Spring Cushion",
+      "normalized_name": "spring cushion",
+      "src": "https://arcraidershub.com/images/items/spring-cushion.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Spring Cushion\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Thermostat",
+      "normalized_name": "thermostat",
+      "src": "https://arcraidershub.com/images/items/thermostat.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Thermostat\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Torn Blanket",
+      "normalized_name": "torn blanket",
+      "src": "https://arcraidershub.com/images/items/torn-blanket.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Torn Blanket\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Turbo Pump",
+      "normalized_name": "turbo pump",
+      "src": "https://arcraidershub.com/images/items/turbo-pump.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Turbo Pump\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Water Filter",
+      "normalized_name": "water filter",
+      "src": "https://arcraidershub.com/images/items/water-filter.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Water Filter\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Broken Riot Shield",
+      "normalized_name": "broken riot shield",
+      "src": "https://arcraidershub.com/images/items/broken-riot-shield.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Broken Riot Shield\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Damaged Rocketeer Driver",
+      "normalized_name": "damaged rocketeer driver",
+      "src": "https://arcraidershub.com/images/items/damaged-rocketeer-part.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Damaged Rocketeer Driver\n                            Common \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Damaged Fireball Burner",
+      "normalized_name": "damaged fireball burner",
+      "src": "https://arcraidershub.com/images/items/damaged-fireball-burner.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Damaged Fireball Burner\n                            Common \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Mini Centrifuge",
+      "normalized_name": "mini centrifuge",
+      "src": "https://arcraidershub.com/images/items/mini-centrifuge.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Mini Centrifuge\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Microscope",
+      "normalized_name": "microscope",
+      "src": "https://arcraidershub.com/images/items/microscope.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Microscope\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Radio Relay",
+      "normalized_name": "radio relay",
+      "src": "https://arcraidershub.com/images/items/radio-relay.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Radio Relay\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Sample Cleaner",
+      "normalized_name": "sample cleaner",
+      "src": "https://arcraidershub.com/images/items/sample-cleaner.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Sample Cleaner\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Signal Amplifier",
+      "normalized_name": "signal amplifier",
+      "src": "https://arcraidershub.com/images/items/signal-amplifier.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Signal Amplifier\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Spectrometer",
+      "normalized_name": "spectrometer",
+      "src": "https://arcraidershub.com/images/items/spectrometer.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Spectrometer\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Spectrum Analyzer",
+      "normalized_name": "spectrum analyzer",
+      "src": "https://arcraidershub.com/images/items/spectrum-analyzer.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Spectrum Analyzer\n                            Epic \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Telemetry Transceiver",
+      "normalized_name": "telemetry transceiver",
+      "src": "https://arcraidershub.com/images/items/telemetry-transceiver.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Telemetry Transceiver\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Unusable Weapon",
+      "normalized_name": "unusable weapon",
+      "src": "https://arcraidershub.com/images/items/unusable-weapon.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Unusable Weapon\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Degraded ARC Rubber",
+      "normalized_name": "degraded arc rubber",
+      "src": "https://arcraidershub.com/images/items/degraded-arc-rubber.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Degraded ARC Rubber\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Vaporizer Regulator",
+      "normalized_name": "vaporizer regulator",
+      "src": "https://arcraidershub.com/images/items/vaporizer-regulator.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Vaporizer Regulator\n                            Epic \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Assessor Matrix",
+      "normalized_name": "assessor matrix",
+      "src": "https://arcraidershub.com/images/items/assessor-matrix.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Assessor Matrix\n                            Epic \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "ARC Flex Rubber",
+      "normalized_name": "arc flex rubber",
+      "src": "https://arcraidershub.com/images/items/arc-flex-rubber.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            ARC Flex Rubber\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Rotary Encoder",
+      "normalized_name": "rotary encoder",
+      "src": "https://arcraidershub.com/images/items/rotary-encoder.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Rotary Encoder\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "ARC Coolant",
+      "normalized_name": "arc coolant",
+      "src": "https://arcraidershub.com/images/items/arc-coolant.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            ARC Coolant\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Flow Controller",
+      "normalized_name": "flow controller",
+      "src": "https://arcraidershub.com/images/items/flow-controller.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Flow Controller\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Magnetron",
+      "normalized_name": "magnetron",
+      "src": "https://arcraidershub.com/images/items/magnetron.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Magnetron\n                            Epic \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Water Pump",
+      "normalized_name": "water pump",
+      "src": "https://arcraidershub.com/images/items/water-pump.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Water Pump\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Rusted Gear",
+      "normalized_name": "rusted gear",
+      "src": "https://arcraidershub.com/images/items/rusted-gear.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Rusted Gear\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Sentinel Firing Core",
+      "normalized_name": "sentinel firing core",
+      "src": "https://arcraidershub.com/images/items/sentinel-part.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Sentinel Firing Core\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Power Cable",
+      "normalized_name": "power cable",
+      "src": "https://arcraidershub.com/images/items/power-cable.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Power Cable\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Industrial Battery",
+      "normalized_name": "industrial battery",
+      "src": "https://arcraidershub.com/images/items/industrial-battery.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Industrial Battery\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Cracked Bioscanner",
+      "normalized_name": "cracked bioscanner",
+      "src": "https://arcraidershub.com/images/items/cracked-bioscanner.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Cracked Bioscanner\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Rusted Shut Medical Kit",
+      "normalized_name": "rusted shut medical kit",
+      "src": "https://arcraidershub.com/images/items/rusted-shut-medical-kit.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Rusted Shut Medical Kit\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Toaster",
+      "normalized_name": "toaster",
+      "src": "https://arcraidershub.com/images/items/toaster.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Toaster\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "ARC Motion Core",
+      "normalized_name": "arc motion core",
+      "src": "https://arcraidershub.com/images/items/arc-motion-core.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            ARC Motion Core\n                            Rare \u2022 Topside Material\n                        \n                    "
+    },
+    {
+      "name": "Motor",
+      "normalized_name": "motor",
+      "src": "https://arcraidershub.com/images/items/motor.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Motor\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Bombardier Cell",
+      "normalized_name": "bombardier cell",
+      "src": "https://arcraidershub.com/images/items/bombardier-cell.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Bombardier Cell\n                            Epic \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Pop Trigger",
+      "normalized_name": "pop trigger",
+      "src": "https://arcraidershub.com/images/items/pop-trigger.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Pop Trigger\n                            Common \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Explosive Compound",
+      "normalized_name": "explosive compound",
+      "src": "https://arcraidershub.com/images/items/explosive-compound.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Explosive Compound\n                            Rare \u2022 Refined Material\n                        \n                    "
+    },
+    {
+      "name": "Damaged Heat Sink",
+      "normalized_name": "damaged heat sink",
+      "src": "https://arcraidershub.com/images/items/damaged-heat-sink.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Damaged Heat Sink\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Fried Motherboard",
+      "normalized_name": "fried motherboard",
+      "src": "https://arcraidershub.com/images/items/fried-motherboard.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Fried Motherboard\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Steel Spring",
+      "normalized_name": "steel spring",
+      "src": "https://arcraidershub.com/images/items/spring.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Steel Spring\n                            Uncommon \u2022 Topside Material\n                        \n                    "
+    },
+    {
+      "name": "Cooling Fan",
+      "normalized_name": "cooling fan",
+      "src": "https://arcraidershub.com/images/items/cooling-fan.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Cooling Fan\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Cooling Coil",
+      "normalized_name": "cooling coil",
+      "src": "https://arcraidershub.com/images/items/cooling-coil.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Cooling Coil\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Expired Respirator",
+      "normalized_name": "expired respirator",
+      "src": "https://arcraidershub.com/images/items/expired-respirator.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Expired Respirator\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Rusted Bolts",
+      "normalized_name": "rusted bolts",
+      "src": "https://arcraidershub.com/images/items/rusted-bolts.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Rusted Bolts\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "ARC Performance Steel",
+      "normalized_name": "arc performance steel",
+      "src": "https://arcraidershub.com/images/items/arc-performance-steel.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            ARC Performance Steel\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "ARC Synthetic Resin",
+      "normalized_name": "arc synthetic resin",
+      "src": "https://arcraidershub.com/images/items/arc-synthetic-resin.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            ARC Synthetic Resin\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Spotter Relay",
+      "normalized_name": "spotter relay",
+      "src": "https://arcraidershub.com/images/items/spotter-relay.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Spotter Relay\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Shredder Gyro",
+      "normalized_name": "shredder gyro",
+      "src": "https://arcraidershub.com/images/items/shredder-gyro.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Shredder Gyro\n                            Uncommon \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Geiger Counter",
+      "normalized_name": "geiger counter",
+      "src": "https://arcraidershub.com/images/items/geiger-counter.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Geiger Counter\n                            Epic \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Frequency Modulation Box",
+      "normalized_name": "frequency modulation box",
+      "src": "https://arcraidershub.com/images/items/frequency-modulation-box.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Frequency Modulation Box\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Ion Sputter",
+      "normalized_name": "ion sputter",
+      "src": "https://arcraidershub.com/images/items/ion-sputter.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Ion Sputter\n                            Epic \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Exodus Modules",
+      "normalized_name": "exodus modules",
+      "src": "https://arcraidershub.com/images/items/exodus-modules.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Exodus Modules\n                            Epic \u2022 Topside Material\n                        \n                    "
+    },
+    {
+      "name": "Humidifier",
+      "normalized_name": "humidifier",
+      "src": "https://arcraidershub.com/images/items/humidifier.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Humidifier\n                            Rare \u2022 Recyclable\n                        \n                    "
+    },
+    {
+      "name": "Magnetic Accelerator",
+      "normalized_name": "magnetic accelerator",
+      "src": "https://arcraidershub.com/images/items/magnetic-accelerator.webp",
+      "page_section": null,
+      "text": "\n                        \n                        \n                            Magnetic Accelerator\n                            Epic \u2022 Refined Material\n                        \n                    "
+    },
+    {
+      "name": "Processor",
+      "normalized_name": "processor",
+      "src": "https://arcraidershub.com/images/items/processor.webp",
+      "page_section": null,
+      "text": "Processor\nRare \u2022 Topside Material"
+    },
+    {
+      "name": "Advanced ARC Powercell",
+      "normalized_name": "advanced arc powercell",
+      "src": "https://arcraidershub.com/images/items/advanced-arc-powercell.webp",
+      "page_section": null,
+      "text": "Advanced ARC Powercell\nRare \u2022 Topside Material"
+    },
+    {
+      "name": "Canister",
+      "normalized_name": "canister",
+      "src": "https://arcraidershub.com/images/items/canister.webp",
+      "page_section": null,
+      "text": "Canister\nUncommon \u2022 Topside Material"
+    },
+    {
+      "name": "Complex Gun Parts",
+      "normalized_name": "complex gun parts",
+      "src": "https://arcraidershub.com/images/items/complex-gun-parts.webp",
+      "page_section": null,
+      "text": "Complex Gun Parts\nEpic \u2022 Topside Material"
+    },
+    {
+      "name": "Simple Gun Parts",
+      "normalized_name": "simple gun parts",
+      "src": "https://arcraidershub.com/images/items/simple-gun-parts.webp",
+      "page_section": null,
+      "text": "Simple Gun Parts\nUncommon \u2022 Topside Material"
+    },
+    {
+      "name": "Voltage Converter",
+      "normalized_name": "voltage converter",
+      "src": "https://arcraidershub.com/images/items/voltage-converter.webp",
+      "page_section": null,
+      "text": "Voltage Converter\nRare \u2022 Topside Material"
+    },
+    {
+      "name": "Mod Components",
+      "normalized_name": "mod components",
+      "src": "https://arcraidershub.com/images/items/mod-components.webp",
+      "page_section": null,
+      "text": "Mod Components\nRare \u2022 Refined Material"
+    },
+    {
+      "name": "Medium Gun Parts",
+      "normalized_name": "medium gun parts",
+      "src": "https://arcraidershub.com/images/items/medium-gun-parts.webp",
+      "page_section": null,
+      "text": "Medium Gun Parts\nRare \u2022 Topside Material"
+    },
+    {
+      "name": "Magnet",
+      "normalized_name": "magnet",
+      "src": "https://arcraidershub.com/images/items/magnet.webp",
+      "page_section": null,
+      "text": "Magnet\nUncommon \u2022 Topside Material"
+    },
+    {
+      "name": "Light Gun Parts",
+      "normalized_name": "light gun parts",
+      "src": "https://arcraidershub.com/images/items/light-gun-parts.webp",
+      "page_section": null,
+      "text": "Light Gun Parts\nRare \u2022 Topside Material"
+    },
+    {
+      "name": "Heavy Gun Parts",
+      "normalized_name": "heavy gun parts",
+      "src": "https://arcraidershub.com/images/items/heavy-gun-parts.webp",
+      "page_section": null,
+      "text": "Heavy Gun Parts\nRare \u2022 Topside Material"
+    },
+    {
+      "name": "Matriarch Reactor",
+      "normalized_name": "matriarch reactor",
+      "src": "https://arcraidershub.com/images/items/matriarch-reactor.webp",
+      "page_section": null,
+      "text": "Matriarch Reactor\nLegendary \u2022 Recyclable"
+    },
+    {
+      "name": "Queen Reactor",
+      "normalized_name": "queen reactor",
+      "src": "https://arcraidershub.com/images/items/queen-reactor.webp",
+      "page_section": null,
+      "text": "Queen Reactor\nLegendary \u2022 Recyclable"
+    },
+    {
+      "name": "Duct Tape",
+      "normalized_name": "duct tape",
+      "src": "https://arcraidershub.com/images/items/duct-tape.webp",
+      "page_section": null,
+      "text": "Duct Tape\nUncommon \u2022 Topside Material"
+    },
+    {
+      "name": "Language Picker",
+      "normalized_name": "language picker",
+      "src": "https://s.nitropay.com/cmp/lang.png",
+      "page_section": null,
+      "text": " English\nDeutsch\nEnglish\nEspa\u00f1ol\nFran\u00e7ais\nItaliano\nNederlands\nPolski\nPortugu\u00eas\nLimba rom\u00e2n\u0103"
+    },
+    {
+      "name": "Close Language Picker",
+      "normalized_name": "close language picker",
+      "src": "https://s.nitropay.com/cmp/cancel.png",
+      "page_section": null,
+      "text": "Deutsch\nEnglish\nEspa\u00f1ol\nFran\u00e7ais\nItaliano\nNederlands\nPolski\nPortugu\u00eas\nLimba rom\u00e2n\u0103"
+    },
+    {
+      "name": "Arc Raiders Hub",
+      "normalized_name": "arc raiders hub",
+      "src": "https://www.facebook.com/tr?id=1444191539742058&ev=PageView&noscript=1",
+      "page_section": null,
+      "text": "Arc Raiders Hub\nGuides\nMaps NEW\nEvents NEW\nSkill tree\nLoadouts\nWeapons\nItems/recycling NEW\nWeekly Trials NEW\nEnglish\n\ud55c\uad6d\uc5b4\nSupport\nHelp this solo raider cover server & dev costs \u2764\ufe0f\nSign in\n\u267b\ufe0f Arc Raiders Recycling & Needed Items Guide\n\nMaster Arc Raiders inventory management: discover which items to recycle safely, needed items for quests, station upgrades, expeditions, and crafting recipes\n\n59\nSAFE"
+    }
+  ],
+  "unused_existing": []
+}

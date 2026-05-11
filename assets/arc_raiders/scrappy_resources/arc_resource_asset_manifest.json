@@ -1,0 +1,434 @@
+[
+  {
+    "name": "Dog Collar",
+    "filename": "dog_collar.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/dog_collar.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/dog_collar.webp"
+  },
+  {
+    "name": "Lemons",
+    "filename": "lemons.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/lemons.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/lemons.webp"
+  },
+  {
+    "name": "Apricots",
+    "filename": "apricots.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/apricots.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/apricots.webp"
+  },
+  {
+    "name": "Prickly Pears",
+    "filename": "prickly_pears.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/prickly_pears.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/prickly_pears.webp"
+  },
+  {
+    "name": "Olives",
+    "filename": "olives.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/olives.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/olives.webp"
+  },
+  {
+    "name": "Cat Bed",
+    "filename": "cat_bed.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/cat_bed.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/cat_bed.webp"
+  },
+  {
+    "name": "Mushrooms",
+    "filename": "mushrooms.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/mushrooms.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/mushrooms.webp"
+  },
+  {
+    "name": "Very Comfortable Pillows",
+    "filename": "very_comfortable_pillows.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/very_comfortable_pillows.webp"
+  },
+  {
+    "name": "Metal Parts",
+    "filename": "metal_parts.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/metal_parts.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/metal_parts.webp"
+  },
+  {
+    "name": "Rubber Parts",
+    "filename": "rubber_parts.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/rubber_parts.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/rubber_parts.webp"
+  },
+  {
+    "name": "Rusted Tools",
+    "filename": "rusted_tools.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/rusted_tools.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/rusted_tools.webp"
+  },
+  {
+    "name": "Mechanical Components",
+    "filename": "mechanical_components.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/mechanical_components.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/mechanical_components.webp"
+  },
+  {
+    "name": "Wasp Drivers",
+    "filename": "wasp_drivers.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/wasp_drivers.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/wasp_drivers.webp"
+  },
+  {
+    "name": "Rusted Gears",
+    "filename": "rusted_gears.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/rusted_gears.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/rusted_gears.webp"
+  },
+  {
+    "name": "Advanced Mechanical Components",
+    "filename": "advanced_mechanical_components.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/advanced_mechanical_components.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/advanced_mechanical_components.webp"
+  },
+  {
+    "name": "Sentinel Firing Cores",
+    "filename": "sentinel_firing_cores.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/sentinel_firing_cores.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/sentinel_firing_cores.webp"
+  },
+  {
+    "name": "Chemicals",
+    "filename": "chemicals.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/chemicals.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/chemicals.webp"
+  },
+  {
+    "name": "ARC Alloy",
+    "filename": "arc_alloy.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/arc_alloy.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/arc_alloy.webp"
+  },
+  {
+    "name": "Synthesized Fuel",
+    "filename": "synthesized_fuel.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/synthesized_fuel.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/synthesized_fuel.webp"
+  },
+  {
+    "name": "Crude Explosives",
+    "filename": "crude_explosives.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/crude_explosives.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/crude_explosives.webp"
+  },
+  {
+    "name": "Pop Triggers",
+    "filename": "pop_triggers.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/pop_triggers.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/pop_triggers.webp"
+  },
+  {
+    "name": "Laboratory Reagents",
+    "filename": "laboratory_reagents.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/laboratory_reagents.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/laboratory_reagents.webp"
+  },
+  {
+    "name": "Explosive Compounds",
+    "filename": "explosive_compounds.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/explosive_compounds.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/explosive_compounds.webp"
+  },
+  {
+    "name": "Rocketeer Drivers",
+    "filename": "rocketeer_drivers.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/rocketeer_drivers.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/rocketeer_drivers.webp"
+  },
+  {
+    "name": "Plastic Parts",
+    "filename": "plastic_parts.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/plastic_parts.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/plastic_parts.webp"
+  },
+  {
+    "name": "Fabric",
+    "filename": "fabric.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/fabric.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/fabric.webp"
+  },
+  {
+    "name": "Power Cables",
+    "filename": "power_cables.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/power_cables.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/power_cables.webp"
+  },
+  {
+    "name": "Electrical Components",
+    "filename": "electrical_components.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/electrical_components.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/electrical_components.webp"
+  },
+  {
+    "name": "Hornet Drivers",
+    "filename": "hornet_drivers.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/hornet_drivers.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/hornet_drivers.webp"
+  },
+  {
+    "name": "Industrial Batteries",
+    "filename": "industrial_batteries.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/industrial_batteries.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/industrial_batteries.webp"
+  },
+  {
+    "name": "Advanced Electrical Components",
+    "filename": "advanced_electrical_components.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/advanced_electrical_components.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/advanced_electrical_components.webp"
+  },
+  {
+    "name": "Bastion Cells",
+    "filename": "bastion_cells.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/bastion_cells.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/bastion_cells.webp"
+  },
+  {
+    "name": "Cracked Bioscanners",
+    "filename": "cracked_bioscanners.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/cracked_bioscanners.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/cracked_bioscanners.webp"
+  },
+  {
+    "name": "Durable Cloth",
+    "filename": "durable_cloth.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/durable_cloth.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/durable_cloth.webp"
+  },
+  {
+    "name": "Tick Pods",
+    "filename": "tick_pods.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/tick_pods.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/tick_pods.webp"
+  },
+  {
+    "name": "Rusted Shut Medical Kits",
+    "filename": "rusted_shut_medical_kits.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/rusted_shut_medical_kits.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/rusted_shut_medical_kits.webp"
+  },
+  {
+    "name": "Antiseptic",
+    "filename": "antiseptic.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/antiseptic.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/antiseptic.webp"
+  },
+  {
+    "name": "Surveyor Vaults",
+    "filename": "surveyor_vaults.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/surveyor_vaults.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/surveyor_vaults.webp"
+  },
+  {
+    "name": "Damaged Heat Sinks",
+    "filename": "damaged_heat_sinks.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/damaged_heat_sinks.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/damaged_heat_sinks.webp"
+  },
+  {
+    "name": "Snitch Scanners",
+    "filename": "snitch_scanners.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/snitch_scanners.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/snitch_scanners.webp"
+  },
+  {
+    "name": "Fried Motherboards",
+    "filename": "fried_motherboards.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/fried_motherboards.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/fried_motherboards.webp"
+  },
+  {
+    "name": "Leaper Pulse Units",
+    "filename": "leaper_pulse_units.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/leaper_pulse_units.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/leaper_pulse_units.webp"
+  },
+  {
+    "name": "ARC Powercells",
+    "filename": "arc_powercells.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/arc_powercells.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/arc_powercells.webp"
+  },
+  {
+    "name": "Toasters",
+    "filename": "toasters.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/toasters.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/toasters.webp"
+  },
+  {
+    "name": "ARC Motion Cores",
+    "filename": "arc_motion_cores.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/arc_motion_cores.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/arc_motion_cores.webp"
+  },
+  {
+    "name": "Fireball Burners",
+    "filename": "fireball_burners.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/fireball_burners.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/fireball_burners.webp"
+  },
+  {
+    "name": "Motors",
+    "filename": "motors.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/motors.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/motors.webp"
+  },
+  {
+    "name": "ARC Circuitry",
+    "filename": "arc_circuitry.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/arc_circuitry.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/arc_circuitry.webp"
+  },
+  {
+    "name": "Bombardier Cells",
+    "filename": "bombardier_cells.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/bombardier_cells.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/bombardier_cells.webp"
+  },
+  {
+    "name": "Syringe",
+    "filename": "syringe.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/syringe.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/syringe.webp"
+  },
+  {
+    "name": "Great Mullein",
+    "filename": "great_mullein.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/great_mullein.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/great_mullein.webp"
+  },
+  {
+    "name": "Wires",
+    "filename": "wires.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/wires.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/wires.webp"
+  },
+  {
+    "name": "Rubber Duck",
+    "filename": "rubber_duck.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/rubber_duck.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/rubber_duck.webp"
+  },
+  {
+    "name": "Faded Photograph",
+    "filename": "faded_photograph.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/faded_photograph.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/faded_photograph.webp"
+  },
+  {
+    "name": "Camera Lens",
+    "filename": "camera_lens.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/camera_lens.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/camera_lens.webp"
+  },
+  {
+    "name": "Film Reel",
+    "filename": "film_reel.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/film_reel.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/film_reel.webp"
+  },
+  {
+    "name": "Recorder",
+    "filename": "recorder.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/recorder.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/recorder.webp"
+  },
+  {
+    "name": "Empty Wine Bottle",
+    "filename": "empty_wine_bottle.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/empty_wine_bottle.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/empty_wine_bottle.webp"
+  },
+  {
+    "name": "Light Impact Grenade",
+    "filename": "light_impact_grenade.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/light_impact_grenade.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/light_impact_grenade.webp"
+  },
+  {
+    "name": "Oil",
+    "filename": "oil.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/oil.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/oil.webp"
+  },
+  {
+    "name": "Sensors",
+    "filename": "sensors.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/sensors.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/sensors.webp"
+  },
+  {
+    "name": "Battery",
+    "filename": "battery.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/battery.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/battery.webp"
+  },
+  {
+    "name": "Power Rod",
+    "filename": "power_rod.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/power_rod.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/power_rod.webp"
+  },
+  {
+    "name": "Bicycle Pump",
+    "filename": "bicycle_pump.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/bicycle_pump.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/bicycle_pump.webp"
+  },
+  {
+    "name": "Deflated Football",
+    "filename": "deflated_football.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/deflated_football.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/deflated_football.webp"
+  },
+  {
+    "name": "Portable TV",
+    "filename": "portable_tv.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/portable_tv.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/portable_tv.webp"
+  },
+  {
+    "name": "Stack Of Movie Tapes",
+    "filename": "stack_of_movie_tapes.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/stack_of_movie_tapes.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/stack_of_movie_tapes.webp"
+  },
+  {
+    "name": "Fireworks Box",
+    "filename": "fireworks_box.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/fireworks_box.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/fireworks_box.webp"
+  },
+  {
+    "name": "Espresso Machine Parts",
+    "filename": "espresso_machine_parts.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/espresso_machine_parts.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/espresso_machine_parts.webp"
+  },
+  {
+    "name": "Coffee Pot",
+    "filename": "coffee_pot.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/coffee_pot.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/coffee_pot.webp"
+  },
+  {
+    "name": "Vita Shot",
+    "filename": "vita_shot.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/vita_shot.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/vita_shot.webp"
+  },
+  {
+    "name": "Firefly Burner",
+    "filename": "firefly_burner.webp",
+    "assetPath": "assets/arc_raiders/scrappy_resources/firefly_burner.webp",
+    "sourceUrl": "https://ardb.app/static/items/icons/firefly_burner.webp"
+  }
+]

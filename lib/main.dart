@@ -36,6 +36,7 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   if (!kIsWeb) {
     try {
       await TradingPushService.instance.initialize();
@@ -44,6 +45,7 @@ Future<void> main() async {
       debugPrintStack(stackTrace: st);
     }
   }
+
   runApp(const UAGTradersHubApp());
 }
 
@@ -57,47 +59,56 @@ class UAGTradersHubApp extends StatelessWidget {
           builder: (_) => const AuthLandingScreen(),
           settings: settings,
         );
+
       case AuthScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const AuthScreen(),
           settings: settings,
         );
+
       case AppEntryGate.routeName:
       case HomeScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const AppEntryGate(),
           settings: settings,
         );
+
       case MonetisationScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const MonetisationScreen(),
           settings: settings,
         );
+
       case TradingHubScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const TradingHubScreen(),
           settings: settings,
         );
+
       case ArcRaidersHubScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcRaidersHubScreen(),
           settings: settings,
         );
+
       case BlueprintGridScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const BlueprintGridScreen(),
           settings: settings,
         );
+
       case ArcMarketIntelligenceScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcMarketIntelligenceScreen(),
           settings: settings,
         );
+
       case ArcIntelExplorerScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcIntelExplorerScreen(),
           settings: settings,
         );
+
       case ArcMatchRiderScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -107,6 +118,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case ScrappyGridScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -116,6 +128,27 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
+      case ScrappyGridScreen.benchRouteName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.scrappyTracker,
+            title: 'Bench Tracker',
+            child: ScrappyGridScreen.bench(),
+          ),
+          settings: settings,
+        );
+
+      case ScrappyGridScreen.questRouteName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.scrappyTracker,
+            title: 'Quest Tracker',
+            child: ScrappyGridScreen.quest(),
+          ),
+          settings: settings,
+        );
+
       case PlayLikeAProScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -125,11 +158,13 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case RaidPlannerScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const RaidPlannerScreen(),
           settings: settings,
         );
+
       case TraderHubScreen.routeName:
       case TradingListingsScreen.routeName:
         return MaterialPageRoute(
@@ -140,6 +175,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case TradingCreateListingScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -149,6 +185,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case TradingActivityScreen.routeName:
       case TradingMyListingsScreen.routeName:
         return MaterialPageRoute(
@@ -159,6 +196,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case TradingMyOffersScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -168,6 +206,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case TradingTradeSessionsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -177,6 +216,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case TradingNotificationsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -186,6 +226,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case TradingProfileScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -195,6 +236,7 @@ class UAGTradersHubApp extends StatelessWidget {
           ),
           settings: settings,
         );
+
       case FeedbackScreen.routeName:
         final args = settings.arguments is FeedbackScreenArgs
             ? settings.arguments! as FeedbackScreenArgs
@@ -203,11 +245,13 @@ class UAGTradersHubApp extends StatelessWidget {
           builder: (_) => FeedbackScreen(initialTabIndex: args.initialTabIndex),
           settings: settings,
         );
+
       case AdminConsoleScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const AdminConsoleScreen(),
           settings: settings,
         );
+
       default:
         return MaterialPageRoute(
           builder: (_) => const AuthLandingScreen(),
@@ -232,7 +276,9 @@ class UAGTradersHubApp extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           }
+
           if (snapshot.hasData) return const AppEntryGate();
+
           return const AuthLandingScreen();
         },
       ),

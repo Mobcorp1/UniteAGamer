@@ -1,0 +1,578 @@
+[
+  {
+    "display_name": "Dog Collar",
+    "normalized_name": "dog collar",
+    "file_name": "dog_collar.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/dog_collar.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Lemons",
+    "normalized_name": "lemons",
+    "file_name": "lemons.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/lemons.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Apricots",
+    "normalized_name": "apricots",
+    "file_name": "apricots.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/apricots.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Prickly Pears",
+    "normalized_name": "prickly pears",
+    "file_name": "prickly_pears.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/prickly_pears.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Olives",
+    "normalized_name": "olives",
+    "file_name": "olives.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/olives.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Cat Bed",
+    "normalized_name": "cat bed",
+    "file_name": "cat_bed.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/cat_bed.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Mushrooms",
+    "normalized_name": "mushrooms",
+    "file_name": "mushrooms.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/mushrooms.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Very Comfortable Pillows",
+    "normalized_name": "very comfortable pillows",
+    "file_name": "very_comfortable_pillows.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_scrappy_seed_data.dart",
+    "usage": "arc_scrappy_seed_data"
+  },
+  {
+    "display_name": "Metal Parts",
+    "normalized_name": "metal parts",
+    "file_name": "metal_parts.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/metal_parts.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Rubber Parts",
+    "normalized_name": "rubber parts",
+    "file_name": "rubber_parts.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/rubber_parts.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Rusted Tools",
+    "normalized_name": "rusted tools",
+    "file_name": "rusted_tools.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/rusted_tools.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Mechanical Components",
+    "normalized_name": "mechanical components",
+    "file_name": "mechanical_components.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/mechanical_components.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Wasp Drivers",
+    "normalized_name": "wasp drivers",
+    "file_name": "wasp_drivers.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/wasp_drivers.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Rusted Gears",
+    "normalized_name": "rusted gears",
+    "file_name": "rusted_gears.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/rusted_gears.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Advanced Mechanical Components",
+    "normalized_name": "advanced mechanical components",
+    "file_name": "advanced_mechanical_components.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/advanced_mechanical_components.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Sentinel Firing Cores",
+    "normalized_name": "sentinel firing cores",
+    "file_name": "sentinel_firing_cores.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/sentinel_firing_cores.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Chemicals",
+    "normalized_name": "chemicals",
+    "file_name": "chemicals.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/chemicals.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "ARC Alloy",
+    "normalized_name": "arc alloy",
+    "file_name": "arc_alloy.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/arc_alloy.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Synthesized Fuel",
+    "normalized_name": "synthesized fuel",
+    "file_name": "synthesized_fuel.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/synthesized_fuel.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Crude Explosives",
+    "normalized_name": "crude explosives",
+    "file_name": "crude_explosives.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/crude_explosives.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Pop Triggers",
+    "normalized_name": "pop triggers",
+    "file_name": "pop_triggers.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/pop_triggers.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Laboratory Reagents",
+    "normalized_name": "laboratory reagents",
+    "file_name": "laboratory_reagents.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/laboratory_reagents.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Explosive Compounds",
+    "normalized_name": "explosive compounds",
+    "file_name": "explosive_compounds.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/explosive_compounds.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Rocketeer Drivers",
+    "normalized_name": "rocketeer drivers",
+    "file_name": "rocketeer_drivers.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/rocketeer_drivers.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Plastic Parts",
+    "normalized_name": "plastic parts",
+    "file_name": "plastic_parts.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/plastic_parts.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Fabric",
+    "normalized_name": "fabric",
+    "file_name": "fabric.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/fabric.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Power Cables",
+    "normalized_name": "power cables",
+    "file_name": "power_cables.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/power_cables.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Electrical Components",
+    "normalized_name": "electrical components",
+    "file_name": "electrical_components.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/electrical_components.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Hornet Drivers",
+    "normalized_name": "hornet drivers",
+    "file_name": "hornet_drivers.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/hornet_drivers.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Industrial Batteries",
+    "normalized_name": "industrial batteries",
+    "file_name": "industrial_batteries.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/industrial_batteries.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Advanced Electrical Components",
+    "normalized_name": "advanced electrical components",
+    "file_name": "advanced_electrical_components.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/advanced_electrical_components.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Bastion Cells",
+    "normalized_name": "bastion cells",
+    "file_name": "bastion_cells.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/bastion_cells.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Cracked Bioscanners",
+    "normalized_name": "cracked bioscanners",
+    "file_name": "cracked_bioscanners.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/cracked_bioscanners.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Durable Cloth",
+    "normalized_name": "durable cloth",
+    "file_name": "durable_cloth.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/durable_cloth.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Tick Pods",
+    "normalized_name": "tick pods",
+    "file_name": "tick_pods.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/tick_pods.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Rusted Shut Medical Kits",
+    "normalized_name": "rusted shut medical kits",
+    "file_name": "rusted_shut_medical_kits.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/rusted_shut_medical_kits.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Antiseptic",
+    "normalized_name": "antiseptic",
+    "file_name": "antiseptic.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/antiseptic.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Surveyor Vaults",
+    "normalized_name": "surveyor vaults",
+    "file_name": "surveyor_vaults.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/surveyor_vaults.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Damaged Heat Sinks",
+    "normalized_name": "damaged heat sinks",
+    "file_name": "damaged_heat_sinks.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/damaged_heat_sinks.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Snitch Scanners",
+    "normalized_name": "snitch scanners",
+    "file_name": "snitch_scanners.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/snitch_scanners.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Fried Motherboards",
+    "normalized_name": "fried motherboards",
+    "file_name": "fried_motherboards.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/fried_motherboards.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Leaper Pulse Units",
+    "normalized_name": "leaper pulse units",
+    "file_name": "leaper_pulse_units.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/leaper_pulse_units.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "ARC Powercells",
+    "normalized_name": "arc powercells",
+    "file_name": "arc_powercells.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/arc_powercells.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Toasters",
+    "normalized_name": "toasters",
+    "file_name": "toasters.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/toasters.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "ARC Motion Cores",
+    "normalized_name": "arc motion cores",
+    "file_name": "arc_motion_cores.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/arc_motion_cores.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Fireball Burners",
+    "normalized_name": "fireball burners",
+    "file_name": "fireball_burners.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/fireball_burners.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Motors",
+    "normalized_name": "motors",
+    "file_name": "motors.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/motors.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "ARC Circuitry",
+    "normalized_name": "arc circuitry",
+    "file_name": "arc_circuitry.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/arc_circuitry.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Bombardier Cells",
+    "normalized_name": "bombardier cells",
+    "file_name": "bombardier_cells.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/bombardier_cells.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_bench_upgrade_seed_data.dart",
+    "usage": "arc_bench_upgrade_seed_data"
+  },
+  {
+    "display_name": "Syringe",
+    "normalized_name": "syringe",
+    "file_name": "syringe.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/syringe.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Great Mullein",
+    "normalized_name": "great mullein",
+    "file_name": "great_mullein.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/great_mullein.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Wires",
+    "normalized_name": "wires",
+    "file_name": "wires.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/wires.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Rubber Duck",
+    "normalized_name": "rubber duck",
+    "file_name": "rubber_duck.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/rubber_duck.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Faded Photograph",
+    "normalized_name": "faded photograph",
+    "file_name": "faded_photograph.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/faded_photograph.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Camera Lens",
+    "normalized_name": "camera lens",
+    "file_name": "camera_lens.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/camera_lens.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Film Reel",
+    "normalized_name": "film reel",
+    "file_name": "film_reel.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/film_reel.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Recorder",
+    "normalized_name": "recorder",
+    "file_name": "recorder.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/recorder.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Empty Wine Bottle",
+    "normalized_name": "empty wine bottle",
+    "file_name": "empty_wine_bottle.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/empty_wine_bottle.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Light Impact Grenade",
+    "normalized_name": "light impact grenade",
+    "file_name": "light_impact_grenade.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/light_impact_grenade.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Oil",
+    "normalized_name": "oil",
+    "file_name": "oil.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/oil.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Sensors",
+    "normalized_name": "sensors",
+    "file_name": "sensors.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/sensors.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Battery",
+    "normalized_name": "battery",
+    "file_name": "battery.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/battery.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Power Rod",
+    "normalized_name": "power rod",
+    "file_name": "power_rod.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/power_rod.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Bicycle Pump",
+    "normalized_name": "bicycle pump",
+    "file_name": "bicycle_pump.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/bicycle_pump.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Deflated Football",
+    "normalized_name": "deflated football",
+    "file_name": "deflated_football.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/deflated_football.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Portable TV",
+    "normalized_name": "portable tv",
+    "file_name": "portable_tv.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/portable_tv.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Stack Of Movie Tapes",
+    "normalized_name": "stack of movie tapes",
+    "file_name": "stack_of_movie_tapes.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/stack_of_movie_tapes.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Fireworks Box",
+    "normalized_name": "fireworks box",
+    "file_name": "fireworks_box.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/fireworks_box.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Espresso Machine Parts",
+    "normalized_name": "espresso machine parts",
+    "file_name": "espresso_machine_parts.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/espresso_machine_parts.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Coffee Pot",
+    "normalized_name": "coffee pot",
+    "file_name": "coffee_pot.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/coffee_pot.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Vita Shot",
+    "normalized_name": "vita shot",
+    "file_name": "vita_shot.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/vita_shot.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  },
+  {
+    "display_name": "Firefly Burner",
+    "normalized_name": "firefly burner",
+    "file_name": "firefly_burner.webp",
+    "asset_path": "assets/arc_raiders/scrappy_resources/firefly_burner.webp",
+    "source_file": "lib\\features\\trading_hub\\arc_raiders\\data\\arc_quest_requirement_seed_data.dart",
+    "usage": "arc_quest_requirement_seed_data"
+  }
+]
