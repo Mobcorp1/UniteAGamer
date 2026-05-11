@@ -55,6 +55,7 @@ flutter:
     - assets/arc_raiders/banners/
     - assets/arc_raiders/blueprints/
     - assets/arc_raiders/scrappy_resources/
+    - assets/arc_raiders/items/
 
   fonts:
     - family: VT323
