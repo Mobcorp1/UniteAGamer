@@ -1,15 +1,15 @@
 [
   {
-    "name": "ARCTracker ACTIVE EVENTS Lush Blooms Lush",
-    "key": "arctracker active events lush blooms lush",
+    "name": "ARCTracker ACTIVE EVENTS Lush Blooms Night Raid",
+    "key": "arctracker active events lush blooms night raid",
     "src": "https://arctracker.io/cdn-cgi/image/width=256/images/logos/logo_full.png",
     "raw": {
       "src": "https://arctracker.io/cdn-cgi/image/width=256/images/logos/logo_full.png",
       "alt": "",
       "aria": "",
-      "text": "ARCTracker\n\nACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
+      "text": "ARCTracker\n\nACTIVE EVENTS\n\nLush Blooms\n\nNight Raid",
       "nameCandidates": [
-        "ARCTracker ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
+        "ARCTracker ACTIVE EVENTS Lush Blooms Night Raid"
       ]
     }
   },
@@ -21,55 +21,25 @@
       "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/lush_blooms.png",
       "alt": "Lush Blooms",
       "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
+      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nNight Raid",
       "nameCandidates": [
         "Lush Blooms",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
+        "ACTIVE EVENTS Lush Blooms Night Raid"
       ]
     }
   },
   {
-    "name": "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid",
-    "key": "active events lush blooms lush blooms night raid night raid",
+    "name": "ACTIVE EVENTS Lush Blooms Night Raid",
+    "key": "active events lush blooms night raid",
     "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/lush_blooms.png",
     "raw": {
       "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/lush_blooms.png",
       "alt": "Lush Blooms",
       "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
+      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nNight Raid",
       "nameCandidates": [
         "Lush Blooms",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
-      ]
-    }
-  },
-  {
-    "name": "Lush Blooms",
-    "key": "lush blooms",
-    "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/lush_blooms.png",
-    "raw": {
-      "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/lush_blooms.png",
-      "alt": "Lush Blooms",
-      "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
-      "nameCandidates": [
-        "Lush Blooms",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
-      ]
-    }
-  },
-  {
-    "name": "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid",
-    "key": "active events lush blooms lush blooms night raid night raid",
-    "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/lush_blooms.png",
-    "raw": {
-      "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/lush_blooms.png",
-      "alt": "Lush Blooms",
-      "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
-      "nameCandidates": [
-        "Lush Blooms",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
+        "ACTIVE EVENTS Lush Blooms Night Raid"
       ]
     }
   },
@@ -81,55 +51,25 @@
       "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/night_raid.png",
       "alt": "Night Raid",
       "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
+      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nNight Raid",
       "nameCandidates": [
         "Night Raid",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
+        "ACTIVE EVENTS Lush Blooms Night Raid"
       ]
     }
   },
   {
-    "name": "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid",
-    "key": "active events lush blooms lush blooms night raid night raid",
+    "name": "ACTIVE EVENTS Lush Blooms Night Raid",
+    "key": "active events lush blooms night raid",
     "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/night_raid.png",
     "raw": {
       "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/night_raid.png",
       "alt": "Night Raid",
       "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
+      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nNight Raid",
       "nameCandidates": [
         "Night Raid",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
-      ]
-    }
-  },
-  {
-    "name": "Night Raid",
-    "key": "night raid",
-    "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/night_raid.png",
-    "raw": {
-      "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/night_raid.png",
-      "alt": "Night Raid",
-      "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
-      "nameCandidates": [
-        "Night Raid",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
-      ]
-    }
-  },
-  {
-    "name": "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid",
-    "key": "active events lush blooms lush blooms night raid night raid",
-    "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/night_raid.png",
-    "raw": {
-      "src": "https://arctracker.io/cdn-cgi/image/width=16/https://cdn.arctracker.io/map-events/night_raid.png",
-      "alt": "Night Raid",
-      "aria": "",
-      "text": "ACTIVE EVENTS\n\nLush Blooms\n\nLush Blooms\n\nNight Raid\n\nNight Raid",
-      "nameCandidates": [
-        "Night Raid",
-        "ACTIVE EVENTS Lush Blooms Lush Blooms Night Raid Night Raid"
+        "ACTIVE EVENTS Lush Blooms Night Raid"
       ]
     }
   },

@@ -1,0 +1,48 @@
+{
+  "repo_raw_base": "https://raw.githubusercontent.com/Mobcorp1/UniteAGamer/main",
+  "source_items_url": "https://arctracker.io/items",
+  "project_data_files": [
+    "lib/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart",
+    "lib/features/trading_hub/arc_raiders/data/trade_items_data.dart"
+  ],
+  "output_main_folder": "assets/arc_raiders/items",
+  "backup_folder": "assets/arc_raiders/_legacy_item_assets",
+  "final_canvas_size": 512,
+  "webp_quality": 92,
+  "keep_background": true,
+  "border_crop_percent": 0.045,
+  "object_fill_ratio": 0.88,
+  "mirror_to_existing_asset_paths": true,
+  "exclude_asset_paths_containing": [
+    "/blueprints/",
+    "blueprint"
+  ],
+  "manual_name_overrides": {
+    "mushrooms": ["Mushroom", "Mushrooms"],
+    "very-comfortable-pillows": ["Very Comfortable Pillow", "Very Comfortable Pillows"],
+    "lemons": ["Lemon", "Lemons"],
+    "apricots": ["Apricot", "Apricots"],
+    "prickly-pears": ["Prickly Pear", "Prickly Pears"],
+    "olives": ["Olive", "Olives"],
+    "cat-bed": ["Cat Bed"],
+    "metal-parts": ["Metal Parts"],
+    "rubber-parts": ["Rubber Parts"],
+    "plastic-parts": ["Plastic Parts"],
+    "power-cables": ["Power Cable", "Power Cables"],
+    "industrial-batteries": ["Industrial Battery", "Industrial Batteries"],
+    "fabric": ["Fabric"],
+    "rusted-gears": ["Rusted Gear", "Rusted Gears"],
+    "sentinel-firing-cores": ["Sentinel Firing Core", "Sentinel Firing Cores"],
+    "chemicals": ["Chemical", "Chemicals"],
+    "pop-triggers": ["Pop Trigger", "Pop Triggers"],
+    "explosive-compounds": ["Explosive Compound", "Explosive Compounds"]
+  },
+  "skip_item_ids": [
+    "l4-weapon",
+    "high-durability-weapon",
+    "modded-weapon"
+  ]
+}
