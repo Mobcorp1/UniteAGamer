@@ -1,0 +1,41 @@
+{
+  "repo_raw_base": "https://raw.githubusercontent.com/Mobcorp1/UniteAGamer/main",
+  "source_items_url": "https://arctracker.io/items",
+  "project_data_files": [
+    "lib/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart",
+    "lib/features/trading_hub/arc_raiders/data/trade_items_data.dart"
+  ],
+  "output_main_folder": "assets/arc_raiders/items",
+  "backup_folder": "assets/arc_raiders/_legacy_item_assets",
+  "border_crop_percent": 0.08,
+  "final_canvas_size": 512,
+  "webp_quality": 92,
+  "mirror_to_existing_asset_paths": true,
+  "exclude_asset_paths_containing": [
+    "/blueprints/",
+    "blueprint"
+  ],
+  "level_4_weapon_terms": [
+    "mk4",
+    "mk 4",
+    "level 4",
+    "tier 4",
+    "iv"
+  ],
+  "fallback_background_rgba": [
+    9,
+    18,
+    35,
+    255
+  ],
+  "fallback_grid_boost_rgb": [
+    8,
+    18,
+    30,
+    0
+  ],
+  "asset_background_mode": "keep_source_background_or_bake_dark_arc_panel"
+}

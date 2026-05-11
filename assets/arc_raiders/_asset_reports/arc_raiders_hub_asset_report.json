@@ -1,7 +1,7 @@
 {
   "source_url": "https://arcraidershub.com/needed-items-recycling-guide",
-  "downloaded_count": 180,
-  "failure_count": 2,
+  "downloaded_count": 181,
+  "failure_count": 1,
   "missing_required_count": 38,
   "scraped_count": 148,
   "required_count": 72,
@@ -872,6 +872,11 @@
       "source": "https://arcraidershub.com/images/items/rusted-tools.webp"
     },
     {
+      "name": "Sensors",
+      "file": "assets\\arc_raiders\\scrappy_resources\\sensors.webp",
+      "source": "https://arcraidershub.com/images/items/sensors-recipe.webp"
+    },
+    {
       "name": "Snitch Scanner",
       "file": "assets\\arc_raiders\\scrappy_resources\\snitch_scanners.webp",
       "source": "https://arcraidershub.com/images/items/snitch-scanner.webp"
@@ -912,13 +917,7 @@
       "name": "Arc Raiders Hub",
       "file": "arc_raiders_hub.webp",
       "source": "https://www.facebook.com/tr?id=1444191539742058&ev=PageView&noscript=1",
-      "error": "cannot identify image file <_io.BytesIO object at 0x0000013D1D5ABC40>"
-    },
-    {
-      "name": "Sensors",
-      "file": "sensors.webp",
-      "source": "https://arcraidershub.com/images/items/sensors-recipe.webp",
-      "error": "APIRequestContext.get: getaddrinfo ENOTFOUND arcraidershub.com\nCall log:\n  - \u2192 GET https://arcraidershub.com/images/items/sensors-recipe.webp\n    - user-agent: Mozilla/5.0\n    - accept: */*\n    - accept-encoding: gzip,deflate,br\n"
+      "error": "cannot identify image file <_io.BytesIO object at 0x000001F49F99CFE0>"
     }
   ],
   "missing_required": [
