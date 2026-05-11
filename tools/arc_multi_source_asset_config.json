@@ -1,0 +1,96 @@
+{
+  "repo_raw_base": "https://raw.githubusercontent.com/Mobcorp1/UniteAGamer/main",
+  "project_data_files": [
+    "lib/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart",
+    "lib/features/trading_hub/arc_raiders/data/trade_items_data.dart"
+  ],
+  "sources": [
+    {
+      "id": "manual_overrides",
+      "type": "local_folder",
+      "folder": "assets/arc_raiders/manual_overrides"
+    },
+    {
+      "id": "arctracker",
+      "type": "playwright_catalogue",
+      "url": "https://arctracker.io/items",
+      "priority": 10
+    },
+    {
+      "id": "fandom_items",
+      "type": "static_catalogue",
+      "url": "https://arc-raiders.fandom.com/wiki/Items",
+      "priority": 20
+    },
+    {
+      "id": "thearcraiders_wiki_items",
+      "type": "static_catalogue",
+      "url": "https://thearcraiders.wiki/items",
+      "priority": 30
+    },
+    {
+      "id": "arcraidershub_recycling",
+      "type": "static_catalogue",
+      "url": "https://arcraidershub.com/needed-items-recycling-guide",
+      "priority": 40
+    }
+  ],
+  "output_main_folder": "assets/arc_raiders/items",
+  "reports_folder": "assets/arc_raiders/items/_reports",
+  "backup_folder": "assets/arc_raiders/_legacy_item_assets",
+  "manual_overrides_folder": "assets/arc_raiders/manual_overrides",
+  "final_canvas_size": 512,
+  "webp_quality": 92,
+  "keep_background": true,
+  "background_crop_percent": 0.04,
+  "transparent_item_fill_ratio": 0.86,
+  "min_match_score": 0.84,
+  "mirror_to_existing_asset_paths": true,
+  "exclude_asset_paths_containing": [
+    "/blueprints/",
+    "blueprint"
+  ],
+  "name_overrides": {
+    "mushrooms": ["Mushroom", "Mushrooms"],
+    "mushroom": ["Mushroom", "Mushrooms"],
+    "very-comfortable-pillows": ["Very Comfortable Pillow", "Very Comfortable Pillows"],
+    "very-comfortable-pillow": ["Very Comfortable Pillow", "Very Comfortable Pillows"],
+    "prickly-pears": ["Prickly Pear", "Prickly Pears"],
+    "industrial-batteries": ["Industrial Battery", "Industrial Batteries"],
+    "power-cables": ["Power Cable", "Power Cables"],
+    "pop-triggers": ["Pop Trigger", "Pop Triggers"],
+    "explosive-compounds": ["Explosive Compound", "Explosive Compounds"],
+    "arc-powercells": ["ARC Powercell", "ARC Powercells", "Arc Powercell", "Arc Powercells"],
+    "arc-motion-cores": ["ARC Motion Core", "ARC Motion Cores", "Arc Motion Core", "Arc Motion Cores"],
+    "sentinel-firing-cores": ["Sentinel Firing Core", "Sentinel Firing Cores"],
+    "rusted-shut-medical-kits": ["Rusted Shut Medical Kit", "Rusted Shut Medical Kits"],
+    "damaged-heat-sinks": ["Damaged Heat Sink", "Damaged Heat Sinks"],
+    "fried-motherboards": ["Fried Motherboard", "Fried Motherboards"],
+    "tick-pods": ["Tick Pod", "Tick Pods"],
+    "leaper-pulse-units": ["Leaper Pulse Unit", "Leaper Pulse Units"],
+    "snitch-scanners": ["Snitch Scanner", "Snitch Scanners"],
+    "surveyor-vaults": ["Surveyor Vault", "Surveyor Vaults"],
+    "fireball-burners": ["Fireball Burner", "Fireball Burners"],
+    "rocketeer-drivers": ["Rocketeer Driver", "Rocketeer Drivers"],
+    "hornet-drivers": ["Hornet Driver", "Hornet Drivers"],
+    "wasp-drivers": ["Wasp Driver", "Wasp Drivers"],
+    "bastion-cells": ["Bastion Cell", "Bastion Cells"],
+    "bombardier-cells": ["Bombardier Cell", "Bombardier Cells"],
+    "metal-parts": ["Metal Parts", "Metal Part"],
+    "rubber-parts": ["Rubber Parts", "Rubber Part"],
+    "plastic-parts": ["Plastic Parts", "Plastic Part"],
+    "mechanical-components": ["Mechanical Component", "Mechanical Components"],
+    "electrical-components": ["Electrical Component", "Electrical Components"],
+    "advanced-mechanical-components": ["Advanced Mechanical Component", "Advanced Mechanical Components"],
+    "advanced-electrical-components": ["Advanced Electrical Component", "Advanced Electrical Components"],
+    "wires": ["Wire", "Wires"],
+    "motors": ["Motor", "Motors"],
+    "toasters": ["Toaster", "Toasters"],
+    "lemons": ["Lemon", "Lemons"],
+    "apricots": ["Apricot", "Apricots"],
+    "olives": ["Olive", "Olives"]
+  }
+}

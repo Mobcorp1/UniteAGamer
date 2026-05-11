@@ -1,0 +1,2742 @@
+[
+  {
+    "id": "fireworks-box",
+    "name": "Fireworks Box",
+    "matched_name": "Fireworks Box",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/fireworks_box.png",
+    "main_asset_path": "assets/arc_raiders/items/fireworks_box.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fireworks_box.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "electrical-components",
+    "name": "Electrical Components",
+    "matched_name": "Electrical Components",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/electrical_components.png",
+    "main_asset_path": "assets/arc_raiders/items/electrical_components.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/electrical_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "apricots-tier-2",
+    "name": "Apricots",
+    "matched_name": "Apricot",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/apricot.png",
+    "main_asset_path": "assets/arc_raiders/items/apricots.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/apricots.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "fireball-burners",
+    "name": "Fireball Burners",
+    "matched_name": "Fireball Burner",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/fireball_burner.png",
+    "main_asset_path": "assets/arc_raiders/items/fireball_burners.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fireball_burners.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "bicycle-pump",
+    "name": "Bicycle Pump",
+    "matched_name": "Bicycle Pump",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/bicycle_pump.png",
+    "main_asset_path": "assets/arc_raiders/items/bicycle_pump.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/bicycle_pump.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "camera-lens",
+    "name": "Camera Lens",
+    "matched_name": "Camera Lens",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/camera_lens.png",
+    "main_asset_path": "assets/arc_raiders/items/camera_lens.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/camera_lens.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "coffee-pot",
+    "name": "Coffee Pot",
+    "matched_name": "Coffee Pot",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/coffee_pot.png",
+    "main_asset_path": "assets/arc_raiders/items/coffee_pot.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/coffee_pot.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "deflated-football",
+    "name": "Deflated Football",
+    "matched_name": "Deflated Football",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/deflated_football.png",
+    "main_asset_path": "assets/arc_raiders/items/deflated_football.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/deflated_football.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "empty-wine-bottle",
+    "name": "Empty Wine Bottle",
+    "matched_name": "Empty Wine Bottle",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/empty_wine_bottle.png",
+    "main_asset_path": "assets/arc_raiders/items/empty_wine_bottle.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/empty_wine_bottle.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "espresso-machine-parts",
+    "name": "Espresso Machine Parts",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/espresso_machine_parts.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/espresso_machine_parts.webp"
+    ],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "film-reel",
+    "name": "Film Reel",
+    "matched_name": "Film Reel",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/film_reel.png",
+    "main_asset_path": "assets/arc_raiders/items/film_reel.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/film_reel.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "firefly-burner",
+    "name": "Firefly Burner",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/firefly_burner.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/firefly_burner.webp"
+    ],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "light-impact-grenade",
+    "name": "Light Impact Grenade",
+    "matched_name": "Light Impact Grenade",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/light_impact_grenade.png",
+    "main_asset_path": "assets/arc_raiders/items/light_impact_grenade.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/light_impact_grenade.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "oil",
+    "name": "Oil",
+    "matched_name": "Oil",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/oil.png",
+    "main_asset_path": "assets/arc_raiders/items/oil.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/oil.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "portable-tv",
+    "name": "Portable TV",
+    "matched_name": "Portable TV",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/portable_tv.png",
+    "main_asset_path": "assets/arc_raiders/items/portable_tv.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/portable_tv.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "recorder",
+    "name": "Recorder",
+    "matched_name": "Recorder",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/recorder.png",
+    "main_asset_path": "assets/arc_raiders/items/recorder.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/recorder.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stack-of-movie-tapes",
+    "name": "Stack Of Movie Tapes",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/stack_of_movie_tapes.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/stack_of_movie_tapes.webp"
+    ],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "power-rod",
+    "name": "Power Rod",
+    "matched_name": "Power Rod",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/power_rod.png",
+    "main_asset_path": "assets/arc_raiders/items/power_rod.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/power_rod.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-alloy",
+    "name": "ARC Alloy",
+    "matched_name": "ARC Alloy",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_alloy.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_alloy.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_alloy.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rocketeer-drivers",
+    "name": "Rocketeer Drivers",
+    "matched_name": "Rocketeer Driver",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/rocketeer_driver.png",
+    "main_asset_path": "assets/arc_raiders/items/rocketeer_drivers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rocketeer_drivers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "chemicals",
+    "name": "Chemicals",
+    "matched_name": "Chemicals",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/chemicals.png",
+    "main_asset_path": "assets/arc_raiders/items/chemicals.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/chemicals.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "crude-explosives",
+    "name": "Crude Explosives",
+    "matched_name": "Crude Explosives",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/crude_explosives.png",
+    "main_asset_path": "assets/arc_raiders/items/crude_explosives.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/crude_explosives.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "explosive-compounds",
+    "name": "Explosive Compounds",
+    "matched_name": "Explosive Compound",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/explosive_compound.png",
+    "main_asset_path": "assets/arc_raiders/items/explosive_compounds.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/explosive_compounds.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "laboratory-reagents",
+    "name": "Laboratory Reagents",
+    "matched_name": "Laboratory Reagents",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/laboratory_reagents.png",
+    "main_asset_path": "assets/arc_raiders/items/laboratory_reagents.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/laboratory_reagents.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "pop-triggers",
+    "name": "Pop Triggers",
+    "matched_name": "Pop Trigger",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/pop_trigger.png",
+    "main_asset_path": "assets/arc_raiders/items/pop_triggers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/pop_triggers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "synthesized-fuel",
+    "name": "Synthesized Fuel",
+    "matched_name": "Synthesized Fuel",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/synthesized_fuel.png",
+    "main_asset_path": "assets/arc_raiders/items/synthesized_fuel.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/synthesized_fuel.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "hornet-drivers",
+    "name": "Hornet Drivers",
+    "matched_name": "Hornet Driver",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/hornet_driver.png",
+    "main_asset_path": "assets/arc_raiders/items/hornet_drivers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/hornet_drivers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "advanced-electrical-components",
+    "name": "Advanced Electrical Components",
+    "matched_name": "Advanced Electrical Components",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/advanced_electrical_components.png",
+    "main_asset_path": "assets/arc_raiders/items/advanced_electrical_components.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/advanced_electrical_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "bastion-cells",
+    "name": "Bastion Cells",
+    "matched_name": "Bastion Cell",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/bastion_cell.png",
+    "main_asset_path": "assets/arc_raiders/items/bastion_cells.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/bastion_cells.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "fabric",
+    "name": "Fabric",
+    "matched_name": "Fabric",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/fabric.png",
+    "main_asset_path": "assets/arc_raiders/items/fabric.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fabric.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "industrial-batteries",
+    "name": "Industrial Batteries",
+    "matched_name": "Industrial Battery",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/industrial_battery.png",
+    "main_asset_path": "assets/arc_raiders/items/industrial_batteries.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/industrial_batteries.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "plastic-parts",
+    "name": "Plastic Parts",
+    "matched_name": "Plastic Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/plastic_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/plastic_parts.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/plastic_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "power-cables",
+    "name": "Power Cables",
+    "matched_name": "Power Cable",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/power_cable.png",
+    "main_asset_path": "assets/arc_raiders/items/power_cables.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/power_cables.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "wasp-drivers",
+    "name": "Wasp Drivers",
+    "matched_name": "Wasp Driver",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/wasp_driver.png",
+    "main_asset_path": "assets/arc_raiders/items/wasp_drivers.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/wasp_drivers.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "advanced-mechanical-components",
+    "name": "Advanced Mechanical Components",
+    "matched_name": "Advanced Mechanical Components",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/advanced_mechanical_components.png",
+    "main_asset_path": "assets/arc_raiders/items/advanced_mechanical_components.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/advanced_mechanical_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "mechanical-components",
+    "name": "Mechanical Components",
+    "matched_name": "Mechanical Components",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/mechanical_components.png",
+    "main_asset_path": "assets/arc_raiders/items/mechanical_components.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/mechanical_components.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "metal-parts",
+    "name": "Metal Parts",
+    "matched_name": "Metal Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/metal_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/metal_parts.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/metal_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rubber-parts",
+    "name": "Rubber Parts",
+    "matched_name": "Rubber Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/rubber_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/rubber_parts.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rubber_parts.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rusted-gears",
+    "name": "Rusted Gears",
+    "matched_name": "Rusted Gear",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/rusted_gear.png",
+    "main_asset_path": "assets/arc_raiders/items/rusted_gears.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rusted_gears.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rusted-tools",
+    "name": "Rusted Tools",
+    "matched_name": "Rusted Tools",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/rusted_tools.png",
+    "main_asset_path": "assets/arc_raiders/items/rusted_tools.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rusted_tools.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "sentinel-firing-cores",
+    "name": "Sentinel Firing Cores",
+    "matched_name": "Sentinel Firing Core",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/sentinel_firing_core.png",
+    "main_asset_path": "assets/arc_raiders/items/sentinel_firing_cores.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/sentinel_firing_cores.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "vita-shot",
+    "name": "Vita Shot",
+    "matched_name": "Vita Shot",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/vita_shot.png",
+    "main_asset_path": "assets/arc_raiders/items/vita_shot.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/vita_shot.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "antiseptic",
+    "name": "Antiseptic",
+    "matched_name": "Antiseptic",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/antiseptic.png",
+    "main_asset_path": "assets/arc_raiders/items/antiseptic.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/antiseptic.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "durable-cloth",
+    "name": "Durable Cloth",
+    "matched_name": "Durable Cloth",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/durable_cloth.png",
+    "main_asset_path": "assets/arc_raiders/items/durable_cloth.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/durable_cloth.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "faded-photograph",
+    "name": "Faded Photograph",
+    "matched_name": "Faded Photograph",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/faded_photograph.png",
+    "main_asset_path": "assets/arc_raiders/items/faded_photograph.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/faded_photograph.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "great-mullein",
+    "name": "Great Mullein",
+    "matched_name": "Great Mullein",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/great_mullein.png",
+    "main_asset_path": "assets/arc_raiders/items/great_mullein.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/great_mullein.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rubber-duck",
+    "name": "Rubber Duck",
+    "matched_name": "Rubber Duck",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/rubber_duck.png",
+    "main_asset_path": "assets/arc_raiders/items/rubber_duck.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rubber_duck.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "syringe",
+    "name": "Syringe",
+    "matched_name": "Syringe",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/syringe.png",
+    "main_asset_path": "assets/arc_raiders/items/syringe.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/syringe.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "cat-bed",
+    "name": "Cat Bed",
+    "matched_name": "Cat Bed",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/cat_bed.png",
+    "main_asset_path": "assets/arc_raiders/items/cat_bed.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/cat_bed.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "dog-collar",
+    "name": "Dog Collar",
+    "matched_name": "Dog Collar",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/dog_collar.png",
+    "main_asset_path": "assets/arc_raiders/items/dog_collar.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/dog_collar.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "lemons",
+    "name": "Lemons",
+    "matched_name": "Lemon",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/lemon.png",
+    "main_asset_path": "assets/arc_raiders/items/lemons.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/lemons.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "mushrooms",
+    "name": "Mushrooms",
+    "matched_name": "Mushroom",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/mushroom.png",
+    "main_asset_path": "assets/arc_raiders/items/mushrooms.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/mushrooms.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "olives",
+    "name": "Olives",
+    "matched_name": "Olives",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/olives.png",
+    "main_asset_path": "assets/arc_raiders/items/olives.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/olives.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "prickly-pears",
+    "name": "Prickly Pears",
+    "matched_name": "Prickly Pear",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/prickly_pear.png",
+    "main_asset_path": "assets/arc_raiders/items/prickly_pears.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/prickly_pears.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "very-comfortable-pillows",
+    "name": "Very Comfortable Pillows",
+    "matched_name": "Very Comfortable Pillow",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/very_comfortable_pillow.png",
+    "main_asset_path": "assets/arc_raiders/items/very_comfortable_pillows.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "tick-pods",
+    "name": "Tick Pods",
+    "matched_name": "Tick Pod",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/tick_pod.png",
+    "main_asset_path": "assets/arc_raiders/items/tick_pods.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/tick_pods.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "surveyor-vaults",
+    "name": "Surveyor Vaults",
+    "matched_name": "Surveyor Vault",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/surveyor_vault.png",
+    "main_asset_path": "assets/arc_raiders/items/surveyor_vaults.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/surveyor_vaults.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "cracked-bioscanners",
+    "name": "Cracked Bioscanners",
+    "matched_name": "Cracked Bioscanner",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/cracked_bioscanner.png",
+    "main_asset_path": "assets/arc_raiders/items/cracked_bioscanners.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/cracked_bioscanners.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rusted-shut-medical-kits",
+    "name": "Rusted Shut Medical Kits",
+    "matched_name": "Rusted Shut Medical Kit",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/rusted_shut_medical_kit.png",
+    "main_asset_path": "assets/arc_raiders/items/rusted_shut_medical_kits.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/rusted_shut_medical_kits.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-circuitry",
+    "name": "ARC Circuitry",
+    "matched_name": "ARC Circuitry",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_circuitry.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_circuitry.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_circuitry.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-motion-cores",
+    "name": "ARC Motion Cores",
+    "matched_name": "ARC Motion Core",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_motion_core.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_motion_cores.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_motion_cores.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-powercells",
+    "name": "ARC Powercells",
+    "matched_name": "ARC Powercell",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/arc_powercell.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_powercells.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/arc_powercells.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "bombardier-cells",
+    "name": "Bombardier Cells",
+    "matched_name": "Bombardier Cell",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/bombardier_cell.png",
+    "main_asset_path": "assets/arc_raiders/items/bombardier_cells.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/bombardier_cells.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "motors",
+    "name": "Motors",
+    "matched_name": "Motor",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/motor.png",
+    "main_asset_path": "assets/arc_raiders/items/motors.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/motors.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "toasters",
+    "name": "Toasters",
+    "matched_name": "Toaster",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/toaster.png",
+    "main_asset_path": "assets/arc_raiders/items/toasters.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/toasters.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "leaper-pulse-units",
+    "name": "Leaper Pulse Units",
+    "matched_name": "Leaper Pulse Unit",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/leaper_pulse_unit.png",
+    "main_asset_path": "assets/arc_raiders/items/leaper_pulse_units.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/leaper_pulse_units.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "snitch-scanners",
+    "name": "Snitch Scanners",
+    "matched_name": "Snitch Scanner",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/snitch_scanner.png",
+    "main_asset_path": "assets/arc_raiders/items/snitch_scanners.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/snitch_scanners.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "battery",
+    "name": "Battery",
+    "matched_name": "Battery",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/battery.png",
+    "main_asset_path": "assets/arc_raiders/items/battery.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/battery.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "sensors",
+    "name": "Sensors",
+    "matched_name": "Sensors",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/sensors.png",
+    "main_asset_path": "assets/arc_raiders/items/sensors.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/sensors.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "wires",
+    "name": "Wires",
+    "matched_name": "Wires",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/wires.png",
+    "main_asset_path": "assets/arc_raiders/items/wires.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/wires.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "damaged-heat-sinks",
+    "name": "Damaged Heat Sinks",
+    "matched_name": "Damaged Heat Sink",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/damaged_heat_sink.png",
+    "main_asset_path": "assets/arc_raiders/items/damaged_heat_sinks.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/damaged_heat_sinks.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "fried-motherboards",
+    "name": "Fried Motherboards",
+    "matched_name": "Fried Motherboard",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/fried_motherboard.png",
+    "main_asset_path": "assets/arc_raiders/items/fried_motherboards.webp",
+    "mirrored_paths": [
+      "assets/arc_raiders/scrappy_resources/fried_motherboards.webp"
+    ],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "acoustic-guitar",
+    "name": "Acoustic Guitar",
+    "matched_name": "Acoustic Guitar",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/acoustic_guitar.png",
+    "main_asset_path": "assets/arc_raiders/items/acoustic_guitar.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "adrenaline-shot",
+    "name": "Adrenaline Shot",
+    "matched_name": "Adrenaline Shot",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/adrenaline_shot.png",
+    "main_asset_path": "assets/arc_raiders/items/adrenaline_shot.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "advanced-arc-powercell",
+    "name": "Advanced ARC Powercell",
+    "matched_name": "Advanced ARC Powercell",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/advanced_arc_powercell.png",
+    "main_asset_path": "assets/arc_raiders/items/advanced_arc_powercell.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "agave",
+    "name": "Agave",
+    "matched_name": "Agave",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/agave.png",
+    "main_asset_path": "assets/arc_raiders/items/agave.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "agave-juice",
+    "name": "Agave Juice",
+    "matched_name": "Agave Juice",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/agave_juice.png",
+    "main_asset_path": "assets/arc_raiders/items/agave_juice.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "alien-duck",
+    "name": "Alien Duck",
+    "matched_name": "Alien Duck",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/alien_duck.png",
+    "main_asset_path": "assets/arc_raiders/items/alien_duck.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "ancient-fort-security-code",
+    "name": "Ancient Fort Security Code",
+    "matched_name": "Ancient Fort Security Code",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/ancient_fort_security_code.png",
+    "main_asset_path": "assets/arc_raiders/items/ancient_fort_security_code.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "angled-grip-i",
+    "name": "Angled Grip I",
+    "matched_name": "Angled Grip I",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/angled_grip_i.png",
+    "main_asset_path": "assets/arc_raiders/items/angled_grip_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "angled-grip-ii",
+    "name": "Angled Grip II",
+    "matched_name": "Angled Grip II",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/angled_grip_ii.png",
+    "main_asset_path": "assets/arc_raiders/items/angled_grip_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "angled-grip-iii",
+    "name": "Angled Grip III",
+    "matched_name": "Angled Grip III",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/angled_grip_iii.png",
+    "main_asset_path": "assets/arc_raiders/items/angled_grip_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "anvil",
+    "name": "Anvil",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/anvil.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "anvil-splitter",
+    "name": "Anvil Splitter",
+    "matched_name": "Anvil Splitter",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/anvil_splitter.png",
+    "main_asset_path": "assets/arc_raiders/items/anvil_splitter.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "aphelion",
+    "name": "Aphelion",
+    "matched_name": "Aphelion",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/aphelion.png",
+    "main_asset_path": "assets/arc_raiders/items/aphelion.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-coolant",
+    "name": "ARC Coolant",
+    "matched_name": "ARC Coolant",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_coolant.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_coolant.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-flex-rubber",
+    "name": "ARC Flex Rubber",
+    "matched_name": "ARC Flex Rubber",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/arc_flex_rubber.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_flex_rubber.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-performance-steel",
+    "name": "ARC Performance Steel",
+    "matched_name": "ARC Performance Steel",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/arc_performance_steel.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_performance_steel.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-synthetic-resin",
+    "name": "ARC Synthetic Resin",
+    "matched_name": "ARC Synthetic Resin",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/arc_synthetic_resin.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_synthetic_resin.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arc-thermo-lining",
+    "name": "ARC Thermo Lining",
+    "matched_name": "ARC Thermo Lining",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/arc_thermo_lining.png",
+    "main_asset_path": "assets/arc_raiders/items/arc_thermo_lining.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "arpeggio",
+    "name": "Arpeggio",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/arpeggio.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "assessor-matrix",
+    "name": "Assessor Matrix",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/assessor_matrix.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "assorted-seeds",
+    "name": "Assorted Seeds",
+    "matched_name": "Assorted Seeds",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/assorted_seeds.png",
+    "main_asset_path": "assets/arc_raiders/items/assorted_seeds.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "bandage",
+    "name": "Bandage",
+    "matched_name": "Bandage",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/bandage.png",
+    "main_asset_path": "assets/arc_raiders/items/bandage.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "beachcombing-cache",
+    "name": "Beachcombing Cache",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/beachcombing_cache.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "bettina",
+    "name": "Bettina",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/bettina.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "blue-gate-cellar-key",
+    "name": "Blue Gate Cellar Key",
+    "matched_name": "Blue Gate Cellar Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/blue_gate_cellar_key.png",
+    "main_asset_path": "assets/arc_raiders/items/blue_gate_cellar_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "blue-gate-communication-tower-key",
+    "name": "Blue Gate Communication Tower Key",
+    "matched_name": "Blue Gate Communication Tower Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/blue_gate_communication_tower_key.png",
+    "main_asset_path": "assets/arc_raiders/items/blue_gate_communication_tower_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "blue-gate-confiscation-room-key",
+    "name": "Blue Gate Confiscation Room Key",
+    "matched_name": "Blue Gate Confiscation Room Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/blue_gate_confiscation_room_key.png",
+    "main_asset_path": "assets/arc_raiders/items/blue_gate_confiscation_room_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "blue-gate-village-key",
+    "name": "Blue Gate Village Key",
+    "matched_name": "Blue Gate Village Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/blue_gate_village_key.png",
+    "main_asset_path": "assets/arc_raiders/items/blue_gate_village_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "bobcat",
+    "name": "Bobcat",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/bobcat.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "breach-room",
+    "name": "Breach Room",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/breach_room.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "breach-room-key",
+    "name": "Breach Room Key",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/breach_room_key.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "buried-city-hospital-key",
+    "name": "Buried City Hospital Key",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/buried_city_hospital_key.webp",
+    "mirrored_paths": [],
+    "status": "failed",
+    "reason": "404 Client Error: Not Found for url: https://cdn.thearcraiders.wiki/images/items/buried_city_hospital_key.png"
+  },
+  {
+    "id": "buried-city-jkv-employee-access-card",
+    "name": "Buried City JKV Employee Access Card",
+    "matched_name": "Buried City JKV Employee Access Card",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/buried_city_jkv_employee_access_card.png",
+    "main_asset_path": "assets/arc_raiders/items/buried_city_jkv_employee_access_card.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "buried-city-residential-master-key",
+    "name": "Buried City Residential Master Key",
+    "matched_name": "Buried City Residential Master Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/buried_city_residential_master_key.png",
+    "main_asset_path": "assets/arc_raiders/items/buried_city_residential_master_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "buried-city-town-hall-key",
+    "name": "Buried City Town Hall Key",
+    "matched_name": "Buried City Town Hall Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/buried_city_town_hall_key.png",
+    "main_asset_path": "assets/arc_raiders/items/buried_city_town_hall_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "burletta",
+    "name": "Burletta",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/burletta.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "canister",
+    "name": "Canister",
+    "matched_name": "Canister",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/canister.png",
+    "main_asset_path": "assets/arc_raiders/items/canister.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "canto",
+    "name": "Canto",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/canto.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "chip-pods",
+    "name": "Chip Pods",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/chip_pods.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "comet-igniter",
+    "name": "Comet Igniter",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/comet_igniter.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "compensator-i",
+    "name": "Compensator I",
+    "matched_name": "Compensator I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/compensator.png",
+    "main_asset_path": "assets/arc_raiders/items/compensator_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "compensator-ii",
+    "name": "Compensator II",
+    "matched_name": "Compensator II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/compensator.png",
+    "main_asset_path": "assets/arc_raiders/items/compensator_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "compensator-iii",
+    "name": "Compensator III",
+    "matched_name": "Compensator III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/compensator.png",
+    "main_asset_path": "assets/arc_raiders/items/compensator_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "complex-gun-parts",
+    "name": "Complex Gun Parts",
+    "matched_name": "Complex Gun Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/complex_gun_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/complex_gun_parts.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "cool-box-on-wheels",
+    "name": "Cool Box on Wheels",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/cool_box_on_wheels.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "dam-control-tower-key",
+    "name": "Dam Control Tower Key",
+    "matched_name": "Dam Control Tower Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/dam_control_tower_key.png",
+    "main_asset_path": "assets/arc_raiders/items/dam_control_tower_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "dam-controlled-access-zone-key",
+    "name": "Dam Controlled Access Zone Key",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/dam_controlled_access_zone_key.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "dam-staff-room-key",
+    "name": "Dam Staff Room Key",
+    "matched_name": "Dam Staff Room Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/dam_staff_room_key.png",
+    "main_asset_path": "assets/arc_raiders/items/dam_staff_room_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "dam-surveillance-key",
+    "name": "Dam Surveillance Key",
+    "matched_name": "Dam Surveillance Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/dam_surveillance_key.png",
+    "main_asset_path": "assets/arc_raiders/items/dam_surveillance_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "dam-testing-annex-key",
+    "name": "Dam Testing Annex Key",
+    "matched_name": "Dam Testing Annex Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/dam_testing_annex_key.png",
+    "main_asset_path": "assets/arc_raiders/items/dam_testing_annex_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "dam-utility-key",
+    "name": "Dam Utility Key",
+    "matched_name": "Dam Utility Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/dam_utility_key.png",
+    "main_asset_path": "assets/arc_raiders/items/dam_utility_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "dolabra",
+    "name": "Dolabra",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/dolabra.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "duct-tape",
+    "name": "Duct Tape",
+    "matched_name": "Duct Tape",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/duct_tape.png",
+    "main_asset_path": "assets/arc_raiders/items/duct_tape.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "energy-ammo",
+    "name": "Energy Ammo",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/energy_ammo.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "equalizer",
+    "name": "Equalizer",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/equalizer.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "exodus-module",
+    "name": "Exodus Module",
+    "matched_name": "Exodus Modules",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/exodus_modules.png",
+    "main_asset_path": "assets/arc_raiders/items/exodus_module.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-barrel",
+    "name": "Extended Barrel",
+    "matched_name": "Extended Barrel",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_barrel.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_barrel.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-light-mag-i",
+    "name": "Extended Light Mag I",
+    "matched_name": "Extended Light Mag I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_light_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_light_mag_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-light-mag-ii",
+    "name": "Extended Light Mag II",
+    "matched_name": "Extended Light Mag II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_light_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_light_mag_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-light-mag-iii",
+    "name": "Extended Light Mag III",
+    "matched_name": "Extended Light Mag III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_light_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_light_mag_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-medium-mag-i",
+    "name": "Extended Medium Mag I",
+    "matched_name": "Extended Medium Mag I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_medium_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_medium_mag_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-medium-mag-ii",
+    "name": "Extended Medium Mag II",
+    "matched_name": "Extended Medium Mag II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_medium_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_medium_mag_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-medium-mag-iii",
+    "name": "Extended Medium Mag III",
+    "matched_name": "Extended Medium Mag III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_medium_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_medium_mag_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-shotgun-mag-i",
+    "name": "Extended Shotgun Mag I",
+    "matched_name": "Extended Shotgun Mag I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_shotgun_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_shotgun_mag_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-shotgun-mag-ii",
+    "name": "Extended Shotgun Mag II",
+    "matched_name": "Extended Shotgun Mag II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_shotgun_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_shotgun_mag_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "extended-shotgun-mag-iii",
+    "name": "Extended Shotgun Mag III",
+    "matched_name": "Extended Shotgun Mag III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/extended_shotgun_mag.png",
+    "main_asset_path": "assets/arc_raiders/items/extended_shotgun_mag_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "ferro",
+    "name": "Ferro",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/ferro.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "fertiliser",
+    "name": "Fertiliser",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/fertiliser.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "fertilizer",
+    "name": "Fertilizer",
+    "matched_name": "Fertilizer",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/fertilizer.png",
+    "main_asset_path": "assets/arc_raiders/items/fertilizer.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "fine-wristwatch",
+    "name": "Fine Wristwatch",
+    "matched_name": "Fine Wristwatch",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/fine_wristwatch.png",
+    "main_asset_path": "assets/arc_raiders/items/fine_wristwatch.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "flow-controller",
+    "name": "Flow Controller",
+    "matched_name": "Flow Controller",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/flow_controller.png",
+    "main_asset_path": "assets/arc_raiders/items/flow_controller.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "frequency-modulation-box",
+    "name": "Frequency Modulation Box",
+    "matched_name": "Frequency Modulation Box",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/frequency_modulation_box.png",
+    "main_asset_path": "assets/arc_raiders/items/frequency_modulation_box.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "hairpin",
+    "name": "Hairpin",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/hairpin.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "harvester-components",
+    "name": "Harvester Components",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/harvester_components.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "heavy-gun-parts",
+    "name": "Heavy Gun Parts",
+    "matched_name": "Heavy Gun Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/heavy_gun_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/heavy_gun_parts.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "high-durability-weapon",
+    "name": "High Durability Weapon",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/high_durability_weapon.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "high-security-key",
+    "name": "High Security Key",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/high_security_key.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "horizontal-grip",
+    "name": "Horizontal Grip",
+    "matched_name": "Horizontal Grip",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/horizontal_grip.png",
+    "main_asset_path": "assets/arc_raiders/items/horizontal_grip.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "hullcracker",
+    "name": "Hullcracker",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/hullcracker.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "il-toro",
+    "name": "Il Toro",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/il_toro.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "jupiter",
+    "name": "Jupiter",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/jupiter.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "kettle",
+    "name": "Kettle",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/kettle.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "kinetic-converter",
+    "name": "Kinetic Converter",
+    "matched_name": "Kinetic Converter",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/kinetic_converter.png",
+    "main_asset_path": "assets/arc_raiders/items/kinetic_converter.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "l4-weapon",
+    "name": "L4 Weapon",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/l4_weapon.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "leviathans-crown-ship-model",
+    "name": "Leviathan\u2019s Crown Ship Model",
+    "matched_name": "\"Leviathan's Crown\" Ship Model",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/leviathans_crown_ship_model.png",
+    "main_asset_path": "assets/arc_raiders/items/leviathans_crown_ship_model.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "light-gun-parts",
+    "name": "Light Gun Parts",
+    "matched_name": "Light Gun Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/light_gun_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/light_gun_parts.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "lightweight-stock",
+    "name": "Lightweight Stock",
+    "matched_name": "Lightweight Stock",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/lightweight_stock.png",
+    "main_asset_path": "assets/arc_raiders/items/lightweight_stock.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "locked-room",
+    "name": "Locked Room",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/locked_room.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "locked-room-key",
+    "name": "Locked Room Key",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/locked_room_key.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "magnet",
+    "name": "Magnet",
+    "matched_name": "Magnet",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/magnet.png",
+    "main_asset_path": "assets/arc_raiders/items/magnet.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "magnetic-accelerator",
+    "name": "Magnetic Accelerator",
+    "matched_name": "Magnetic Accelerator",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/magnetic_accelerator.png",
+    "main_asset_path": "assets/arc_raiders/items/magnetic_accelerator.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "matriarch-components",
+    "name": "Matriarch Components",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/matriarch_components.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "matriarch-reactor",
+    "name": "Matriarch Reactor",
+    "matched_name": "Matriarch Reactor",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/matriarch_reactor.png",
+    "main_asset_path": "assets/arc_raiders/items/matriarch_reactor.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "medical-kit",
+    "name": "Medical Kit",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/medical_kit.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "medium-gun-parts",
+    "name": "Medium Gun Parts",
+    "matched_name": "Medium Gun Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/medium_gun_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/medium_gun_parts.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "micro-arc-reactor",
+    "name": "Micro ARC Reactor",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/micro_arc_reactor.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "mod-components",
+    "name": "Mod Components",
+    "matched_name": "Mod Components",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/mod_components.png",
+    "main_asset_path": "assets/arc_raiders/items/mod_components.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "modded-weapon",
+    "name": "Modded Weapon",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/modded_weapon.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "moss",
+    "name": "Moss",
+    "matched_name": "Moss",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/moss.png",
+    "main_asset_path": "assets/arc_raiders/items/moss.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "mushroom",
+    "name": "Mushroom",
+    "matched_name": "Mushroom",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/mushroom.png",
+    "main_asset_path": "assets/arc_raiders/items/mushroom.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "music-box",
+    "name": "Music Box",
+    "matched_name": "Music Box",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/music_box.png",
+    "main_asset_path": "assets/arc_raiders/items/music_box.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "muzzle-brake-i",
+    "name": "Muzzle Brake I",
+    "matched_name": "Muzzle Brake I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/muzzle_brake.png",
+    "main_asset_path": "assets/arc_raiders/items/muzzle_brake_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "muzzle-brake-ii",
+    "name": "Muzzle Brake II",
+    "matched_name": "Muzzle Brake II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/muzzle_brake.png",
+    "main_asset_path": "assets/arc_raiders/items/muzzle_brake_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "muzzle-brake-iii",
+    "name": "Muzzle Brake III",
+    "matched_name": "Muzzle Brake III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/muzzle_brake.png",
+    "main_asset_path": "assets/arc_raiders/items/muzzle_brake_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "osprey",
+    "name": "Osprey",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/osprey.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "padded-stock",
+    "name": "Padded Stock",
+    "matched_name": "Padded Stock",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/padded_stock.png",
+    "main_asset_path": "assets/arc_raiders/items/padded_stock.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "patrol-car-key",
+    "name": "Patrol Car Key",
+    "matched_name": "Patrol Car Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/patrol_car_key.png",
+    "main_asset_path": "assets/arc_raiders/items/patrol_car_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "power-clips",
+    "name": "Power Clips",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/power_clips.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "processor",
+    "name": "Processor",
+    "matched_name": "Processor",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/processor.png",
+    "main_asset_path": "assets/arc_raiders/items/processor.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "queen-reactor",
+    "name": "Queen Reactor",
+    "matched_name": "Queen Reactor",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/queen_reactor.png",
+    "main_asset_path": "assets/arc_raiders/items/queen_reactor.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "raider-cache",
+    "name": "Raider Cache",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/raider_cache.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "pilgrims-peak-security-code",
+    "name": "Raider Hatch Key",
+    "matched_name": "Raider Hatch Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/raider_hatch_key.png",
+    "main_asset_path": "assets/arc_raiders/items/raider_hatch_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rattler",
+    "name": "Rattler",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/rattler.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "red-coral-jewelry",
+    "name": "Red Coral Jewelry",
+    "matched_name": "Red Coral Jewelry",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/red_coral_jewelry.png",
+    "main_asset_path": "assets/arc_raiders/items/red_coral_jewelry.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "raiders-refuge-security-code",
+    "name": "Reinforced Reception Security Code",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/reinforced_reception_security_code.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "renegade",
+    "name": "Renegade",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/renegade.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "roots",
+    "name": "Roots",
+    "matched_name": "Roots",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/roots.png",
+    "main_asset_path": "assets/arc_raiders/items/roots.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "rusty-arc-steel",
+    "name": "Rusty ARC Steel",
+    "matched_name": "Rusty ARC Steel",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/rusty_arc_steel.png",
+    "main_asset_path": "assets/arc_raiders/items/rusty_arc_steel.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "sample-cleaner",
+    "name": "Sample Cleaner",
+    "matched_name": "Sample Cleaner",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/sample_cleaner.png",
+    "main_asset_path": "assets/arc_raiders/items/sample_cleaner.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "shotgun-choke-i",
+    "name": "Shotgun Choke I",
+    "matched_name": "Shotgun Choke I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/shotgun_choke.png",
+    "main_asset_path": "assets/arc_raiders/items/shotgun_choke_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "shotgun-choke-ii",
+    "name": "Shotgun Choke II",
+    "matched_name": "Shotgun Choke II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/shotgun_choke.png",
+    "main_asset_path": "assets/arc_raiders/items/shotgun_choke_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "shotgun-choke-iii",
+    "name": "Shotgun Choke III",
+    "matched_name": "Shotgun Choke III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/shotgun_choke.png",
+    "main_asset_path": "assets/arc_raiders/items/shotgun_choke_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "shotgun-silencer",
+    "name": "Shotgun Silencer",
+    "matched_name": "Shotgun Silencer",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/shotgun_silencer.png",
+    "main_asset_path": "assets/arc_raiders/items/shotgun_silencer.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "shredder-gyro",
+    "name": "Shredder Gyro",
+    "matched_name": "Shredder Gyro",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/shredder_gyro.png",
+    "main_asset_path": "assets/arc_raiders/items/shredder_gyro.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "silencer-i",
+    "name": "Silencer I",
+    "matched_name": "Silencer I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/silencer.png",
+    "main_asset_path": "assets/arc_raiders/items/silencer_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "silencer-ii",
+    "name": "Silencer II",
+    "matched_name": "Silencer II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/silencer.png",
+    "main_asset_path": "assets/arc_raiders/items/silencer_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "silencer-iii",
+    "name": "Silencer III",
+    "matched_name": "Silencer III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/silencer.png",
+    "main_asset_path": "assets/arc_raiders/items/silencer_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "simple-gun-parts",
+    "name": "Simple Gun Parts",
+    "matched_name": "Simple Gun Parts",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/simple_gun_parts.png",
+    "main_asset_path": "assets/arc_raiders/items/simple_gun_parts.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "sorena-dorata-ship-model",
+    "name": "Sorena Dorata Ship Model",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/sorena_dorata_ship_model.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "spaceport-container-storage-key",
+    "name": "Spaceport Container Storage Key",
+    "matched_name": "Spaceport Container Storage Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/spaceport_container_storage_key.png",
+    "main_asset_path": "assets/arc_raiders/items/spaceport_container_storage_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "spaceport-control-tower-key",
+    "name": "Spaceport Control Tower Key",
+    "matched_name": "Spaceport Control Tower Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/spaceport_control_tower_key.png",
+    "main_asset_path": "assets/arc_raiders/items/spaceport_control_tower_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "spaceport-trench-tower-key",
+    "name": "Spaceport Trench Tower Key",
+    "matched_name": "Spaceport Trench Tower Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/spaceport_trench_tower_key.png",
+    "main_asset_path": "assets/arc_raiders/items/spaceport_trench_tower_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "spaceport-warehouse-key",
+    "name": "Spaceport Warehouse Key",
+    "matched_name": "Spaceport Warehouse Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/spaceport_warehouse_key.png",
+    "main_asset_path": "assets/arc_raiders/items/spaceport_warehouse_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stable-stock-i",
+    "name": "Stable Stock I",
+    "matched_name": "Stable Stock I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/stable_stock.png",
+    "main_asset_path": "assets/arc_raiders/items/stable_stock_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stable-stock-ii",
+    "name": "Stable Stock II",
+    "matched_name": "Stable Stock II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/stable_stock.png",
+    "main_asset_path": "assets/arc_raiders/items/stable_stock_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stable-stock-iii",
+    "name": "Stable Stock III",
+    "matched_name": "Stable Stock III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/stable_stock.png",
+    "main_asset_path": "assets/arc_raiders/items/stable_stock_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "standard-ammo",
+    "name": "Standard Ammo",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/standard_ammo.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "statuette",
+    "name": "Statuette",
+    "matched_name": "Statuette",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/statuette.png",
+    "main_asset_path": "assets/arc_raiders/items/statuette.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "steel-spring",
+    "name": "Steel Spring",
+    "matched_name": "Steel Spring",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/steel_spring.png",
+    "main_asset_path": "assets/arc_raiders/items/steel_spring.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "steel-springs",
+    "name": "Steel Springs",
+    "matched_name": "Steel Spring",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/steel_spring.png",
+    "main_asset_path": "assets/arc_raiders/items/steel_springs.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stella-montis-archives-key",
+    "name": "Stella Montis Archives Key",
+    "matched_name": "Stella Montis Archives Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/stella_montis_archives_key.png",
+    "main_asset_path": "assets/arc_raiders/items/stella_montis_archives_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stella-montis-assembly-admin-key",
+    "name": "Stella Montis Assembly Admin Key",
+    "matched_name": "Stella Montis Assembly Admin Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/stella_montis_assembly_admin_key.png",
+    "main_asset_path": "assets/arc_raiders/items/stella_montis_assembly_admin_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stella-montis-medical-storage-key",
+    "name": "Stella Montis Medical Storage Key",
+    "matched_name": "Stella Montis Medical Storage Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/stella_montis_medical_storage_key.png",
+    "main_asset_path": "assets/arc_raiders/items/stella_montis_medical_storage_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stella-montis-security-checkpoint-key",
+    "name": "Stella Montis Security Checkpoint Key",
+    "matched_name": "Stella Montis Security Checkpoint Key",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/stella_montis_security_checkpoint_key.png",
+    "main_asset_path": "assets/arc_raiders/items/stella_montis_security_checkpoint_key.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "stitcher",
+    "name": "Stitcher",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/stitcher.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "suitcase",
+    "name": "Suitcase",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/suitcase.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "tempest",
+    "name": "Tempest",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/tempest.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "tick-pod-canister",
+    "name": "Tick Pod Canister",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/tick_pod_canister.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "torrente",
+    "name": "Torrente",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/torrente.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "turbine-compressor",
+    "name": "Turbine Compressor",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/turbine_compressor.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "twilight-compass-ship-model",
+    "name": "Twilight Compass Ship Model",
+    "matched_name": "\"Twilight Compass\" Ship Model",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/twilight_compass_ship_model.png",
+    "main_asset_path": "assets/arc_raiders/items/twilight_compass_ship_model.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "vaporizer-regulator",
+    "name": "Vaporizer Regulator",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/vaporizer_regulator.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "vase",
+    "name": "Vase",
+    "matched_name": "Vase",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/vase.png",
+    "main_asset_path": "assets/arc_raiders/items/vase.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "velocity-ship-model",
+    "name": "Velocity Ship Model",
+    "matched_name": "\"Velocity\" Ship Model",
+    "matched_source": "arctracker",
+    "source_url": "https://arctracker.io/cdn-cgi/image/width=64/https://cdn.arctracker.io/items/v2/velocity_ship_model.png",
+    "main_asset_path": "assets/arc_raiders/items/velocity_ship_model.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "venator",
+    "name": "Venator",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/venator.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "vertical-grip-i",
+    "name": "Vertical Grip I",
+    "matched_name": "Vertical Grip I",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/vertical_grip.png",
+    "main_asset_path": "assets/arc_raiders/items/vertical_grip_i.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "vertical-grip-ii",
+    "name": "Vertical Grip II",
+    "matched_name": "Vertical Grip II",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/vertical_grip.png",
+    "main_asset_path": "assets/arc_raiders/items/vertical_grip_ii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "vertical-grip-iii",
+    "name": "Vertical Grip III",
+    "matched_name": "Vertical Grip III",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/vertical_grip.png",
+    "main_asset_path": "assets/arc_raiders/items/vertical_grip_iii.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "voltage-converter",
+    "name": "Voltage Converter",
+    "matched_name": "Voltage Converter",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/voltage_converter.png",
+    "main_asset_path": "assets/arc_raiders/items/voltage_converter.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "vortex-components",
+    "name": "Vortex Components",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/vortex_components.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "vulcano",
+    "name": "Vulcano",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/vulcano.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "water-filter",
+    "name": "Water Filter",
+    "matched_name": "Water Filter",
+    "matched_source": "thearcraiders_wiki_items",
+    "source_url": "https://cdn.thearcraiders.wiki/images/items/water_filter.png",
+    "main_asset_path": "assets/arc_raiders/items/water_filter.webp",
+    "mirrored_paths": [],
+    "status": "ok",
+    "reason": ""
+  },
+  {
+    "id": "weapon-case",
+    "name": "Weapon Case",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/weapon_case.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  },
+  {
+    "id": "wind-sprite-ship-model",
+    "name": "Wind Sprite Ship Model",
+    "matched_name": null,
+    "matched_source": null,
+    "source_url": null,
+    "main_asset_path": "assets/arc_raiders/items/wind_sprite_ship_model.webp",
+    "mirrored_paths": [],
+    "status": "placeholder",
+    "reason": "No safe match found in any configured source. Placeholder generated."
+  }
+]

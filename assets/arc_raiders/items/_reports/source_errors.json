@@ -1,0 +1,11 @@
+[
+  {
+    "source": {
+      "id": "fandom_items",
+      "type": "static_catalogue",
+      "url": "https://arc-raiders.fandom.com/wiki/Items",
+      "priority": 20
+    },
+    "error": "403 Client Error: Forbidden for url: https://arc-raiders.fandom.com/wiki/Items"
+  }
+]

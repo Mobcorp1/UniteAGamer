@@ -1,0 +1,72 @@
+{
+  "repo_raw_base": "https://raw.githubusercontent.com/Mobcorp1/UniteAGamer/main",
+  "source_items_url": "https://arc-raiders.fandom.com/wiki/Items",
+  "extra_source_urls": [
+    "https://arc-raiders.fandom.com/wiki/Weapons",
+    "https://arc-raiders.fandom.com/wiki/Attachments",
+    "https://arc-raiders.fandom.com/wiki/Ammunition",
+    "https://arc-raiders.fandom.com/wiki/Keys",
+    "https://arc-raiders.fandom.com/wiki/Grenades",
+    "https://arc-raiders.fandom.com/wiki/Gadgets",
+    "https://arc-raiders.fandom.com/wiki/Medical"
+  ],
+  "project_data_files": [
+    "lib/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart",
+    "lib/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart",
+    "lib/features/trading_hub/arc_raiders/data/trade_items_data.dart"
+  ],
+  "output_main_folder": "assets/arc_raiders/items",
+  "backup_folder": "assets/arc_raiders/_legacy_item_assets",
+  "mirror_to_existing_asset_paths": true,
+  "exclude_asset_paths_containing": [
+    "/blueprints/",
+    "blueprint"
+  ],
+  "exclude_item_names_containing": [
+    "Blueprint"
+  ],
+  "final_canvas_size": 512,
+  "webp_quality": 92,
+  "target_fill_ratio": 0.84,
+  "bake_dark_tile_background": true,
+  "dark_tile_background": "#071625",
+  "preserve_transparency_when_no_background": false,
+  "name_overrides": {
+    "apricots": "Apricot",
+    "lemons": "Lemon",
+    "prickly-pears": "Prickly Pear",
+    "mushrooms": "Mushroom",
+    "very-comfortable-pillows": "Very Comfortable Pillow",
+    "wasp-drivers": "Wasp Driver",
+    "hornet-drivers": "Hornet Driver",
+    "rocketeer-drivers": "Rocketeer Driver",
+    "bastion-cells": "Bastion Cell",
+    "sentinel-firing-cores": "Sentinel Firing Core",
+    "industrial-batteries": "Industrial Battery",
+    "power-cables": "Power Cable",
+    "pop-triggers": "Pop Trigger",
+    "tick-pods": "Tick Pod",
+    "snitch-scanners": "Snitch Scanner",
+    "surveyor-vaults": "Surveyor Vault",
+    "leaper-pulse-units": "Leaper Pulse Unit",
+    "damaged-heat-sinks": "Damaged Heat Sink",
+    "fried-motherboards": "Fried Motherboard",
+    "arc-powercells": "ARC Powercell",
+    "arc-motion-cores": "ARC Motion Core",
+    "fireball-burners": "Fireball Burner",
+    "bombardier-cells": "Bombardier Cell",
+    "motors": "Motor",
+    "toasters": "Toaster",
+    "rubber-parts": "Rubber Parts",
+    "metal-parts": "Metal Parts",
+    "plastic-parts": "Plastic Parts",
+    "rusted-tools": "Rusted Tools",
+    "rusted-gears": "Rusted Gears",
+    "mechanical-components": "Mechanical Components",
+    "electrical-components": "Electrical Components",
+    "advanced-mechanical-components": "Advanced Mechanical Components",
+    "advanced-electrical-components": "Advanced Electrical Components"
+  }
+}

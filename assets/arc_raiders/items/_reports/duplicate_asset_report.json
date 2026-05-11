@@ -1,0 +1,139 @@
+{
+  "30f4e21dba3ba9bd11095b353cdf58dce41661ac2c149264793f1e3b242c3230": [
+    "assets/arc_raiders/items/espresso_machine_parts.webp",
+    "assets/arc_raiders/items/firefly_burner.webp",
+    "assets/arc_raiders/items/stack_of_movie_tapes.webp",
+    "assets/arc_raiders/items/anvil.webp",
+    "assets/arc_raiders/items/arpeggio.webp",
+    "assets/arc_raiders/items/assessor_matrix.webp",
+    "assets/arc_raiders/items/beachcombing_cache.webp",
+    "assets/arc_raiders/items/bettina.webp",
+    "assets/arc_raiders/items/bobcat.webp",
+    "assets/arc_raiders/items/breach_room.webp",
+    "assets/arc_raiders/items/breach_room_key.webp",
+    "assets/arc_raiders/items/burletta.webp",
+    "assets/arc_raiders/items/canto.webp",
+    "assets/arc_raiders/items/chip_pods.webp",
+    "assets/arc_raiders/items/comet_igniter.webp",
+    "assets/arc_raiders/items/cool_box_on_wheels.webp",
+    "assets/arc_raiders/items/dam_controlled_access_zone_key.webp",
+    "assets/arc_raiders/items/dolabra.webp",
+    "assets/arc_raiders/items/energy_ammo.webp",
+    "assets/arc_raiders/items/equalizer.webp",
+    "assets/arc_raiders/items/ferro.webp",
+    "assets/arc_raiders/items/fertiliser.webp",
+    "assets/arc_raiders/items/hairpin.webp",
+    "assets/arc_raiders/items/harvester_components.webp",
+    "assets/arc_raiders/items/high_durability_weapon.webp",
+    "assets/arc_raiders/items/high_security_key.webp",
+    "assets/arc_raiders/items/hullcracker.webp",
+    "assets/arc_raiders/items/il_toro.webp",
+    "assets/arc_raiders/items/jupiter.webp",
+    "assets/arc_raiders/items/kettle.webp",
+    "assets/arc_raiders/items/l4_weapon.webp",
+    "assets/arc_raiders/items/locked_room.webp",
+    "assets/arc_raiders/items/locked_room_key.webp",
+    "assets/arc_raiders/items/matriarch_components.webp",
+    "assets/arc_raiders/items/medical_kit.webp",
+    "assets/arc_raiders/items/micro_arc_reactor.webp",
+    "assets/arc_raiders/items/modded_weapon.webp",
+    "assets/arc_raiders/items/osprey.webp",
+    "assets/arc_raiders/items/power_clips.webp",
+    "assets/arc_raiders/items/raider_cache.webp",
+    "assets/arc_raiders/items/rattler.webp",
+    "assets/arc_raiders/items/reinforced_reception_security_code.webp",
+    "assets/arc_raiders/items/renegade.webp",
+    "assets/arc_raiders/items/sorena_dorata_ship_model.webp",
+    "assets/arc_raiders/items/standard_ammo.webp",
+    "assets/arc_raiders/items/stitcher.webp",
+    "assets/arc_raiders/items/suitcase.webp",
+    "assets/arc_raiders/items/tempest.webp",
+    "assets/arc_raiders/items/tick_pod_canister.webp",
+    "assets/arc_raiders/items/torrente.webp",
+    "assets/arc_raiders/items/turbine_compressor.webp",
+    "assets/arc_raiders/items/vaporizer_regulator.webp",
+    "assets/arc_raiders/items/venator.webp",
+    "assets/arc_raiders/items/vortex_components.webp",
+    "assets/arc_raiders/items/vulcano.webp",
+    "assets/arc_raiders/items/weapon_case.webp",
+    "assets/arc_raiders/items/wind_sprite_ship_model.webp"
+  ],
+  "acf4d8128b10d523cf658c1f072585fe06833146fd2ab422afbb081efc2b63d4": [
+    "assets/arc_raiders/items/mushrooms.webp",
+    "assets/arc_raiders/items/mushroom.webp"
+  ],
+  "a158c246b3f8cf3defc01a71e8bd4cbae8d0563c5e6693052fc0948ceef88388": [
+    "assets/arc_raiders/items/blue_gate_cellar_key.webp",
+    "assets/arc_raiders/items/blue_gate_communication_tower_key.webp",
+    "assets/arc_raiders/items/blue_gate_village_key.webp"
+  ],
+  "c13e7fd12ccf2f76b6cd59efdea782fb53b28d7a13ee3a47cd9c62962e6eb611": [
+    "assets/arc_raiders/items/buried_city_jkv_employee_access_card.webp",
+    "assets/arc_raiders/items/buried_city_residential_master_key.webp"
+  ],
+  "87ecbf9556e5133e6d795a41c209417891d79e69be5e3c86ac806092ac18ed02": [
+    "assets/arc_raiders/items/compensator_i.webp",
+    "assets/arc_raiders/items/compensator_ii.webp",
+    "assets/arc_raiders/items/compensator_iii.webp"
+  ],
+  "82e0268f6f2ce9bc1c3facf3beec141f6ec9b21b501f5f37e5cdc0ee02448f14": [
+    "assets/arc_raiders/items/dam_staff_room_key.webp",
+    "assets/arc_raiders/items/dam_utility_key.webp"
+  ],
+  "540780c323706b671ab8759c032995a178524f8ba08cd61a4f21f9b0a55c4516": [
+    "assets/arc_raiders/items/extended_light_mag_i.webp",
+    "assets/arc_raiders/items/extended_light_mag_ii.webp",
+    "assets/arc_raiders/items/extended_light_mag_iii.webp"
+  ],
+  "ad5d5cebf06904e38508c34e8b8739fcdcff01a74b72b36d45f00f548b137287": [
+    "assets/arc_raiders/items/extended_medium_mag_i.webp",
+    "assets/arc_raiders/items/extended_medium_mag_ii.webp",
+    "assets/arc_raiders/items/extended_medium_mag_iii.webp"
+  ],
+  "ab7944829a54e107c2c6a3308a4781da123d286393524ac73ad2bc469724c824": [
+    "assets/arc_raiders/items/extended_shotgun_mag_i.webp",
+    "assets/arc_raiders/items/extended_shotgun_mag_ii.webp",
+    "assets/arc_raiders/items/extended_shotgun_mag_iii.webp"
+  ],
+  "539e143b45c87406045c1f0401992550671c2a8e5fff642aa84256a85b011b2a": [
+    "assets/arc_raiders/items/muzzle_brake_i.webp",
+    "assets/arc_raiders/items/muzzle_brake_ii.webp",
+    "assets/arc_raiders/items/muzzle_brake_iii.webp"
+  ],
+  "594617340df6b7eb3407b8d927d281e17fe2cbf26b03d5eb4a54a0aa998ebf21": [
+    "assets/arc_raiders/items/shotgun_choke_i.webp",
+    "assets/arc_raiders/items/shotgun_choke_ii.webp",
+    "assets/arc_raiders/items/shotgun_choke_iii.webp"
+  ],
+  "3ac76f050db0db25d949ca10c355202108775fa4d7f65326f2e44583b9cc9616": [
+    "assets/arc_raiders/items/silencer_i.webp",
+    "assets/arc_raiders/items/silencer_ii.webp",
+    "assets/arc_raiders/items/silencer_iii.webp"
+  ],
+  "c6de4319912eb43494e1162dae29302bc15c23a353db47b3da3a46f186459fa0": [
+    "assets/arc_raiders/items/spaceport_container_storage_key.webp",
+    "assets/arc_raiders/items/spaceport_control_tower_key.webp"
+  ],
+  "6df0d92c835ea9a9617424127bc6caf47ac74485823aaf24bc128de76a560599": [
+    "assets/arc_raiders/items/spaceport_trench_tower_key.webp",
+    "assets/arc_raiders/items/spaceport_warehouse_key.webp"
+  ],
+  "821a263195c9d6fcf429574faf735c6f0fdc5fb519a7f017524fad8ae4fc77ed": [
+    "assets/arc_raiders/items/stable_stock_i.webp",
+    "assets/arc_raiders/items/stable_stock_ii.webp",
+    "assets/arc_raiders/items/stable_stock_iii.webp"
+  ],
+  "4cd38f60ccae37023442ec21da24ae2eb89397a45a74d248eb51000cbe259f3c": [
+    "assets/arc_raiders/items/steel_spring.webp",
+    "assets/arc_raiders/items/steel_springs.webp"
+  ],
+  "f3b14449e243b834a93d9adfa8ff2232c60d1325708d93cbd61ec2d195558f4a": [
+    "assets/arc_raiders/items/stella_montis_archives_key.webp",
+    "assets/arc_raiders/items/stella_montis_medical_storage_key.webp"
+  ],
+  "84f6aeb3369cf20ee4100b9550ed7d61e8ad92e24c753f5e863778517e985ccf": [
+    "assets/arc_raiders/items/vertical_grip_i.webp",
+    "assets/arc_raiders/items/vertical_grip_ii.webp",
+    "assets/arc_raiders/items/vertical_grip_iii.webp"
+  ]
+}
