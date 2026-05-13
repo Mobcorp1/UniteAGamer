@@ -17,7 +17,7 @@ class TradingHubScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
-        title: 'UAG ARC Raiders Hub',
+        title: 'UAG Arc Raiders Hub',
         subtitle:
             'Choose a live game hub and keep the app shell consistent across the project.',
       ),

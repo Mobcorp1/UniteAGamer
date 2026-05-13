@@ -4,7 +4,7 @@ $projectRoot = "C:\Users\mikem\uag_traders_hub"
 
 Write-Host ""
 Write-Host "========================================"
-Write-Host " UAG ARC RAIDERS HUB FULL NAMING UPDATE"
+Write-Host " UAG Arc Raiders Hub FULL NAMING UPDATE"
 Write-Host "========================================"
 Write-Host ""
 
@@ -27,11 +27,11 @@ $replacements = [ordered]@{
     "UIG Trader Hub" = $targetName
     "UIG Raiders Hub" = $targetName
     "UIG Raider Hub" = $targetName
-    "UAG ARC Raiders Hub" = $targetName
+    "UAG Arc Raiders Hub" = $targetName
     "UAG Raider Hub" = $targetName
     "UAG Riders Hub" = $targetName
     "UAG Rider Hub" = $targetName
-    "UAG ARC Raiders Hub" = $targetName
+    "UAG Arc Raiders Hub" = $targetName
     "UAG Trader Hub" = $targetName
     "Arc Riders Trading Hub" = $targetName
     "Arc Rider Trading Hub" = $targetName

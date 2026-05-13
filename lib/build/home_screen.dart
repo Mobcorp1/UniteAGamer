@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: AnimatedTextKit(
               animatedTexts: [
                 AppTheme.animatedText(
-                  'UAG ARC Raiders Hub',
+                  'UAG Arc Raiders Hub',
                   Theme.of(context).appBarTheme.titleTextStyle,
                 ),
               ],
@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 AnimatedTextKit(
                                   animatedTexts: [
                                     TypewriterAnimatedText(
-                                      'UAG ARC Raiders Hub',
+                                      'UAG Arc Raiders Hub',
                                       textStyle: _heroStyle(screenWidth),
                                       speed: const Duration(milliseconds: 85),
                                     ),
@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   maxWidth: 520,
                                 ),
                                 child: DoseActionButton(
-                                  label: 'Enter UAG ARC Raiders Hub',
+                                  label: 'Enter UAG Arc Raiders Hub',
                                   icon: Icons.swap_horiz_rounded,
                                   onPressed: () {
                                     Navigator.of(

@@ -297,7 +297,7 @@ def patch_scrappy_grid_screen() -> None:
 
       buffer
         ..writeln()
-        ..writeln('Shared from UAG ARC Raiders Hub.');
+        ..writeln('Shared from UAG Arc Raiders Hub.');
 
       await Share.share(buffer.toString().trim());
     } catch (e) {

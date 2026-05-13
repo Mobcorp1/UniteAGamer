@@ -65,8 +65,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   Future<void> _shareReferralCode(String code) async {
     if (code.trim().isEmpty) return;
     await Share.share(
-      'Join UAG ARC Raiders Hub using my referral code: $code',
-      subject: 'UAG ARC Raiders Hub Referral',
+      'Join UAG Arc Raiders Hub using my referral code: $code',
+      subject: 'UAG Arc Raiders Hub Referral',
     );
   }
 

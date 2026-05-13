@@ -59,7 +59,7 @@ class AuthLandingScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 18),
                               Text(
-                                'UAG ARC Raiders Hub',
+                                'UAG Arc Raiders Hub',
                                 style: titleStyle,
                                 textAlign: TextAlign.center,
                               ),

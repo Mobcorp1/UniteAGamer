@@ -32,7 +32,7 @@ class _AnimatedWelcomeTextState extends State<AnimatedWelcomeText> {
     return AnimatedTextKit(
       animatedTexts: [
         TyperAnimatedText(
-          'Welcome to UAG ARC Raiders Hub',
+          'Welcome to UAG Arc Raiders Hub',
           textStyle: AppTheme.heroTextStyle(
             fontSize: MediaQuery.of(context).size.width * 0.08,
             color: AppTheme.neonPink,

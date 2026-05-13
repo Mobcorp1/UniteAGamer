@@ -1,4 +1,4 @@
-UAG ARC RAIDERS HUB FULL NAMING UPDATE
+UAG Arc Raiders Hub FULL NAMING UPDATE
 
 Target app name:
 UAG Arc Raiders Hub
@@ -9,9 +9,9 @@ It replaces:
 - UIG Riders Hub
 - UIG Traders Hub
 - UIG Raiders Hub
-- UAG ARC Raiders Hub
+- UAG Arc Raiders Hub
 - UAG Riders Hub
-- UAG ARC Raiders Hub
+- UAG Arc Raiders Hub
 - Arc Riders Trading Hub
 - Arc Raiders Trading Hub
 - ARC Raiders Trading Hub

@@ -10,7 +10,7 @@ class AnimatedTitle extends StatelessWidget {
     return AnimatedTextKit(
       animatedTexts: [
         TyperAnimatedText(
-          'UAG ARC Raiders Hub',
+          'UAG Arc Raiders Hub',
           textStyle: AppTheme.heroTextStyle(
             fontSize: 30.0,
             color: AppTheme.neonCyan,

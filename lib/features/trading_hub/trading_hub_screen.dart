@@ -15,7 +15,7 @@ class TradingHubScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
-          'UAG ARC Raiders Hub',
+          'UAG Arc Raiders Hub',
           style: AppTheme.neonTextStyle(
             fontSize: 25,
             color: AppTheme.neonCyan,
@@ -36,7 +36,7 @@ class TradingHubScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TradingHubFeatureCard(
-                        title: 'UAG ARC Raiders Trading',
+                        title: 'UAG Arc Raiders Hub',
                         icon: Icons.swap_horiz,
                         description:
                             'Trade blueprints, seeds and resources with other players using structured offers, safer swap guidance and reputation tracking.',

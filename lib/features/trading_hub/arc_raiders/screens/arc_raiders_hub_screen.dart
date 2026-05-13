@@ -272,7 +272,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
-        title: 'UAG ARC Raiders Hub',
+        title: 'UAG Arc Raiders Hub',
         subtitle: 'Track, plan, trade, team up and improve your raids.',
       ),
       drawer: const AppDrawer(),
@@ -320,7 +320,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
                               _buildBanner(context),
                               const SizedBox(height: AppTheme.spaceM),
                               Text(
-                                'UAG ARC Raiders Hub',
+                                'UAG Arc Raiders Hub',
                                 textAlign: TextAlign.center,
                                 style: AppTheme.neonTextStyle(
                                   fontSize: width < 430 ? 22 : 26,

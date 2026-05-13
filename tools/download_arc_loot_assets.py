@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-UAG ARC Raiders Hub — ARC Raiders item asset pipeline.
+UAG Arc Raiders Hub — ARC Raiders item asset pipeline.
 
 Primary image source:
   https://arcraiders.wiki/wiki/Loot

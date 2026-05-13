@@ -95,7 +95,7 @@ class _AppDrawerState extends State<AppDrawer>
               child: AnimatedTextKit(
                 animatedTexts: [
                   AppTheme.animatedText(
-                    'UAG ARC Raiders Hub',
+                    'UAG Arc Raiders Hub',
                     AppTheme.heroTextStyle(
                       fontSize: 24,
                       color: AppTheme.neonCyan,

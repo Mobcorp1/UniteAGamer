@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
-          'UAG ARC Raiders Hub',
+          'UAG Arc Raiders Hub',
           style: AppTheme.neonTextStyle(
             fontSize: 24,
             color: AppTheme.neonCyan,
@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Welcome to UAG ARC Raiders Hub',
+                        'Welcome to UAG Arc Raiders Hub',
                         textAlign: TextAlign.center,
                         style: AppTheme.heroTextStyle(
                           fontSize: 36,
@@ -64,7 +64,7 @@ class HomeScreen extends StatelessWidget {
                               context,
                             ).pushNamed(TradingHubScreen.routeName);
                           },
-                          label: const Text('Enter UAG ARC Raiders Hub'),
+                          label: const Text('Enter UAG Arc Raiders Hub'),
                         ),
                       ),
                     ],
