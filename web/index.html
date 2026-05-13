@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="UAG Traders Hub standalone app.">
+  <meta name="description" content="UAG Traders Hub standalone companion app.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0925">
+
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="UAG Traders Hub">
 
@@ -28,31 +29,12 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: #090529;
+      background: #0A0925;
     }
 
     body {
       position: fixed;
       inset: 0;
-      display: block;
-    }
-
-    flutter-view,
-    flt-glass-pane,
-    flt-scene-host,
-    flt-scene,
-    canvas {
-      width: 100% !important;
-      height: 100% !important;
-      min-width: 100% !important;
-      min-height: 100% !important;
-      max-width: none !important;
-      max-height: none !important;
-      left: 0 !important;
-      top: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      position: absolute !important;
     }
 
     #loading {
@@ -63,25 +45,42 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at center, #15104a 0%, #090529 52%, #050316 100%);
-      color: #19f7ff;
-      font-family: monospace;
-      font-size: 18px;
-      letter-spacing: 0.14em;
+      background: #0A0925;
+      color: #00ffff;
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      z-index: 9999;
+    }
+
+    flutter-view,
+    flt-glass-pane,
+    flt-scene-host,
+    flt-semantics-host,
+    flt-semantics,
+    flt-platform-view,
+    canvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      min-width: 100vw !important;
+      min-height: 100vh !important;
+      max-width: none !important;
+      max-height: none !important;
+      display: block !important;
     }
   </style>
-
-  <script>
-    window.addEventListener('flutter-first-frame', function () {
-      const loading = document.getElementById('loading');
-      if (loading) loading.remove();
-    });
-  </script>
 </head>
 <body>
   <div id="loading">Loading UAG Traders Hub</div>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var loading = document.getElementById('loading');
+      if (loading) {
+        loading.remove();
+      }
+    });
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
