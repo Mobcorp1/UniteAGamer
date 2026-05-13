@@ -339,4 +339,26 @@ service cloud.firestore {
       allow create, update, delete: if isAdminOrDev();
     }
   }
+
+
+    match /sessions/{sessionId} {
+      allow read: if request.auth != null && (
+        resource.data.participantOneUid == request.auth.uid ||
+        resource.data.participantTwoUid == request.auth.uid ||
+        resource.data.createdBy == request.auth.uid
+      );
+
+      allow create: if request.auth != null &&
+        request.resource.data.createdBy == request.auth.uid &&
+        (request.resource.data.participantOneUid == request.auth.uid ||
+         request.resource.data.participantTwoUid == request.auth.uid);
+
+      allow update: if request.auth != null && (
+        resource.data.participantOneUid == request.auth.uid ||
+        resource.data.participantTwoUid == request.auth.uid ||
+        resource.data.createdBy == request.auth.uid
+      );
+
+      allow delete: if false;
+    }
 }
