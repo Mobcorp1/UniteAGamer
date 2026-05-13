@@ -1,11 +1,11 @@
 {
-  "name": "UAG Traders Hub",
+  "name": "UAG ARC Raiders Hub",
   "short_name": "UAG Traders",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#090529",
   "theme_color": "#090529",
-  "description": "UAG Traders Hub standalone companion app.",
+  "description": "UAG ARC Raiders Hub standalone companion app.",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [

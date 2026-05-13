@@ -192,7 +192,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       final authenticated = await _localAuth.authenticate(
-        localizedReason: 'Unlock UAG Traders Hub',
+        localizedReason: 'Unlock UAG ARC Raiders Hub',
         biometricOnly: true,
       );
 

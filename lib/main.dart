@@ -275,7 +275,7 @@ class UAGTradersHubApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'UAG Raiders Hub',
+      title: 'UAG ARC Raiders Hub',
       theme: AppTheme.theme,
       navigatorKey: TradingPushService.instance.navigatorKey,
       onGenerateRoute: _buildRoute,

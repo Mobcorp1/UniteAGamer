@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: AnimatedTextKit(
               animatedTexts: [
                 AppTheme.animatedText(
-                  'UAG Raiders Hub',
+                  'UAG ARC Raiders Hub',
                   Theme.of(context).appBarTheme.titleTextStyle,
                 ),
               ],
@@ -87,7 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
                         minWidth: constraints.maxWidth - (AppTheme.spaceXL * 2),
-                        minHeight: constraints.maxHeight - (AppTheme.spaceL * 2),
+                        minHeight:
+                            constraints.maxHeight - (AppTheme.spaceL * 2),
                       ),
                       child: Center(
                         child: ConstrainedBox(
@@ -106,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 AnimatedTextKit(
                                   animatedTexts: [
                                     TypewriterAnimatedText(
-                                      'UAG Raiders Hub',
+                                      'UAG ARC Raiders Hub',
                                       textStyle: _heroStyle(screenWidth),
                                       speed: const Duration(milliseconds: 85),
                                     ),
@@ -126,13 +127,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                               const SizedBox(height: 28),
                               ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 520),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 520,
+                                ),
                                 child: DoseActionButton(
-                                  label: 'Enter Trading Hub',
+                                  label: 'Enter UAG ARC Raiders Hub',
                                   icon: Icons.swap_horiz_rounded,
                                   onPressed: () {
-                                    Navigator.of(context)
-                                        .pushNamed(TradingHubScreen.routeName);
+                                    Navigator.of(
+                                      context,
+                                    ).pushNamed(TradingHubScreen.routeName);
                                   },
                                 ),
                               ),

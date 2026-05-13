@@ -95,7 +95,7 @@ class _AppDrawerState extends State<AppDrawer>
               child: AnimatedTextKit(
                 animatedTexts: [
                   AppTheme.animatedText(
-                    'UAG Raiders Hub',
+                    'UAG ARC Raiders Hub',
                     AppTheme.heroTextStyle(
                       fontSize: 24,
                       color: AppTheme.neonCyan,
@@ -114,7 +114,11 @@ class _AppDrawerState extends State<AppDrawer>
   List<_DrawerEntry> _buildItems(bool isLoggedIn, bool adminMode) {
     return <_DrawerEntry>[
       _DrawerItem('Home', Icons.home_outlined, AppEntryGate.routeName),
-      _DrawerItem('Trading Hub', Icons.hub_outlined, TradingHubScreen.routeName),
+      _DrawerItem(
+        'Trading Hub',
+        Icons.hub_outlined,
+        TradingHubScreen.routeName,
+      ),
       _DrawerItem(
         'ARC Raiders Hub',
         Icons.rocket_launch_outlined,
@@ -287,57 +291,63 @@ class _AppDrawerState extends State<AppDrawer>
                     thickness: 1.5,
                   ),
                   Expanded(
-                    child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                      future: user == null
-                          ? null
-                          : FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(user.uid)
-                                .get(),
-                      builder: (context, snapshot) {
-                        final userData = snapshot.data?.data() ?? {};
-                        final adminMode =
-                            userData['isAdmin'] == true ||
-                            userData['isDev'] == true;
-                        final items = _buildItems(isLoggedIn, adminMode);
+                    child:
+                        FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                          future: user == null
+                              ? null
+                              : FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(user.uid)
+                                    .get(),
+                          builder: (context, snapshot) {
+                            final userData = snapshot.data?.data() ?? {};
+                            final adminMode =
+                                userData['isAdmin'] == true ||
+                                userData['isDev'] == true;
+                            final items = _buildItems(isLoggedIn, adminMode);
 
-                        return ListView.builder(
-                          padding: EdgeInsets.zero,
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final entry = items[index];
-                            if (entry is _DrawerSection) {
-                              return Padding(
-                                padding: const EdgeInsets.fromLTRB(18, 14, 18, 6),
-                                child: Text(
-                                  entry.title,
-                                  style: AppTheme.bodyTextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.tradingFaintText,
-                                    isBold: true,
+                            return ListView.builder(
+                              padding: EdgeInsets.zero,
+                              itemCount: items.length,
+                              itemBuilder: (context, index) {
+                                final entry = items[index];
+                                if (entry is _DrawerSection) {
+                                  return Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      18,
+                                      14,
+                                      18,
+                                      6,
+                                    ),
+                                    child: Text(
+                                      entry.title,
+                                      style: AppTheme.bodyTextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.tradingFaintText,
+                                        isBold: true,
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                final item = entry as _DrawerItem;
+                                return UagDrawerNavTile(
+                                  title: item.title,
+                                  icon: item.icon,
+                                  selected: currentRoute == item.routeName,
+                                  onTap: () => _openRoute(
+                                    context,
+                                    item.routeName,
+                                    accessFlag: item.accessFlag,
+                                    title: item.title,
+                                    showComingSoonWhenLocked:
+                                        item.showComingSoonWhenLocked,
                                   ),
-                                ),
-                              );
-                            }
-
-                            final item = entry as _DrawerItem;
-                            return UagDrawerNavTile(
-                              title: item.title,
-                              icon: item.icon,
-                              selected: currentRoute == item.routeName,
-                              onTap: () => _openRoute(
-                                context,
-                                item.routeName,
-                                accessFlag: item.accessFlag,
-                                title: item.title,
-                                showComingSoonWhenLocked:
-                                    item.showComingSoonWhenLocked,
-                              ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    ),
+                        ),
                   ),
                   if (isLoggedIn)
                     Padding(

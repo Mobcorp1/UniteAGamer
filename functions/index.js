@@ -383,7 +383,7 @@ exports.sendTradingNotificationPush = onDocumentCreated(
 
     const response = await admin.messaging().sendEachForMulticast({
       notification: {
-        title: data.title || 'UAG Traders Hub',
+        title: data.title || 'UAG ARC Raiders Hub',
         body: data.body || 'You have a new trading update.',
       },
       data: {

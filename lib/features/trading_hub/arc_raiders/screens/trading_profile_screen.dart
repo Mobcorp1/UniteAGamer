@@ -57,16 +57,16 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     if (code.trim().isEmpty) return;
     await Clipboard.setData(ClipboardData(text: code));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Referral code copied')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Referral code copied')));
   }
 
   Future<void> _shareReferralCode(String code) async {
     if (code.trim().isEmpty) return;
     await Share.share(
-      'Join UAG Traders Hub using my referral code: $code',
-      subject: 'UAG Traders Hub Referral',
+      'Join UAG ARC Raiders Hub using my referral code: $code',
+      subject: 'UAG ARC Raiders Hub Referral',
     );
   }
 
@@ -112,7 +112,13 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     if (_initError != null) {
       return Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        appBar: widget.showAppBar ? const UagAppBar(title: 'Trader Profile', subtitle: 'Identity, visibility, availability and referral tools.') : null,
+        appBar: widget.showAppBar
+            ? const UagAppBar(
+                title: 'Trader Profile',
+                subtitle:
+                    'Identity, visibility, availability and referral tools.',
+              )
+            : null,
         body: Center(
           child: Container(
             margin: const EdgeInsets.all(AppTheme.spaceL),
@@ -123,7 +129,11 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, color: Colors.redAccent, size: 34),
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.redAccent,
+                  size: 34,
+                ),
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
                   _initError!,
@@ -131,10 +141,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   style: const TextStyle(color: Colors.white70, height: 1.35),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
-                ElevatedButton(
-                  onPressed: _retry,
-                  child: const Text('Retry'),
-                ),
+                ElevatedButton(onPressed: _retry, child: const Text('Retry')),
               ],
             ),
           ),
@@ -144,7 +151,13 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: widget.showAppBar ? const UagAppBar(title: 'Trader Profile', subtitle: 'Identity, visibility, availability and referral tools.') : null,
+      appBar: widget.showAppBar
+          ? const UagAppBar(
+              title: 'Trader Profile',
+              subtitle:
+                  'Identity, visibility, availability and referral tools.',
+            )
+          : null,
       body: SafeArea(
         child: StreamBuilder<ArcTraderProfile>(
           stream: _repository.watchProfile(),
@@ -222,7 +235,10 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                       profile.affiliateEnabled ? 'Applied' : 'Not applied',
                     ),
                     _detailRow('Payout Method', profile.payoutMethod),
-                    _detailRow('Subscription Status', profile.subscriptionStatus),
+                    _detailRow(
+                      'Subscription Status',
+                      profile.subscriptionStatus,
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppTheme.spaceL),
@@ -253,7 +269,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                             child: ElevatedButton.icon(
                               onPressed: profile.referralCode.trim().isEmpty
                                   ? null
-                                  : () => _copyReferralCode(profile.referralCode),
+                                  : () =>
+                                        _copyReferralCode(profile.referralCode),
                               icon: const Icon(Icons.copy_all_rounded),
                               label: const Text('Copy Code'),
                             ),
@@ -263,7 +280,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                             child: OutlinedButton.icon(
                               onPressed: profile.referralCode.trim().isEmpty
                                   ? null
-                                  : () => _shareReferralCode(profile.referralCode),
+                                  : () => _shareReferralCode(
+                                      profile.referralCode,
+                                    ),
                               icon: const Icon(Icons.share_outlined),
                               label: const Text('Share Code'),
                             ),
@@ -327,8 +346,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   }
 
   Widget _summaryCard(ArcTraderProfile profile) {
-    final statusColor =
-        profile.isProfileComplete ? AppTheme.neonCyan : AppTheme.neonPink;
+    final statusColor = profile.isProfileComplete
+        ? AppTheme.neonCyan
+        : AppTheme.neonPink;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceL),
@@ -351,7 +371,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile.uagName.isEmpty ? 'No UAG Name yet' : profile.uagName,
+                      profile.uagName.isEmpty
+                          ? 'No UAG Name yet'
+                          : profile.uagName,
                       style: AppTheme.tradingHeading(
                         fontSize: 24,
                         color: Colors.white,
@@ -369,7 +391,10 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               ),
               const SizedBox(width: AppTheme.spaceM),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: AppTheme.tradingPillDecoration(color: statusColor),
                 child: Text(
                   profile.isProfileComplete ? 'Ready' : 'Incomplete',
@@ -389,7 +414,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             children: [
               _miniTag(
                 icon: Icons.public_outlined,
-                text: profile.region.isEmpty ? 'Region not set' : profile.region,
+                text: profile.region.isEmpty
+                    ? 'Region not set'
+                    : profile.region,
               ),
               _miniTag(
                 icon: Icons.sports_esports_outlined,
@@ -403,7 +430,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               ),
               _miniTag(
                 icon: Icons.travel_explore_outlined,
-                text: profile.crossRegionOk ? 'Cross-region okay' : 'Local only',
+                text: profile.crossRegionOk
+                    ? 'Cross-region okay'
+                    : 'Local only',
               ),
             ],
           ),
@@ -412,10 +441,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
-  Widget _detailCard({
-    required String title,
-    required List<Widget> children,
-  }) {
+  Widget _detailCard({required String title, required List<Widget> children}) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceL),
       decoration: AppTheme.tradingCardDecoration(
@@ -524,10 +550,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      height: 1.3,
-                    ),
+                    style: const TextStyle(color: Colors.white70, height: 1.3),
                   ),
                 ],
               ),
@@ -540,10 +563,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
-  Widget _miniTag({
-    required IconData icon,
-    required String text,
-  }) {
+  Widget _miniTag({required IconData icon, required String text}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(

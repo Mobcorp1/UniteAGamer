@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/trading_hub_feature_card.dart';
-import 'package:uag_traders_hub/widgets/dose_section_card.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
@@ -16,7 +15,7 @@ class TradingHubScreen extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
-          'UAG Traders Hub',
+          'UAG ARC Raiders Hub',
           style: AppTheme.neonTextStyle(
             fontSize: 25,
             color: AppTheme.neonCyan,
@@ -37,7 +36,7 @@ class TradingHubScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TradingHubFeatureCard(
-                        title: 'ARC Raiders Trading',
+                        title: 'UAG ARC Raiders Trading',
                         icon: Icons.swap_horiz,
                         description:
                             'Trade blueprints, seeds and resources with other players using structured offers, safer swap guidance and reputation tracking.',
@@ -49,16 +48,6 @@ class TradingHubScreen extends StatelessWidget {
                             ArcRaidersHubScreen.routeName,
                           );
                         },
-                      ),
-                      const SizedBox(height: AppTheme.spaceL),
-                      DoseSectionCard(
-                        title: 'More Games Coming',
-                        icon: Icons.extension,
-                        child: Text(
-                          'Dying Light, Dying Light: The Beast, Dead Island and more trading hubs can be added here later using the same system.',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
                       ),
                     ],
                   ),

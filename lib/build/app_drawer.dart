@@ -57,7 +57,10 @@ class _AppDrawerState extends State<AppDrawer>
     navigator.pop();
     await FirebaseAuth.instance.signOut();
     if (!mounted) return;
-    navigator.pushNamedAndRemoveUntil(AuthLandingScreen.routeName, (_) => false);
+    navigator.pushNamedAndRemoveUntil(
+      AuthLandingScreen.routeName,
+      (_) => false,
+    );
   }
 
   Widget _buildDrawerHeader(Color dynamicColor) {
@@ -93,7 +96,7 @@ class _AppDrawerState extends State<AppDrawer>
               child: AnimatedTextKit(
                 animatedTexts: [
                   AppTheme.animatedText(
-                    'UAG Raiders Hub',
+                    'UAG ARC Raiders Hub',
                     AppTheme.heroTextStyle(
                       fontSize: 24,
                       color: AppTheme.neonCyan,
@@ -140,7 +143,7 @@ class _AppDrawerState extends State<AppDrawer>
         accessFlag: FeatureAccessFlag.traderHub,
       ),
       _DrawerItem(
-        'Match Raider',
+        'Match A Raider',
         Icons.groups_2_outlined,
         ArcMatchRiderScreen.routeName,
         accessFlag: FeatureAccessFlag.matchRaider,
@@ -280,42 +283,45 @@ class _AppDrawerState extends State<AppDrawer>
                     thickness: 1.5,
                   ),
                   Expanded(
-                    child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                      future: user == null
-                          ? null
-                          : FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(user.uid)
-                              .get(),
-                      builder: (context, snapshot) {
-                        final userData = snapshot.data?.data() ?? {};
-                        final adminMode = userData['isAdmin'] == true ||
-                            userData['isDev'] == true;
-                        final items = _buildItems(isLoggedIn, adminMode);
-                        return ListView.builder(
-                          padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).padding.bottom + 12,
-                          ),
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return UagDrawerNavTile(
-                              title: item.title,
-                              icon: item.icon,
-                              selected: currentRoute == item.routeName,
-                              onTap: () => _openRoute(
-                                context,
-                                item.routeName,
-                                accessFlag: item.accessFlag,
-                                title: item.title,
-                                comingSoonWhenLocked:
-                                    item.comingSoonWhenLocked,
+                    child:
+                        FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                          future: user == null
+                              ? null
+                              : FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(user.uid)
+                                    .get(),
+                          builder: (context, snapshot) {
+                            final userData = snapshot.data?.data() ?? {};
+                            final adminMode =
+                                userData['isAdmin'] == true ||
+                                userData['isDev'] == true;
+                            final items = _buildItems(isLoggedIn, adminMode);
+                            return ListView.builder(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).padding.bottom + 12,
                               ),
+                              itemCount: items.length,
+                              itemBuilder: (context, index) {
+                                final item = items[index];
+                                return UagDrawerNavTile(
+                                  title: item.title,
+                                  icon: item.icon,
+                                  selected: currentRoute == item.routeName,
+                                  onTap: () => _openRoute(
+                                    context,
+                                    item.routeName,
+                                    accessFlag: item.accessFlag,
+                                    title: item.title,
+                                    comingSoonWhenLocked:
+                                        item.comingSoonWhenLocked,
+                                  ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    ),
+                        ),
                   ),
                   if (isLoggedIn)
                     SafeArea(

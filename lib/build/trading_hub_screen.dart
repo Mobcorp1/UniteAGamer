@@ -12,47 +12,14 @@ class TradingHubScreen extends StatelessWidget {
 
   const TradingHubScreen({super.key});
 
-  Widget _comingSoonCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.22),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.extension, color: AppTheme.neonPink, size: 30),
-          const SizedBox(height: AppTheme.spaceM),
-          Text(
-            'More Games Coming',
-            textAlign: TextAlign.center,
-            style: AppTheme.neonTextStyle(
-              fontSize: 22,
-              color: AppTheme.neonCyan,
-              isBold: true,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceS),
-          Text(
-            'Dying Light, Dying Light: The Beast, Dead Island and more trading hubs can be added here later using the same system.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white70,
-              height: 1.35,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
-        title: 'UAG Traders Hub',
-        subtitle: 'Choose a live game hub and keep the app shell consistent across the project.',
+        title: 'UAG ARC Raiders Hub',
+        subtitle:
+            'Choose a live game hub and keep the app shell consistent across the project.',
       ),
       drawer: const AppDrawer(),
       body: Stack(
@@ -82,7 +49,6 @@ class TradingHubScreen extends StatelessWidget {
                         },
                       ),
                       const SizedBox(height: AppTheme.spaceL),
-                      _comingSoonCard(context),
                     ],
                   ),
                 ),

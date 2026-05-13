@@ -1,6 +1,6 @@
 # UniteAGamer
 
-## UAG Traders Hub (ARC Raiders)
+## UAG ARC Raiders Hub (ARC Raiders)
 
 Unite A Gamer (UAG) Traders Hub is a standalone Flutter + Firebase app designed to support ARC Raiders players with:
 
