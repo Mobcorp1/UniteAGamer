@@ -14,7 +14,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_mar
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart'; import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_activity_screen.dart';
@@ -26,6 +26,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/trading_hub_screen.dart';
 import 'package:uag_traders_hub/screens/build/admin_console_screen.dart';
 import 'package:uag_traders_hub/screens/build/app_entry_gate.dart';
@@ -165,7 +166,17 @@ class UAGTradersHubApp extends StatelessWidget {
           settings: settings,
         );
 
-      case SessionPlannerScreen.routeName: return MaterialPageRoute( builder: (_) => const FeatureAccessRouteGate( flag: FeatureAccessFlag.traderHub, title: 'Session Planner', child: SessionPlannerScreen(), ), settings: settings, ); case TraderHubScreen.routeName:
+      case SessionPlannerScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.traderHub,
+            title: 'Session Planner',
+            child: SessionPlannerScreen(),
+          ),
+          settings: settings,
+        );
+
+      case TraderHubScreen.routeName:
       case TradingListingsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
@@ -273,7 +284,9 @@ class UAGTradersHubApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
+              body: SizedBox.expand(
+                child: Center(child: CircularProgressIndicator()),
+              ),
             );
           }
 

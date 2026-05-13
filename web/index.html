@@ -6,9 +6,8 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="UAG Traders Hub standalone app.">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-  <meta name="theme-color" content="#090529">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="UAG Traders Hub">
@@ -35,56 +34,54 @@
     body {
       position: fixed;
       inset: 0;
-      overscroll-behavior: none;
-      touch-action: manipulation;
+      display: block;
     }
 
-    flt-glass-pane,
     flutter-view,
-    flutter-view > flt-glass-pane,
-    #flutter_target {
-      width: 100vw !important;
-      height: 100vh !important;
-      min-width: 100vw !important;
-      min-height: 100vh !important;
-      display: block !important;
-      position: fixed !important;
-      inset: 0 !important;
-      background: #090529 !important;
-    }
-
-    canvas,
+    flt-glass-pane,
     flt-scene-host,
     flt-scene,
-    flt-platform-view {
+    canvas {
       width: 100% !important;
       height: 100% !important;
+      min-width: 100% !important;
+      min-height: 100% !important;
+      max-width: none !important;
+      max-height: none !important;
+      left: 0 !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      position: absolute !important;
     }
 
     #loading {
       position: fixed;
       inset: 0;
+      width: 100vw;
+      height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at center, rgba(0,255,255,0.08), transparent 42%), #090529;
-      color: #00ffff;
-      font-family: Arial, sans-serif;
-      letter-spacing: 0.08em;
+      background: radial-gradient(circle at center, #15104a 0%, #090529 52%, #050316 100%);
+      color: #19f7ff;
+      font-family: monospace;
+      font-size: 18px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
       z-index: 9999;
     }
   </style>
-</head>
-<body>
-  <div id="loading">LOADING UAG TRADERS HUB</div>
-  <div id="flutter_target"></div>
 
-  <script src="flutter_bootstrap.js" async></script>
   <script>
     window.addEventListener('flutter-first-frame', function () {
       const loading = document.getElementById('loading');
       if (loading) loading.remove();
     });
   </script>
+</head>
+<body>
+  <div id="loading">Loading UAG Traders Hub</div>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -70,62 +70,62 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       drawer: const AppDrawer(drawerWidth: 250),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: AppTheme.pageMaxWidth,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const AnimatedLogo(
-                      assetPath:
-                          'assets/icon/uag_traders_icon_transparent.webp',
-                    ),
-                    const SizedBox(height: 24),
-                    if (_showText) ...[
-                      AnimatedTextKit(
-                        animatedTexts: [
-                          TypewriterAnimatedText(
-                            'UAG Raiders Hub',
-                            textStyle: _heroStyle(screenWidth),
-                            speed: const Duration(milliseconds: 85),
-                          ),
-                        ],
-                        isRepeatingAnimation: false,
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Positioned.fill(child: StaticWatermark()),
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppTheme.pageMaxWidth,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const AnimatedLogo(
+                        assetPath: 'assets/icon/uag_traders_icon_transparent.webp',
                       ),
-                      const SizedBox(height: 14),
-                      AnimatedOpacity(
-                        duration: const Duration(milliseconds: 650),
-                        opacity: 1,
-                        child: Text(
-                          'Welcome back. Build trust, browse trades, and manage your ARC Raiders deals.',
-                          textAlign: TextAlign.center,
-                          style: _subStyle(screenWidth),
+                      const SizedBox(height: 24),
+                      if (_showText) ...[
+                        AnimatedTextKit(
+                          animatedTexts: [
+                            TypewriterAnimatedText(
+                              'UAG Raiders Hub',
+                              textStyle: _heroStyle(screenWidth),
+                              speed: const Duration(milliseconds: 85),
+                            ),
+                          ],
+                          isRepeatingAnimation: false,
                         ),
+                        const SizedBox(height: 14),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 650),
+                          opacity: 1,
+                          child: Text(
+                            'Welcome back.\nBuild trust, browse trades, and manage your ARC Raiders deals.',
+                            textAlign: TextAlign.center,
+                            style: _subStyle(screenWidth),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 28),
+                      DoseActionButton(
+                        label: 'Enter Trading Hub',
+                        icon: Icons.swap_horiz_rounded,
+                        onPressed: () {
+                          Navigator.of(context).pushNamed(TradingHubScreen.routeName);
+                        },
                       ),
                     ],
-                    const SizedBox(height: 28),
-                    DoseActionButton(
-                      label: 'Enter Trading Hub',
-                      icon: Icons.swap_horiz_rounded,
-                      onPressed: () {
-                        Navigator.of(
-                          context,
-                        ).pushNamed(TradingHubScreen.routeName);
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
