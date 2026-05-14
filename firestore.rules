@@ -10,13 +10,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function userDocExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function isAdminOrDev() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
-          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDev == true
-        );
+      return userDocExists() &&
+        (currentUserData().isAdmin == true || currentUserData().isDev == true);
     }
 
     function ownsExistingDocByOwnerUid() {
@@ -44,39 +48,39 @@ service cloud.firestore {
     }
 
     function isTradingOfferParticipant() {
-      return isSignedIn()
-        && (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
+      return isSignedIn() &&
+        (resource.data.senderUid == request.auth.uid || resource.data.receiverUid == request.auth.uid);
     }
 
     function isIncomingTradingOfferSender() {
-      return isSignedIn()
-        && request.resource.data.senderUid == request.auth.uid
-        && request.resource.data.receiverUid != request.auth.uid;
+      return isSignedIn() &&
+        request.resource.data.senderUid == request.auth.uid &&
+        request.resource.data.receiverUid != request.auth.uid;
     }
 
     function isTradingSessionParticipant() {
-      return isSignedIn()
-        && (resource.data.traderOneUid == request.auth.uid || resource.data.traderTwoUid == request.auth.uid);
+      return isSignedIn() &&
+        (resource.data.traderOneUid == request.auth.uid || resource.data.traderTwoUid == request.auth.uid);
     }
 
     function isIncomingTradingSessionParticipant() {
-      return isSignedIn()
-        && request.resource.data.traderOneUid != request.resource.data.traderTwoUid
-        && (
-          request.resource.data.traderOneUid == request.auth.uid
-          || request.resource.data.traderTwoUid == request.auth.uid
+      return isSignedIn() &&
+        request.resource.data.traderOneUid != request.resource.data.traderTwoUid &&
+        (
+          request.resource.data.traderOneUid == request.auth.uid ||
+          request.resource.data.traderTwoUid == request.auth.uid
         );
     }
 
     function isMatchInviteParticipant() {
-      return isSignedIn()
-        && (resource.data.senderUid == request.auth.uid || resource.data.recipientUid == request.auth.uid);
+      return isSignedIn() &&
+        (resource.data.senderUid == request.auth.uid || resource.data.recipientUid == request.auth.uid);
     }
 
     function isIncomingMatchInviteSender() {
-      return isSignedIn()
-        && request.resource.data.senderUid == request.auth.uid
-        && request.resource.data.recipientUid != request.auth.uid;
+      return isSignedIn() &&
+        request.resource.data.senderUid == request.auth.uid &&
+        request.resource.data.recipientUid != request.auth.uid;
     }
 
     function isNotificationTarget() {
@@ -84,10 +88,29 @@ service cloud.firestore {
     }
 
     function isIncomingNotificationActor() {
-      return isSignedIn()
-        && request.resource.data.actorUid == request.auth.uid
-        && request.resource.data.targetUid is string
-        && request.resource.data.targetUid != '';
+      return isSignedIn() &&
+        request.resource.data.actorUid == request.auth.uid &&
+        request.resource.data.targetUid is string &&
+        request.resource.data.targetUid != '';
+    }
+
+    function isSessionPlannerParticipant() {
+      return isSignedIn() &&
+        (
+          resource.data.participantOneUid == request.auth.uid ||
+          resource.data.participantTwoUid == request.auth.uid ||
+          resource.data.createdBy == request.auth.uid
+        );
+    }
+
+    function isIncomingSessionPlannerParticipant() {
+      return isSignedIn() &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.participantOneUid != request.resource.data.participantTwoUid &&
+        (
+          request.resource.data.participantOneUid == request.auth.uid ||
+          request.resource.data.participantTwoUid == request.auth.uid
+        );
     }
 
     match /users/{userId} {
@@ -123,27 +146,6 @@ service cloud.firestore {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
     }
-    match /uag_sessions/{sessionId} {
-      allow get, list, read: if isSignedIn();
-
-      allow create: if isSignedIn()
-        && request.resource.data.createdBy == request.auth.uid;
-
-      allow update: if isSignedIn()
-        && (
-          resource.data.createdBy == request.auth.uid
-          || resource.data.participantOneUid == request.auth.uid
-          || resource.data.participantTwoUid == request.auth.uid
-          || isAdminOrDev()
-        );
-
-      allow delete: if isSignedIn()
-        && (
-          resource.data.createdBy == request.auth.uid
-          || isAdminOrDev()
-        );
-    }
-
 
     match /arc_blueprint_drop_reports/{reportId} {
       allow read: if isSignedIn();
@@ -178,40 +180,40 @@ service cloud.firestore {
     match /trading_listings/{listingId} {
       allow read: if isSignedIn();
       allow create: if ownsIncomingDocByOwnerUid() && request.resource.data.id == listingId;
-      allow update: if ownsExistingDocByOwnerUid()
-        && request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.id == resource.data.id;
+      allow update: if ownsExistingDocByOwnerUid() &&
+        request.resource.data.ownerUid == resource.data.ownerUid &&
+        request.resource.data.id == resource.data.id;
       allow delete: if ownsExistingDocByOwnerUid() || isAdminOrDev();
     }
 
     match /trading_offers/{offerId} {
       allow read: if isTradingOfferParticipant() || isAdminOrDev();
       allow create: if isIncomingTradingOfferSender() && request.resource.data.id == offerId;
-      allow update: if (isTradingOfferParticipant() || isAdminOrDev())
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.listingId == resource.data.listingId
-        && request.resource.data.senderUid == resource.data.senderUid
-        && request.resource.data.receiverUid == resource.data.receiverUid;
+      allow update: if (isTradingOfferParticipant() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.listingId == resource.data.listingId &&
+        request.resource.data.senderUid == resource.data.senderUid &&
+        request.resource.data.receiverUid == resource.data.receiverUid;
       allow delete: if false;
     }
 
     match /trading_sessions/{sessionId} {
       allow read: if isTradingSessionParticipant() || isAdminOrDev();
       allow create: if isIncomingTradingSessionParticipant() && request.resource.data.id == sessionId;
-      allow update: if (isTradingSessionParticipant() || isAdminOrDev())
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.traderOneUid == resource.data.traderOneUid
-        && request.resource.data.traderTwoUid == resource.data.traderTwoUid;
+      allow update: if (isTradingSessionParticipant() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.traderOneUid == resource.data.traderOneUid &&
+        request.resource.data.traderTwoUid == resource.data.traderTwoUid;
       allow delete: if false;
     }
 
     match /trading_notifications/{notificationId} {
       allow read: if isNotificationTarget() || isAdminOrDev();
       allow create: if isIncomingNotificationActor() && request.resource.data.id == notificationId;
-      allow update: if (isNotificationTarget() || isAdminOrDev())
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.targetUid == resource.data.targetUid
-        && request.resource.data.actorUid == resource.data.actorUid;
+      allow update: if (isNotificationTarget() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.targetUid == resource.data.targetUid &&
+        request.resource.data.actorUid == resource.data.actorUid;
       allow delete: if isNotificationTarget() || isAdminOrDev();
     }
 
@@ -224,39 +226,61 @@ service cloud.firestore {
     match /arc_match_rider_invites/{inviteId} {
       allow read: if isMatchInviteParticipant() || isAdminOrDev();
       allow create: if isIncomingMatchInviteSender() && request.resource.data.id == inviteId;
-      allow update: if (isMatchInviteParticipant() || isAdminOrDev())
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.senderUid == resource.data.senderUid
-        && request.resource.data.recipientUid == resource.data.recipientUid;
+      allow update: if (isMatchInviteParticipant() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.senderUid == resource.data.senderUid &&
+        request.resource.data.recipientUid == resource.data.recipientUid;
       allow delete: if false;
     }
 
     match /arc_trade_listings/{listingId} {
       allow read: if isSignedIn();
       allow create: if ownsIncomingDocByUserId() && request.resource.data.id == listingId;
-      allow update: if ownsExistingDocByUserId()
-        && request.resource.data.userId == resource.data.userId
-        && request.resource.data.id == resource.data.id;
+      allow update: if ownsExistingDocByUserId() &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.id == resource.data.id;
       allow delete: if ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /arc_trade_sessions/{sessionId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && (
-          request.resource.data.traderOneUid == request.auth.uid
-          || request.resource.data.traderTwoUid == request.auth.uid
-          || request.resource.data.userId == request.auth.uid
-          || request.resource.data.ownerUid == request.auth.uid
+      allow create: if isSignedIn() &&
+        (
+          request.resource.data.traderOneUid == request.auth.uid ||
+          request.resource.data.traderTwoUid == request.auth.uid ||
+          request.resource.data.userId == request.auth.uid ||
+          request.resource.data.ownerUid == request.auth.uid
         );
-      allow update: if isSignedIn()
-        && (
-          resource.data.traderOneUid == request.auth.uid
-          || resource.data.traderTwoUid == request.auth.uid
-          || resource.data.userId == request.auth.uid
-          || resource.data.ownerUid == request.auth.uid
-          || isAdminOrDev()
+      allow update: if isSignedIn() &&
+        (
+          resource.data.traderOneUid == request.auth.uid ||
+          resource.data.traderTwoUid == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          resource.data.ownerUid == request.auth.uid ||
+          isAdminOrDev()
         );
+      allow delete: if false;
+    }
+
+    match /uag_sessions/{sessionId} {
+      allow read: if isSessionPlannerParticipant() || isAdminOrDev();
+      allow list: if isSignedIn();
+      allow create: if isIncomingSessionPlannerParticipant() || isAdminOrDev();
+      allow update: if (isSessionPlannerParticipant() || isAdminOrDev()) &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.participantOneUid == resource.data.participantOneUid &&
+        request.resource.data.participantTwoUid == resource.data.participantTwoUid;
+      allow delete: if false;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSessionPlannerParticipant() || isAdminOrDev();
+      allow list: if isSignedIn();
+      allow create: if isIncomingSessionPlannerParticipant() || isAdminOrDev();
+      allow update: if (isSessionPlannerParticipant() || isAdminOrDev()) &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.participantOneUid == resource.data.participantOneUid &&
+        request.resource.data.participantTwoUid == resource.data.participantTwoUid;
       allow delete: if false;
     }
 
@@ -267,15 +291,15 @@ service cloud.firestore {
       allow delete: if false;
 
       match /replies/{replyId} {
-        allow read: if isSignedIn()
-          && (
-            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
-            || isAdminOrDev()
-          );
-        allow create: if isSignedIn()
-          && (
+        allow read: if isSignedIn() &&
+          (
+            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid ||
             isAdminOrDev()
-            || get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
+          );
+        allow create: if isSignedIn() &&
+          (
+            isAdminOrDev() ||
+            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
           );
         allow update, delete: if false;
       }
@@ -289,22 +313,22 @@ service cloud.firestore {
 
     match /system_counters/{counterId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && counterId == 'arc_trader_ids'
-        && request.resource.data.lastIssuedNumber is int
-        && request.resource.data.lastIssuedNumber >= 0
-        && request.resource.data.lastIssuedNumber <= 400000000;
+      allow create, update: if isSignedIn() &&
+        counterId == 'arc_trader_ids' &&
+        request.resource.data.lastIssuedNumber is int &&
+        request.resource.data.lastIssuedNumber >= 0 &&
+        request.resource.data.lastIssuedNumber <= 400000000;
       allow delete: if false;
     }
 
     match /referral_codes/{code} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && request.resource.data.code == code
-        && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if isSignedIn()
-        && resource.data.ownerUid == request.auth.uid
-        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow create: if isSignedIn() &&
+        request.resource.data.code == code &&
+        request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isSignedIn() &&
+        resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.ownerUid == resource.data.ownerUid;
       allow delete: if false;
     }
 
@@ -335,13 +359,13 @@ service cloud.firestore {
 
     match /uag_ids/{uagId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.uagId == uagId;
-      allow update: if isSignedIn()
-        && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.uagId == resource.data.uagId;
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.uagId == uagId;
+      allow update: if isSignedIn() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.uagId == resource.data.uagId;
       allow delete: if false;
     }
 
@@ -352,13 +376,13 @@ service cloud.firestore {
     }
 
     match /dose_tasks/{taskId} {
-      allow read, create, update, delete: if isSignedIn()
-        && (
-          request.resource.data.uid == request.auth.uid
-          || resource.data.uid == request.auth.uid
-          || request.resource.data.userId == request.auth.uid
-          || resource.data.userId == request.auth.uid
-          || isAdminOrDev()
+      allow read, create, update, delete: if isSignedIn() &&
+        (
+          request.resource.data.uid == request.auth.uid ||
+          resource.data.uid == request.auth.uid ||
+          request.resource.data.userId == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          isAdminOrDev()
         );
     }
 

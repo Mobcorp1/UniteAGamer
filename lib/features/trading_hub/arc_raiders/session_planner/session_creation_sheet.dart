@@ -5,19 +5,24 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 
 class SessionCreationSheet extends StatefulWidget {
   const SessionCreationSheet({super.key, required this.repository});
+
   final UagSessionRepository repository;
+
   static Future<void> show(
     BuildContext context,
     UagSessionRepository repository,
-  ) => showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: AppTheme.cardBackgroundDeep,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (_) => SessionCreationSheet(repository: repository),
-  );
+  ) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.cardBackgroundDeep,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => SessionCreationSheet(repository: repository),
+    );
+  }
+
   @override
   State<SessionCreationSheet> createState() => _SessionCreationSheetState();
 }
@@ -27,10 +32,12 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _embarkController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+
   DateTime _date = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _time = const TimeOfDay(hour: 20, minute: 0);
   String _type = 'trade';
   bool _saving = false;
+
   @override
   void dispose() {
     _uidController.dispose();
@@ -47,18 +54,27 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
       firstDate: DateTime.now().subtract(const Duration(days: 1)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (result != null) setState(() => _date = result);
+
+    if (result != null && mounted) {
+      setState(() => _date = result);
+    }
   }
 
   Future<void> _pickTime() async {
     final result = await showTimePicker(context: context, initialTime: _time);
-    if (result != null) setState(() => _time = result);
+
+    if (result != null && mounted) {
+      setState(() => _time = result);
+    }
   }
 
   Future<void> _save() async {
     if (_saving) return;
-    if (_uidController.text.trim().isEmpty ||
-        _nameController.text.trim().isEmpty) {
+
+    final otherUid = _uidController.text.trim();
+    final otherName = _nameController.text.trim();
+
+    if (otherUid.isEmpty || otherName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Add the other player UID and display name.'),
@@ -66,7 +82,18 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
       );
       return;
     }
+
+    if (otherUid == widget.repository.currentUid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You cannot schedule a session with yourself.'),
+        ),
+      );
+      return;
+    }
+
     setState(() => _saving = true);
+
     try {
       final timezone = await FlutterTimezone.getLocalTimezone();
       final scheduledAt = DateTime(
@@ -76,124 +103,153 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
         _time.hour,
         _time.minute,
       );
+
       await widget.repository.createManualSession(
         type: _type,
-        participantTwoUid: _uidController.text.trim(),
-        participantTwoDisplayName: _nameController.text.trim(),
+        participantTwoUid: otherUid,
+        participantTwoDisplayName: otherName,
         participantTwoEmbarkId: _embarkController.text.trim(),
         scheduledAt: scheduledAt,
         timezone: timezone,
         notes: _notesController.text.trim(),
       );
+
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not create session: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not create session: $error')),
+      );
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    top: false,
-    child: Padding(
-      padding: EdgeInsets.only(
-        left: AppTheme.spaceL,
-        right: AppTheme.spaceL,
-        top: AppTheme.spaceL,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spaceL,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Schedule Session',
-              style: AppTheme.tradingHeading(
-                fontSize: 24,
-                color: AppTheme.neonPink,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            DropdownButtonFormField<String>(
-              initialValue: _type,
-              decoration: AppTheme.tradingInputDecoration(label: 'Type'),
-              dropdownColor: AppTheme.cardBackgroundAlt,
-              items: const [
-                DropdownMenuItem(value: 'trade', child: Text('Trade')),
-                DropdownMenuItem(
-                  value: 'matchmaking',
-                  child: Text('Matchmaking'),
-                ),
-              ],
-              onChanged: (value) => setState(() => _type = value ?? 'trade'),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            TextField(
-              controller: _uidController,
-              style: const TextStyle(color: Colors.white),
-              decoration: AppTheme.tradingInputDecoration(
-                label: 'Other player UID',
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            TextField(
-              controller: _nameController,
-              style: const TextStyle(color: Colors.white),
-              decoration: AppTheme.tradingInputDecoration(
-                label: 'Other player display name',
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            TextField(
-              controller: _embarkController,
-              style: const TextStyle(color: Colors.white),
-              decoration: AppTheme.tradingInputDecoration(
-                label: 'Other player Embark ID',
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickDate,
-                    icon: const Icon(Icons.calendar_month_rounded),
-                    label: Text('${_date.day}/${_date.month}/${_date.year}'),
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppTheme.spaceL,
+          right: AppTheme.spaceL,
+          top: AppTheme.spaceL,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spaceL,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(999),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceS),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickTime,
-                    icon: const Icon(Icons.schedule_rounded),
-                    label: Text(_time.format(context)),
-                  ),
+              ),
+              const SizedBox(height: AppTheme.spaceL),
+              Text(
+                'Schedule Session',
+                style: AppTheme.tradingHeading(
+                  fontSize: 24,
+                  color: AppTheme.neonPink,
                 ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            TextField(
-              controller: _notesController,
-              minLines: 2,
-              maxLines: 4,
-              style: const TextStyle(color: Colors.white),
-              decoration: AppTheme.tradingInputDecoration(label: 'Notes'),
-            ),
-            const SizedBox(height: AppTheme.spaceL),
-            ElevatedButton.icon(
-              onPressed: _saving ? null : _save,
-              icon: const Icon(Icons.save_rounded),
-              label: Text(_saving ? 'Saving…' : 'Create Session'),
-            ),
-          ],
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              DropdownButtonFormField<String>(
+                value: _type,
+                decoration: AppTheme.tradingInputDecoration(label: 'Type'),
+                dropdownColor: AppTheme.cardBackgroundAlt,
+                items: const [
+                  DropdownMenuItem(value: 'trade', child: Text('Trade')),
+                  DropdownMenuItem(
+                    value: 'matchmaking',
+                    child: Text('Matchmaking'),
+                  ),
+                ],
+                onChanged: _saving
+                    ? null
+                    : (value) => setState(() => _type = value ?? 'trade'),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              TextField(
+                controller: _uidController,
+                enabled: !_saving,
+                style: const TextStyle(color: Colors.white),
+                decoration: AppTheme.tradingInputDecoration(
+                  label: 'Other player UID',
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              TextField(
+                controller: _nameController,
+                enabled: !_saving,
+                style: const TextStyle(color: Colors.white),
+                decoration: AppTheme.tradingInputDecoration(
+                  label: 'Other player display name',
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              TextField(
+                controller: _embarkController,
+                enabled: !_saving,
+                style: const TextStyle(color: Colors.white),
+                decoration: AppTheme.tradingInputDecoration(
+                  label: 'Other player Embark ID',
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _saving ? null : _pickDate,
+                      icon: const Icon(Icons.calendar_month_rounded),
+                      label: Text('${_date.day}/${_date.month}/${_date.year}'),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spaceS),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _saving ? null : _pickTime,
+                      icon: const Icon(Icons.schedule_rounded),
+                      label: Text(_time.format(context)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              TextField(
+                controller: _notesController,
+                enabled: !_saving,
+                minLines: 2,
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white),
+                decoration: AppTheme.tradingInputDecoration(label: 'Notes'),
+              ),
+              const SizedBox(height: AppTheme.spaceL),
+              ElevatedButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: _saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save_rounded),
+                label: Text(_saving ? 'Saving…' : 'Create Session'),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
