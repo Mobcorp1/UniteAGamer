@@ -96,27 +96,60 @@ service cloud.firestore {
       match /arc_blueprints/{docId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
+
       match /arc_blueprint_targets/{docId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
+
       match /arc_scrappy_items/{docId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
+
       match /trading_activity/{docId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
+
       match /notification_tokens/{tokenId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
+
       match /monetisation_usage/{usageId} {
         allow read: if isOwner(userId) || isAdminOrDev();
         allow create, update: if isOwner(userId) || isAdminOrDev();
         allow delete: if isAdminOrDev();
       }
+
       match /{document=**} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
     }
+
+    match /uag_sessions/{sessionId} {
+
+  allow get: if isSignedIn();
+
+  allow list: if isSignedIn()
+    && (
+      request.query.orderBy.size() == 1
+    );
+
+  allow create: if isSignedIn()
+    && request.resource.data.createdBy == request.auth.uid;
+
+  allow update: if isSignedIn()
+    && (
+      resource.data.createdBy == request.auth.uid
+      || resource.data.participantOneUid == request.auth.uid
+      || resource.data.participantTwoUid == request.auth.uid
+      || isAdminOrDev()
+    );
+
+  allow delete: if isSignedIn()
+    && (
+      resource.data.createdBy == request.auth.uid
+      || isAdminOrDev()
+    );
+}
 
     match /arc_blueprint_drop_reports/{reportId} {
       allow read: if isSignedIn();
@@ -284,6 +317,7 @@ service cloud.firestore {
     match /referral_wallets/{uid} {
       allow read: if isOwner(uid) || isAdminOrDev();
       allow create, update, delete: if isAdminOrDev();
+
       match /ledger/{ledgerId} {
         allow read: if isOwner(uid) || isAdminOrDev();
         allow create, update, delete: if isAdminOrDev();
@@ -339,57 +373,4 @@ service cloud.firestore {
       allow create, update, delete: if isAdminOrDev();
     }
   }
-
-
-    match /uag_sessions/{sessionId} {
-  allow read: if request.auth != null
-    && (
-      resource.data.participantOneUid == request.auth.uid ||
-      resource.data.participantTwoUid == request.auth.uid ||
-      resource.data.createdBy == request.auth.uid ||
-      isAdminOrDev()
-    );
-
-  allow create: if request.auth != null
-    && request.resource.data.createdBy == request.auth.uid
-    && (
-      request.resource.data.participantOneUid == request.auth.uid ||
-      request.resource.data.participantTwoUid == request.auth.uid ||
-      isAdminOrDev()
-    );
-
-  allow update: if request.auth != null
-    && (
-      resource.data.participantOneUid == request.auth.uid ||
-      resource.data.participantTwoUid == request.auth.uid ||
-      resource.data.createdBy == request.auth.uid ||
-      isAdminOrDev()
-    );
-
-  allow delete: if request.auth != null
-    && (
-      resource.data.createdBy == request.auth.uid ||
-      isAdminOrDev()
-    );
-} match /sessions/{sessionId} {
-      allow read: if request.auth != null && (
-        resource.data.participantOneUid == request.auth.uid ||
-        resource.data.participantTwoUid == request.auth.uid ||
-        resource.data.createdBy == request.auth.uid
-      );
-
-      allow create: if request.auth != null &&
-        request.resource.data.createdBy == request.auth.uid &&
-        (request.resource.data.participantOneUid == request.auth.uid ||
-         request.resource.data.participantTwoUid == request.auth.uid);
-
-      allow update: if request.auth != null && (
-        resource.data.participantOneUid == request.auth.uid ||
-        resource.data.participantTwoUid == request.auth.uid ||
-        resource.data.createdBy == request.auth.uid
-      );
-
-      allow delete: if false;
-    }
 }
-
