@@ -6,14 +6,14 @@ class UagVoiceAssistantSheet extends StatefulWidget {
   const UagVoiceAssistantSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: AppTheme.cardBackgroundDeep,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (_) => const UagVoiceAssistantSheet(),
-      );
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppTheme.cardBackgroundDeep,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => const UagVoiceAssistantSheet(),
+  );
 
   @override
   State<UagVoiceAssistantSheet> createState() => _UagVoiceAssistantSheetState();
@@ -88,7 +88,7 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                 ),
                 const SizedBox(height: AppTheme.spaceS),
                 Text(
-                  'Ask: “Do I need ARC Alloy?” or “Can I trade lemons?”',
+                  'Ask: “Who wants Anvil?”, “Any trade sessions today?”, or “Find blueprint Canto”.',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 14,
                     color: Colors.white70,
@@ -98,31 +98,64 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                 _buildVoiceSelector(),
                 const SizedBox(height: AppTheme.spaceM),
                 ElevatedButton.icon(
-                  onPressed: _service.initialising
+                  onPressed: (_service.initialising || _service.thinking)
                       ? null
                       : _service.listening
-                          ? _service.stopListening
-                          : _service.startListening,
+                      ? _service.stopListening
+                      : _service.startListening,
                   icon: Icon(
-                    _service.listening
-                        ? Icons.stop_rounded
-                        : Icons.mic_rounded,
+                    _service.listening ? Icons.stop_rounded : Icons.mic_rounded,
                   ),
                   label: Text(
-                    _service.initialising
+                    _service.thinking
+                        ? 'Checking live UAG data…'
+                        : _service.initialising
                         ? 'Starting voice assistant…'
                         : _service.listening
-                            ? 'Listening… tap to stop'
-                            : 'Tap and ask UAG Raider',
+                        ? 'Listening… tap to stop'
+                        : 'Tap and ask UAG Raider',
                   ),
                 ),
+
+                if (_service.thinking) ...[
+                  const SizedBox(height: AppTheme.spaceM),
+                  Container(
+                    padding: const EdgeInsets.all(AppTheme.spaceM),
+                    decoration: AppTheme.tradingCardDecoration(
+                      borderColor: AppTheme.neonPink.withValues(alpha: 0.28),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: AppTheme.spaceM),
+                        Expanded(
+                          child: Text(
+                            'Checking live trades, sessions and tracker state…',
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 13,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (_service.lastError != null) ...[
                   const SizedBox(height: AppTheme.spaceM),
                   Container(
                     padding: const EdgeInsets.all(AppTheme.spaceM),
                     decoration: AppTheme.tradingCardDecoration(
-                      borderColor: AppTheme.warningAmber.withValues(alpha: 0.55),
-                      backgroundColor: AppTheme.warningAmber.withValues(alpha: 0.08),
+                      borderColor: AppTheme.warningAmber.withValues(
+                        alpha: 0.55,
+                      ),
+                      backgroundColor: AppTheme.warningAmber.withValues(
+                        alpha: 0.08,
+                      ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,11 +186,17 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                   decoration: AppTheme.tradingInputDecoration(
                     label: 'Type instead',
                   ),
-                  onSubmitted: _service.submitText,
+                  onSubmitted: (value) {
+                    _service.submitText(value);
+                  },
                 ),
                 const SizedBox(height: AppTheme.spaceS),
                 OutlinedButton.icon(
-                  onPressed: () => _service.submitText(_textController.text),
+                  onPressed: _service.thinking
+                      ? null
+                      : () {
+                          _service.submitText(_textController.text);
+                        },
                   icon: const Icon(Icons.search_rounded),
                   label: const Text('Search'),
                 ),
@@ -217,16 +256,13 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
         ),
         child: Text(
           'Voice output will use the default system voice on this device.',
-          style: AppTheme.bodyTextStyle(
-            fontSize: 13,
-            color: Colors.white70,
-          ),
+          style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
         ),
       );
     }
 
     return DropdownButtonFormField<UagVoiceOption>(
-      value: _service.selectedVoice,
+      initialValue: _service.selectedVoice,
       dropdownColor: AppTheme.cardBackgroundDeep,
       iconEnabledColor: AppTheme.neonPink,
       style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white),
@@ -235,10 +271,7 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
           .map(
             (voice) => DropdownMenuItem<UagVoiceOption>(
               value: voice,
-              child: Text(
-                voice.label,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(voice.label, overflow: TextOverflow.ellipsis),
             ),
           )
           .toList(),

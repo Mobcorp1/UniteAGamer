@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_intent_parser.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_response_builder.dart';
 
@@ -25,14 +29,19 @@ class UagVoiceOption {
 }
 
 class UagVoiceAssistantService extends ChangeNotifier {
-  UagVoiceAssistantService({stt.SpeechToText? speech, FlutterTts? tts})
-      : _speech = speech ?? stt.SpeechToText(),
-        _tts = tts ?? FlutterTts();
+  UagVoiceAssistantService({
+    stt.SpeechToText? speech,
+    FlutterTts? tts,
+    ArcBlueprintRepository? blueprintRepository,
+  })  : _speech = speech ?? stt.SpeechToText(),
+        _tts = tts ?? FlutterTts(),
+        _blueprintRepository = blueprintRepository ?? ArcBlueprintRepository();
 
   static const String _voicePreferenceKey = 'uag_voice_assistant_voice_id';
 
   final stt.SpeechToText _speech;
   final FlutterTts _tts;
+  final ArcBlueprintRepository _blueprintRepository;
 
   final UagVoiceIntentParser _parser = const UagVoiceIntentParser();
   final UagVoiceResponseBuilder _responseBuilder =
@@ -45,6 +54,8 @@ class UagVoiceAssistantService extends ChangeNotifier {
   String _transcript = '';
   String? _lastError;
   UagVoiceResponse? _lastResponse;
+  Map<String, ArcBlueprintState> _blueprintStates = const <String, ArcBlueprintState>{};
+  StreamSubscription<Map<String, ArcBlueprintState>>? _blueprintSubscription;
   List<UagVoiceOption> _voiceOptions = const <UagVoiceOption>[];
   UagVoiceOption? _selectedVoice;
 
@@ -55,6 +66,7 @@ class UagVoiceAssistantService extends ChangeNotifier {
   String get transcript => _transcript;
   String? get lastError => _lastError;
   UagVoiceResponse? get lastResponse => _lastResponse;
+  Map<String, ArcBlueprintState> get blueprintStates => Map.unmodifiable(_blueprintStates);
   List<UagVoiceOption> get voiceOptions => List.unmodifiable(_voiceOptions);
   UagVoiceOption? get selectedVoice => _selectedVoice;
 
@@ -68,6 +80,8 @@ class UagVoiceAssistantService extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _startBlueprintStateListener();
+
       _available = await _speech.initialize(
         onError: (error) {
           _lastError = error.errorMsg;
@@ -277,17 +291,33 @@ class UagVoiceAssistantService extends ChangeNotifier {
 
   void _handleTranscript(String text) {
     final intent = _parser.parse(text);
-    final response = _responseBuilder.build(intent);
+    final response = _responseBuilder.build(
+      intent,
+      blueprintStates: _blueprintStates,
+    );
 
     _lastResponse = response;
 
     if (response.shouldSpeak) {
-      speak(response.body);
+      speak(response.spokenBody ?? response.body);
     }
+  }
+
+  void _startBlueprintStateListener() {
+    _blueprintSubscription ??= _blueprintRepository.watchMyBlueprintStates().listen(
+      (states) {
+        _blueprintStates = states;
+        notifyListeners();
+      },
+      onError: (error) {
+        debugPrint('UAG voice blueprint state listener failed: $error');
+      },
+    );
   }
 
   @override
   void dispose() {
+    _blueprintSubscription?.cancel();
     _speech.cancel();
     _tts.stop();
     super.dispose();

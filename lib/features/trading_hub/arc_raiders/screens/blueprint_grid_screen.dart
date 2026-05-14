@@ -8,6 +8,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blue
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
@@ -447,9 +448,18 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           hintText: 'Search blueprints',
           hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
           prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70),
-          suffixIcon: _searchQuery.trim().isEmpty
-              ? null
-              : IconButton(
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BlueprintVoiceSearchButton(
+                onSearchText: (value) {
+                  if (value.trim().isEmpty) return;
+                  _searchController.text = value;
+                  setState(() => _searchQuery = value);
+                },
+              ),
+              if (_searchQuery.trim().isNotEmpty)
+                IconButton(
                   tooltip: 'Clear search',
                   onPressed: () {
                     _searchController.clear();
@@ -457,6 +467,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   },
                   icon: const Icon(Icons.close_rounded, color: Colors.white70),
                 ),
+            ],
+          ),
           isDense: true,
           filled: true,
           fillColor: AppTheme.cardBackgroundAlt.withValues(alpha: 0.9),

@@ -164,7 +164,7 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
               ),
               const SizedBox(height: AppTheme.spaceM),
               DropdownButtonFormField<String>(
-                value: _type,
+                initialValue: _type,
                 decoration: AppTheme.tradingInputDecoration(label: 'Type'),
                 dropdownColor: AppTheme.cardBackgroundAlt,
                 items: const [
