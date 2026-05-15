@@ -4,44 +4,27 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_traders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_traders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_intent_parser.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_pronunciation.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_profiles.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_response_builder.dart';
-
-class UagVoiceOption {
-  const UagVoiceOption({
-    required this.id,
-    required this.name,
-    required this.locale,
-    required this.label,
-  });
-
-  final String id;
-  final String name;
-  final String locale;
-  final String label;
-
-  Map<String, String> get ttsVoice => <String, String>{
-        'name': name,
-        'locale': locale,
-      };
-}
 
 class UagVoiceAssistantService extends ChangeNotifier {
   UagVoiceAssistantService({
     stt.SpeechToText? speech,
     FlutterTts? tts,
-    ArcBlueprintRepository? blueprintRepository,
+    UagEntitlementService? entitlementService,
   })  : _speech = speech ?? stt.SpeechToText(),
         _tts = tts ?? FlutterTts(),
-        _blueprintRepository = blueprintRepository ?? ArcBlueprintRepository();
+        _entitlementService = entitlementService ?? UagEntitlementService();
 
-  static const String _voicePreferenceKey = 'uag_voice_assistant_voice_id';
+  static const String _voicePreferenceKey = 'uag_voice_assistant_profile_id';
 
   final stt.SpeechToText _speech;
   final FlutterTts _tts;
-  final ArcBlueprintRepository _blueprintRepository;
+  final UagEntitlementService _entitlementService;
 
   final UagVoiceIntentParser _parser = const UagVoiceIntentParser();
   final UagVoiceResponseBuilder _responseBuilder = const UagVoiceResponseBuilder();
@@ -50,37 +33,39 @@ class UagVoiceAssistantService extends ChangeNotifier {
   bool _initialised = false;
   bool _initialising = false;
   bool _listening = false;
+  bool _speakingPreview = false;
+  bool _adminBypass = false;
+  UagSubscriptionTier _tier = UagSubscriptionTier.free;
   String _transcript = '';
   String? _lastError;
   UagVoiceResponse? _lastResponse;
-  Map<String, ArcBlueprintState> _blueprintStates = const <String, ArcBlueprintState>{};
-  StreamSubscription<Map<String, ArcBlueprintState>>? _blueprintSubscription;
-  List<UagVoiceOption> _voiceOptions = const <UagVoiceOption>[];
-  UagVoiceOption? _selectedVoice;
+  List<UagResolvedVoiceProfile> _voiceProfiles = const <UagResolvedVoiceProfile>[];
+  UagResolvedVoiceProfile? _selectedVoice;
+  StreamSubscription<dynamic>? _entitlementSubscription;
 
   bool get available => _available;
   bool get initialised => _initialised;
   bool get initialising => _initialising;
   bool get listening => _listening;
   bool get thinking => _initialising;
+  bool get speakingPreview => _speakingPreview;
+  bool get adminBypass => _adminBypass;
+  UagSubscriptionTier get tier => _tier;
   String get transcript => _transcript;
   String? get lastError => _lastError;
   UagVoiceResponse? get lastResponse => _lastResponse;
-  Map<String, ArcBlueprintState> get blueprintStates => Map.unmodifiable(_blueprintStates);
-  List<UagVoiceOption> get voiceOptions => List.unmodifiable(_voiceOptions);
-  UagVoiceOption? get selectedVoice => _selectedVoice;
+  List<UagResolvedVoiceProfile> get voiceProfiles => List.unmodifiable(_voiceProfiles);
+  UagResolvedVoiceProfile? get selectedVoice => _selectedVoice;
 
   Future<void> initialize() async {
-    if (_initialised || _initialising) {
-      return;
-    }
+    if (_initialised || _initialising) return;
 
     _initialising = true;
     _lastError = null;
     notifyListeners();
 
     try {
-      _startBlueprintStateListener();
+      _startEntitlementListener();
 
       _available = await _speech.initialize(
         onError: (error) {
@@ -98,9 +83,8 @@ class UagVoiceAssistantService extends ChangeNotifier {
         },
       );
 
-      await _tts.setSpeechRate(0.45);
       await _tts.setVolume(1.0);
-      await _loadVoiceOptions();
+      await _loadVoiceProfiles();
 
       if (!_available) {
         _lastError = 'Microphone permission is blocked or speech recognition is not available on this device/browser.';
@@ -117,9 +101,7 @@ class UagVoiceAssistantService extends ChangeNotifier {
   }
 
   Future<void> startListening() async {
-    if (!_initialised) {
-      await initialize();
-    }
+    if (!_initialised) await initialize();
 
     if (!_available) {
       _lastError ??= 'Microphone permission is blocked or speech recognition is not available.';
@@ -127,9 +109,7 @@ class UagVoiceAssistantService extends ChangeNotifier {
       return;
     }
 
-    if (_listening) {
-      return;
-    }
+    if (_listening) return;
 
     _transcript = '';
     _lastError = null;
@@ -180,29 +160,59 @@ class UagVoiceAssistantService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> selectVoice(UagVoiceOption option) async {
-    _selectedVoice = option;
-    await _tts.setVoice(option.ttsVoice);
+  Future<void> selectVoice(UagResolvedVoiceProfile voice) async {
+    if (!voice.profile.isUnlockedFor(_tier, adminBypass: _adminBypass)) {
+      _lastError = '${voice.displayName} is part of ${voice.tierLabel}. Upgrade to select this voice.';
+      notifyListeners();
+      return;
+    }
+
+    _selectedVoice = voice;
+    await _applyVoice(voice);
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_voicePreferenceKey, option.id);
+    await prefs.setString(_voicePreferenceKey, voice.id);
 
+    _lastError = null;
     notifyListeners();
+  }
+
+  Future<void> previewVoice(UagResolvedVoiceProfile voice) async {
+    _speakingPreview = true;
+    _lastError = null;
+    notifyListeners();
+
+    try {
+      await _tts.stop();
+      await _applyVoice(voice);
+      await _tts.speak(UagVoicePronunciation.improveSpeech(voice.profile.previewText));
+      if (_selectedVoice != null) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        await _applyVoice(_selectedVoice!);
+      }
+    } catch (error) {
+      _lastError = 'Could not preview ${voice.displayName}: $error';
+    } finally {
+      _speakingPreview = false;
+      notifyListeners();
+    }
   }
 
   Future<void> speak(String text) async {
     await _tts.stop();
-    if (_selectedVoice != null) {
-      await _tts.setVoice(_selectedVoice!.ttsVoice);
+    final selected = _selectedVoice;
+    if (selected != null) {
+      await _applyVoice(selected);
     }
-    await _tts.speak(text);
+
+    final prefix = selected?.profile.personalityPrefix ?? '';
+    final spokenText = UagVoicePronunciation.improveSpeech('$prefix$text');
+    await _tts.speak(spokenText);
   }
 
   void submitText(String text) {
     final trimmed = text.trim();
-    if (trimmed.isEmpty) {
-      return;
-    }
+    if (trimmed.isEmpty) return;
 
     _transcript = trimmed;
     _lastError = null;
@@ -210,114 +220,86 @@ class UagVoiceAssistantService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _loadVoiceOptions() async {
+  Future<void> _loadVoiceProfiles() async {
     final rawVoices = await _tts.getVoices;
-    final options = <UagVoiceOption>[];
+    _voiceProfiles = resolveUagVoiceProfiles(rawVoices);
 
-    if (rawVoices is List) {
-      for (final voice in rawVoices) {
-        if (voice is! Map) {
-          continue;
-        }
-
-        final name = voice['name']?.toString() ?? '';
-        final locale = voice['locale']?.toString() ?? '';
-
-        if (name.isEmpty || locale.isEmpty) {
-          continue;
-        }
-
-        final normalisedLocale = locale.replaceAll('_', '-').toLowerCase();
-        if (!normalisedLocale.startsWith('en')) {
-          continue;
-        }
-
-        final lowerName = name.toLowerCase();
-        final isMale = lowerName.contains('male') ||
-            lowerName.contains('daniel') ||
-            lowerName.contains('george') ||
-            lowerName.contains('arthur') ||
-            lowerName.contains('ryan');
-        final isFemale = lowerName.contains('female') ||
-            lowerName.contains('samantha') ||
-            lowerName.contains('karen') ||
-            lowerName.contains('serena') ||
-            lowerName.contains('susan') ||
-            lowerName.contains('victoria') ||
-            lowerName.contains('moira');
-        final voiceType = isMale
-            ? 'Male'
-            : isFemale
-                ? 'Female'
-                : 'Voice';
-
-        options.add(
-          UagVoiceOption(
-            id: '$name|$locale',
-            name: name,
-            locale: locale,
-            label: '$voiceType · $name · $locale',
-          ),
-        );
-      }
-    }
-
-    options.sort((a, b) {
-      final aGb = a.locale.toLowerCase().contains('gb') ? 0 : 1;
-      final bGb = b.locale.toLowerCase().contains('gb') ? 0 : 1;
-      final localeCompare = aGb.compareTo(bGb);
-      if (localeCompare != 0) {
-        return localeCompare;
-      }
-      return a.label.compareTo(b.label);
-    });
-
-    _voiceOptions = options;
-
-    if (_voiceOptions.isEmpty) {
+    if (_voiceProfiles.isEmpty) {
+      _lastError = 'No English text-to-speech voices were found on this device/browser.';
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final savedVoiceId = prefs.getString(_voicePreferenceKey);
+    final savedProfileId = prefs.getString(_voicePreferenceKey);
 
-    _selectedVoice = _voiceOptions.firstWhere(
-      (voice) => voice.id == savedVoiceId,
-      orElse: () => _voiceOptions.first,
-    );
+    UagResolvedVoiceProfile preferred;
+    try {
+      preferred = _voiceProfiles.firstWhere((voice) => voice.id == savedProfileId);
+    } catch (_) {
+      preferred = _voiceProfiles.firstWhere(
+        (voice) => voice.profile.isUnlockedFor(_tier, adminBypass: _adminBypass),
+        orElse: () => _voiceProfiles.first,
+      );
+    }
 
-    await _tts.setVoice(_selectedVoice!.ttsVoice);
+    if (!preferred.profile.isUnlockedFor(_tier, adminBypass: _adminBypass)) {
+      preferred = _voiceProfiles.firstWhere(
+        (voice) => voice.profile.isUnlockedFor(_tier, adminBypass: _adminBypass),
+        orElse: () => _voiceProfiles.first,
+      );
+    }
+
+    _selectedVoice = preferred;
+    await _applyVoice(preferred);
+  }
+
+  Future<void> _applyVoice(UagResolvedVoiceProfile voice) async {
+    await _tts.setVoice(voice.ttsVoice);
+    await _tts.setSpeechRate(voice.profile.rate);
+    await _tts.setPitch(voice.profile.pitch);
+    await _tts.setVolume(1.0);
   }
 
   void _handleTranscript(String text) {
     final intent = _parser.parse(text);
-    final response = _responseBuilder.build(
-      intent,
-      blueprintStates: _blueprintStates,
-    );
+    final response = _responseBuilder.build(intent);
 
     _lastResponse = response;
 
     if (response.shouldSpeak) {
-      speak(response.spokenBody ?? response.body);
+      speak(response.body);
     }
   }
 
-  void _startBlueprintStateListener() {
-    _blueprintSubscription ??= _blueprintRepository.watchMyBlueprintStates().listen(
-      (states) {
-        _blueprintStates = states;
+  void _startEntitlementListener() {
+    _entitlementSubscription ??= _entitlementService.watchMyEntitlement().listen(
+      (entitlement) {
+        _tier = entitlement.tier;
+        _adminBypass = entitlement.hasAdminBypass;
+
+        final selected = _selectedVoice;
+        if (selected != null && !selected.profile.isUnlockedFor(_tier, adminBypass: _adminBypass)) {
+          final fallback = _voiceProfiles.where((voice) => voice.profile.isUnlockedFor(_tier, adminBypass: _adminBypass)).toList();
+          if (fallback.isNotEmpty) {
+            _selectedVoice = fallback.first;
+            _applyVoice(_selectedVoice!);
+          }
+        }
+
         notifyListeners();
       },
       onError: (error) {
-        debugPrint('UAG voice blueprint state listener failed: $error');
+        debugPrint('UAG voice entitlement listener failed: $error');
+        _tier = UagSubscriptionTier.free;
+        _adminBypass = false;
+        notifyListeners();
       },
     );
   }
 
   @override
   void dispose() {
-    _blueprintSubscription?.cancel();
+    _entitlementSubscription?.cancel();
     _speech.cancel();
     _tts.stop();
     super.dispose();
