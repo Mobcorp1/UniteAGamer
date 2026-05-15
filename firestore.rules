@@ -106,7 +106,6 @@ service cloud.firestore {
     function isIncomingSessionPlannerParticipant() {
       return isSignedIn() &&
         request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.participantOneUid != request.resource.data.participantTwoUid &&
         (
           request.resource.data.participantOneUid == request.auth.uid ||
           request.resource.data.participantTwoUid == request.auth.uid
@@ -262,17 +261,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    match /uag_sessions/{sessionId} {
-      allow read: if isSessionPlannerParticipant() || isAdminOrDev();
-      allow list: if isSignedIn();
-      allow create: if isIncomingSessionPlannerParticipant() || isAdminOrDev();
-      allow update: if (isSessionPlannerParticipant() || isAdminOrDev()) &&
-        request.resource.data.createdBy == resource.data.createdBy &&
-        request.resource.data.participantOneUid == resource.data.participantOneUid &&
-        request.resource.data.participantTwoUid == resource.data.participantTwoUid;
-      allow delete: if false;
-    }
-
     match /sessions/{sessionId} {
       allow read: if isSessionPlannerParticipant() || isAdminOrDev();
       allow list: if isSignedIn();
@@ -340,6 +328,13 @@ service cloud.firestore {
         allow read: if isOwner(uid) || isAdminOrDev();
         allow create, update, delete: if isAdminOrDev();
       }
+    }
+
+
+    match /payout_requests/{requestId} {
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAdminOrDev();
     }
 
     match /impact_pots/{potId} {

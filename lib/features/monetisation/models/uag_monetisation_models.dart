@@ -25,13 +25,32 @@ extension UagPlanTierX on UagPlanTier {
     }
   }
 
+  String get publicName {
+    switch (this) {
+      case UagPlanTier.free:
+        return 'Core Raider';
+      case UagPlanTier.essential:
+        return 'Active Raider';
+      case UagPlanTier.premium:
+        return 'Elite Raider';
+    }
+  }
+
   static UagPlanTier fromId(String? value) {
     switch ((value ?? '').toLowerCase().trim()) {
       case 'essential':
+      case 'active_raider':
+      case 'active-raider':
         return UagPlanTier.essential;
       case 'premium':
+      case 'elite':
+      case 'elite_raider':
+      case 'elite-raider':
         return UagPlanTier.premium;
       case 'free':
+      case 'core':
+      case 'core_raider':
+      case 'core-raider':
       default:
         return UagPlanTier.free;
     }
@@ -79,52 +98,54 @@ class UagPlans {
     tier: UagPlanTier.free,
     monthlyPricePence: 0,
     yearlyPricePence: 0,
-    weeklyTrades: 1,
-    weeklyMatchSearches: 1,
-    weeklyIntelHints: 1,
-    prioritySlots: 1,
+    weeklyTrades: 10,
+    weeklyMatchSearches: 10,
+    weeklyIntelHints: 8,
+    prioritySlots: 3,
     creatorDiscountPercent: 0,
     creatorCommissionPercent: 0,
     charityProfitPercent: 0,
-    adsLabel: 'Full ads',
+    adsLabel: 'Passive ads + optional rewarded boosts',
     benefits: [
-      '1 trade per week',
-      '1 Match Raider search per week',
-      '1 intel hint per week',
-      '1 priority target slot',
-      'Ads enabled',
-      '+1 extra action per 5 verified free signups',
+      'Full Blueprint Tracker access',
+      'Core UAG Raider voice item advice',
+      'Unlimited Intel contribution',
+      '2 active listings and 5 daily offers',
+      '10 weekly trade actions',
+      '10 weekly Match Raider searches',
+      '8 weekly Intel hints and 3 priority targets',
+      'No forced ads during voice assistant or active sessions',
     ],
   );
 
   static const essential = UagPlanDefinition(
     tier: UagPlanTier.essential,
-    monthlyPricePence: 599,
+    monthlyPricePence: 499,
     yearlyPricePence: 4999,
-    weeklyTrades: 5,
-    weeklyMatchSearches: 5,
-    weeklyIntelHints: 5,
-    prioritySlots: 5,
+    weeklyTrades: 50,
+    weeklyMatchSearches: 50,
+    weeklyIntelHints: 40,
+    prioritySlots: 10,
     creatorDiscountPercent: 10,
     creatorCommissionPercent: 10,
     charityProfitPercent: 10,
-    adsLabel: 'Reduced ads',
+    adsLabel: 'Reduced passive ads',
     benefits: [
-      '5 trades per week',
-      '5 Match Raider searches per week',
-      '5 intel hints per week',
-      '5 priority target slots',
-      'Reduced ads',
-      'Creator code: followers get 10% off',
-      'Creator commission: 10% recurring on active paid referrals',
+      '10 active trade listings and 25 daily offers',
+      '50 weekly trade actions and 50 Match Raider searches',
+      '40 weekly Intel hints and 12 premium Intel unlocks',
+      'Unlimited advanced voice commands',
+      'Smart trade, item and session alerts',
+      'Raid Companion presets and enhanced voice profiles',
+      '10% follower discounts and 10% recurring creator commission',
       '10% of net platform profit goes into the Essential Impact Pot',
     ],
   );
 
   static const premium = UagPlanDefinition(
     tier: UagPlanTier.premium,
-    monthlyPricePence: 1099,
-    yearlyPricePence: 9499,
+    monthlyPricePence: 999,
+    yearlyPricePence: 9999,
     weeklyTrades: -1,
     weeklyMatchSearches: -1,
     weeklyIntelHints: -1,
@@ -134,13 +155,14 @@ class UagPlans {
     charityProfitPercent: 20,
     adsLabel: 'No ads',
     benefits: [
-      'Unlimited trades',
+      'Unlimited listings, offers, trades and sessions',
       'Unlimited Match Raider searches',
-      'Unlimited intel hints',
-      'Unlimited priority tracking',
-      'No ads',
-      'Creator code: followers get up to 20% off',
-      'Creator commission: 20% recurring on active paid referrals',
+      'Unlimited Intel hints and premium Intel unlocks',
+      'Trader Pro analytics and demand alerts',
+      'All UAG Raider voice profiles and personalities',
+      'Unlimited Raid Companion automation and saved raid plans',
+      'No ads anywhere',
+      '20% follower discounts and 20% recurring creator commission',
       '20% of net platform profit goes into the Premium Impact Pot',
     ],
   );
@@ -189,19 +211,19 @@ class UagEntitlement {
   factory UagEntitlement.fromUserDoc(String uid, Map<String, dynamic> data) {
     final monetisation = (data['monetisation'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
     final tier = UagPlanTierX.fromId(
-      (monetisation['tier'] ?? data['tier'] ?? data['planTier'])?.toString(),
+      (data['subscriptionTier'] ?? monetisation['tier'] ?? data['tier'] ?? data['planTier'])?.toString(),
     );
-    final periodValue = monetisation['currentPeriodEnd'] ?? data['currentPeriodEnd'];
+    final periodValue = monetisation['currentPeriodEnd'] ?? data['currentPeriodEnd'] ?? data['subscriptionCurrentPeriodEnd'];
     return UagEntitlement(
       uid: uid,
       tier: tier,
-      subscriptionStatus: (monetisation['subscriptionStatus'] ?? data['subscriptionStatus'] ?? 'inactive').toString(),
+      subscriptionStatus: (data['subscriptionStatus'] ?? monetisation['subscriptionStatus'] ?? 'inactive').toString(),
       isAdmin: data['isAdmin'] == true,
       isDev: data['isDev'] == true,
       stripeCustomerId: (monetisation['stripeCustomerId'] ?? data['stripeCustomerId'])?.toString(),
       stripeSubscriptionId: (monetisation['stripeSubscriptionId'] ?? data['stripeSubscriptionId'])?.toString(),
       currentPeriodEnd: periodValue is Timestamp ? periodValue.toDate() : null,
-      referralCode: (monetisation['referralCode'] ?? data['referralCode'])?.toString(),
+      referralCode: (data['referralCode'] ?? monetisation['referralCode'])?.toString(),
     );
   }
 }
@@ -221,10 +243,17 @@ class UagUsageSnapshot {
 
   factory UagUsageSnapshot.fromMap(Map<String, dynamic> data) {
     return UagUsageSnapshot(
-      tradesUsed: (data['tradesUsed'] as num?)?.toInt() ?? 0,
-      matchSearchesUsed: (data['matchSearchesUsed'] as num?)?.toInt() ?? 0,
-      intelHintsUsed: (data['intelHintsUsed'] as num?)?.toInt() ?? 0,
-      extraActionsAvailable: (data['extraActionsAvailable'] as num?)?.toInt() ?? 0,
+      tradesUsed: (data['tradesUsed'] as num?)?.toInt() ??
+          (data['tradeActions'] as num?)?.toInt() ??
+          0,
+      matchSearchesUsed: (data['matchSearchesUsed'] as num?)?.toInt() ??
+          (data['matchRaiderSearches'] as num?)?.toInt() ??
+          0,
+      intelHintsUsed: (data['intelHintsUsed'] as num?)?.toInt() ??
+          (data['intelUnlocks'] as num?)?.toInt() ??
+          0,
+      extraActionsAvailable:
+          (data['extraActionsAvailable'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -246,15 +275,18 @@ class UagImpactPotSnapshot {
   final int contributingUsers;
   final DateTime? lastAllocatedAt;
 
-  factory UagImpactPotSnapshot.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory UagImpactPotSnapshot.fromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     final data = doc.data() ?? const <String, dynamic>{};
+    final last = data['lastAllocatedAt'];
     return UagImpactPotSnapshot(
       id: doc.id,
       label: (data['label'] ?? doc.id).toString(),
       monthlyPence: (data['monthlyPence'] as num?)?.toInt() ?? 0,
       allTimePence: (data['allTimePence'] as num?)?.toInt() ?? 0,
       contributingUsers: (data['contributingUsers'] as num?)?.toInt() ?? 0,
-      lastAllocatedAt: data['lastAllocatedAt'] is Timestamp ? (data['lastAllocatedAt'] as Timestamp).toDate() : null,
+      lastAllocatedAt: last is Timestamp ? last.toDate() : null,
     );
   }
 }

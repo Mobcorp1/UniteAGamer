@@ -29,6 +29,7 @@ dependencies:
   timezone: ^0.9.4
   flutter_timezone: ^4.0.0
   add_2_calendar: ^3.0.1
+  wakelock_plus: ^1.2.8
 
 dev_dependencies:
   flutter_test:

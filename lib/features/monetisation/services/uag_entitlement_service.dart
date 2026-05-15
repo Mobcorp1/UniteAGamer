@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../models/uag_ad_policy.dart';
 import '../models/uag_plan_limits.dart';
 import '../models/uag_subscription_tier.dart';
 import '../models/uag_user_entitlement.dart';
@@ -43,11 +44,11 @@ class UagEntitlementService {
     }
 
     return _firestore.collection('users').doc(currentUid).snapshots().map(
-      (snapshot) => UagUserEntitlement.fromUserDoc(
-        uid: currentUid,
-        data: snapshot.data() ?? <String, dynamic>{},
-      ),
-    );
+          (snapshot) => UagUserEntitlement.fromUserDoc(
+            uid: currentUid,
+            data: snapshot.data() ?? <String, dynamic>{},
+          ),
+        );
   }
 
   Future<UagUserEntitlement> getMyEntitlement() async {
@@ -60,6 +61,31 @@ class UagEntitlementService {
       uid: currentUid,
       data: snapshot.data() ?? <String, dynamic>{},
     );
+  }
+
+  Future<UagPlanLimits> getMyLimits() async => (await getMyEntitlement()).limits;
+
+  Future<UagAdPolicy> getMyAdPolicy() async => (await getMyEntitlement()).adPolicy;
+
+  Future<bool> canUseTraderProAnalytics() async => (await getMyEntitlement()).canUseTraderProAnalytics;
+
+  Future<bool> canUseAdvancedVoicePersonalities() async => (await getMyEntitlement()).canUseAdvancedVoicePersonalities;
+
+  Future<bool> canUseSmartAlerts() async => (await getMyEntitlement()).canUseSmartAlerts;
+
+  Future<bool> shouldShowBannerAds() async {
+    final entitlement = await getMyEntitlement();
+    return entitlement.adPolicy.showBannerAds;
+  }
+
+  Future<bool> shouldShowRewardedAds() async {
+    final entitlement = await getMyEntitlement();
+    return entitlement.adPolicy.showRewardedAds;
+  }
+
+  Future<bool> shouldBlockAdsInActiveSession() async {
+    final entitlement = await getMyEntitlement();
+    return !entitlement.adPolicy.allowMidSessionAds;
   }
 
   Stream<Map<String, int>> watchCurrentWeeklyUsage() {
@@ -109,7 +135,7 @@ class UagEntitlementService {
       tier: entitlement.tier,
       reason: allowed
           ? null
-          : '${action.label} limit reached for ${entitlement.tier.label}.',
+          : '${action.label} limit reached for ${entitlement.tier.publicName}.',
     );
   }
 
@@ -146,7 +172,7 @@ class UagEntitlementService {
           used: used,
           limit: limit,
           tier: entitlement.tier,
-          reason: '${action.label} limit reached for ${entitlement.tier.label}.',
+          reason: '${action.label} limit reached for ${entitlement.tier.publicName}.',
         );
       }
 
@@ -182,6 +208,7 @@ class UagEntitlementService {
       throw StateError('User must be signed in.');
     }
 
+    final entitlement = await getMyEntitlement();
     final userRef = _firestore.collection('users').doc(currentUid);
     final userSnap = await userRef.get();
     final existing = userSnap.data()?['referralCode'] as String?;
@@ -203,10 +230,14 @@ class UagEntitlementService {
         'ownerUid': currentUid,
         'active': true,
         'createdAt': FieldValue.serverTimestamp(),
-        'discountPercent': UagPlanLimits.free.referralDiscountPercent,
-        'commissionPercent': UagPlanLimits.free.referralCommissionPercent,
+        'discountPercent': entitlement.limits.referralDiscountPercent,
+        'commissionPercent': entitlement.limits.referralCommissionPercent,
       });
-      transaction.set(userRef, {'referralCode': code}, SetOptions(merge: true));
+      transaction.set(userRef, {
+        'referralCode': code,
+        'referralDiscountPercent': entitlement.limits.referralDiscountPercent,
+        'referralCommissionPercent': entitlement.limits.referralCommissionPercent,
+      }, SetOptions(merge: true));
     });
 
     return code;

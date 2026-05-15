@@ -24,6 +24,7 @@ class UagVoiceAssistantSheet extends StatefulWidget {
 class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
   late final UagVoiceAssistantService _service;
   final TextEditingController _textController = TextEditingController();
+  bool _showVoicePicker = false;
 
   @override
   void initState() {
@@ -47,7 +48,7 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
   @override
   Widget build(BuildContext context) {
     final response = _service.lastResponse;
-    final maxHeight = MediaQuery.sizeOf(context).height * 0.92;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.94;
 
     return SafeArea(
       top: false,
@@ -80,10 +81,7 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                   Expanded(
                     child: Text(
                       'UAG Raider Voice',
-                      style: AppTheme.tradingHeading(
-                        fontSize: 24,
-                        color: AppTheme.neonPink,
-                      ),
+                      style: AppTheme.tradingHeading(fontSize: 24, color: AppTheme.neonPink),
                     ),
                   ),
                   _TierBadge(tier: _service.tier, adminBypass: _service.adminBypass),
@@ -95,6 +93,8 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                 style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
               ),
               const SizedBox(height: AppTheme.spaceL),
+              _buildCompanionModeCard(),
+              const SizedBox(height: AppTheme.spaceM),
               _buildMicButton(),
               if (_service.lastError != null) ...<Widget>[
                 const SizedBox(height: AppTheme.spaceM),
@@ -139,6 +139,25 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                         response.body,
                         style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white),
                       ),
+                      if (response.hasConfirmableSuggestion) ...<Widget>[
+                        const SizedBox(height: AppTheme.spaceM),
+                        Wrap(
+                          spacing: AppTheme.spaceS,
+                          runSpacing: AppTheme.spaceS,
+                          children: <Widget>[
+                            ElevatedButton.icon(
+                              onPressed: _service.confirmSuggestedItem,
+                              icon: const Icon(Icons.check_circle_rounded),
+                              label: Text('Confirm ${response.suggestedItemName}'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _service.startListening,
+                              icon: const Icon(Icons.mic_rounded),
+                              label: const Text('Try again'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -148,6 +167,46 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCompanionModeCard() {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: _service.raidCompanionMode
+            ? AppTheme.neonPink.withValues(alpha: 0.45)
+            : AppTheme.neonCyan.withValues(alpha: 0.24),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            _service.raidCompanionMode ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+            color: _service.raidCompanionMode ? AppTheme.neonPink : AppTheme.neonCyan,
+          ),
+          const SizedBox(width: AppTheme.spaceM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Raid Companion Mode',
+                  style: AppTheme.tradingHeading(fontSize: 17, color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Keeps the screen awake while this assistant is open for longer raids.',
+                  style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white60),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: _service.raidCompanionMode,
+            onChanged: _service.setRaidCompanionMode,
+          ),
+        ],
       ),
     );
   }
@@ -172,6 +231,8 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
 
   Widget _buildVoiceProfiles() {
     final profiles = _service.voiceProfiles;
+    final selectedVoice = _service.selectedVoice;
+
     if (profiles.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -185,41 +246,127 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
       );
     }
 
+    if (selectedVoice != null && !_showVoicePicker) {
+      return _SelectedVoiceCard(
+        voice: selectedVoice,
+        previewing: _service.speakingPreview,
+        onPreview: () => _service.previewVoice(selectedVoice),
+        onChange: () => setState(() => _showVoicePicker = true),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Voice Profiles',
-          style: AppTheme.tradingHeading(fontSize: 20, color: AppTheme.neonCyan),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                'Change UAG Raider Voice',
+                style: AppTheme.tradingHeading(fontSize: 20, color: AppTheme.neonCyan),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => setState(() => _showVoicePicker = false),
+              icon: const Icon(Icons.close_rounded),
+              label: const Text('Collapse'),
+            ),
+          ],
         ),
         const SizedBox(height: AppTheme.spaceS),
         Text(
-          'Preview any voice, then select the one you want. Raw device voice names are hidden to keep this clean.',
+          'Preview any voice, then select the one you want. Raw device voice names are hidden.',
           style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white60),
         ),
         const SizedBox(height: AppTheme.spaceM),
         for (final tier in UagSubscriptionTier.values) ...<Widget>[
           _TierSectionHeader(tier: tier),
           const SizedBox(height: AppTheme.spaceS),
-          ...profiles
-              .where((voice) => voice.requiredTier == tier)
-              .map((voice) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
-                    child: _VoiceProfileCard(
-                      voice: voice,
-                      selected: _service.selectedVoice?.id == voice.id,
-                      unlocked: voice.profile.isUnlockedFor(
-                        _service.tier,
-                        adminBypass: _service.adminBypass,
-                      ),
-                      previewing: _service.speakingPreview,
-                      onPreview: () => _service.previewVoice(voice),
-                      onSelect: () => _service.selectVoice(voice),
-                    ),
-                  )),
+          ...profiles.where((voice) => voice.requiredTier == tier).map(
+                (voice) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                  child: _VoiceProfileCard(
+                    voice: voice,
+                    selected: _service.selectedVoice?.id == voice.id,
+                    unlocked: voice.profile.isUnlockedFor(_service.tier, adminBypass: _service.adminBypass),
+                    previewing: _service.speakingPreview,
+                    onPreview: () => _service.previewVoice(voice),
+                    onSelect: () async {
+                      await _service.selectVoice(voice);
+                      if (mounted && voice.profile.isUnlockedFor(_service.tier, adminBypass: _service.adminBypass)) {
+                        setState(() => _showVoicePicker = false);
+                      }
+                    },
+                  ),
+                ),
+              ),
           const SizedBox(height: AppTheme.spaceM),
         ],
       ],
+    );
+  }
+}
+
+class _SelectedVoiceCard extends StatelessWidget {
+  const _SelectedVoiceCard({
+    required this.voice,
+    required this.previewing,
+    required this.onPreview,
+    required this.onChange,
+  });
+
+  final UagResolvedVoiceProfile voice;
+  final bool previewing;
+  final VoidCallback onPreview;
+  final VoidCallback onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonPink.withValues(alpha: 0.42),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Icon(Icons.record_voice_over_rounded, color: AppTheme.neonPink),
+          const SizedBox(width: AppTheme.spaceM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '${voice.displayName} selected',
+                  style: AppTheme.tradingHeading(fontSize: 18, color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  voice.subtitle,
+                  style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white60),
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                Wrap(
+                  spacing: AppTheme.spaceS,
+                  runSpacing: AppTheme.spaceS,
+                  children: <Widget>[
+                    OutlinedButton.icon(
+                      onPressed: previewing ? null : onPreview,
+                      icon: const Icon(Icons.volume_up_rounded),
+                      label: const Text('Preview'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: onChange,
+                      icon: const Icon(Icons.swap_horiz_rounded),
+                      label: const Text('Change voice'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

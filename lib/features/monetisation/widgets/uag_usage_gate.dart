@@ -24,14 +24,14 @@ class UagUsageGate {
         backgroundColor: AppTheme.cardBackgroundDeep,
         shape: AppTheme.tradingDialogShape(),
         title: Text(
-          'Limit Reached',
+          'Upgrade for more ${action.label.toLowerCase()}s',
           style: AppTheme.tradingHeading(
             fontSize: 22,
             color: AppTheme.neonPink,
           ),
         ),
         content: Text(
-          '${result.reason ?? 'Your weekly limit has been reached.'}\n\nUpgrade to Essential for 5 weekly uses or Premium for unlimited access.',
+          '${result.reason ?? 'Your current plan limit has been reached.'}\n\nFree users keep the core app, Intel contribution, Blueprint Tracker and basic UAG Raider access. Essential unlocks regular-player limits. Premium unlocks unlimited power-user tools and no ads.',
           style: const TextStyle(color: Colors.white70, height: 1.4),
         ),
         actions: [
