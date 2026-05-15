@@ -272,6 +272,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /uag_sessions/{sessionId} {
+      allow read: if isSessionPlannerParticipant() || isAdminOrDev();
+      allow list: if isSignedIn();
+      allow create: if isIncomingSessionPlannerParticipant() || isAdminOrDev();
+      allow update: if (isSessionPlannerParticipant() || isAdminOrDev()) &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.participantOneUid == resource.data.participantOneUid &&
+        request.resource.data.participantTwoUid == resource.data.participantTwoUid;
+      allow delete: if false;
+    }
+
     match /beta_feedback/{feedbackId} {
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
