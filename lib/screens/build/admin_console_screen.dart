@@ -181,7 +181,7 @@ class _AdminConsoleBody extends StatelessWidget {
                             ),
                             const SizedBox(height: AppTheme.spaceM),
                             _FeatureToggleCard(
-                              title: 'PlayLocker Pro',
+                              title: 'Play Like A Pro',
                               subtitle:
                                   'Performance and prep tools for future testing.',
                               value: data['playLockerProEnabled'] == true,

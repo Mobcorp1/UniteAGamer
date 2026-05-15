@@ -160,7 +160,7 @@ class _AppDrawerState extends State<AppDrawer>
         showComingSoonWhenLocked: true,
       ),
       _DrawerItem(
-        'PlayLocker Pro',
+        'Play Like A Pro',
         Icons.psychology_outlined,
         PlayLikeAProScreen.routeName,
         accessFlag: FeatureAccessFlag.playLockerPro,

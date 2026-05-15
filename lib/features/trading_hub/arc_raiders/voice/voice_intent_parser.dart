@@ -1,3 +1,5 @@
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_item_advice_index.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_voice_item_database.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_intent.dart';
 
@@ -11,53 +13,75 @@ class UagVoiceIntentParser {
       return UagVoiceIntent(type: UagVoiceIntentType.unknown, rawText: raw);
     }
 
+    final itemQuery = _extractItem(raw);
+
     if (_containsAny(normalized, const <String>[
-      'what can i trade',
-      'safe to trade',
-      'can i trade',
-      'should i trade',
-      'trade this',
-      'trade it',
+      'trade',
+      'swap',
+      'offer',
+      'offering',
+      'looking for',
+      'who wants',
+      'anyone need',
     ])) {
-      return UagVoiceIntent(type: UagVoiceIntentType.tradeCheck, rawText: raw, itemQuery: _extractItem(raw));
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.tradeCheck,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
     }
 
     if (_containsAny(normalized, const <String>[
       'bench',
       'upgrade',
-      'workshop',
-      'gunsmith',
-      'gear bench',
-      'medical lab',
+      'workbench',
+      'crafting bench',
     ])) {
-      return UagVoiceIntent(type: UagVoiceIntentType.benchLookup, rawText: raw, itemQuery: _extractItem(raw));
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.benchLookup,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
     }
 
     if (_containsAny(normalized, const <String>[
       'quest',
       'mission',
-      'project',
-      'expedition',
+      'objective',
+      'task',
     ])) {
-      return UagVoiceIntent(type: UagVoiceIntentType.questLookup, rawText: raw, itemQuery: _extractItem(raw));
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.questLookup,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
     }
 
     if (_containsAny(normalized, const <String>[
-      'sell',
-      'recycle',
-      'salvage',
       'keep',
       'need',
+      'needed',
+      'sell',
+      'recycle',
+      'worth',
+      'valuable',
       'consume',
       'learn',
       'blueprint',
-      'found',
-      'what about',
+      'scrappy',
     ])) {
-      return UagVoiceIntent(type: UagVoiceIntentType.needCheck, rawText: raw, itemQuery: _extractItem(raw));
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.needCheck,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
     }
 
-    return UagVoiceIntent(type: UagVoiceIntentType.needCheck, rawText: raw, itemQuery: _extractItem(raw));
+    return UagVoiceIntent(
+      type: UagVoiceIntentType.needCheck,
+      rawText: raw,
+      itemQuery: itemQuery,
+    );
   }
 
   bool _containsAny(String normalized, List<String> phrases) {
@@ -65,51 +89,59 @@ class UagVoiceIntentParser {
   }
 
   String? _extractItem(String raw) {
+    final directDatabaseMatch = ArcVoiceItemDatabase.findBest(raw);
+    final directAdviceMatches = ArcItemAdviceIndex.search(raw);
+
+    var bestName = directDatabaseMatch?.item.name;
+    if (directAdviceMatches.isNotEmpty) {
+      final indexedName = directAdviceMatches.first.name;
+      if (bestName == null || indexedName.length >= bestName.length) {
+        bestName = indexedName;
+      }
+    }
+    if (bestName != null && bestName.trim().isNotEmpty) {
+      return bestName.trim();
+    }
+
     var cleaned = raw.toLowerCase();
     const phrases = <String>[
-      'hey uag raider',
-      'uag raider',
-      'hey raider',
-      'raider',
       'do i need',
       'do we need',
       'should i keep',
       'should we keep',
       'can i trade',
-      'can we trade',
       'what can i trade',
-      'safe to trade',
-      'should i trade',
       'is this needed',
       'is it needed',
+      'do i sell',
+      'should i sell',
+      'do i recycle',
+      'should i recycle',
       'for bench',
       'for quest',
-      'for mission',
-      'for project',
       'for scrappy',
-      'should i sell',
-      'can i sell',
-      'sell this',
-      'sell it',
-      'should i recycle',
-      'can i recycle',
-      'recycle this',
-      'recycle it',
-      'should i salvage',
-      'can i salvage',
-      'consume it',
-      'learn it',
-      'i found',
-      'found a',
-      'found an',
-      'found some',
-      'what about',
-      'please',
+      'check item',
+      'look up',
+      'search for',
+      'find',
+      'uag raider',
+      'hey uag raider',
+      'okay uag raider',
+      'ok uag raider',
+      'raider',
     ];
+
     for (final phrase in phrases) {
       cleaned = cleaned.replaceAll(phrase, ' ');
     }
-    cleaned = cleaned.replaceAll(RegExp(r'[?!.:,;]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-    return cleaned.isEmpty ? null : cleaned;
+
+    cleaned = cleaned
+        .replaceAll('?', ' ')
+        .replaceAll('.', ' ')
+        .replaceAll(',', ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    return cleaned.isEmpty ? raw.trim() : cleaned;
   }
 }

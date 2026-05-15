@@ -88,7 +88,7 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                 ),
                 const SizedBox(height: AppTheme.spaceS),
                 Text(
-                  'Ask: “Who wants Anvil?”, “Any trade sessions today?”, or “Find blueprint Canto”.',
+                  'Ask: “Do I need ARC Alloy?” or “Can I trade lemons?”',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 14,
                     color: Colors.white70,
@@ -98,7 +98,7 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                 _buildVoiceSelector(),
                 const SizedBox(height: AppTheme.spaceM),
                 ElevatedButton.icon(
-                  onPressed: (_service.initialising || _service.thinking)
+                  onPressed: _service.initialising
                       ? null
                       : _service.listening
                       ? _service.stopListening
@@ -107,44 +107,13 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                     _service.listening ? Icons.stop_rounded : Icons.mic_rounded,
                   ),
                   label: Text(
-                    _service.thinking
-                        ? 'Checking live UAG data…'
-                        : _service.initialising
+                    _service.initialising
                         ? 'Starting voice assistant…'
                         : _service.listening
                         ? 'Listening… tap to stop'
                         : 'Tap and ask UAG Raider',
                   ),
                 ),
-
-                if (_service.thinking) ...[
-                  const SizedBox(height: AppTheme.spaceM),
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.spaceM),
-                    decoration: AppTheme.tradingCardDecoration(
-                      borderColor: AppTheme.neonPink.withValues(alpha: 0.28),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        const SizedBox(width: AppTheme.spaceM),
-                        Expanded(
-                          child: Text(
-                            'Checking live trades, sessions and tracker state…',
-                            style: AppTheme.bodyTextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
                 if (_service.lastError != null) ...[
                   const SizedBox(height: AppTheme.spaceM),
                   Container(
@@ -186,17 +155,11 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                   decoration: AppTheme.tradingInputDecoration(
                     label: 'Type instead',
                   ),
-                  onSubmitted: (value) {
-                    _service.submitText(value);
-                  },
+                  onSubmitted: _service.submitText,
                 ),
                 const SizedBox(height: AppTheme.spaceS),
                 OutlinedButton.icon(
-                  onPressed: _service.thinking
-                      ? null
-                      : () {
-                          _service.submitText(_textController.text);
-                        },
+                  onPressed: () => _service.submitText(_textController.text),
                   icon: const Icon(Icons.search_rounded),
                   label: const Text('Search'),
                 ),

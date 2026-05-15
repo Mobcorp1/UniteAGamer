@@ -44,8 +44,7 @@ class UagVoiceAssistantService extends ChangeNotifier {
   final ArcBlueprintRepository _blueprintRepository;
 
   final UagVoiceIntentParser _parser = const UagVoiceIntentParser();
-  final UagVoiceResponseBuilder _responseBuilder =
-      const UagVoiceResponseBuilder();
+  final UagVoiceResponseBuilder _responseBuilder = const UagVoiceResponseBuilder();
 
   bool _available = false;
   bool _initialised = false;
@@ -63,6 +62,7 @@ class UagVoiceAssistantService extends ChangeNotifier {
   bool get initialised => _initialised;
   bool get initialising => _initialising;
   bool get listening => _listening;
+  bool get thinking => _initialising;
   String get transcript => _transcript;
   String? get lastError => _lastError;
   UagVoiceResponse? get lastResponse => _lastResponse;
