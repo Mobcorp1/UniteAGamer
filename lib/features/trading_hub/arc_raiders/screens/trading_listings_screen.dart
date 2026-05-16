@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
@@ -16,7 +15,11 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 class TradingListingsScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/listings';
 
-  const TradingListingsScreen({super.key, this.showAppBar = true, this.embedProfileSummary = false});
+  const TradingListingsScreen({
+    super.key,
+    this.showAppBar = true,
+    this.embedProfileSummary = false,
+  });
 
   final bool showAppBar;
   final bool embedProfileSummary;
@@ -28,7 +31,8 @@ class TradingListingsScreen extends StatefulWidget {
 class _TradingListingsScreenState extends State<TradingListingsScreen> {
   final TradingRepository _repository = TradingRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
-  final ArcTraderProfileRepository _profileRepository = ArcTraderProfileRepository();
+  final ArcTraderProfileRepository _profileRepository =
+      ArcTraderProfileRepository();
   final TextEditingController _searchController = TextEditingController();
 
   bool _showOpenToOffersOnly = false;
@@ -42,18 +46,18 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
     super.dispose();
   }
 
-  Set<String> _buildMissingBlueprintNames(Map<String, ArcBlueprintState> states) {
-    final missingIds = states.values
-        .where((state) => !state.owned)
+  Set<String> _buildMissingBlueprintNames(
+    Map<String, ArcBlueprintState> states,
+  ) {
+    final ownedBlueprintIds = states.values
+        .where((state) => state.owned)
         .map((state) => state.blueprintId)
         .toSet();
 
-    final missingNames = ArcBlueprintSeedData.blueprints
-        .where((blueprint) => missingIds.contains(blueprint.id))
+    return ArcBlueprintSeedData.blueprints
+        .where((blueprint) => !ownedBlueprintIds.contains(blueprint.id))
         .map((blueprint) => blueprint.name.toLowerCase())
         .toSet();
-
-    return missingNames;
   }
 
   List<TradingListing> _applyFilters(
@@ -62,50 +66,57 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   ) {
     final query = _searchController.text.trim().toLowerCase();
 
-    return listings.where((listing) {
-      final hasOfferedMatch = missingBlueprintNames.isEmpty
-          ? true
-          : listing.offeredBlueprintNames
-              .map((name) => name.toLowerCase())
-              .any(missingBlueprintNames.contains);
+    return listings
+        .where((listing) {
+          final hasOfferedMatch = missingBlueprintNames.isEmpty
+              ? true
+              : listing.offeredBlueprintNames
+                    .map((name) => name.toLowerCase())
+                    .any(missingBlueprintNames.contains);
 
-      if (!hasOfferedMatch) {
-        return false;
-      }
-      if (_showOpenToOffersOnly &&
-          listing.listingType != TradingListingType.openToOffers) {
-        return false;
-      }
-      if (_showLowRiskOnly && listing.riskLevel != TradingRiskLevel.low) {
-        return false;
-      }
-      if (_showSeedsOnly &&
-          listing.seedTotalOffered <= 0 &&
-          !listing.acceptsSeeds) {
-        return false;
-      }
-      if (_showBundleOnly && !listing.tradeAsBundle) {
-        return false;
-      }
-      if (query.isEmpty) {
-        return true;
-      }
+          if (!hasOfferedMatch) {
+            return false;
+          }
 
-      final searchableText = <String>[
-        listing.title,
-        listing.offeredSummary,
-        listing.wantedSummary,
-        listing.traderName,
-        listing.region,
-        listing.playWindow,
-        ...listing.offeredBlueprintNames,
-        ...listing.wantedBlueprintNames,
-        ...listing.offeredAssetNames,
-        ...listing.wantedAssetNames,
-      ].join(' ').toLowerCase();
+          if (_showOpenToOffersOnly &&
+              listing.listingType != TradingListingType.openToOffers) {
+            return false;
+          }
 
-      return searchableText.contains(query);
-    }).toList(growable: false);
+          if (_showLowRiskOnly && listing.riskLevel != TradingRiskLevel.low) {
+            return false;
+          }
+
+          if (_showSeedsOnly &&
+              listing.seedTotalOffered <= 0 &&
+              !listing.acceptsSeeds) {
+            return false;
+          }
+
+          if (_showBundleOnly && !listing.tradeAsBundle) {
+            return false;
+          }
+
+          if (query.isEmpty) {
+            return true;
+          }
+
+          final searchableText = [
+            listing.title,
+            listing.offeredSummary,
+            listing.wantedSummary,
+            listing.traderName,
+            listing.region,
+            listing.playWindow,
+            ...listing.offeredBlueprintNames,
+            ...listing.wantedBlueprintNames,
+            ...listing.offeredAssetNames,
+            ...listing.wantedAssetNames,
+          ].join(' ').toLowerCase();
+
+          return searchableText.contains(query);
+        })
+        .toList(growable: false);
   }
 
   String _expiryText(DateTime expiresAt) {
@@ -148,7 +159,11 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
       decoration: AppTheme.tradingPillDecoration(color: color),
       child: Text(
         label,
-        style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
       ),
     );
   }
@@ -173,7 +188,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   }
 
   Widget _listingCard(BuildContext context, TradingListing listing) {
-    final subtitleBits = <String>[
+    final subtitleBits = [
       if (listing.tradeAsBundle) 'Bundle only' else 'Mix and match',
       if (listing.allowPartialOffers) 'Partial offers on',
       if (listing.seriousOffersOnly) 'Serious only',
@@ -223,7 +238,10 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(listing.offeredSummary, style: const TextStyle(color: Colors.white)),
+              Text(
+                listing.offeredSummary,
+                style: const TextStyle(color: Colors.white),
+              ),
               const SizedBox(height: AppTheme.spaceM),
               Text(
                 'Looking for',
@@ -233,7 +251,10 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(listing.wantedSummary, style: const TextStyle(color: Colors.white)),
+              Text(
+                listing.wantedSummary,
+                style: const TextStyle(color: Colors.white),
+              ),
               if (subtitleBits.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
@@ -260,9 +281,11 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
     );
   }
 
-
   Widget _profileSummaryCard(BuildContext context, ArcTraderProfile profile) {
-    final statusColor = profile.isProfileComplete ? AppTheme.neonCyan : AppTheme.warningAmber;
+    final statusColor = profile.isProfileComplete
+        ? AppTheme.neonCyan
+        : AppTheme.warningAmber;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
@@ -280,12 +303,19 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile.uagName.trim().isEmpty ? 'Trader Profile' : profile.uagName,
-                      style: AppTheme.tradingHeading(fontSize: 20, color: Colors.white),
+                      profile.uagName.trim().isEmpty
+                          ? 'Trader Profile'
+                          : profile.uagName,
+                      style: AppTheme.tradingHeading(
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      profile.uagId.trim().isEmpty ? 'Set up your trading identity and visibility.' : profile.uagId,
+                      profile.uagId.trim().isEmpty
+                          ? 'Set up your trading identity and visibility.'
+                          : profile.uagId,
                       style: TextStyle(color: AppTheme.tradingMutedText),
                     ),
                   ],
@@ -296,7 +326,11 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                 decoration: AppTheme.tradingPillDecoration(color: statusColor),
                 child: Text(
                   profile.isProfileComplete ? 'Ready' : 'Needs setup',
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.w700, fontSize: 12),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -306,9 +340,19 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _metaChip(profile.region.isEmpty ? 'Region not set' : profile.region),
-              _metaChip(profile.platform.isEmpty ? 'Platform not set' : profile.platform),
-              _metaChip(profile.visibleInSearch ? 'Visible in search' : 'Hidden in search'),
+              _metaChip(
+                profile.region.isEmpty ? 'Region not set' : profile.region,
+              ),
+              _metaChip(
+                profile.platform.isEmpty
+                    ? 'Platform not set'
+                    : profile.platform,
+              ),
+              _metaChip(
+                profile.visibleInSearch
+                    ? 'Visible in search'
+                    : 'Hidden in search',
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -326,6 +370,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
       ),
     );
   }
+
   Widget _buildEmptyState(bool hasMissingBlueprints) {
     return Center(
       child: Text(
@@ -367,7 +412,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               _buildFilterChip(
                 label: 'Low Risk',
                 selected: _showLowRiskOnly,
-                onTap: () => setState(() => _showLowRiskOnly = !_showLowRiskOnly),
+                onTap: () =>
+                    setState(() => _showLowRiskOnly = !_showLowRiskOnly),
               ),
               _buildFilterChip(
                 label: 'Seed Trades',
@@ -390,28 +436,32 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: widget.showAppBar ? AppBar(
-        title: Text(
-          'Market',
-          style: AppTheme.tradingHeading(fontSize: 25),
-        ),
-      ) : null,
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: Text(
+                'Market',
+                style: AppTheme.tradingHeading(fontSize: 25),
+              ),
+            )
+          : null,
       body: Stack(
         children: [
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: AppTheme.pageMaxWidth),
+                constraints: const BoxConstraints(
+                  maxWidth: AppTheme.pageMaxWidth,
+                ),
                 child: Padding(
                   padding: AppTheme.pagePadding,
                   child: StreamBuilder<Map<String, ArcBlueprintState>>(
                     stream: _blueprintRepository.watchMyBlueprintStates(),
                     builder: (context, statesSnapshot) {
-                      final states =
-                          statesSnapshot.data ?? const <String, ArcBlueprintState>{};
-                      final missingBlueprintNames =
-                          _buildMissingBlueprintNames(states);
+                      final states = statesSnapshot.data ?? const {};
+                      final missingBlueprintNames = _buildMissingBlueprintNames(
+                        states,
+                      );
 
                       return Column(
                         children: [
@@ -419,7 +469,12 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                             StreamBuilder<ArcTraderProfile>(
                               stream: _profileRepository.watchProfile(),
                               builder: (context, profileSnapshot) {
-                                final profile = profileSnapshot.data ?? ArcTraderProfile.empty(_profileRepository.currentUid ?? '');
+                                final profile =
+                                    profileSnapshot.data ??
+                                    ArcTraderProfile.empty(
+                                      _profileRepository.currentUid ?? '',
+                                    );
+
                                 return _profileSummaryCard(context, profile);
                               },
                             ),
@@ -449,7 +504,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                                 }
 
                                 final listings = _applyFilters(
-                                  snapshot.data ?? const <TradingListing>[],
+                                  snapshot.data ?? const [],
                                   missingBlueprintNames,
                                 );
 
