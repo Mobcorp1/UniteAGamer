@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -378,7 +378,7 @@ class TradingRepository {
               '${effectiveScheduled.minute.toString().padLeft(2, '0')}';
 
     return 'ARC Raiders trade invite\n\n'
-        'Traders: ${session.traderOneName} â†” ${session.traderTwoName}\n'
+        'Traders: ${session.traderOneName} ↔ ${session.traderTwoName}\n'
         'When: $when (${session.timezone})\n'
         'Protocol: ${session.protocolLabel}\n'
         'Session ID: ${session.id}\n'
@@ -428,9 +428,9 @@ class TradingRepository {
         (smallBundles * 10) + (mediumBundles * 50) + (largeBundles * 100);
 
     final title = wantsNothing
-        ? '$offeredItem â€¢ Free Giveaway'
+        ? '$offeredItem • Free Giveaway'
         : listingType == TradingListingType.openToOffers
-            ? '$offeredItem â€¢ Open Offer'
+            ? '$offeredItem • Open Offer'
             : '$offeredItem for $wantedText';
 
     final listing = TradingListing(
@@ -631,30 +631,12 @@ class TradingRepository {
     if (!listingSnap.exists) {
       throw Exception('The listing linked to this offer no longer exists.');
     }
-
     final listing = TradingListing.fromMap(listingSnap.data()!);
     if (listing.ownerUid != uid) {
       throw Exception('Only the listing owner can accept this offer.');
     }
 
-    Future<String> loadEmbarkId(String traderUid) async {
-      try {
-        final snap = await _tradingProfileDoc(traderUid).get();
-        final data = snap.data() ?? <String, dynamic>{};
-        final value = data['embarkId'];
-        if (value is String && value.trim().isNotEmpty) {
-          return value.trim();
-        }
-      } catch (_) {
-        // Embark ID hydration is best effort and must not block accepting a trade.
-      }
-      return '';
-    }
-
     final now = DateTime.now();
-    final traderOneEmbarkId = await loadEmbarkId(listing.ownerUid);
-    final traderTwoEmbarkId = await loadEmbarkId(offer.senderUid);
-
     final sessionRef = _sessionsCollection.doc();
     final session = TradingSession(
       id: sessionRef.id,
@@ -668,10 +650,10 @@ class TradingRepository {
       timezone: 'Europe/London',
       protocolType: TradingProtocolType.sequentialSafePocketSwap,
       status: TradingSessionStatus.pending,
-      traderOneEmbarkId: traderOneEmbarkId,
-      traderTwoEmbarkId: traderTwoEmbarkId,
-      traderOneSharedEmbarkId: traderOneEmbarkId.isNotEmpty,
-      traderTwoSharedEmbarkId: traderTwoEmbarkId.isNotEmpty,
+      traderOneEmbarkId: '',
+      traderTwoEmbarkId: '',
+      traderOneSharedEmbarkId: false,
+      traderTwoSharedEmbarkId: false,
       traderOneReady: false,
       traderTwoReady: false,
       dropOrderAssigned: false,
@@ -682,7 +664,7 @@ class TradingRepository {
       traderTwoMarkedNoShow: false,
       traderOneMarkedBetrayal: false,
       traderTwoMarkedBetrayal: false,
-      bookingOptions: const [],
+      bookingOptions: const <TradingBookingOption>[],
       selectedBooking: null,
       bookingProposedByUid: '',
       bookingProposedAt: null,
@@ -690,25 +672,17 @@ class TradingRepository {
       updatedAt: now,
     );
 
-    final batch = _firestore.batch();
-
-    batch.update(_offersCollection.doc(offer.id), {
+    await _offersCollection.doc(offer.id).update({
       'status': TradingOfferStatus.accepted.name,
       'updatedAt': Timestamp.fromDate(now),
     });
 
-    batch.set(
-      _listingsCollection.doc(offer.listingId),
-      {
-        'active': false,
-        'updatedAt': Timestamp.fromDate(now),
-      },
-      SetOptions(merge: true),
-    );
+    await _listingsCollection.doc(offer.listingId).set({
+      'active': false,
+      'updatedAt': Timestamp.fromDate(now),
+    }, SetOptions(merge: true));
 
-    batch.set(sessionRef, session.toMap());
-
-    await batch.commit();
+    await sessionRef.set(session.toMap());
 
     try {
       final pendingOffers = await _offersCollection
@@ -736,7 +710,7 @@ class TradingRepository {
       type: TradingNotificationType.offerAccepted,
       title: 'Offer accepted',
       body:
-          '${listing.traderName} accepted your offer and created a trade session. Open the Session Planner to confirm a time.',
+          '${listing.traderName} accepted your offer and created a trade session.',
       listingId: offer.listingId,
       offerId: offer.id,
       sessionId: session.id,
@@ -747,7 +721,7 @@ class TradingRepository {
       type: TradingNotificationType.sessionCreated,
       title: 'Trade session created',
       body:
-          'Your accepted trade is now live in the Session Planner. Book a time, confirm Embark IDs, and send the in-game friend request.',
+          'Your accepted trade is now live. Book a time and share Embark IDs.',
       listingId: offer.listingId,
       offerId: offer.id,
       sessionId: session.id,
@@ -1043,51 +1017,23 @@ class TradingRepository {
       throw Exception('That booking option is no longer available.');
     }
 
-    Future<String> loadEmbarkId(String traderUid, String fallback) async {
-      try {
-        final snap = await _tradingProfileDoc(traderUid).get();
-        final data = snap.data() ?? <String, dynamic>{};
-        final value = data['embarkId'];
-        if (value is String && value.trim().isNotEmpty) {
-          return value.trim();
-        }
-      } catch (_) {
-        // Best effort only.
-      }
-      return fallback.trim();
-    }
-
     final targetUid = _otherTraderUid(session, uid!);
-    final now = DateTime.now();
 
-    final traderOneEmbarkId = await loadEmbarkId(
-      session.traderOneUid,
-      session.traderOneEmbarkId,
-    );
-    final traderTwoEmbarkId = await loadEmbarkId(
-      session.traderTwoUid,
-      session.traderTwoEmbarkId,
-    );
-
-    final updates = <String, dynamic>{
+    final batch = _firestore.batch();
+    batch.update(_sessionsCollection.doc(session.id), {
       'selectedBooking': Timestamp.fromDate(selected),
       'scheduledAt': Timestamp.fromDate(selected),
       'status': TradingSessionStatus.scheduled.name,
-      'updatedAt': Timestamp.fromDate(now),
-      'traderOneEmbarkId': traderOneEmbarkId,
-      'traderTwoEmbarkId': traderTwoEmbarkId,
-      'traderOneSharedEmbarkId': traderOneEmbarkId.isNotEmpty,
-      'traderTwoSharedEmbarkId': traderTwoEmbarkId.isNotEmpty,
-    };
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
+    });
 
-    await _sessionsCollection.doc(session.id).update(updates);
+    await batch.commit();
 
     await _safeNotify(
       targetUid: targetUid,
       type: TradingNotificationType.sessionUpdated,
       title: 'Trade time confirmed',
-      body:
-          'A booking slot has been locked in. Saved Embark IDs have been added to the Session Planner where available. Send the in-game friend request before the trade.',
+      body: 'A booking slot has been locked in for your trade session.',
       listingId: session.listingId,
       offerId: session.offerId,
       sessionId: session.id,
@@ -1318,5 +1264,3 @@ class TradingRepository {
     return;
   }
 }
-
-

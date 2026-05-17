@@ -72,7 +72,7 @@ class _TradingTradeSessionsScreenState
 
   String _formatDateTime(DateTime? value) {
     if (value == null) return 'Not confirmed yet';
-    return '${_formatDate(value)} â€¢ ${_formatTime(value)}';
+    return '${_formatDate(value)} • ${_formatTime(value)}';
   }
 
   bool _isStartingSoon(TradingSession session) {
@@ -379,7 +379,7 @@ class _TradingTradeSessionsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Propose 3 days Ã— 3 times',
+                      'Propose 3 days × 3 times',
                       style: AppTheme.tradingHeading(fontSize: 24),
                     ),
                     const SizedBox(height: 8),
@@ -832,12 +832,6 @@ class _TradingTradeSessionsScreenState
         : session.traderTwoSharedEmbarkId;
     final bothEmbarkIdsShared =
         session.traderOneSharedEmbarkId && session.traderTwoSharedEmbarkId;
-    final myEmbarkId = _isTraderOne(session)
-        ? session.traderOneEmbarkId
-        : session.traderTwoEmbarkId;
-    final otherEmbarkId = _isTraderOne(session)
-        ? session.traderTwoEmbarkId
-        : session.traderOneEmbarkId;
     final needsChoice = _needsBookingChoice(session);
 
     return Container(
@@ -849,7 +843,7 @@ class _TradingTradeSessionsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${session.traderOneName} â†” ${session.traderTwoName}',
+              '${session.traderOneName} ↔ ${session.traderTwoName}',
               style: AppTheme.tradingHeading(fontSize: 22),
             ),
             const SizedBox(height: 10),
@@ -866,24 +860,10 @@ class _TradingTradeSessionsScreenState
             const SizedBox(height: 14),
             _infoRow('Confirmed slot', _formatDateTime(confirmedBooking)),
             _infoRow(
-              'My Embark ID',
-              myEmbarkId.trim().isEmpty ? 'Not shared yet' : myEmbarkId.trim(),
-            ),
-
-            _infoRow(
-              '${_otherTraderName(session)} Embark ID',
-              otherEmbarkId.trim().isEmpty
-                  ? 'Waiting for trader to share'
-                  : otherEmbarkId.trim(),
-            ),
-
-            _infoRow(
-              'Friend request',
-              confirmedBooking == null
-                  ? 'Confirm a time first'
-                  : bothEmbarkIdsShared
-                  ? 'Send/add the in-game friend request before the trade'
-                  : 'Share both Embark IDs first',
+              'Embark IDs',
+              bothEmbarkIdsShared
+                  ? 'Both traders shared'
+                  : 'Waiting on one or both traders',
             ),
             _infoRow(
               'First drop',
@@ -1080,7 +1060,7 @@ class _TradingTradeSessionsScreenState
             Divider(color: AppTheme.tradingDivider),
             const SizedBox(height: 10),
             Text(
-              'Flow: accept offer â†’ propose 3 days Ã— 3 times â†’ other trader confirms one slot â†’ share Embark IDs â†’ assign first drop â†’ both mark ready.',
+              'Flow: accept offer → propose 3 days × 3 times → other trader confirms one slot → share Embark IDs → assign first drop → both mark ready.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.tradingMutedText,

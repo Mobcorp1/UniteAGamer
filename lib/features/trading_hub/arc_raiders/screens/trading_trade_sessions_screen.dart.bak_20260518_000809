@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
@@ -830,8 +830,7 @@ class _TradingTradeSessionsScreenState
     final myEmbarkShared = _isTraderOne(session)
         ? session.traderOneSharedEmbarkId
         : session.traderTwoSharedEmbarkId;
-    final bothEmbarkIdsShared =
-        session.traderOneSharedEmbarkId && session.traderTwoSharedEmbarkId;
+    final bothEmbarkIdsShared = session.traderOneSharedEmbarkId && session.traderTwoSharedEmbarkId;
     final myEmbarkId = _isTraderOne(session)
         ? session.traderOneEmbarkId
         : session.traderTwoEmbarkId;
@@ -866,24 +865,10 @@ class _TradingTradeSessionsScreenState
             const SizedBox(height: 14),
             _infoRow('Confirmed slot', _formatDateTime(confirmedBooking)),
             _infoRow(
-              'My Embark ID',
-              myEmbarkId.trim().isEmpty ? 'Not shared yet' : myEmbarkId.trim(),
-            ),
-
-            _infoRow(
-              '${_otherTraderName(session)} Embark ID',
-              otherEmbarkId.trim().isEmpty
-                  ? 'Waiting for trader to share'
-                  : otherEmbarkId.trim(),
-            ),
-
-            _infoRow(
-              'Friend request',
-              confirmedBooking == null
-                  ? 'Confirm a time first'
-                  : bothEmbarkIdsShared
-                  ? 'Send/add the in-game friend request before the trade'
-                  : 'Share both Embark IDs first',
+              'Embark IDs',
+              bothEmbarkIdsShared
+                  ? 'Both traders shared'
+                  : 'Waiting on one or both traders',
             ),
             _infoRow(
               'First drop',
@@ -1177,3 +1162,4 @@ class _TradingTradeSessionsScreenState
     );
   }
 }
+
