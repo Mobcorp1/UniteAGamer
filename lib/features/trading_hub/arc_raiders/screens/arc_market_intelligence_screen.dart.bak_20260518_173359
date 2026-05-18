@@ -208,10 +208,6 @@ class _ArcMarketIntelligenceScreenState
                       state:
                           blueprintStates[blueprint.id] ??
                           ArcBlueprintState.empty(blueprint.id),
-                      reportsForBlueprint: _reportsForBlueprint(
-                        reports,
-                        blueprint.id,
-                      ),
                     ),
                   ),
                 ),
@@ -227,7 +223,7 @@ class _ArcMarketIntelligenceScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Recommended targets based on your missing collection, wanted priorities and recent community discoveries.',
+                'This is the cleaner snapshot view: the strongest next missing blueprints for your account, ranked by your priorities first and then by useful community intel.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.white70,
                   height: 1.35,
@@ -254,10 +250,6 @@ class _ArcMarketIntelligenceScreenState
                           state:
                               blueprintStates[blueprint.id] ??
                               ArcBlueprintState.empty(blueprint.id),
-                          reportsForBlueprint: _reportsForBlueprint(
-                            reports,
-                            blueprint.id,
-                          ),
                         ),
                       ),
                     ),
@@ -525,35 +517,11 @@ class _ArcMarketIntelligenceScreenState
     );
   }
 
-  List<ArcBlueprintDropReport> _reportsForBlueprint(
-    List<ArcBlueprintDropReport> reports,
-    String blueprintId,
-  ) {
-    final matches = reports
-        .where((report) => report.blueprintId == blueprintId)
-        .toList(growable: false);
-
-    return [...matches]..sort((a, b) {
-      final aDate = a.lastConfirmedAt ?? a.createdAt ?? a.foundAt;
-      final bDate = b.lastConfirmedAt ?? b.createdAt ?? b.foundAt;
-
-      if (aDate == null && bDate == null) {
-        return b.confirmationCount.compareTo(a.confirmationCount);
-      }
-
-      if (aDate == null) return 1;
-      if (bDate == null) return -1;
-
-      return bDate.compareTo(aDate);
-    });
-  }
-
   Widget _buildBlueprintIntelCard(
     BuildContext context, {
     required ArcBlueprint blueprint,
     required ArcDropIntel intel,
     required ArcBlueprintState state,
-    required List<ArcBlueprintDropReport> reportsForBlueprint,
   }) {
     final hasIntel = intel.hasReports;
     final topCombo = intel.topCombinations.isEmpty
@@ -638,22 +606,6 @@ class _ArcMarketIntelligenceScreenState
               'Last reported',
               _relativeDateLabel(intel.lastReportedAt),
             ),
-            const SizedBox(height: AppTheme.spaceS),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                onPressed: reportsForBlueprint.isEmpty
-                    ? null
-                    : () => _showBlueprintReportDrilldown(
-                        context,
-                        blueprint: blueprint,
-                        intel: intel,
-                        reports: reportsForBlueprint,
-                      ),
-                icon: const Icon(Icons.manage_search_rounded),
-                label: const Text('View report details'),
-              ),
-            ),
           ] else ...[
             Text(
               blueprint.intelHint,
@@ -664,229 +616,6 @@ class _ArcMarketIntelligenceScreenState
               'No community reports yet. This target stays in your snapshot so you can decide what to chase next even before data builds up.',
               style: TextStyle(color: Colors.white54, height: 1.35),
             ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showBlueprintReportDrilldown(
-    BuildContext context, {
-    required ArcBlueprint blueprint,
-    required ArcDropIntel intel,
-    required List<ArcBlueprintDropReport> reports,
-  }) async {
-    final latestReports = reports.take(12).toList(growable: false);
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.82,
-            minChildSize: 0.45,
-            maxChildSize: 0.94,
-            builder: (context, scrollController) {
-              return ListView(
-                controller: scrollController,
-                padding: AppTheme.pagePadding,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          blueprint.name,
-                          style: AppTheme.tradingHeading(
-                            fontSize: 25,
-                            color: AppTheme.neonCyan,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(sheetContext).pop(),
-                        icon: const Icon(Icons.close_rounded),
-                        color: Colors.white70,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spaceS),
-                  Text(
-                    'Intel drilldown based on community reports for this blueprint.',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 14,
-                      color: AppTheme.tradingMutedText,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildIntelChip(
-                        'Confidence',
-                        _buildConfidenceLabel(intel),
-                        AppTheme.neonPink,
-                      ),
-                      _buildIntelChip(
-                        'Reports',
-                        '${intel.totalReports}',
-                        AppTheme.neonCyan,
-                      ),
-                      _buildIntelChip(
-                        'Last seen',
-                        _relativeDateLabel(intel.lastReportedAt),
-                        AppTheme.warningAmber,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  if (intel.topCombinations.isNotEmpty) ...[
-                    Text(
-                      'Strongest Reported Conditions',
-                      style: AppTheme.tradingHeading(
-                        fontSize: 20,
-                        color: AppTheme.neonPink,
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    ...intel.topCombinations
-                        .take(5)
-                        .map(
-                          (combo) => Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppTheme.spaceS,
-                            ),
-                            child: _buildCombinationCard(combo),
-                          ),
-                        ),
-                    const SizedBox(height: AppTheme.spaceL),
-                  ],
-                  Text(
-                    'Recent Reports',
-                    style: AppTheme.tradingHeading(
-                      fontSize: 20,
-                      color: AppTheme.neonPink,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  if (latestReports.isEmpty)
-                    _buildEmptyPanel(
-                      context,
-                      'No report records are available for this blueprint yet.',
-                    )
-                  else
-                    ...latestReports.map(
-                      (report) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
-                        child: _buildReportDetailCard(report),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildIntelChip(String label, String value, Color color) {
-    return Container(
-      padding: AppTheme.pillPadding,
-      decoration: AppTheme.tradingPillDecoration(color: color),
-      child: Text(
-        '$label: $value',
-        style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
-      ),
-    );
-  }
-
-  Widget _buildCombinationCard(ArcIntelCombination combo) {
-    return Container(
-      width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
-        radius: 16,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildInfoLine('Map', combo.mapLabel),
-          _buildInfoLine('Area / POI', combo.areaLabel),
-          _buildInfoLine('Container', combo.containerLabel),
-          _buildInfoLine('Weather', combo.weatherLabel),
-          _buildInfoLine('Event', combo.eventLabel),
-          _buildInfoLine(
-            'Support',
-            '${combo.reportCount} weighted reports â€¢ ${combo.percentageLabel}',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReportDetailCard(ArcBlueprintDropReport report) {
-    final timestamp =
-        report.lastConfirmedAt ?? report.createdAt ?? report.foundAt;
-    final showLegacyEntryTime = report.entryTime != ArcEntryTime.unknown;
-    final isRaidSpecific =
-        report.mapName.trim().isNotEmpty &&
-        report.mapName.trim().toLowerCase() != 'not raid specific';
-
-    return Container(
-      width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.18),
-        radius: 16,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildIntelChip(
-                'Source',
-                report.acquisitionSource.label,
-                AppTheme.neonCyan,
-              ),
-              _buildIntelChip(
-                'Confirmed',
-                '${report.confirmationCount}',
-                AppTheme.neonPink,
-              ),
-              _buildIntelChip(
-                'Seen',
-                _relativeDateLabel(timestamp),
-                AppTheme.warningAmber,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          if (isRaidSpecific) ...[
-            _buildInfoLine('Map', report.mapName),
-            _buildInfoLine('Event', report.eventLabel),
-            _buildInfoLine('Area / POI', report.areaLabel),
-            _buildInfoLine('Container', report.resolvedContainerLabel),
-            _buildInfoLine('Raid Round', report.raidType.label),
-            _buildInfoLine('Raider Time', report.timeOfDay.label),
-            if (showLegacyEntryTime)
-              _buildInfoLine('Legacy Entry Time', report.entryTime.label),
-          ] else ...[
-            _buildInfoLine('Location', 'Not raid specific'),
-          ],
-          if (report.notes.trim().isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spaceS),
-            _buildInfoLine('Notes', report.notes.trim()),
           ],
         ],
       ),
