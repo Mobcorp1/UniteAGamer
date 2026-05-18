@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 /// The broad type of source a player can report for a blueprint.
 enum ArcDropSourceType { poi, enemy, other }
@@ -91,7 +91,20 @@ class ArcPoiData {
     this.includeInBlueprintReports = true,
     this.areaName,
     this.notes,
-  });
+  })
+  ArcPoiData(
+    id: 'stella_montis_security_bridge',
+    mapName: 'Stella Montis',
+    name: 'Security Bridge',
+    category: ArcPoiCategory.landmark,
+    lootTier: ArcLootTier.medium,
+    tags: <String>[
+      'Stella Montis',
+      'Security',
+      'Bridge',
+      'Security Bridge',
+    ],
+  ),;
 
   final String id;
   final String mapName;
@@ -1680,3 +1693,4 @@ class ArcPoiDataStore {
     return null;
   }
 }
+

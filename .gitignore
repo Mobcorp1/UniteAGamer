@@ -48,3 +48,4 @@ app.*.map.json
 *.tmp
 *.bak_textclean_*
 *.bak_mojibake_*
+*.bak_apostrophe_recovery_*

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 enum ArcTradeItemCategory {
   blueprint,
@@ -750,7 +750,7 @@ class ArcTradeItemsData {
     ),
     ArcTradeItem(
       id: 'leviathans-crown-ship-model',
-      name: 'Leviathan's Crown Ship Model',
+      name: "Leviathan's Crown Ship Model",
       category: ArcTradeItemCategory.trinket,
       tradeValue: ArcTradeValueTier.elite,
       rarity: ArcTradeItemRarity.legendary,
@@ -1148,4 +1148,3 @@ class ArcTradeItemsData {
           .toList(growable: false)
         ..sort();
 }
-

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class UnifiedItemEntry {
@@ -839,7 +839,7 @@ class UnifiedItemIndex {
     ),
     UnifiedItemEntry(
       id: 'leviathans-crown-ship-model',
-      name: 'Leviathan's Crown Ship Model',
+      name: "Leviathan's Crown Ship Model",
       usedIn: <String>['Trading Hub'],
       aliases: <String>['leviathans crown ship model'],
     ),
@@ -1634,4 +1634,3 @@ class UnifiedItemIndex {
         .toList(growable: false);
   }
 }
-

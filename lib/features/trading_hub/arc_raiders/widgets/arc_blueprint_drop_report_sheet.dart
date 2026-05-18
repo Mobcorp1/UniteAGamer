@@ -663,6 +663,63 @@ class _ArcBlueprintDropReportSheetState
     );
   }
 
+  Widget _buildExpandablePanel({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Widget> children,
+    bool initiallyExpanded = false,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dividerColor: Colors.transparent,
+        splashColor: Colors.white.withValues(alpha: 0.04),
+        highlightColor: Colors.white.withValues(alpha: 0.03),
+      ),
+      child: Container(
+        width: double.infinity,
+        decoration: AppTheme.tradingCardDecoration(
+          borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+          radius: 18,
+        ),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spaceM,
+            vertical: AppTheme.spaceS,
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppTheme.spaceM,
+            0,
+            AppTheme.spaceM,
+            AppTheme.spaceM,
+          ),
+          iconColor: AppTheme.neonCyan,
+          collapsedIconColor: Colors.white70,
+          leading: Icon(icon, color: AppTheme.neonCyan),
+          title: Text(
+            title,
+            style: AppTheme.tradingHeading(
+              fontSize: 20,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              subtitle,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 13,
+                color: AppTheme.tradingMutedText,
+              ),
+            ),
+          ),
+          children: children,
+        ),
+      ),
+    );
+  }
+
   Widget _buildIntelSummary() {
     return StreamBuilder<ArcDropIntel>(
       stream: widget.repository.watchIntelForBlueprint(widget.blueprint.id),
@@ -938,151 +995,172 @@ class _ArcBlueprintDropReportSheetState
                     ],
                   ),
                   const SizedBox(height: AppTheme.spaceL),
-                  _buildIntelSummary(),
-                  const SizedBox(height: AppTheme.spaceL),
-                  Text(
-                    'Drop Report',
-                    style: AppTheme.tradingHeading(
-                      fontSize: 20,
-                      color: AppTheme.neonPink,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceXS),
-                  const Text(
-                    'Start with how the blueprint was obtained. Loot Drop reports can include map, event, area, container, raid round and Raider time of day. Quest rewards, trial rewards and trades do not need raid details.',
-                    style: TextStyle(color: Colors.white60, height: 1.35),
+                  _buildExpandablePanel(
+                    title: 'Community Intel',
+                    subtitle:
+                        'Open community drop data, confidence and reported locations.',
+                    icon: Icons.insights_rounded,
+                    children: [_buildIntelSummary()],
                   ),
                   const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'How Was It Obtained *',
-                    value: _acquisitionSource?.label ?? 'Select Source',
-                    onTap: _pickAcquisitionSource,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  if (_acquisitionSource != null && !_requiresRaidDetails) ...[
-                    _buildNonRaidSourceNotice(),
-                    const SizedBox(height: AppTheme.spaceM),
-                  ],
-                  _buildSelectorField(
-                    label: 'Map *',
-                    value: _selectedMap ?? 'Select Map',
-                    onTap: _pickMap,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'Map Event *',
-                    value:
-                        _selectedMapEvent?.label ??
-                        (widget.blueprint.id == 'surge_coil'
-                            ? 'Electromagnetic Storm'
-                            : widget.blueprint.id == 'canto'
-                            ? 'Hurricane'
-                            : _usesAssessorFlow
-                            ? 'Close Scrutiny'
-                            : 'Select Map Event'),
-                    onTap:
-                        _selectedMap == null ||
-                            _usesAssessorFlow ||
-                            widget.blueprint.id == 'surge_coil' ||
-                            widget.blueprint.id == 'canto'
-                        ? null
-                        : _pickMapEvent,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'Area / POI *',
-                    value: selectedPoi == null
-                        ? 'Select Area / POI'
-                        : selectedPoi.name,
-                    onTap: _selectedMap == null ? null : _pickPoi,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'Container Type *',
-                    value:
-                        _selectedContainerType?.label ??
-                        (_usesAssessorFlow
-                            ? 'Assessor'
-                            : 'Select Container Type'),
-                    onTap: _selectedPoiId == null || _usesAssessorFlow
-                        ? null
-                        : _pickContainerType,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'Raid Round *',
-                    value: _raidType?.label ?? 'Select Raid Round',
-                    onTap: _selectedMap == null ? null : _pickRaidType,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'How Was It Obtained *',
-                    value: _acquisitionSource?.label ?? 'Select Source',
-                    onTap: _selectedMap == null ? null : _pickAcquisitionSource,
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'Raider Time of Day *',
-                    value: _timeOfDay?.label ?? 'Select Raider Time of Day',
-                    onTap: _selectedMap == null ? null : _pickTimeOfDay,
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  Row(
+                  _buildExpandablePanel(
+                    title: 'Drop Report',
+                    subtitle:
+                        'Open this when you want to add how and where this blueprint was found.',
+                    icon: Icons.add_location_alt_outlined,
                     children: [
-                      Expanded(
-                        child: Text(
-                          'Additional blueprints from this raid',
-                          style: AppTheme.tradingHeading(
-                            fontSize: 18,
-                            color: AppTheme.neonCyan,
+                      Text(
+                        'Drop Report',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 20,
+                          color: AppTheme.neonPink,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceXS),
+                      const Text(
+                        'Start with how the blueprint was obtained. Loot Drop reports can include map, event, area, container, raid round and Raider time of day. Quest rewards, trial rewards and trades do not need raid details.',
+                        style: TextStyle(color: Colors.white60, height: 1.35),
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      _buildSelectorField(
+                        label: 'How Was It Obtained *',
+                        value: _acquisitionSource?.label ?? 'Select Source',
+                        onTap: _pickAcquisitionSource,
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      if (_acquisitionSource != null &&
+                          !_requiresRaidDetails) ...[
+                        _buildNonRaidSourceNotice(),
+                        const SizedBox(height: AppTheme.spaceM),
+                      ],
+                      if (_requiresRaidDetails) ...[
+                        _buildSelectorField(
+                          label: 'Map *',
+                          value: _selectedMap ?? 'Select Map',
+                          onTap: _pickMap,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _buildSelectorField(
+                          label: 'Map Event *',
+                          value:
+                              _selectedMapEvent?.label ??
+                              (widget.blueprint.id == 'surge_coil'
+                                  ? 'Electromagnetic Storm'
+                                  : widget.blueprint.id == 'canto'
+                                  ? 'Hurricane'
+                                  : _usesAssessorFlow
+                                  ? 'Close Scrutiny'
+                                  : 'Select Map Event'),
+                          onTap:
+                              _selectedMap == null ||
+                                  _usesAssessorFlow ||
+                                  widget.blueprint.id == 'surge_coil' ||
+                                  widget.blueprint.id == 'canto'
+                              ? null
+                              : _pickMapEvent,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _buildSelectorField(
+                          label: 'Area / POI *',
+                          value: selectedPoi == null
+                              ? 'Select Area / POI'
+                              : selectedPoi.name,
+                          onTap: _selectedMap == null ? null : _pickPoi,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _buildSelectorField(
+                          label: 'Container Type *',
+                          value:
+                              _selectedContainerType?.label ??
+                              (_usesAssessorFlow
+                                  ? 'Assessor'
+                                  : 'Select Container Type'),
+                          onTap: _selectedPoiId == null || _usesAssessorFlow
+                              ? null
+                              : _pickContainerType,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _buildSelectorField(
+                          label: 'Raid Round *',
+                          value: _raidType?.label ?? 'Select Raid Round',
+                          onTap: _selectedMap == null ? null : _pickRaidType,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _buildSelectorField(
+                          label: 'How Was It Obtained *',
+                          value: _acquisitionSource?.label ?? 'Select Source',
+                          onTap: _selectedMap == null
+                              ? null
+                              : _pickAcquisitionSource,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _buildSelectorField(
+                          label: 'Raider Time of Day *',
+                          value:
+                              _timeOfDay?.label ?? 'Select Raider Time of Day',
+                          onTap: _selectedMap == null ? null : _pickTimeOfDay,
+                        ),
+                        const SizedBox(height: AppTheme.spaceL),
+                      ],
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Additional blueprints from this raid',
+                              style: AppTheme.tradingHeading(
+                                fontSize: 18,
+                                color: AppTheme.neonCyan,
+                              ),
+                            ),
                           ),
+                          TextButton.icon(
+                            onPressed: _selectedMap == null
+                                ? null
+                                : _addAnotherBlueprintEntry,
+                            icon: const Icon(Icons.add_rounded),
+                            label: const Text('Add Another'),
+                          ),
+                        ],
+                      ),
+                      const Text(
+                        'Shared run details stay the same. For each extra blueprint you can keep the same Area / POI and container type, or change them.',
+                        style: TextStyle(color: Colors.white60, height: 1.35),
+                      ),
+                      if (_additionalReports.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(top: AppTheme.spaceM),
+                          padding: const EdgeInsets.all(AppTheme.spaceM),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.03),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          child: const Text(
+                            'No additional blueprints added yet.',
+                            style: TextStyle(color: Colors.white60),
+                          ),
+                        )
+                      else
+                        ...List.generate(
+                          _additionalReports.length,
+                          (index) => _buildAdditionalReportCard(context, index),
+                        ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      TextField(
+                        controller: _notesController,
+                        style: const TextStyle(color: Colors.white),
+                        minLines: 3,
+                        maxLines: 5,
+                        decoration: AppTheme.tradingInputDecoration(
+                          label:
+                              'Location Notes (bridge, back room, upper floor, hidden corner, etc.)',
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: _selectedMap == null
-                            ? null
-                            : _addAnotherBlueprintEntry,
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text('Add Another'),
-                      ),
+                      const SizedBox(height: AppTheme.spaceL),
                     ],
-                  ),
-                  const Text(
-                    'Shared run details stay the same. For each extra blueprint you can keep the same Area / POI and container type, or change them.',
-                    style: TextStyle(color: Colors.white60, height: 1.35),
-                  ),
-                  if (_additionalReports.isEmpty)
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(top: AppTheme.spaceM),
-                      padding: const EdgeInsets.all(AppTheme.spaceM),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08),
-                        ),
-                      ),
-                      child: const Text(
-                        'No additional blueprints added yet.',
-                        style: TextStyle(color: Colors.white60),
-                      ),
-                    )
-                  else
-                    ...List.generate(
-                      _additionalReports.length,
-                      (index) => _buildAdditionalReportCard(context, index),
-                    ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  TextField(
-                    controller: _notesController,
-                    style: const TextStyle(color: Colors.white),
-                    minLines: 3,
-                    maxLines: 5,
-                    decoration: AppTheme.tradingInputDecoration(
-                      label:
-                          'Location Notes (bridge, back room, upper floor, hidden corner, etc.)',
-                    ),
                   ),
                   const SizedBox(height: AppTheme.spaceL),
                   Row(

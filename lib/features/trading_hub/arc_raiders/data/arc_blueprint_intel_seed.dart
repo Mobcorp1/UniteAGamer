@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 
 enum ArcIntelConfidence { starter, community, confirmed }
@@ -585,7 +585,7 @@ class ArcBlueprintIntelLibrary {
       likelyContainers: <String>['Quest Reward'],
       likelyMaps: <String>[],
       bestConditions: <String>['Quest'],
-      specialSource: 'The Major's Footlocker quest.',
+      specialSource: "The Major's Footlocker quest.",
       confidence: ArcIntelConfidence.starter,
     ),
     'il-toro': _HintSeed(
@@ -1072,4 +1072,3 @@ class ArcBlueprintIntelLibrary {
     ),
   };
 }
-
