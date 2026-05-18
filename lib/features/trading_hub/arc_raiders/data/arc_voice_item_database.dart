@@ -117,8 +117,9 @@ class ArcVoiceItemDatabase {
   static ArcVoiceItemAction _actionFromUnified(UnifiedItemEntry item) {
     final n = UnifiedItemIndex.normalize(item.name);
     if (n.contains('blueprint')) return ArcVoiceItemAction.learn;
-    if (item.neededForBench || item.neededForQuest || item.neededForScrappy)
+    if (item.neededForBench || item.neededForQuest || item.neededForScrappy) {
       return ArcVoiceItemAction.keep;
+    }
     if (_looksLikeKey(n)) return ArcVoiceItemAction.trade;
     if (_looksLikeUseItem(n)) return ArcVoiceItemAction.use;
     if (_looksLikeRecycle(n)) return ArcVoiceItemAction.recycle;
@@ -134,8 +135,9 @@ class ArcVoiceItemDatabase {
     if (_looksLikeUseItem(n)) return 'Quick Use / Gear';
     if (_looksLikeRecycle(n)) return 'Recyclable';
     if (_looksLikeSell(n)) return 'Trinket';
-    if (item.neededForBench || item.neededForQuest || item.neededForScrappy)
+    if (item.neededForBench || item.neededForQuest || item.neededForScrappy) {
       return 'Progression Material';
+    }
     return 'Item';
   }
 

@@ -936,8 +936,9 @@ class _TradingCreateListingScreenState
                                                   initiallySelected:
                                                       _selectedOfferingBlueprints,
                                                 );
-                                            if (!mounted || picked == null)
+                                            if (!mounted || picked == null) {
                                               return;
+                                            }
                                             setState(() {
                                               _selectedOfferingBlueprints
                                                 ..clear()
@@ -1119,8 +1120,9 @@ class _TradingCreateListingScreenState
                                                   initiallySelected:
                                                       _selectedWantedBlueprints,
                                                 );
-                                            if (!mounted || picked == null)
+                                            if (!mounted || picked == null) {
                                               return;
+                                            }
                                             setState(() {
                                               _selectedWantedBlueprints
                                                 ..clear()
@@ -1158,8 +1160,9 @@ class _TradingCreateListingScreenState
                                                   initiallySelected:
                                                       _selectedWantedAssets,
                                                 );
-                                            if (!mounted || picked == null)
+                                            if (!mounted || picked == null) {
                                               return;
+                                            }
                                             setState(() {
                                               _selectedWantedAssets
                                                 ..clear()

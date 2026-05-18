@@ -22,10 +22,11 @@ class RaidPlannerRepository {
 
   Stream<List<RaidBlueprintTarget>> watchTargets() {
     final uid = _uid;
-    if (uid == null)
+    if (uid == null) {
       return Stream<List<RaidBlueprintTarget>>.value(
         const <RaidBlueprintTarget>[],
       );
+    }
 
     return _targetCollection(uid).snapshots().map((snapshot) {
       final targets = snapshot.docs

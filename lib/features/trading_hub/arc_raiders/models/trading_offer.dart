@@ -94,8 +94,9 @@ class TradingOffer {
   String get offerSummary {
     if (isGiveawayClaim) return 'Free giveaway claim';
     final parts = <String>[];
-    if (offeredBlueprintText.trim().isNotEmpty)
+    if (offeredBlueprintText.trim().isNotEmpty) {
       parts.add(offeredBlueprintText.trim());
+    }
     parts.addAll(offeredTradeItemNames);
     if (seedTotal > 0) parts.add('$seedTotal seeds');
     if (includesResources && resourcesText.trim().isNotEmpty) {

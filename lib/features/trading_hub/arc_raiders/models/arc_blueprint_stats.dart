@@ -217,8 +217,9 @@ class ArcBlueprintStats {
 
     DateTime? fromMillis(dynamic value) {
       if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
-      if (value is num)
+      if (value is num) {
         return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+      }
       return null;
     }
 

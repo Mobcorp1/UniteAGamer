@@ -291,19 +291,21 @@ class TradingListing {
             : 'Mix and match');
 
   String get offeredSummary {
-    if (allOfferedItems.isEmpty)
+    if (allOfferedItems.isEmpty) {
       return offeredItem.trim().isNotEmpty
           ? offeredItem.trim()
           : 'Nothing listed';
+    }
     return allOfferedItems.join(', ');
   }
 
   String get wantedSummary {
     if (wantsNothing) return 'Nothing wanted • free giveaway';
-    if (allWantedItems.isEmpty)
+    if (allWantedItems.isEmpty) {
       return wantedText.trim().isNotEmpty
           ? wantedText.trim()
           : 'Open to offers';
+    }
     return allWantedItems.join(', ');
   }
 

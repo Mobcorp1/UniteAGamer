@@ -1596,8 +1596,9 @@ class UnifiedItemIndex {
     if (normalized.isEmpty) return null;
     for (final item in items) {
       if (normalize(item.name) == normalized ||
-          normalize(item.id) == normalized)
+          normalize(item.id) == normalized) {
         return item;
+      }
       for (final alias in item.aliases) {
         if (normalize(alias) == normalized) return item;
       }
@@ -1608,8 +1609,9 @@ class UnifiedItemIndex {
       for (final alias in item.aliases) {
         final normalizedAlias = normalize(alias);
         if (normalizedAlias.contains(normalized) ||
-            normalized.contains(normalizedAlias))
+            normalized.contains(normalizedAlias)) {
           return item;
+        }
       }
     }
     return null;
@@ -1621,8 +1623,9 @@ class UnifiedItemIndex {
     return items
         .where((item) {
           final name = normalize(item.name);
-          if (name.contains(normalized) || normalized.contains(name))
+          if (name.contains(normalized) || normalized.contains(name)) {
             return true;
+          }
           return item.aliases.any(
             (alias) => normalize(alias).contains(normalized),
           );

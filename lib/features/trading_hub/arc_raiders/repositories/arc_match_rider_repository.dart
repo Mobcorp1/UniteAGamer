@@ -280,8 +280,9 @@ class ArcMatchRiderRepository {
       final overlap = mine
           .where((item) => theirs.contains(item))
           .toList(growable: false);
-      if (overlap.isNotEmpty)
+      if (overlap.isNotEmpty) {
         reasons.add('$label: ${overlap.take(2).join(', ')}');
+      }
     }
 
     addShared('Shared goals', me.goals, other.goals);
@@ -289,12 +290,15 @@ class ArcMatchRiderRepository {
     addShared('Shared squad vibe', me.squadPreferences, other.squadPreferences);
     addShared('Shared comms', me.comms, other.comms);
     addShared('Shared maps', me.preferredMaps, other.preferredMaps);
-    if (me.platform.isNotEmpty && me.platform == other.platform)
+    if (me.platform.isNotEmpty && me.platform == other.platform) {
       reasons.add('Same platform');
-    if (me.crossplayEnabled && other.crossplayEnabled)
+    }
+    if (me.crossplayEnabled && other.crossplayEnabled) {
       reasons.add('Crossplay compatible');
-    if (me.region.isNotEmpty && me.region == other.region)
+    }
+    if (me.region.isNotEmpty && me.region == other.region) {
       reasons.add('Same region');
+    }
     if (me.serverPreference.isNotEmpty &&
         other.serverPreference.isNotEmpty &&
         (me.serverPreference == 'Automatic' ||

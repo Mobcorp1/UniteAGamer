@@ -244,8 +244,9 @@ _EngineVoice? _findBestVoiceForProfile(
     }
     for (final hint in profile.fallbackNameHints) {
       if (name.contains(hint.toLowerCase()) ||
-          locale.contains(hint.toLowerCase()))
+          locale.contains(hint.toLowerCase())) {
         score += 2;
+      }
     }
     if (name.contains('network')) score -= 2;
     if (name.contains('compact')) score -= 1;

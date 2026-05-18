@@ -236,8 +236,9 @@ class UagVoiceAppContextService {
     score += listing.offeredTradeItemNames.length * 18;
     score += listing.offeredAssetNames.length * 14;
     score += listing.seedTotalOffered ~/ 10;
-    if (listing.completedTrades > 0)
+    if (listing.completedTrades > 0) {
       score += listing.completedTrades.clamp(0, 25).toInt();
+    }
     if (listing.riskLevel == TradingRiskLevel.low) score += 12;
     if (listing.riskLevel == TradingRiskLevel.high) score -= 18;
     if (listing.wantsNothing) score -= 8;

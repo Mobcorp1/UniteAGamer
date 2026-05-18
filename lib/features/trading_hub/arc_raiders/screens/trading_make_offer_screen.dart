@@ -409,8 +409,9 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   }
 
   Future<void> _submitOffer() async {
-    if (!widget.listing.wantsNothing && !_formKey.currentState!.validate())
+    if (!widget.listing.wantsNothing && !_formKey.currentState!.validate()) {
       return;
+    }
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
