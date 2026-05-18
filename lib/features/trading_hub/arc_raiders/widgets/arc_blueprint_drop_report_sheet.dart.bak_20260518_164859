@@ -560,6 +560,8 @@ class _ArcBlueprintDropReportSheetState
       if (selection != ArcBlueprintAcquisitionSource.lootDrop) {
         _selectedMap = null;
         _selectedMapEvent = null;
+        _selectedPoi = null;
+        _selectedEnemySource = null;
         _selectedContainerType = null;
         _raidType = null;
         _entryTime = ArcEntryTime.unknown;
@@ -866,7 +868,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.group} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.group} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -937,10 +939,6 @@ class _ArcBlueprintDropReportSheetState
                     onTap: _pickAcquisitionSource,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
-                  if (_acquisitionSource != null && !_requiresRaidDetails) ...[
-                    _buildNonRaidSourceNotice(),
-                    const SizedBox(height: AppTheme.spaceM),
-                  ],
                   _buildSelectorField(
                     label: 'Map *',
                     value: _selectedMap ?? 'Select Map',

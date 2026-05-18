@@ -111,9 +111,6 @@ class _ArcBlueprintDropReportSheetState
 
   bool get _effectiveOwned => _owned || _currentDupes > 0;
 
-  bool get _requiresRaidDetails =>
-      _acquisitionSource == ArcBlueprintAcquisitionSource.lootDrop;
-
   bool get _canSubmitReport {
     return (_selectedMap ?? '').isNotEmpty &&
         (_selectedPoiId ?? '').isNotEmpty &&
@@ -248,9 +245,9 @@ class _ArcBlueprintDropReportSheetState
           mapEventId: _selectedMapEvent?.id,
           mapEventLabel: _selectedMapEvent?.label,
           mode: _derivedMode,
-          raidType: _requiresRaidDetails ? _raidType! : ArcRaidType.fullRaid,
+          raidType: _raidType!,
           entryTime: _entryTime!,
-          timeOfDay: _requiresRaidDetails ? _timeOfDay! : ArcTimeOfDay.unknown,
+          timeOfDay: _timeOfDay!,
           acquisitionSource:
               _acquisitionSource ?? ArcBlueprintAcquisitionSource.lootDrop,
           foundAt: reportTime,
@@ -555,17 +552,7 @@ class _ArcBlueprintDropReportSheetState
       labelBuilder: (item) => item.label,
     );
     if (selection == null || !mounted) return;
-    setState(() {
-      _acquisitionSource = selection;
-      if (selection != ArcBlueprintAcquisitionSource.lootDrop) {
-        _selectedMap = null;
-        _selectedMapEvent = null;
-        _selectedContainerType = null;
-        _raidType = null;
-        _entryTime = ArcEntryTime.unknown;
-        _timeOfDay = null;
-      }
-    });
+    setState(() => _acquisitionSource = selection);
     _scrollToNextStep();
   }
 
@@ -781,23 +768,6 @@ class _ArcBlueprintDropReportSheetState
     );
   }
 
-  Widget _buildNonRaidSourceNotice() {
-    return Container(
-      width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.22),
-      ),
-      child: Text(
-        'This source is not tied to a raid location. Save the report with the source selected so other players can see it came from a quest, trial reward or trade.',
-        style: AppTheme.bodyTextStyle(
-          fontSize: 14,
-          color: AppTheme.tradingMutedText,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final selectedPoi = _selectedPoiId == null
@@ -866,7 +836,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.group} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${widget.blueprint.group} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -937,10 +907,6 @@ class _ArcBlueprintDropReportSheetState
                     onTap: _pickAcquisitionSource,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
-                  if (_acquisitionSource != null && !_requiresRaidDetails) ...[
-                    _buildNonRaidSourceNotice(),
-                    const SizedBox(height: AppTheme.spaceM),
-                  ],
                   _buildSelectorField(
                     label: 'Map *',
                     value: _selectedMap ?? 'Select Map',

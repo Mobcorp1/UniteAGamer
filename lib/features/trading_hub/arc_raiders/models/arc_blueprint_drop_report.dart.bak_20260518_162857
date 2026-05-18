@@ -1,0 +1,475 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+
+@immutable
+class ArcBlueprintDropReport {
+  const ArcBlueprintDropReport({
+    required this.id,
+    required this.blueprintId,
+    required this.userId,
+    required this.mapName,
+    required this.sourceType,
+    required this.mode,
+    required this.raidType,
+    required this.entryTime,
+    required this.timeOfDay,
+    required this.createdAt,
+    required this.confirmationCount,
+    required this.confirmedByUserIds,
+    this.poiId,
+    this.poiName,
+    this.enemySourceId,
+    this.enemySourceName,
+    this.containerTypeId,
+    this.containerTypeLabel,
+    this.weatherConditionId,
+    this.weatherConditionLabel,
+    this.mapEventId,
+    this.mapEventLabel,
+    this.acquisitionSource = ArcBlueprintAcquisitionSource.lootDrop,
+    this.foundAt,
+    this.lastConfirmedAt,
+    this.notes = '',
+    this.signature = '',
+  });
+
+  final String id;
+  final String blueprintId;
+  final String userId;
+  final String mapName;
+  final ArcDropSourceType sourceType;
+  final String? poiId;
+  final String? poiName;
+  final String? enemySourceId;
+  final String? enemySourceName;
+  final String? containerTypeId;
+  final String? containerTypeLabel;
+  final String? weatherConditionId;
+  final String? weatherConditionLabel;
+  final String? mapEventId;
+  final String? mapEventLabel;
+  final ArcBlueprintAcquisitionSource acquisitionSource;
+  final ArcRaidMode mode;
+  final ArcRaidType raidType;
+  final ArcEntryTime entryTime;
+  final ArcTimeOfDay timeOfDay;
+  final DateTime? foundAt;
+  final DateTime? lastConfirmedAt;
+  final String notes;
+  final DateTime? createdAt;
+  final int confirmationCount;
+  final List<String> confirmedByUserIds;
+  final String signature;
+
+  static String buildSignature({
+    required String blueprintId,
+    required String mapName,
+    required ArcDropSourceType sourceType,
+    required ArcRaidMode mode,
+    required ArcRaidType raidType,
+    required ArcEntryTime entryTime,
+    required ArcTimeOfDay timeOfDay,
+    ArcBlueprintAcquisitionSource acquisitionSource =
+        ArcBlueprintAcquisitionSource.lootDrop,
+    String? poiId,
+    String? enemySourceId,
+    String? containerTypeId,
+    String? weatherConditionId,
+    String? mapEventId,
+  }) {
+    String normalize(String? value, {String fallback = 'none'}) {
+      final trimmed = value?.trim().toLowerCase();
+      return (trimmed == null || trimmed.isEmpty) ? fallback : trimmed;
+    }
+
+    return [
+      normalize(blueprintId),
+      normalize(mapName),
+      sourceType.name.toLowerCase(),
+      normalize(poiId),
+      normalize(enemySourceId),
+      normalize(containerTypeId),
+      normalize(weatherConditionId),
+      normalize(mapEventId),
+      mode.name.toLowerCase(),
+      raidType.name.toLowerCase(),
+      entryTime.name.toLowerCase(),
+      timeOfDay.name.toLowerCase(),
+      acquisitionSource.name.toLowerCase(),
+    ].join('|');
+  }
+
+  String get areaLabel {
+    switch (sourceType) {
+      case ArcDropSourceType.poi:
+        return poiName?.trim().isNotEmpty == true
+            ? poiName!.trim()
+            : 'Unknown POI';
+      case ArcDropSourceType.enemy:
+        return enemySourceName?.trim().isNotEmpty == true
+            ? enemySourceName!.trim()
+            : 'Unknown Enemy';
+      case ArcDropSourceType.other:
+        return poiName?.trim().isNotEmpty == true
+            ? poiName!.trim()
+            : enemySourceName?.trim().isNotEmpty == true
+            ? enemySourceName!.trim()
+            : 'Other Source';
+    }
+  }
+
+  String get locationName => areaLabel;
+
+  String get resolvedContainerLabel {
+    final label = containerTypeLabel?.trim();
+    if (label != null && label.isNotEmpty) return label;
+    return ArcContainerTypes.byId(containerTypeId).label;
+  }
+
+  String get weatherLabel {
+    final label = weatherConditionLabel?.trim();
+    return (label != null && label.isNotEmpty) ? label : 'No Special Weather';
+  }
+
+  String get eventLabel {
+    final label = mapEventLabel?.trim();
+    return (label != null && label.isNotEmpty) ? label : 'No Map Event';
+  }
+
+  String? get conditionId {
+    final weatherId = weatherConditionId?.trim();
+    if (weatherId != null && weatherId.isNotEmpty) return weatherId;
+
+    final eventId = mapEventId?.trim();
+    if (eventId != null && eventId.isNotEmpty) return eventId;
+
+    return null;
+  }
+
+  String? get conditionLabel {
+    final weather = weatherConditionLabel?.trim();
+    if (weather != null && weather.isNotEmpty) return weather;
+
+    final event = mapEventLabel?.trim();
+    if (event != null && event.isNotEmpty) return event;
+
+    return null;
+  }
+
+  String get areaKey {
+    final sourceKey = switch (sourceType) {
+      ArcDropSourceType.poi => poiId ?? poiName ?? 'poi_unknown',
+      ArcDropSourceType.enemy =>
+        enemySourceId ?? enemySourceName ?? 'enemy_unknown',
+      ArcDropSourceType.other => poiId ?? enemySourceId ?? 'other_unknown',
+    };
+
+    return '$mapName|${sourceType.name}|$sourceKey';
+  }
+
+  ArcBlueprintDropReport copyWith({
+    String? id,
+    String? blueprintId,
+    String? userId,
+    String? mapName,
+    ArcDropSourceType? sourceType,
+    String? poiId,
+    String? poiName,
+    String? enemySourceId,
+    String? enemySourceName,
+    String? containerTypeId,
+    String? containerTypeLabel,
+    String? weatherConditionId,
+    String? weatherConditionLabel,
+    String? mapEventId,
+    String? mapEventLabel,
+    ArcBlueprintAcquisitionSource? acquisitionSource,
+    ArcRaidMode? mode,
+    ArcRaidType? raidType,
+    ArcEntryTime? entryTime,
+    ArcTimeOfDay? timeOfDay,
+    DateTime? foundAt,
+    DateTime? lastConfirmedAt,
+    String? notes,
+    DateTime? createdAt,
+    int? confirmationCount,
+    List<String>? confirmedByUserIds,
+    String? signature,
+  }) {
+    return ArcBlueprintDropReport(
+      id: id ?? this.id,
+      blueprintId: blueprintId ?? this.blueprintId,
+      userId: userId ?? this.userId,
+      mapName: mapName ?? this.mapName,
+      sourceType: sourceType ?? this.sourceType,
+      poiId: poiId ?? this.poiId,
+      poiName: poiName ?? this.poiName,
+      enemySourceId: enemySourceId ?? this.enemySourceId,
+      enemySourceName: enemySourceName ?? this.enemySourceName,
+      containerTypeId: containerTypeId ?? this.containerTypeId,
+      containerTypeLabel: containerTypeLabel ?? this.containerTypeLabel,
+      weatherConditionId: weatherConditionId ?? this.weatherConditionId,
+      weatherConditionLabel:
+          weatherConditionLabel ?? this.weatherConditionLabel,
+      mapEventId: mapEventId ?? this.mapEventId,
+      mapEventLabel: mapEventLabel ?? this.mapEventLabel,
+      acquisitionSource: acquisitionSource ?? this.acquisitionSource,
+      mode: mode ?? this.mode,
+      raidType: raidType ?? this.raidType,
+      entryTime: entryTime ?? this.entryTime,
+      timeOfDay: timeOfDay ?? this.timeOfDay,
+      foundAt: foundAt ?? this.foundAt,
+      lastConfirmedAt: lastConfirmedAt ?? this.lastConfirmedAt,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      confirmationCount: confirmationCount ?? this.confirmationCount,
+      confirmedByUserIds: confirmedByUserIds ?? this.confirmedByUserIds,
+      signature: signature ?? this.signature,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'blueprintId': blueprintId,
+      'userId': userId,
+      'mapName': mapName,
+      'sourceType': sourceType.name,
+      'poiId': poiId,
+      'poiName': poiName,
+      'enemySourceId': enemySourceId,
+      'enemySourceName': enemySourceName,
+      'containerTypeId': containerTypeId,
+      'containerTypeLabel': containerTypeLabel,
+      'weatherConditionId': weatherConditionId,
+      'weatherConditionLabel': weatherConditionLabel,
+      'mapEventId': mapEventId,
+      'mapEventLabel': mapEventLabel,
+      'conditionId': conditionId,
+      'conditionLabel': conditionLabel,
+      'locationName': areaLabel,
+      'acquisitionSource': acquisitionSource.name,
+      'acquisitionSourceLabel': acquisitionSource.label,
+      'mode': mode.name,
+      'raidType': raidType.name,
+      'entryTime': entryTime.name,
+      'timeOfDay': timeOfDay.name,
+      'foundAt': foundAt == null ? null : Timestamp.fromDate(foundAt!),
+      'lastConfirmedAt': lastConfirmedAt == null
+          ? null
+          : Timestamp.fromDate(lastConfirmedAt!),
+      'notes': notes,
+      'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
+      'confirmationCount': confirmationCount,
+      'confirmedByUserIds': confirmedByUserIds,
+      'signature': signature,
+    };
+  }
+
+  factory ArcBlueprintDropReport.fromMap(Map<String, dynamic> map) {
+    final sourceType =
+        _enumByName(ArcDropSourceType.values, map['sourceType'] as String?) ??
+        ArcDropSourceType.poi;
+
+    final legacyLocation = (map['locationName'] as String?)?.trim();
+    final poiName = (map['poiName'] as String?)?.trim();
+    final enemySourceName = (map['enemySourceName'] as String?)?.trim();
+    final weatherConditionId = (map['weatherConditionId'] as String?)?.trim();
+    final weatherConditionLabel = (map['weatherConditionLabel'] as String?)
+        ?.trim();
+    final mapEventId = (map['mapEventId'] as String?)?.trim();
+    final mapEventLabel = (map['mapEventLabel'] as String?)?.trim();
+    final legacyConditionId = (map['conditionId'] as String?)?.trim();
+    final legacyConditionLabel = (map['conditionLabel'] as String?)?.trim();
+
+    final confirmedBy = ((map['confirmedByUserIds'] as List?) ?? const [])
+        .whereType<String>()
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+
+    final report = ArcBlueprintDropReport(
+      id: (map['id'] as String?) ?? '',
+      blueprintId: (map['blueprintId'] as String?) ?? '',
+      userId: (map['userId'] as String?) ?? '',
+      mapName: (map['mapName'] as String?)?.trim() ?? 'Unknown Map',
+      sourceType: sourceType,
+      poiId: (map['poiId'] as String?)?.trim(),
+      poiName:
+          poiName ??
+          (sourceType == ArcDropSourceType.poi ? legacyLocation : null),
+      enemySourceId: (map['enemySourceId'] as String?)?.trim(),
+      enemySourceName:
+          enemySourceName ??
+          (sourceType == ArcDropSourceType.enemy ? legacyLocation : null),
+      containerTypeId: (map['containerTypeId'] as String?)?.trim(),
+      containerTypeLabel: (map['containerTypeLabel'] as String?)?.trim(),
+      weatherConditionId: weatherConditionId,
+      weatherConditionLabel: weatherConditionLabel,
+      mapEventId:
+          mapEventId ??
+          ((weatherConditionId == null || weatherConditionId.isEmpty)
+              ? legacyConditionId
+              : null),
+      mapEventLabel:
+          mapEventLabel ??
+          ((weatherConditionLabel == null || weatherConditionLabel.isEmpty)
+              ? legacyConditionLabel
+              : null),
+      acquisitionSource:
+          _enumByName(
+            ArcBlueprintAcquisitionSource.values,
+            map['acquisitionSource'] as String?,
+          ) ??
+          ArcBlueprintAcquisitionSource.lootDrop,
+      mode:
+          _enumByName(ArcRaidMode.values, map['mode'] as String?) ??
+          ArcRaidMode.dayRaid,
+      raidType:
+          _enumByName(ArcRaidType.values, map['raidType'] as String?) ??
+          ArcRaidType.fullRaid,
+      entryTime:
+          _enumByName(ArcEntryTime.values, map['entryTime'] as String?) ??
+          ArcEntryTime.unknown,
+      timeOfDay:
+          _enumByName(ArcTimeOfDay.values, map['timeOfDay'] as String?) ??
+          ArcTimeOfDay.unknown,
+      foundAt: (map['foundAt'] as Timestamp?)?.toDate(),
+      lastConfirmedAt: (map['lastConfirmedAt'] as Timestamp?)?.toDate(),
+      notes: (map['notes'] as String?)?.trim() ?? '',
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+      confirmationCount: (map['confirmationCount'] as num?)?.toInt() ?? 1,
+      confirmedByUserIds: confirmedBy,
+      signature: (map['signature'] as String?)?.trim() ?? '',
+    );
+
+    if (report.signature.isNotEmpty) return report;
+
+    return report.copyWith(
+      signature: ArcBlueprintDropReport.buildSignature(
+        blueprintId: report.blueprintId,
+        mapName: report.mapName,
+        sourceType: report.sourceType,
+        poiId: report.poiId,
+        enemySourceId: report.enemySourceId,
+        containerTypeId: report.containerTypeId,
+        weatherConditionId: report.weatherConditionId,
+        mapEventId: report.mapEventId,
+        mode: report.mode,
+        raidType: report.raidType,
+        entryTime: report.entryTime,
+        timeOfDay: report.timeOfDay,
+        acquisitionSource: report.acquisitionSource,
+      ),
+    );
+  }
+
+  static T? _enumByName<T>(List<T> values, String? rawName) {
+    if (rawName == null || rawName.trim().isEmpty) return null;
+
+    final normalized = rawName.trim().toLowerCase();
+
+    for (final value in values) {
+      if (value is Enum && value.name.toLowerCase() == normalized) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+}
+
+enum ArcRaidMode { dayRaid, nightRaid }
+
+enum ArcRaidType { fullRaid, midRaid, lateRaid }
+
+enum ArcEntryTime { early, mid, late, unknown }
+
+enum ArcTimeOfDay {
+  earlyMorning,
+  midMorning,
+  midday,
+  midAfternoon,
+  night,
+  lateNight,
+  unknown,
+}
+
+enum ArcBlueprintAcquisitionSource { lootDrop, questReward, trialReward, trade }
+
+extension ArcRaidModeX on ArcRaidMode {
+  String get label {
+    switch (this) {
+      case ArcRaidMode.dayRaid:
+        return 'Day Raid';
+      case ArcRaidMode.nightRaid:
+        return 'Night Raid';
+    }
+  }
+}
+
+extension ArcRaidTypeX on ArcRaidType {
+  String get label {
+    switch (this) {
+      case ArcRaidType.fullRaid:
+        return 'Full Raid';
+      case ArcRaidType.midRaid:
+        return 'Mid Raid';
+      case ArcRaidType.lateRaid:
+        return 'Late Raid';
+    }
+  }
+}
+
+extension ArcEntryTimeX on ArcEntryTime {
+  String get label {
+    switch (this) {
+      case ArcEntryTime.early:
+        return 'Early Entry';
+      case ArcEntryTime.mid:
+        return 'Mid Entry';
+      case ArcEntryTime.late:
+        return 'Late Entry';
+      case ArcEntryTime.unknown:
+        return 'Unknown Entry';
+    }
+  }
+}
+
+extension ArcTimeOfDayX on ArcTimeOfDay {
+  String get label {
+    switch (this) {
+      case ArcTimeOfDay.earlyMorning:
+        return 'Early Morning';
+      case ArcTimeOfDay.midMorning:
+        return 'Mid-Morning';
+      case ArcTimeOfDay.midday:
+        return 'Midday';
+      case ArcTimeOfDay.midAfternoon:
+        return 'Mid-Afternoon';
+      case ArcTimeOfDay.night:
+        return 'Night';
+      case ArcTimeOfDay.lateNight:
+        return 'Late Night';
+      case ArcTimeOfDay.unknown:
+        return 'Unknown';
+    }
+  }
+}
+
+extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
+  String get label {
+    switch (this) {
+      case ArcBlueprintAcquisitionSource.lootDrop:
+        return 'Loot Drop';
+      case ArcBlueprintAcquisitionSource.questReward:
+        return 'Quest Reward';
+      case ArcBlueprintAcquisitionSource.trialReward:
+        return 'Trial Reward';
+      case ArcBlueprintAcquisitionSource.trade:
+        return 'Trade';
+    }
+  }
+}
