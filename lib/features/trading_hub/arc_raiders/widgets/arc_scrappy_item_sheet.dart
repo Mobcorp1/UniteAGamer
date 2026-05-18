@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
@@ -47,14 +48,31 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
   int get _collectedCount =>
       int.tryParse(_collectedController.text.trim())?.clamp(0, 999999) ?? 0;
 
+  int get _itemNeeded => widget.item.neededCount;
+
   int get _remainingNeeded =>
       (_itemNeeded - _collectedCount).clamp(0, _itemNeeded);
+
   int get _surplus => (_collectedCount - _itemNeeded).clamp(0, 999999);
-  int get _itemNeeded => widget.item.neededCount;
+
   bool get _completed => _collectedCount >= _itemNeeded;
+
+  void _setCollectedCount(int value) {
+    final normalized = value.clamp(0, 999999);
+    _collectedController.text = normalized.toString();
+    _collectedController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _collectedController.text.length),
+    );
+    setState(() {});
+  }
+
+  void _adjustCollectedCount(int delta) {
+    _setCollectedCount(_collectedCount + delta);
+  }
 
   Future<void> _save() async {
     if (_isSaving) return;
+
     setState(() => _isSaving = true);
 
     try {
@@ -76,10 +94,34 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
         SnackBar(content: Text('Could not save ${widget.item.name}: $e')),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Widget _quantityButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 46,
+        height: 46,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: EdgeInsets.zero,
+            side: BorderSide(color: widget.tierColor.withValues(alpha: 0.35)),
+            foregroundColor: widget.tierColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: Icon(icon, size: 22),
+        ),
+      ),
+    );
   }
 
   Widget _statCard({
@@ -109,6 +151,102 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _quantityControls() {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        radius: 16,
+        borderColor: widget.tierColor.withValues(alpha: 0.22),
+        backgroundColor: AppTheme.cardBackgroundAlt,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Collected Quantity',
+            style: AppTheme.tradingHeading(fontSize: 18, color: Colors.white),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            'Use plus and minus to track what you own. Anything above the target becomes tradeable surplus automatically.',
+            style: const TextStyle(color: Colors.white60, height: 1.35),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Row(
+            children: [
+              _quantityButton(
+                icon: Icons.remove_rounded,
+                tooltip: 'Remove 1',
+                onPressed: _collectedCount <= 0
+                    ? null
+                    : () => _adjustCollectedCount(-1),
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              _quantityButton(
+                icon: Icons.keyboard_double_arrow_down_rounded,
+                tooltip: 'Remove 5',
+                onPressed: _collectedCount <= 0
+                    ? null
+                    : () => _adjustCollectedCount(-5),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: TextField(
+                  controller: _collectedController,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 26,
+                    color: widget.tierColor,
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
+                  decoration: AppTheme.tradingInputDecoration(label: 'Amount'),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              _quantityButton(
+                icon: Icons.keyboard_double_arrow_up_rounded,
+                tooltip: 'Add 5',
+                onPressed: () => _adjustCollectedCount(5),
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              _quantityButton(
+                icon: Icons.add_rounded,
+                tooltip: 'Add 1',
+                onPressed: () => _adjustCollectedCount(1),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _setCollectedCount(0),
+                  child: const Text('Set 0'),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _setCollectedCount(_itemNeeded),
+                  child: const Text('Set Target'),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _adjustCollectedCount(_itemNeeded),
+                  child: const Text('+ Target'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -152,7 +290,7 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${widget.item.group} • Need x${widget.item.neededCount}',
+                  '${widget.item.group} â€¢ Need x${widget.item.neededCount}',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -232,7 +370,7 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'Enter the full amount you currently own. Anything above the target becomes tradeable surplus automatically.',
+                              'Plus/minus controls keep this quick on mobile and web.',
                               style: const TextStyle(
                                 color: Colors.white60,
                                 height: 1.35,
@@ -245,20 +383,7 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
-                TextField(
-                  controller: _collectedController,
-                  style: const TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                  decoration:
-                      AppTheme.tradingInputDecoration(
-                        label: 'Amount Collected',
-                      ).copyWith(
-                        helperText:
-                            'Need ${widget.item.neededCount}. Example: 8 collected from a target of 12 means 4 still needed.',
-                        helperStyle: const TextStyle(color: Colors.white54),
-                      ),
-                ),
+                _quantityControls(),
                 const SizedBox(height: AppTheme.spaceL),
                 Row(
                   children: [

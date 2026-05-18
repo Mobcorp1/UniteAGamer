@@ -45,7 +45,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   final ArcScrappyRepository _repository = ArcScrappyRepository();
   final Set<String> _expandedSections = <String>{};
 
-  ArcScrappyFilter _selectedFilter = ArcScrappyFilter.missing;
+  ArcScrappyFilter _selectedFilter = ArcScrappyFilter.all;
   late ArcScrappyTrackerMode _mode;
 
   @override
@@ -59,7 +59,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialMode != widget.initialMode) {
       _mode = widget.initialMode;
-      _selectedFilter = ArcScrappyFilter.missing;
+      _selectedFilter = ArcScrappyFilter.all;
       _expandedSections.clear();
     }
   }
@@ -212,7 +212,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       0,
       (total, item) => total + item.neededCount,
     );
-    return '$completed / ${items.length} complete • $totalRequired total needed';
+    return '$completed / ${items.length} complete â€¢ $totalRequired total needed';
   }
 
   int _completedCount(
@@ -604,7 +604,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           onExpansionChanged: (value) {
             setState(() {
               if (value) {
-                _expandedSections.add(id);
+                _expandedSections
+                  ..clear()
+                  ..add(id);
               } else {
                 _expandedSections.remove(id);
               }
