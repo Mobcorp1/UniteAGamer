@@ -16,8 +16,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_li
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
 import 'package:uag_traders_hub/screens/build/admin_console_screen.dart';
 import 'package:uag_traders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
@@ -199,7 +197,7 @@ class _AppDrawerState extends State<AppDrawer>
           backgroundColor: AppTheme.cardBackgroundDeep,
           shape: AppTheme.tradingDialogShape(),
           title: Text(
-            '$title â€” Coming Soon',
+            '$title — Coming Soon',
             style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
           ),
           content: Text(

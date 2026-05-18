@@ -34,23 +34,21 @@ class FeatureAccess {
         .doc(user.uid)
         .snapshots()
         .asyncMap((snapshot) async {
-          final data = snapshot.data() ?? {};
-          if (data['isAdmin'] == true ||
-              data['isDev'] == true ||
-              data[flag] == true) {
-            return true;
-          }
+      final data = snapshot.data() ?? {};
+      if (data['isAdmin'] == true || data['isDev'] == true || data[flag] == true) {
+        return true;
+      }
 
-          final globalField = _globalFieldMap[flag];
-          if (globalField == null) return false;
+      final globalField = _globalFieldMap[flag];
+      if (globalField == null) return false;
 
-          final configSnapshot = await FirebaseFirestore.instance
-              .collection('config')
-              .doc('feature_access')
-              .get();
-          final configData = configSnapshot.data() ?? {};
-          return configData[globalField] == true;
-        });
+      final configSnapshot = await FirebaseFirestore.instance
+          .collection('config')
+          .doc('feature_access')
+          .get();
+      final configData = configSnapshot.data() ?? {};
+      return configData[globalField] == true;
+    });
   }
 
   static Future<bool> hasAccess(String flag) async {
@@ -62,9 +60,7 @@ class FeatureAccess {
         .doc(user.uid)
         .get();
     final data = snapshot.data() ?? {};
-    if (data['isAdmin'] == true ||
-        data['isDev'] == true ||
-        data[flag] == true) {
+    if (data['isAdmin'] == true || data['isDev'] == true || data[flag] == true) {
       return true;
     }
 
@@ -90,7 +86,9 @@ class FeatureAccess {
           backgroundColor: AppTheme.cardBackground,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: AppTheme.neonPink.withValues(alpha: 0.35)),
+            side: BorderSide(
+              color: AppTheme.neonPink.withValues(alpha: 0.35),
+            ),
           ),
           title: Text(
             'Coming Soon',
@@ -116,7 +114,10 @@ class FeatureAccess {
 }
 
 class FeatureLockedScreen extends StatelessWidget {
-  const FeatureLockedScreen({super.key, required this.title});
+  const FeatureLockedScreen({
+    super.key,
+    required this.title,
+  });
 
   final String title;
 
@@ -124,7 +125,10 @@ class FeatureLockedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: UagAppBar(title: title, subtitle: 'Coming soon.'),
+      appBar: UagAppBar(
+        title: title,
+        subtitle: 'Coming soon.',
+      ),
       drawer: const AppDrawer(),
       body: Stack(
         children: [
@@ -158,10 +162,7 @@ class FeatureLockedScreen extends StatelessWidget {
                       Text(
                         '$title is not available yet. We\'ll open this area when it is ready for testing.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          height: 1.4,
-                        ),
+                        style: const TextStyle(color: Colors.white70, height: 1.4),
                       ),
                     ],
                   ),

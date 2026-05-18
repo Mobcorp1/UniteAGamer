@@ -146,7 +146,7 @@ class ArcRaidersHubScreen extends StatelessWidget {
           backgroundColor: AppTheme.cardBackgroundDeep,
           shape: AppTheme.tradingDialogShape(),
           title: Text(
-            '$title â€” Coming Soon',
+            '$title — Coming Soon',
             style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
           ),
           content: Text(
