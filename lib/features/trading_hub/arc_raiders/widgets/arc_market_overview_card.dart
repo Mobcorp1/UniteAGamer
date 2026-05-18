@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_market_snapshot.dart';
@@ -99,14 +98,18 @@ class ArcMarketOverviewCard extends StatelessWidget {
             _BreakdownBlock(
               title: 'Top Blueprints',
               accentColor: AppTheme.neonCyan,
-              items: snapshot.blueprintBreakdown.take(maxBreakdownItems).toList(growable: false),
+              items: snapshot.blueprintBreakdown
+                  .take(maxBreakdownItems)
+                  .toList(growable: false),
             ),
           if (snapshot.mapBreakdown.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spaceL),
             _BreakdownBlock(
               title: 'Hot Maps',
               accentColor: Colors.lightGreenAccent,
-              items: snapshot.mapBreakdown.take(maxBreakdownItems).toList(growable: false),
+              items: snapshot.mapBreakdown
+                  .take(maxBreakdownItems)
+                  .toList(growable: false),
             ),
           ],
           if (snapshot.conditionBreakdown.isNotEmpty) ...[
@@ -114,7 +117,9 @@ class ArcMarketOverviewCard extends StatelessWidget {
             _BreakdownBlock(
               title: 'Conditions / Events',
               accentColor: Colors.amberAccent,
-              items: snapshot.conditionBreakdown.take(maxBreakdownItems).toList(growable: false),
+              items: snapshot.conditionBreakdown
+                  .take(maxBreakdownItems)
+                  .toList(growable: false),
             ),
           ],
         ],
@@ -189,10 +194,7 @@ class _HeadlineLine extends StatelessWidget {
             TextSpan(text: '$label: '),
             TextSpan(
               text: value,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: color, fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -219,10 +221,7 @@ class _BreakdownBlock extends StatelessWidget {
       children: [
         Text(
           title,
-          style: AppTheme.tradingHeading(
-            fontSize: 18,
-            color: accentColor,
-          ),
+          style: AppTheme.tradingHeading(fontSize: 18, color: accentColor),
         ),
         const SizedBox(height: AppTheme.spaceS),
         ...items.map(
@@ -252,10 +251,7 @@ class _BreakdownBlock extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     '${item.count} reports',
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                   const SizedBox(width: 12),
                   Text(

@@ -18,11 +18,22 @@ class TradingMyListingsScreen extends StatelessWidget {
     return Container(
       padding: AppTheme.pillPadding,
       decoration: AppTheme.tradingPillDecoration(color: color),
-      child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 
-  Widget _listingCard(BuildContext context, TradingRepository repository, TradingListing listing) {
+  Widget _listingCard(
+    BuildContext context,
+    TradingRepository repository,
+    TradingListing listing,
+  ) {
     final formatBits = <String>[
       listing.tradeFormatLabel,
       if (listing.allowPartialOffers) 'Partial offers on',
@@ -41,7 +52,10 @@ class TradingMyListingsScreen extends StatelessWidget {
                 Expanded(
                   child: Text(
                     listing.title,
-                    style: AppTheme.tradingHeading(fontSize: 22, color: AppTheme.neonPink),
+                    style: AppTheme.tradingHeading(
+                      fontSize: 22,
+                      color: AppTheme.neonPink,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -49,16 +63,28 @@ class TradingMyListingsScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppTheme.spaceS),
-            Text('Offering: ${listing.offeredSummary}', style: const TextStyle(color: Colors.white)),
+            Text(
+              'Offering: ${listing.offeredSummary}',
+              style: const TextStyle(color: Colors.white),
+            ),
             const SizedBox(height: 6),
-            Text('Wanted: ${listing.wantedSummary}', style: TextStyle(color: AppTheme.tradingMutedText)),
+            Text(
+              'Wanted: ${listing.wantedSummary}',
+              style: TextStyle(color: AppTheme.tradingMutedText),
+            ),
             if (formatBits.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(formatBits.join(' • '), style: TextStyle(color: AppTheme.tradingFaintText)),
+              Text(
+                formatBits.join(' • '),
+                style: TextStyle(color: AppTheme.tradingFaintText),
+              ),
             ],
             if (listing.notes.trim().isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(listing.notes, style: TextStyle(color: AppTheme.tradingFaintText)),
+              Text(
+                listing.notes,
+                style: TextStyle(color: AppTheme.tradingFaintText),
+              ),
             ],
             const SizedBox(height: AppTheme.spaceM),
             Wrap(
@@ -69,13 +95,25 @@ class TradingMyListingsScreen extends StatelessWidget {
                   onPressed: listing.active
                       ? () => repository.closeListing(listing.id)
                       : () => repository.reopenListing(listing.id),
-                  icon: Icon(listing.active ? Icons.pause_circle_outline : Icons.restart_alt_rounded),
-                  label: Text(listing.active ? 'Close Listing' : 'Reopen Listing'),
+                  icon: Icon(
+                    listing.active
+                        ? Icons.pause_circle_outline
+                        : Icons.restart_alt_rounded,
+                  ),
+                  label: Text(
+                    listing.active ? 'Close Listing' : 'Reopen Listing',
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: () => repository.deleteListing(listing.id),
-                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                  label: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.redAccent,
+                  ),
+                  label: const Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
                 ),
               ],
             ),
@@ -94,7 +132,9 @@ class TradingMyListingsScreen extends StatelessWidget {
             stream: repository.watchMyListings(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: AppTheme.neonCyan));
+                return const Center(
+                  child: CircularProgressIndicator(color: AppTheme.neonCyan),
+                );
               }
 
               final items = snapshot.data ?? const <TradingListing>[];
@@ -105,7 +145,10 @@ class TradingMyListingsScreen extends StatelessWidget {
                     child: Text(
                       'No listings yet. Create your first listing from the Trader Hub.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppTheme.tradingMutedText, fontSize: 16),
+                      style: TextStyle(
+                        color: AppTheme.tradingMutedText,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 );
@@ -114,7 +157,8 @@ class TradingMyListingsScreen extends StatelessWidget {
               return ListView(
                 padding: AppTheme.pagePadding,
                 children: [
-                  for (final item in items) _listingCard(context, repository, item),
+                  for (final item in items)
+                    _listingCard(context, repository, item),
                 ],
               );
             },
@@ -135,7 +179,10 @@ class TradingMyListingsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: Text('My Listings', style: AppTheme.tradingHeading(fontSize: 25)),
+        title: Text(
+          'My Listings',
+          style: AppTheme.tradingHeading(fontSize: 25),
+        ),
       ),
       body: _buildBody(context, repository),
     );

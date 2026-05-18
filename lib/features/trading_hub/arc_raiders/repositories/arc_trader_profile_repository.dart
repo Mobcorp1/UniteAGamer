@@ -78,7 +78,10 @@ class ArcTraderProfileRepository {
   }
 
   String _normalizeUagId(String rawValue) {
-    final cleaned = rawValue.trim().toUpperCase().replaceAll(RegExp(r'\s+'), '');
+    final cleaned = rawValue.trim().toUpperCase().replaceAll(
+      RegExp(r'\s+'),
+      '',
+    );
     if (cleaned.isEmpty) return '';
     if (!cleaned.startsWith(_uagPrefix)) return '';
 
@@ -125,9 +128,7 @@ class ArcTraderProfileRepository {
     await _userDoc(uid).set({
       'uagId': uagId,
       'updatedAt': now,
-      'traderProfile': {
-        'uagId': uagId,
-      },
+      'traderProfile': {'uagId': uagId},
     }, SetOptions(merge: true));
 
     await profileDoc(uid).set({
@@ -172,7 +173,8 @@ class ArcTraderProfileRepository {
     await _firestore.runTransaction((transaction) async {
       final counterSnap = await transaction.get(_uagCounterDoc);
       final current =
-          ((counterSnap.data() ?? const <String, dynamic>{})['lastIssuedNumber'] ??
+          ((counterSnap.data() ??
+                      const <String, dynamic>{})['lastIssuedNumber'] ??
                   0)
               as num;
       var lastIssuedNumber = current.toInt();
@@ -202,14 +204,10 @@ class ArcTraderProfileRepository {
 
       lastIssuedNumber = max(lastIssuedNumber, candidateNumber);
 
-      transaction.set(
-        _uagCounterDoc,
-        {
-          'lastIssuedNumber': lastIssuedNumber,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      transaction.set(_uagCounterDoc, {
+        'lastIssuedNumber': lastIssuedNumber,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       transaction.set(uagIdRef, {
         'uagId': candidateId,

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -430,8 +430,8 @@ class TradingRepository {
     final title = wantsNothing
         ? '$offeredItem â€¢ Free Giveaway'
         : listingType == TradingListingType.openToOffers
-            ? '$offeredItem â€¢ Open Offer'
-            : '$offeredItem for $wantedText';
+        ? '$offeredItem â€¢ Open Offer'
+        : '$offeredItem for $wantedText';
 
     final listing = TradingListing(
       id: listingRef.id,
@@ -448,8 +448,12 @@ class TradingRepository {
       wantedAssetNames: wantedAssetNames,
       offeredTradeItemIds: offeredTradeItemIds,
       wantedTradeItemIds: wantedTradeItemIds,
-      offeredTradeItemNames: offeredTradeItemNames.isNotEmpty ? offeredTradeItemNames : offeredAssetNames,
-      wantedTradeItemNames: wantedTradeItemNames.isNotEmpty ? wantedTradeItemNames : wantedAssetNames,
+      offeredTradeItemNames: offeredTradeItemNames.isNotEmpty
+          ? offeredTradeItemNames
+          : offeredAssetNames,
+      wantedTradeItemNames: wantedTradeItemNames.isNotEmpty
+          ? wantedTradeItemNames
+          : wantedAssetNames,
       wantsNothing: wantsNothing,
       listingType: wantsNothing ? TradingListingType.openToOffers : listingType,
       riskLevel: profile.riskLevel,
@@ -606,7 +610,9 @@ class TradingRepository {
     await _safeNotify(
       targetUid: listing.ownerUid,
       type: TradingNotificationType.offerReceived,
-      title: listing.wantsNothing ? 'Giveaway claim received' : 'New offer received',
+      title: listing.wantsNothing
+          ? 'Giveaway claim received'
+          : 'New offer received',
       body: listing.wantsNothing
           ? '${profile.displayName} claimed your giveaway for ${listing.offeredItem}.'
           : '${profile.displayName} sent an offer for ${listing.offeredItem}.',
@@ -697,14 +703,10 @@ class TradingRepository {
       'updatedAt': Timestamp.fromDate(now),
     });
 
-    batch.set(
-      _listingsCollection.doc(offer.listingId),
-      {
-        'active': false,
-        'updatedAt': Timestamp.fromDate(now),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_listingsCollection.doc(offer.listingId), {
+      'active': false,
+      'updatedAt': Timestamp.fromDate(now),
+    }, SetOptions(merge: true));
 
     batch.set(sessionRef, session.toMap());
 
@@ -1318,5 +1320,3 @@ class TradingRepository {
     return;
   }
 }
-
-

@@ -44,62 +44,65 @@ class ArcBlueprintHotspotsCard extends StatelessWidget {
               style: TextStyle(color: Colors.white60),
             )
           else
-            ...hotspots.take(maxItems).map(
-              (hotspot) => Padding(
-                padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
-                child: Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceM),
-                  decoration: AppTheme.tradingCardDecoration(
-                    radius: 16,
-                    borderColor: AppTheme.neonCyan.withValues(alpha: 0.12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+            ...hotspots
+                .take(maxItems)
+                .map(
+                  (hotspot) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spaceM),
+                      decoration: AppTheme.tradingCardDecoration(
+                        radius: 16,
+                        borderColor: AppTheme.neonCyan.withValues(alpha: 0.12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              '${hotspot.mapName} • ${hotspot.areaLabel}',
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${hotspot.mapName} • ${hotspot.areaLabel}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                '${hotspot.count} reports',
+                                style: const TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${hotspot.containerLabel} • ${hotspot.percentageLabel}',
+                            style: TextStyle(
+                              color: AppTheme.neonCyan.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (hotspot.locationPreview?.trim().isNotEmpty ??
+                              false) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              hotspot.locationPreview!.trim(),
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
+                                color: Colors.white70,
+                                height: 1.35,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            '${hotspot.count} reports',
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                            ),
-                          ),
+                          ],
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${hotspot.containerLabel} • ${hotspot.percentageLabel}',
-                        style: TextStyle(
-                          color: AppTheme.neonCyan.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (hotspot.locationPreview?.trim().isNotEmpty ?? false) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          hotspot.locationPreview!.trim(),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
         ],
       ),
     );

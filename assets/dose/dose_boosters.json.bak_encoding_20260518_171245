@@ -1,10 +1,10 @@
-﻿{
+{
   "version": 5,
   "boosters": [
     {
       "id": "dop-001",
       "title": "Brush Your Teeth",
-      "description": "Brush your teeth and rinse. That's the win.",
+      "description": "Brush your teeth and rinse. That’s the win.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
       "durationMinutes": 3,
@@ -27,7 +27,7 @@
       "repeatable": "daily",
       "whyTitle": "Why this helps",
       "whyBullets": [
-        "A small, completed action gives your brain a quick 'win' signal.",
+        "A small, completed action gives your brain a quick ‘win’ signal.",
         "Routine + self-care can increase motivation to do the next step."
       ],
       "whySources": [
@@ -38,7 +38,7 @@
     {
       "id": "dop-002",
       "title": "Drink Water (Buxton)",
-      "description": "Drink a full glass of Buxton mineral water. Then you're done.",
+      "description": "Drink a full glass of Buxton mineral water. Then you’re done.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
       "durationMinutes": 3,
@@ -61,7 +61,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Hydration supports attention, energy and physical performance.",
-        "A quick reset ritual can reduce 'stuck' feelings."
+        "A quick reset ritual can reduce ‘stuck’ feelings."
       ],
       "whySources": [
         "NHS: Dehydration",
@@ -70,7 +70,7 @@
     },
     {
       "id": "dop-003",
-      "title": "5-Min 'One Zone' Tidy",
+      "title": "5-Min ‘One Zone’ Tidy",
       "description": "Set a 5-minute timer. Clear one tiny area. Stop when it ends.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
@@ -134,7 +134,7 @@
     {
       "id": "dop-005",
       "title": "Quick Shower Reset",
-      "description": "2-5 minute shower or wash. No extras. Just reset.",
+      "description": "2–5 minute shower or wash. No extras. Just reset.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
       "durationMinutes": 5,
@@ -193,7 +193,7 @@
       "linkId": "recipe_random_v1",
       "whyTitle": "Why this helps",
       "whyBullets": [
-        "Cooking a small item is a meaningful 'creation' win.",
+        "Cooking a small item is a meaningful ‘creation’ win.",
         "Food routines can support energy and mood when kept simple."
       ],
       "whySources": [
@@ -204,7 +204,7 @@
     {
       "id": "oxy-001",
       "title": "Send a Check-in",
-      "description": "Message someone safe: "You good?" No speech needed.",
+      "description": "Message someone safe: “You good?” No speech needed.",
       "category": "Oxytocin",
       "primaryCategory": "Oxytocin",
       "durationMinutes": 2,
@@ -299,7 +299,7 @@
     {
       "id": "oxy-004",
       "title": "Hug / Safe Touch",
-      "description": "If appropriate: a hug, hand-hold, or a warm 'good to see you'.",
+      "description": "If appropriate: a hug, hand-hold, or a warm ‘good to see you’.",
       "category": "Oxytocin",
       "primaryCategory": "Oxytocin",
       "durationMinutes": 2,
@@ -329,7 +329,7 @@
     {
       "id": "oxy-005",
       "title": "Rough Play (Parent/Child)",
-      "description": "5-10 minutes of gentle rough-and-tumble play (safe + supervised).",
+      "description": "5–10 minutes of gentle rough-and-tumble play (safe + supervised).",
       "category": "Oxytocin",
       "primaryCategory": "Oxytocin",
       "durationMinutes": 8,
@@ -354,7 +354,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Play strengthens bonding and can lift mood through movement.",
-        "Short bursts of play can create 'connection wins' quickly."
+        "Short bursts of play can create ‘connection wins’ quickly."
       ],
       "whySources": [
         "General child development research (rough-and-tumble play)"
@@ -396,7 +396,7 @@
     {
       "id": "ser-001",
       "title": "Daylight Reset",
-      "description": "Step outside or to a window for 2-5 minutes of natural light.",
+      "description": "Step outside or to a window for 2–5 minutes of natural light.",
       "category": "Serotonin",
       "primaryCategory": "Serotonin",
       "durationMinutes": 5,
@@ -426,7 +426,7 @@
     {
       "id": "ser-002",
       "title": "Box Breathing",
-      "description": "4 in / 4 hold / 4 out / 4 hold - repeat 4 rounds.",
+      "description": "4 in / 4 hold / 4 out / 4 hold — repeat 4 rounds.",
       "category": "Serotonin",
       "primaryCategory": "Serotonin",
       "durationMinutes": 3,
@@ -447,7 +447,7 @@
       "repeatable": "daily",
       "whyTitle": "Why this helps",
       "whyBullets": [
-        "Slow breathing activates the parasympathetic 'calm' response."
+        "Slow breathing activates the parasympathetic ‘calm’ response."
       ],
       "whySources": [
         "NHS: Breathing exercises for stress"
@@ -583,7 +583,7 @@
 
     {
       "id": "end-001",
-      "title": "10-20 Squats",
+      "title": "10–20 Squats",
       "description": "Do 20 squats. If low energy, do 10 and count it.",
       "category": "Endorphins",
       "primaryCategory": "Endorphins",
@@ -776,7 +776,7 @@
     {
       "id": "mix-001",
       "title": "Daylight + One Win",
-      "description": "2-5 minutes daylight, then write one realistic win for today.",
+      "description": "2–5 minutes daylight, then write one realistic win for today.",
       "category": "Mix",
       "primaryCategory": "Mix",
       "durationMinutes": 8,
@@ -809,7 +809,7 @@
     {
       "id": "mix-002",
       "title": "Walk + Check-in",
-      "description": "10-minute walk, then send a "you good?" message.",
+      "description": "10-minute walk, then send a “you good?” message.",
       "category": "Mix",
       "primaryCategory": "Mix",
       "durationMinutes": 12,
@@ -870,7 +870,7 @@
       "repeatable": "weekly",
       "whyTitle": "Why this helps",
       "whyBullets": [
-        "Combines light, movement, connection and a small win - a strong reset pattern."
+        "Combines light, movement, connection and a small win — a strong reset pattern."
       ],
       "whySources": [
         "NHS: Exercise and physical activity",

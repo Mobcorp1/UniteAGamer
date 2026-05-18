@@ -55,10 +55,7 @@ class _ElectricChargeBorderState extends State<ElectricChargeBorder>
 
   @override
   Widget build(BuildContext context) {
-    final child = Padding(
-      padding: widget.padding,
-      child: widget.child,
-    );
+    final child = Padding(padding: widget.padding, child: widget.child);
 
     if (!widget.active) {
       return child;
@@ -196,7 +193,8 @@ class _ElectricChargeBorderPainter extends CustomPainter {
     drawSegment(
       start: headStart,
       end: headEnd,
-      color: Color.lerp(
+      color:
+          Color.lerp(
             AppTheme.neonCyan,
             AppTheme.neonPink,
             0.65 + (0.1 * math.sin(progress * math.pi * 2)),

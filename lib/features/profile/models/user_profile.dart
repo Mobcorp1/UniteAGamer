@@ -17,7 +17,7 @@ class UserProfile {
   }
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-        'serverPreference': serverPreference,
-        'crossplayEnabled': crossplayEnabled,
-      };
+    'serverPreference': serverPreference,
+    'crossplayEnabled': crossplayEnabled,
+  };
 }

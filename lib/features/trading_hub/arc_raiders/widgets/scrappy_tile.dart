@@ -39,8 +39,9 @@ class ScrappyTile extends StatelessWidget {
         decoration: AppTheme.tradingCardDecoration(
           radius: 12,
           borderColor: accent.withValues(alpha: owned ? 0.52 : 0.14),
-          backgroundColor:
-              owned ? AppTheme.cardBackgroundAlt : AppTheme.cardBackgroundDeep,
+          backgroundColor: owned
+              ? AppTheme.cardBackgroundAlt
+              : AppTheme.cardBackgroundDeep,
         ),
         child: Padding(
           padding: const EdgeInsets.all(6),

@@ -10,15 +10,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blue
 /// scraping restricted editorial/database sites into the app. The rules below
 /// classify the full local item catalogue and combine it with live user state
 /// from the Blueprint Tracker.
-enum ArcItemPrimaryAction {
-  keep,
-  learn,
-  trade,
-  sell,
-  recycle,
-  use,
-  check,
-}
+enum ArcItemPrimaryAction { keep, learn, trade, sell, recycle, use, check }
 
 class ArcVoiceItemDecision {
   const ArcVoiceItemDecision({
@@ -68,20 +60,25 @@ class ArcItemAdviceIndex {
 
   static ArcVoiceItemDecision? decide({
     required String query,
-    Map<String, ArcBlueprintState> blueprintStates = const <String, ArcBlueprintState>{},
+    Map<String, ArcBlueprintState> blueprintStates =
+        const <String, ArcBlueprintState>{},
   }) {
     final cleanedQuery = _cleanVoiceQuery(query);
     final blueprint = _findBlueprint(cleanedQuery);
     final item = _findItem(cleanedQuery);
 
-    if (blueprint != null && _queryLooksBlueprint(cleanedQuery, blueprint, item)) {
+    if (blueprint != null &&
+        _queryLooksBlueprint(cleanedQuery, blueprint, item)) {
       return _blueprintDecision(blueprint, blueprintStates[blueprint.id]);
     }
 
     if (item != null && _entryLooksBlueprint(item)) {
       final matchedBlueprint = _findBlueprint(item.name) ?? blueprint;
       if (matchedBlueprint != null) {
-        return _blueprintDecision(matchedBlueprint, blueprintStates[matchedBlueprint.id]);
+        return _blueprintDecision(
+          matchedBlueprint,
+          blueprintStates[matchedBlueprint.id],
+        );
       }
     }
 
@@ -99,7 +96,10 @@ class ArcItemAdviceIndex {
       if (databaseMatch.item.isBlueprint) {
         final matchedBlueprint = _findBlueprint(databaseMatch.item.name);
         if (matchedBlueprint != null) {
-          return _blueprintDecision(matchedBlueprint, blueprintStates[matchedBlueprint.id]);
+          return _blueprintDecision(
+            matchedBlueprint,
+            blueprintStates[matchedBlueprint.id],
+          );
         }
       }
       return _databaseDecision(databaseMatch.item, databaseMatch.score);
@@ -187,12 +187,16 @@ class ArcItemAdviceIndex {
     );
   }
 
-  static ArcVoiceItemDecision _databaseDecision(ArcVoiceItemRecord item, int score) {
+  static ArcVoiceItemDecision _databaseDecision(
+    ArcVoiceItemRecord item,
+    int score,
+  ) {
     final reasons = <String>[
       'Matched against the local UAG Raider item database.',
       'Category: ${item.category}.',
       'Rarity: ${item.rarity}.',
-      if (item.usedToCraft.isNotEmpty) 'Used to craft: ${item.usedToCraft.join(', ')}.',
+      if (item.usedToCraft.isNotEmpty)
+        'Used to craft: ${item.usedToCraft.join(', ')}.',
     ];
 
     ArcItemPrimaryAction primaryAction;
@@ -220,7 +224,8 @@ class ArcItemAdviceIndex {
         break;
     }
 
-    final advice = '${item.name}: ${item.summary} Recommended action: ${item.actionLabel}.';
+    final advice =
+        '${item.name}: ${item.summary} Recommended action: ${item.actionLabel}.';
     return ArcVoiceItemDecision(
       title: item.name,
       spokenAdvice: advice,
@@ -237,8 +242,12 @@ class ArcItemAdviceIndex {
 
   static ArcVoiceItemDecision _itemDecision(UnifiedItemEntry item) {
     final name = item.name;
-    final normalizedName = UnifiedItemIndex.normalize('${item.name} ${item.id} ${item.aliases.join(' ')}');
-    final usedIn = item.usedIn.isEmpty ? 'No tracker usage currently mapped.' : item.usedIn.join(', ');
+    final normalizedName = UnifiedItemIndex.normalize(
+      '${item.name} ${item.id} ${item.aliases.join(' ')}',
+    );
+    final usedIn = item.usedIn.isEmpty
+        ? 'No tracker usage currently mapped.'
+        : item.usedIn.join(', ');
 
     if (item.neededForBench || item.neededForQuest || item.neededForScrappy) {
       final buckets = <String>[];
@@ -250,7 +259,8 @@ class ArcItemAdviceIndex {
         'Used in: $usedIn.',
         'Progression items should not be sold until the tracker says you have enough.',
       ];
-      final advice = '$name: keep it. It is currently linked to ${_joinHuman(buckets)}. Used in: $usedIn.';
+      final advice =
+          '$name: keep it. It is currently linked to ${_joinHuman(buckets)}. Used in: $usedIn.';
       return ArcVoiceItemDecision(
         title: name,
         spokenAdvice: advice,
@@ -272,7 +282,8 @@ class ArcItemAdviceIndex {
         'They can be more useful as access/trade items than quick cash.',
         'Used in: $usedIn.',
       ];
-      final advice = '$name: keep it or trade it. Keys and access cards can unlock valuable areas, so do not recycle them.';
+      final advice =
+          '$name: keep it or trade it. Keys and access cards can unlock valuable areas, so do not recycle them.';
       return ArcVoiceItemDecision(
         title: name,
         spokenAdvice: advice,
@@ -294,7 +305,8 @@ class ArcItemAdviceIndex {
         'Keep it if you will run it; otherwise list it for trade or sell spare stock.',
         'Used in: $usedIn.',
       ];
-      final advice = '$name: usable item. Keep it if you will run it; otherwise trade or sell spare copies.';
+      final advice =
+          '$name: usable item. Keep it if you will run it; otherwise trade or sell spare copies.';
       return ArcVoiceItemDecision(
         title: name,
         spokenAdvice: advice,
@@ -316,7 +328,8 @@ class ArcItemAdviceIndex {
         'Name matches recyclable salvage/junk patterns.',
         'Used in: $usedIn.',
       ];
-      final advice = '$name: recycle candidate. It is not currently mapped to your progression trackers and looks like salvage.';
+      final advice =
+          '$name: recycle candidate. It is not currently mapped to your progression trackers and looks like salvage.';
       return ArcVoiceItemDecision(
         title: name,
         spokenAdvice: advice,
@@ -338,7 +351,8 @@ class ArcItemAdviceIndex {
         'Name matches value/trinket patterns.',
         'Used in: $usedIn.',
       ];
-      final advice = '$name: sell candidate. It looks more like a value item than a progression item.';
+      final advice =
+          '$name: sell candidate. It looks more like a value item than a progression item.';
       return ArcVoiceItemDecision(
         title: name,
         spokenAdvice: advice,
@@ -360,7 +374,8 @@ class ArcItemAdviceIndex {
         'Not currently mapped as required by your progression trackers.',
         'Used in: $usedIn.',
       ];
-      final advice = '$name: trade-aware item. Keep it if demand is high, otherwise sell or recycle based on stash pressure.';
+      final advice =
+          '$name: trade-aware item. Keep it if demand is high, otherwise sell or recycle based on stash pressure.';
       return ArcVoiceItemDecision(
         title: name,
         spokenAdvice: advice,
@@ -380,7 +395,8 @@ class ArcItemAdviceIndex {
       'Item was recognised but has no strong progression/trade/recycle/sell mapping yet.',
       'Used in: $usedIn.',
     ];
-    final advice = '$name: check manually. I found the item, but it needs more item intelligence before Raider can make a strong call.';
+    final advice =
+        '$name: check manually. I found the item, but it needs more item intelligence before Raider can make a strong call.';
     return ArcVoiceItemDecision(
       title: name,
       spokenAdvice: advice,
@@ -406,14 +422,18 @@ class ArcItemAdviceIndex {
   }
 
   static ArcBlueprint? _findBlueprint(String query) {
-    final normalized = UnifiedItemIndex.normalize(query.replaceAll('blueprint', ''));
+    final normalized = UnifiedItemIndex.normalize(
+      query.replaceAll('blueprint', ''),
+    );
     if (normalized.isEmpty) return null;
 
     ArcBlueprint? exact;
     for (final blueprint in ArcBlueprintSeedData.blueprints) {
       final name = UnifiedItemIndex.normalize(blueprint.name);
       final id = UnifiedItemIndex.normalize(blueprint.id);
-      if (name == normalized || id == normalized || '$name blueprint' == normalized) {
+      if (name == normalized ||
+          id == normalized ||
+          '$name blueprint' == normalized) {
         exact = blueprint;
         break;
       }
@@ -425,7 +445,11 @@ class ArcItemAdviceIndex {
     for (final blueprint in ArcBlueprintSeedData.blueprints) {
       final name = UnifiedItemIndex.normalize(blueprint.name);
       final id = UnifiedItemIndex.normalize(blueprint.id);
-      final score = _scoreCandidate(normalized, <String>[name, id, '$name blueprint']);
+      final score = _scoreCandidate(normalized, <String>[
+        name,
+        id,
+        '$name blueprint',
+      ]);
       if (score > bestScore) {
         best = blueprint;
         bestScore = score;
@@ -463,16 +487,23 @@ class ArcItemAdviceIndex {
 
   static int _scoreCandidate(String normalizedQuery, List<String> candidates) {
     var best = 0;
-    final queryTokens = normalizedQuery.split(' ').where((token) => token.isNotEmpty).toSet();
+    final queryTokens = normalizedQuery
+        .split(' ')
+        .where((token) => token.isNotEmpty)
+        .toSet();
 
     for (final candidate in candidates) {
       if (candidate.isEmpty) continue;
       if (candidate == normalizedQuery) best = best < 100 ? 100 : best;
-      if (candidate.contains(normalizedQuery) || normalizedQuery.contains(candidate)) {
+      if (candidate.contains(normalizedQuery) ||
+          normalizedQuery.contains(candidate)) {
         best = best < 86 ? 86 : best;
       }
 
-      final candidateTokens = candidate.split(' ').where((token) => token.isNotEmpty).toSet();
+      final candidateTokens = candidate
+          .split(' ')
+          .where((token) => token.isNotEmpty)
+          .toSet();
       if (candidateTokens.isEmpty || queryTokens.isEmpty) continue;
       final overlap = queryTokens.intersection(candidateTokens).length;
       final tokenScore = ((overlap / candidateTokens.length) * 75).round();
@@ -482,7 +513,11 @@ class ArcItemAdviceIndex {
     return best;
   }
 
-  static bool _queryLooksBlueprint(String query, ArcBlueprint blueprint, UnifiedItemEntry? item) {
+  static bool _queryLooksBlueprint(
+    String query,
+    ArcBlueprint blueprint,
+    UnifiedItemEntry? item,
+  ) {
     final normalized = UnifiedItemIndex.normalize(query);
     if (normalized.contains('blueprint')) return true;
     if (item == null) return true;

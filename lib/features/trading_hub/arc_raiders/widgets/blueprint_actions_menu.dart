@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class BlueprintActionsMenu extends StatelessWidget {
-  const BlueprintActionsMenu({
-    super.key,
-    required this.onResetGrid,
-  });
+  const BlueprintActionsMenu({super.key, required this.onResetGrid});
 
   final VoidCallback onResetGrid;
 

@@ -37,10 +37,7 @@ class UAGTextField extends StatelessWidget {
     }
 
     if (prefixIcon is IconData) {
-      return Icon(
-        prefixIcon as IconData,
-        color: AppTheme.neonPink,
-      );
+      return Icon(prefixIcon as IconData, color: AppTheme.neonPink);
     }
 
     return null;
@@ -57,14 +54,10 @@ class UAGTextField extends StatelessWidget {
       enabled: enabled,
       onTap: onTap,
       readOnly: readOnly,
-      style: AppTheme.bodyTextStyle(
-        fontSize: 16,
-        color: Colors.white,
-      ),
-      decoration: AppTheme.inputDecoration(label).copyWith(
-        hintText: hintText,
-        prefixIcon: _buildPrefixIcon(),
-      ),
+      style: AppTheme.bodyTextStyle(fontSize: 16, color: Colors.white),
+      decoration: AppTheme.inputDecoration(
+        label,
+      ).copyWith(hintText: hintText, prefixIcon: _buildPrefixIcon()),
     );
   }
 }

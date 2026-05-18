@@ -45,7 +45,8 @@ class UagAdPolicy {
     showRewardedAds: true,
     allowVoiceAssistantAds: false,
     allowMidSessionAds: false,
-    bannerPlacement: 'Reduced passive banner only; never during active voice/session flow.',
+    bannerPlacement:
+        'Reduced passive banner only; never during active voice/session flow.',
     rewardedBoosts: [
       'Optional temporary Premium Intel unlock',
       'Optional temporary Trader Pro preview',

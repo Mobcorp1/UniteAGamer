@@ -100,7 +100,9 @@ class ArcBlueprintDropReport {
   String get areaLabel {
     switch (sourceType) {
       case ArcDropSourceType.poi:
-        return poiName?.trim().isNotEmpty == true ? poiName!.trim() : 'Unknown POI';
+        return poiName?.trim().isNotEmpty == true
+            ? poiName!.trim()
+            : 'Unknown POI';
       case ArcDropSourceType.enemy:
         return enemySourceName?.trim().isNotEmpty == true
             ? enemySourceName!.trim()
@@ -109,8 +111,8 @@ class ArcBlueprintDropReport {
         return poiName?.trim().isNotEmpty == true
             ? poiName!.trim()
             : enemySourceName?.trim().isNotEmpty == true
-                ? enemySourceName!.trim()
-                : 'Other Source';
+            ? enemySourceName!.trim()
+            : 'Other Source';
     }
   }
 
@@ -151,7 +153,8 @@ class ArcBlueprintDropReport {
   String get areaKey {
     final sourceKey = switch (sourceType) {
       ArcDropSourceType.poi => poiId ?? poiName ?? 'poi_unknown',
-      ArcDropSourceType.enemy => enemySourceId ?? enemySourceName ?? 'enemy_unknown',
+      ArcDropSourceType.enemy =>
+        enemySourceId ?? enemySourceName ?? 'enemy_unknown',
       ArcDropSourceType.other => poiId ?? enemySourceId ?? 'other_unknown',
     };
     return '$mapName|${sourceType.name}|$sourceKey';
@@ -198,7 +201,8 @@ class ArcBlueprintDropReport {
       containerTypeId: containerTypeId ?? this.containerTypeId,
       containerTypeLabel: containerTypeLabel ?? this.containerTypeLabel,
       weatherConditionId: weatherConditionId ?? this.weatherConditionId,
-      weatherConditionLabel: weatherConditionLabel ?? this.weatherConditionLabel,
+      weatherConditionLabel:
+          weatherConditionLabel ?? this.weatherConditionLabel,
       mapEventId: mapEventId ?? this.mapEventId,
       mapEventLabel: mapEventLabel ?? this.mapEventLabel,
       mode: mode ?? this.mode,
@@ -240,7 +244,9 @@ class ArcBlueprintDropReport {
       'entryTime': entryTime.name,
       'timeOfDay': timeOfDay.name,
       'foundAt': foundAt == null ? null : Timestamp.fromDate(foundAt!),
-      'lastConfirmedAt': lastConfirmedAt == null ? null : Timestamp.fromDate(lastConfirmedAt!),
+      'lastConfirmedAt': lastConfirmedAt == null
+          ? null
+          : Timestamp.fromDate(lastConfirmedAt!),
       'notes': notes,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'confirmationCount': confirmationCount,
@@ -251,23 +257,28 @@ class ArcBlueprintDropReport {
 
   factory ArcBlueprintDropReport.fromMap(Map<String, dynamic> map) {
     final sourceType =
-        _enumByName<ArcDropSourceType>(ArcDropSourceType.values, map['sourceType'] as String?) ??
+        _enumByName<ArcDropSourceType>(
+          ArcDropSourceType.values,
+          map['sourceType'] as String?,
+        ) ??
         ArcDropSourceType.poi;
 
     final legacyLocation = (map['locationName'] as String?)?.trim();
     final poiName = (map['poiName'] as String?)?.trim();
     final enemySourceName = (map['enemySourceName'] as String?)?.trim();
     final weatherConditionId = (map['weatherConditionId'] as String?)?.trim();
-    final weatherConditionLabel = (map['weatherConditionLabel'] as String?)?.trim();
+    final weatherConditionLabel = (map['weatherConditionLabel'] as String?)
+        ?.trim();
     final mapEventId = (map['mapEventId'] as String?)?.trim();
     final mapEventLabel = (map['mapEventLabel'] as String?)?.trim();
     final legacyConditionId = (map['conditionId'] as String?)?.trim();
     final legacyConditionLabel = (map['conditionLabel'] as String?)?.trim();
-    final confirmedBy = ((map['confirmedByUserIds'] as List?) ?? const <dynamic>[])
-        .whereType<String>()
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList(growable: false);
+    final confirmedBy =
+        ((map['confirmedByUserIds'] as List?) ?? const <dynamic>[])
+            .whereType<String>()
+            .map((item) => item.trim())
+            .where((item) => item.isNotEmpty)
+            .toList(growable: false);
 
     final report = ArcBlueprintDropReport(
       id: (map['id'] as String?) ?? '',
@@ -276,25 +287,50 @@ class ArcBlueprintDropReport {
       mapName: (map['mapName'] as String?)?.trim() ?? 'Unknown Map',
       sourceType: sourceType,
       poiId: (map['poiId'] as String?)?.trim(),
-      poiName: poiName ?? (sourceType == ArcDropSourceType.poi ? legacyLocation : null),
+      poiName:
+          poiName ??
+          (sourceType == ArcDropSourceType.poi ? legacyLocation : null),
       enemySourceId: (map['enemySourceId'] as String?)?.trim(),
       enemySourceName:
-          enemySourceName ?? (sourceType == ArcDropSourceType.enemy ? legacyLocation : null),
+          enemySourceName ??
+          (sourceType == ArcDropSourceType.enemy ? legacyLocation : null),
       containerTypeId: (map['containerTypeId'] as String?)?.trim(),
       containerTypeLabel: (map['containerTypeLabel'] as String?)?.trim(),
       weatherConditionId: weatherConditionId,
       weatherConditionLabel: weatherConditionLabel,
-      mapEventId: mapEventId ?? ((weatherConditionId == null || weatherConditionId.isEmpty)
-          ? legacyConditionId
-          : null),
-      mapEventLabel: mapEventLabel ?? ((weatherConditionLabel == null || weatherConditionLabel.isEmpty)
-          ? legacyConditionLabel
-          : null),
-      mode: _enumByName<ArcRaidMode>(ArcRaidMode.values, map['mode'] as String?) ?? ArcRaidMode.dayRaid,
-      raidType: _enumByName<ArcRaidType>(ArcRaidType.values, map['raidType'] as String?) ?? ArcRaidType.fullRaid,
-      entryTime: _enumByName<ArcEntryTime>(ArcEntryTime.values, map['entryTime'] as String?) ??
+      mapEventId:
+          mapEventId ??
+          ((weatherConditionId == null || weatherConditionId.isEmpty)
+              ? legacyConditionId
+              : null),
+      mapEventLabel:
+          mapEventLabel ??
+          ((weatherConditionLabel == null || weatherConditionLabel.isEmpty)
+              ? legacyConditionLabel
+              : null),
+      mode:
+          _enumByName<ArcRaidMode>(
+            ArcRaidMode.values,
+            map['mode'] as String?,
+          ) ??
+          ArcRaidMode.dayRaid,
+      raidType:
+          _enumByName<ArcRaidType>(
+            ArcRaidType.values,
+            map['raidType'] as String?,
+          ) ??
+          ArcRaidType.fullRaid,
+      entryTime:
+          _enumByName<ArcEntryTime>(
+            ArcEntryTime.values,
+            map['entryTime'] as String?,
+          ) ??
           ArcEntryTime.unknown,
-      timeOfDay: _enumByName<ArcTimeOfDay>(ArcTimeOfDay.values, map['timeOfDay'] as String?) ??
+      timeOfDay:
+          _enumByName<ArcTimeOfDay>(
+            ArcTimeOfDay.values,
+            map['timeOfDay'] as String?,
+          ) ??
           ArcTimeOfDay.unknown,
       foundAt: (map['foundAt'] as Timestamp?)?.toDate(),
       lastConfirmedAt: (map['lastConfirmedAt'] as Timestamp?)?.toDate(),

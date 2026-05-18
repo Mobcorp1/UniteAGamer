@@ -268,37 +268,45 @@ class PlayLikeAProState {
       'preConfidence': preConfidence,
       'preTiltRisk': preTiltRisk,
       'preNotes': preNotes,
-      'preUpdatedAt':
-          preUpdatedAt == null ? null : Timestamp.fromDate(preUpdatedAt!),
+      'preUpdatedAt': preUpdatedAt == null
+          ? null
+          : Timestamp.fromDate(preUpdatedAt!),
       'midTiltLevel': midTiltLevel,
       'midFatigue': midFatigue,
       'midFrustration': midFrustration,
       'midFocusDrop': midFocusDrop,
       'midNeedsBreak': midNeedsBreak,
       'midNotes': midNotes,
-      'midUpdatedAt':
-          midUpdatedAt == null ? null : Timestamp.fromDate(midUpdatedAt!),
+      'midUpdatedAt': midUpdatedAt == null
+          ? null
+          : Timestamp.fromDate(midUpdatedAt!),
       'postPerformance': postPerformance,
       'postEnjoyment': postEnjoyment,
       'postDiscipline': postDiscipline,
       'postTiltControl': postTiltControl,
       'postNotes': postNotes,
-      'postUpdatedAt':
-          postUpdatedAt == null ? null : Timestamp.fromDate(postUpdatedAt!),
+      'postUpdatedAt': postUpdatedAt == null
+          ? null
+          : Timestamp.fromDate(postUpdatedAt!),
       'history': history.map((entry) => entry.toMap()).toList(growable: false),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
     };
   }
 
   factory PlayLikeAProState.fromMap(Map<String, dynamic> map) {
-    final history = (map['history'] as List?)
-            ?.map((entry) => entry is Map<String, dynamic>
-                ? PlayLikeAProHistoryEntry.fromMap(entry)
-                : entry is Map
-                    ? PlayLikeAProHistoryEntry.fromMap(
-                        entry.map((key, value) => MapEntry(key.toString(), value)),
-                      )
-                    : null)
+    final history =
+        (map['history'] as List?)
+            ?.map(
+              (entry) => entry is Map<String, dynamic>
+                  ? PlayLikeAProHistoryEntry.fromMap(entry)
+                  : entry is Map
+                  ? PlayLikeAProHistoryEntry.fromMap(
+                      entry.map(
+                        (key, value) => MapEntry(key.toString(), value),
+                      ),
+                    )
+                  : null,
+            )
             .whereType<PlayLikeAProHistoryEntry>()
             .toList(growable: false) ??
         const <PlayLikeAProHistoryEntry>[];

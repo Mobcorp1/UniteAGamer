@@ -111,9 +111,9 @@ class TradingHubFeatureCard extends StatelessWidget {
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.neonPink,
-                            height: 1.35,
-                          ),
+                        color: AppTheme.neonPink,
+                        height: 1.35,
+                      ),
                     ),
                   ],
                 ),

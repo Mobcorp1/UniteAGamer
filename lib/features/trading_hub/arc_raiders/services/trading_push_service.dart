@@ -13,7 +13,9 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
 
 @pragma('vm:entry-point')
-Future<void> tradingFirebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> tradingFirebaseMessagingBackgroundHandler(
+  RemoteMessage message,
+) async {
   // Keep background handling lightweight. Routing happens when the user opens the app.
 }
 
@@ -61,7 +63,8 @@ class TradingPushService {
       );
       await _localNotifications
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(_channel);
     }
 
@@ -134,9 +137,11 @@ class TradingPushService {
         return;
       }
       if (decoded is Map) {
-        _navigateFromData(decoded.map(
-          (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
-        ));
+        _navigateFromData(
+          decoded.map(
+            (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
+          ),
+        );
         return;
       }
     } catch (_) {
@@ -185,7 +190,6 @@ class TradingPushService {
     navigator.pushNamed(routeName);
   }
 
-
   Future<void> scheduleTradeReminder({
     required String sessionId,
     required DateTime scheduledAt,
@@ -208,7 +212,8 @@ class TradingPushService {
           android: AndroidNotificationDetails(
             'trading_alerts',
             'Trading Alerts',
-            channelDescription: 'Offer, session, booking and match notifications.',
+            channelDescription:
+                'Offer, session, booking and match notifications.',
             importance: Importance.high,
             priority: Priority.high,
           ),

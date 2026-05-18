@@ -80,8 +80,8 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-        subtitle != null && subtitle!.trim().isNotEmpty
-            ? kToolbarHeight + 6
-            : kToolbarHeight,
-      );
+    subtitle != null && subtitle!.trim().isNotEmpty
+        ? kToolbarHeight + 6
+        : kToolbarHeight,
+  );
 }

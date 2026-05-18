@@ -5,7 +5,11 @@ import '../models/arc_match_rider_invite.dart';
 import '../models/arc_match_rider_profile.dart';
 
 class ArcMatchCandidate {
-  const ArcMatchCandidate({required this.profile, required this.score, required this.reasons});
+  const ArcMatchCandidate({
+    required this.profile,
+    required this.score,
+    required this.reasons,
+  });
 
   final ArcMatchRiderProfile profile;
   final int score;
@@ -14,20 +18,27 @@ class ArcMatchCandidate {
 
 class ArcMatchRiderRepository {
   ArcMatchRiderRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
   String? get currentUid => _auth.currentUser?.uid;
 
-  CollectionReference<Map<String, dynamic>> get _profiles => _firestore.collection('arc_match_rider_profiles');
-  CollectionReference<Map<String, dynamic>> get _invites => _firestore.collection('arc_match_rider_invites');
-  CollectionReference<Map<String, dynamic>> get _notifications => _firestore.collection('trading_notifications');
+  CollectionReference<Map<String, dynamic>> get _profiles =>
+      _firestore.collection('arc_match_rider_profiles');
+  CollectionReference<Map<String, dynamic>> get _invites =>
+      _firestore.collection('arc_match_rider_invites');
+  CollectionReference<Map<String, dynamic>> get _notifications =>
+      _firestore.collection('trading_notifications');
 
   DocumentReference<Map<String, dynamic>> _userProfileDoc(String uid) =>
-      _firestore.collection('users').doc(uid).collection('trading_activity').doc('profile');
+      _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('trading_activity')
+          .doc('profile');
 
   Future<ArcMatchRiderProfile> loadMyProfile() async {
     final uid = currentUid;
@@ -40,11 +51,18 @@ class ArcMatchRiderRepository {
 
     final userSnap = await _userProfileDoc(uid).get();
     final userData = userSnap.data() ?? const <String, dynamic>{};
-    final fallbackName = (userData['uagName'] as String? ?? userData['displayName'] as String? ?? '').trim();
-    final fallbackUag = (userData['uagId'] as String? ?? userData['gamerTag'] as String? ?? '').trim();
+    final fallbackName =
+        (userData['uagName'] as String? ??
+                userData['displayName'] as String? ??
+                '')
+            .trim();
+    final fallbackUag =
+        (userData['uagId'] as String? ?? userData['gamerTag'] as String? ?? '')
+            .trim();
     final fallbackRegion = (userData['region'] as String? ?? '').trim();
     final fallbackPlatform = (userData['platform'] as String? ?? '').trim();
-    final fallbackServerPreference = (userData['serverPreference'] as String? ?? 'Automatic').trim();
+    final fallbackServerPreference =
+        (userData['serverPreference'] as String? ?? 'Automatic').trim();
     final fallbackCrossplay = userData['crossplayEnabled'] is bool
         ? userData['crossplayEnabled'] as bool
         : userData['crossPlatformOk'] != false;
@@ -54,7 +72,9 @@ class ArcMatchRiderRepository {
       uagId: fallbackUag,
       region: fallbackRegion,
       platform: fallbackPlatform,
-      serverPreference: fallbackServerPreference.isEmpty ? 'Automatic' : fallbackServerPreference,
+      serverPreference: fallbackServerPreference.isEmpty
+          ? 'Automatic'
+          : fallbackServerPreference,
       crossplayEnabled: fallbackCrossplay,
     );
   }
@@ -67,33 +87,38 @@ class ArcMatchRiderRepository {
     await _profiles.doc(uid).set(normalized.toMap(), SetOptions(merge: true));
   }
 
-  Stream<List<ArcMatchCandidate>> watchCandidates(ArcMatchRiderProfile currentProfile) {
+  Stream<List<ArcMatchCandidate>> watchCandidates(
+    ArcMatchRiderProfile currentProfile,
+  ) {
     final uid = currentUid;
     if (uid == null) return const Stream<List<ArcMatchCandidate>>.empty();
 
-    return _profiles
-        .where('visibleInSearch', isEqualTo: true)
-        .snapshots()
-        .map((snapshot) {
-          final matches = <ArcMatchCandidate>[];
-          for (final doc in snapshot.docs) {
-            if (doc.id == uid) continue;
-            final profile = ArcMatchRiderProfile.fromMap(doc.data(), doc.id);
-            final score = _score(currentProfile, profile);
-            final reasons = _buildReasons(currentProfile, profile);
-            matches.add(ArcMatchCandidate(profile: profile, score: score, reasons: reasons));
-          }
+    return _profiles.where('visibleInSearch', isEqualTo: true).snapshots().map((
+      snapshot,
+    ) {
+      final matches = <ArcMatchCandidate>[];
+      for (final doc in snapshot.docs) {
+        if (doc.id == uid) continue;
+        final profile = ArcMatchRiderProfile.fromMap(doc.data(), doc.id);
+        final score = _score(currentProfile, profile);
+        final reasons = _buildReasons(currentProfile, profile);
+        matches.add(
+          ArcMatchCandidate(profile: profile, score: score, reasons: reasons),
+        );
+      }
 
-          matches.sort((a, b) {
-            final scoreCompare = b.score.compareTo(a.score);
-            if (scoreCompare != 0) return scoreCompare;
-            if (a.profile.lookingNow != b.profile.lookingNow) {
-              return a.profile.lookingNow ? -1 : 1;
-            }
-            return a.profile.title.toLowerCase().compareTo(b.profile.title.toLowerCase());
-          });
-          return matches;
-        });
+      matches.sort((a, b) {
+        final scoreCompare = b.score.compareTo(a.score);
+        if (scoreCompare != 0) return scoreCompare;
+        if (a.profile.lookingNow != b.profile.lookingNow) {
+          return a.profile.lookingNow ? -1 : 1;
+        }
+        return a.profile.title.toLowerCase().compareTo(
+          b.profile.title.toLowerCase(),
+        );
+      });
+      return matches;
+    });
   }
 
   Stream<List<ArcMatchRiderInvite>> watchIncomingInvites() {
@@ -103,7 +128,11 @@ class ArcMatchRiderRepository {
         .where('recipientUid', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => ArcMatchRiderInvite.fromMap(doc.data())).toList(growable: false));
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ArcMatchRiderInvite.fromMap(doc.data()))
+              .toList(growable: false),
+        );
   }
 
   Stream<List<ArcMatchRiderInvite>> watchOutgoingInvites() {
@@ -113,7 +142,11 @@ class ArcMatchRiderRepository {
         .where('senderUid', isEqualTo: uid)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => ArcMatchRiderInvite.fromMap(doc.data())).toList(growable: false));
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ArcMatchRiderInvite.fromMap(doc.data()))
+              .toList(growable: false),
+        );
   }
 
   Future<void> sendInvite({
@@ -128,7 +161,8 @@ class ArcMatchRiderRepository {
     final inviteRef = _invites.doc('${uid}_${recipient.uid}');
     final existingInvite = await inviteRef.get();
     if (existingInvite.exists) {
-      final existingStatus = (existingInvite.data()?['status'] as String? ?? '').trim();
+      final existingStatus = (existingInvite.data()?['status'] as String? ?? '')
+          .trim();
       if (existingStatus == 'pending') {
         throw StateError('You already have a pending invite with this raider.');
       }
@@ -167,7 +201,10 @@ class ArcMatchRiderRepository {
     await batch.commit();
   }
 
-  Future<void> respondToInvite(ArcMatchRiderInvite invite, String newStatus) async {
+  Future<void> respondToInvite(
+    ArcMatchRiderInvite invite,
+    String newStatus,
+  ) async {
     final uid = currentUid;
     if (uid == null) throw StateError('No signed-in user found.');
     if (!['accepted', 'declined', 'cancelled'].contains(newStatus)) {
@@ -182,13 +219,19 @@ class ArcMatchRiderRepository {
       'recipientName': invite.recipientName,
       'status': newStatus,
       'note': invite.note,
-      'createdAt': invite.createdAt == null ? FieldValue.serverTimestamp() : Timestamp.fromDate(invite.createdAt!),
+      'createdAt': invite.createdAt == null
+          ? FieldValue.serverTimestamp()
+          : Timestamp.fromDate(invite.createdAt!),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: false));
 
-    final targetUid = newStatus == 'cancelled' ? invite.recipientUid : invite.senderUid;
+    final targetUid = newStatus == 'cancelled'
+        ? invite.recipientUid
+        : invite.senderUid;
     final actorUid = uid;
-    final actorName = uid == invite.senderUid ? invite.senderName : invite.recipientName;
+    final actorName = uid == invite.senderUid
+        ? invite.senderName
+        : invite.recipientName;
     final notificationRef = _notifications.doc();
     await notificationRef.set({
       'id': notificationRef.id,
@@ -228,11 +271,17 @@ class ArcMatchRiderRepository {
     return score;
   }
 
-  List<String> _buildReasons(ArcMatchRiderProfile me, ArcMatchRiderProfile other) {
+  List<String> _buildReasons(
+    ArcMatchRiderProfile me,
+    ArcMatchRiderProfile other,
+  ) {
     final reasons = <String>[];
     void addShared(String label, List<String> mine, List<String> theirs) {
-      final overlap = mine.where((item) => theirs.contains(item)).toList(growable: false);
-      if (overlap.isNotEmpty) reasons.add('$label: ${overlap.take(2).join(', ')}');
+      final overlap = mine
+          .where((item) => theirs.contains(item))
+          .toList(growable: false);
+      if (overlap.isNotEmpty)
+        reasons.add('$label: ${overlap.take(2).join(', ')}');
     }
 
     addShared('Shared goals', me.goals, other.goals);
@@ -240,9 +289,12 @@ class ArcMatchRiderRepository {
     addShared('Shared squad vibe', me.squadPreferences, other.squadPreferences);
     addShared('Shared comms', me.comms, other.comms);
     addShared('Shared maps', me.preferredMaps, other.preferredMaps);
-    if (me.platform.isNotEmpty && me.platform == other.platform) reasons.add('Same platform');
-    if (me.crossplayEnabled && other.crossplayEnabled) reasons.add('Crossplay compatible');
-    if (me.region.isNotEmpty && me.region == other.region) reasons.add('Same region');
+    if (me.platform.isNotEmpty && me.platform == other.platform)
+      reasons.add('Same platform');
+    if (me.crossplayEnabled && other.crossplayEnabled)
+      reasons.add('Crossplay compatible');
+    if (me.region.isNotEmpty && me.region == other.region)
+      reasons.add('Same region');
     if (me.serverPreference.isNotEmpty &&
         other.serverPreference.isNotEmpty &&
         (me.serverPreference == 'Automatic' ||

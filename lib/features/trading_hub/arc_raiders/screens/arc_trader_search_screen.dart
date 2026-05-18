@@ -17,7 +17,8 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
 
   final TextEditingController _regionController = TextEditingController();
   final TextEditingController _platformController = TextEditingController();
-  final TextEditingController _wantedBlueprintController = TextEditingController();
+  final TextEditingController _wantedBlueprintController =
+      TextEditingController();
 
   bool _loading = false;
   List<ArcTraderSearchResult> _results = const [];
@@ -63,9 +64,7 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Traders'),
-      ),
+      appBar: AppBar(title: const Text('Search Traders')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

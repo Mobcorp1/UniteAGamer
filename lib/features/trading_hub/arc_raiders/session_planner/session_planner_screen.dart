@@ -117,7 +117,8 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
                       ),
                       lastDay: DateTime.now().add(const Duration(days: 365)),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       eventLoader: (day) => _sessionsForDay(sessions, day),
                       calendarStyle: CalendarStyle(
                         markerDecoration: const BoxDecoration(
@@ -133,7 +134,9 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
                           shape: BoxShape.circle,
                         ),
                         defaultTextStyle: const TextStyle(color: Colors.white),
-                        weekendTextStyle: const TextStyle(color: Colors.white70),
+                        weekendTextStyle: const TextStyle(
+                          color: Colors.white70,
+                        ),
                       ),
                       headerStyle: const HeaderStyle(
                         titleCentered: true,
@@ -188,7 +191,9 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
   }
 
   Widget _buildSessionCard(UagSession session) {
-    final color = session.type == 'trade' ? AppTheme.neonCyan : AppTheme.neonPink;
+    final color = session.type == 'trade'
+        ? AppTheme.neonCyan
+        : AppTheme.neonPink;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),

@@ -102,12 +102,20 @@ class ArcBlueprintStats {
     for (final report in reports) {
       reporters.add(report.userId);
       mapCounts.update(report.mapName, (value) => value + 1, ifAbsent: () => 1);
-      areaCounts.update(report.areaLabel, (value) => value + 1, ifAbsent: () => 1);
+      areaCounts.update(
+        report.areaLabel,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
 
       final conditionLabel = (report.conditionLabel?.trim().isNotEmpty ?? false)
           ? report.conditionLabel!.trim()
           : 'No Special Condition';
-      conditionCounts.update(conditionLabel, (value) => value + 1, ifAbsent: () => 1);
+      conditionCounts.update(
+        conditionLabel,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
 
       final sourceLabel = report.sourceType.label;
       sourceCounts.update(sourceLabel, (value) => value + 1, ifAbsent: () => 1);
@@ -135,7 +143,9 @@ class ArcBlueprintStats {
               key: entry.key,
               label: entry.key,
               count: entry.value,
-              percentage: totalReports <= 0 ? 0 : (entry.value / totalReports) * 100,
+              percentage: totalReports <= 0
+                  ? 0
+                  : (entry.value / totalReports) * 100,
             ),
           )
           .toList(growable: false);
@@ -156,8 +166,12 @@ class ArcBlueprintStats {
       sourceBreakdown: sourceBreakdown,
       topMapLabel: mapBreakdown.isEmpty ? null : mapBreakdown.first.label,
       topAreaLabel: areaBreakdown.isEmpty ? null : areaBreakdown.first.label,
-      topConditionLabel: conditionBreakdown.isEmpty ? null : conditionBreakdown.first.label,
-      topSourceLabel: sourceBreakdown.isEmpty ? null : sourceBreakdown.first.label,
+      topConditionLabel: conditionBreakdown.isEmpty
+          ? null
+          : conditionBreakdown.first.label,
+      topSourceLabel: sourceBreakdown.isEmpty
+          ? null
+          : sourceBreakdown.first.label,
       lastReportedAt: lastReportedAt,
       updatedAt: DateTime.now(),
     );
@@ -168,12 +182,18 @@ class ArcBlueprintStats {
       'blueprintId': blueprintId,
       'totalReports': totalReports,
       'uniqueReporterCount': uniqueReporterCount,
-      'mapBreakdown': mapBreakdown.map((item) => item.toMap()).toList(growable: false),
-      'areaBreakdown': areaBreakdown.map((item) => item.toMap()).toList(growable: false),
+      'mapBreakdown': mapBreakdown
+          .map((item) => item.toMap())
+          .toList(growable: false),
+      'areaBreakdown': areaBreakdown
+          .map((item) => item.toMap())
+          .toList(growable: false),
       'conditionBreakdown': conditionBreakdown
           .map((item) => item.toMap())
           .toList(growable: false),
-      'sourceBreakdown': sourceBreakdown.map((item) => item.toMap()).toList(growable: false),
+      'sourceBreakdown': sourceBreakdown
+          .map((item) => item.toMap())
+          .toList(growable: false),
       'topMapLabel': topMapLabel,
       'topAreaLabel': topAreaLabel,
       'topConditionLabel': topConditionLabel,
@@ -188,13 +208,17 @@ class ArcBlueprintStats {
       if (raw is! List) return const <ArcStatsBreakdownItem>[];
       return raw
           .whereType<Map>()
-          .map((item) => ArcStatsBreakdownItem.fromMap(Map<String, dynamic>.from(item)))
+          .map(
+            (item) =>
+                ArcStatsBreakdownItem.fromMap(Map<String, dynamic>.from(item)),
+          )
           .toList(growable: false);
     }
 
     DateTime? fromMillis(dynamic value) {
       if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
-      if (value is num) return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+      if (value is num)
+        return DateTime.fromMillisecondsSinceEpoch(value.toInt());
       return null;
     }
 

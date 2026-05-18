@@ -1,8 +1,1 @@
-enum ArcScrappyFilter {
-  all,
-  owned,
-  missing,
-  duplicates,
-  wanted,
-  tradeable,
-}
+enum ArcScrappyFilter { all, owned, missing, duplicates, wanted, tradeable }

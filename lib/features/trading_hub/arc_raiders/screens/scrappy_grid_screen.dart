@@ -30,10 +30,10 @@ class ScrappyGridScreen extends StatefulWidget {
   });
 
   const ScrappyGridScreen.bench({super.key})
-      : initialMode = ArcScrappyTrackerMode.bench;
+    : initialMode = ArcScrappyTrackerMode.bench;
 
   const ScrappyGridScreen.quest({super.key})
-      : initialMode = ArcScrappyTrackerMode.quest;
+    : initialMode = ArcScrappyTrackerMode.quest;
 
   final ArcScrappyTrackerMode initialMode;
 
@@ -329,17 +329,14 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
               color: Colors.redAccent,
             ),
           ),
-          content: Text(
-            switch (_mode) {
-              ArcScrappyTrackerMode.scrappy =>
-                'This will remove all collected Scrappy progress and surplus from the Scrappy tracker only.',
-              ArcScrappyTrackerMode.bench =>
-                'This will remove all collected bench upgrade material progress from the Bench tracker only.',
-              ArcScrappyTrackerMode.quest =>
-                'This will remove all collected quest item progress from the Quest tracker only.',
-            },
-            style: const TextStyle(color: Colors.white70, height: 1.45),
-          ),
+          content: Text(switch (_mode) {
+            ArcScrappyTrackerMode.scrappy =>
+              'This will remove all collected Scrappy progress and surplus from the Scrappy tracker only.',
+            ArcScrappyTrackerMode.bench =>
+              'This will remove all collected bench upgrade material progress from the Bench tracker only.',
+            ArcScrappyTrackerMode.quest =>
+              'This will remove all collected quest item progress from the Quest tracker only.',
+          }, style: const TextStyle(color: Colors.white70, height: 1.45)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -443,7 +440,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       return Expanded(
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: selected ? null : () => Navigator.pushReplacementNamed(context, routeName),
+          onTap: selected
+              ? null
+              : () => Navigator.pushReplacementNamed(context, routeName),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(
@@ -453,8 +452,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             decoration: AppTheme.tradingCardDecoration(
               radius: 16,
               borderColor: color.withValues(alpha: selected ? 0.64 : 0.20),
-              backgroundColor:
-                  selected ? AppTheme.cardBackgroundAlt : AppTheme.cardBackgroundDeep,
+              backgroundColor: selected
+                  ? AppTheme.cardBackgroundAlt
+                  : AppTheme.cardBackgroundDeep,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -510,7 +510,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     List<ArcScrappyItem> items,
     Map<String, ArcScrappyState> states,
   ) {
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     final maxTileWidth = isLandscape ? 124.0 : 118.0;
     final minTileWidth = isLandscape ? 104.0 : 96.0;
     const spacing = AppTheme.spaceS;
@@ -521,7 +522,10 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         final rawColumns = (constraints.maxWidth / targetWidth).floor();
         final columns = rawColumns.clamp(2, isLandscape ? 6 : 3);
         final usableWidth = constraints.maxWidth - (spacing * (columns - 1));
-        final tileWidth = (usableWidth / columns).clamp(minTileWidth, maxTileWidth);
+        final tileWidth = (usableWidth / columns).clamp(
+          minTileWidth,
+          maxTileWidth,
+        );
 
         return Wrap(
           spacing: spacing,
@@ -537,7 +541,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   landscape: isLandscape,
                   tierColor: _tierColor(item.tier),
                   onTap: () {
-                    final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+                    final state =
+                        states[item.id] ?? ArcScrappyState.empty(item.id);
                     if (state.collectedCount > 0) {
                       _openItemEditor(item, state);
                     } else {
@@ -545,7 +550,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     }
                   },
                   onLongPress: () {
-                    final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+                    final state =
+                        states[item.id] ?? ArcScrappyState.empty(item.id);
                     _openItemEditor(item, state);
                   },
                 ),
@@ -632,7 +638,10 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             children: [
               _ProgressPill(text: '$completed / ${items.length}', color: color),
               const SizedBox(width: 4),
-              Icon(expanded ? Icons.expand_less : Icons.expand_more, color: color),
+              Icon(
+                expanded ? Icons.expand_less : Icons.expand_more,
+                color: color,
+              ),
             ],
           ),
           children: [child ?? _buildAdaptiveTileWrap(items, states)],
@@ -684,7 +693,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         for (final category in categories)
           _buildCategorySection(
             category: category,
-            items: filtered.where((item) => item.category == category).toList(growable: false),
+            items: filtered
+                .where((item) => item.category == category)
+                .toList(growable: false),
             states: states,
           ),
       ],
@@ -721,7 +732,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
               id: '${_mode.name}-$category-$group',
               title: _displayGroupTitle(category, group),
               color: _groupColor(items, group),
-              items: items.where((item) => item.group == group).toList(growable: false),
+              items: items
+                  .where((item) => item.group == group)
+                  .toList(growable: false),
               states: states,
               subtitle: _mode == ArcScrappyTrackerMode.quest
                   ? 'Quest collection items'
@@ -758,10 +771,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: Text(
-          _modeTitle,
-          style: AppTheme.tradingHeading(fontSize: 25),
-        ),
+        title: Text(_modeTitle, style: AppTheme.tradingHeading(fontSize: 25)),
         actions: [ScrappyActionsMenu(onResetGrid: _confirmResetGrid)],
       ),
       body: Stack(
@@ -775,8 +785,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 final filtered = _applyFilter(allItems, states);
                 final counts = _buildCounts(allItems, states);
                 final ownedCount = counts[ArcScrappyFilter.owned] ?? 0;
-                final completion = allItems.isEmpty ? 0.0 : ownedCount / allItems.length;
-                final landscape = MediaQuery.of(context).orientation == Orientation.landscape;
+                final completion = allItems.isEmpty
+                    ? 0.0
+                    : ownedCount / allItems.length;
+                final landscape =
+                    MediaQuery.of(context).orientation == Orientation.landscape;
 
                 return ListView(
                   padding: AppTheme.pagePadding,

@@ -5,8 +5,8 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/play_lik
 
 class PlayLikeAProRepository {
   PlayLikeAProRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -36,7 +36,9 @@ class PlayLikeAProRepository {
   Future<void> ensureDocExists() async {
     final snapshot = await _doc.get();
     if (snapshot.exists) return;
-    final state = PlayLikeAProState.initial().copyWith(updatedAt: DateTime.now());
+    final state = PlayLikeAProState.initial().copyWith(
+      updatedAt: DateTime.now(),
+    );
     await _doc.set(state.toMap(), SetOptions(merge: true));
   }
 
@@ -109,27 +111,27 @@ class PlayLikeAProRepository {
     required String notes,
   }) async {
     final now = DateTime.now();
-    final nextHistory = List<PlayLikeAProHistoryEntry>.from(currentState.history)
-      ..insert(
-        0,
-        PlayLikeAProHistoryEntry(
-          createdAt: now,
-          goal: currentState.preGoal,
-          energy: currentState.preEnergy,
-          focus: currentState.preFocus,
-          calm: currentState.preCalm,
-          confidence: currentState.preConfidence,
-          tiltRisk: currentState.preTiltRisk,
-          tiltLevel: currentState.midTiltLevel,
-          fatigue: currentState.midFatigue,
-          frustration: currentState.midFrustration,
-          performance: performance,
-          enjoyment: enjoyment,
-          discipline: discipline,
-          tiltControl: tiltControl,
-          notes: notes.trim(),
-        ),
-      );
+    final nextHistory =
+        List<PlayLikeAProHistoryEntry>.from(currentState.history)..insert(
+          0,
+          PlayLikeAProHistoryEntry(
+            createdAt: now,
+            goal: currentState.preGoal,
+            energy: currentState.preEnergy,
+            focus: currentState.preFocus,
+            calm: currentState.preCalm,
+            confidence: currentState.preConfidence,
+            tiltRisk: currentState.preTiltRisk,
+            tiltLevel: currentState.midTiltLevel,
+            fatigue: currentState.midFatigue,
+            frustration: currentState.midFrustration,
+            performance: performance,
+            enjoyment: enjoyment,
+            discipline: discipline,
+            tiltControl: tiltControl,
+            notes: notes.trim(),
+          ),
+        );
 
     if (nextHistory.length > 12) {
       nextHistory.removeRange(12, nextHistory.length);
@@ -142,7 +144,9 @@ class PlayLikeAProRepository {
       'postTiltControl': tiltControl,
       'postNotes': notes.trim(),
       'postUpdatedAt': Timestamp.fromDate(now),
-      'history': nextHistory.map((entry) => entry.toMap()).toList(growable: false),
+      'history': nextHistory
+          .map((entry) => entry.toMap())
+          .toList(growable: false),
       'updatedAt': Timestamp.fromDate(now),
     }, SetOptions(merge: true));
   }

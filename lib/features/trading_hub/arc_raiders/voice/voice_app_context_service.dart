@@ -30,8 +30,8 @@ class UagVoiceTodayResult<T> {
 
 class UagVoiceAppContextService {
   UagVoiceAppContextService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -51,12 +51,16 @@ class UagVoiceAppContextService {
         ? UnifiedItemIndex.findBest(cleaned)
         : ArcItemAdviceIndex.search(cleaned).first;
     final matchedName = item?.name ?? cleaned;
-    final aliases = <String>{
-      cleaned,
-      matchedName,
-      if (item != null) item.id,
-      if (item != null) ...item.aliases,
-    }.map(UnifiedItemIndex.normalize).where((value) => value.isNotEmpty).toSet();
+    final aliases =
+        <String>{
+              cleaned,
+              matchedName,
+              if (item != null) item.id,
+              if (item != null) ...item.aliases,
+            }
+            .map(UnifiedItemIndex.normalize)
+            .where((value) => value.isNotEmpty)
+            .toSet();
 
     final uid = currentUid;
     final snapshot = await _listings
@@ -102,7 +106,8 @@ class UagVoiceAppContextService {
     if (uid == null) {
       return const UagVoiceTodayResult<TradingSession>(
         items: <TradingSession>[],
-        errorMessage: 'You need to be signed in before I can check trade sessions.',
+        errorMessage:
+            'You need to be signed in before I can check trade sessions.',
       );
     }
 
@@ -119,18 +124,23 @@ class UagVoiceAppContextService {
         }
       }
 
-      final today = merged.values
-          .where((session) {
-            final scheduledAt = session.effectiveScheduledAt;
-            if (scheduledAt == null) return false;
-            return _isToday(scheduledAt);
-          })
-          .toList(growable: false)
-        ..sort((a, b) {
-          final aTime = a.effectiveScheduledAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bTime = b.effectiveScheduledAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return aTime.compareTo(bTime);
-        });
+      final today =
+          merged.values
+              .where((session) {
+                final scheduledAt = session.effectiveScheduledAt;
+                if (scheduledAt == null) return false;
+                return _isToday(scheduledAt);
+              })
+              .toList(growable: false)
+            ..sort((a, b) {
+              final aTime =
+                  a.effectiveScheduledAt ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              final bTime =
+                  b.effectiveScheduledAt ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              return aTime.compareTo(bTime);
+            });
 
       return UagVoiceTodayResult<TradingSession>(items: today);
     } catch (error) {
@@ -141,12 +151,14 @@ class UagVoiceAppContextService {
     }
   }
 
-  Future<UagVoiceTodayResult<ArcMatchRiderInvite>> findMatchActivityToday() async {
+  Future<UagVoiceTodayResult<ArcMatchRiderInvite>>
+  findMatchActivityToday() async {
     final uid = currentUid;
     if (uid == null) {
       return const UagVoiceTodayResult<ArcMatchRiderInvite>(
         items: <ArcMatchRiderInvite>[],
-        errorMessage: 'You need to be signed in before I can check Match Raider activity.',
+        errorMessage:
+            'You need to be signed in before I can check Match Raider activity.',
       );
     }
 
@@ -163,18 +175,25 @@ class UagVoiceAppContextService {
         }
       }
 
-      final today = merged.values
-          .where((invite) {
-            final date = invite.updatedAt ?? invite.createdAt;
-            if (date == null) return false;
-            return _isToday(date);
-          })
-          .toList(growable: false)
-        ..sort((a, b) {
-          final aTime = a.updatedAt ?? a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bTime = b.updatedAt ?? b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return bTime.compareTo(aTime);
-        });
+      final today =
+          merged.values
+              .where((invite) {
+                final date = invite.updatedAt ?? invite.createdAt;
+                if (date == null) return false;
+                return _isToday(date);
+              })
+              .toList(growable: false)
+            ..sort((a, b) {
+              final aTime =
+                  a.updatedAt ??
+                  a.createdAt ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              final bTime =
+                  b.updatedAt ??
+                  b.createdAt ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              return bTime.compareTo(aTime);
+            });
 
       return UagVoiceTodayResult<ArcMatchRiderInvite>(items: today);
     } catch (error) {
@@ -186,18 +205,24 @@ class UagVoiceAppContextService {
   }
 
   bool _listingWantsAny(TradingListing listing, Set<String> normalizedAliases) {
-    final wanted = <String>[
-      ...listing.wantedBlueprintNames,
-      ...listing.wantedAssetNames,
-      ...listing.wantedTradeItemIds,
-      ...listing.wantedTradeItemNames,
-      listing.wantedText,
-      listing.title,
-    ].map(UnifiedItemIndex.normalize).where((value) => value.isNotEmpty).toList(growable: false);
+    final wanted =
+        <String>[
+              ...listing.wantedBlueprintNames,
+              ...listing.wantedAssetNames,
+              ...listing.wantedTradeItemIds,
+              ...listing.wantedTradeItemNames,
+              listing.wantedText,
+              listing.title,
+            ]
+            .map(UnifiedItemIndex.normalize)
+            .where((value) => value.isNotEmpty)
+            .toList(growable: false);
 
     for (final wantedValue in wanted) {
       for (final alias in normalizedAliases) {
-        if (wantedValue == alias || wantedValue.contains(alias) || alias.contains(wantedValue)) {
+        if (wantedValue == alias ||
+            wantedValue.contains(alias) ||
+            alias.contains(wantedValue)) {
           return true;
         }
       }
@@ -211,7 +236,8 @@ class UagVoiceAppContextService {
     score += listing.offeredTradeItemNames.length * 18;
     score += listing.offeredAssetNames.length * 14;
     score += listing.seedTotalOffered ~/ 10;
-    if (listing.completedTrades > 0) score += listing.completedTrades.clamp(0, 25).toInt();
+    if (listing.completedTrades > 0)
+      score += listing.completedTrades.clamp(0, 25).toInt();
     if (listing.riskLevel == TradingRiskLevel.low) score += 12;
     if (listing.riskLevel == TradingRiskLevel.high) score -= 18;
     if (listing.wantsNothing) score -= 8;
@@ -221,6 +247,8 @@ class UagVoiceAppContextService {
   bool _isToday(DateTime value) {
     final now = DateTime.now();
     final local = value.toLocal();
-    return local.year == now.year && local.month == now.month && local.day == now.day;
+    return local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day;
   }
 }

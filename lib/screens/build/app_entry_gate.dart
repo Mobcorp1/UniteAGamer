@@ -24,8 +24,10 @@ class _AppEntryGateState extends State<AppEntryGate> {
 
   Future<bool> _prepareUser(String uid) async {
     await _initializer.initialize();
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
     final data = doc.data() ?? <String, dynamic>{};
     return !(data['onboardingComplete'] == true);
   }
@@ -135,18 +137,18 @@ class _GateErrorScaffold extends StatelessWidget {
                   Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Colors.white),
                   ),
                   if (details != null) ...[
                     const SizedBox(height: AppTheme.spaceS),
                     Text(
                       details.toString(),
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.white70),
                     ),
                   ],
                 ],

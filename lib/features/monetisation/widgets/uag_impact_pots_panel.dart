@@ -28,25 +28,67 @@ class UagImpactPotsPanel extends StatelessWidget {
             children: [
               Text(
                 'UAG Impact Pots',
-                style: AppTheme.tradingHeading(fontSize: 24, color: AppTheme.neonPink),
+                style: AppTheme.tradingHeading(
+                  fontSize: 24,
+                  color: AppTheme.neonPink,
+                ),
               ),
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 'Essential contributes 10% of net platform profit. Premium contributes 20% of net platform profit. This is held as an impact pot for future charitable causes and wishlist fulfilment.',
-                style: AppTheme.bodyTextStyle(fontSize: 14, color: AppTheme.tradingMutedText),
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: AppTheme.tradingMutedText,
+                ),
               ),
               const SizedBox(height: AppTheme.spaceM),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth >= 700;
                   final cards = [
-                    _ImpactPotCard(title: 'Essential Impact Pot', pot: essential, color: AppTheme.neonCyan, percent: 10, showAdminDetail: showAdminDetail),
-                    _ImpactPotCard(title: 'Premium Impact Pot', pot: premium, color: AppTheme.neonPink, percent: 20, showAdminDetail: showAdminDetail),
+                    _ImpactPotCard(
+                      title: 'Essential Impact Pot',
+                      pot: essential,
+                      color: AppTheme.neonCyan,
+                      percent: 10,
+                      showAdminDetail: showAdminDetail,
+                    ),
+                    _ImpactPotCard(
+                      title: 'Premium Impact Pot',
+                      pot: premium,
+                      color: AppTheme.neonPink,
+                      percent: 20,
+                      showAdminDetail: showAdminDetail,
+                    ),
                   ];
                   if (!isWide) {
-                    return Column(children: cards.map((card) => Padding(padding: const EdgeInsets.only(bottom: AppTheme.spaceM), child: card)).toList());
+                    return Column(
+                      children: cards
+                          .map(
+                            (card) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppTheme.spaceM,
+                              ),
+                              child: card,
+                            ),
+                          )
+                          .toList(),
+                    );
                   }
-                  return Row(children: cards.map((card) => Expanded(child: Padding(padding: const EdgeInsets.only(right: AppTheme.spaceM), child: card))).toList());
+                  return Row(
+                    children: cards
+                        .map(
+                          (card) => Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                right: AppTheme.spaceM,
+                              ),
+                              child: card,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  );
                 },
               ),
             ],
@@ -65,7 +107,13 @@ class UagImpactPotsPanel extends StatelessWidget {
 }
 
 class _ImpactPotCard extends StatelessWidget {
-  const _ImpactPotCard({required this.title, required this.pot, required this.color, required this.percent, required this.showAdminDetail});
+  const _ImpactPotCard({
+    required this.title,
+    required this.pot,
+    required this.color,
+    required this.percent,
+    required this.showAdminDetail,
+  });
 
   final String title;
   final UagImpactPotSnapshot? pot;
@@ -77,13 +125,26 @@ class _ImpactPotCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(borderColor: color.withValues(alpha: 0.22), radius: 18),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: color.withValues(alpha: 0.22),
+        radius: 18,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTheme.tradingHeading(fontSize: 20, color: color)),
+          Text(
+            title,
+            style: AppTheme.tradingHeading(fontSize: 20, color: color),
+          ),
           const SizedBox(height: AppTheme.spaceS),
-          Text('$percent% of net profit', style: AppTheme.bodyTextStyle(fontSize: 13, color: AppTheme.tradingMutedText, isBold: true)),
+          Text(
+            '$percent% of net profit',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: AppTheme.tradingMutedText,
+              isBold: true,
+            ),
+          ),
           const SizedBox(height: AppTheme.spaceM),
           _row('This month', _money(pot?.monthlyPence ?? 0)),
           _row('All-time', _money(pot?.allTimePence ?? 0)),
@@ -101,8 +162,23 @@ class _ImpactPotCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white60))),
-          Text(value, style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white, isBold: true)),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 13,
+                color: Colors.white60,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: Colors.white,
+              isBold: true,
+            ),
+          ),
         ],
       ),
     );

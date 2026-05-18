@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -519,7 +519,7 @@
         }
 
         .used-in-label::before {
-            content: 'â ï¸';
+            content: 'â ï¸';
         }
 
         .used-in-list {
@@ -959,7 +959,7 @@
                 Whether you're wondering <strong>which items to recycle in Arc Raiders</strong> or trying to find specific <strong>quest items</strong> you shouldn't dismantle, this guide has you covered. Use the filters above to quickly locate items by category, rarity, or name. Each item card shows exactly what materials you'll receive from recycling and highlights if it's needed for any quests, upgrades, or crafting recipes.
             </p>
             <div class="important-note">
-                <p><strong>â ï¸ Important: Recycling Yields</strong> - The recycling yields shown in this guide are for when you recycle items <strong>in Speranza</strong>. If you "scrap" items topside during a raid, you will only receive <strong>half the resources</strong> listed here. Always bring valuable items back to Speranza for maximum material returns!</p>
+                <p><strong>â ï¸ Important: Recycling Yields</strong> - The recycling yields shown in this guide are for when you recycle items <strong>in Speranza</strong>. If you "scrap" items topside during a raid, you will only receive <strong>half the resources</strong> listed here. Always bring valuable items back to Speranza for maximum material returns!</p>
             </div>
         </div>
 
@@ -985,7 +985,7 @@
                 <span class="section-badge" id="questsBadge" style="background: #f59e0b;">0 items</span>
             </div>
             <div class="warning-box">
-                <strong>â ï¸ Keep These Quest Items!</strong> These are needed items required to complete specific quests in Arc Raiders. Do not recycle these quest items until you've completed their associated missions. Recycling quest items can block your progression!
+                <strong>â ï¸ Keep These Quest Items!</strong> These are needed items required to complete specific quests in Arc Raiders. Do not recycle these quest items until you've completed their associated missions. Recycling quest items can block your progression!
             </div>
             <div class="items-grid" id="questsItemsGrid">
                 <div class="loading">
@@ -1001,7 +1001,7 @@
                 <span class="section-badge" id="upgradesBadge" style="background: #8b5cf6;">0 items</span>
             </div>
             <div class="warning-box">
-                <strong>â ï¸ Required for Station Upgrades!</strong> These needed items are essential for upgrading your various stations in Speranza. Keep these items if you plan to upgrade your Workshop, Recycling Station, Medical Bay, or other facilities.
+                <strong>â ï¸ Required for Station Upgrades!</strong> These needed items are essential for upgrading your various stations in Speranza. Keep these items if you plan to upgrade your Workshop, Recycling Station, Medical Bay, or other facilities.
             </div>
             <div class="items-grid" id="upgradesItemsGrid">
                 <div class="loading">
@@ -1017,7 +1017,7 @@
                 <span class="section-badge" id="expeditionsBadge" style="background: #06b6d4;">0 items</span>
             </div>
             <div class="warning-box">
-                <strong>â ï¸ Expedition items!</strong> These items are needed for expeditions in Arc Raiders. Hold onto these if you're planning to participate in expeditions, as they may be required for entry or objectives.
+                <strong>â ï¸ Expedition items!</strong> These items are needed for expeditions in Arc Raiders. Hold onto these if you're planning to participate in expeditions, as they may be required for entry or objectives.
             </div>
             <div class="items-grid" id="expeditionsItemsGrid">
                 <div class="loading">
@@ -1033,7 +1033,7 @@
                 <span class="section-badge" id="craftingBadge">0 items</span>
             </div>
             <div class="warning-box">
-                <strong>â ï¸ Crafting Materials:</strong> These needed items are required for crafting weapons, weapon mods, shields, armor, and other equipment in Arc Raiders. Only recycle these crafting items if you already own or don't need the recipes they're used in. Check what each item crafts into before recycling!
+                <strong>â ï¸ Crafting Materials:</strong> These needed items are required for crafting weapons, weapon mods, shields, armor, and other equipment in Arc Raiders. Only recycle these crafting items if you already own or don't need the recipes they're used in. Check what each item crafts into before recycling!
             </div>
             <div class="items-grid" id="craftingItemsGrid">
                 <div class="loading">
@@ -1213,7 +1213,7 @@
                     'augment': 'ð Augment',
                     'valuable': 'ð° Too Valuable'
                 };
-                reasonBadge = `<div class="used-in-label" style="color: #ef4444;">${reasonLabels[item.reason] || 'â ï¸ Keep'}</div>`;
+                reasonBadge = `<div class="used-in-label" style="color: #ef4444;">${reasonLabels[item.reason] || 'â ï¸ Keep'}</div>`;
             }
             
             return `
@@ -1318,4 +1318,3 @@
 </body>
 
 </html>
-

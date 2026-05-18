@@ -12,12 +12,7 @@ class ArcAwayStatus {
   });
 
   factory ArcAwayStatus.initial() {
-    return const ArcAwayStatus(
-      isAway: false,
-      from: null,
-      to: null,
-      note: '',
-    );
+    return const ArcAwayStatus(isAway: false, from: null, to: null, note: '');
   }
 
   Map<String, dynamic> toMap() {

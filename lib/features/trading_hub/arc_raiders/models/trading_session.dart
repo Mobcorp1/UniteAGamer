@@ -20,15 +20,9 @@ class TradingBookingOption {
   final DateTime day;
   final List<DateTime> times;
 
-  const TradingBookingOption({
-    required this.day,
-    required this.times,
-  });
+  const TradingBookingOption({required this.day, required this.times});
 
-  TradingBookingOption copyWith({
-    DateTime? day,
-    List<DateTime>? times,
-  }) {
+  TradingBookingOption copyWith({DateTime? day, List<DateTime>? times}) {
     return TradingBookingOption(
       day: day ?? this.day,
       times: times ?? this.times,
@@ -125,7 +119,8 @@ class TradingSession {
   bool get bothMarkedComplete =>
       traderOneMarkedComplete && traderTwoMarkedComplete;
   bool get hasBookingOptions => bookingOptions.isNotEmpty;
-  bool get hasConfirmedBooking => selectedBooking != null || scheduledAt != null;
+  bool get hasConfirmedBooking =>
+      selectedBooking != null || scheduledAt != null;
   DateTime? get effectiveScheduledAt => selectedBooking ?? scheduledAt;
 
   String get protocolLabel {
@@ -244,8 +239,9 @@ class TradingSession {
       'traderTwoUid': traderTwoUid,
       'traderOneName': traderOneName,
       'traderTwoName': traderTwoName,
-      'scheduledAt':
-          scheduledAt == null ? null : Timestamp.fromDate(scheduledAt!),
+      'scheduledAt': scheduledAt == null
+          ? null
+          : Timestamp.fromDate(scheduledAt!),
       'timezone': timezone,
       'protocolType': protocolType.name,
       'status': statusValue,
@@ -264,11 +260,13 @@ class TradingSession {
       'traderOneMarkedBetrayal': traderOneMarkedBetrayal,
       'traderTwoMarkedBetrayal': traderTwoMarkedBetrayal,
       'bookingOptions': bookingOptions.map((value) => value.toMap()).toList(),
-      'selectedBooking':
-          selectedBooking == null ? null : Timestamp.fromDate(selectedBooking!),
+      'selectedBooking': selectedBooking == null
+          ? null
+          : Timestamp.fromDate(selectedBooking!),
       'bookingProposedByUid': bookingProposedByUid,
-      'bookingProposedAt':
-          bookingProposedAt == null ? null : Timestamp.fromDate(bookingProposedAt!),
+      'bookingProposedAt': bookingProposedAt == null
+          ? null
+          : Timestamp.fromDate(bookingProposedAt!),
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
     };
@@ -283,7 +281,8 @@ class TradingSession {
       _ => rawStatus,
     };
 
-    final rawBookingOptions = (map['bookingOptions'] as List?) ?? const <dynamic>[];
+    final rawBookingOptions =
+        (map['bookingOptions'] as List?) ?? const <dynamic>[];
 
     return TradingSession(
       id: (map['id'] ?? '') as String,
@@ -325,9 +324,11 @@ class TradingSession {
           (map['traderTwoMarkedBetrayal'] ?? false) as bool,
       bookingOptions: rawBookingOptions
           .whereType<Map>()
-          .map((value) => TradingBookingOption.fromMap(
-                value.map((key, item) => MapEntry(key.toString(), item)),
-              ))
+          .map(
+            (value) => TradingBookingOption.fromMap(
+              value.map((key, item) => MapEntry(key.toString(), item)),
+            ),
+          )
           .toList(growable: false),
       selectedBooking: (map['selectedBooking'] as Timestamp?)?.toDate(),
       bookingProposedByUid: (map['bookingProposedByUid'] ?? '') as String,

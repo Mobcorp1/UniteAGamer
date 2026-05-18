@@ -306,12 +306,19 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   Widget _targetTile(RaidBlueprintTarget target) {
     final blueprint = RaidPlannerEngine.findBlueprintById(target.blueprintId);
     final rule = RaidPlannerBlueprintRules.byBlueprintId(target.blueprintId);
-    final seededHint = blueprint == null ? null : ArcBlueprintIntelLibrary.resolve(blueprint);
+    final seededHint = blueprint == null
+        ? null
+        : ArcBlueprintIntelLibrary.resolve(blueprint);
     final seededConditions = seededHint == null
         ? <String>[]
-        : ArcBlueprintIntelLibrary.playableConditions(seededHint.bestConditions);
-    final seededTimingLabel = rule?.eventName ??
-        (seededConditions.isEmpty ? 'Seeded route enabled' : '${seededConditions.first} seeded route enabled');
+        : ArcBlueprintIntelLibrary.playableConditions(
+            seededHint.bestConditions,
+          );
+    final seededTimingLabel =
+        rule?.eventName ??
+        (seededConditions.isEmpty
+            ? 'Seeded route enabled'
+            : '${seededConditions.first} seeded route enabled');
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -545,7 +552,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               ),
             )
           else
-            ...windows.map((opportunity) => _opportunityCard(opportunity, utcNow)),
+            ...windows.map(
+              (opportunity) => _opportunityCard(opportunity, utcNow),
+            ),
         ],
       ),
     );
@@ -724,7 +733,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
-
   Widget _intelLine(String label, String? value) {
     final text = value?.trim();
     if (text == null || text.isEmpty) return const SizedBox.shrink();
@@ -742,7 +750,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
 
   Widget _targetIntelTile(RaidBlueprintTarget target) {
     final blueprint = RaidPlannerEngine.findBlueprintById(target.blueprintId);
-    final seededHint = blueprint == null ? null : ArcBlueprintIntelLibrary.resolve(blueprint);
+    final seededHint = blueprint == null
+        ? null
+        : ArcBlueprintIntelLibrary.resolve(blueprint);
     return StreamBuilder<ArcDropIntel>(
       stream: _blueprintRepository.watchIntelForBlueprint(target.blueprintId),
       builder: (context, snapshot) {
@@ -753,14 +763,20 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.24),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.25)),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.25),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.radar_rounded, color: AppTheme.neonCyan, size: 18),
+                  const Icon(
+                    Icons.radar_rounded,
+                    color: AppTheme.neonCyan,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -790,14 +806,23 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                 if (seededHint != null) ...[
                   const SizedBox(height: 8),
                   _intelLine('Seed map', seededHint.likelyMaps.join(', ')),
-                  _intelLine('Seed containers', seededHint.likelyContainers.join(', ')),
-                  _intelLine('Seed condition/event', seededHint.bestConditions.join(', ')),
+                  _intelLine(
+                    'Seed containers',
+                    seededHint.likelyContainers.join(', '),
+                  ),
+                  _intelLine(
+                    'Seed condition/event',
+                    seededHint.bestConditions.join(', '),
+                  ),
                 ],
               ] else ...[
                 _intelLine('Top map', intel.topMapLabel),
                 _intelLine('Top area/source', intel.topAreaLabel),
                 _intelLine('Top container', intel.topContainerLabel),
-                _intelLine('Top condition/event', intel.topConditionLabel ?? intel.topMapEventLabel),
+                _intelLine(
+                  'Top condition/event',
+                  intel.topConditionLabel ?? intel.topMapEventLabel,
+                ),
                 if (intel.topCombinations.isNotEmpty)
                   Text(
                     'Best signal: ${intel.topCombinations.first.summaryLabel} (${intel.topCombinations.first.reportCount} weighted)',
@@ -845,6 +870,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       ),
     );
   }
+
   Widget _buildContent({
     required List<RaidBlueprintTarget> targets,
     required RaidPlannerEntitlement entitlement,
@@ -1063,11 +1089,14 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
 
   List<ArcBlueprint> get _candidates {
     if (_query.length < 2) return <ArcBlueprint>[];
-    return RaidPlannerEngine.supportedBlueprints.where((blueprint) {
-      if (widget.targetedIds.contains(blueprint.id)) return false;
-      if (widget.states[blueprint.id]?.owned ?? false) return false;
-      return blueprint.name.toLowerCase().contains(_query);
-    }).take(30).toList(growable: false);
+    return RaidPlannerEngine.supportedBlueprints
+        .where((blueprint) {
+          if (widget.targetedIds.contains(blueprint.id)) return false;
+          if (widget.states[blueprint.id]?.owned ?? false) return false;
+          return blueprint.name.toLowerCase().contains(_query);
+        })
+        .take(30)
+        .toList(growable: false);
   }
 
   @override
@@ -1145,17 +1174,25 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
               Flexible(
                 child: ListView.separated(
                   shrinkWrap: true,
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   itemCount: candidates.length,
-                  separatorBuilder: (_, _) => const Divider(color: Colors.white12),
+                  separatorBuilder: (_, _) =>
+                      const Divider(color: Colors.white12),
                   itemBuilder: (context, index) {
                     final blueprint = candidates[index];
-                    final rule = RaidPlannerBlueprintRules.byBlueprintId(blueprint.id);
+                    final rule = RaidPlannerBlueprintRules.byBlueprintId(
+                      blueprint.id,
+                    );
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(
-                        rule == null ? Icons.track_changes_rounded : Icons.bolt_rounded,
-                        color: rule == null ? Colors.white70 : AppTheme.neonPink,
+                        rule == null
+                            ? Icons.track_changes_rounded
+                            : Icons.bolt_rounded,
+                        color: rule == null
+                            ? Colors.white70
+                            : AppTheme.neonPink,
                       ),
                       title: Text(
                         blueprint.name,

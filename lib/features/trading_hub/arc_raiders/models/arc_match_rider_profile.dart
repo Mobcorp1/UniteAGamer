@@ -39,7 +39,9 @@ class ArcMatchRiderProfile {
   final String notes;
   final DateTime? updatedAt;
 
-  String get title => displayName.isNotEmpty ? displayName : (uagId.isNotEmpty ? uagId : 'Unknown Raider');
+  String get title => displayName.isNotEmpty
+      ? displayName
+      : (uagId.isNotEmpty ? uagId : 'Unknown Raider');
 
   ArcMatchRiderProfile copyWith({
     String? uid,
@@ -125,7 +127,10 @@ class ArcMatchRiderProfile {
     );
   }
 
-  factory ArcMatchRiderProfile.fromMap(Map<String, dynamic> map, String fallbackUid) {
+  factory ArcMatchRiderProfile.fromMap(
+    Map<String, dynamic> map,
+    String fallbackUid,
+  ) {
     DateTime? updatedAt;
     final rawUpdatedAt = map['updatedAt'];
     if (rawUpdatedAt is Timestamp) updatedAt = rawUpdatedAt.toDate();
@@ -133,18 +138,25 @@ class ArcMatchRiderProfile {
     List<String> readList(String key) {
       final raw = map[key];
       if (raw is Iterable) {
-        return raw.whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toList(growable: false);
+        return raw
+            .whereType<String>()
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList(growable: false);
       }
       return const [];
     }
 
     return ArcMatchRiderProfile(
-      uid: (map['uid'] as String?)?.trim().isNotEmpty == true ? (map['uid'] as String).trim() : fallbackUid,
+      uid: (map['uid'] as String?)?.trim().isNotEmpty == true
+          ? (map['uid'] as String).trim()
+          : fallbackUid,
       uagId: (map['uagId'] as String? ?? '').trim(),
       displayName: (map['displayName'] as String? ?? '').trim(),
       region: (map['region'] as String? ?? '').trim(),
       platform: (map['platform'] as String? ?? '').trim(),
-      serverPreference: (map['serverPreference'] as String? ?? 'Automatic').trim(),
+      serverPreference: (map['serverPreference'] as String? ?? 'Automatic')
+          .trim(),
       crossplayEnabled: map['crossplayEnabled'] != false,
       playstyles: readList('playstyles'),
       preferredMaps: readList('preferredMaps'),

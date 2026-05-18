@@ -82,11 +82,11 @@ class _ScrappyFeedQueueSectionState extends State<ScrappyFeedQueueSection> {
                                 isAntiAlias: true,
                                 errorBuilder: (context, error, stackTrace) =>
                                     const Center(
-                                  child: Icon(
-                                    Icons.restaurant_rounded,
-                                    color: Colors.white38,
-                                  ),
-                                ),
+                                      child: Icon(
+                                        Icons.restaurant_rounded,
+                                        color: Colors.white38,
+                                      ),
+                                    ),
                               ),
                             ),
                           ),

@@ -8,14 +8,14 @@ class UagVoiceAssistantSheet extends StatefulWidget {
   const UagVoiceAssistantSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: AppTheme.cardBackgroundDeep,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (_) => const UagVoiceAssistantSheet(),
-      );
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppTheme.cardBackgroundDeep,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => const UagVoiceAssistantSheet(),
+  );
 
   @override
   State<UagVoiceAssistantSheet> createState() => _UagVoiceAssistantSheetState();
@@ -81,16 +81,25 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                   Expanded(
                     child: Text(
                       'UAG Raider Voice',
-                      style: AppTheme.tradingHeading(fontSize: 24, color: AppTheme.neonPink),
+                      style: AppTheme.tradingHeading(
+                        fontSize: 24,
+                        color: AppTheme.neonPink,
+                      ),
                     ),
                   ),
-                  _TierBadge(tier: _service.tier, adminBypass: _service.adminBypass),
+                  _TierBadge(
+                    tier: _service.tier,
+                    adminBypass: _service.adminBypass,
+                  ),
                 ],
               ),
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 'Ask about blueprints, trades, quests, Scrappy items, or bench materials.',
-                style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
               ),
               const SizedBox(height: AppTheme.spaceL),
               _buildCompanionModeCard(),
@@ -104,7 +113,9 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
               TextField(
                 controller: _textController,
                 style: const TextStyle(color: Colors.white),
-                decoration: AppTheme.tradingInputDecoration(label: 'Type instead'),
+                decoration: AppTheme.tradingInputDecoration(
+                  label: 'Type instead',
+                ),
                 onSubmitted: _service.submitText,
               ),
               const SizedBox(height: AppTheme.spaceS),
@@ -117,7 +128,10 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
                   'Heard: ${_service.transcript}',
-                  style: AppTheme.bodyTextStyle(fontSize: 13, color: AppTheme.neonCyan),
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: AppTheme.neonCyan,
+                  ),
                 ),
               ],
               if (response != null) ...<Widget>[
@@ -132,12 +146,18 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                     children: <Widget>[
                       Text(
                         response.title,
-                        style: AppTheme.tradingHeading(fontSize: 20, color: AppTheme.neonCyan),
+                        style: AppTheme.tradingHeading(
+                          fontSize: 20,
+                          color: AppTheme.neonCyan,
+                        ),
                       ),
                       const SizedBox(height: AppTheme.spaceS),
                       Text(
                         response.body,
-                        style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white),
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
                       ),
                       if (response.hasConfirmableSuggestion) ...<Widget>[
                         const SizedBox(height: AppTheme.spaceM),
@@ -148,7 +168,9 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
                             ElevatedButton.icon(
                               onPressed: _service.confirmSuggestedItem,
                               icon: const Icon(Icons.check_circle_rounded),
-                              label: Text('Confirm ${response.suggestedItemName}'),
+                              label: Text(
+                                'Confirm ${response.suggestedItemName}',
+                              ),
                             ),
                             OutlinedButton.icon(
                               onPressed: _service.startListening,
@@ -182,8 +204,12 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
       child: Row(
         children: <Widget>[
           Icon(
-            _service.raidCompanionMode ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-            color: _service.raidCompanionMode ? AppTheme.neonPink : AppTheme.neonCyan,
+            _service.raidCompanionMode
+                ? Icons.visibility_rounded
+                : Icons.visibility_off_rounded,
+            color: _service.raidCompanionMode
+                ? AppTheme.neonPink
+                : AppTheme.neonCyan,
           ),
           const SizedBox(width: AppTheme.spaceM),
           Expanded(
@@ -192,12 +218,18 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
               children: <Widget>[
                 Text(
                   'Raid Companion Mode',
-                  style: AppTheme.tradingHeading(fontSize: 17, color: Colors.white),
+                  style: AppTheme.tradingHeading(
+                    fontSize: 17,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Keeps the screen awake while this assistant is open for longer raids.',
-                  style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white60),
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: Colors.white60,
+                  ),
                 ),
               ],
             ),
@@ -215,15 +247,15 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
     final label = _service.listening
         ? 'Listening… tap to stop'
         : _service.initialising
-            ? 'Starting voice system…'
-            : 'Tap and ask UAG Raider';
+        ? 'Starting voice system…'
+        : 'Tap and ask UAG Raider';
 
     return ElevatedButton.icon(
       onPressed: _service.initialising
           ? null
           : _service.listening
-              ? _service.stopListening
-              : _service.startListening,
+          ? _service.stopListening
+          : _service.startListening,
       icon: Icon(_service.listening ? Icons.stop_rounded : Icons.mic_rounded),
       label: Text(label),
     );
@@ -263,7 +295,10 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
             Expanded(
               child: Text(
                 'Change UAG Raider Voice',
-                style: AppTheme.tradingHeading(fontSize: 20, color: AppTheme.neonCyan),
+                style: AppTheme.tradingHeading(
+                  fontSize: 20,
+                  color: AppTheme.neonCyan,
+                ),
               ),
             ),
             TextButton.icon(
@@ -282,18 +317,27 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
         for (final tier in UagSubscriptionTier.values) ...<Widget>[
           _TierSectionHeader(tier: tier),
           const SizedBox(height: AppTheme.spaceS),
-          ...profiles.where((voice) => voice.requiredTier == tier).map(
+          ...profiles
+              .where((voice) => voice.requiredTier == tier)
+              .map(
                 (voice) => Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
                   child: _VoiceProfileCard(
                     voice: voice,
                     selected: _service.selectedVoice?.id == voice.id,
-                    unlocked: voice.profile.isUnlockedFor(_service.tier, adminBypass: _service.adminBypass),
+                    unlocked: voice.profile.isUnlockedFor(
+                      _service.tier,
+                      adminBypass: _service.adminBypass,
+                    ),
                     previewing: _service.speakingPreview,
                     onPreview: () => _service.previewVoice(voice),
                     onSelect: () async {
                       await _service.selectVoice(voice);
-                      if (mounted && voice.profile.isUnlockedFor(_service.tier, adminBypass: _service.adminBypass)) {
+                      if (mounted &&
+                          voice.profile.isUnlockedFor(
+                            _service.tier,
+                            adminBypass: _service.adminBypass,
+                          )) {
                         setState(() => _showVoicePicker = false);
                       }
                     },
@@ -338,12 +382,18 @@ class _SelectedVoiceCard extends StatelessWidget {
               children: <Widget>[
                 Text(
                   '${voice.displayName} selected',
-                  style: AppTheme.tradingHeading(fontSize: 18, color: Colors.white),
+                  style: AppTheme.tradingHeading(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   voice.subtitle,
-                  style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white60),
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: Colors.white60,
+                  ),
                 ),
                 const SizedBox(height: AppTheme.spaceM),
                 Wrap(
@@ -393,8 +443,8 @@ class _VoiceProfileCard extends StatelessWidget {
     final borderColor = selected
         ? AppTheme.neonPink.withValues(alpha: 0.72)
         : unlocked
-            ? AppTheme.neonCyan.withValues(alpha: 0.34)
-            : Colors.white24;
+        ? AppTheme.neonCyan.withValues(alpha: 0.34)
+        : Colors.white24;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -417,13 +467,13 @@ class _VoiceProfileCard extends StatelessWidget {
                 label: selected
                     ? 'Selected'
                     : unlocked
-                        ? voice.tierLabel
-                        : 'Locked · ${voice.tierLabel}',
+                    ? voice.tierLabel
+                    : 'Locked · ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked
-                        ? AppTheme.neonCyan
-                        : Colors.white38,
+                    ? AppTheme.neonCyan
+                    : Colors.white38,
               ),
             ],
           ),
@@ -441,7 +491,10 @@ class _VoiceProfileCard extends StatelessWidget {
             const SizedBox(height: AppTheme.spaceS),
             Text(
               'Uses the closest matching voice available on this device.',
-              style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white38),
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: Colors.white38,
+              ),
             ),
           ],
           const SizedBox(height: AppTheme.spaceM),
@@ -456,7 +509,11 @@ class _VoiceProfileCard extends StatelessWidget {
               ),
               ElevatedButton.icon(
                 onPressed: unlocked ? onSelect : null,
-                icon: Icon(selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded),
+                icon: Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                ),
                 label: Text(selected ? 'Selected' : 'Select'),
               ),
             ],
@@ -551,7 +608,10 @@ class _ErrorCard extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
+              style: AppTheme.bodyTextStyle(
+                fontSize: 13,
+                color: Colors.white70,
+              ),
             ),
           ),
         ],

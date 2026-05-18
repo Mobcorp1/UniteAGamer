@@ -25,7 +25,9 @@ class ArcBlueprintDemand {
     );
   }
 
-  double get demandRatio => tradeableCount <= 0 ? wantedCount.toDouble() : wantedCount / tradeableCount;
+  double get demandRatio => tradeableCount <= 0
+      ? wantedCount.toDouble()
+      : wantedCount / tradeableCount;
 
   String get demandLevel {
     final ratio = demandRatio;
@@ -77,7 +79,8 @@ class ArcBlueprintDemand {
       tradeableCount: tradeableCount ?? this.tradeableCount,
       lastReportedMap: lastReportedMap ?? this.lastReportedMap,
       lastReportedLocation: lastReportedLocation ?? this.lastReportedLocation,
-      lastReportedCondition: lastReportedCondition ?? this.lastReportedCondition,
+      lastReportedCondition:
+          lastReportedCondition ?? this.lastReportedCondition,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }

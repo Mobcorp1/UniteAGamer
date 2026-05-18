@@ -77,8 +77,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       _embarkIdController.text = profile.embarkId;
       _regionController.text = profile.region.isEmpty ? 'UK' : profile.region;
       _platformController.text = profile.platform;
-      _timezoneController.text =
-          profile.timezone.isEmpty ? 'Europe/London' : profile.timezone;
+      _timezoneController.text = profile.timezone.isEmpty
+          ? 'Europe/London'
+          : profile.timezone;
       _referredByController.text = profile.referredByCode;
       _visibleInSearch = profile.visibleInSearch;
       _micOk = profile.micOk;

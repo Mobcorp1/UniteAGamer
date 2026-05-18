@@ -6,10 +6,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/utils/arc_label
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class ArcReportExplorerFeed extends StatelessWidget {
-  const ArcReportExplorerFeed({
-    super.key,
-    required this.reports,
-  });
+  const ArcReportExplorerFeed({super.key, required this.reports});
 
   final List<ArcBlueprintDropReport> reports;
 
@@ -44,10 +41,12 @@ class ArcReportExplorerFeed extends StatelessWidget {
               style: TextStyle(color: Colors.white60),
             )
           else
-            ...reports.map((report) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
-                  child: _ReportCard(report: report),
-                )),
+            ...reports.map(
+              (report) => Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                child: _ReportCard(report: report),
+              ),
+            ),
         ],
       ),
     );
@@ -107,10 +106,7 @@ class _ReportCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               report.notes.trim(),
-              style: const TextStyle(
-                color: Colors.white70,
-                height: 1.35,
-              ),
+              style: const TextStyle(color: Colors.white70, height: 1.35),
             ),
           ],
         ],

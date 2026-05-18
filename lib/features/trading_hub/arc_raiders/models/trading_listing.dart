@@ -1,16 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-enum TradingRiskLevel {
-  low,
-  medium,
-  high,
-}
+enum TradingRiskLevel { low, medium, high }
 
-enum TradingListingType {
-  specificWant,
-  openToOffers,
-}
+enum TradingListingType { specificWant, openToOffers }
 
 class TradingListing {
   final String id;
@@ -249,7 +242,9 @@ class TradingListing {
   }
 
   String get traderDisplayLine {
-    final name = traderName.trim().isNotEmpty ? traderName.trim() : 'Unknown Trader';
+    final name = traderName.trim().isNotEmpty
+        ? traderName.trim()
+        : 'Unknown Trader';
     final tag = gamerTag.trim();
     final platform = preferredPlatform.trim();
     final parts = <String>[name];
@@ -288,17 +283,27 @@ class TradingListing {
   }
 
   String get tradeFormatLabel => tradeAsBundle
-      ? (allowPartialOffers ? 'Bundle preferred • partial offers allowed' : 'Bundle only')
-      : (allowPartialOffers ? 'Mix and match • partial offers allowed' : 'Mix and match');
+      ? (allowPartialOffers
+            ? 'Bundle preferred • partial offers allowed'
+            : 'Bundle only')
+      : (allowPartialOffers
+            ? 'Mix and match • partial offers allowed'
+            : 'Mix and match');
 
   String get offeredSummary {
-    if (allOfferedItems.isEmpty) return offeredItem.trim().isNotEmpty ? offeredItem.trim() : 'Nothing listed';
+    if (allOfferedItems.isEmpty)
+      return offeredItem.trim().isNotEmpty
+          ? offeredItem.trim()
+          : 'Nothing listed';
     return allOfferedItems.join(', ');
   }
 
   String get wantedSummary {
     if (wantsNothing) return 'Nothing wanted • free giveaway';
-    if (allWantedItems.isEmpty) return wantedText.trim().isNotEmpty ? wantedText.trim() : 'Open to offers';
+    if (allWantedItems.isEmpty)
+      return wantedText.trim().isNotEmpty
+          ? wantedText.trim()
+          : 'Open to offers';
     return allWantedItems.join(', ');
   }
 
@@ -362,10 +367,12 @@ class TradingListing {
       wantedAssetNames: _readStringList(map['wantedAssetNames']),
       offeredTradeItemIds: _readStringList(map['offeredTradeItemIds']),
       wantedTradeItemIds: _readStringList(map['wantedTradeItemIds']),
-      offeredTradeItemNames: _readStringList(map['offeredTradeItemNames']).isNotEmpty
+      offeredTradeItemNames:
+          _readStringList(map['offeredTradeItemNames']).isNotEmpty
           ? _readStringList(map['offeredTradeItemNames'])
           : _readStringList(map['offeredAssetNames']),
-      wantedTradeItemNames: _readStringList(map['wantedTradeItemNames']).isNotEmpty
+      wantedTradeItemNames:
+          _readStringList(map['wantedTradeItemNames']).isNotEmpty
           ? _readStringList(map['wantedTradeItemNames'])
           : _readStringList(map['wantedAssetNames']),
       wantsNothing: _readBool(map['wantsNothing']),

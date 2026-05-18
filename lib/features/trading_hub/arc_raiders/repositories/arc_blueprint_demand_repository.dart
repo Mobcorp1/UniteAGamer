@@ -4,7 +4,7 @@ import '../models/arc_blueprint_demand.dart';
 
 class ArcBlueprintDemandRepository {
   ArcBlueprintDemandRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -48,7 +48,9 @@ class ArcBlueprintDemandRepository {
       updatedAt: DateTime.now(),
     );
 
-    await _collection.doc(blueprintId).set(demand.toMap(), SetOptions(merge: true));
+    await _collection
+        .doc(blueprintId)
+        .set(demand.toMap(), SetOptions(merge: true));
   }
 
   Future<void> updateCounts({

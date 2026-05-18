@@ -47,7 +47,8 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
   int get _collectedCount =>
       int.tryParse(_collectedController.text.trim())?.clamp(0, 999999) ?? 0;
 
-  int get _remainingNeeded => (_itemNeeded - _collectedCount).clamp(0, _itemNeeded);
+  int get _remainingNeeded =>
+      (_itemNeeded - _collectedCount).clamp(0, _itemNeeded);
   int get _surplus => (_collectedCount - _itemNeeded).clamp(0, 999999);
   int get _itemNeeded => widget.item.neededCount;
   bool get _completed => _collectedCount >= _itemNeeded;
@@ -124,9 +125,7 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
           decoration: BoxDecoration(
             color: AppTheme.cardBackgroundDeep,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(
-              color: widget.tierColor.withValues(alpha: 0.24),
-            ),
+            border: Border.all(color: widget.tierColor.withValues(alpha: 0.24)),
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppTheme.spaceL),
@@ -154,10 +153,9 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                 const SizedBox(height: 4),
                 Text(
                   '${widget.item.group} • Need x${widget.item.neededCount}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white70),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                 ),
                 if (widget.item.helperText.isNotEmpty) ...[
                   const SizedBox(height: AppTheme.spaceM),
@@ -252,12 +250,14 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                   style: const TextStyle(color: Colors.white),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setState(() {}),
-                  decoration: AppTheme.tradingInputDecoration(
-                    label: 'Amount Collected',
-                  ).copyWith(
-                    helperText: 'Need ${widget.item.neededCount}. Example: 8 collected from a target of 12 means 4 still needed.',
-                    helperStyle: const TextStyle(color: Colors.white54),
-                  ),
+                  decoration:
+                      AppTheme.tradingInputDecoration(
+                        label: 'Amount Collected',
+                      ).copyWith(
+                        helperText:
+                            'Need ${widget.item.neededCount}. Example: 8 collected from a target of 12 means 4 still needed.',
+                        helperStyle: const TextStyle(color: Colors.white54),
+                      ),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
                 Row(
@@ -289,9 +289,7 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                     _statCard(
                       label: 'Surplus',
                       value: _surplus.toString(),
-                      color: _surplus > 0
-                          ? Colors.amberAccent
-                          : Colors.white54,
+                      color: _surplus > 0 ? Colors.amberAccent : Colors.white54,
                     ),
                   ],
                 ),
@@ -301,17 +299,18 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                   padding: const EdgeInsets.all(AppTheme.spaceM),
                   decoration: AppTheme.tradingCardDecoration(
                     radius: 14,
-                    borderColor: (_completed
-                            ? Colors.lightGreenAccent
-                            : AppTheme.neonPink)
-                        .withValues(alpha: 0.22),
+                    borderColor:
+                        (_completed
+                                ? Colors.lightGreenAccent
+                                : AppTheme.neonPink)
+                            .withValues(alpha: 0.22),
                     backgroundColor: AppTheme.cardBackgroundAlt,
                   ),
                   child: Text(
                     _completed
                         ? _surplus > 0
-                            ? 'Target complete. You have $_surplus spare that can be traded.'
-                            : 'Target complete. No spare surplus yet.'
+                              ? 'Target complete. You have $_surplus spare that can be traded.'
+                              : 'Target complete. No spare surplus yet.'
                         : 'You still need $_remainingNeeded more to complete this item.',
                     style: TextStyle(
                       color: _completed
@@ -354,7 +353,9 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text(
                                 'Save Progress',

@@ -1,10 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-enum ArcMapConditionType {
-  neutral,
-  weather,
-  event,
-}
+enum ArcMapConditionType { neutral, weather, event }
 
 @immutable
 class ArcMapCondition {
@@ -197,15 +193,15 @@ class ArcMapConditions {
   }
 
   static List<ArcMapCondition> eventsForMap(String mapName) {
-    return combinedOptionsForMap(mapName)
-        .where((item) => item.isEvent || item.isNeutral)
-        .toList(growable: false);
+    return combinedOptionsForMap(
+      mapName,
+    ).where((item) => item.isEvent || item.isNeutral).toList(growable: false);
   }
 
   static List<ArcMapCondition> weatherForMap(String mapName) {
-    return combinedOptionsForMap(mapName)
-        .where((item) => item.isWeather || item.isNeutral)
-        .toList(growable: false);
+    return combinedOptionsForMap(
+      mapName,
+    ).where((item) => item.isWeather || item.isNeutral).toList(growable: false);
   }
 
   static ArcMapCondition? byId(String? id) {

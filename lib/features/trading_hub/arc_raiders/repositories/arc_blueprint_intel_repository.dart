@@ -4,7 +4,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blue
 
 class ArcBlueprintIntelRepository {
   ArcBlueprintIntelRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 

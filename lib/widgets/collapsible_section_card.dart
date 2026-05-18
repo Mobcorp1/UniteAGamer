@@ -59,8 +59,9 @@ class _CollapsibleSectionCardState extends State<CollapsibleSectionCard> {
           ),
           AnimatedCrossFade(
             duration: AppTheme.fastAnimation,
-            crossFadeState:
-                _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: _expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             firstChild: const SizedBox.shrink(),
             secondChild: Padding(
               padding: const EdgeInsets.fromLTRB(

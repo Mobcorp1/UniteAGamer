@@ -45,7 +45,8 @@ class UagSubscriptionPlan {
       tier: UagSubscriptionTier.free,
       name: 'Core Raider',
       shortName: 'Free',
-      positioning: 'Useful enough to keep every player contributing to Intel, trading and Match Raider activity.',
+      positioning:
+          'Useful enough to keep every player contributing to Intel, trading and Match Raider activity.',
       monthlyPricePence: 0,
       yearlyPricePence: 0,
       creatorOnboardingDiscountPercent: 0,
@@ -70,7 +71,8 @@ class UagSubscriptionPlan {
       tier: UagSubscriptionTier.essential,
       name: 'Active Raider',
       shortName: 'Essential',
-      positioning: 'The regular-player tier: higher limits, cleaner experience, smart alerts and stronger voice tools.',
+      positioning:
+          'The regular-player tier: higher limits, cleaner experience, smart alerts and stronger voice tools.',
       monthlyPricePence: 499,
       yearlyPricePence: 4999,
       creatorOnboardingDiscountPercent: 20,
@@ -96,7 +98,8 @@ class UagSubscriptionPlan {
       tier: UagSubscriptionTier.premium,
       name: 'Elite Raider',
       shortName: 'Premium',
-      positioning: 'The power-user tier: unlimited systems, no ads, Trader Pro analytics and full automation.',
+      positioning:
+          'The power-user tier: unlimited systems, no ads, Trader Pro analytics and full automation.',
       monthlyPricePence: 999,
       yearlyPricePence: 9999,
       creatorOnboardingDiscountPercent: 25,

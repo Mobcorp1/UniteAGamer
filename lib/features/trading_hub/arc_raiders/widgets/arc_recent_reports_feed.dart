@@ -78,7 +78,9 @@ class _ReportRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final blueprintName = ArcRecentReportsFeed.blueprintNameForId(report.blueprintId);
+    final blueprintName = ArcRecentReportsFeed.blueprintNameForId(
+      report.blueprintId,
+    );
     final weather = ArcLabels.fallbackWeather(report.weatherConditionLabel);
     final mapEvent = ArcLabels.fallbackMapEvent(report.mapEventLabel);
 

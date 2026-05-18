@@ -6,8 +6,8 @@ class ArcUserInitializer {
   ArcUserInitializer({
     ArcTraderProfileRepository? repository,
     FirebaseAuth? auth,
-  })  : _repository = repository ?? ArcTraderProfileRepository(auth: auth),
-        _auth = auth ?? FirebaseAuth.instance;
+  }) : _repository = repository ?? ArcTraderProfileRepository(auth: auth),
+       _auth = auth ?? FirebaseAuth.instance;
 
   final ArcTraderProfileRepository _repository;
   final FirebaseAuth _auth;

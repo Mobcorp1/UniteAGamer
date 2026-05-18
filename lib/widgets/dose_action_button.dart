@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
-enum DoseActionButtonVariant {
-  primary,
-  secondary,
-  danger,
-}
+enum DoseActionButtonVariant { primary, secondary, danger }
 
 class DoseActionButton extends StatelessWidget {
   const DoseActionButton({

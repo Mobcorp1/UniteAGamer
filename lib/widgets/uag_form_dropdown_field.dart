@@ -23,10 +23,7 @@ class UagFormDropdownField extends StatelessWidget {
       decoration: decoration ?? InputDecoration(labelText: label),
       items: items
           .map(
-            (item) => DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            ),
+            (item) => DropdownMenuItem<String>(value: item, child: Text(item)),
           )
           .toList(),
       onChanged: onChanged,

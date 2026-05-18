@@ -1,4 +1,3 @@
-
 class LegalAcceptance {
   final bool termsAccepted;
   final int termsVersion;

@@ -21,10 +21,7 @@ class MissingBlueprintDialog extends StatelessWidget {
 
   Future<void> _markOwned(BuildContext context) async {
     await repository.saveBlueprintState(
-      currentState.copyWith(
-        owned: true,
-        dupesOwned: 0,
-      ),
+      currentState.copyWith(owned: true, dupesOwned: 0),
     );
 
     if (!context.mounted) return;
@@ -41,10 +38,7 @@ class MissingBlueprintDialog extends StatelessWidget {
       ),
       title: Text(
         blueprint.name,
-        style: AppTheme.tradingHeading(
-          fontSize: 24,
-          color: rarityColor,
-        ),
+        style: AppTheme.tradingHeading(fontSize: 24, color: rarityColor),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,

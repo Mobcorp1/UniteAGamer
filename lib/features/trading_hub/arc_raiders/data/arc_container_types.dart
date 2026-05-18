@@ -205,7 +205,6 @@ class ArcContainerTypes {
     isPrimaryBlueprintSource: false,
   );
 
-
   static const ArcContainerType assessor = ArcContainerType(
     id: 'assessor',
     label: 'Assessor',

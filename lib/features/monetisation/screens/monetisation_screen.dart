@@ -24,14 +24,14 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
     try {
       final code = await _entitlementService.ensureMyReferralCode();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Referral code ready: $code')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Referral code ready: $code')));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     }
   }
 
@@ -44,9 +44,9 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     }
   }
 
@@ -87,9 +87,12 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                         totalEarnedPence: entitlement.totalEarnedPence,
                         hasAdminBypass: entitlement.hasAdminBypass,
                         onGenerateReferralCode: _ensureReferralCode,
-                        onRequestPayout: entitlement.availableBalancePence >=
+                        onRequestPayout:
+                            entitlement.availableBalancePence >=
                                 entitlement.limits.payoutThresholdPence
-                            ? () => _requestPayout(entitlement.availableBalancePence)
+                            ? () => _requestPayout(
+                                entitlement.availableBalancePence,
+                              )
                             : null,
                       ),
                     const SizedBox(height: AppTheme.spaceL),
@@ -100,7 +103,8 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                             .map(
                               (plan) => _PlanCard(
                                 plan: plan,
-                                activeTier: entitlement?.tier ??
+                                activeTier:
+                                    entitlement?.tier ??
                                     UagSubscriptionTier.free,
                               ),
                             )
@@ -241,8 +245,8 @@ class _PlanCard extends StatelessWidget {
     final borderColor = active
         ? AppTheme.warningAmber
         : highlight
-            ? AppTheme.neonPink.withValues(alpha: 0.36)
-            : AppTheme.neonCyan.withValues(alpha: 0.24);
+        ? AppTheme.neonPink.withValues(alpha: 0.36)
+        : AppTheme.neonCyan.withValues(alpha: 0.24);
 
     return Container(
       padding: AppTheme.sectionCardPadding,

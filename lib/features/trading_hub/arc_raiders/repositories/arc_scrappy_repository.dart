@@ -6,8 +6,8 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scra
 
 class ArcScrappyRepository {
   ArcScrappyRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -46,8 +46,12 @@ class ArcScrappyRepository {
   }) async {
     final resolvedNeeded = neededCount ?? _neededCountFor(state.itemId);
 
-    await _statesRef.doc(state.itemId).set(
-          state.copyWith(updatedAt: DateTime.now()).toJson(neededCount: resolvedNeeded),
+    await _statesRef
+        .doc(state.itemId)
+        .set(
+          state
+              .copyWith(updatedAt: DateTime.now())
+              .toJson(neededCount: resolvedNeeded),
           SetOptions(merge: true),
         );
   }

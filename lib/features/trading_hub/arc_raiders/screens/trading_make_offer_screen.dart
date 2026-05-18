@@ -41,14 +41,20 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   @override
   void initState() {
     super.initState();
-    _tradeItems = List<ArcTradeItem>.from(ArcTradeItemsData.items.where((item) => item.category != ArcTradeItemCategory.containerIntel))
-      ..sort((a, b) {
-        final valueCompare = b.tradeValue.index.compareTo(a.tradeValue.index);
-        if (valueCompare != 0) return valueCompare;
-        final categoryCompare = a.categoryLabel.toLowerCase().compareTo(b.categoryLabel.toLowerCase());
-        if (categoryCompare != 0) return categoryCompare;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
+    _tradeItems =
+        List<ArcTradeItem>.from(
+          ArcTradeItemsData.items.where(
+            (item) => item.category != ArcTradeItemCategory.containerIntel,
+          ),
+        )..sort((a, b) {
+          final valueCompare = b.tradeValue.index.compareTo(a.tradeValue.index);
+          if (valueCompare != 0) return valueCompare;
+          final categoryCompare = a.categoryLabel.toLowerCase().compareTo(
+            b.categoryLabel.toLowerCase(),
+          );
+          if (categoryCompare != 0) return categoryCompare;
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
     _loadMatchingDupes();
   }
 
@@ -171,7 +177,10 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
   Widget _chipWrap(List<String> items) {
     if (items.isEmpty) {
-      return Text('Nothing selected yet.', style: TextStyle(color: AppTheme.tradingFaintText));
+      return Text(
+        'Nothing selected yet.',
+        style: TextStyle(color: AppTheme.tradingFaintText),
+      );
     }
     return Wrap(
       spacing: 8,
@@ -180,7 +189,9 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           .map(
             (item) => Container(
               padding: AppTheme.pillPadding,
-              decoration: AppTheme.tradingPillDecoration(color: AppTheme.neonPink),
+              decoration: AppTheme.tradingPillDecoration(
+                color: AppTheme.neonPink,
+              ),
               child: Text(
                 item,
                 style: const TextStyle(
@@ -200,30 +211,42 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     final selectedIds = _selectedTradeItems.map((item) => item.id).toSet();
     var filtered = List<ArcTradeItem>.from(_tradeItems);
     String categoryFilter = 'All';
-    final categories = <String>['All', ...{for (final item in _tradeItems) item.categoryLabel}];
+    final categories = <String>[
+      'All',
+      ...{for (final item in _tradeItems) item.categoryLabel},
+    ];
 
     return showModalBottomSheet<List<ArcTradeItem>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppTheme.cardBackgroundDeep,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             void updateFilter() {
               final query = controller.text.trim().toLowerCase();
               setModalState(() {
-                filtered = _tradeItems.where((item) {
-                  final matchesCategory = categoryFilter == 'All' || item.categoryLabel == categoryFilter;
-                  final matchesQuery = query.isEmpty ||
-                      item.name.toLowerCase().contains(query) ||
-                      item.id.toLowerCase().contains(query) ||
-                      item.categoryLabel.toLowerCase().contains(query) ||
-                      item.rarityLabel.toLowerCase().contains(query) ||
-                      item.tradeValueLabel.toLowerCase().contains(query) ||
-                      item.sourceHints.any((hint) => hint.toLowerCase().contains(query));
-                  return matchesCategory && matchesQuery;
-                }).toList(growable: false);
+                filtered = _tradeItems
+                    .where((item) {
+                      final matchesCategory =
+                          categoryFilter == 'All' ||
+                          item.categoryLabel == categoryFilter;
+                      final matchesQuery =
+                          query.isEmpty ||
+                          item.name.toLowerCase().contains(query) ||
+                          item.id.toLowerCase().contains(query) ||
+                          item.categoryLabel.toLowerCase().contains(query) ||
+                          item.rarityLabel.toLowerCase().contains(query) ||
+                          item.tradeValueLabel.toLowerCase().contains(query) ||
+                          item.sourceHints.any(
+                            (hint) => hint.toLowerCase().contains(query),
+                          );
+                      return matchesCategory && matchesQuery;
+                    })
+                    .toList(growable: false);
               });
             }
 
@@ -233,72 +256,112 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                   left: AppTheme.spaceL,
                   right: AppTheme.spaceL,
                   top: AppTheme.spaceL,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spaceL,
+                  bottom:
+                      MediaQuery.of(context).viewInsets.bottom +
+                      AppTheme.spaceL,
                 ),
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height * 0.82,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Select trade items', style: AppTheme.tradingHeading(fontSize: 22, color: AppTheme.neonCyan)),
+                      Text(
+                        'Select trade items',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 22,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
                       const SizedBox(height: AppTheme.spaceM),
                       TextField(
                         controller: controller,
                         style: const TextStyle(color: Colors.white),
                         onChanged: (_) => updateFilter(),
-                        decoration: AppTheme.tradingInputDecoration(label: 'Search weapons, ammo, attachments, materials, trinkets'),
+                        decoration: AppTheme.tradingInputDecoration(
+                          label:
+                              'Search weapons, ammo, attachments, materials, trinkets',
+                        ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: categories.map((category) {
-                            final selected = categoryFilter == category;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                selected: selected,
-                                selectedColor: AppTheme.neonPink.withValues(alpha: 0.25),
-                                checkmarkColor: AppTheme.neonPink,
-                                label: Text(category),
-                                labelStyle: TextStyle(
-                                  color: selected ? AppTheme.neonPink : AppTheme.neonCyan,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                backgroundColor: AppTheme.tradingCardBackground,
-                                side: BorderSide(
-                                  color: selected
-                                      ? AppTheme.neonPink.withValues(alpha: 0.7)
-                                      : AppTheme.neonCyan.withValues(alpha: 0.25),
-                                ),
-                                onSelected: (_) {
-                                  categoryFilter = category;
-                                  updateFilter();
-                                },
-                              ),
-                            );
-                          }).toList(growable: false),
+                          children: categories
+                              .map((category) {
+                                final selected = categoryFilter == category;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    selected: selected,
+                                    selectedColor: AppTheme.neonPink.withValues(
+                                      alpha: 0.25,
+                                    ),
+                                    checkmarkColor: AppTheme.neonPink,
+                                    label: Text(category),
+                                    labelStyle: TextStyle(
+                                      color: selected
+                                          ? AppTheme.neonPink
+                                          : AppTheme.neonCyan,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    backgroundColor:
+                                        AppTheme.tradingCardBackground,
+                                    side: BorderSide(
+                                      color: selected
+                                          ? AppTheme.neonPink.withValues(
+                                              alpha: 0.7,
+                                            )
+                                          : AppTheme.neonCyan.withValues(
+                                              alpha: 0.25,
+                                            ),
+                                    ),
+                                    onSelected: (_) {
+                                      categoryFilter = category;
+                                      updateFilter();
+                                    },
+                                  ),
+                                );
+                              })
+                              .toList(growable: false),
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
-                      Text(_selectionSummary(selectedIds.length, 'item'), style: TextStyle(color: AppTheme.tradingMutedText)),
+                      Text(
+                        _selectionSummary(selectedIds.length, 'item'),
+                        style: TextStyle(color: AppTheme.tradingMutedText),
+                      ),
                       const SizedBox(height: AppTheme.spaceS),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(child: Text('No matching trade items.', style: TextStyle(color: Colors.white60)))
+                            ? const Center(
+                                child: Text(
+                                  'No matching trade items.',
+                                  style: TextStyle(color: Colors.white60),
+                                ),
+                              )
                             : ListView.builder(
                                 itemCount: filtered.length,
                                 itemBuilder: (context, index) {
                                   final item = filtered[index];
-                                  final isSelected = selectedIds.contains(item.id);
+                                  final isSelected = selectedIds.contains(
+                                    item.id,
+                                  );
                                   return CheckboxListTile(
                                     value: isSelected,
                                     activeColor: AppTheme.neonPink,
-                                    controlAffinity: ListTileControlAffinity.leading,
-                                    title: Text(item.name, style: const TextStyle(color: Colors.white)),
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    title: Text(
+                                      item.name,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                     subtitle: Text(
                                       '${item.categoryLabel} • ${item.rarityLabel} • ${item.tradeValueLabel} value',
-                                      style: const TextStyle(color: Colors.white60),
+                                      style: const TextStyle(
+                                        color: Colors.white60,
+                                      ),
                                     ),
                                     onChanged: (_) {
                                       setModalState(() {
@@ -318,14 +381,18 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            final selected = _tradeItems.where((item) => selectedIds.contains(item.id)).toList(growable: false);
+                            final selected = _tradeItems
+                                .where((item) => selectedIds.contains(item.id))
+                                .toList(growable: false);
                             Navigator.of(context).pop(selected);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.neonPink,
                             foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           child: const Text('Done'),
                         ),
@@ -342,7 +409,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   }
 
   Future<void> _submitOffer() async {
-    if (!widget.listing.wantsNothing && !_formKey.currentState!.validate()) return;
+    if (!widget.listing.wantsNothing && !_formKey.currentState!.validate())
+      return;
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
@@ -354,19 +422,29 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     try {
       await _repository.createOffer(
         listing: widget.listing,
-        offeredBlueprintText: widget.listing.wantsNothing ? '' : _blueprintController.text,
+        offeredBlueprintText: widget.listing.wantsNothing
+            ? ''
+            : _blueprintController.text,
         smallBundles: widget.listing.wantsNothing ? 0 : _smallBundles,
         mediumBundles: widget.listing.wantsNothing ? 0 : _mediumBundles,
         largeBundles: widget.listing.wantsNothing ? 0 : _largeBundles,
-        includesResources: widget.listing.wantsNothing ? false : _includesResources,
-        resourcesText: widget.listing.wantsNothing ? '' : _resourcesController.text,
+        includesResources: widget.listing.wantsNothing
+            ? false
+            : _includesResources,
+        resourcesText: widget.listing.wantsNothing
+            ? ''
+            : _resourcesController.text,
         note: _noteController.text,
         offeredTradeItemIds: widget.listing.wantsNothing
             ? const <String>[]
-            : _selectedTradeItems.map((item) => item.id).toList(growable: false),
+            : _selectedTradeItems
+                  .map((item) => item.id)
+                  .toList(growable: false),
         offeredTradeItemNames: widget.listing.wantsNothing
             ? const <String>[]
-            : _selectedTradeItems.map((item) => item.name).toList(growable: false),
+            : _selectedTradeItems
+                  .map((item) => item.name)
+                  .toList(growable: false),
         isGiveawayClaim: widget.listing.wantsNothing,
       );
 
@@ -378,7 +456,11 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
       messenger.showSnackBar(
         SnackBar(
-          content: Text(widget.listing.wantsNothing ? 'Giveaway claim sent successfully.' : 'Offer sent successfully.'),
+          content: Text(
+            widget.listing.wantsNothing
+                ? 'Giveaway claim sent successfully.'
+                : 'Offer sent successfully.',
+          ),
           backgroundColor: AppTheme.neonPink,
         ),
       );
@@ -458,15 +540,20 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                 ),
                               )
                             : _matchingDupes.isEmpty
-                                ? Text(
-                                    'No matching dupes found in your collection yet. You can still type a manual offer below.',
-                                    style: TextStyle(color: AppTheme.tradingMutedText),
-                                  )
-                                : Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: _matchingDupes.map((name) {
-                                      final selected = _selectedDupes.contains(name);
+                            ? Text(
+                                'No matching dupes found in your collection yet. You can still type a manual offer below.',
+                                style: TextStyle(
+                                  color: AppTheme.tradingMutedText,
+                                ),
+                              )
+                            : Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _matchingDupes
+                                    .map((name) {
+                                      final selected = _selectedDupes.contains(
+                                        name,
+                                      );
                                       return FilterChip(
                                         selected: selected,
                                         label: Text(name),
@@ -478,7 +565,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                         ),
                                         selectedColor: AppTheme.neonCyan,
                                         checkmarkColor: Colors.black,
-                                        backgroundColor: AppTheme.tradingCardBackground,
+                                        backgroundColor:
+                                            AppTheme.tradingCardBackground,
                                         side: BorderSide(
                                           color: selected
                                               ? AppTheme.neonCyan
@@ -495,8 +583,9 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                           });
                                         },
                                       );
-                                    }).toList(growable: false),
-                                  ),
+                                    })
+                                    .toList(growable: false),
+                              ),
                       ),
                       _sectionCard(
                         title: 'Your Offer',
@@ -513,9 +602,13 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                 final hasResources =
                                     _includesResources &&
                                     _resourcesController.text.trim().isNotEmpty;
-                                final hasTradeItems = _selectedTradeItems.isNotEmpty;
+                                final hasTradeItems =
+                                    _selectedTradeItems.isNotEmpty;
 
-                                if (!hasBlueprint && !hasSeeds && !hasResources && !hasTradeItems) {
+                                if (!hasBlueprint &&
+                                    !hasSeeds &&
+                                    !hasResources &&
+                                    !hasTradeItems) {
                                   return 'Add at least one blueprint, item, seed bundle or resource.';
                                 }
                                 return null;
@@ -526,7 +619,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                               onTap: listing.wantsNothing
                                   ? null
                                   : () async {
-                                      final picked = await _showTradeItemPicker();
+                                      final picked =
+                                          await _showTradeItemPicker();
                                       if (!mounted || picked == null) return;
                                       setState(() {
                                         _selectedTradeItems
@@ -536,25 +630,43 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                     },
                               borderRadius: BorderRadius.circular(16),
                               child: InputDecorator(
-                                decoration: AppTheme.tradingInputDecoration(label: 'Trade Items You Are Offering'),
+                                decoration: AppTheme.tradingInputDecoration(
+                                  label: 'Trade Items You Are Offering',
+                                ),
                                 child: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        listing.wantsNothing ? 'No return needed for giveaway claim' : _selectionSummary(_selectedTradeItems.length, 'item'),
-                                        style: const TextStyle(color: Colors.white),
+                                        listing.wantsNothing
+                                            ? 'No return needed for giveaway claim'
+                                            : _selectionSummary(
+                                                _selectedTradeItems.length,
+                                                'item',
+                                              ),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
-                                    const Icon(Icons.arrow_drop_down_rounded, color: Colors.white70),
+                                    const Icon(
+                                      Icons.arrow_drop_down_rounded,
+                                      color: Colors.white70,
+                                    ),
                                   ],
                                 ),
                               ),
                             ),
                             const SizedBox(height: AppTheme.spaceS),
-                            _chipWrap(_selectedTradeItems.map((item) => item.name).toList(growable: false)),
+                            _chipWrap(
+                              _selectedTradeItems
+                                  .map((item) => item.name)
+                                  .toList(growable: false),
+                            ),
                             const SizedBox(height: 14),
                             SwitchListTile(
-                              value: listing.wantsNothing ? false : _includesResources,
+                              value: listing.wantsNothing
+                                  ? false
+                                  : _includesResources,
                               activeThumbColor: AppTheme.neonPink,
                               title: const Text(
                                 'Include Resources',
@@ -573,7 +685,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                               controller: _resourcesController,
                               label: 'Resource Summary',
                               maxLines: 3,
-                              enabled: !listing.wantsNothing && _includesResources,
+                              enabled:
+                                  !listing.wantsNothing && _includesResources,
                             ),
                             const SizedBox(height: 16),
                             Align(
@@ -656,8 +769,12 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                               : const Icon(Icons.send_rounded),
                           label: Text(
                             _isSaving
-                                ? (listing.wantsNothing ? 'Claiming...' : 'Sending Offer...')
-                                : (listing.wantsNothing ? 'Claim Giveaway' : 'Send Offer'),
+                                ? (listing.wantsNothing
+                                      ? 'Claiming...'
+                                      : 'Sending Offer...')
+                                : (listing.wantsNothing
+                                      ? 'Claim Giveaway'
+                                      : 'Send Offer'),
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 16,

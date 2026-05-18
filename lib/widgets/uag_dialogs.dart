@@ -26,17 +26,11 @@ class UagDialogs {
           ),
           title: Text(
             title,
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: titleColor,
-            ),
+            style: AppTheme.tradingHeading(fontSize: 22, color: titleColor),
           ),
           content: Text(
             message,
-            style: const TextStyle(
-              color: Colors.white70,
-              height: 1.4,
-            ),
+            style: const TextStyle(color: Colors.white70, height: 1.4),
           ),
           actions: [
             TextButton(
@@ -44,7 +38,9 @@ class UagDialogs {
               child: Text(cancelLabel),
             ),
             ElevatedButton(
-              style: confirmBackgroundColor == null && confirmForegroundColor == null
+              style:
+                  confirmBackgroundColor == null &&
+                      confirmForegroundColor == null
                   ? null
                   : ElevatedButton.styleFrom(
                       backgroundColor: confirmBackgroundColor,
@@ -105,9 +101,7 @@ class UagDialogs {
           backgroundColor: AppTheme.cardBackgroundDeep,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: AppTheme.neonCyan.withValues(alpha: 0.20),
-            ),
+            side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.20)),
           ),
           title: Text(
             title,
@@ -118,10 +112,7 @@ class UagDialogs {
           ),
           content: Text(
             message,
-            style: const TextStyle(
-              color: Colors.white70,
-              height: 1.4,
-            ),
+            style: const TextStyle(color: Colors.white70, height: 1.4),
           ),
           actions: [
             ElevatedButton(

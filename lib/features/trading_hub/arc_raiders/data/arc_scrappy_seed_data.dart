@@ -91,7 +91,8 @@ class ArcScrappySeedData {
       tier: ArcScrappyTier.tier4,
       neededCount: 12,
       imageAsset: 'assets/arc_raiders/scrappy_resources/mushrooms.webp',
-      helperText: 'Need 12 total. Any amount above 12 becomes tradeable surplus.',
+      helperText:
+          'Need 12 total. Any amount above 12 becomes tradeable surplus.',
       locationHint:
           'Best intel: nature/organic spawns. Prioritise Blue Gate nature POIs, damp/greenhouse routes, wooded edges, planters and wicker baskets during Lush Blooms.',
     ),
@@ -116,7 +117,8 @@ class ArcScrappySeedData {
       sortOrder: 9,
       tier: ArcScrappyTier.tier4,
       neededCount: 3,
-      imageAsset: 'assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp',
+      imageAsset:
+          'assets/arc_raiders/scrappy_resources/very_comfortable_pillows.webp',
       helperText: 'Need 3 total. Extra pillows become tradeable surplus.',
       locationHint:
           'Best intel: residential bedroom loot. Search apartments, houses, hotels, beds, wardrobes, shelves and drawers. Buried City apartments are the strongest route.',

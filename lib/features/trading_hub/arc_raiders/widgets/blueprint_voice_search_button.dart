@@ -4,18 +4,17 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class BlueprintVoiceSearchButton extends StatefulWidget {
-  const BlueprintVoiceSearchButton({
-    super.key,
-    required this.onSearchText,
-  });
+  const BlueprintVoiceSearchButton({super.key, required this.onSearchText});
 
   final ValueChanged<String> onSearchText;
 
   @override
-  State<BlueprintVoiceSearchButton> createState() => _BlueprintVoiceSearchButtonState();
+  State<BlueprintVoiceSearchButton> createState() =>
+      _BlueprintVoiceSearchButtonState();
 }
 
-class _BlueprintVoiceSearchButtonState extends State<BlueprintVoiceSearchButton> {
+class _BlueprintVoiceSearchButtonState
+    extends State<BlueprintVoiceSearchButton> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _listening = false;
   bool _initialising = false;
@@ -46,7 +45,11 @@ class _BlueprintVoiceSearchButtonState extends State<BlueprintVoiceSearchButton>
     if (!_available) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Microphone permission is blocked or speech recognition is unavailable.')),
+        const SnackBar(
+          content: Text(
+            'Microphone permission is blocked or speech recognition is unavailable.',
+          ),
+        ),
       );
       return;
     }
@@ -56,9 +59,7 @@ class _BlueprintVoiceSearchButtonState extends State<BlueprintVoiceSearchButton>
       localeId: 'en_GB',
       listenFor: const Duration(seconds: 8),
       pauseFor: const Duration(seconds: 2),
-      listenOptions: stt.SpeechListenOptions(
-        listenMode: stt.ListenMode.search,
-      ),
+      listenOptions: stt.SpeechListenOptions(listenMode: stt.ListenMode.search),
       onResult: (result) {
         final words = result.recognizedWords.trim();
         if (words.isEmpty) return;
@@ -87,7 +88,10 @@ class _BlueprintVoiceSearchButtonState extends State<BlueprintVoiceSearchButton>
     for (final phrase in phrases) {
       cleaned = cleaned.replaceAll(phrase, ' ');
     }
-    return cleaned.replaceAll(RegExp(r'[?!.:,;]+'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+    return cleaned
+        .replaceAll(RegExp(r'[?!.:,;]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 
   @override
@@ -100,7 +104,9 @@ class _BlueprintVoiceSearchButtonState extends State<BlueprintVoiceSearchButton>
   Widget build(BuildContext context) {
     final color = _listening ? AppTheme.neonPink : Colors.white70;
     return IconButton(
-      tooltip: _listening ? 'Listening… tap to stop' : 'Voice search blueprints',
+      tooltip: _listening
+          ? 'Listening… tap to stop'
+          : 'Voice search blueprints',
       onPressed: _initialising ? null : _toggle,
       icon: _initialising
           ? const SizedBox(

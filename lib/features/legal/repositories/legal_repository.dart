@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -19,7 +18,7 @@ class LegalRepository {
         'fanDisclaimerAccepted': true,
         'fanDisclaimerVersion': 1,
         'fanDisclaimerAcceptedAt': FieldValue.serverTimestamp(),
-      }
+      },
     }, SetOptions(merge: true));
   }
 }

@@ -47,16 +47,19 @@ class ScrappyProgressHeader extends StatelessWidget {
                 (landscape
                     ? 'Track your scrappy materials the same way as the blueprint grid. Tap a missing item for the requirement, tap or hold an owned item to edit dupes.'
                     : 'Portrait is supported, but landscape gives you a roomier tracker view for quick updates.'),
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.white70),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: 8),
           Text(
             footer ??
                 'Use this to log collection progress and extras you could trade later once the wider resource system is added.',
-            style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.35),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: AppTheme.spaceM),
           LinearProgressIndicator(
@@ -69,10 +72,9 @@ class ScrappyProgressHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '$ownedCount / $totalCount items complete',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.white70),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.white70),
           ),
         ],
       ),

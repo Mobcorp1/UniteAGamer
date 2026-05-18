@@ -15,10 +15,7 @@ class FanDisclaimerDialog extends StatelessWidget {
       ),
       title: Text(
         'Fan Project Notice',
-        style: AppTheme.tradingHeading(
-          fontSize: 24,
-          color: AppTheme.neonPink,
-        ),
+        style: AppTheme.tradingHeading(fontSize: 24, color: AppTheme.neonPink),
       ),
       content: const SingleChildScrollView(
         child: Text(

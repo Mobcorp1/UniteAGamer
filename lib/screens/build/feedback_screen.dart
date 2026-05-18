@@ -183,7 +183,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               if (unreadCount > 0) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.neonCyan,
                     borderRadius: BorderRadius.circular(999),
@@ -395,10 +398,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: OutlinedButton.icon(
-                              onPressed: () => Navigator.of(context).pushNamed(
-                                AdminConsoleScreen.routeName,
+                              onPressed: () => Navigator.of(
+                                context,
+                              ).pushNamed(AdminConsoleScreen.routeName),
+                              icon: const Icon(
+                                Icons.admin_panel_settings_outlined,
                               ),
-                              icon: const Icon(Icons.admin_panel_settings_outlined),
                               label: const Text('Open Admin Console'),
                             ),
                           ),
@@ -695,10 +700,11 @@ class _FeedbackCardState extends State<_FeedbackCard> {
                         backgroundColor: isAdminReply
                             ? AppTheme.neonPink.withValues(alpha: 0.08)
                             : AppTheme.cardBackgroundAlt,
-                        borderColor: (isAdminReply
-                                ? AppTheme.neonPink
-                                : AppTheme.neonCyan)
-                            .withValues(alpha: 0.28),
+                        borderColor:
+                            (isAdminReply
+                                    ? AppTheme.neonPink
+                                    : AppTheme.neonCyan)
+                                .withValues(alpha: 0.28),
                         radius: 14,
                       ),
                       child: Column(

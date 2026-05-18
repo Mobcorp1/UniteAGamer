@@ -121,8 +121,9 @@ class ArcTraderProfile {
       'subscriptionStatus': subscriptionStatus,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
-      'lastActiveAt':
-          lastActiveAt == null ? null : Timestamp.fromDate(lastActiveAt!),
+      'lastActiveAt': lastActiveAt == null
+          ? null
+          : Timestamp.fromDate(lastActiveAt!),
     };
   }
 

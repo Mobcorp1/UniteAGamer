@@ -35,21 +35,23 @@ class UagUserEntitlement {
 
   bool get hasAdminBypass => isAdmin || isDev;
   bool get isPaid => hasAdminBypass || tier.isPaid;
-  bool get isPremiumLike => hasAdminBypass || tier == UagSubscriptionTier.premium;
+  bool get isPremiumLike =>
+      hasAdminBypass || tier == UagSubscriptionTier.premium;
 
-  UagPlanLimits get limits => hasAdminBypass
-      ? UagPlanLimits.premium
-      : UagPlanLimits.forTier(tier);
+  UagPlanLimits get limits =>
+      hasAdminBypass ? UagPlanLimits.premium : UagPlanLimits.forTier(tier);
 
-  UagAdPolicy get adPolicy => hasAdminBypass
-      ? UagAdPolicy.premium
-      : UagAdPolicy.forTier(tier);
+  UagAdPolicy get adPolicy =>
+      hasAdminBypass ? UagAdPolicy.premium : UagAdPolicy.forTier(tier);
 
   bool get canShowAds => adPolicy.hasAnyAds;
-  bool get canUseTraderProAnalytics => hasAdminBypass || limits.hasTraderProAnalytics;
-  bool get canUseAdvancedVoicePersonalities => hasAdminBypass || limits.hasAdvancedVoicePersonalities;
+  bool get canUseTraderProAnalytics =>
+      hasAdminBypass || limits.hasTraderProAnalytics;
+  bool get canUseAdvancedVoicePersonalities =>
+      hasAdminBypass || limits.hasAdvancedVoicePersonalities;
   bool get canUseSmartAlerts => hasAdminBypass || limits.hasSmartAlerts;
-  bool get canUseUnlimitedSessions => hasAdminBypass || limits.hasUnlimitedSessions;
+  bool get canUseUnlimitedSessions =>
+      hasAdminBypass || limits.hasUnlimitedSessions;
   bool get canDisableAds => hasAdminBypass || limits.canDisableAds;
 
   factory UagUserEntitlement.fromUserDoc({
@@ -63,7 +65,9 @@ class UagUserEntitlement {
       return null;
     }
 
-    final monetisation = (data['monetisation'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
+    final monetisation =
+        (data['monetisation'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
     final tier = UagSubscriptionTier.fromValue(
       data['subscriptionTier'] as String? ??
           data['tier'] as String? ??
@@ -75,28 +79,39 @@ class UagUserEntitlement {
     return UagUserEntitlement(
       uid: uid,
       tier: tier,
-      subscriptionStatus: (data['subscriptionStatus'] as String?) ??
+      subscriptionStatus:
+          (data['subscriptionStatus'] as String?) ??
           monetisation['subscriptionStatus']?.toString() ??
           'inactive',
       isAdmin: data['isAdmin'] == true,
       isDev: data['isDev'] == true,
-      referralCode: data['referralCode'] as String? ?? monetisation['referralCode']?.toString(),
-      availableBalancePence: (data['referralAvailableBalancePence'] as num?)?.toInt() ??
+      referralCode:
+          data['referralCode'] as String? ??
+          monetisation['referralCode']?.toString(),
+      availableBalancePence:
+          (data['referralAvailableBalancePence'] as num?)?.toInt() ??
           (monetisation['availableBalancePence'] as num?)?.toInt() ??
           0,
-      pendingBalancePence: (data['referralPendingBalancePence'] as num?)?.toInt() ??
+      pendingBalancePence:
+          (data['referralPendingBalancePence'] as num?)?.toInt() ??
           (monetisation['pendingBalancePence'] as num?)?.toInt() ??
           0,
-      totalEarnedPence: (data['referralTotalEarnedPence'] as num?)?.toInt() ??
+      totalEarnedPence:
+          (data['referralTotalEarnedPence'] as num?)?.toInt() ??
           (monetisation['totalEarnedPence'] as num?)?.toInt() ??
           0,
-      referralDiscountPercent: (data['referralDiscountPercent'] as num?)?.toInt() ??
+      referralDiscountPercent:
+          (data['referralDiscountPercent'] as num?)?.toInt() ??
           (monetisation['referralDiscountPercent'] as num?)?.toInt() ??
           limits.referralDiscountPercent,
-      referralCommissionPercent: (data['referralCommissionPercent'] as num?)?.toInt() ??
+      referralCommissionPercent:
+          (data['referralCommissionPercent'] as num?)?.toInt() ??
           (monetisation['referralCommissionPercent'] as num?)?.toInt() ??
           limits.referralCommissionPercent,
-      currentPeriodEnd: parseDate(data['subscriptionCurrentPeriodEnd'] ?? monetisation['currentPeriodEnd']),
+      currentPeriodEnd: parseDate(
+        data['subscriptionCurrentPeriodEnd'] ??
+            monetisation['currentPeriodEnd'],
+      ),
     );
   }
 }

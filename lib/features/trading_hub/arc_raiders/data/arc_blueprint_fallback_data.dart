@@ -28,15 +28,20 @@ class ArcBlueprintFallbackData {
       events: ['Day Raid', 'Beachcombing'],
       sources: ['Riven Tides loot containers', 'Beach / Harbor routes'],
       confidenceLabel: 'User-confirmed',
-      notes: 'User confirmed Crash Mat blueprint on Riven Tides Day Raid. Keep Riven Tides-only until wider reports prove otherwise.',
+      notes:
+          'User confirmed Crash Mat blueprint on Riven Tides Day Raid. Keep Riven Tides-only until wider reports prove otherwise.',
     ),
     'Powered Descender': ArcBlueprintResearchedFallback(
       blueprintName: 'Powered Descender',
       maps: ['Riven Tides'],
       events: ['Day Raid', 'Night Raid', 'Beachcombing'],
-      sources: ['Riven Tides loot containers', 'Turbine / vertical traversal routes'],
+      sources: [
+        'Riven Tides loot containers',
+        'Turbine / vertical traversal routes',
+      ],
       confidenceLabel: 'User-confirmed',
-      notes: 'User confirmed Powered Descender on Riven Tides Day Raid and Night Raid.',
+      notes:
+          'User confirmed Powered Descender on Riven Tides Day Raid and Night Raid.',
     ),
     'White Flag': ArcBlueprintResearchedFallback(
       blueprintName: 'White Flag',
@@ -44,7 +49,8 @@ class ArcBlueprintFallbackData {
       events: ['Day Raid', 'Beachcombing'],
       sources: ['Riven Tides general loot', 'Beachcombing routes'],
       confidenceLabel: 'Patch-seeded',
-      notes: 'Official Riven Tides item. Use Riven Tides fallback until user intel replaces this.',
+      notes:
+          'Official Riven Tides item. Use Riven Tides fallback until user intel replaces this.',
     ),
     'Tactical Mk. 3 (Smoke)': ArcBlueprintResearchedFallback(
       blueprintName: 'Tactical Mk. 3 (Smoke)',
@@ -52,7 +58,8 @@ class ArcBlueprintFallbackData {
       events: ['Day Raid', 'Night Raid', 'Beachcombing'],
       sources: ['Riven Tides tactical/support loot routes'],
       confidenceLabel: 'Patch-seeded',
-      notes: 'Official Riven Tides augment. Treat as Riven Tides-first until user reports confirm broader pools.',
+      notes:
+          'Official Riven Tides augment. Treat as Riven Tides-first until user reports confirm broader pools.',
     ),
   };
 

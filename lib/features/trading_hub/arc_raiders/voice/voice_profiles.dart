@@ -77,7 +77,14 @@ const List<UagVoiceProfile> uagVoiceProfiles = <UagVoiceProfile>[
     description: 'Clear, steady operator voice for general raid support.',
     requiredTier: UagSubscriptionTier.free,
     preferredLocales: <String>['en-gb', 'en_gb', 'en-gb-x'],
-    preferredNameHints: <String>['daniel', 'george', 'arthur', 'ryan', 'male', 'gbb'],
+    preferredNameHints: <String>[
+      'daniel',
+      'george',
+      'arthur',
+      'ryan',
+      'male',
+      'gbb',
+    ],
     fallbackNameHints: <String>['english', 'gb', 'uk'],
     previewText: 'Atlas online. UAG Raider systems ready.',
     personalityPrefix: 'Raider check. ',
@@ -91,7 +98,14 @@ const List<UagVoiceProfile> uagVoiceProfiles = <UagVoiceProfile>[
     description: 'Clean, bright voice for quick item calls and route checks.',
     requiredTier: UagSubscriptionTier.free,
     preferredLocales: <String>['en-gb', 'en_gb', 'en-gb-x'],
-    preferredNameHints: <String>['serena', 'susan', 'victoria', 'female', 'gba', 'gbc'],
+    preferredNameHints: <String>[
+      'serena',
+      'susan',
+      'victoria',
+      'female',
+      'gba',
+      'gbc',
+    ],
     fallbackNameHints: <String>['english', 'gb', 'uk'],
     previewText: 'Nova online. UAG Raider systems ready.',
     personalityPrefix: 'Scan complete. ',
@@ -119,7 +133,13 @@ const List<UagVoiceProfile> uagVoiceProfiles = <UagVoiceProfile>[
     description: 'Smoother support voice for longer trade and tracker advice.',
     requiredTier: UagSubscriptionTier.essential,
     preferredLocales: <String>['en-gb', 'en-ie', 'en-us', 'en_gb', 'en_us'],
-    preferredNameHints: <String>['samantha', 'karen', 'moira', 'serena', 'female'],
+    preferredNameHints: <String>[
+      'samantha',
+      'karen',
+      'moira',
+      'serena',
+      'female',
+    ],
     fallbackNameHints: <String>['english', 'local'],
     previewText: 'Valkyrie online. Squad support ready.',
     personalityPrefix: 'Support readout. ',
@@ -146,8 +166,21 @@ const List<UagVoiceProfile> uagVoiceProfiles = <UagVoiceProfile>[
     subtitle: 'Low-profile scavenger',
     description: 'Quieter scavenger-style voice for stealthy item advice.',
     requiredTier: UagSubscriptionTier.premium,
-    preferredLocales: <String>['en-gb', 'en-us', 'en_ie', 'en-au', 'en_gb', 'en_us'],
-    preferredNameHints: <String>['moira', 'samantha', 'serena', 'victoria', 'female'],
+    preferredLocales: <String>[
+      'en-gb',
+      'en-us',
+      'en_ie',
+      'en-au',
+      'en_gb',
+      'en_us',
+    ],
+    preferredNameHints: <String>[
+      'moira',
+      'samantha',
+      'serena',
+      'victoria',
+      'female',
+    ],
     fallbackNameHints: <String>['english'],
     previewText: 'Ghost online. Quiet scan mode ready.',
     personalityPrefix: 'Low-profile readout. ',
@@ -160,16 +193,20 @@ List<UagResolvedVoiceProfile> resolveUagVoiceProfiles(dynamic rawVoices) {
   final engineVoices = _normaliseRawVoices(rawVoices);
   if (engineVoices.isEmpty) return const <UagResolvedVoiceProfile>[];
 
-  final englishVoices = engineVoices.where((voice) {
-    return voice.locale.toLowerCase().replaceAll('_', '-').startsWith('en');
-  }).toList(growable: false);
+  final englishVoices = engineVoices
+      .where((voice) {
+        return voice.locale.toLowerCase().replaceAll('_', '-').startsWith('en');
+      })
+      .toList(growable: false);
 
   final source = englishVoices.isNotEmpty ? englishVoices : engineVoices;
   final usedEngineIds = <String>{};
   final resolved = <UagResolvedVoiceProfile>[];
 
   for (final profile in uagVoiceProfiles) {
-    final match = _findBestVoiceForProfile(profile, source, usedEngineIds) ?? source.first;
+    final match =
+        _findBestVoiceForProfile(profile, source, usedEngineIds) ??
+        source.first;
     usedEngineIds.add(match.id);
     resolved.add(
       UagResolvedVoiceProfile(
@@ -206,14 +243,15 @@ _EngineVoice? _findBestVoiceForProfile(
       if (name.contains(hint.toLowerCase())) score += 7;
     }
     for (final hint in profile.fallbackNameHints) {
-      if (name.contains(hint.toLowerCase()) || locale.contains(hint.toLowerCase())) score += 2;
+      if (name.contains(hint.toLowerCase()) ||
+          locale.contains(hint.toLowerCase()))
+        score += 2;
     }
     if (name.contains('network')) score -= 2;
     if (name.contains('compact')) score -= 1;
 
     return _ScoredVoice(voice: voice, score: score);
-  }).toList()
-    ..sort((a, b) => b.score.compareTo(a.score));
+  }).toList()..sort((a, b) => b.score.compareTo(a.score));
 
   if (scored.isEmpty) return null;
   return scored.first.voice;
@@ -222,7 +260,9 @@ _EngineVoice? _findBestVoiceForProfile(
 bool _matchesProfile(UagVoiceProfile profile, _EngineVoice voice) {
   final name = voice.name.toLowerCase();
   final locale = voice.locale.toLowerCase().replaceAll('_', '-');
-  return profile.preferredNameHints.any((hint) => name.contains(hint.toLowerCase())) ||
+  return profile.preferredNameHints.any(
+        (hint) => name.contains(hint.toLowerCase()),
+      ) ||
       profile.preferredLocales.any((preferredLocale) {
         final normalised = preferredLocale.toLowerCase().replaceAll('_', '-');
         return locale.startsWith(normalised);
@@ -242,8 +282,12 @@ List<_EngineVoice> _normaliseRawVoices(dynamic rawVoices) {
   }
 
   voices.sort((a, b) {
-    final aGb = a.locale.toLowerCase().replaceAll('_', '-').startsWith('en-gb') ? 0 : 1;
-    final bGb = b.locale.toLowerCase().replaceAll('_', '-').startsWith('en-gb') ? 0 : 1;
+    final aGb = a.locale.toLowerCase().replaceAll('_', '-').startsWith('en-gb')
+        ? 0
+        : 1;
+    final bGb = b.locale.toLowerCase().replaceAll('_', '-').startsWith('en-gb')
+        ? 0
+        : 1;
     final localeSort = aGb.compareTo(bGb);
     if (localeSort != 0) return localeSort;
     return a.name.compareTo(b.name);

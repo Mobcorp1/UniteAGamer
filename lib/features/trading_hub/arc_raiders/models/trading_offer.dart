@@ -1,12 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum TradingOfferStatus {
-  pending,
-  accepted,
-  declined,
-  cancelled,
-  expired,
-}
+enum TradingOfferStatus { pending, accepted, declined, cancelled, expired }
 
 class TradingOffer {
   final String id;
@@ -100,7 +94,8 @@ class TradingOffer {
   String get offerSummary {
     if (isGiveawayClaim) return 'Free giveaway claim';
     final parts = <String>[];
-    if (offeredBlueprintText.trim().isNotEmpty) parts.add(offeredBlueprintText.trim());
+    if (offeredBlueprintText.trim().isNotEmpty)
+      parts.add(offeredBlueprintText.trim());
     parts.addAll(offeredTradeItemNames);
     if (seedTotal > 0) parts.add('$seedTotal seeds');
     if (includesResources && resourcesText.trim().isNotEmpty) {

@@ -20,7 +20,8 @@ class PlayLikeAProScreen extends StatefulWidget {
 class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
   final PlayLikeAProRepository _repository = PlayLikeAProRepository();
 
-  final TextEditingController _preferredGameController = TextEditingController();
+  final TextEditingController _preferredGameController =
+      TextEditingController();
   final TextEditingController _musicTriggerController = TextEditingController();
   final TextEditingController _preNotesController = TextEditingController();
   final TextEditingController _midNotesController = TextEditingController();
@@ -130,9 +131,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
         notes: _preNotesController.text,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pre-session check saved.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Pre-session check saved.')));
     } finally {
       if (mounted) {
         setState(() => _savingPre = false);
@@ -152,9 +153,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
         notes: _midNotesController.text,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tilt check saved.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Tilt check saved.')));
     } finally {
       if (mounted) {
         setState(() => _savingMid = false);
@@ -205,16 +206,22 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
       steps.add('Do a 60-second breathing reset before you load in.');
     }
     if (_confidence <= 2) {
-      steps.add('Start with one low-pressure warm-up raid before chasing value.');
+      steps.add(
+        'Start with one low-pressure warm-up raid before chasing value.',
+      );
     }
     if (_tiltRisk >= 4) {
-      steps.add('Avoid pressure stacking. Skip arguments, lower the stakes, protect your head.');
+      steps.add(
+        'Avoid pressure stacking. Skip arguments, lower the stakes, protect your head.',
+      );
     }
     if (_musicTriggerController.text.trim().isNotEmpty) {
       steps.add('Use your trigger track to lock your pace before queueing.');
     }
     if (steps.isEmpty) {
-      steps.add('You are in a solid state. Hydrate, set a clear objective, and queue with intent.');
+      steps.add(
+        'You are in a solid state. Hydrate, set a clear objective, and queue with intent.',
+      );
     }
     return steps;
   }
@@ -222,36 +229,54 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
   List<String> _buildMidRoutine() {
     final steps = <String>[];
     if (_tiltLevel >= 4 || _frustration >= 4) {
-      steps.add('Stop spiral queueing. Stand up, breathe, and reset before the next run.');
+      steps.add(
+        'Stop spiral queueing. Stand up, breathe, and reset before the next run.',
+      );
     }
     if (_fatigue >= 4) {
-      steps.add('Fatigue is dragging decision speed. Take a short break or end on the next extraction.');
+      steps.add(
+        'Fatigue is dragging decision speed. Take a short break or end on the next extraction.',
+      );
     }
     if (_focusDrop >= 4) {
-      steps.add('Strip the plan back to one objective. Less multitasking, cleaner calls.');
+      steps.add(
+        'Strip the plan back to one objective. Less multitasking, cleaner calls.',
+      );
     }
     if (_needsBreak) {
-      steps.add('Take 3-5 minutes away from the screen. No “just one more” autopilot.');
+      steps.add(
+        'Take 3-5 minutes away from the screen. No “just one more” autopilot.',
+      );
     }
     switch (_preferredResetStyle) {
       case PlayLikeAProResetStyle.breathing:
-        steps.add('Use your default reset: 4 slow breaths before the next queue.');
+        steps.add(
+          'Use your default reset: 4 slow breaths before the next queue.',
+        );
         break;
       case PlayLikeAProResetStyle.hydrate:
         steps.add('Use your default reset: hydrate before the next run.');
         break;
       case PlayLikeAProResetStyle.music:
-        steps.add('Use your default reset: one music trigger before re-engaging.');
+        steps.add(
+          'Use your default reset: one music trigger before re-engaging.',
+        );
         break;
       case PlayLikeAProResetStyle.shortBreak:
-        steps.add('Use your default reset: step off the game for a couple of minutes.');
+        steps.add(
+          'Use your default reset: step off the game for a couple of minutes.',
+        );
         break;
       case PlayLikeAProResetStyle.lowerPressure:
-        steps.add('Use your default reset: switch to a lower-pressure objective for one raid.');
+        steps.add(
+          'Use your default reset: switch to a lower-pressure objective for one raid.',
+        );
         break;
     }
     if (steps.isEmpty) {
-      steps.add('You look stable. Keep comms clean, stick to the plan, and don’t overstay a good session.');
+      steps.add(
+        'You look stable. Keep comms clean, stick to the plan, and don’t overstay a good session.',
+      );
     }
     return steps;
   }
@@ -279,7 +304,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
       (entry) => entry.goal == PlayLikeAProGoal.rankedPush,
     );
     final farmingHistory = history.where(
-      (entry) => entry.goal == PlayLikeAProGoal.blueprintFarm || entry.goal == PlayLikeAProGoal.resourceRun,
+      (entry) =>
+          entry.goal == PlayLikeAProGoal.blueprintFarm ||
+          entry.goal == PlayLikeAProGoal.resourceRun,
     );
 
     final bullets = <String>[
@@ -288,20 +315,32 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
     ];
 
     if (rankedHistory.isNotEmpty) {
-      final rankedAvg = average(rankedHistory.map((entry) => entry.performance));
-      bullets.add('Ranked-style sessions are averaging ${rankedAvg.toStringAsFixed(1)}/5 performance. Queue those when your head is clean, not when you are forcing it.');
+      final rankedAvg = average(
+        rankedHistory.map((entry) => entry.performance),
+      );
+      bullets.add(
+        'Ranked-style sessions are averaging ${rankedAvg.toStringAsFixed(1)}/5 performance. Queue those when your head is clean, not when you are forcing it.',
+      );
     }
 
     if (farmingHistory.isNotEmpty) {
-      final farmEnjoyment = average(farmingHistory.map((entry) => entry.enjoyment));
-      bullets.add('Farm and loot sessions are landing at ${farmEnjoyment.toStringAsFixed(1)}/5 enjoyment. That is your safer fallback when you want progress without pressure.');
+      final farmEnjoyment = average(
+        farmingHistory.map((entry) => entry.enjoyment),
+      );
+      bullets.add(
+        'Farm and loot sessions are landing at ${farmEnjoyment.toStringAsFixed(1)}/5 enjoyment. That is your safer fallback when you want progress without pressure.',
+      );
     }
 
     final latest = history.first;
     if (latest.energy <= 2 && latest.performance >= 4) {
-      bullets.add('One positive signal: you can still perform while tired when the plan is simple and disciplined.');
+      bullets.add(
+        'One positive signal: you can still perform while tired when the plan is simple and disciplined.',
+      );
     } else if (latest.tiltLevel >= 4 && latest.tiltControl <= 2) {
-      bullets.add('Latest session says your reset needs to happen earlier. Do not wait for full tilt before pulling out.');
+      bullets.add(
+        'Latest session says your reset needs to happen earlier. Do not wait for full tilt before pulling out.',
+      );
     }
 
     return bullets;
@@ -348,32 +387,34 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
     return Wrap(
       spacing: AppTheme.spaceS,
       runSpacing: AppTheme.spaceS,
-      children: values.map((option) {
-        final selected = option == value;
-        final chip = ChoiceChip(
-          label: Text(label(option)),
-          selected: selected,
-          labelStyle: AppTheme.bodyTextStyle(
-            fontSize: 13,
-            color: selected ? AppTheme.darkBackground : AppTheme.neonCyan,
-            isBold: true,
-          ),
-          selectedColor: AppTheme.neonCyan,
-          backgroundColor: AppTheme.cardBackgroundAlt,
-          shape: StadiumBorder(
-            side: BorderSide(
-              color: selected
-                  ? AppTheme.neonCyan
-                  : AppTheme.neonCyan.withValues(alpha: 0.28),
-            ),
-          ),
-          onSelected: (_) => setState(() => onChanged(option)),
-        );
+      children: values
+          .map((option) {
+            final selected = option == value;
+            final chip = ChoiceChip(
+              label: Text(label(option)),
+              selected: selected,
+              labelStyle: AppTheme.bodyTextStyle(
+                fontSize: 13,
+                color: selected ? AppTheme.darkBackground : AppTheme.neonCyan,
+                isBold: true,
+              ),
+              selectedColor: AppTheme.neonCyan,
+              backgroundColor: AppTheme.cardBackgroundAlt,
+              shape: StadiumBorder(
+                side: BorderSide(
+                  color: selected
+                      ? AppTheme.neonCyan
+                      : AppTheme.neonCyan.withValues(alpha: 0.28),
+                ),
+              ),
+              onSelected: (_) => setState(() => onChanged(option)),
+            );
 
-        return selected
-            ? ElectricChargeBorder(active: true, radius: 999, child: chip)
-            : chip;
-      }).toList(growable: false),
+            return selected
+                ? ElectricChargeBorder(active: true, radius: 999, child: chip)
+                : chip;
+          })
+          .toList(growable: false),
     );
   }
 
@@ -482,7 +523,10 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                   Expanded(
                     child: Text(
                       bullet,
-                      style: const TextStyle(color: Colors.white70, height: 1.35),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.35,
+                      ),
                     ),
                   ),
                 ],
@@ -514,7 +558,8 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
           StreamBuilder<PlayLikeAProState>(
             stream: _repository.watchState(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
 
@@ -543,7 +588,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               final insights = _buildInsightBullets(state);
               final latestDate = state.history.isEmpty
                   ? null
-                  : DateFormat('dd MMM • HH:mm').format(state.history.first.createdAt);
+                  : DateFormat(
+                      'dd MMM • HH:mm',
+                    ).format(state.history.first.createdAt);
 
               return SafeArea(
                 child: Center(
@@ -555,7 +602,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                         Container(
                           padding: const EdgeInsets.all(AppTheme.spaceL),
                           decoration: AppTheme.tradingCardDecoration(
-                            borderColor: AppTheme.neonCyan.withValues(alpha: 0.26),
+                            borderColor: AppTheme.neonCyan.withValues(
+                              alpha: 0.26,
+                            ),
                             radius: 22,
                           ),
                           child: Column(
@@ -571,7 +620,10 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                               const SizedBox(height: AppTheme.spaceS),
                               const Text(
                                 'Track how you feel before you queue, reset yourself when the session starts slipping, and log how you actually performed after the raid. The app then turns that into cleaner prep and fewer throwaway sessions.',
-                                style: TextStyle(color: Colors.white70, height: 1.4),
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  height: 1.4,
+                                ),
                               ),
                               const SizedBox(height: AppTheme.spaceM),
                               Wrap(
@@ -618,9 +670,10 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                         horizontal: AppTheme.spaceM,
                                         vertical: AppTheme.spaceS,
                                       ),
-                                      decoration: AppTheme.tradingPillDecoration(
-                                        color: AppTheme.tradingSuccess,
-                                      ),
+                                      decoration:
+                                          AppTheme.tradingPillDecoration(
+                                            color: AppTheme.tradingSuccess,
+                                          ),
                                       child: Text(
                                         'Latest Review: $latestDate',
                                         style: AppTheme.bodyTextStyle(
@@ -665,7 +718,8 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                 value: _preferredResetStyle,
                                 values: PlayLikeAProResetStyle.values,
                                 label: _resetLabel,
-                                onChanged: (value) => _preferredResetStyle = value,
+                                onChanged: (value) =>
+                                    _preferredResetStyle = value,
                               ),
                               const SizedBox(height: AppTheme.spaceL),
                               Text(
@@ -690,9 +744,13 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: DoseActionButton(
-                                  label: _savingPreferences ? 'Saving...' : 'Save Preferences',
+                                  label: _savingPreferences
+                                      ? 'Saving...'
+                                      : 'Save Preferences',
                                   icon: Icons.save_outlined,
-                                  onPressed: _savingPreferences ? null : _savePreferences,
+                                  onPressed: _savingPreferences
+                                      ? null
+                                      : _savePreferences,
                                   active: !_savingPreferences,
                                 ),
                               ),
@@ -774,7 +832,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                               ),
                               const SizedBox(height: AppTheme.spaceL),
                               DoseActionButton(
-                                label: _savingPre ? 'Saving...' : 'Save Pre-Session Check',
+                                label: _savingPre
+                                    ? 'Saving...'
+                                    : 'Save Pre-Session Check',
                                 icon: Icons.playlist_add_check_circle_outlined,
                                 onPressed: _savingPre ? null : _savePreGame,
                                 active: !_savingPre,
@@ -824,7 +884,8 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                               SwitchListTile.adaptive(
                                 contentPadding: EdgeInsets.zero,
                                 value: _needsBreak,
-                                onChanged: (value) => setState(() => _needsBreak = value),
+                                onChanged: (value) =>
+                                    setState(() => _needsBreak = value),
                                 title: const Text(
                                   'I need a proper break before the next run.',
                                   style: TextStyle(color: Colors.white),
@@ -851,7 +912,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                               ),
                               const SizedBox(height: AppTheme.spaceL),
                               DoseActionButton(
-                                label: _savingMid ? 'Saving...' : 'Save Tilt Check',
+                                label: _savingMid
+                                    ? 'Saving...'
+                                    : 'Save Tilt Check',
                                 icon: Icons.refresh_rounded,
                                 onPressed: _savingMid ? null : _saveMidSession,
                                 variant: DoseActionButtonVariant.secondary,
@@ -908,9 +971,13 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                               ),
                               const SizedBox(height: AppTheme.spaceL),
                               DoseActionButton(
-                                label: _savingPost ? 'Saving...' : 'Save Session Review',
+                                label: _savingPost
+                                    ? 'Saving...'
+                                    : 'Save Session Review',
                                 icon: Icons.done_all_rounded,
-                                onPressed: _savingPost ? null : () => _savePostSession(state),
+                                onPressed: _savingPost
+                                    ? null
+                                    : () => _savePostSession(state),
                                 active: !_savingPost,
                               ),
                             ],
@@ -925,9 +992,12 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                             children: [
                               ...insights.map(
                                 (bullet) => Padding(
-                                  padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppTheme.spaceM,
+                                  ),
                                   child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const Padding(
                                         padding: EdgeInsets.only(top: 2),
@@ -960,8 +1030,12 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                 const SizedBox(height: AppTheme.spaceS),
                                 ...state.history.take(5).map((entry) {
                                   return Container(
-                                    margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-                                    padding: const EdgeInsets.all(AppTheme.spaceM),
+                                    margin: const EdgeInsets.only(
+                                      bottom: AppTheme.spaceS,
+                                    ),
+                                    padding: const EdgeInsets.all(
+                                      AppTheme.spaceM,
+                                    ),
                                     decoration: AppTheme.tradingCardDecoration(
                                       borderColor: AppTheme.tradingSoftBorder,
                                       radius: 14,
@@ -970,7 +1044,8 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                       children: [
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 '${DateFormat('dd MMM').format(entry.createdAt)} • ${_goalLabel(entry.goal)}',
@@ -983,7 +1058,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                               const SizedBox(height: 4),
                                               Text(
                                                 'Perf ${entry.performance}/5 • Enjoyment ${entry.enjoyment}/5 • Tilt Control ${entry.tiltControl}/5',
-                                                style: const TextStyle(color: Colors.white60),
+                                                style: const TextStyle(
+                                                  color: Colors.white60,
+                                                ),
                                               ),
                                             ],
                                           ),

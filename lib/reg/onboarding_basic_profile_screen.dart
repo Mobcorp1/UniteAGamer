@@ -83,8 +83,10 @@ class _OnboardingBasicProfileScreenState
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
 
     final data = doc.data() ?? <String, dynamic>{};
     final basicProfile = data['basicProfile'] is Map<String, dynamic>
@@ -164,8 +166,9 @@ class _OnboardingBasicProfileScreenState
       }, SetOptions(merge: true));
 
       if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -256,12 +259,14 @@ class _OnboardingBasicProfileScreenState
                             TextFormField(
                               controller: _displayNameController,
                               style: AppTheme.bodyTextStyle(
-                                  fontSize: 16, color: AppTheme.neonCyan),
+                                fontSize: 16,
+                                color: AppTheme.neonCyan,
+                              ),
                               decoration: _input('Display Name'),
                               validator: (value) =>
                                   value == null || value.trim().isEmpty
-                                      ? 'Enter your display name'
-                                      : null,
+                                  ? 'Enter your display name'
+                                  : null,
                             ),
                             const SizedBox(height: AppTheme.spaceM),
                             _buildDropdown(
@@ -307,7 +312,9 @@ class _OnboardingBasicProfileScreenState
                           minLines: 3,
                           maxLines: 5,
                           style: AppTheme.bodyTextStyle(
-                              fontSize: 16, color: AppTheme.neonCyan),
+                            fontSize: 16,
+                            color: AppTheme.neonCyan,
+                          ),
                           decoration: _input('Short Bio (optional)'),
                         ),
                       ),
@@ -316,9 +323,9 @@ class _OnboardingBasicProfileScreenState
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _isSaving ? null : _saveProfile,
-                          child: Text(_isSaving
-                              ? 'Saving...'
-                              : 'Continue to Traders Hub'),
+                          child: Text(
+                            _isSaving ? 'Saving...' : 'Continue to Traders Hub',
+                          ),
                         ),
                       ),
                     ],

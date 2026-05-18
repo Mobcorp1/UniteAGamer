@@ -87,8 +87,12 @@ class UagPlanDefinition {
   final List<String> benefits;
 
   bool get isUnlimited => tier == UagPlanTier.premium;
-  String get monthlyPriceLabel => monthlyPricePence == 0 ? '£0' : '£${(monthlyPricePence / 100).toStringAsFixed(2)}';
-  String get yearlyPriceLabel => yearlyPricePence == 0 ? '£0' : '£${(yearlyPricePence / 100).toStringAsFixed(2)}';
+  String get monthlyPriceLabel => monthlyPricePence == 0
+      ? '£0'
+      : '£${(monthlyPricePence / 100).toStringAsFixed(2)}';
+  String get yearlyPriceLabel => yearlyPricePence == 0
+      ? '£0'
+      : '£${(yearlyPricePence / 100).toStringAsFixed(2)}';
 }
 
 class UagPlans {
@@ -204,26 +208,46 @@ class UagEntitlement {
   final DateTime? currentPeriodEnd;
   final String? referralCode;
 
-  bool get hasUnlimitedAccess => isAdmin || isDev || tier == UagPlanTier.premium;
-  bool get isPaid => tier == UagPlanTier.essential || tier == UagPlanTier.premium;
+  bool get hasUnlimitedAccess =>
+      isAdmin || isDev || tier == UagPlanTier.premium;
+  bool get isPaid =>
+      tier == UagPlanTier.essential || tier == UagPlanTier.premium;
   UagPlanDefinition get plan => UagPlans.byTier(tier);
 
   factory UagEntitlement.fromUserDoc(String uid, Map<String, dynamic> data) {
-    final monetisation = (data['monetisation'] as Map?)?.cast<String, dynamic>() ?? const <String, dynamic>{};
+    final monetisation =
+        (data['monetisation'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
     final tier = UagPlanTierX.fromId(
-      (data['subscriptionTier'] ?? monetisation['tier'] ?? data['tier'] ?? data['planTier'])?.toString(),
+      (data['subscriptionTier'] ??
+              monetisation['tier'] ??
+              data['tier'] ??
+              data['planTier'])
+          ?.toString(),
     );
-    final periodValue = monetisation['currentPeriodEnd'] ?? data['currentPeriodEnd'] ?? data['subscriptionCurrentPeriodEnd'];
+    final periodValue =
+        monetisation['currentPeriodEnd'] ??
+        data['currentPeriodEnd'] ??
+        data['subscriptionCurrentPeriodEnd'];
     return UagEntitlement(
       uid: uid,
       tier: tier,
-      subscriptionStatus: (data['subscriptionStatus'] ?? monetisation['subscriptionStatus'] ?? 'inactive').toString(),
+      subscriptionStatus:
+          (data['subscriptionStatus'] ??
+                  monetisation['subscriptionStatus'] ??
+                  'inactive')
+              .toString(),
       isAdmin: data['isAdmin'] == true,
       isDev: data['isDev'] == true,
-      stripeCustomerId: (monetisation['stripeCustomerId'] ?? data['stripeCustomerId'])?.toString(),
-      stripeSubscriptionId: (monetisation['stripeSubscriptionId'] ?? data['stripeSubscriptionId'])?.toString(),
+      stripeCustomerId:
+          (monetisation['stripeCustomerId'] ?? data['stripeCustomerId'])
+              ?.toString(),
+      stripeSubscriptionId:
+          (monetisation['stripeSubscriptionId'] ?? data['stripeSubscriptionId'])
+              ?.toString(),
       currentPeriodEnd: periodValue is Timestamp ? periodValue.toDate() : null,
-      referralCode: (data['referralCode'] ?? monetisation['referralCode'])?.toString(),
+      referralCode: (data['referralCode'] ?? monetisation['referralCode'])
+          ?.toString(),
     );
   }
 }
@@ -243,13 +267,16 @@ class UagUsageSnapshot {
 
   factory UagUsageSnapshot.fromMap(Map<String, dynamic> data) {
     return UagUsageSnapshot(
-      tradesUsed: (data['tradesUsed'] as num?)?.toInt() ??
+      tradesUsed:
+          (data['tradesUsed'] as num?)?.toInt() ??
           (data['tradeActions'] as num?)?.toInt() ??
           0,
-      matchSearchesUsed: (data['matchSearchesUsed'] as num?)?.toInt() ??
+      matchSearchesUsed:
+          (data['matchSearchesUsed'] as num?)?.toInt() ??
           (data['matchRaiderSearches'] as num?)?.toInt() ??
           0,
-      intelHintsUsed: (data['intelHintsUsed'] as num?)?.toInt() ??
+      intelHintsUsed:
+          (data['intelHintsUsed'] as num?)?.toInt() ??
           (data['intelUnlocks'] as num?)?.toInt() ??
           0,
       extraActionsAvailable:

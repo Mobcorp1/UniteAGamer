@@ -8,9 +8,6 @@ class ArcBlueprintIntelService {
     required String blueprintId,
     required List<ArcBlueprintDropReport> reports,
   }) {
-    return ArcDropIntel.fromReports(
-      blueprintId: blueprintId,
-      reports: reports,
-    );
+    return ArcDropIntel.fromReports(blueprintId: blueprintId, reports: reports);
   }
 }

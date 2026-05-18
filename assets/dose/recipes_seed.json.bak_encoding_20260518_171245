@@ -1,12 +1,12 @@
-﻿{
+{
   "recipes": [
     {
       "id": "dose_jelly_chilli_lime_v1",
       "version": 1,
       "status": "complete",
       "category": "gamingSnack",
-      "title": "Chilli-Lime Agar Jelly Bites",
-      "shortDescription": "Bright, zingy agar jellies with a gentle chilli kick. A ritual snack with a clear 'finished' reward.",
+      "title": "Chilli–Lime Agar Jelly Bites",
+      "shortDescription": "Bright, zingy agar jellies with a gentle chilli kick. A ritual snack with a clear ‘finished’ reward.",
       "servings": 12,
       "yieldText": "12 mini jelly bites",
       "difficulty": "easy",
@@ -25,7 +25,7 @@
           "name": "Fresh lime juice",
           "amount": 40,
           "unit": "ml",
-          "notes": "about 1-2 limes"
+          "notes": "about 1–2 limes"
         },
         {
           "name": "Lime zest",
@@ -95,7 +95,7 @@
         },
         {
           "order": 4,
-          "instruction": "Remove from heat. Let it cool 30-60 seconds, then whisk in lime juice."
+          "instruction": "Remove from heat. Let it cool 30–60 seconds, then whisk in lime juice."
         },
         {
           "order": 5,
@@ -113,7 +113,7 @@
       ],
       "whyItWorks": [
         "Short ritual loop: start → finish → reward (ADHD-friendly).",
-        "Agar is consistent when boiled properly, so it's repeatable for testing.",
+        "Agar is consistent when boiled properly, so it’s repeatable for testing.",
         "Strong flavour increases satisfaction without needing huge sugar."
       ],
       "pillars": [
@@ -127,7 +127,7 @@
         "agar",
         "portion-control"
       ],
-      "storage": "Fridge 3-4 days in a sealed container. Freezing can change texture/weep.",
+      "storage": "Fridge 3–4 days in a sealed container. Freezing can change texture/weep.",
       "ragPrompt": "10 minutes after: are you Red/Amber/Green for mood + energy?",
       "substitutions": [
         "Honey → maple syrup (vegan).",
@@ -150,7 +150,7 @@
         "bestUseCases": [
           "Afternoon craving swap",
           "Pre-game snack ritual",
-          "Late-night 'something sweet'"
+          "Late-night ‘something sweet’"
         ],
         "cautions": [
           "Skip chilli if reflux/spice sensitive"
@@ -164,7 +164,7 @@
           "bloodSugarStable"
         ],
         "whyItHelps": [
-          "Hydration-adjacent snack helps reduce 'dry fatigue' while sitting.",
+          "Hydration-adjacent snack helps reduce ‘dry fatigue’ while sitting.",
           "Optional chilli adds gentle warmth sensation (skip if sensitive).",
           "Portioning reduces spike/crash patterns that can worsen sluggishness."
         ],
@@ -179,10 +179,10 @@
       "version": 1,
       "status": "complete",
       "category": "slushy",
-      "title": "Chilli-Lime Pre-Game Shot",
-      "shortDescription": "A fast 'switch on' ritual drink without needing an energy drink.",
+      "title": "Chilli–Lime Pre-Game Shot",
+      "shortDescription": "A fast ‘switch on’ ritual drink without needing an energy drink.",
       "servings": 1,
-      "yieldText": "1 shot (80-120ml)",
+      "yieldText": "1 shot (80–120ml)",
       "difficulty": "easy",
       "prepMinutes": 3,
       "cookMinutes": 0,
@@ -307,7 +307,7 @@
         "whyItHelps": [
           "Hydration supports long sitting sessions.",
           "Tiny pinch of salt supports fluid balance.",
-          "Optional chilli adds warmth sensation that can feel 'activating'."
+          "Optional chilli adds warmth sensation that can feel ‘activating’."
         ],
         "microMovePrompt": "Before gaming: 60s march-in-place + 30s shoulder rolls.",
         "cautions": [
@@ -407,7 +407,7 @@
       "steps": [
         {
           "order": 1,
-          "instruction": "Simmer water with orange peel, cinnamon, ginger, and salt for 8-10 minutes."
+          "instruction": "Simmer water with orange peel, cinnamon, ginger, and salt for 8–10 minutes."
         },
         {
           "order": 2,
@@ -428,7 +428,7 @@
       ],
       "whyItWorks": [
         "Swap strategy reduces impulse soda choices.",
-        "Spice complexity reduces the need for high sweetness to feel 'interesting'."
+        "Spice complexity reduces the need for high sweetness to feel ‘interesting’."
       ],
       "pillars": [
         "serotonin",
@@ -441,7 +441,7 @@
         "cola-style",
         "reduce-soda"
       ],
-      "storage": "Concentrate keeps 2-3 days in fridge. Add sparkling only when serving.",
+      "storage": "Concentrate keeps 2–3 days in fridge. Add sparkling only when serving.",
       "ragPrompt": "After: did it satisfy the craving without a crash? Red/Amber/Green.",
       "substitutions": [
         "Honey → maple syrup (vegan).",
@@ -464,7 +464,7 @@
         "bestUseCases": [
           "Afternoon soda cravings",
           "Weekend treat swap",
-          "When you want 'cola vibe'"
+          "When you want ‘cola vibe’"
         ],
         "cautions": [
           "Reduce citrus if acid sensitive",
@@ -472,14 +472,14 @@
         ]
       },
       "circulation": {
-        "circulationSupport": "Low-Medium",
+        "circulationSupport": "Low–Medium",
         "focuses": [
           "hydration",
           "antiInflammatory"
         ],
         "whyItHelps": [
           "Hydration with a satisfying swap supports longer sessions without dehydrating soda habits.",
-          "Ginger/cinnamon are common 'warming routine' ingredients."
+          "Ginger/cinnamon are common ‘warming routine’ ingredients."
         ],
         "microMovePrompt": "Mid-session: stand up 60s + 10 slow bodyweight squats.",
         "cautions": [
@@ -494,7 +494,7 @@
       "status": "complete",
       "category": "iceCream",
       "title": "Oat-Based Yoghurt Cheesecake (No-Bake)",
-      "shortDescription": "No-bake 'cheesecake' using an oat base and thick yoghurt filling for a cleaner, steadier dessert.",
+      "shortDescription": "No-bake ‘cheesecake’ using an oat base and thick yoghurt filling for a cleaner, steadier dessert.",
       "servings": 6,
       "yieldText": "1 small cheesecake (6 slices)",
       "difficulty": "easy",
@@ -585,7 +585,7 @@
         },
         {
           "order": 3,
-          "instruction": "Press firmly into a lined tin. Chill 20-30 minutes."
+          "instruction": "Press firmly into a lined tin. Chill 20–30 minutes."
         },
         {
           "order": 4,
@@ -640,7 +640,7 @@
         "Oats (may contain gluten unless certified GF)"
       ],
       "mood": {
-        "bloodSugarStability": "Medium-High (depends on sweetener amount)",
+        "bloodSugarStability": "Medium–High (depends on sweetener amount)",
         "stabilityLevers": [
           "protein support",
           "portion control",
@@ -651,20 +651,20 @@
         "bestUseCases": [
           "Evening treat swap",
           "Post-workout dessert",
-          "Weekend 'controlled treat'"
+          "Weekend ‘controlled treat’"
         ],
         "cautions": [
           "Keep sweetener modest if prone to sugar crashes"
         ]
       },
       "circulation": {
-        "circulationSupport": "Low-Medium",
+        "circulationSupport": "Low–Medium",
         "focuses": [
           "bloodSugarStable",
           "lightProteinSupport"
         ],
         "whyItHelps": [
-          "More balanced dessert reduces the 'crash' feeling that can keep you sedentary.",
+          "More balanced dessert reduces the ‘crash’ feeling that can keep you sedentary.",
           "Portioning encourages getting up for a small break rather than grazing."
         ],
         "microMovePrompt": "After dessert: stand 60s + 30s calf raises.",

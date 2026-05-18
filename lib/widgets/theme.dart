@@ -42,11 +42,15 @@ class AppTheme {
   static const double space = spaceS;
 
   static const EdgeInsets pagePadding = EdgeInsets.all(spaceL);
-  static const EdgeInsets buttonPadding =
-      EdgeInsets.symmetric(horizontal: 14, vertical: 12);
+  static const EdgeInsets buttonPadding = EdgeInsets.symmetric(
+    horizontal: 14,
+    vertical: 12,
+  );
   static const EdgeInsets sectionCardPadding = EdgeInsets.all(spaceL);
-  static const EdgeInsets pillPadding =
-      EdgeInsets.symmetric(horizontal: 10, vertical: 6);
+  static const EdgeInsets pillPadding = EdgeInsets.symmetric(
+    horizontal: 10,
+    vertical: 6,
+  );
 
   static const Duration fastAnimation = Duration(milliseconds: 160);
 
@@ -101,14 +105,8 @@ class AppTheme {
           color: neonPink,
           isBold: true,
         ),
-        headlineSmall: heroTextStyle(
-          fontSize: 32.0,
-          color: neonPink,
-        ),
-        labelSmall: buttonTextStyle(
-          color: neonCyan,
-          fontSize: 13.0,
-        ),
+        headlineSmall: heroTextStyle(fontSize: 32.0, color: neonPink),
+        labelSmall: buttonTextStyle(color: neonCyan, fontSize: 13.0),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: darkBackground,
@@ -122,14 +120,17 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          backgroundColor:
-              WidgetStateProperty.all(neonPink.withValues(alpha: 0.14)),
+          backgroundColor: WidgetStateProperty.all(
+            neonPink.withValues(alpha: 0.14),
+          ),
           foregroundColor: WidgetStateProperty.all(neonPink),
-          shadowColor:
-              WidgetStateProperty.all(neonPink.withValues(alpha: 0.16)),
+          shadowColor: WidgetStateProperty.all(
+            neonPink.withValues(alpha: 0.16),
+          ),
           elevation: WidgetStateProperty.all(0),
-          overlayColor:
-              WidgetStateProperty.all(neonPink.withValues(alpha: 0.08)),
+          overlayColor: WidgetStateProperty.all(
+            neonPink.withValues(alpha: 0.08),
+          ),
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(buttonRadius),
@@ -140,10 +141,7 @@ class AppTheme {
             ),
           ),
           textStyle: WidgetStateProperty.all(
-            buttonTextStyle(
-              color: neonPink,
-              fontSize: 16,
-            ),
+            buttonTextStyle(color: neonPink, fontSize: 16),
           ),
           padding: WidgetStateProperty.all(buttonPadding),
         ),
@@ -157,14 +155,9 @@ class AppTheme {
           return Colors.transparent;
         }),
         side: WidgetStateBorderSide.resolveWith(
-          (_) => const BorderSide(
-            color: neonPink,
-            width: 2.0,
-          ),
+          (_) => const BorderSide(color: neonPink, width: 2.0),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -194,10 +187,7 @@ class AppTheme {
         ),
       ),
       dropdownMenuTheme: DropdownMenuThemeData(
-        textStyle: bodyTextStyle(
-          fontSize: 16.0,
-          color: neonCyan,
-        ),
+        textStyle: bodyTextStyle(fontSize: 16.0, color: neonCyan),
         menuStyle: MenuStyle(
           backgroundColor: WidgetStateProperty.all(cardBackground),
         ),
@@ -213,12 +203,12 @@ class AppTheme {
           ),
         ),
       ),
-      dialogTheme: const DialogThemeData(
-        backgroundColor: darkBackground,
-      ),
+      dialogTheme: const DialogThemeData(backgroundColor: darkBackground),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(neonCyan.withValues(alpha: 0.60)),
-        trackColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.05)),
+        trackColor: WidgetStateProperty.all(
+          Colors.white.withValues(alpha: 0.05),
+        ),
         thickness: WidgetStateProperty.all(6),
         radius: const Radius.circular(999),
       ),
@@ -228,10 +218,7 @@ class AppTheme {
         shadowColor: glassShadow,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
-          side: BorderSide(
-            color: glassBorder,
-            width: cardBorderWidth,
-          ),
+          side: BorderSide(color: glassBorder, width: cardBorderWidth),
         ),
       ),
     );
@@ -263,10 +250,7 @@ class AppTheme {
       letterSpacing: bodyLetterSpacing,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.16),
-          blurRadius: glowSoft,
-        ),
+        Shadow(color: color.withValues(alpha: 0.16), blurRadius: glowSoft),
       ],
     );
   }
@@ -283,10 +267,7 @@ class AppTheme {
       letterSpacing: titleLetterSpacing,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.10),
-          blurRadius: glowSoft,
-        ),
+        Shadow(color: color.withValues(alpha: 0.10), blurRadius: glowSoft),
       ],
     );
   }
@@ -303,10 +284,7 @@ class AppTheme {
       height: 1.0,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.30),
-          blurRadius: glowStrong,
-        ),
+        Shadow(color: color.withValues(alpha: 0.30), blurRadius: glowStrong),
       ],
     );
   }
@@ -322,10 +300,7 @@ class AppTheme {
       letterSpacing: 0.35,
       color: color,
       shadows: [
-        Shadow(
-          color: color.withValues(alpha: 0.12),
-          blurRadius: glowSoft,
-        ),
+        Shadow(color: color.withValues(alpha: 0.12), blurRadius: glowSoft),
       ],
     );
   }
@@ -333,10 +308,7 @@ class AppTheme {
   static OutlineInputBorder neonBorder({double width = 1.5}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(inputRadius),
-      borderSide: BorderSide(
-        color: neonPink,
-        width: width,
-      ),
+      borderSide: BorderSide(color: neonPink, width: width),
     );
   }
 
@@ -353,11 +325,7 @@ class AppTheme {
         color: neonCyan.withValues(alpha: 0.65),
       ),
       prefixIconColor: neonPink,
-      labelStyle: bodyTextStyle(
-        fontSize: 14.0,
-        color: neonCyan,
-        isBold: true,
-      ),
+      labelStyle: bodyTextStyle(fontSize: 14.0, color: neonCyan, isBold: true),
     );
   }
 
@@ -394,9 +362,7 @@ class AppTheme {
         color: glowColor.withValues(alpha: 0.78),
         width: cardBorderWidth,
       ),
-      boxShadow: dualOutlineGlow(
-        glowColor: glowColor,
-      ),
+      boxShadow: dualOutlineGlow(glowColor: glowColor),
     );
   }
 
@@ -425,10 +391,7 @@ class AppTheme {
   static const LinearGradient dualToneGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      neonCyan,
-      neonPink,
-    ],
+    colors: [neonCyan, neonPink],
   );
 
   static BoxDecoration dualToneOuterDecoration({
@@ -476,21 +439,15 @@ class AppTheme {
   ) {
     return TypewriterAnimatedText(
       text,
-      textStyle: textStyle ??
-          titleTextStyle(
-            fontSize: 20.0,
-            color: neonCyan,
-            isBold: true,
-          ),
+      textStyle:
+          textStyle ??
+          titleTextStyle(fontSize: 20.0, color: neonCyan, isBold: true),
       speed: const Duration(milliseconds: 100),
     );
   }
 
   static TextStyle drawerItemTextStyle({required Color color}) {
-    return buttonTextStyle(
-      color: color,
-      fontSize: 16.0,
-    );
+    return buttonTextStyle(color: color, fontSize: 16.0);
   }
 
   static Color primaryButtonBorder(bool enabled) => enabled
@@ -579,9 +536,7 @@ class AppTheme {
     return BoxDecoration(
       color: backgroundColor ?? tradingCardBackground,
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: borderColor ?? tradingCardBorder,
-      ),
+      border: Border.all(color: borderColor ?? tradingCardBorder),
       boxShadow: [
         BoxShadow(
           color: neonCyan.withValues(alpha: 0.05),
@@ -592,9 +547,7 @@ class AppTheme {
     );
   }
 
-  static BoxDecoration tradingPillDecoration({
-    required Color color,
-  }) {
+  static BoxDecoration tradingPillDecoration({required Color color}) {
     return BoxDecoration(
       color: color.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(999),
@@ -605,17 +558,13 @@ class AppTheme {
     );
   }
 
-  static InputDecoration tradingInputDecoration({
-    required String label,
-  }) {
+  static InputDecoration tradingInputDecoration({required String label}) {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(color: neonPink),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: neonCyan.withValues(alpha: 0.25),
-        ),
+        borderSide: BorderSide(color: neonCyan.withValues(alpha: 0.25)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -623,9 +572,7 @@ class AppTheme {
       ),
       disabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.15),
-        ),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
       ),
     );
   }
@@ -633,9 +580,7 @@ class AppTheme {
   static ShapeBorder tradingDialogShape() {
     return RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(18),
-      side: BorderSide(
-        color: neonCyan.withValues(alpha: 0.25),
-      ),
+      side: BorderSide(color: neonCyan.withValues(alpha: 0.25)),
     );
   }
 

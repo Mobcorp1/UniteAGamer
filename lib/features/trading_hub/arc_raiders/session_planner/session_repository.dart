@@ -7,8 +7,8 @@ import 'package:uuid/uuid.dart';
 
 class UagSessionRepository {
   UagSessionRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   static const String collectionPath = 'uag_sessions';
 
@@ -103,22 +103,22 @@ class UagSessionRepository {
         .orderBy('scheduledAt')
         .snapshots()
         .listen((snapshot) {
-      participantOneSessions = snapshot.docs
-          .map(UagSession.fromDoc)
-          .toList(growable: false);
-      emit();
-    }, onError: controller.addError);
+          participantOneSessions = snapshot.docs
+              .map(UagSession.fromDoc)
+              .toList(growable: false);
+          emit();
+        }, onError: controller.addError);
 
     final subTwo = _sessions
         .where('participantTwoUid', isEqualTo: uid)
         .orderBy('scheduledAt')
         .snapshots()
         .listen((snapshot) {
-      participantTwoSessions = snapshot.docs
-          .map(UagSession.fromDoc)
-          .toList(growable: false);
-      emit();
-    }, onError: controller.addError);
+          participantTwoSessions = snapshot.docs
+              .map(UagSession.fromDoc)
+              .toList(growable: false);
+          emit();
+        }, onError: controller.addError);
 
     controller.onCancel = () async {
       await subOne.cancel();

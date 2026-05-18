@@ -1197,7 +1197,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.security],
-      notes: 'Player-reported weapon cache spawn on the broken bridge near Town Hall.',
+      notes:
+          'Player-reported weapon cache spawn on the broken bridge near Town Hall.',
     ),
     ArcPoiData(
       id: 'buried_city_weapon_cache_library_rooftop',
@@ -1207,7 +1208,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.commercial],
-      notes: 'Community guide: rooftop cache spawns on the east and north sides.',
+      notes:
+          'Community guide: rooftop cache spawns on the east and north sides.',
     ),
     ArcPoiData(
       id: 'buried_city_weapon_cache_galleria_sign',
@@ -1237,7 +1239,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.oldWorld],
-      notes: 'Community guide: raider camp reached via the barricaded door and elevator shaft.',
+      notes:
+          'Community guide: raider camp reached via the barricaded door and elevator shaft.',
     ),
   ];
 
@@ -1250,7 +1253,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
-      notes: 'Community guide: near the consoles and left of the stairs by the lockers.',
+      notes:
+          'Community guide: near the consoles and left of the stairs by the lockers.',
     ),
     ArcPoiData(
       id: 'dam_weapon_cache_control_tower_lower_floor',
@@ -1270,7 +1274,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.nature, ArcBuildingType.industrial],
-      notes: 'Community guide: sewer route under the Control Tower back entrance.',
+      notes:
+          'Community guide: sewer route under the Control Tower back entrance.',
     ),
     ArcPoiData(
       id: 'dam_weapon_cache_hydroponic_southwest',
@@ -1279,8 +1284,12 @@ class ArcPoiDataStore {
       areaName: 'Hydroponic Dome Complex',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.technological],
-      notes: 'Community guide: westmost part of the building and near the dirty pools.',
+      buildingTypes: [
+        ArcBuildingType.industrial,
+        ArcBuildingType.technological,
+      ],
+      notes:
+          'Community guide: westmost part of the building and near the dirty pools.',
     ),
     ArcPoiData(
       id: 'dam_weapon_cache_hydroponic_eastern_building',
@@ -1289,8 +1298,12 @@ class ArcPoiDataStore {
       areaName: 'Hydroponic Dome Complex',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.technological],
-      notes: 'Community guide: on the scaffolding shelf just inside the south entrance.',
+      buildingTypes: [
+        ArcBuildingType.industrial,
+        ArcBuildingType.technological,
+      ],
+      notes:
+          'Community guide: on the scaffolding shelf just inside the south entrance.',
     ),
   ];
 
@@ -1303,7 +1316,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.oldWorld],
-      notes: 'Community guide: rail between the two broken roads with abandoned cars.',
+      notes:
+          'Community guide: rail between the two broken roads with abandoned cars.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_concrete_beams',
@@ -1313,7 +1327,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
-      notes: 'Community guide: zipline-access concrete beams above the underground entrance.',
+      notes:
+          'Community guide: zipline-access concrete beams above the underground entrance.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_pilgrims_peak_top',
@@ -1333,7 +1348,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
-      notes: 'Community guide: below the turret after heading down the stairs and turning right.',
+      notes:
+          'Community guide: below the turret after heading down the stairs and turning right.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_traffic_tunnel_right_end',
@@ -1353,7 +1369,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
-      notes: 'Community guide: outer rims above the traffic tunnel, sometimes guarded by turrets.',
+      notes:
+          'Community guide: outer rims above the traffic tunnel, sometimes guarded by turrets.',
     ),
     ArcPoiData(
       id: 'blue_gate_weapon_cache_mantikor_room',
@@ -1363,7 +1380,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
-      notes: 'Community guide: fuel-cell room accessed from Reinforced Reception.',
+      notes:
+          'Community guide: fuel-cell room accessed from Reinforced Reception.',
     ),
   ];
 
@@ -1375,7 +1393,10 @@ class ArcPoiDataStore {
       areaName: 'Departure Building',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.commercial, ArcBuildingType.technological],
+      buildingTypes: [
+        ArcBuildingType.commercial,
+        ArcBuildingType.technological,
+      ],
       notes: 'Community guide: shower area near reception.',
     ),
     ArcPoiData(
@@ -1385,8 +1406,12 @@ class ArcPoiDataStore {
       areaName: 'Arrival Building',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.commercial, ArcBuildingType.technological],
-      notes: 'Community guide: ladder access outside near the Shipping Warehouse side.',
+      buildingTypes: [
+        ArcBuildingType.commercial,
+        ArcBuildingType.technological,
+      ],
+      notes:
+          'Community guide: ladder access outside near the Shipping Warehouse side.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_launch_towers_top',
@@ -1396,7 +1421,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.technological, ArcBuildingType.security],
-      notes: 'Community guide: top level spawns under the stairs or near the railings facing the rocket shaft.',
+      notes:
+          'Community guide: top level spawns under the stairs or near the railings facing the rocket shaft.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_fuel_lines_pipe',
@@ -1406,7 +1432,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.electrical],
-      notes: 'Community guide: climb inside the vertical cylindrical pipe east of the nearby Field Depot.',
+      notes:
+          'Community guide: climb inside the vertical cylindrical pipe east of the nearby Field Depot.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_east_container_yard',
@@ -1416,7 +1443,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.commercial],
-      notes: 'Community guide: lower container yard between the two catwalks east of the raider hatch.',
+      notes:
+          'Community guide: lower container yard between the two catwalks east of the raider hatch.',
     ),
     ArcPoiData(
       id: 'spaceport_weapon_cache_tunnels_console_room',
@@ -1426,7 +1454,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
-      notes: 'Community guide: usually in the console rooms or the southeast tunnel camp.',
+      notes:
+          'Community guide: usually in the console rooms or the southeast tunnel camp.',
     ),
   ];
 
@@ -1439,7 +1468,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.medical, ArcBuildingType.technological],
-      notes: 'Community guide: on top of the server banks in the northern part of the area.',
+      notes:
+          'Community guide: on top of the server banks in the northern part of the area.',
     ),
     ArcPoiData(
       id: 'stella_weapon_cache_seed_vault_left_hallway',
@@ -1449,7 +1479,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.technological, ArcBuildingType.security],
-      notes: 'Community guide: inside after opening the fuel-cell door and hugging the left wall.',
+      notes:
+          'Community guide: inside after opening the fuel-cell door and hugging the left wall.',
     ),
     ArcPoiData(
       id: 'stella_weapon_cache_assembly_hanging_thruster',
@@ -1489,7 +1520,8 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.exodus],
-      notes: 'Community guide: lying on the railcar between Cargo Dock A and B.',
+      notes:
+          'Community guide: lying on the railcar between Cargo Dock A and B.',
     ),
   ];
 
@@ -1595,7 +1627,6 @@ class ArcPoiDataStore {
     ),
   ];
 
-
   static const List<ArcEnemySource> commonEnemySources = [
     ArcEnemySource(id: 'enemy_surveyor', name: 'Surveyor'),
     ArcEnemySource(id: 'enemy_raider', name: 'Raider'),
@@ -1624,11 +1655,11 @@ class ArcPoiDataStore {
   }
 
   static List<String> blueprintReportAreasForMap(String mapName) {
-    final areas = blueprintReportPoisForMap(mapName)
-        .map((poi) => poi.resolvedAreaName)
-        .toSet()
-        .toList(growable: false)
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final areas =
+        blueprintReportPoisForMap(
+            mapName,
+          ).map((poi) => poi.resolvedAreaName).toSet().toList(growable: false)
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return areas;
   }
 

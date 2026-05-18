@@ -19,11 +19,7 @@ class ArcRaidersTheme {
   static const LinearGradient energyGradient = LinearGradient(
     begin: Alignment.bottomRight,
     end: Alignment.topLeft,
-    colors: <Color>[
-      stripeBlue,
-      stripePurple,
-      stripePink,
-    ],
+    colors: <Color>[stripeBlue, stripePurple, stripePink],
   );
 
   static List<BoxShadow> outerGlow([Color color = stripeBlue]) {
@@ -59,23 +55,15 @@ class ArcRaidersTheme {
     return BoxDecoration(
       color: backgroundColor ?? panelAlt,
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: Colors.white.withValues(alpha: 0.08),
-      ),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
     );
   }
 
-  static TextStyle hubTitle({
-    double fontSize = 24,
-    Color color = textPrimary,
-  }) {
+  static TextStyle hubTitle({double fontSize = 24, Color color = textPrimary}) {
     return AppTheme.heroTextStyle(fontSize: fontSize, color: color);
   }
 
-  static TextStyle label({
-    double fontSize = 12,
-    Color color = textSecondary,
-  }) {
+  static TextStyle label({double fontSize = 12, Color color = textSecondary}) {
     return TextStyle(
       fontSize: fontSize,
       fontFamily: AppTheme.bodyFontFamily,

@@ -33,8 +33,8 @@ class BlueprintTile extends StatelessWidget {
     final accent = isSelected
         ? AppTheme.neonPink
         : owned
-            ? rarityColor
-            : Colors.redAccent.withValues(alpha: 0.55);
+        ? rarityColor
+        : Colors.redAccent.withValues(alpha: 0.55);
 
     return ElectricChargeBorder(
       active: isSelected,
@@ -47,13 +47,17 @@ class BlueprintTile extends StatelessWidget {
           decoration: AppTheme.tradingCardDecoration(
             radius: 12,
             borderColor: accent.withValues(
-              alpha: isSelected ? 0.88 : owned ? 0.55 : 0.24,
+              alpha: isSelected
+                  ? 0.88
+                  : owned
+                  ? 0.55
+                  : 0.24,
             ),
             backgroundColor: isSelected
                 ? AppTheme.cardBackgroundAlt.withValues(alpha: 0.96)
                 : owned
-                    ? AppTheme.cardBackgroundAlt
-                    : AppTheme.cardBackground,
+                ? AppTheme.cardBackgroundAlt
+                : AppTheme.cardBackground,
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -130,12 +134,31 @@ class _BlueprintTileVisual extends StatelessWidget {
               children: [
                 ColorFiltered(
                   colorFilter: owned
-                      ? const ColorFilter.mode(Colors.transparent, BlendMode.dst)
+                      ? const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.dst,
+                        )
                       : const ColorFilter.matrix(<double>[
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0, 0, 0, 1, 0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
                         ]),
                   child: Image.asset(
                     blueprint.imageAssetPath!,
@@ -161,7 +184,9 @@ class _BlueprintTileVisual extends StatelessWidget {
           top: 4,
           right: 4,
           child: _cornerBadge(
-            icon: state.owned ? Icons.check_circle_rounded : Icons.close_rounded,
+            icon: state.owned
+                ? Icons.check_circle_rounded
+                : Icons.close_rounded,
             color: state.owned ? Colors.lightGreenAccent : Colors.redAccent,
           ),
         ),
@@ -208,9 +233,7 @@ class _BlueprintTileVisual extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.cardBackgroundAlt,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.30),
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.30)),
       ),
       child: Center(
         child: Icon(

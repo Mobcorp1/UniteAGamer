@@ -73,12 +73,13 @@ class ArcBlueprintState {
         (legacyOwnedCount == null
             ? 0
             : legacyOwnedCount > 0
-                ? legacyOwnedCount - 1
-                : 0);
+            ? legacyOwnedCount - 1
+            : 0);
 
     final explicitOwned = map['owned'] as bool?;
     final legacyWanted = (map['wanted'] as bool?) ?? false;
-    final owned = explicitOwned ??
+    final owned =
+        explicitOwned ??
         (legacyOwnedCount != null
             ? legacyOwnedCount > 0
             : (!legacyWanted || dupesOwned > 0));

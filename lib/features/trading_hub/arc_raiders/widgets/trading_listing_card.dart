@@ -76,7 +76,9 @@ class TradingListingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = listing.isLive ? AppTheme.neonCyan : Colors.white54;
-    final statusLabel = listing.isLive ? 'Live' : (listing.active ? 'Expired' : 'Closed');
+    final statusLabel = listing.isLive
+        ? 'Live'
+        : (listing.active ? 'Expired' : 'Closed');
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),

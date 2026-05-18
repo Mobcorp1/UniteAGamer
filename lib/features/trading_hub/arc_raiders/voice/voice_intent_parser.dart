@@ -24,22 +24,50 @@ class UagVoiceIntentParser {
       'who wants',
       'anyone need',
     ])) {
-      return UagVoiceIntent(type: UagVoiceIntentType.tradeCheck, rawText: raw, itemQuery: itemQuery);
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.tradeCheck,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
     }
 
-    if (_containsAny(normalized, const <String>['bench', 'upgrade', 'workbench', 'crafting bench'])) {
-      return UagVoiceIntent(type: UagVoiceIntentType.benchLookup, rawText: raw, itemQuery: itemQuery);
+    if (_containsAny(normalized, const <String>[
+      'bench',
+      'upgrade',
+      'workbench',
+      'crafting bench',
+    ])) {
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.benchLookup,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
     }
 
-    if (_containsAny(normalized, const <String>['quest', 'mission', 'objective', 'task'])) {
-      return UagVoiceIntent(type: UagVoiceIntentType.questLookup, rawText: raw, itemQuery: itemQuery);
+    if (_containsAny(normalized, const <String>[
+      'quest',
+      'mission',
+      'objective',
+      'task',
+    ])) {
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.questLookup,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
     }
 
-    return UagVoiceIntent(type: UagVoiceIntentType.needCheck, rawText: raw, itemQuery: itemQuery);
+    return UagVoiceIntent(
+      type: UagVoiceIntentType.needCheck,
+      rawText: raw,
+      itemQuery: itemQuery,
+    );
   }
 
   bool _containsAny(String normalized, List<String> phrases) {
-    return phrases.any((phrase) => normalized.contains(UnifiedItemIndex.normalize(phrase)));
+    return phrases.any(
+      (phrase) => normalized.contains(UnifiedItemIndex.normalize(phrase)),
+    );
   }
 
   String? _extractItem(String raw) {
@@ -103,10 +131,22 @@ class UagVoiceIntentParser {
   String _normaliseSpeech(String text) {
     var value = text.trim();
     value = value.replaceAll(RegExp(r'\bark\b', caseSensitive: false), 'ARC');
-    value = value.replaceAll(RegExp(r'\bequaliser\b', caseSensitive: false), 'Equalizer');
-    value = value.replaceAll(RegExp(r'\bdalabra\b', caseSensitive: false), 'Dolabra');
-    value = value.replaceAll(RegExp(r'\bdoll abra\b', caseSensitive: false), 'Dolabra');
-    value = value.replaceAll(RegExp(r'\bdoh labra\b', caseSensitive: false), 'Dolabra');
+    value = value.replaceAll(
+      RegExp(r'\bequaliser\b', caseSensitive: false),
+      'Equalizer',
+    );
+    value = value.replaceAll(
+      RegExp(r'\bdalabra\b', caseSensitive: false),
+      'Dolabra',
+    );
+    value = value.replaceAll(
+      RegExp(r'\bdoll abra\b', caseSensitive: false),
+      'Dolabra',
+    );
+    value = value.replaceAll(
+      RegExp(r'\bdoh labra\b', caseSensitive: false),
+      'Dolabra',
+    );
     return value;
   }
 }

@@ -1,10 +1,10 @@
-﻿{
+{
   "version": 5,
   "boosters": [
     {
       "id": "dop-001",
       "title": "Brush Your Teeth",
-      "description": "Brush your teeth and rinse. That's the win.",
+      "description": "Brush your teeth and rinse. That’s the win.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
       "durationMinutes": 3,
@@ -18,7 +18,7 @@
       "repeatable": "daily",
       "whyTitle": "Why this helps",
       "whyBullets": [
-        "A quick 'done' task creates momentum and reduces mental friction.",
+        "A quick ‘done’ task creates momentum and reduces mental friction.",
         "Completing a small win can boost motivation for the next step."
       ],
       "whySources": ["NHS: Mental wellbeing tips", "Harvard Health: The power of small habits"]
@@ -40,7 +40,7 @@
       "repeatable": "daily",
       "whyTitle": "Why this helps",
       "whyBullets": [
-        "Cold/water contact can act as a rapid 'reset cue' for your nervous system.",
+        "Cold/water contact can act as a rapid ‘reset cue’ for your nervous system.",
         "A simple sensory change helps interrupt spirals and rumination."
       ],
       "whySources": ["NHS: Stress and anxiety guidance", "Sleep Foundation: Arousal and alertness basics"]
@@ -63,14 +63,14 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Changing state physically can shift state mentally (behaviour → mood).",
-        "It reduces 'stuck mode' by signalling the day has started."
+        "It reduces ‘stuck mode’ by signalling the day has started."
       ],
       "whySources": ["NHS: Behaviour and mood", "APA: Behavioural activation basics"]
     },
     {
       "id": "dop-004",
       "title": "Drink Water",
-      "description": "Drink a full glass of water. Then you're done.",
+      "description": "Drink a full glass of water. Then you’re done.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
       "durationMinutes": 3,
@@ -85,7 +85,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Hydration supports attention and reduces fatigue signals.",
-        "Small self-care actions build trust in the system: 'I can do this'."
+        "Small self-care actions build trust in the system: ‘I can do this’."
       ],
       "whySources": ["NHS: Dehydration overview", "Harvard Health: Hydration and energy"]
     },
@@ -129,7 +129,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Music can quickly shift arousal and emotion.",
-        "It creates an easy 'bridge' from low energy to action."
+        "It creates an easy ‘bridge’ from low energy to action."
       ],
       "whySources": ["NHS: Music and mood", "Harvard Health: Music and the brain"]
     },
@@ -151,7 +151,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Timeboxing prevents overwhelm and increases completion rates.",
-        "A small 'control win' improves perceived capability."
+        "A small ‘control win’ improves perceived capability."
       ],
       "whySources": ["Behavioural activation: timeboxing approach", "NHS: Managing stress"]
     },
@@ -183,7 +183,7 @@
     {
       "id": "dop-009",
       "title": "5-Min Desk Reset",
-      "description": "Clear your desk/area for 5 minutes. Only what's in reach.",
+      "description": "Clear your desk/area for 5 minutes. Only what’s in reach.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
       "durationMinutes": 5,
@@ -205,7 +205,7 @@
     {
       "id": "dop-010",
       "title": "1-Min Cold Rinse (hands/face)",
-      "description": "Rinse hands/face with cool water for 30-60 seconds.",
+      "description": "Rinse hands/face with cool water for 30–60 seconds.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
       "durationMinutes": 2,
@@ -220,13 +220,13 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Fast sensory change can increase alertness.",
-        "Interrupts 'stuck loop' with a physical cue."
+        "Interrupts ‘stuck loop’ with a physical cue."
       ],
       "whySources": ["Sleep Foundation: Alertness cues", "NHS: Stress management basics"]
     },
     {
       "id": "dop-011",
-      "title": "2-Min 'Next Objective' List",
+      "title": "2-Min ‘Next Objective’ List",
       "description": "Write 3 micro-tasks. Do the easiest one first.",
       "category": "Dopamine",
       "primaryCategory": "Dopamine",
@@ -272,7 +272,7 @@
     {
       "id": "oxy-001",
       "title": "Send a Check-in",
-      "description": "Message someone safe: "You good?" No big speech needed.",
+      "description": "Message someone safe: “You good?” No big speech needed.",
       "category": "Oxytocin",
       "primaryCategory": "Oxytocin",
       "durationMinutes": 2,
@@ -361,7 +361,7 @@
     {
       "id": "oxy-005",
       "title": "2-Min Hug (or Hand Hold)",
-      "description": "If safe/appropriate, hug or hold hands for 20-60 seconds.",
+      "description": "If safe/appropriate, hug or hold hands for 20–60 seconds.",
       "category": "Oxytocin",
       "primaryCategory": "Oxytocin",
       "durationMinutes": 2,
@@ -427,7 +427,7 @@
     {
       "id": "oxy-008",
       "title": "Partner Check-in (2 mins)",
-      "description": "Ask: "What do you need today?" Listen. No fixing.",
+      "description": "Ask: “What do you need today?” Listen. No fixing.",
       "category": "Oxytocin",
       "primaryCategory": "Oxytocin",
       "durationMinutes": 3,
@@ -450,7 +450,7 @@
     {
       "id": "ser-001",
       "title": "Daylight Reset",
-      "description": "Step outside or to a window for 2-5 minutes of natural light.",
+      "description": "Step outside or to a window for 2–5 minutes of natural light.",
       "category": "Serotonin",
       "primaryCategory": "Serotonin",
       "durationMinutes": 5,
@@ -472,7 +472,7 @@
     {
       "id": "ser-002",
       "title": "Box Breathing",
-      "description": "4 in / 4 hold / 4 out / 4 hold - repeat 4 rounds.",
+      "description": "4 in / 4 hold / 4 out / 4 hold — repeat 4 rounds.",
       "category": "Serotonin",
       "primaryCategory": "Serotonin",
       "durationMinutes": 3,
@@ -487,7 +487,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Slow breathing reduces stress response and increases calm.",
-        "A repeatable rhythm gives your brain a 'safe pattern'."
+        "A repeatable rhythm gives your brain a ‘safe pattern’."
       ],
       "whySources": ["NHS: Breathing exercises", "APA: Stress response basics"]
     },
@@ -539,7 +539,7 @@
     {
       "id": "ser-005",
       "title": "Calming Tea Ritual",
-      "description": "Make a calming tea (from DOSE recipes if you've got them). Sip slowly.",
+      "description": "Make a calming tea (from DOSE recipes if you’ve got them). Sip slowly.",
       "category": "Serotonin",
       "primaryCategory": "Serotonin",
       "durationMinutes": 10,
@@ -605,7 +605,7 @@
 
     {
       "id": "end-001",
-      "title": "10-20 Squats",
+      "title": "10–20 Squats",
       "description": "Do 20 squats. If low energy, do 10 and count it.",
       "category": "Endorphins",
       "primaryCategory": "Endorphins",
@@ -694,8 +694,8 @@
 
     {
       "id": "end-005",
-      "title": "Chair Squats (8-12)",
-      "description": "Sit-to-stand from a chair 8-12 times. Slow + controlled.",
+      "title": "Chair Squats (8–12)",
+      "description": "Sit-to-stand from a chair 8–12 times. Slow + controlled.",
       "category": "Endorphins",
       "primaryCategory": "Endorphins",
       "durationMinutes": 4,
@@ -716,8 +716,8 @@
     },
     {
       "id": "end-006",
-      "title": "Wall Push-ups (10-20)",
-      "description": "10-20 wall push-ups. If hard, step closer; if easy, step back.",
+      "title": "Wall Push-ups (10–20)",
+      "description": "10–20 wall push-ups. If hard, step closer; if easy, step back.",
       "category": "Endorphins",
       "primaryCategory": "Endorphins",
       "durationMinutes": 4,
@@ -732,7 +732,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Quick strength work can lift mood and reduce stress.",
-        "Progression is easy, so you'll keep doing it."
+        "Progression is easy, so you’ll keep doing it."
       ],
       "whySources": ["NHS: Physical activity", "Harvard Health: Exercise and stress"]
     },
@@ -740,7 +740,7 @@
     {
       "id": "mix-001",
       "title": "Daylight + One Win",
-      "description": "2-5 minutes daylight, then write one realistic win for today.",
+      "description": "2–5 minutes daylight, then write one realistic win for today.",
       "category": "Mix",
       "primaryCategory": "Mix",
       "durationMinutes": 8,
@@ -762,7 +762,7 @@
     {
       "id": "mix-002",
       "title": "Walk + Check-in",
-      "description": "10-minute walk, then send a "you good?" message.",
+      "description": "10-minute walk, then send a “you good?” message.",
       "category": "Mix",
       "primaryCategory": "Mix",
       "durationMinutes": 12,
@@ -799,7 +799,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Stacks the four pillars: light + movement + connection + direction.",
-        "You're not relying on one lever - you're building a system."
+        "You’re not relying on one lever — you’re building a system."
       ],
       "whySources": ["NHS: Wellbeing basics", "Sleep Foundation: Rhythm + mood"]
     },
@@ -821,7 +821,7 @@
       "whyTitle": "Why this helps",
       "whyBullets": [
         "Combines body calming + connection + routine cues.",
-        "Builds calm without needing 'perfect' meditation."
+        "Builds calm without needing ‘perfect’ meditation."
       ],
       "whySources": ["NHS: Relaxation and stress", "APA: Calm regulation basics"]
     }

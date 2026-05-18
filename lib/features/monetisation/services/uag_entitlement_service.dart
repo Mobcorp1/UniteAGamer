@@ -29,8 +29,8 @@ class UagUsageGateResult {
 
 class UagEntitlementService {
   UagEntitlementService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -43,7 +43,11 @@ class UagEntitlementService {
       return Stream.error(StateError('User must be signed in.'));
     }
 
-    return _firestore.collection('users').doc(currentUid).snapshots().map(
+    return _firestore
+        .collection('users')
+        .doc(currentUid)
+        .snapshots()
+        .map(
           (snapshot) => UagUserEntitlement.fromUserDoc(
             uid: currentUid,
             data: snapshot.data() ?? <String, dynamic>{},
@@ -63,15 +67,20 @@ class UagEntitlementService {
     );
   }
 
-  Future<UagPlanLimits> getMyLimits() async => (await getMyEntitlement()).limits;
+  Future<UagPlanLimits> getMyLimits() async =>
+      (await getMyEntitlement()).limits;
 
-  Future<UagAdPolicy> getMyAdPolicy() async => (await getMyEntitlement()).adPolicy;
+  Future<UagAdPolicy> getMyAdPolicy() async =>
+      (await getMyEntitlement()).adPolicy;
 
-  Future<bool> canUseTraderProAnalytics() async => (await getMyEntitlement()).canUseTraderProAnalytics;
+  Future<bool> canUseTraderProAnalytics() async =>
+      (await getMyEntitlement()).canUseTraderProAnalytics;
 
-  Future<bool> canUseAdvancedVoicePersonalities() async => (await getMyEntitlement()).canUseAdvancedVoicePersonalities;
+  Future<bool> canUseAdvancedVoicePersonalities() async =>
+      (await getMyEntitlement()).canUseAdvancedVoicePersonalities;
 
-  Future<bool> canUseSmartAlerts() async => (await getMyEntitlement()).canUseSmartAlerts;
+  Future<bool> canUseSmartAlerts() async =>
+      (await getMyEntitlement()).canUseSmartAlerts;
 
   Future<bool> shouldShowBannerAds() async {
     final entitlement = await getMyEntitlement();
@@ -98,12 +107,12 @@ class UagEntitlementService {
         .doc(_currentWeekKey())
         .snapshots()
         .map((snapshot) {
-      final data = snapshot.data() ?? <String, dynamic>{};
-      return {
-        for (final action in UagBillableAction.values)
-          action.usageKey: (data[action.usageKey] as num?)?.toInt() ?? 0,
-      };
-    });
+          final data = snapshot.data() ?? <String, dynamic>{};
+          return {
+            for (final action in UagBillableAction.values)
+              action.usageKey: (data[action.usageKey] as num?)?.toInt() ?? 0,
+          };
+        });
   }
 
   Future<UagUsageGateResult> canUseAction(UagBillableAction action) async {
@@ -172,24 +181,21 @@ class UagEntitlementService {
           used: used,
           limit: limit,
           tier: entitlement.tier,
-          reason: '${action.label} limit reached for ${entitlement.tier.publicName}.',
+          reason:
+              '${action.label} limit reached for ${entitlement.tier.publicName}.',
         );
       }
 
-      transaction.set(
-        docRef,
-        {
-          'uid': currentUid,
-          'periodKey': _currentWeekKey(),
-          'periodType': 'weekly',
-          action.usageKey: FieldValue.increment(1),
-          'updatedAt': FieldValue.serverTimestamp(),
-          'createdAt': snapshot.exists
-              ? data['createdAt']
-              : FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      transaction.set(docRef, {
+        'uid': currentUid,
+        'periodKey': _currentWeekKey(),
+        'periodType': 'weekly',
+        action.usageKey: FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'createdAt': snapshot.exists
+            ? data['createdAt']
+            : FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       return UagUsageGateResult(
         allowed: true,
@@ -236,7 +242,8 @@ class UagEntitlementService {
       transaction.set(userRef, {
         'referralCode': code,
         'referralDiscountPercent': entitlement.limits.referralDiscountPercent,
-        'referralCommissionPercent': entitlement.limits.referralCommissionPercent,
+        'referralCommissionPercent':
+            entitlement.limits.referralCommissionPercent,
       }, SetOptions(merge: true));
     });
 
@@ -246,7 +253,9 @@ class UagEntitlementService {
   Future<void> requestPayout({required int amountPence}) async {
     final entitlement = await getMyEntitlement();
     if (amountPence < entitlement.limits.payoutThresholdPence) {
-      throw StateError('Minimum payout is £${(entitlement.limits.payoutThresholdPence / 100).toStringAsFixed(2)}.');
+      throw StateError(
+        'Minimum payout is £${(entitlement.limits.payoutThresholdPence / 100).toStringAsFixed(2)}.',
+      );
     }
     if (amountPence > entitlement.availableBalancePence) {
       throw StateError('Requested payout is higher than available balance.');

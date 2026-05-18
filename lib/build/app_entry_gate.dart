@@ -21,8 +21,10 @@ class _AppEntryGateState extends State<AppEntryGate> {
   bool _fanDisclaimerChecked = false;
 
   Future<bool> _needsOnboarding(String uid) async {
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
     final data = doc.data() ?? <String, dynamic>{};
     return !(data['onboardingComplete'] == true);
   }

@@ -36,7 +36,9 @@ class BlueprintGridControlsCard extends StatelessWidget {
     final ownedCount = counts[ArcBlueprintFilter.owned] ?? 0;
     final missingCount = counts[ArcBlueprintFilter.missing] ?? 0;
     final dupesCount = counts[ArcBlueprintFilter.duplicates] ?? 0;
-    final completion = totalBlueprints == 0 ? 0.0 : ownedCount / totalBlueprints;
+    final completion = totalBlueprints == 0
+        ? 0.0
+        : ownedCount / totalBlueprints;
 
     return Container(
       width: double.infinity,
@@ -51,24 +53,25 @@ class BlueprintGridControlsCard extends StatelessWidget {
             controller: searchController,
             style: const TextStyle(color: Colors.white),
             onChanged: onSearchChanged,
-            decoration: AppTheme.tradingInputDecoration(
-              label: 'Search blueprints',
-            ).copyWith(
-              prefixIcon: const Icon(
-                Icons.search_rounded,
-                color: Colors.white70,
-              ),
-              suffixIcon: searchQuery.trim().isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Clear search',
-                      onPressed: onClearSearch,
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        color: Colors.white70,
-                      ),
-                    ),
-            ),
+            decoration:
+                AppTheme.tradingInputDecoration(
+                  label: 'Search blueprints',
+                ).copyWith(
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: Colors.white70,
+                  ),
+                  suffixIcon: searchQuery.trim().isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear search',
+                          onPressed: onClearSearch,
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white70,
+                          ),
+                        ),
+                ),
           ),
           const SizedBox(height: AppTheme.spaceM),
           Wrap(
@@ -101,12 +104,10 @@ class BlueprintGridControlsCard extends StatelessWidget {
                 selected: selectionMode,
                 onTap: onEnterSelectionMode,
               ),
-              _MiniActionButton(
-                label: 'Reset All',
-                onTap: onResetAll,
-              ),
+              _MiniActionButton(label: 'Reset All', onTap: onResetAll),
               const Tooltip(
-                message: 'Tap missing to mark owned. Tap owned to edit reports or duplicates. Long press to select quickly.',
+                message:
+                    'Tap missing to mark owned. Tap owned to edit reports or duplicates. Long press to select quickly.',
                 child: Icon(
                   Icons.info_outline_rounded,
                   color: Colors.white70,
@@ -122,7 +123,9 @@ class BlueprintGridControlsCard extends StatelessWidget {
               value: completion,
               minHeight: 10,
               backgroundColor: Colors.white.withValues(alpha: 0.08),
-              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppTheme.neonCyan,
+              ),
             ),
           ),
           const SizedBox(height: 8),

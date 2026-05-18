@@ -728,9 +728,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       decoration: BoxDecoration(
         color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppTheme.neonCyan.withValues(alpha: 0.12),
-        ),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.12)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -755,8 +753,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               miniButton(
                 label: 'Missing ($missingCount)',
                 selected: _selectedFilter == ArcBlueprintFilter.missing,
-                onPressed: () =>
-                    setState(() => _selectedFilter = ArcBlueprintFilter.missing),
+                onPressed: () => setState(
+                  () => _selectedFilter = ArcBlueprintFilter.missing,
+                ),
               ),
               miniButton(
                 label: 'Dupes ($dupesCount)',
@@ -837,7 +836,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 ),
                 toolButton(
                   label: 'Select Column',
-                  onTap: filtered.isEmpty ? null : () => _selectColumn(filtered),
+                  onTap: filtered.isEmpty
+                      ? null
+                      : () => _selectColumn(filtered),
                   color: AppTheme.neonCyan,
                   energized: filtered.isNotEmpty,
                 ),
@@ -859,9 +860,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 ),
                 toolButton(
                   label: 'Clear Selected',
-                  onTap: _selectedBlueprintIds.isEmpty
-                      ? null
-                      : _applyBulkClear,
+                  onTap: _selectedBlueprintIds.isEmpty ? null : _applyBulkClear,
                   color: Colors.redAccent,
                   energized: _selectedBlueprintIds.isNotEmpty,
                 ),

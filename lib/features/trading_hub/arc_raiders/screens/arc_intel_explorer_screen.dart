@@ -210,7 +210,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           title: 'Map Breakdown',
           initiallyExpanded: false,
           titleColor: AppTheme.neonCyan,
-          child: _buildBreakdownCard(context, title: 'Map', showTitle: false, items: intel.mapBreakdown),
+          child: _buildBreakdownCard(
+            context,
+            title: 'Map',
+            showTitle: false,
+            items: intel.mapBreakdown,
+          ),
         ),
         const SizedBox(height: AppTheme.spaceL),
         CollapsibleSectionCard(

@@ -15,7 +15,11 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 class TraderHubScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/trader-hub';
 
-  const TraderHubScreen({super.key, this.initialIndex = 0, this.initialActivityTab = 0});
+  const TraderHubScreen({
+    super.key,
+    this.initialIndex = 0,
+    this.initialActivityTab = 0,
+  });
 
   final int initialIndex;
   final int initialActivityTab;
@@ -51,7 +55,10 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex.clamp(0, _titles.length - 1);
-    _navigatorKeys = List.generate(_titles.length, (_) => GlobalKey<NavigatorState>());
+    _navigatorKeys = List.generate(
+      _titles.length,
+      (_) => GlobalKey<NavigatorState>(),
+    );
   }
 
   @override
@@ -66,11 +73,17 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
   Widget _rootForIndex(int index) {
     switch (index) {
       case 0:
-        return const TradingListingsScreen(showAppBar: false, embedProfileSummary: true);
+        return const TradingListingsScreen(
+          showAppBar: false,
+          embedProfileSummary: true,
+        );
       case 1:
         return const TradingCreateListingScreen(showAppBar: false);
       case 2:
-        return TradingActivityScreen(showAppBar: false, initialTabIndex: widget.initialActivityTab);
+        return TradingActivityScreen(
+          showAppBar: false,
+          initialTabIndex: widget.initialActivityTab,
+        );
       case 3:
         return const TradingTradeSessionsScreen(showAppBar: false);
       case 4:
@@ -78,7 +91,10 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
       case 5:
         return const TradingProfileScreen(showAppBar: false);
       default:
-        return const TradingListingsScreen(showAppBar: false, embedProfileSummary: true);
+        return const TradingListingsScreen(
+          showAppBar: false,
+          embedProfileSummary: true,
+        );
     }
   }
 
@@ -106,12 +122,18 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
                 right: -8,
                 top: -6,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
                   constraints: const BoxConstraints(minWidth: 18),
                   decoration: BoxDecoration(
                     color: AppTheme.neonPink,
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: AppTheme.darkBackground, width: 1.4),
+                    border: Border.all(
+                      color: AppTheme.darkBackground,
+                      width: 1.4,
+                    ),
                   ),
                   child: Text(
                     badgeCount > 99 ? '99+' : '$badgeCount',
@@ -132,7 +154,8 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
   Widget _tabNavigator(int index) {
     return Navigator(
       key: _navigatorKeys[index],
-      onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => _rootForIndex(index)),
+      onGenerateRoute: (_) =>
+          MaterialPageRoute(builder: (_) => _rootForIndex(index)),
     );
   }
 
@@ -210,7 +233,11 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
                 _item(icon: Icons.add_circle_outline, label: 'Create'),
                 _item(icon: Icons.swap_horiz_rounded, label: 'Activity'),
                 _item(icon: Icons.handshake_outlined, label: 'Sessions'),
-                _item(icon: Icons.notifications_active_outlined, label: 'Alerts', badgeCount: unreadCount),
+                _item(
+                  icon: Icons.notifications_active_outlined,
+                  label: 'Alerts',
+                  badgeCount: unreadCount,
+                ),
                 _item(icon: Icons.person_outline_rounded, label: 'Profile'),
               ],
             ),

@@ -64,7 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1098283124220',
     projectId: 'unite-a-gamer',
     storageBucket: 'unite-a-gamer.firebasestorage.app',
-    iosClientId: '1098283124220-jh6k4bgmjfngsqh6ab48cc08jb7gdg5h.apps.googleusercontent.com',
+    iosClientId:
+        '1098283124220-jh6k4bgmjfngsqh6ab48cc08jb7gdg5h.apps.googleusercontent.com',
     iosBundleId: 'com.example.uniteAGamer',
   );
 
@@ -74,7 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1098283124220',
     projectId: 'unite-a-gamer',
     storageBucket: 'unite-a-gamer.firebasestorage.app',
-    iosClientId: '1098283124220-jh6k4bgmjfngsqh6ab48cc08jb7gdg5h.apps.googleusercontent.com',
+    iosClientId:
+        '1098283124220-jh6k4bgmjfngsqh6ab48cc08jb7gdg5h.apps.googleusercontent.com',
     iosBundleId: 'com.example.uniteAGamer',
   );
 
@@ -87,5 +89,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'unite-a-gamer.firebasestorage.app',
     measurementId: 'G-65FY7WTKT6',
   );
-
 }
