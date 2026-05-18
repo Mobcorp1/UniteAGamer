@@ -164,7 +164,7 @@ class _SmartTradeIntelligencePanelState
           return _shell(
             child: Text(
               'Smart trading check failed: ${snapshot.error}',
-              style: const TextStyle(color: AppTheme.tradingDanger),
+              style: TextStyle(color: AppTheme.tradingDanger),
             ),
           );
         }
@@ -325,7 +325,7 @@ class _SmartTradeIntelligencePanelState
           const SizedBox(height: AppTheme.spaceM),
           ElevatedButton.icon(
             onPressed: _creatingOffer ? null : () => _createOffer(match),
-            icon: const Icon(Icons.outgoing_mail_rounded),
+            icon: const Icon(Icons.outbox_rounded),
             label: Text(_creatingOffer ? 'Creating...' : 'Create Smart Offer'),
           ),
         ],
