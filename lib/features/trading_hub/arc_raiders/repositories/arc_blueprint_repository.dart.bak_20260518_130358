@@ -145,7 +145,6 @@ class ArcBlueprintRepository {
     required ArcRaidType raidType,
     required ArcEntryTime entryTime,
     required ArcTimeOfDay timeOfDay,
-    required ArcBlueprintAcquisitionSource acquisitionSource,
     String? poiId,
     String? poiName,
     String? enemySourceId,
@@ -221,7 +220,7 @@ class ArcBlueprintRepository {
       mapEventId: resolvedMapEventId,
       mode: mode,
       raidType: raidType,
-      entryTime: ArcEntryTime.unknown,
+      entryTime: entryTime,
       timeOfDay: timeOfDay,
     );
 
@@ -276,9 +275,8 @@ class ArcBlueprintRepository {
       mapEventLabel: resolvedMapEventLabel,
       mode: mode,
       raidType: raidType,
-      entryTime: ArcEntryTime.unknown,
+      entryTime: entryTime,
       timeOfDay: timeOfDay,
-      acquisitionSource: acquisitionSource,
       foundAt: foundAt ?? now,
       lastConfirmedAt: now,
       notes: notes.trim(),

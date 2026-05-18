@@ -56,8 +56,7 @@ class _ArcBlueprintDropReportSheetState
   ArcContainerType? _selectedContainerType;
   ArcMapCondition? _selectedMapEvent;
   ArcRaidType? _raidType;
-  ArcBlueprintAcquisitionSource? _acquisitionSource;
-  ArcEntryTime? _entryTime = ArcEntryTime.unknown;
+  ArcEntryTime? _entryTime;
   ArcTimeOfDay? _timeOfDay;
   final List<_AdditionalBlueprintReportEntry> _additionalReports = [];
   bool _isSaving = false;
@@ -233,9 +232,7 @@ class _ArcBlueprintDropReportSheetState
         return widget.repository.addDropReport(
           blueprintId: blueprint.id,
           mapName: _selectedMap!,
-          sourceType: isDolabra
-              ? ArcDropSourceType.enemy
-              : ArcDropSourceType.poi,
+          sourceType: isDolabra ? ArcDropSourceType.enemy : ArcDropSourceType.poi,
           poiId: isDolabra ? null : poiId,
           poiName: isDolabra ? null : poiName,
           enemySourceId: isDolabra ? 'enemy_assessor' : null,
@@ -248,8 +245,6 @@ class _ArcBlueprintDropReportSheetState
           raidType: _raidType!,
           entryTime: _entryTime!,
           timeOfDay: _timeOfDay!,
-          acquisitionSource:
-              _acquisitionSource ?? ArcBlueprintAcquisitionSource.lootDrop,
           foundAt: reportTime,
           notes: _notesController.text,
         );
@@ -328,9 +323,8 @@ class _ArcBlueprintDropReportSheetState
     final controller = TextEditingController();
     final sortedItems = List<T>.from(items)
       ..sort(
-        (a, b) => labelBuilder(
-          a,
-        ).toLowerCase().compareTo(labelBuilder(b).toLowerCase()),
+        (a, b) =>
+            labelBuilder(a).toLowerCase().compareTo(labelBuilder(b).toLowerCase()),
       );
     var filteredItems = List<T>.from(sortedItems);
 
@@ -352,9 +346,8 @@ class _ArcBlueprintDropReportSheetState
                 } else {
                   filteredItems = sortedItems
                       .where(
-                        (item) => labelBuilder(
-                          item,
-                        ).toLowerCase().contains(normalized),
+                        (item) =>
+                            labelBuilder(item).toLowerCase().contains(normalized),
                       )
                       .toList(growable: false);
                 }
@@ -535,7 +528,7 @@ class _ArcBlueprintDropReportSheetState
   }
 
   Future<void> _pickRaidType() async {
-    final selection = await _showSearchPicker(
+    final selection = await _showSearchPicker<ArcRaidType>(
       title: 'Raid Round',
       items: ArcRaidType.values,
       labelBuilder: (item) => item.label,
@@ -545,14 +538,14 @@ class _ArcBlueprintDropReportSheetState
     _scrollToNextStep();
   }
 
-  Future<void> _pickAcquisitionSource() async {
-    final selection = await _showSearchPicker(
-      title: 'How was it obtained?',
-      items: ArcBlueprintAcquisitionSource.values,
+  Future<void> _pickEntryTime() async {
+    final selection = await _showSearchPicker<ArcEntryTime>(
+      title: 'Entry Time',
+      items: ArcEntryTime.values,
       labelBuilder: (item) => item.label,
     );
     if (selection == null || !mounted) return;
-    setState(() => _acquisitionSource = selection);
+    setState(() => _entryTime = selection);
     _scrollToNextStep();
   }
 
@@ -576,20 +569,15 @@ class _ArcBlueprintDropReportSheetState
       if (picked != null) usedIds.add(picked.id);
     }
 
-    final items =
-        List<ArcBlueprint>.from(
-            ArcBlueprintSeedData.blueprints,
-          ).where((item) => !usedIds.contains(item.id)).toList(growable: false)
-          ..sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-          );
+    final items = List<ArcBlueprint>.from(ArcBlueprintSeedData.blueprints)
+        .where((item) => !usedIds.contains(item.id))
+        .toList(growable: false)
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     if (currentBlueprint != null &&
         !items.any((item) => item.id == currentBlueprint.id)) {
       items.add(currentBlueprint);
-      items.sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
+      items.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     }
 
     final selection = await _showSearchPicker<ArcBlueprint>(
@@ -836,7 +824,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} Ã¢â‚¬Â¢ ${widget.blueprint.group} Ã¢â‚¬Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} • ${widget.blueprint.group} • ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -897,7 +885,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: AppTheme.spaceXS),
                   const Text(
-                    'Fill out the run in this order: map, map event, area / POI, container type, raid round, how it was obtained, then Raider time of day. Add as many extra blueprints from the same raid as you need below.',
+                    'Fill out the run in this order: map, map event, area / POI, container type, raid round, entry time, then time of day. Add as many extra blueprints from the same raid as you need below.',
                     style: TextStyle(color: Colors.white60, height: 1.35),
                   ),
                   const SizedBox(height: AppTheme.spaceM),
@@ -909,22 +897,8 @@ class _ArcBlueprintDropReportSheetState
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
                     label: 'Map Event *',
-                    value:
-                        _selectedMapEvent?.label ??
-                        (widget.blueprint.id == 'surge_coil'
-                            ? 'Electromagnetic Storm'
-                            : widget.blueprint.id == 'canto'
-                            ? 'Hurricane'
-                            : _usesAssessorFlow
-                            ? 'Close Scrutiny'
-                            : 'Select Map Event'),
-                    onTap:
-                        _selectedMap == null ||
-                            _usesAssessorFlow ||
-                            widget.blueprint.id == 'surge_coil' ||
-                            widget.blueprint.id == 'canto'
-                        ? null
-                        : _pickMapEvent,
+                    value: _selectedMapEvent?.label ?? (widget.blueprint.id == 'surge_coil' ? 'Electromagnetic Storm' : widget.blueprint.id == 'canto' ? 'Hurricane' : _usesAssessorFlow ? 'Close Scrutiny' : 'Select Map Event'),
+                    onTap: _selectedMap == null || _usesAssessorFlow || widget.blueprint.id == 'surge_coil' || widget.blueprint.id == 'canto' ? null : _pickMapEvent,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
@@ -938,13 +912,8 @@ class _ArcBlueprintDropReportSheetState
                   _buildSelectorField(
                     label: 'Container Type *',
                     value:
-                        _selectedContainerType?.label ??
-                        (_usesAssessorFlow
-                            ? 'Assessor'
-                            : 'Select Container Type'),
-                    onTap: _selectedPoiId == null || _usesAssessorFlow
-                        ? null
-                        : _pickContainerType,
+                        _selectedContainerType?.label ?? (_usesAssessorFlow ? 'Assessor' : 'Select Container Type'),
+                    onTap: _selectedPoiId == null || _usesAssessorFlow ? null : _pickContainerType,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
@@ -954,14 +923,14 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
-                    label: 'Obtained From *',
-                    value: _acquisitionSource?.label ?? 'Select Source',
-                    onTap: _selectedMap == null ? null : _pickAcquisitionSource,
+                    label: 'Entry Time *',
+                    value: _entryTime?.label ?? 'Select Entry Time',
+                    onTap: _selectedMap == null ? null : _pickEntryTime,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
-                    label: 'Raider Time of Day *',
-                    value: _timeOfDay?.label ?? 'Select Raider Time of Day',
+                    label: 'Time of Day *',
+                    value: _timeOfDay?.label ?? 'Select Time of Day',
                     onTap: _selectedMap == null ? null : _pickTimeOfDay,
                   ),
                   const SizedBox(height: AppTheme.spaceL),
@@ -977,9 +946,8 @@ class _ArcBlueprintDropReportSheetState
                         ),
                       ),
                       TextButton.icon(
-                        onPressed: _selectedMap == null
-                            ? null
-                            : _addAnotherBlueprintEntry,
+                        onPressed:
+                            _selectedMap == null ? null : _addAnotherBlueprintEntry,
                         icon: const Icon(Icons.add_rounded),
                         label: const Text('Add Another'),
                       ),
@@ -1074,10 +1042,10 @@ class _ArcBlueprintDropReportSheetState
                         child: ElevatedButton(
                           onPressed:
                               (_isSaving ||
-                                  !_canSubmitReport ||
-                                  !_allAdditionalReportsValid)
-                              ? null
-                              : _saveWithReport,
+                                      !_canSubmitReport ||
+                                      !_allAdditionalReportsValid)
+                                  ? null
+                                  : _saveWithReport,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: widget.rarityColor,
                             foregroundColor: Colors.black,

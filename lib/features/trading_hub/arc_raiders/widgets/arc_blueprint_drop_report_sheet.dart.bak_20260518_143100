@@ -248,8 +248,6 @@ class _ArcBlueprintDropReportSheetState
           raidType: _raidType!,
           entryTime: _entryTime!,
           timeOfDay: _timeOfDay!,
-          acquisitionSource:
-              _acquisitionSource ?? ArcBlueprintAcquisitionSource.lootDrop,
           foundAt: reportTime,
           notes: _notesController.text,
         );
@@ -836,7 +834,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} Ã¢â‚¬Â¢ ${widget.blueprint.group} Ã¢â‚¬Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} â€¢ ${widget.blueprint.group} â€¢ ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),

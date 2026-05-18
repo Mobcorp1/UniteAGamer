@@ -56,8 +56,7 @@ class _ArcBlueprintDropReportSheetState
   ArcContainerType? _selectedContainerType;
   ArcMapCondition? _selectedMapEvent;
   ArcRaidType? _raidType;
-  ArcBlueprintAcquisitionSource? _acquisitionSource;
-  ArcEntryTime? _entryTime = ArcEntryTime.unknown;
+  ArcEntryTime? _entryTime;
   ArcTimeOfDay? _timeOfDay;
   final List<_AdditionalBlueprintReportEntry> _additionalReports = [];
   bool _isSaving = false;
@@ -248,8 +247,6 @@ class _ArcBlueprintDropReportSheetState
           raidType: _raidType!,
           entryTime: _entryTime!,
           timeOfDay: _timeOfDay!,
-          acquisitionSource:
-              _acquisitionSource ?? ArcBlueprintAcquisitionSource.lootDrop,
           foundAt: reportTime,
           notes: _notesController.text,
         );
@@ -535,7 +532,7 @@ class _ArcBlueprintDropReportSheetState
   }
 
   Future<void> _pickRaidType() async {
-    final selection = await _showSearchPicker(
+    final selection = await _showSearchPicker<ArcRaidType>(
       title: 'Raid Round',
       items: ArcRaidType.values,
       labelBuilder: (item) => item.label,
@@ -545,14 +542,14 @@ class _ArcBlueprintDropReportSheetState
     _scrollToNextStep();
   }
 
-  Future<void> _pickAcquisitionSource() async {
-    final selection = await _showSearchPicker(
-      title: 'How was it obtained?',
-      items: ArcBlueprintAcquisitionSource.values,
+  Future<void> _pickEntryTime() async {
+    final selection = await _showSearchPicker<ArcEntryTime>(
+      title: 'Entry Time',
+      items: ArcEntryTime.values,
       labelBuilder: (item) => item.label,
     );
     if (selection == null || !mounted) return;
-    setState(() => _acquisitionSource = selection);
+    setState(() => _entryTime = selection);
     _scrollToNextStep();
   }
 
@@ -836,7 +833,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} Ã¢â‚¬Â¢ ${widget.blueprint.group} Ã¢â‚¬Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} • ${widget.blueprint.group} • ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -897,7 +894,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: AppTheme.spaceXS),
                   const Text(
-                    'Fill out the run in this order: map, map event, area / POI, container type, raid round, how it was obtained, then Raider time of day. Add as many extra blueprints from the same raid as you need below.',
+                    'Fill out the run in this order: map, map event, area / POI, container type, raid round, entry time, then time of day. Add as many extra blueprints from the same raid as you need below.',
                     style: TextStyle(color: Colors.white60, height: 1.35),
                   ),
                   const SizedBox(height: AppTheme.spaceM),
@@ -954,14 +951,14 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
-                    label: 'Obtained From *',
-                    value: _acquisitionSource?.label ?? 'Select Source',
-                    onTap: _selectedMap == null ? null : _pickAcquisitionSource,
+                    label: 'Entry Time *',
+                    value: _entryTime?.label ?? 'Select Entry Time',
+                    onTap: _selectedMap == null ? null : _pickEntryTime,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
-                    label: 'Raider Time of Day *',
-                    value: _timeOfDay?.label ?? 'Select Raider Time of Day',
+                    label: 'Time of Day *',
+                    value: _timeOfDay?.label ?? 'Select Time of Day',
                     onTap: _selectedMap == null ? null : _pickTimeOfDay,
                   ),
                   const SizedBox(height: AppTheme.spaceL),

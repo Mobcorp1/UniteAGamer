@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 
@@ -28,7 +29,6 @@ class ArcBlueprintDropReport {
     this.weatherConditionLabel,
     this.mapEventId,
     this.mapEventLabel,
-    this.acquisitionSource = ArcBlueprintAcquisitionSource.lootDrop,
     this.foundAt,
     this.lastConfirmedAt,
     this.notes = '',
@@ -50,7 +50,6 @@ class ArcBlueprintDropReport {
   final String? weatherConditionLabel;
   final String? mapEventId;
   final String? mapEventLabel;
-  final ArcBlueprintAcquisitionSource acquisitionSource;
   final ArcRaidMode mode;
   final ArcRaidType raidType;
   final ArcEntryTime entryTime;
@@ -71,8 +70,6 @@ class ArcBlueprintDropReport {
     required ArcRaidType raidType,
     required ArcEntryTime entryTime,
     required ArcTimeOfDay timeOfDay,
-    ArcBlueprintAcquisitionSource acquisitionSource =
-        ArcBlueprintAcquisitionSource.lootDrop,
     String? poiId,
     String? enemySourceId,
     String? containerTypeId,
@@ -97,7 +94,6 @@ class ArcBlueprintDropReport {
       raidType.name.toLowerCase(),
       entryTime.name.toLowerCase(),
       timeOfDay.name.toLowerCase(),
-      acquisitionSource.name.toLowerCase(),
     ].join('|');
   }
 
@@ -141,20 +137,16 @@ class ArcBlueprintDropReport {
   String? get conditionId {
     final weatherId = weatherConditionId?.trim();
     if (weatherId != null && weatherId.isNotEmpty) return weatherId;
-
     final eventId = mapEventId?.trim();
     if (eventId != null && eventId.isNotEmpty) return eventId;
-
     return null;
   }
 
   String? get conditionLabel {
     final weather = weatherConditionLabel?.trim();
     if (weather != null && weather.isNotEmpty) return weather;
-
     final event = mapEventLabel?.trim();
     if (event != null && event.isNotEmpty) return event;
-
     return null;
   }
 
@@ -165,7 +157,6 @@ class ArcBlueprintDropReport {
         enemySourceId ?? enemySourceName ?? 'enemy_unknown',
       ArcDropSourceType.other => poiId ?? enemySourceId ?? 'other_unknown',
     };
-
     return '$mapName|${sourceType.name}|$sourceKey';
   }
 
@@ -185,7 +176,6 @@ class ArcBlueprintDropReport {
     String? weatherConditionLabel,
     String? mapEventId,
     String? mapEventLabel,
-    ArcBlueprintAcquisitionSource? acquisitionSource,
     ArcRaidMode? mode,
     ArcRaidType? raidType,
     ArcEntryTime? entryTime,
@@ -215,7 +205,6 @@ class ArcBlueprintDropReport {
           weatherConditionLabel ?? this.weatherConditionLabel,
       mapEventId: mapEventId ?? this.mapEventId,
       mapEventLabel: mapEventLabel ?? this.mapEventLabel,
-      acquisitionSource: acquisitionSource ?? this.acquisitionSource,
       mode: mode ?? this.mode,
       raidType: raidType ?? this.raidType,
       entryTime: entryTime ?? this.entryTime,
@@ -250,8 +239,6 @@ class ArcBlueprintDropReport {
       'conditionId': conditionId,
       'conditionLabel': conditionLabel,
       'locationName': areaLabel,
-      'acquisitionSource': acquisitionSource.name,
-      'acquisitionSourceLabel': acquisitionSource.label,
       'mode': mode.name,
       'raidType': raidType.name,
       'entryTime': entryTime.name,
@@ -270,7 +257,10 @@ class ArcBlueprintDropReport {
 
   factory ArcBlueprintDropReport.fromMap(Map<String, dynamic> map) {
     final sourceType =
-        _enumByName(ArcDropSourceType.values, map['sourceType'] as String?) ??
+        _enumByName<ArcDropSourceType>(
+          ArcDropSourceType.values,
+          map['sourceType'] as String?,
+        ) ??
         ArcDropSourceType.poi;
 
     final legacyLocation = (map['locationName'] as String?)?.trim();
@@ -283,12 +273,12 @@ class ArcBlueprintDropReport {
     final mapEventLabel = (map['mapEventLabel'] as String?)?.trim();
     final legacyConditionId = (map['conditionId'] as String?)?.trim();
     final legacyConditionLabel = (map['conditionLabel'] as String?)?.trim();
-
-    final confirmedBy = ((map['confirmedByUserIds'] as List?) ?? const [])
-        .whereType<String>()
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList(growable: false);
+    final confirmedBy =
+        ((map['confirmedByUserIds'] as List?) ?? const <dynamic>[])
+            .whereType<String>()
+            .map((item) => item.trim())
+            .where((item) => item.isNotEmpty)
+            .toList(growable: false);
 
     final report = ArcBlueprintDropReport(
       id: (map['id'] as String?) ?? '',
@@ -318,23 +308,29 @@ class ArcBlueprintDropReport {
           ((weatherConditionLabel == null || weatherConditionLabel.isEmpty)
               ? legacyConditionLabel
               : null),
-      acquisitionSource:
-          _enumByName(
-            ArcBlueprintAcquisitionSource.values,
-            map['acquisitionSource'] as String?,
-          ) ??
-          ArcBlueprintAcquisitionSource.lootDrop,
       mode:
-          _enumByName(ArcRaidMode.values, map['mode'] as String?) ??
+          _enumByName<ArcRaidMode>(
+            ArcRaidMode.values,
+            map['mode'] as String?,
+          ) ??
           ArcRaidMode.dayRaid,
       raidType:
-          _enumByName(ArcRaidType.values, map['raidType'] as String?) ??
+          _enumByName<ArcRaidType>(
+            ArcRaidType.values,
+            map['raidType'] as String?,
+          ) ??
           ArcRaidType.fullRaid,
       entryTime:
-          _enumByName(ArcEntryTime.values, map['entryTime'] as String?) ??
+          _enumByName<ArcEntryTime>(
+            ArcEntryTime.values,
+            map['entryTime'] as String?,
+          ) ??
           ArcEntryTime.unknown,
       timeOfDay:
-          _enumByName(ArcTimeOfDay.values, map['timeOfDay'] as String?) ??
+          _enumByName<ArcTimeOfDay>(
+            ArcTimeOfDay.values,
+            map['timeOfDay'] as String?,
+          ) ??
           ArcTimeOfDay.unknown,
       foundAt: (map['foundAt'] as Timestamp?)?.toDate(),
       lastConfirmedAt: (map['lastConfirmedAt'] as Timestamp?)?.toDate(),
@@ -361,43 +357,29 @@ class ArcBlueprintDropReport {
         raidType: report.raidType,
         entryTime: report.entryTime,
         timeOfDay: report.timeOfDay,
-        acquisitionSource: report.acquisitionSource,
       ),
     );
   }
 
   static T? _enumByName<T>(List<T> values, String? rawName) {
     if (rawName == null || rawName.trim().isEmpty) return null;
-
     final normalized = rawName.trim().toLowerCase();
-
     for (final value in values) {
       if (value is Enum && value.name.toLowerCase() == normalized) {
         return value;
       }
     }
-
     return null;
   }
 }
 
 enum ArcRaidMode { dayRaid, nightRaid }
 
-enum ArcRaidType { fullRaid, midRaid, lateRaid }
+enum ArcRaidType { fullRaid, quickRaid, lateRaid }
 
 enum ArcEntryTime { early, mid, late, unknown }
 
-enum ArcTimeOfDay {
-  earlyMorning,
-  midMorning,
-  midday,
-  midAfternoon,
-  night,
-  lateNight,
-  unknown,
-}
-
-enum ArcBlueprintAcquisitionSource { lootDrop, questReward, trialReward, trade }
+enum ArcTimeOfDay { dawn, day, dusk, night, unknown }
 
 extension ArcRaidModeX on ArcRaidMode {
   String get label {
@@ -415,8 +397,8 @@ extension ArcRaidTypeX on ArcRaidType {
     switch (this) {
       case ArcRaidType.fullRaid:
         return 'Full Raid';
-      case ArcRaidType.midRaid:
-        return 'Mid Raid';
+      case ArcRaidType.quickRaid:
+        return 'Quick Raid';
       case ArcRaidType.lateRaid:
         return 'Late Raid';
     }
@@ -441,35 +423,16 @@ extension ArcEntryTimeX on ArcEntryTime {
 extension ArcTimeOfDayX on ArcTimeOfDay {
   String get label {
     switch (this) {
-      case ArcTimeOfDay.earlyMorning:
-        return 'Early Morning';
-      case ArcTimeOfDay.midMorning:
-        return 'Mid-Morning';
-      case ArcTimeOfDay.midday:
-        return 'Midday';
-      case ArcTimeOfDay.midAfternoon:
-        return 'Mid-Afternoon';
+      case ArcTimeOfDay.dawn:
+        return 'Dawn';
+      case ArcTimeOfDay.day:
+        return 'Day';
+      case ArcTimeOfDay.dusk:
+        return 'Dusk';
       case ArcTimeOfDay.night:
         return 'Night';
-      case ArcTimeOfDay.lateNight:
-        return 'Late Night';
       case ArcTimeOfDay.unknown:
         return 'Unknown';
-    }
-  }
-}
-
-extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
-  String get label {
-    switch (this) {
-      case ArcBlueprintAcquisitionSource.lootDrop:
-        return 'Normal Loot / Drop';
-      case ArcBlueprintAcquisitionSource.questReward:
-        return 'Quest Reward';
-      case ArcBlueprintAcquisitionSource.trialReward:
-        return 'Trial Reward';
-      case ArcBlueprintAcquisitionSource.trade:
-        return 'Trade';
     }
   }
 }
