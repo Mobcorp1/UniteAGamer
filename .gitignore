@@ -49,3 +49,4 @@ app.*.map.json
 *.bak_textclean_*
 *.bak_mojibake_*
 *.bak_apostrophe_recovery_*
+*.bak_bigbatch_*

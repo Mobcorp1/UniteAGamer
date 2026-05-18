@@ -91,20 +91,7 @@ class ArcPoiData {
     this.includeInBlueprintReports = true,
     this.areaName,
     this.notes,
-  })
-  ArcPoiData(
-    id: 'stella_montis_security_bridge',
-    mapName: 'Stella Montis',
-    name: 'Security Bridge',
-    category: ArcPoiCategory.landmark,
-    lootTier: ArcLootTier.medium,
-    tags: <String>[
-      'Stella Montis',
-      'Security',
-      'Bridge',
-      'Security Bridge',
-    ],
-  ),;
+  });
 
   final String id;
   final String mapName;
@@ -694,6 +681,14 @@ class ArcPoiDataStore {
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.high,
       buildingTypes: [ArcBuildingType.medical],
+    ),
+    ArcPoiData(
+      id: 'stella_montis_security_bridge',
+      mapName: stellaMontis,
+      name: 'Security Bridge',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
     ),
     ArcPoiData(
       id: 'stella_communications',
@@ -1693,4 +1688,3 @@ class ArcPoiDataStore {
     return null;
   }
 }
-
