@@ -290,7 +290,7 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${widget.item.group} â€¢ Need x${widget.item.neededCount}',
+                  '${widget.item.group} • Need x${widget.item.neededCount}',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.white70),

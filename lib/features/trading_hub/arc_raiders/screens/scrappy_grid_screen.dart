@@ -212,7 +212,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       0,
       (total, item) => total + item.neededCount,
     );
-    return '$completed / ${items.length} complete â€¢ $totalRequired total needed';
+    return '$completed / ${items.length} complete • $totalRequired total needed';
   }
 
   int _completedCount(
