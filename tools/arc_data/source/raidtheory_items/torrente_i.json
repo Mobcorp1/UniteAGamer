@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "torrente_i",
   "name": {
     "da": "Torrente I",
@@ -27,7 +27,7 @@
     "de": "Hat eine große Munitionskapazität, ist aber nur im Hocken präzise.",
     "en": "Has a large ammo capacity, but is only accurate while crouched",
     "es": "Tiene una gran capacidad de munición, pero solo es preciso al estar agachado.",
-    "fr": "Dispose d’une grande capacité de munitions, mais n’est précis qu’en position accroupie.",
+    "fr": "Dispose d'une grande capacité de munitions, mais n'est précis qu'en position accroupie.",
     "he": "בעל קיבולת תחמושת גדולה, אך מדויק רק במצב כריעה",
     "hr": "Ima veliki kapacitet streljiva, ali je precizno samo dok ste u čučnju.",
     "it": "Ha un'ampia capacità di munizioni, ma è precisa solo quando si è accucciati.",
@@ -219,3 +219,4 @@
   "repairDurability": 0.5,
   "upgradesTo": "torrente_ii"
 }
+

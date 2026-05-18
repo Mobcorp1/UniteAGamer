@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "extended_light_mag_iii_blueprint",
   "name": {
     "da": "Udvidet let magasin III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Rozszerzony lekki magazynek III",
     "pt": "Projeto de Carregador leve estendido III",
     "pt-BR": "Esquema de Carregador Leve Estendido III",
-    "ru": "Чертеж — Увеличенный магазин для легкого оружия III",
+    "ru": "Чертеж - Увеличенный магазин для легкого оружия III",
     "sr": "Produzeni laki spremnik III Nacrt",
     "tr": "Uzatılmış Hafif Şarjör III Taslağı",
     "uk": "Креслення Розширений легкий магазин III",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "trigger_nade_blueprint",
   "name": {
     "da": "Udløsergranattegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt granatu wyzwalającego",
     "pt": "Projeto de granada de ativação",
     "pt-BR": "Esquema de Granada de Gatilho",
-    "ru": "Чертеж — Триггер-граната",
+    "ru": "Чертеж - Триггер-граната",
     "sr": "Nacrt Trigger Nade",
     "tr": "Tetikleme Bombası Taslağı",
     "uk": "Креслення тригерної гранати",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

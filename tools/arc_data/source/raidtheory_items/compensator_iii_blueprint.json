@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "compensator_iii_blueprint",
   "name": {
     "da": "Kompensator III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Kompensator III",
     "pt": "Projeto de Compensador III",
     "pt-BR": "Diagrama de Compensador III",
-    "ru": "Чертеж — Компенсатор III",
+    "ru": "Чертеж - Компенсатор III",
     "sr": "Kompenzator III Nacrt",
     "tr": "Namlu Ağzı Baskısı III Taslağı",
     "uk": "Креслення Компенсатор III",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

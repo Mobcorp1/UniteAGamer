@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "fireworks_box_blueprint",
   "name": {
     "da": "Fyrværkerikassetegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt pudełka fajerwerków",
     "pt": "Projeto de caixa de fogos de artifício",
     "pt-BR": "Esquema de Caixa de Fogos de Artifício",
-    "ru": "Чертеж — Коробка фейерверков",
+    "ru": "Чертеж - Коробка фейерверков",
     "sr": "Nacrt Kutije Vatrometa",
     "tr": "Havai Fişek Kutusu Taslağı",
     "uk": "Креслення коробки феєрверків",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "1.7"
 }
+

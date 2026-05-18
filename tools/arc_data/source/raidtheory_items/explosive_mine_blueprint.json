@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "explosive_mine_blueprint",
   "name": {
     "da": "Sprengmine-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Mina wybuchowa",
     "pt": "Projeto de Mina explosiva",
     "pt-BR": "Esquema de Mina Explosiva",
-    "ru": "Чертеж — Взрывная мина",
+    "ru": "Чертеж - Взрывная мина",
     "sr": "Eksplozivna mina Nacrt",
     "tr": "Patlayıcı Mayın Taslağı",
     "uk": "Креслення Вибухова міна",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

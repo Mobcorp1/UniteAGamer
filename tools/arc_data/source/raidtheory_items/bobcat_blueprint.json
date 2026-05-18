@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "bobcat_blueprint",
   "name": {
     "da": "Bobcat-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Bobcat",
     "pt": "Projeto de Bobcat",
     "pt-BR": "Esquema de Lince",
-    "ru": "Чертеж — Бобкэт",
+    "ru": "Чертеж - Бобкэт",
     "sr": "Nacrt Bobcat",
     "tr": "Vaşak Taslağı",
     "uk": "Креслення Бобкет",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

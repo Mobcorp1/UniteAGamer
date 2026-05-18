@@ -1192,7 +1192,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_town_hall_broken_bridge',
       mapName: buriedCity,
-      name: 'Weapon Cache – Town Hall Broken Bridge',
+      name: 'Weapon Cache - Town Hall Broken Bridge',
       areaName: 'Town Hall',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1203,7 +1203,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_library_rooftop',
       mapName: buriedCity,
-      name: 'Weapon Cache – Library Rooftop',
+      name: 'Weapon Cache - Library Rooftop',
       areaName: 'Library',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1214,7 +1214,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_galleria_sign',
       mapName: buriedCity,
-      name: 'Weapon Cache – Galleria Sign',
+      name: 'Weapon Cache - Galleria Sign',
       areaName: 'Galleria',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1224,7 +1224,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_marano_station_bus',
       mapName: buriedCity,
-      name: 'Weapon Cache – Marano Station Bus',
+      name: 'Weapon Cache - Marano Station Bus',
       areaName: 'Marano Station',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1234,7 +1234,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'buried_city_weapon_cache_parking_garage_raider_camp',
       mapName: buriedCity,
-      name: 'Weapon Cache – Parking Garage Raider Camp',
+      name: 'Weapon Cache - Parking Garage Raider Camp',
       areaName: 'Parking Garage',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1248,7 +1248,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'dam_weapon_cache_control_tower_key_room',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Control Tower Key Room',
+      name: 'Weapon Cache - Control Tower Key Room',
       areaName: 'Research & Administration',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1259,7 +1259,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'dam_weapon_cache_control_tower_lower_floor',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Control Tower Lower Floor',
+      name: 'Weapon Cache - Control Tower Lower Floor',
       areaName: 'Research & Administration',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1269,7 +1269,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'dam_weapon_cache_red_lakes_balcony_sewer_entrance',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Red Lakes Balcony Sewer Entrance',
+      name: 'Weapon Cache - Red Lakes Balcony Sewer Entrance',
       areaName: 'Red Lakes',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1280,7 +1280,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'dam_weapon_cache_hydroponic_southwest',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Hydroponic Southwest Building',
+      name: 'Weapon Cache - Hydroponic Southwest Building',
       areaName: 'Hydroponic Dome Complex',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1294,7 +1294,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'dam_weapon_cache_hydroponic_eastern_building',
       mapName: damBattlegrounds,
-      name: 'Weapon Cache – Hydroponic Eastern Building',
+      name: 'Weapon Cache - Hydroponic Eastern Building',
       areaName: 'Hydroponic Dome Complex',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1311,7 +1311,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_checkpoint_between_rails',
       mapName: blueGate,
-      name: 'Weapon Cache – Checkpoint Between Rails',
+      name: 'Weapon Cache - Checkpoint Between Rails',
       areaName: 'Checkpoint',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1322,7 +1322,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_concrete_beams',
       mapName: blueGate,
-      name: 'Weapon Cache – Concrete Beams',
+      name: 'Weapon Cache - Concrete Beams',
       areaName: 'Underground Entrance',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1333,7 +1333,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_pilgrims_peak_top',
       mapName: blueGate,
-      name: 'Weapon Cache – Pilgrim\'s Peak Top',
+      name: 'Weapon Cache - Pilgrim\'s Peak Top',
       areaName: 'Pilgrim\'s Peak',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1343,7 +1343,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_data_vault',
       mapName: blueGate,
-      name: 'Weapon Cache – Data Vault',
+      name: 'Weapon Cache - Data Vault',
       areaName: 'Data Vault',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1354,7 +1354,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_traffic_tunnel_right_end',
       mapName: blueGate,
-      name: 'Weapon Cache – Traffic Tunnel Right End',
+      name: 'Weapon Cache - Traffic Tunnel Right End',
       areaName: 'Traffic Tunnel',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1364,7 +1364,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_headhouse_rims',
       mapName: blueGate,
-      name: 'Weapon Cache – Headhouse Rims',
+      name: 'Weapon Cache - Headhouse Rims',
       areaName: 'Headhouse',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1375,7 +1375,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'blue_gate_weapon_cache_mantikor_room',
       mapName: blueGate,
-      name: 'Weapon Cache – Mantikor Room',
+      name: 'Weapon Cache - Mantikor Room',
       areaName: 'Mantikor Room',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1389,7 +1389,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'spaceport_weapon_cache_departure_building_showers',
       mapName: spaceport,
-      name: 'Weapon Cache – Departure Building Showers',
+      name: 'Weapon Cache - Departure Building Showers',
       areaName: 'Departure Building',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1402,7 +1402,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'spaceport_weapon_cache_arrival_building_roof',
       mapName: spaceport,
-      name: 'Weapon Cache – Arrival Building Roof',
+      name: 'Weapon Cache - Arrival Building Roof',
       areaName: 'Arrival Building',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1416,7 +1416,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'spaceport_weapon_cache_launch_towers_top',
       mapName: spaceport,
-      name: 'Weapon Cache – Launch Towers Top',
+      name: 'Weapon Cache - Launch Towers Top',
       areaName: 'Launch Towers',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1427,7 +1427,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'spaceport_weapon_cache_fuel_lines_pipe',
       mapName: spaceport,
-      name: 'Weapon Cache – Fuel Lines Pipe',
+      name: 'Weapon Cache - Fuel Lines Pipe',
       areaName: 'Fuel Lines',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1438,7 +1438,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'spaceport_weapon_cache_east_container_yard',
       mapName: spaceport,
-      name: 'Weapon Cache – East Container Yard',
+      name: 'Weapon Cache - East Container Yard',
       areaName: 'East Container Yard',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1449,7 +1449,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'spaceport_weapon_cache_tunnels_console_room',
       mapName: spaceport,
-      name: 'Weapon Cache – Spaceport Tunnels Console Room',
+      name: 'Weapon Cache - Spaceport Tunnels Console Room',
       areaName: 'Spaceport Tunnels',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1463,7 +1463,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_medical_research_servers',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Medical Research Servers',
+      name: 'Weapon Cache - Medical Research Servers',
       areaName: 'Medical Research',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1474,7 +1474,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_seed_vault_left_hallway',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Seed Vault Left Hallway',
+      name: 'Weapon Cache - Seed Vault Left Hallway',
       areaName: 'Seed Vault',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1485,7 +1485,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_assembly_hanging_thruster',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Assembly Hanging Thruster',
+      name: 'Weapon Cache - Assembly Hanging Thruster',
       areaName: 'Assembly Workshops',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1495,7 +1495,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_lobby_security_bridge',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Lobby Security Bridge',
+      name: 'Weapon Cache - Lobby Security Bridge',
       areaName: 'Lobby',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1505,7 +1505,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_auditorium_teacher_desk',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Auditorium Teacher Desk',
+      name: 'Weapon Cache - Auditorium Teacher Desk',
       areaName: 'Auditorium',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
@@ -1515,7 +1515,7 @@ class ArcPoiDataStore {
     ArcPoiData(
       id: 'stella_weapon_cache_cargo_docks_railcar',
       mapName: stellaMontis,
-      name: 'Weapon Cache – Cargo Docks Railcar',
+      name: 'Weapon Cache - Cargo Docks Railcar',
       areaName: 'Cargo Docks',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,

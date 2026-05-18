@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "wolfpack_blueprint",
   "name": {
     "da": "Wolfpack-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Wolfpack",
     "pt": "Projeto Wolfpack",
     "pt-BR": "Esquema de Matilha de Lobos",
-    "ru": "Чертеж — Волчья стая",
+    "ru": "Чертеж - Волчья стая",
     "sr": "Nacrt Wolfpack",
     "tr": "Kurt Sürüsü Taslağı",
     "uk": "Креслення Зграї вовків",
@@ -53,3 +53,4 @@
   "updatedAt": "11/12/2025",
   "addedIn": "base"
 }
+

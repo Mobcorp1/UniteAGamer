@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "lure_grenade_blueprint",
   "name": {
     "da": "Lokkegranattegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt granatu wabika",
     "pt": "Projeto de granada isca",
     "pt-BR": "Diagrama: Granada de Chamariz",
-    "ru": "Чертеж — Граната-приманка",
+    "ru": "Чертеж - Граната-приманка",
     "sr": "Nacrt Mamac Granate",
     "tr": "Yem Bombası Taslağı",
     "uk": "Креслення гранати-принади",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

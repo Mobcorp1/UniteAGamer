@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "seeker_grenade_blueprint",
   "name": {
     "da": "Søgergranat-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt granatu naprowadzanego",
     "pt": "Projeto de granada rastreadora",
     "pt-BR": "Esquema de Granada Rastreadora",
-    "ru": "Чертёж — Самонаводящаяся граната",
+    "ru": "Чертёж - Самонаводящаяся граната",
     "sr": "Nacrt Tragačke granate",
     "tr": "Güdümlü Bomba Taslağı",
     "uk": "Креслення самонавідної гранати",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "1.2"
 }
+

@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "combat_mk3_flanking_blueprint",
   "name": {
     "da": "Kamp Mk. 3 (Flankerende) Tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Bojowy Mk. 3 (Flankujacy)",
     "pt": "Projeto Combate Mk. 3 (Flanqueamento)",
     "pt-BR": "Diagrama de Combate Mk. 3 (Flanqueador)",
-    "ru": "Чертеж — Боевой Mk. 3 (Фланговый)",
+    "ru": "Чертеж - Боевой Mk. 3 (Фланговый)",
     "sr": "Borbeni Mk. 3 (Bocni) Nacrt",
     "tr": "Çatışma Mod. 3 (Baskın) Taslağı",
     "uk": "Креслення Бойовий Mk. 3 (Фланговий)",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

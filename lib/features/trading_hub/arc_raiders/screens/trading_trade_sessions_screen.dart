@@ -72,7 +72,7 @@ class _TradingTradeSessionsScreenState
 
   String _formatDateTime(DateTime? value) {
     if (value == null) return 'Not confirmed yet';
-    return '${_formatDate(value)} â€¢ ${_formatTime(value)}';
+    return '${_formatDate(value)} • ${_formatTime(value)}';
   }
 
   bool _isStartingSoon(TradingSession session) {
@@ -379,7 +379,7 @@ class _TradingTradeSessionsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Propose 3 days Ã— 3 times',
+                      'Propose 3 days × 3 times',
                       style: AppTheme.tradingHeading(fontSize: 24),
                     ),
                     const SizedBox(height: 8),
@@ -849,7 +849,7 @@ class _TradingTradeSessionsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${session.traderOneName} â†” ${session.traderTwoName}',
+              '${session.traderOneName} ↔ ${session.traderTwoName}',
               style: AppTheme.tradingHeading(fontSize: 22),
             ),
             const SizedBox(height: 10),
@@ -1080,7 +1080,7 @@ class _TradingTradeSessionsScreenState
             Divider(color: AppTheme.tradingDivider),
             const SizedBox(height: 10),
             Text(
-              'Flow: accept offer â†’ propose 3 days Ã— 3 times â†’ other trader confirms one slot â†’ share Embark IDs â†’ assign first drop â†’ both mark ready.',
+              'Flow: accept offer → propose 3 days × 3 times → other trader confirms one slot → share Embark IDs → assign first drop → both mark ready.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.tradingMutedText,

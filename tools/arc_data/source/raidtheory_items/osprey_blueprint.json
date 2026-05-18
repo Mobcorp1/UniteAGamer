@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "osprey_blueprint",
   "name": {
     "da": "Osprey-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Osprey",
     "pt": "Projeto de Osprey",
     "pt-BR": "Esquema de Águia-Pescadora",
-    "ru": "Чертеж — Ястреб",
+    "ru": "Чертеж - Ястреб",
     "sr": "Osprey Nacrt",
     "tr": "Kartal Taslağı",
     "uk": "Креслення Osprey",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

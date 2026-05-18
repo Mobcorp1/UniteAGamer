@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "doodly_duck",
   "name": {
     "da": "Krims-Krams And",
@@ -37,7 +37,7 @@
     "pl": "Wszystko jest płótnem dla kreatywnego dziecka. Można rzucić, aby wytworzyć hałas.",
     "pt": "Tudo é uma tela para uma criança criativa. Pode ser arremessado para criar ruído.",
     "pt-BR": "Tudo é uma tela para uma criança criativa. Pode ser arremessado para fazer barulho.",
-    "ru": "Всё — холст для творческого ребёнка. Можно бросить, чтобы создать шум.",
+    "ru": "Всё - холст для творческого ребёнка. Можно бросить, чтобы создать шум.",
     "sr": "Sve je platno za kreativno dete. Može se baciti da stvori buku.",
     "tr": "Yaratıcı bir çocuk için her şey bir tuvaldir. Gürültü yaratmak için fırlatılabilir.",
     "uk": "Все є полотном для творчої дитини. Можна кинути, щоб створити шум.",
@@ -53,3 +53,4 @@
   "updatedAt": "03/17/2026",
   "addedIn": "1.13"
 }
+

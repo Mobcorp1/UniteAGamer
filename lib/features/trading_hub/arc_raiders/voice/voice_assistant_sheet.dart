@@ -245,9 +245,9 @@ class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
 
   Widget _buildMicButton() {
     final label = _service.listening
-        ? 'Listening… tap to stop'
+        ? 'Listening... tap to stop'
         : _service.initialising
-        ? 'Starting voice system…'
+        ? 'Starting voice system...'
         : 'Tap and ask UAG Raider';
 
     return ElevatedButton.icon(

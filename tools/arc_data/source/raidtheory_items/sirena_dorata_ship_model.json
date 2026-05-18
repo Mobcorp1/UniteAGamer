@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "sirena_dorata_ship_model",
   "name": {
     "da": "Skibsmodel \"Sirena Dorata\"",
@@ -37,10 +37,10 @@
     "pl": "Gdy śródziemnomorskie słońce migocze na jej kadłubie, ten żywy jacht jest ponadczasowym uosobieniem słonowodnego splendoru.",
     "pt": "Com o sol mediterrâneo brilhando em seu casco, este iate vibrante é a personificação atemporal do esplendor das águas salgadas.",
     "pt-BR": "Com o sol mediterrâneo brilhando em seu casco, este iate vibrante é a personificação atemporal do esplendor das águas salgadas.",
-    "ru": "Когда средиземноморское солнце играет на её корпусе, эта яркая яхта — вневременное воплощение солёного великолепия.",
+    "ru": "Когда средиземноморское солнце играет на её корпусе, эта яркая яхта - вневременное воплощение солёного великолепия.",
     "sr": "Dok mediteransko sunce blista na njenom trupu, ova živopisna jahta je bezvremenski vrhunac slankastog sjaja.",
     "tr": "Akdeniz güneşinin gövdesinde parıldadığı bu canlı yat, tuzlu su ihtişamının zamansız bir simgesidir.",
-    "uk": "Коли середземноморське сонце виграє на її корпусі, ця яскрава яхта — позачасове втілення солоної розкоші.",
+    "uk": "Коли середземноморське сонце виграє на її корпусі, ця яскрава яхта - позачасове втілення солоної розкоші.",
     "zh-CN": "地中海的阳光在船身上闪烁，这艘鲜艳的游艇是咸水奢华永恒的典范。",
     "zh-TW": "地中海的陽光在船身上閃爍，這艘鮮豔的遊艇是鹹水奢華永恆的典範。"
   },
@@ -53,3 +53,4 @@
   "updatedAt": "04/28/2026",
   "addedIn": "1.26"
 }
+

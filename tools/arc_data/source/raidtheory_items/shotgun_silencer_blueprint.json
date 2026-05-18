@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "shotgun_silencer_blueprint",
   "name": {
     "da": "Haglgevaer-lyddaemper-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Tlumik do strzelby",
     "pt": "Projeto de Silenciador de espingarda",
     "pt-BR": "Esquema de Silenciador de Escopeta",
-    "ru": "Чертеж — Глушитель для дробовика",
+    "ru": "Чертеж - Глушитель для дробовика",
     "sr": "Prigusivac za sacmaru Nacrt",
     "tr": "Pompalı Tüfek Susturucusu Taslağı",
     "uk": "Креслення Глушник для дробовика",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

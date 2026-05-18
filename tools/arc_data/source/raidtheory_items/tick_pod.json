@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "tick_pod",
   "name": {
     "da": "Flåtkapsel",
@@ -19,7 +19,7 @@
     "sr": "Krpeljeva Mahuna",
     "tr": "Kene Kozası",
     "uk": "Капсула кліща",
-    "zh-CN": "“跳蚤”收纳仓",
+    "zh-CN": ""跳蚤"收纳仓",
     "zh-TW": "蜱蟲莢"
   },
   "description": {
@@ -61,3 +61,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

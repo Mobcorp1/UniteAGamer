@@ -244,7 +244,7 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_rounded),
-                label: Text(_saving ? 'Saving…' : 'Create Session'),
+                label: Text(_saving ? 'Saving...' : 'Create Session'),
               ),
             ],
           ),

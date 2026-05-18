@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "damaged_tick_pod",
   "name": {
     "da": "Beskadiget flåtkapsel",
@@ -19,7 +19,7 @@
     "sr": "Oštećena Mahuna Krpelja",
     "tr": "Hasarlı Kene Kozası",
     "uk": "Пошкоджена капсула кліща",
-    "zh-CN": "损坏的“跳蚤”收纳仓",
+    "zh-CN": "损坏的"跳蚤"收纳仓",
     "zh-TW": "損壞的蜱蟲莢"
   },
   "description": {
@@ -60,3 +60,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

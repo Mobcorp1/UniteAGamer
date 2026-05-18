@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "tempest_blueprint",
   "name": {
     "da": "Tempest-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Burza",
     "pt": "Projeto de Tempestade",
     "pt-BR": "Esquema de Temporal",
-    "ru": "Чертеж — Буря",
+    "ru": "Чертеж - Буря",
     "sr": "Oluja Nacrt",
     "tr": "Bora Taslağı",
     "uk": "Креслення Буря",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

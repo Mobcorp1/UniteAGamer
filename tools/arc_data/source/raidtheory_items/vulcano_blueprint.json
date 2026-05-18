@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "vulcano_blueprint",
   "name": {
     "da": "Vulcano-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Vulcano",
     "pt": "Projeto de Vulcano",
     "pt-BR": "Diagrama da Vulcão",
-    "ru": "Чертеж — Вулкан",
+    "ru": "Чертеж - Вулкан",
     "sr": "Vulcano Nacrt",
     "tr": "Yanardağ Taslağı",
     "uk": "Креслення Vulcano",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

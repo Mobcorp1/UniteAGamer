@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "il_toro_blueprint",
   "name": {
     "da": "Il Toro-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Il Toro",
     "pt": "Projeto do Il Toro",
     "pt-BR": "Projeto do Il Toro",
-    "ru": "Чертеж — Эль-Торо",
+    "ru": "Чертеж - Эль-Торо",
     "sr": "Nacrt za Il Toro",
     "tr": "Il Toro Taslağı",
     "uk": "Креслення Il Toro",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

@@ -105,7 +105,7 @@ class _BlueprintVoiceSearchButtonState
     final color = _listening ? AppTheme.neonPink : Colors.white70;
     return IconButton(
       tooltip: _listening
-          ? 'Listening… tap to stop'
+          ? 'Listening... tap to stop'
           : 'Voice search blueprints',
       onPressed: _initialising ? null : _toggle,
       icon: _initialising

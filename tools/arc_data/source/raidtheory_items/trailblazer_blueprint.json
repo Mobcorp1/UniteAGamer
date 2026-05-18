@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "trailblazer_blueprint",
   "name": {
     "da": "Trailblazer-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Trailblazera",
     "pt": "Projeto de Trailblazer",
     "pt-BR": "Esquema de Desbravador",
-    "ru": "Чертёж — Trailblazer",
+    "ru": "Чертёж - Trailblazer",
     "sr": "Nacrt Trailblazera",
     "tr": "Yol Açan Taslağı",
     "uk": "Креслення Trailblazer",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "1.2"
 }
+

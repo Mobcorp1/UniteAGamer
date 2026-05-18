@@ -1201,7 +1201,7 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
                       subtitle: Text(
                         rule == null
                             ? 'Seeded blueprint route available.'
-                            : '${rule.eventName} — exact Raid Planner windows available.',
+                            : '${rule.eventName} - exact Raid Planner windows available.',
                         style: AppTheme.bodyTextStyle(
                           fontSize: 12,
                           color: AppTheme.tradingMutedText,

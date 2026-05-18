@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "extended_light_mag_ii_blueprint",
   "name": {
     "da": "Udvidet let magasin II-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Rozszerzony lekki magazynek II",
     "pt": "Projeto de Carregador leve estendido II",
     "pt-BR": "Esquema de Carregador Leve Estendido II",
-    "ru": "Чертеж — Увеличенный магазин для легкого оружия II",
+    "ru": "Чертеж - Увеличенный магазин для легкого оружия II",
     "sr": "Produzeni laki okvir II Nacrt",
     "tr": "Uzatılmış Hafif Şarjör II Taslağı",
     "uk": "Креслення Розширений легкий магазин II",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "vertical_grip_ii_blueprint",
   "name": {
     "da": "Vertikalt greb II-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Chwyt pionowy II",
     "pt": "Projeto de Punho Vertical II",
     "pt-BR": "Esquema de Empunhadura Vertical II",
-    "ru": "Чертеж — Вертикальная рукоятка II",
+    "ru": "Чертеж - Вертикальная рукоятка II",
     "sr": "Vertikalni Drzac II Nacrt",
     "tr": "Dikey Tutamaç II Taslağı",
     "uk": "Креслення Вертикальна рукоятка II",
@@ -53,3 +53,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

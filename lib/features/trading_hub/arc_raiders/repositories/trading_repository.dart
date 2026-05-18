@@ -378,7 +378,7 @@ class TradingRepository {
               '${effectiveScheduled.minute.toString().padLeft(2, '0')}';
 
     return 'ARC Raiders trade invite\n\n'
-        'Traders: ${session.traderOneName} â†” ${session.traderTwoName}\n'
+        'Traders: ${session.traderOneName} ↔ ${session.traderTwoName}\n'
         'When: $when (${session.timezone})\n'
         'Protocol: ${session.protocolLabel}\n'
         'Session ID: ${session.id}\n'
@@ -428,9 +428,9 @@ class TradingRepository {
         (smallBundles * 10) + (mediumBundles * 50) + (largeBundles * 100);
 
     final title = wantsNothing
-        ? '$offeredItem â€¢ Free Giveaway'
+        ? '$offeredItem • Free Giveaway'
         : listingType == TradingListingType.openToOffers
-        ? '$offeredItem â€¢ Open Offer'
+        ? '$offeredItem • Open Offer'
         : '$offeredItem for $wantedText';
 
     final listing = TradingListing(

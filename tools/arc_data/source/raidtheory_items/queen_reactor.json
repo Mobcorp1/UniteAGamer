@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "queen_reactor",
   "name": {
     "da": "Dronningereaktor",
@@ -19,7 +19,7 @@
     "sr": "Kraljičin Reaktor",
     "tr": "Kraliçe Reaktörü",
     "uk": "Реактор королеви",
-    "zh-CN": "“女王”反应堆",
+    "zh-CN": ""女王"反应堆",
     "zh-TW": "女王反應爐"
   },
   "description": {
@@ -62,3 +62,4 @@
   "addedIn": "base",
   "tip": "The Queen Reactor is a legendary item only acquired by defeating The Queen that can be recycled into crafting materials."
 }
+

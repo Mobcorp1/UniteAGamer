@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "stable_stock_iii_blueprint",
   "name": {
     "da": "Stabil kolbe III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Stabilna kolba III",
     "pt": "Projeto de Coronha estavel III",
     "pt-BR": "Esquema de Coronha Estável III",
-    "ru": "Чертеж — Надежный приклад III",
+    "ru": "Чертеж - Надежный приклад III",
     "sr": "Stabilna Kundak III Nacrt",
     "tr": "Dengeli Dipçik III Taslağı",
     "uk": "Креслення Стабільний приклад III",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

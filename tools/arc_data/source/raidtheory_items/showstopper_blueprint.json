@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "showstopper_blueprint",
   "name": {
     "da": "Showstopper-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Showstopper",
     "pt": "Projeto de Showstopper",
     "pt-BR": "Esquema de Para-Tudo",
-    "ru": "Чертеж — Коронный номер",
+    "ru": "Чертеж - Коронный номер",
     "sr": "Showstopper Nacrt",
     "tr": "Efsane Taslağı",
     "uk": "Креслення Шоустопер",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

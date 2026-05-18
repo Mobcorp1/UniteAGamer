@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "venator_blueprint",
   "name": {
     "da": "Venator-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Venator",
     "pt": "Projeto de Venator",
     "pt-BR": "Esquema de Venator",
-    "ru": "Чертеж — Охотник",
+    "ru": "Чертеж - Охотник",
     "sr": "Venator Nacrt",
     "tr": "Avcı Taslağı",
     "uk": "Креслення Venator",
@@ -52,3 +52,4 @@
   "updatedAt": "01/13/2026",
   "addedIn": "base"
 }
+

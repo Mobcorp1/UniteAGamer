@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "extended_medium_mag_iii_blueprint",
   "name": {
     "da": "Udvidet medium magasin III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt rozszerzonego średniego magazynka III",
     "pt": "Projeto de carregador médio estendido III",
     "pt-BR": "Esquema de Carregador Médio Estendido III",
-    "ru": "Чертеж — Увеличенный магазин для оружия среднего калибра III",
+    "ru": "Чертеж - Увеличенный магазин для оружия среднего калибра III",
     "sr": "Nacrt za produženi srednji spremnik III",
     "tr": "Uzatılmış Orta Şarjör III Taslağı",
     "uk": "Креслення розширеного середнього магазину III",
@@ -78,3 +78,4 @@
   "updatedAt": "11/12/2025",
   "addedIn": "base"
 }
+

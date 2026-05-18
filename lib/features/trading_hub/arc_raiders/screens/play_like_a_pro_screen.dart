@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/play_like_a_pro_repository.dart';
@@ -245,7 +245,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
     }
     if (_needsBreak) {
       steps.add(
-        'Take 3-5 minutes away from the screen. No “just one more” autopilot.',
+        'Take 3-5 minutes away from the screen. No "just one more" autopilot.',
       );
     }
     switch (_preferredResetStyle) {
@@ -275,7 +275,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
     }
     if (steps.isEmpty) {
       steps.add(
-        'You look stable. Keep comms clean, stick to the plan, and don’t overstay a good session.',
+        'You look stable. Keep comms clean, stick to the plan, and don't overstay a good session.',
       );
     }
     return steps;
@@ -1085,3 +1085,4 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
     );
   }
 }
+

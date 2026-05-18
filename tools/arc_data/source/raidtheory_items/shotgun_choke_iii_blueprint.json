@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "shotgun_choke_iii_blueprint",
   "name": {
     "da": "Haglgevaer choke III-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Dlawik strzelby III",
     "pt": "Projeto de Afogador de espingarda III",
     "pt-BR": "Esquema de Choque de Escopeta III",
-    "ru": "Чертеж — Чок для дробовика III",
+    "ru": "Чертеж - Чок для дробовика III",
     "sr": "Sacmarica Prigusnica III Nacrt",
     "tr": "Av Tüfeği Boğumlu Namlusu III Taslağı",
     "uk": "Креслення Дульне звуження III",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

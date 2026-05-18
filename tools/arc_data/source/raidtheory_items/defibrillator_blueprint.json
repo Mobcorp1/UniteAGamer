@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "defibrillator_blueprint",
   "name": {
     "da": "Hjertestarter-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt defibrylatora",
     "pt": "Projeto de desfibrilador",
     "pt-BR": "Diagrama do Desfibrilador",
-    "ru": "Чертеж — Дефибриллятор",
+    "ru": "Чертеж - Дефибриллятор",
     "sr": "Nacrt za Defibrilator",
     "tr": "Şok Cihazı Taslağı",
     "uk": "Креслення дефібрилятора",
@@ -53,3 +53,4 @@
   "updatedAt": "11/12/2025",
   "addedIn": "base"
 }
+

@@ -57,7 +57,6 @@ class _ArcBlueprintDropReportSheetState
   ArcMapCondition? _selectedMapEvent;
   ArcRaidType? _raidType;
   ArcBlueprintAcquisitionSource? _acquisitionSource;
-  ArcEntryTime? _entryTime = ArcEntryTime.unknown;
   ArcTimeOfDay? _timeOfDay;
   final List<_AdditionalBlueprintReportEntry> _additionalReports = [];
   bool _isSaving = false;
@@ -115,25 +114,39 @@ class _ArcBlueprintDropReportSheetState
       _acquisitionSource == ArcBlueprintAcquisitionSource.lootDrop;
 
   bool get _canSubmitReport {
+    if (_acquisitionSource == null) {
+      return false;
+    }
+
+    if (!_requiresRaidDetails) {
+      return true;
+    }
+
     return (_selectedMap ?? '').isNotEmpty &&
         (_selectedPoiId ?? '').isNotEmpty &&
         _selectedContainerType != null &&
         _selectedMapEvent != null &&
         _raidType != null &&
-        _entryTime != null &&
         _timeOfDay != null;
   }
 
   bool get _allAdditionalReportsValid {
     for (final entry in _additionalReports) {
       if (entry.blueprint == null) return false;
+
+      if (!_requiresRaidDetails) {
+        continue;
+      }
+
       final effectivePoiId = entry.useSamePoi ? _selectedPoiId : entry.poiId;
       if ((effectivePoiId ?? '').isEmpty) return false;
+
       final effectiveContainerType = entry.useSameContainerType
           ? _selectedContainerType
           : entry.containerType;
       if (effectiveContainerType == null) return false;
     }
+
     return true;
   }
 
@@ -218,39 +231,43 @@ class _ArcBlueprintDropReportSheetState
 
   Future<void> _saveWithReport() async {
     if (_isSaving || !_canSubmitReport || !_allAdditionalReportsValid) return;
+
     setState(() => _isSaving = true);
 
     try {
-      final selectedPoi = _poiOptions.firstWhere(
-        (item) => item.id == _selectedPoiId,
-      );
       final reportTime = DateTime.now();
+      final isRaidReport = _requiresRaidDetails;
+
+      final selectedPoi = isRaidReport
+          ? _poiOptions.firstWhere((item) => item.id == _selectedPoiId)
+          : null;
 
       Future<void> saveReportForBlueprint(
         ArcBlueprint blueprint, {
-        required String poiId,
-        required String poiName,
-        required ArcContainerType containerType,
+        String? poiId,
+        String? poiName,
+        ArcContainerType? containerType,
       }) {
-        final isDolabra = blueprint.id == 'dolabra';
+        final isDolabra = isRaidReport && blueprint.id == 'dolabra';
+
         return widget.repository.addDropReport(
           blueprintId: blueprint.id,
-          mapName: _selectedMap!,
-          sourceType: isDolabra
-              ? ArcDropSourceType.enemy
-              : ArcDropSourceType.poi,
-          poiId: isDolabra ? null : poiId,
-          poiName: isDolabra ? null : poiName,
+          mapName: isRaidReport ? _selectedMap! : 'Not Raid Specific',
+          sourceType: isRaidReport
+              ? (isDolabra ? ArcDropSourceType.enemy : ArcDropSourceType.poi)
+              : ArcDropSourceType.other,
+          poiId: isRaidReport && !isDolabra ? poiId : null,
+          poiName: isRaidReport && !isDolabra ? poiName : null,
           enemySourceId: isDolabra ? 'enemy_assessor' : null,
           enemySourceName: isDolabra ? 'Assessor' : null,
-          containerTypeId: containerType.id,
-          containerTypeLabel: containerType.label,
-          mapEventId: _selectedMapEvent?.id,
-          mapEventLabel: _selectedMapEvent?.label,
-          mode: _derivedMode,
-          raidType: _requiresRaidDetails ? _raidType! : ArcRaidType.fullRaid,
-          entryTime: _entryTime!,
-          timeOfDay: _requiresRaidDetails ? _timeOfDay! : ArcTimeOfDay.unknown,
+          containerTypeId: isRaidReport ? containerType?.id : null,
+          containerTypeLabel: isRaidReport ? containerType?.label : null,
+          mapEventId: isRaidReport ? _selectedMapEvent?.id : null,
+          mapEventLabel: isRaidReport ? _selectedMapEvent?.label : null,
+          mode: isRaidReport ? _derivedMode : ArcRaidMode.dayRaid,
+          raidType: isRaidReport ? _raidType! : ArcRaidType.fullRaid,
+          entryTime: ArcEntryTime.unknown,
+          timeOfDay: isRaidReport ? _timeOfDay! : ArcTimeOfDay.unknown,
           acquisitionSource:
               _acquisitionSource ?? ArcBlueprintAcquisitionSource.lootDrop,
           foundAt: reportTime,
@@ -258,34 +275,41 @@ class _ArcBlueprintDropReportSheetState
         );
       }
 
-      final stateUpdates = <ArcBlueprintState>[
+      final stateUpdates = [
         _stateAfterFound(current: widget.initialState, isPrimary: true),
       ];
 
       await saveReportForBlueprint(
         widget.blueprint,
-        poiId: selectedPoi.id,
-        poiName: selectedPoi.name,
-        containerType: _selectedContainerType!,
+        poiId: selectedPoi?.id,
+        poiName: selectedPoi?.name,
+        containerType: isRaidReport ? _selectedContainerType : null,
       );
 
       for (final entry in _additionalReports) {
         final blueprint = entry.blueprint;
         if (blueprint == null) continue;
 
-        final effectivePoiId = entry.useSamePoi ? _selectedPoiId : entry.poiId;
-        final additionalPoi = _poiOptions.firstWhere(
-          (item) => item.id == effectivePoiId,
-        );
-        final effectiveContainerType = entry.useSameContainerType
-            ? _selectedContainerType
-            : entry.containerType;
+        ArcPoiData? additionalPoi;
+        ArcContainerType? effectiveContainerType;
+
+        if (isRaidReport) {
+          final effectivePoiId = entry.useSamePoi
+              ? _selectedPoiId
+              : entry.poiId;
+          additionalPoi = _poiOptions.firstWhere(
+            (item) => item.id == effectivePoiId,
+          );
+          effectiveContainerType = entry.useSameContainerType
+              ? _selectedContainerType
+              : entry.containerType;
+        }
 
         await saveReportForBlueprint(
           blueprint,
-          poiId: additionalPoi.id,
-          poiName: additionalPoi.name,
-          containerType: effectiveContainerType!,
+          poiId: additionalPoi?.id,
+          poiName: additionalPoi?.name,
+          containerType: effectiveContainerType,
         );
 
         final currentState = await _loadCurrentBlueprintState(blueprint.id);
@@ -468,7 +492,6 @@ class _ArcBlueprintDropReportSheetState
       _selectedContainerType = null;
       _selectedMapEvent = null;
       _raidType = null;
-      _entryTime = null;
       _timeOfDay = null;
       _additionalReports.clear();
       _applyBlueprintDefaults();
@@ -550,7 +573,7 @@ class _ArcBlueprintDropReportSheetState
 
   Future<void> _pickAcquisitionSource() async {
     final selection = await _showSearchPicker(
-      title: 'How was it obtained?',
+      title: 'How Was It Obtained?',
       items: ArcBlueprintAcquisitionSource.values,
       labelBuilder: (item) => item.label,
     );
@@ -562,7 +585,6 @@ class _ArcBlueprintDropReportSheetState
         _selectedMapEvent = null;
         _selectedContainerType = null;
         _raidType = null;
-        _entryTime = ArcEntryTime.unknown;
         _timeOfDay = null;
       }
     });
@@ -789,7 +811,7 @@ class _ArcBlueprintDropReportSheetState
         borderColor: AppTheme.neonCyan.withValues(alpha: 0.22),
       ),
       child: Text(
-        'This source is not tied to a raid location. Save the report with the source selected so other players can see it came from a quest, trial reward or trade.',
+        'This report is not tied to a raid location. Save it with the source selected so other players can see it came from a quest reward, trial reward or trade.',
         style: AppTheme.bodyTextStyle(
           fontSize: 14,
           color: AppTheme.tradingMutedText,
@@ -866,7 +888,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.group} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} â€¢ ${widget.blueprint.group} â€¢ ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -927,7 +949,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: AppTheme.spaceXS),
                   const Text(
-                    'Start with how the blueprint was obtained, then add the map, event, area, container, raid round and Raider time of day. Add as many extra blueprints from the same raid as you need below.',
+                    'Start with how the blueprint was obtained. Loot Drop reports can include map, event, area, container, raid round and Raider time of day. Quest rewards, trial rewards and trades do not need raid details.',
                     style: TextStyle(color: Colors.white60, height: 1.35),
                   ),
                   const SizedBox(height: AppTheme.spaceM),
@@ -994,7 +1016,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(
-                    label: 'Obtained From *',
+                    label: 'How Was It Obtained *',
                     value: _acquisitionSource?.label ?? 'Select Source',
                     onTap: _selectedMap == null ? null : _pickAcquisitionSource,
                   ),

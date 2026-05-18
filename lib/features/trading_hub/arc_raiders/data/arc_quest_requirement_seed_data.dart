@@ -1,4 +1,4 @@
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
+﻿import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 
 class ArcQuestRequirement {
   final String questName;
@@ -87,7 +87,7 @@ class ArcQuestRequirementSeedData {
           'Best intel: electrical and technological POIs. Search server rooms, power rooms, cabinets, lockers and tech crates.',
     ),
     ArcQuestRequirement(
-      questName: 'Lance’s Tea Party',
+      questName: 'Lance's Tea Party',
       trader: 'Lance',
       order: 7,
       itemId: 'rubber-duck',
@@ -97,7 +97,7 @@ class ArcQuestRequirementSeedData {
           'Best intel: residential bathrooms, apartments, shelves, cupboards and civilian interiors.',
     ),
     ArcQuestRequirement(
-      questName: 'Lance’s Tea Party',
+      questName: 'Lance's Tea Party',
       trader: 'Lance',
       order: 8,
       itemId: 'faded-photograph',
@@ -560,3 +560,4 @@ class ArcQuestRequirementSeedData {
     }
   }
 }
+

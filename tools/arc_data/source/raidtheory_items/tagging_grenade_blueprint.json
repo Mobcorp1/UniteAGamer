@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "tagging_grenade_blueprint",
   "name": {
     "da": "Markeringsgranат-tegning",
@@ -15,7 +15,7 @@
     "pl": "Projekt Granat znacznikowy",
     "pt": "Projeto de Granada marcadora",
     "pt-BR": "Esquema de Granada de Marcação",
-    "ru": "Чертеж — Маркирующая граната",
+    "ru": "Чертеж - Маркирующая граната",
     "sr": "Granata za Oznacavanje Nacrt",
     "tr": "İşaretleme Bombası Taslağı",
     "uk": "Креслення Маркувальна граната",
@@ -53,3 +53,4 @@
   "updatedAt": "12/07/2025",
   "addedIn": "base"
 }
+

@@ -1,4 +1,4 @@
-{
+﻿{
   "id": "anvil_iv",
   "name": {
     "da": "Ambolt IV",
@@ -80,7 +80,7 @@
       "de": "ARC-Panzerungsdurchdringung",
       "en": "ARC Armor Penetration",
       "es": "Penetración de armadura ARC",
-      "fr": "Pénétration d’armure ARC",
+      "fr": "Pénétration d'armure ARC",
       "he": "חדירת שריון ARC",
       "hr": "ARC probijanje oklopa",
       "it": "Penetrazione armature ARC",
@@ -249,3 +249,4 @@
   },
   "repairDurability": 0.5
 }
+
