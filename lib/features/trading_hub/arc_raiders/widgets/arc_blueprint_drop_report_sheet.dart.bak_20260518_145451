@@ -836,7 +836,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${widget.blueprint.group} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${widget.blueprint.group} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),

@@ -836,7 +836,7 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${widget.blueprint.category} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${widget.blueprint.group} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${widget.blueprint.rarityLabel}',
+                    '${widget.blueprint.category} Ã¢â‚¬Â¢ ${widget.blueprint.group} Ã¢â‚¬Â¢ ${widget.blueprint.rarityLabel}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -897,14 +897,8 @@ class _ArcBlueprintDropReportSheetState
                   ),
                   const SizedBox(height: AppTheme.spaceXS),
                   const Text(
-                    'Start with how the blueprint was obtained, then add the map, event, area, container, raid round and Raider time of day. Add as many extra blueprints from the same raid as you need below.',
+                    'Fill out the run in this order: map, map event, area / POI, container type, raid round, how it was obtained, then Raider time of day. Add as many extra blueprints from the same raid as you need below.',
                     style: TextStyle(color: Colors.white60, height: 1.35),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  _buildSelectorField(
-                    label: 'How Was It Obtained *',
-                    value: _acquisitionSource?.label ?? 'Select Source',
-                    onTap: _pickAcquisitionSource,
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _buildSelectorField(

@@ -463,7 +463,7 @@ extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
   String get label {
     switch (this) {
       case ArcBlueprintAcquisitionSource.lootDrop:
-        return 'Loot Drop';
+        return 'Normal Loot / Drop';
       case ArcBlueprintAcquisitionSource.questReward:
         return 'Quest Reward';
       case ArcBlueprintAcquisitionSource.trialReward:
