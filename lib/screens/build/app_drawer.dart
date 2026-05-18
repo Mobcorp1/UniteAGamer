@@ -197,7 +197,7 @@ class _AppDrawerState extends State<AppDrawer>
           backgroundColor: AppTheme.cardBackgroundDeep,
           shape: AppTheme.tradingDialogShape(),
           title: Text(
-            '$title Ã¢â‚¬â€ Coming Soon',
+            '$title â€¢â€ Coming Soon',
             style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
           ),
           content: Text(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 /// The broad type of source a player can report for a blueprint.
 enum ArcDropSourceType { poi, enemy, other }
