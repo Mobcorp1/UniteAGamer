@@ -51,3 +51,4 @@ app.*.map.json
 *.bak_apostrophe_recovery_*
 *.bak_bigbatch_*
 *.bak_batch5_*
+*.bak_batch6_*
