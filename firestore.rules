@@ -1,5 +1,3 @@
-﻿rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() {
@@ -284,27 +282,27 @@ service cloud.firestore {
     }
 
     match /beta_feedback/{feedbackId} {
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
-      allow update: if isAdminOrDev();
-      allow delete: if false;
+  allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+  allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
+  allow update: if isAdminOrDev() || (isSignedIn() && resource.data.uid == request.auth.uid);
+  allow delete: if isAdminOrDev();
 
-      match /replies/{replyId} {
-        allow read: if isSignedIn() &&
-          (
-            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid ||
-            isAdminOrDev()
-          );
-        allow create: if isSignedIn() &&
-          (
-            isAdminOrDev() ||
-            get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
-          );
-        allow update, delete: if false;
-      }
-    }
+  match /replies/{replyId} {
+    allow read: if isSignedIn() && (
+      get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid ||
+      isAdminOrDev()
+    );
 
-    match /config/{docId} {
+    allow create: if isSignedIn() && (
+      isAdminOrDev() ||
+      get(/databases/$(database)/documents/beta_feedback/$(feedbackId)).data.uid == request.auth.uid
+    );
+
+    allow update: if isAdminOrDev();
+    allow delete: if isAdminOrDev();
+  }
+}
+ match /config/{docId} {
       allow read: if isSignedIn();
       allow create, update: if isAdminOrDev();
       allow delete: if false;
@@ -398,4 +396,5 @@ service cloud.firestore {
     }
   }
 }
+
 

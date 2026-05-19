@@ -11,6 +11,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blue
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_intel_panel.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class ArcBlueprintDropReportSheet extends StatefulWidget {
@@ -346,6 +347,7 @@ class _ArcBlueprintDropReportSheetState
     required String title,
     required List<T> items,
     required String Function(T item) labelBuilder,
+    bool enableVoiceSearch = false,
   }) async {
     final controller = TextEditingController();
     final sortedItems = List<T>.from(items)
@@ -431,6 +433,20 @@ class _ArcBlueprintDropReportSheetState
                                 Icons.search_rounded,
                                 color: Colors.white70,
                               ),
+                              suffixIcon: enableVoiceSearch
+                                  ? BlueprintVoiceSearchButton(
+                                      onSearchText: (value) {
+                                        controller.text = value;
+                                        controller.selection =
+                                            TextSelection.fromPosition(
+                                              TextPosition(
+                                                offset: controller.text.length,
+                                              ),
+                                            );
+                                        updateFilter(value);
+                                      },
+                                    )
+                                  : null,
                             ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
@@ -628,6 +644,7 @@ class _ArcBlueprintDropReportSheetState
       title: 'Additional Blueprint',
       items: items,
       labelBuilder: (item) => item.name,
+      enableVoiceSearch: true,
     );
     if (selection == null || !mounted) return;
     setState(() => _additionalReports[index].blueprint = selection);
