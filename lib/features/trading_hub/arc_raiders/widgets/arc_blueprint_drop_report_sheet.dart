@@ -650,6 +650,62 @@ class _ArcBlueprintDropReportSheetState
     setState(() => _additionalReports[index].blueprint = selection);
   }
 
+  Future<void> _voicePickAdditionalBlueprint(
+    int index,
+    String spokenText,
+  ) async {
+    final query = spokenText.trim().toLowerCase();
+    if (query.isEmpty || !mounted) return;
+
+    final usedIds = <String>{widget.blueprint.id};
+    for (var i = 0; i < _additionalReports.length; i++) {
+      if (i == index) continue;
+      final picked = _additionalReports[i].blueprint;
+      if (picked != null) usedIds.add(picked.id);
+    }
+
+    final normalizedQuery = query.replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    final matches =
+        ArcBlueprintSeedData.blueprints
+            .where((item) => !usedIds.contains(item.id))
+            .where((item) {
+              final name = item.name.toLowerCase();
+              final id = item.id.toLowerCase();
+              final category = item.category.toLowerCase();
+              final group = item.group.toLowerCase();
+              return name.contains(query) ||
+                  id.contains(normalizedQuery) ||
+                  category.contains(query) ||
+                  group.contains(query);
+            })
+            .toList(growable: false)
+          ..sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
+
+    if (matches.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No blueprint found for "$spokenText".')),
+      );
+      return;
+    }
+
+    if (matches.length == 1) {
+      setState(() => _additionalReports[index].blueprint = matches.first);
+      return;
+    }
+
+    final selection = await _showSearchPicker<ArcBlueprint>(
+      title: 'Additional Blueprint',
+      items: matches,
+      labelBuilder: (item) => item.name,
+    );
+
+    if (selection == null || !mounted) return;
+    setState(() => _additionalReports[index].blueprint = selection);
+  }
+
   void _addAnotherBlueprintEntry() {
     setState(() {
       _additionalReports.add(_AdditionalBlueprintReportEntry());
@@ -818,10 +874,31 @@ class _ArcBlueprintDropReportSheetState
               ),
             ],
           ),
-          _buildSelectorField(
-            label: 'Additional Blueprint',
-            value: entry.blueprint?.name ?? 'Select additional blueprint',
-            onTap: () => _pickAdditionalBlueprint(index),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+
+            children: [
+              Expanded(
+                child: _buildSelectorField(
+                  label: 'Additional Blueprint',
+
+                  value: entry.blueprint?.name ?? 'Select additional blueprint',
+
+                  onTap: () => _pickAdditionalBlueprint(index),
+                ),
+              ),
+
+              const SizedBox(width: AppTheme.spaceS),
+
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+
+                child: BlueprintVoiceSearchButton(
+                  onSearchText: (value) =>
+                      _voicePickAdditionalBlueprint(index, value),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppTheme.spaceS),
           SwitchListTile(
