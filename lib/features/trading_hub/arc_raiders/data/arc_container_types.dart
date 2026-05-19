@@ -138,6 +138,11 @@ class ArcContainerTypes {
     description: 'Fridge or cooler-style loot source.',
   );
 
+  static const ArcContainerType blackCrateSecurityContainer = ArcContainerType(
+    id: 'black_crate_security_container',
+    label: 'Black Crate / Security Container',
+    description: 'Black crate or secured security container loot source.',
+  );
   static const ArcContainerType securityLocker = ArcContainerType(
     id: 'security_locker',
     label: 'Security Locker',
@@ -243,6 +248,7 @@ class ArcContainerTypes {
     metalCrate,
     netNest,
     raiderCache,
+    blackCrateSecurityContainer,
     securityLocker,
     shippingContainer,
     suitcase,

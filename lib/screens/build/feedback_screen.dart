@@ -461,7 +461,10 @@ class _FeedbackCardState extends State<_FeedbackCard> {
   @override
   void initState() {
     super.initState();
-    _status = (widget.data['status'] ?? 'new').toString();
+    final rawStatus = (widget.data['status'] ?? 'new').toString();
+    _status = _FeedbackScreenState._statusOptions.contains(rawStatus)
+        ? rawStatus
+        : 'new';
   }
 
   @override
