@@ -54,3 +54,6 @@ app.*.map.json
 *.bak_batch6_*
 *.bak_runtime_separator_*
 *.bak_feedback_rules_hardfix_*
+*.bak_batch*
+*.bak_separatorfix_*
+Thumbs.db
