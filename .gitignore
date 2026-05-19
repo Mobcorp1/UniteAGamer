@@ -57,3 +57,4 @@ app.*.map.json
 *.bak_batch*
 *.bak_separatorfix_*
 Thumbs.db
+*.bak_batch9_fixed_*
