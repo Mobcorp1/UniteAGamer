@@ -4,7 +4,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blue
 class ArcBlueprintSeedData {
   static const int columns = 10;
   static const int rows = 9;
-  static const int lastRowCount = 1;
+  static const int lastRowCount = 3;
 
   static const String _base = 'assets/arc_raiders/blueprints/';
 
@@ -883,11 +883,24 @@ class ArcBlueprintSeedData {
       intelHint: 'Track repeated attachment crate reports.',
     ),
     ArcBlueprint(
+      id: 'extended-barrel-ii',
+      name: 'Extended Barrel II',
+      category: 'Attachments',
+      group: 'Row 8',
+      sortOrder: 77,
+      rarity: ArcBlueprintRarity.uncommon,
+      icon: Icons.swap_vert_rounded,
+      imageAssetPath: '${_base}extended-barrel-ii.webp',
+      intelHint:
+          'New attachment blueprint. Track attachment crates, black crate/security containers, and recent community reports.',
+    ),
+
+    ArcBlueprint(
       id: 'muzzle-brake-ii',
       name: 'Muzzle Brake II',
       category: 'Attachments',
       group: 'Row 8',
-      sortOrder: 77,
+      sortOrder: 78,
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.adjust_rounded,
       imageAssetPath: '${_base}muzzle-brake-ii.webp',
@@ -898,18 +911,31 @@ class ArcBlueprintSeedData {
       name: 'Extended Barrel',
       category: 'Attachments',
       group: 'Row 8',
-      sortOrder: 78,
+      sortOrder: 79,
       rarity: ArcBlueprintRarity.rare,
       icon: Icons.swap_vert_rounded,
       imageAssetPath: '${_base}extended-barrel.webp',
       intelHint: 'Strong candidate for comparing attachment-route confidence.',
     ),
     ArcBlueprint(
+      id: 'rascal',
+      name: 'Rascal',
+      category: 'Weapons',
+      group: 'Row 8',
+      sortOrder: 80,
+      rarity: ArcBlueprintRarity.rare,
+      icon: Icons.sports_esports_rounded,
+      imageAssetPath: '${_base}rascal.webp',
+      intelHint:
+          'New weapon blueprint. Use fresh community reports to narrow active maps, containers, and raid timing.',
+    ),
+
+    ArcBlueprint(
       id: 'burletta',
       name: 'Burletta',
       category: 'Weapons',
-      group: 'Row 8',
-      sortOrder: 79,
+      group: 'Row 9',
+      sortOrder: 81,
       rarity: ArcBlueprintRarity.epic,
       icon: Icons.auto_awesome_rounded,
       imageAssetPath: '${_base}burletta.webp',
@@ -920,8 +946,8 @@ class ArcBlueprintSeedData {
       id: 'equalizer',
       name: 'Equalizer',
       category: 'Weapons',
-      group: 'Row 8',
-      sortOrder: 80,
+      group: 'Row 9',
+      sortOrder: 82,
       rarity: ArcBlueprintRarity.legendary,
       icon: Icons.graphic_eq_rounded,
       imageAssetPath: '${_base}equalizer.webp',
@@ -932,7 +958,7 @@ class ArcBlueprintSeedData {
       name: 'Snap Hook',
       category: 'Utility',
       group: 'Row 9',
-      sortOrder: 81,
+      sortOrder: 83,
       rarity: ArcBlueprintRarity.uncommon,
       icon: Icons.link_rounded,
       imageAssetPath: '${_base}snap-hook.webp',
