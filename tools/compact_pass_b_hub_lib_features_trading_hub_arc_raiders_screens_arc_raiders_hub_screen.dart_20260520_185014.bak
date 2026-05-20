@@ -9,7 +9,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_mat
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
@@ -229,14 +228,6 @@ class ArcRaidersHubScreen extends StatelessWidget {
             comingSoonWhenLocked: false,
           ),
           (
-            title: 'Smart Trade Assist',
-            subtitle: 'Turn dupes into target trades and useful offers.',
-            icon: Icons.auto_awesome_rounded,
-            routeName: SmartTradeAssistScreen.routeName,
-            flag: FeatureAccessFlag.traderHub,
-            comingSoonWhenLocked: false,
-          ),
-          (
             title: 'Session Planner',
             subtitle: 'Schedule raids, trades and matchmaking sessions.',
             icon: Icons.calendar_month_rounded,
@@ -366,16 +357,6 @@ class ArcRaidersHubScreen extends StatelessWidget {
                                     subtitle: tile.subtitle,
                                     icon: tile.icon,
                                     onTap: () async {
-                                      if (tile.title == 'Smart Trade Assist') {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const SmartTradeAssistScreen(),
-                                          ),
-                                        );
-                                        return;
-                                      }
-
                                       if (tile.title == 'Voice Assistant') {
                                         UagVoiceAssistantSheet.show(context);
                                         return;

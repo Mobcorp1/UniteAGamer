@@ -12,3 +12,5 @@ export 'services/automation/smart_trade_assist_engine.dart';
 export 'widgets/shared/arc_collapsible_panel.dart';
 
 export 'services/arc_assist/arc_assist_marketplace_summary.dart';
+
+export 'screens/smart_trade_assist_screen.dart';
