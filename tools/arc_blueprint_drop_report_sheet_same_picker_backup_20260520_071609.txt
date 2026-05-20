@@ -642,8 +642,7 @@ class _ArcBlueprintDropReportSheetState
 
   Future<void> _pickAdditionalBlueprint(int index) async {
     final currentBlueprint = _additionalReports[index].blueprint;
-    // Primary blueprint is intentionally allowed here so duplicate finds in the same raid can be reported.
-    final usedIds = <String>{};
+    final usedIds = <String>{widget.blueprint.id};
     for (var i = 0; i < _additionalReports.length; i++) {
       if (i == index) continue;
       final picked = _additionalReports[i].blueprint;
@@ -683,8 +682,7 @@ class _ArcBlueprintDropReportSheetState
     final query = spokenText.trim().toLowerCase();
     if (query.isEmpty || !mounted) return;
 
-    // Primary blueprint is intentionally allowed here so duplicate finds in the same raid can be reported.
-    final usedIds = <String>{};
+    final usedIds = <String>{widget.blueprint.id};
     for (var i = 0; i < _additionalReports.length; i++) {
       if (i == index) continue;
       final picked = _additionalReports[i].blueprint;
