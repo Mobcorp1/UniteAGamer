@@ -121,7 +121,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ArcBlueprintFilter.all: blueprints.length,
       ArcBlueprintFilter.owned: ownedCount,
       ArcBlueprintFilter.missing: blueprints.length - ownedCount,
-      ArcBlueprintFilter.duplicates: sumDupesOwned(),
+      ArcBlueprintFilter.duplicates: countWhere((state) => state.hasDuplicates),
     };
   }
 
@@ -799,7 +799,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned • $missingCount missing • $dupesCount dupes',
+            '$ownedCount / ${allBlueprints.length} owned • $missingCount missing • $dupesCount with dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
