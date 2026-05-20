@@ -17,14 +17,13 @@ class ArcTextSanitizer {
     var output = value;
 
     final replacements = <String, String>{
-      'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢': 'â€¢',
+      'â€¢': 'â€¢',
       'ÃƒÂ¢Ã¢â€šÂ¬': 'â€¢',
-      'Ã¢â‚¬Â¢': 'â€¢',
-      'Ã‚Â·': 'â€¢',
-      'Ãƒâ€šÃ‚Â·': 'â€¢',
-      'Ã‚ ': ' ',
+      'Â·': 'â€¢',
+      'Ãƒâ€šÂ·': 'â€¢',
+      ' ': ' ',
       'Ãƒâ€š': '',
-      'Ã‚': '',
+      '': '',
       'ï¿½': '',
       '\uFEFF': '',
       '\u200B': '',
@@ -55,8 +54,8 @@ class ArcTextSanitizer {
 
   static bool hasMojibake(String value) {
     return value.contains('Ãƒ') ||
-        value.contains('Ã‚') ||
-        value.contains('Ã¢â‚¬Â¢') ||
+        value.contains('') ||
+        value.contains('â€¢') ||
         value.contains('ï¿½');
   }
 }
