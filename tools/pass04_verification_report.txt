@@ -1,0 +1,12 @@
+UAG Stabilisation Pass 04 Verification
+Generated: 05/20/2026 17:45:54
+
+Files created/updated:
+- lib\features\trading_hub\arc_raiders\controllers\arc_collapsible_panel_controller.dart
+- lib\features\trading_hub\arc_raiders\controllers\arc_raiders_section_controller.dart
+- lib\features\trading_hub\arc_raiders\widgets\shared\arc_collapsible_panel.dart
+- lib\features\trading_hub\arc_raiders\access\arc_feature_access_state.dart
+- lib\features\trading_hub\arc_raiders\access\arc_feature_access_controller.dart
+- lib/features/trading_hub/arc_raiders/arc_raiders_foundation.dart
+
+This pass intentionally did not touch duplicate count, same-blueprint picker, or Rascal/Canto ordering logic.
