@@ -10,9 +10,7 @@ class TradingAutomationService {
         .toList();
   }
 
-  List<String> generateSuggestedListings({
-    required List<String> duplicates,
-  }) {
+  List<String> generateSuggestedListings({required List<String> duplicates}) {
     return duplicates;
   }
 
@@ -20,8 +18,6 @@ class TradingAutomationService {
     required List<String> wanted,
     required List<String> available,
   }) {
-    return wanted
-        .where((item) => available.contains(item))
-        .toList();
+    return wanted.where((item) => available.contains(item)).toList();
   }
 }

@@ -21,32 +21,18 @@ class ArcCanonicalBlueprints {
     ArcCanonicalBlueprint(
       id: 'extended-barrel-ii',
       name: 'Extended Barrel II',
-      aliases: [
-        'extended barrel 2',
-        'barrel 2',
-      ],
-      searchTerms: [
-        'extended',
-        'barrel',
-        'weapon',
-      ],
-      imagePath:
-          'assets/images/arc_raiders/blueprints/extended-barrel-ii.webp',
+      aliases: ['extended barrel 2', 'barrel 2'],
+      searchTerms: ['extended', 'barrel', 'weapon'],
+      imagePath: 'assets/images/arc_raiders/blueprints/extended-barrel-ii.webp',
       category: 'weapon_mod',
     ),
 
     ArcCanonicalBlueprint(
       id: 'rascal',
       name: 'Rascal',
-      aliases: [
-        'rascal weapon',
-      ],
-      searchTerms: [
-        'rascal',
-        'smg',
-      ],
-      imagePath:
-          'assets/images/arc_raiders/blueprints/rascal.webp',
+      aliases: ['rascal weapon'],
+      searchTerms: ['rascal', 'smg'],
+      imagePath: 'assets/images/arc_raiders/blueprints/rascal.webp',
       category: 'weapon',
     ),
   ];
@@ -68,9 +54,7 @@ class ArcCanonicalBlueprints {
       return items.firstWhere(
         (item) =>
             item.name.toLowerCase() == query ||
-            item.aliases.any(
-              (alias) => alias.toLowerCase() == query,
-            ),
+            item.aliases.any((alias) => alias.toLowerCase() == query),
       );
     } catch (_) {
       return null;

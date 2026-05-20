@@ -309,10 +309,12 @@ class _ArcBlueprintDropReportSheetState
         );
 
         final currentState = await _loadCurrentBlueprintState(blueprint.id);
-        stateUpdates.add(_stateAfterFound(current: currentState));
+        queueAdditionalStateUpdate(blueprint, currentState);
       }
 
-      await widget.repository.saveBlueprintStates(stateUpdates);
+      await widget.repository.saveBlueprintStates(
+        stateUpdatesById.values.toList(growable: false),
+      );
 
       if (!mounted) return;
       Navigator.of(context).pop(true);
