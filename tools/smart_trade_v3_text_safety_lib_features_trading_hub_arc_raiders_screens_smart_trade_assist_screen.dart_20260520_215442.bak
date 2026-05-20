@@ -24,24 +24,28 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
 
   late final List<SmartTradeOpportunity> _opportunities =
       const SmartTradeAssistEngine().buildFullOpportunityStack(
-        duplicateBlueprintQuantities: const {
-          'wolfpack': 3,
-          'power-descender': 1,
-        },
-        topFiveWantedBlueprintIds: const [
-          'rascal',
-          'extended-barrel-ii',
-          'muzzle-brake-ii',
-          'burletta',
-          'equalizer',
-        ],
-        missingBlueprintIds: const ['canto', 'venator', 'jupiter'],
-        usefulResourceIds: const [
-          'mechanical-components',
-          'electrical-components',
-          'industrial-components',
-        ],
-      );
+    duplicateBlueprintQuantities: const {
+      'wolfpack': 3,
+      'power-descender': 1,
+    },
+    topFiveWantedBlueprintIds: const [
+      'rascal',
+      'extended-barrel-ii',
+      'muzzle-brake-ii',
+      'burletta',
+      'equalizer',
+    ],
+    missingBlueprintIds: const [
+      'canto',
+      'venator',
+      'jupiter',
+    ],
+    usefulResourceIds: const [
+      'mechanical-components',
+      'electrical-components',
+      'industrial-components',
+    ],
+  );
 
   Map<String, String> get _blueprintNamesById {
     return {
@@ -59,14 +63,13 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
         .split('-')
         .where((part) => part.trim().isNotEmpty)
         .map((part) {
-          if (part.length == 1) {
-            return part.toUpperCase();
-          }
+      if (part.length == 1) {
+        return part.toUpperCase();
+      }
 
-          final lower = part.toLowerCase();
-          return '${lower[0].toUpperCase()}${lower.substring(1)}';
-        })
-        .join(' ');
+      final lower = part.toLowerCase();
+      return '${lower[0].toUpperCase()}${lower.substring(1)}';
+    }).join(' ');
   }
 
   String _labelForResources(List<String> ids) {
@@ -330,40 +333,43 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
                     const SizedBox(height: AppTheme.spaceM),
                     _SummaryCard(opportunities: _opportunities),
                     const SizedBox(height: AppTheme.spaceM),
-                    ..._opportunities.map((opportunity) {
-                      final matches = _matchesForOpportunity(
-                        listings,
-                        opportunity,
-                      );
+                    ..._opportunities.map(
+                      (opportunity) {
+                        final matches = _matchesForOpportunity(
+                          listings,
+                          opportunity,
+                        );
 
-                      final key = _opportunityKey(opportunity);
+                        final key = _opportunityKey(opportunity);
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
-                        child: _OpportunityCard(
-                          opportunity: opportunity,
-                          duplicateLabel: _labelForBlueprint(
-                            opportunity.duplicateBlueprintId,
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppTheme.spaceS,
                           ),
-                          targetLabel: _targetLabel(opportunity),
-                          directMatches: matches,
-                          created: _createdListingKeys.contains(key),
-                          busy: _busyKeys.contains(key),
-                          onCreateListing: () => _createListing(opportunity),
-                          onSendOffer: matches.isEmpty
-                              ? null
-                              : () => _sendOffer(
-                                  listing: matches.first,
-                                  opportunity: opportunity,
+                          child: _OpportunityCard(
+                            opportunity: opportunity,
+                            duplicateLabel: _labelForBlueprint(
+                              opportunity.duplicateBlueprintId,
+                            ),
+                            targetLabel: _targetLabel(opportunity),
+                            directMatches: matches,
+                            created: _createdListingKeys.contains(key),
+                            busy: _busyKeys.contains(key),
+                            onCreateListing: () => _createListing(opportunity),
+                            onSendOffer: matches.isEmpty
+                                ? null
+                                : () => _sendOffer(
+                                      listing: matches.first,
+                                      opportunity: opportunity,
+                                    ),
+                            offerSent: matches.isNotEmpty &&
+                                _sentOfferKeys.contains(
+                                  '${matches.first.id}::$key',
                                 ),
-                          offerSent:
-                              matches.isNotEmpty &&
-                              _sentOfferKeys.contains(
-                                '${matches.first.id}::$key',
-                              ),
-                        ),
-                      );
-                    }),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 );
               },
@@ -379,7 +385,10 @@ class _IntroCard extends StatelessWidget {
   final int opportunityCount;
   final VoidCallback onCreateAll;
 
-  const _IntroCard({required this.opportunityCount, required this.onCreateAll});
+  const _IntroCard({
+    required this.opportunityCount,
+    required this.onCreateAll,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -457,7 +466,8 @@ class _SummaryCard extends StatelessWidget {
         .length;
     final resourceFallbacks = opportunities
         .where(
-          (item) => item.tier == SmartTradeOpportunityTier.usefulResourceBundle,
+          (item) =>
+              item.tier == SmartTradeOpportunityTier.usefulResourceBundle,
         )
         .length;
 
@@ -481,7 +491,10 @@ class _MetricPill extends StatelessWidget {
   final String label;
   final int value;
 
-  const _MetricPill({required this.label, required this.value});
+  const _MetricPill({
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +502,9 @@ class _MetricPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: AppTheme.neonCyan.withValues(alpha: 0.5),
+        ),
         color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
       ),
       child: Text(
