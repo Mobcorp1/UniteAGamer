@@ -271,32 +271,9 @@ class _ArcBlueprintDropReportSheetState
         );
       }
 
-      final stateUpdatesById = <String, ArcBlueprintState>{
-        widget.blueprint.id: _stateAfterFound(
-          current: widget.initialState,
-          isPrimary: true,
-        ),
-      };
-
-      void queueAdditionalStateUpdate(
-        ArcBlueprint blueprint,
-        ArcBlueprintState currentState,
-      ) {
-        final existing = stateUpdatesById[blueprint.id];
-
-        if (existing != null) {
-          stateUpdatesById[blueprint.id] = existing.copyWith(
-            owned: true,
-            dupesOwned: existing.dupesOwned + 1,
-            updatedAt: DateTime.now(),
-          );
-          return;
-        }
-
-        stateUpdatesById[blueprint.id] = _stateAfterFound(
-          current: currentState,
-        );
-      }
+      final stateUpdates = [
+        _stateAfterFound(current: widget.initialState, isPrimary: true),
+      ];
 
       await saveReportForBlueprint(
         widget.blueprint,
