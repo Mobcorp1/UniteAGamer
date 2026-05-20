@@ -115,18 +115,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       return count;
     }
 
-    int sumDupesOwned() {
-      var total = 0;
-
-      for (final blueprint in blueprints) {
-        final state =
-            states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
-        total += state.dupesOwned;
-      }
-
-      return total;
-    }
-
     final ownedCount = countWhere((state) => state.owned);
 
     return <ArcBlueprintFilter, int>{
