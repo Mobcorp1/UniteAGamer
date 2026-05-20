@@ -14,3 +14,8 @@ export 'widgets/shared/arc_collapsible_panel.dart';
 export 'services/arc_assist/arc_assist_marketplace_summary.dart';
 
 export 'screens/smart_trade_assist_screen.dart';
+
+export 'services/automation/smart_trade_inventory_input.dart';
+export 'services/automation/smart_trade_assist_controller.dart';
+export 'services/arc_assist/arc_assist_marketplace_speech_service.dart';
+export 'services/arc_assist/arc_assist_marketplace_bridge.dart';

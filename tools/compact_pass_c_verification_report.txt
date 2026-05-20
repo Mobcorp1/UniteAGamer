@@ -1,0 +1,10 @@
+UAG Compact Batch Pass C Verification
+Generated: 05/20/2026 19:09:42
+
+Files created/updated:
+- lib\features\trading_hub\arc_raiders\services\automation\smart_trade_inventory_input.dart
+- lib\features\trading_hub\arc_raiders\services\automation\smart_trade_assist_controller.dart
+- lib\features\trading_hub\arc_raiders\services\arc_assist\arc_assist_marketplace_speech_service.dart
+- lib\features\trading_hub\arc_raiders\services\arc_assist\arc_assist_marketplace_bridge.dart
+- lib/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart
+- lib/features/trading_hub/arc_raiders/arc_raiders_foundation.dart
