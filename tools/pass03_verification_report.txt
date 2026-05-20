@@ -1,0 +1,13 @@
+UAG Stabilisation Pass 03 Verification
+Generated: 05/20/2026 17:28:11
+
+Files created/updated:
+- lib\features\trading_hub\arc_raiders\data\canonical\arc_canonical_entity.dart
+- lib\features\trading_hub\arc_raiders\data\canonical\arc_canonical_resources.dart
+- lib\features\trading_hub\arc_raiders\data\canonical\arc_canonical_containers.dart
+- lib\features\trading_hub\arc_raiders\data\canonical\arc_canonical_source_registry.dart
+- lib\features\trading_hub\arc_raiders\services\automation\smart_trade_assist_engine.dart
+- lib\features\trading_hub\arc_raiders\services\arc_assist\arc_assist_intent.dart
+- lib\features\trading_hub\arc_raiders\services\arc_assist\arc_assist_intent_parser.dart
+
+This pass intentionally did not repeat duplicate count, additional picker, or Rascal/Canto quick fixes.
