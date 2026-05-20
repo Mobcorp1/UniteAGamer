@@ -35,13 +35,13 @@ class ArcCollapsiblePanel extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: expanded
-                ? AppTheme.neonCyan.withValues(alpha: 0.65)
-                : AppTheme.neonCyan.withValues(alpha: 0.25),
+                ? AppTheme.neonCyan.withOpacity(0.65)
+                : AppTheme.neonCyan.withOpacity(0.25),
           ),
           boxShadow: expanded
               ? [
                   BoxShadow(
-                    color: AppTheme.neonCyan.withValues(alpha: 0.16),
+                    color: AppTheme.neonCyan.withOpacity(0.16),
                     blurRadius: 18,
                     spreadRadius: 1,
                   ),
@@ -73,19 +73,18 @@ class ArcCollapsiblePanel extends StatelessWidget {
                         children: [
                           Text(
                             title,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            style: AppTheme.headingSmall.copyWith(
+                              color: AppTheme.textPrimary,
+                            ),
                           ),
                           if (subtitle != null && subtitle!.trim().isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 2),
                               child: Text(
                                 subtitle!,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: Colors.white70),
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
                               ),
                             ),
                         ],
@@ -97,7 +96,7 @@ class ArcCollapsiblePanel extends StatelessWidget {
                       curve: Curves.easeOut,
                       child: Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        color: Colors.white70,
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                   ],

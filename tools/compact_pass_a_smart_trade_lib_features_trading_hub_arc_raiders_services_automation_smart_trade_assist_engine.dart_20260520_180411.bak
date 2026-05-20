@@ -24,9 +24,6 @@ class SmartTradeOpportunity {
     required this.priorityRank,
     required this.reason,
   });
-
-  bool get requestsBlueprint => requestedBlueprintId != null;
-  bool get requestsResources => requestedResourceIds.isNotEmpty;
 }
 
 class SmartTradeAssistEngine {
@@ -61,9 +58,9 @@ class SmartTradeAssistEngine {
       }
 
       for (var index = 0; index < topFiveWantedBlueprintIds.length; index++) {
-        final wantedBlueprintId = topFiveWantedBlueprintIds[index].trim();
+        final wantedBlueprintId = topFiveWantedBlueprintIds[index];
 
-        if (wantedBlueprintId.isEmpty ||
+        if (wantedBlueprintId.trim().isEmpty ||
             wantedBlueprintId == duplicateBlueprintId) {
           continue;
         }
@@ -99,11 +96,8 @@ class SmartTradeAssistEngine {
     final opportunities = <SmartTradeOpportunity>[];
 
     for (final missingBlueprintId in missingBlueprintIds) {
-      final cleanedId = missingBlueprintId.trim();
-
-      if (cleanedId.isEmpty ||
-          cleanedId == duplicateBlueprintId ||
-          topFiveWantedBlueprintIds.contains(cleanedId)) {
+      if (missingBlueprintId == duplicateBlueprintId ||
+          topFiveWantedBlueprintIds.contains(missingBlueprintId)) {
         continue;
       }
 
@@ -111,7 +105,7 @@ class SmartTradeAssistEngine {
         SmartTradeOpportunity(
           tier: SmartTradeOpportunityTier.missingBlueprintMatch,
           duplicateBlueprintId: duplicateBlueprintId,
-          requestedBlueprintId: cleanedId,
+          requestedBlueprintId: missingBlueprintId,
           requestedResourceIds: const [],
           duplicateQuantityAvailable: duplicateQuantityAvailable,
           priorityRank: 99,
@@ -133,64 +127,17 @@ class SmartTradeAssistEngine {
       return const [];
     }
 
-    final requestedResources = usefulResourceIds
-        .map((resourceId) => resourceId.trim())
-        .where((resourceId) => resourceId.isNotEmpty)
-        .take(3)
-        .toList(growable: false);
-
-    if (requestedResources.isEmpty) {
-      return const [];
-    }
-
     return [
       SmartTradeOpportunity(
         tier: SmartTradeOpportunityTier.usefulResourceBundle,
         duplicateBlueprintId: duplicateBlueprintId,
         requestedBlueprintId: null,
-        requestedResourceIds: requestedResources,
+        requestedResourceIds: usefulResourceIds.take(3).toList(),
         duplicateQuantityAvailable: duplicateQuantityAvailable,
         priorityRank: 199,
         reason:
             'Fallback opportunity for useful resource bundle based on tracker needs.',
       ),
     ];
-  }
-
-  List<SmartTradeOpportunity> buildFullOpportunityStack({
-    required Map<String, int> duplicateBlueprintQuantities,
-    required List<String> topFiveWantedBlueprintIds,
-    required List<String> missingBlueprintIds,
-    required List<String> usefulResourceIds,
-  }) {
-    final topFiveSet = topFiveWantedBlueprintIds.toSet();
-    final opportunities = <SmartTradeOpportunity>[
-      ...buildTopFiveListingDrafts(
-        duplicateBlueprintQuantities: duplicateBlueprintQuantities,
-        topFiveWantedBlueprintIds: topFiveWantedBlueprintIds,
-      ),
-    ];
-
-    for (final duplicateEntry in duplicateBlueprintQuantities.entries) {
-      opportunities.addAll(
-        buildMissingBlueprintFallbacks(
-          duplicateBlueprintId: duplicateEntry.key,
-          duplicateQuantityAvailable: duplicateEntry.value,
-          missingBlueprintIds: missingBlueprintIds,
-          topFiveWantedBlueprintIds: topFiveSet,
-        ),
-      );
-
-      opportunities.addAll(
-        buildUsefulResourceFallbacks(
-          duplicateBlueprintId: duplicateEntry.key,
-          duplicateQuantityAvailable: duplicateEntry.value,
-          usefulResourceIds: usefulResourceIds,
-        ),
-      );
-    }
-
-    opportunities.sort((a, b) => a.priorityRank.compareTo(b.priorityRank));
-    return opportunities;
   }
 }
