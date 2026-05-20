@@ -677,27 +677,6 @@ class ArcBlueprintSeedData {
       intelHint: 'Look for repeated reports from high-value industrial routes.',
     ),
     ArcBlueprint(
-      id: 'rascal',
-
-      name: 'Rascal',
-
-      category: 'Weapons',
-
-      group: 'Row 8',
-
-      sortOrder: 80,
-
-      rarity: ArcBlueprintRarity.rare,
-
-      icon: Icons.sports_esports_rounded,
-
-      imageAssetPath: '${_base}rascal.webp',
-
-      intelHint:
-          'New weapon blueprint. Use fresh community reports to narrow active maps, containers, and raid timing.',
-    ),
-
-    ArcBlueprint(
       id: 'canto',
       name: 'Canto',
       category: 'Weapons',
@@ -937,6 +916,18 @@ class ArcBlueprintSeedData {
       icon: Icons.swap_vert_rounded,
       imageAssetPath: '${_base}extended-barrel.webp',
       intelHint: 'Strong candidate for comparing attachment-route confidence.',
+    ),
+    ArcBlueprint(
+      id: 'rascal',
+      name: 'Rascal',
+      category: 'Weapons',
+      group: 'Row 8',
+      sortOrder: 80,
+      rarity: ArcBlueprintRarity.rare,
+      icon: Icons.sports_esports_rounded,
+      imageAssetPath: '${_base}rascal.webp',
+      intelHint:
+          'New weapon blueprint. Use fresh community reports to narrow active maps, containers, and raid timing.',
     ),
 
     ArcBlueprint(
