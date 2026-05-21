@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/services/automation/smart_trade_assist_engine.dart';
@@ -19,11 +18,30 @@ class SmartTradeAssistScreen extends StatefulWidget {
 
 class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   final TradingRepository _repository = TradingRepository();
-  final SmartTradeAssistEngine _engine = const SmartTradeAssistEngine();
-
   final Set<String> _busyKeys = <String>{};
   final Set<String> _createdListingKeys = <String>{};
   final Set<String> _sentOfferKeys = <String>{};
+
+  late final List<SmartTradeOpportunity> _opportunities =
+      const SmartTradeAssistEngine().buildFullOpportunityStack(
+        duplicateBlueprintQuantities: const {
+          'wolfpack': 3,
+          'power-descender': 1,
+        },
+        topFiveWantedBlueprintIds: const [
+          'rascal',
+          'extended-barrel-ii',
+          'muzzle-brake-ii',
+          'burletta',
+          'equalizer',
+        ],
+        missingBlueprintIds: const ['canto', 'venator', 'jupiter'],
+        usefulResourceIds: const [
+          'mechanical-components',
+          'electrical-components',
+          'industrial-components',
+        ],
+      );
 
   Map<String, String> get _blueprintNamesById {
     return {
@@ -72,82 +90,11 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
     ].join('::');
   }
 
-  Map<String, int> _duplicateQuantitiesFromStates(
-    Map<String, ArcBlueprintState> states,
-  ) {
-    final duplicates = <String, int>{};
-
-    for (final entry in states.entries) {
-      final id = entry.key.trim();
-      final quantity = entry.value.dupesOwned;
-
-      if (id.isNotEmpty && quantity > 0) {
-        duplicates[id] = quantity;
-      }
-    }
-
-    return duplicates;
-  }
-
-  List<String> _topFiveWantedFromStates(Map<String, ArcBlueprintState> states) {
-    final prioritized =
-        states.values
-            .where((state) => state.priorityRank > 0)
-            .toList(growable: false)
-          ..sort((a, b) => a.priorityRank.compareTo(b.priorityRank));
-
-    return prioritized
-        .where((state) => state.blueprintId.trim().isNotEmpty)
-        .map((state) => state.blueprintId.trim())
-        .take(5)
-        .toList(growable: false);
-  }
-
-  List<String> _missingBlueprintsFromStates(
-    Map<String, ArcBlueprintState> states,
-  ) {
-    final missing = <String>[];
-
-    for (final blueprint in ArcBlueprintSeedData.blueprints) {
-      final state =
-          states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
-
-      if (!state.owned) {
-        missing.add(blueprint.id);
-      }
-    }
-
-    return missing;
-  }
-
-  List<SmartTradeOpportunity> _buildOpportunities(
-    Map<String, ArcBlueprintState> states,
-  ) {
-    final duplicates = _duplicateQuantitiesFromStates(states);
-    final topFive = _topFiveWantedFromStates(states);
-    final missing = _missingBlueprintsFromStates(states);
-
-    if (duplicates.isEmpty || topFive.isEmpty) {
-      return const <SmartTradeOpportunity>[];
-    }
-
-    return _engine.buildFullOpportunityStack(
-      duplicateBlueprintQuantities: duplicates,
-      topFiveWantedBlueprintIds: topFive,
-      missingBlueprintIds: missing,
-      usefulResourceIds: const <String>[],
-    );
-  }
-
   bool _listingMatchesOpportunity(
     TradingListing listing,
     SmartTradeOpportunity opportunity,
   ) {
     if (!listing.isLive) {
-      return false;
-    }
-
-    if (listing.ownerUid == _repository.currentUid) {
       return false;
     }
 
@@ -259,10 +206,8 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
     }
   }
 
-  Future<void> _createAllListings(
-    List<SmartTradeOpportunity> opportunities,
-  ) async {
-    final listingOpportunities = opportunities
+  Future<void> _createAllListings() async {
+    final listingOpportunities = _opportunities
         .where(
           (item) => item.tier == SmartTradeOpportunityTier.publicListingDraft,
         )
@@ -370,81 +315,56 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
         children: [
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
-            child: StreamBuilder<Map<String, ArcBlueprintState>>(
-              stream: _repository.watchBlueprintStates(),
-              builder: (context, stateSnapshot) {
-                final states =
-                    stateSnapshot.data ?? const <String, ArcBlueprintState>{};
-                final opportunities = _buildOpportunities(states);
-                final duplicateTotal = _duplicateQuantitiesFromStates(
-                  states,
-                ).values.fold<int>(0, (total, quantity) => total + quantity);
-                final topFive = _topFiveWantedFromStates(states);
+            child: StreamBuilder<List<TradingListing>>(
+              stream: _repository.watchActiveListings(),
+              builder: (context, snapshot) {
+                final listings = snapshot.data ?? const <TradingListing>[];
 
-                return StreamBuilder<List<TradingListing>>(
-                  stream: _repository.watchActiveListings(),
-                  builder: (context, listingSnapshot) {
-                    final listings =
-                        listingSnapshot.data ?? const <TradingListing>[];
+                return ListView(
+                  padding: const EdgeInsets.all(AppTheme.spaceM),
+                  children: [
+                    _IntroCard(
+                      opportunityCount: _opportunities.length,
+                      onCreateAll: _createAllListings,
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    _SummaryCard(opportunities: _opportunities),
+                    const SizedBox(height: AppTheme.spaceM),
+                    ..._opportunities.map((opportunity) {
+                      final matches = _matchesForOpportunity(
+                        listings,
+                        opportunity,
+                      );
 
-                    return ListView(
-                      padding: const EdgeInsets.all(AppTheme.spaceM),
-                      children: [
-                        _IntroCard(
-                          opportunityCount: opportunities.length,
-                          duplicateTotal: duplicateTotal,
-                          targetCount: topFive.length,
-                          onCreateAll: opportunities.isEmpty
+                      final key = _opportunityKey(opportunity);
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                        child: _OpportunityCard(
+                          opportunity: opportunity,
+                          duplicateLabel: _labelForBlueprint(
+                            opportunity.duplicateBlueprintId,
+                          ),
+                          targetLabel: _targetLabel(opportunity),
+                          directMatches: matches,
+                          created: _createdListingKeys.contains(key),
+                          busy: _busyKeys.contains(key),
+                          onCreateListing: () => _createListing(opportunity),
+                          onSendOffer: matches.isEmpty
                               ? null
-                              : () => _createAllListings(opportunities),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        if (opportunities.isEmpty)
-                          const _EmptyStateCard()
-                        else ...[
-                          _SummaryCard(opportunities: opportunities),
-                          const SizedBox(height: AppTheme.spaceM),
-                          ...opportunities.map((opportunity) {
-                            final matches = _matchesForOpportunity(
-                              listings,
-                              opportunity,
-                            );
-
-                            final key = _opportunityKey(opportunity);
-
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: AppTheme.spaceS,
-                              ),
-                              child: _OpportunityCard(
-                                opportunity: opportunity,
-                                duplicateLabel: _labelForBlueprint(
-                                  opportunity.duplicateBlueprintId,
+                              : () => _sendOffer(
+                                  listing: matches.first,
+                                  opportunity: opportunity,
                                 ),
-                                targetLabel: _targetLabel(opportunity),
-                                directMatches: matches,
-                                created: _createdListingKeys.contains(key),
-                                busy: _busyKeys.contains(key),
-                                onCreateListing: () =>
-                                    _createListing(opportunity),
-                                onSendOffer: matches.isEmpty
-                                    ? null
-                                    : () => _sendOffer(
-                                        listing: matches.first,
-                                        opportunity: opportunity,
-                                      ),
-                                offerSent:
-                                    matches.isNotEmpty &&
-                                    _sentOfferKeys.contains(
-                                      '${matches.first.id}::$key',
-                                    ),
+                          offerSent:
+                              matches.isNotEmpty &&
+                              _sentOfferKeys.contains(
+                                '${matches.first.id}::$key',
                               ),
-                            );
-                          }),
-                        ],
-                      ],
-                    );
-                  },
+                        ),
+                      );
+                    }),
+                  ],
                 );
               },
             ),
@@ -457,16 +377,9 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
 
 class _IntroCard extends StatelessWidget {
   final int opportunityCount;
-  final int duplicateTotal;
-  final int targetCount;
-  final VoidCallback? onCreateAll;
+  final VoidCallback onCreateAll;
 
-  const _IntroCard({
-    required this.opportunityCount,
-    required this.duplicateTotal,
-    required this.targetCount,
-    required this.onCreateAll,
-  });
+  const _IntroCard({required this.opportunityCount, required this.onCreateAll});
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +402,7 @@ class _IntroCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Live scan of your Blueprint Tracker dupes, Top 5 wanted targets, missing blueprints, and active marketplace listings.',
+              'Turns duplicate blueprints into trade listings and direct offers. Top 5 targets are checked first, then missing blueprints, then useful resource bundles.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 14,
                 color: AppTheme.tradingMutedText,
@@ -497,7 +410,7 @@ class _IntroCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '$duplicateTotal duplicate blueprints / $targetCount priority targets / $opportunityCount opportunities',
+              '$opportunityCount opportunities ready.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.neonCyan,
@@ -518,25 +431,6 @@ class _IntroCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyStateCard extends StatelessWidget {
-  const _EmptyStateCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(radius: 16),
-      child: Text(
-        'No smart trade opportunities yet. Mark duplicate blueprints in the tracker and set your Top 5 wanted priorities.',
-        style: AppTheme.bodyTextStyle(
-          fontSize: 14,
-          color: AppTheme.tradingMutedText,
         ),
       ),
     );

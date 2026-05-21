@@ -300,38 +300,6 @@ class TradingRepository {
     }, SetOptions(merge: true));
   }
 
-  Stream<Map<String, ArcBlueprintState>> watchBlueprintStates() {
-    final uid = currentUid;
-
-    if (uid == null) {
-      return Stream.value(const <String, ArcBlueprintState>{});
-    }
-
-    return _blueprintStatesCollection(uid).snapshots().map((snapshot) {
-      final states = <String, ArcBlueprintState>{};
-
-      for (final doc in snapshot.docs) {
-        final rawData = doc.data();
-        final data = <String, dynamic>{
-          ...rawData,
-          'blueprintId':
-              (rawData['blueprintId'] as String?)?.trim().isNotEmpty == true
-              ? rawData['blueprintId']
-              : doc.id,
-        };
-
-        final state = ArcBlueprintState.fromMap(data);
-        final blueprintId = state.blueprintId.trim().isNotEmpty
-            ? state.blueprintId.trim()
-            : doc.id;
-
-        states[blueprintId] = state.copyWith(blueprintId: blueprintId);
-      }
-
-      return states;
-    });
-  }
-
   Future<List<String>> getMatchingDuplicateBlueprintNames(
     TradingListing listing,
   ) async {

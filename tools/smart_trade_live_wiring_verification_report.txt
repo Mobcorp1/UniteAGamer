@@ -1,0 +1,10 @@
+Smart Trade Assist Live Wiring Verification
+Generated: 05/21/2026 03:46:35
+
+Repository has watchBlueprintStates: True
+Screen watches blueprint states: True
+Screen uses dupesOwned: True
+Screen uses priorityRank: True
+Screen uses createListing: True
+Screen uses createOffer: True
+Screen uses ASCII arrow: True
