@@ -58,3 +58,9 @@ app.*.map.json
 *.bak_separatorfix_*
 Thumbs.db
 *.bak_batch9_fixed_*
+
+.uag_patch_backups/
+
+.uag_patch_reports/
+
+*.pass*.bak
