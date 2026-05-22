@@ -1,0 +1,8 @@
+Trading Hub Stabilisation Pass 01
+Generated: 05/22/2026 19:04:20
+
+Bottom dock tightened
+Descriptions improved
+Trading card layouts tightened
+Old intro wording cleaned
+Safe feature fallback added

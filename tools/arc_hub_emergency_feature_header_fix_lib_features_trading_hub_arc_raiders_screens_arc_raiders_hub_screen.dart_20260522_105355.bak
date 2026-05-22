@@ -108,7 +108,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
             child: Column(
               children: [
                 _HubHeader(selected: selected),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: 6),
                 Expanded(
                   child: Stack(
                     alignment: Alignment.center,
@@ -187,7 +187,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                   ),
                 ),
                 _FloatingDescription(feature: selected),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: 6),
                 _ArcBottomDock(
                   onBlueprints: () => _openFeature(
                     _ArcHubFeature(
@@ -325,7 +325,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: 6),
                 Expanded(
                   child: Stack(
                     alignment: Alignment.center,
@@ -373,7 +373,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                   ),
                 ),
                 _FloatingDescription(feature: selected),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
               ],
             ),
           ),
@@ -417,7 +417,7 @@ class _HubHeader extends StatelessWidget {
           const SizedBox(width: AppTheme.spaceS),
           Expanded(
             child: Text(
-              'UIG Arc Raiders Hub',
+              'UAG Arc Raiders Hub',
               overflow: TextOverflow.ellipsis,
               style: AppTheme.neonTextStyle(
                 fontSize: 22,
@@ -448,19 +448,19 @@ class _FeatureBarrelCard extends StatelessWidget {
     return Center(
       child: ElectricChargeBorder(
         active: selected,
-        radius: 22,
+        radius: 16,
         child: InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            width: selected ? 252 : 220,
-            height: selected ? 270 : 242,
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceM, vertical: AppTheme.spaceS),
+            width: selected ? 214 : 190,
+            height: selected ? 190 : 172,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: selected
                     ? feature.accent.withValues(alpha: 0.82)
@@ -482,19 +482,19 @@ class _FeatureBarrelCard extends StatelessWidget {
                 Icon(
                   feature.icon,
                   color: feature.accent,
-                  size: selected ? 60 : 50,
+                  size: selected ? 42 : 36,
                 ),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: 6),
                 Text(
                   feature.title,
                   textAlign: TextAlign.center,
                   style: AppTheme.neonTextStyle(
-                    fontSize: selected ? 22 : 19,
+                    fontSize: selected ? 19 : 17,
                     color: Colors.white,
                     isBold: true,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceS),
+                const SizedBox(height: 6),
                 Text(
                   selected ? 'Tap to open' : 'Swipe',
                   style: AppTheme.bodyTextStyle(

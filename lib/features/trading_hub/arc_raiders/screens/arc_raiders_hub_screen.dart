@@ -1,4 +1,5 @@
-import 'package:uag_traders_hub/screens/build/app_drawer.dart';
+import 'package:uag_traders_hub/features/profile/screens/profile_settings_screen.dart';
+import 'package:uag_traders_hub/build/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
@@ -50,7 +51,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     ),
     _ArcHubFeature(
       title: 'Trading',
-      subtitle: 'Listings, offers, sessions and safer swap guidance.',
+      subtitle: 'Listings, offers, sessions and .',
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
       builder: (_) => const TraderHubScreen(),
@@ -61,6 +62,13 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.auto_awesome_rounded,
       accent: AppTheme.neonCyan,
       builder: (_) => const SmartTradeAssistScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Play Like a Pro',
+      subtitle: 'Warm-ups, focus systems and performance routines.',
+      icon: Icons.sports_esports_rounded,
+      accent: AppTheme.neonPink,
+      builder: (_) => const ProfileSettingsScreen(),
     ),
     _ArcHubFeature(
       title: 'Community Intel',
@@ -108,7 +116,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
             child: Column(
               children: [
                 _HubHeader(selected: selected),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Expanded(
                   child: Stack(
                     alignment: Alignment.center,
@@ -187,7 +195,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                   ),
                 ),
                 _FloatingDescription(feature: selected),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 _ArcBottomDock(
                   onBlueprints: () => _openFeature(
                     _ArcHubFeature(
@@ -325,7 +333,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Expanded(
                   child: Stack(
                     alignment: Alignment.center,
@@ -373,7 +381,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                   ),
                 ),
                 _FloatingDescription(feature: selected),
-                const SizedBox(height: AppTheme.spaceM),
+                const SizedBox(height: 4),
               ],
             ),
           ),
@@ -392,41 +400,43 @@ class _HubHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppTheme.spaceM,
+        AppTheme.spaceS,
         AppTheme.spaceS,
         AppTheme.spaceM,
         0,
       ),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: 'Menu',
-            onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
-            icon: Icon(
-              Icons.menu_rounded,
-              color: selected.accent,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: AppTheme.spaceXS),
-          Icon(
-            Icons.hexagon_rounded,
-            color: selected.accent,
-            size: 24,
-          ),
-          const SizedBox(width: AppTheme.spaceS),
-          Expanded(
-            child: Text(
-              'UAG Arc Raiders Hub',
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.neonTextStyle(
-                fontSize: 22,
-                color: selected.accent,
-                isBold: true,
+      child: Builder(
+        builder: (menuContext) {
+          return Row(
+            children: [
+              IconButton(
+                tooltip: 'Menu',
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 42, minHeight: 42),
+                onPressed: () => Scaffold.of(menuContext).openDrawer(),
+                icon: Icon(
+                  Icons.menu_rounded,
+                  color: selected.accent,
+                  size: 28,
+                ),
               ),
-            ),
-          ),
-        ],
+              Icon(Icons.hexagon_rounded, color: selected.accent, size: 22),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: Text(
+                  'UAG Arc Raiders Hub',
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.neonTextStyle(
+                    fontSize: 21,
+                    color: selected.accent,
+                    isBold: true,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -455,9 +465,9 @@ class _FeatureBarrelCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            width: selected ? 214 : 190,
-            height: selected ? 190 : 172,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            width: selected ? 206 : 184,
+            height: selected ? 176 : 160,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(16),
@@ -482,19 +492,19 @@ class _FeatureBarrelCard extends StatelessWidget {
                 Icon(
                   feature.icon,
                   color: feature.accent,
-                  size: selected ? 42 : 36,
+                  size: selected ? 38 : 32,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   feature.title,
                   textAlign: TextAlign.center,
                   style: AppTheme.neonTextStyle(
-                    fontSize: selected ? 19 : 17,
+                    fontSize: selected ? 18 : 16,
                     color: Colors.white,
                     isBold: true,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   selected ? 'Tap to open' : 'Swipe',
                   style: AppTheme.bodyTextStyle(
