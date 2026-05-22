@@ -798,7 +798,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ã‚Â¢ÃƒÆ’Ã†â€™Ã‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ã‚Â¢ $missingCount missing ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ã‚Â¢ÃƒÆ’Ã†â€™Ã‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ã‚Â¢ $dupesCount dupes',
+            '$ownedCount / ${allBlueprints.length} owned ÃƒÆ’Ã†â€™Ãƒâ€šÂ¢ÃƒÆ’Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÂ¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÂ¢ $missingCount missing ÃƒÆ’Ã†â€™Ãƒâ€šÂ¢ÃƒÆ’Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÂ¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÂ¢ $dupesCount dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -1014,7 +1014,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             owned
                                 ? state.hasDuplicates
                                       ? 'Owned - ${state.dupesOwned} duplicate${state.dupesOwned == 1 ? '' : 's'} ready for trading.'
-                                      : 'Owned - add intel or register duplicates.'
+                                      : 'Owned - add intel, duplicates, or build a trade listing.'
                                 : 'Missing - check Community Intel, then mark owned when found.',
                             textAlign: TextAlign.center,
                             style: AppTheme.bodyTextStyle(
@@ -1031,7 +1031,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             children: [
                               if (owned)
                                 _buildBlueprintActionButton(
-                                  label: 'Trade',
+                                  label: 'Trade Prompt',
                                   icon: Icons.swap_horiz_rounded,
                                   color: AppTheme.neonPink,
                                   onTap: () => Navigator.of(
