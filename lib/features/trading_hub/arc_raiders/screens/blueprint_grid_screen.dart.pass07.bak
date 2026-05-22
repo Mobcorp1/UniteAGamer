@@ -798,7 +798,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ $missingCount missing ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ $dupesCount dupes',
+            '$ownedCount / ${allBlueprints.length} owned ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ $missingCount missing ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ $dupesCount dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -877,222 +877,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     );
   }
 
-  Widget _buildBlueprintActionButton({
-    required String label,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return ElectricChargeBorder(
-      active: true,
-      radius: 999,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: color.withValues(alpha: 0.42)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: AppTheme.buttonTextStyle(color: color, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPortraitBlueprintCarousel(
-    BuildContext context,
-    List<ArcBlueprint> filtered,
-    Map<String, ArcBlueprintState> states,
-  ) {
-    if (filtered.isEmpty) {
-      return Container(
-        padding: AppTheme.sectionCardPadding,
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
-        ),
-        child: Text(
-          _searchQuery.trim().isNotEmpty
-              ? 'No blueprints matched "${_searchQuery.trim()}".'
-              : 'No blueprints match this filter yet.',
-          style: const TextStyle(color: Colors.white70, height: 1.35),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 470,
-      child: PageView.builder(
-        controller: PageController(viewportFraction: 0.84),
-        itemCount: filtered.length,
-        itemBuilder: (context, index) {
-          final blueprint = filtered[index];
-          final state =
-              states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
-          final accent = _rarityColor(blueprint.rarity);
-          final owned = state.owned;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: ElectricChargeBorder(
-              active: owned || state.hasDuplicates,
-              radius: 24,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: accent.withValues(alpha: owned ? 0.74 : 0.34),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: owned ? 0.16 : 0.08),
-                      blurRadius: 24,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: BlueprintTile(
-                        blueprint: blueprint,
-                        state: state,
-                        landscape: false,
-                        rarityColor: accent,
-                        isSelectionMode: _selectionMode,
-                        isSelected: _selectedBlueprintIds.contains(
-                          blueprint.id,
-                        ),
-                        onTap: () async {
-                          if (_selectionMode) {
-                            _toggleSelection(blueprint.id);
-                            return;
-                          }
-                          if (state.owned) {
-                            await _openBlueprintEditor(blueprint, state);
-                          } else {
-                            await _markMissingAsOwned(blueprint, state);
-                          }
-                        },
-                        onLongPress: () {
-                          if (_selectionMode) {
-                            _toggleSelection(blueprint.id);
-                          } else {
-                            _enterSelectionMode(blueprint.id);
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: accent.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            owned
-                                ? state.hasDuplicates
-                                      ? 'Owned â€¢ ${state.dupesOwned} duplicate${state.dupesOwned == 1 ? '' : 's'} ready for trading.'
-                                      : 'Owned â€¢ add intel, duplicates, or build a trade listing.'
-                                : 'Missing â€¢ check Community Intel, then mark owned when found.',
-                            textAlign: TextAlign.center,
-                            style: AppTheme.bodyTextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                              isBold: true,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              if (owned)
-                                _buildBlueprintActionButton(
-                                  label: 'Trade Prompt',
-                                  icon: Icons.swap_horiz_rounded,
-                                  color: AppTheme.neonPink,
-                                  onTap: () => Navigator.of(
-                                    context,
-                                  ).pushNamed(TraderHubScreen.routeName),
-                                )
-                              else
-                                _buildBlueprintActionButton(
-                                  label: 'Where to Find',
-                                  icon: Icons.radar_rounded,
-                                  color: AppTheme.neonCyan,
-                                  onTap: () => Navigator.of(context).pushNamed(
-                                    ArcMarketIntelligenceScreen.routeName,
-                                  ),
-                                ),
-                              _buildBlueprintActionButton(
-                                label: owned ? 'Add Intel' : 'Mark Owned',
-                                icon: owned
-                                    ? Icons.add_location_alt_rounded
-                                    : Icons.check_circle_rounded,
-                                color: owned
-                                    ? AppTheme.neonCyan
-                                    : AppTheme.neonPink,
-                                onTap: () async {
-                                  if (owned) {
-                                    await _openBlueprintEditor(
-                                      blueprint,
-                                      state,
-                                    );
-                                  } else {
-                                    await _markMissingAsOwned(blueprint, state);
-                                  }
-                                },
-                              ),
-                              _buildBlueprintActionButton(
-                                label: 'Select',
-                                icon: Icons.select_all_rounded,
-                                color: Colors.white70,
-                                onTap: () {
-                                  if (_selectionMode) {
-                                    _toggleSelection(blueprint.id);
-                                  } else {
-                                    _enterSelectionMode(blueprint.id);
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Widget _buildGrid(
     BuildContext context,
     List<ArcBlueprint> filtered,
@@ -1100,14 +884,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   ) {
     final landscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
-
-    if (!landscape) {
-      return _buildPortraitBlueprintCarousel(context, filtered, states);
-    }
-
-    final crossAxisCount = _gridColumns;
-    final spacing = _landscapeSpacing;
-    final childAspectRatio = 0.98;
+    final crossAxisCount = landscape ? _gridColumns : 2;
+    final spacing = landscape ? _landscapeSpacing : _portraitSpacing;
+    final childAspectRatio = landscape ? 0.98 : 1.16;
 
     if (filtered.isEmpty) {
       return Container(
@@ -1146,7 +925,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             final blueprint = filtered[index];
             final state =
                 states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
-
             return BlueprintTile(
               blueprint: blueprint,
               state: state,

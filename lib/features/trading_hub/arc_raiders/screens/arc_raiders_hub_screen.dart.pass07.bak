@@ -52,7 +52,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     ),
     _ArcHubFeature(
       title: 'Trading',
-      subtitle: 'Listings, offers, sessions and swap planning.',
+      subtitle: 'Listings, offers, sessions and .',
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
       builder: (_) => const TraderHubScreen(),
@@ -72,7 +72,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const ProfileSettingsScreen(),
     ),
     _ArcHubFeature(
-      title: 'ARC Assistant',
+      title: 'ARC ARC Assistant',
       subtitle: 'Open the voice assistant from the hub or centre mic.',
       icon: Icons.mic_rounded,
       accent: AppTheme.neonPink,
@@ -470,103 +470,68 @@ class _FeatureBarrelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badgeSize = selected ? 176.0 : 146.0;
-    final iconSize = selected ? 48.0 : 38.0;
-
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ElectricChargeBorder(
-            active: selected,
-            radius: 999,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(999),
-              onTap: onTap,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
-                width: badgeSize,
-                height: badgeSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
-                  border: Border.all(
-                    color: selected
-                        ? feature.accent.withValues(alpha: 0.92)
-                        : feature.accent.withValues(alpha: 0.32),
-                    width: selected ? 2 : 1,
-                  ),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: feature.accent.withValues(alpha: 0.26),
-                            blurRadius: 34,
-                            spreadRadius: 2,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Positioned.fill(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: feature.accent.withValues(alpha: 0.18),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Icon(feature.icon, color: feature.accent, size: iconSize),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          AnimatedContainer(
+      child: ElectricChargeBorder(
+        active: selected,
+        radius: 16,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            curve: Curves.easeOutCubic,
+            width: selected ? 206 : 184,
+            height: selected ? 176 : 160,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),
-              borderRadius: BorderRadius.circular(999),
+              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: feature.accent.withValues(alpha: selected ? 0.62 : 0.22),
+                color: selected
+                    ? feature.accent.withValues(alpha: 0.82)
+                    : feature.accent.withValues(alpha: 0.24),
               ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: feature.accent.withValues(alpha: 0.22),
+                        blurRadius: 28,
+                        spreadRadius: 0,
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(
+                  feature.icon,
+                  color: feature.accent,
+                  size: selected ? 38 : 32,
+                ),
+                const SizedBox(height: 4),
                 Text(
                   feature.title,
                   textAlign: TextAlign.center,
                   style: AppTheme.neonTextStyle(
-                    fontSize: selected ? 18 : 15,
-                    color: selected ? feature.accent : Colors.white70,
+                    fontSize: selected ? 18 : 16,
+                    color: Colors.white,
                     isBold: true,
                   ),
                 ),
-                if (selected) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'Tap to open',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 11,
-                      color: Colors.white60,
-                      isBold: true,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  selected ? 'Tap to open' : 'Swipe',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: selected ? feature.accent : Colors.white54,
+                    isBold: selected,
                   ),
-                ],
+                ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
