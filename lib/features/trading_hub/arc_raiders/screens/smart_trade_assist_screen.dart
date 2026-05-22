@@ -489,7 +489,7 @@ class _IntroCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Live scan of your Blueprint Tracker dupes, Top 5 wanted targets, missing blueprints, and active marketplace listings.',
+              'Live scan of your Blueprint Tracker dupes, Raid Planner active hunt targets, missing blueprints, and active marketplace listings.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 14,
                 color: AppTheme.tradingMutedText,
@@ -533,7 +533,7 @@ class _EmptyStateCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spaceM),
       decoration: AppTheme.tradingCardDecoration(radius: 16),
       child: Text(
-        'No smart trade opportunities yet. Mark duplicate blueprints in the tracker and set your Top 5 wanted priorities.',
+        'No smart trade opportunities yet. Mark duplicate blueprints in the tracker and set your 5 active hunt targets in Raid Planner.',
         style: AppTheme.bodyTextStyle(
           fontSize: 14,
           color: AppTheme.tradingMutedText,

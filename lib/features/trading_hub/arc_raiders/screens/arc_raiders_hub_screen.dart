@@ -1,3 +1,4 @@
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'package:uag_traders_hub/build/app_bar.dart';
@@ -213,6 +214,15 @@ class ArcRaidersHubScreen extends StatelessWidget {
             comingSoonWhenLocked: false,
           ),
           (
+            title: 'Hunt Targets',
+            subtitle:
+                'Edit your 5 active blueprint hunts for Raid Planner and Smart Trade Assist.',
+            icon: Icons.track_changes_rounded,
+            routeName: RaidPlannerHuntTargetsScreen.routeName,
+            flag: FeatureAccessFlag.traderHub,
+            comingSoonWhenLocked: false,
+          ),
+          (
             title: 'Scrappy Tracker',
             subtitle: 'Scrappy, bench and quest materials.',
             icon: Icons.widgets_rounded,
@@ -366,6 +376,16 @@ class ArcRaidersHubScreen extends StatelessWidget {
                                     subtitle: tile.subtitle,
                                     icon: tile.icon,
                                     onTap: () async {
+                                      if (tile.title == 'Hunt Targets') {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const RaidPlannerHuntTargetsScreen(),
+                                          ),
+                                        );
+                                        return;
+                                      }
+
                                       if (tile.title == 'Smart Trade Assist') {
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
