@@ -496,7 +496,7 @@ class _FeatureBarrelCard extends StatelessWidget {
                       BoxShadow(
                         color: feature.accent.withValues(alpha: 0.22),
                         blurRadius: 28,
-                        spreadRadius: 0,
+                        spreadRadius: 2,
                       ),
                     ]
                   : null,

@@ -798,7 +798,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned Ã¢â‚¬Â¢ $missingCount missing Ã¢â‚¬Â¢ $dupesCount dupes',
+            '$ownedCount / ${allBlueprints.length} owned â€¢ $missingCount missing â€¢ $dupesCount dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
