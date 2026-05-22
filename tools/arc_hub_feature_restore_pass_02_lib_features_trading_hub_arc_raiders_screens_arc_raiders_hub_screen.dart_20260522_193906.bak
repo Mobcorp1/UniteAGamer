@@ -1,4 +1,3 @@
-import 'package:uag_traders_hub/features/monetisation/screens/admin_monetisation_dashboard.dart';
 import 'package:uag_traders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_traders_hub/build/app_drawer.dart';
 import 'package:flutter/material.dart';
@@ -70,20 +69,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.sports_esports_rounded,
       accent: AppTheme.neonPink,
       builder: (_) => const ProfileSettingsScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'ARC Assistant',
-      subtitle: 'Open the voice assistant from the hub or centre mic.',
-      icon: Icons.mic_rounded,
-      accent: AppTheme.neonPink,
-      builder: (_) => const _ArcAssistantLauncherScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Feedback',
-      subtitle: 'Review beta feedback and support tools.',
-      icon: Icons.feedback_rounded,
-      accent: AppTheme.neonPink,
-      builder: (_) => const AdminMonetisationDashboard(),
     ),
     _ArcHubFeature(
       title: 'Community Intel',
@@ -744,23 +729,6 @@ class _DockButton extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ArcAssistantLauncherScreen extends StatelessWidget {
-  const _ArcAssistantLauncherScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      UagVoiceAssistantSheet.show(context);
-      Navigator.of(context).maybePop();
-    });
-
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      body: const Center(child: CircularProgressIndicator()),
     );
   }
 }
