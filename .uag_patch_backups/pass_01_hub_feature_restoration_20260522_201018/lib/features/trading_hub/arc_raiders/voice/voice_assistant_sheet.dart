@@ -4,8 +4,8 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_ass
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_profiles.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
-class UagVoiceArcAssistantSheet extends StatefulWidget {
-  const UagVoiceArcAssistantSheet({super.key});
+class UagVoiceAssistantSheet extends StatefulWidget {
+  const UagVoiceAssistantSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
     context: context,
@@ -14,23 +14,22 @@ class UagVoiceArcAssistantSheet extends StatefulWidget {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => const UagVoiceArcAssistantSheet(),
+    builder: (_) => const UagVoiceAssistantSheet(),
   );
 
   @override
-  State<UagVoiceArcAssistantSheet> createState() =>
-      _UagVoiceArcAssistantSheetState();
+  State<UagVoiceAssistantSheet> createState() => _UagVoiceAssistantSheetState();
 }
 
-class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
-  late final UagVoiceArcAssistantService _service;
+class _UagVoiceAssistantSheetState extends State<UagVoiceAssistantSheet> {
+  late final UagVoiceAssistantService _service;
   final TextEditingController _textController = TextEditingController();
   bool _showVoicePicker = false;
 
   @override
   void initState() {
     super.initState();
-    _service = UagVoiceArcAssistantService()..initialize();
+    _service = UagVoiceAssistantService()..initialize();
     _service.addListener(_onServiceChanged);
   }
 
@@ -469,7 +468,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked Â· ${voice.tierLabel}',
+                    : 'Locked · ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked

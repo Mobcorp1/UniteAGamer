@@ -4,8 +4,8 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_ass
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_profiles.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
-class UagVoiceArcAssistantSheet extends StatefulWidget {
-  const UagVoiceArcAssistantSheet({super.key});
+class UagVoiceARC AssistantSheet extends StatefulWidget {
+  const UagVoiceARC AssistantSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
     context: context,
@@ -14,23 +14,22 @@ class UagVoiceArcAssistantSheet extends StatefulWidget {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => const UagVoiceArcAssistantSheet(),
+    builder: (_) => const UagVoiceARC AssistantSheet(),
   );
 
   @override
-  State<UagVoiceArcAssistantSheet> createState() =>
-      _UagVoiceArcAssistantSheetState();
+  State<UagVoiceARC AssistantSheet> createState() => _UagVoiceARC AssistantSheetState();
 }
 
-class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
-  late final UagVoiceArcAssistantService _service;
+class _UagVoiceARC AssistantSheetState extends State<UagVoiceARC AssistantSheet> {
+  late final UagVoiceARC AssistantService _service;
   final TextEditingController _textController = TextEditingController();
   bool _showVoicePicker = false;
 
   @override
   void initState() {
     super.initState();
-    _service = UagVoiceArcAssistantService()..initialize();
+    _service = UagVoiceARC AssistantService()..initialize();
     _service.addListener(_onServiceChanged);
   }
 
@@ -469,7 +468,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked Â· ${voice.tierLabel}',
+                    : 'Locked · ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked

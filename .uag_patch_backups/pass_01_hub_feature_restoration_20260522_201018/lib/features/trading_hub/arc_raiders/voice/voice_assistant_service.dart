@@ -14,8 +14,8 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_pro
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_response_builder.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-class UagVoiceArcAssistantService extends ChangeNotifier {
-  UagVoiceArcAssistantService({
+class UagVoiceAssistantService extends ChangeNotifier {
+  UagVoiceAssistantService({
     stt.SpeechToText? speech,
     FlutterTts? tts,
     ArcBlueprintRepository? blueprintRepository,

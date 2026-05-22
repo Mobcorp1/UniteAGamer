@@ -76,7 +76,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       subtitle: 'Open the voice assistant from the hub or centre mic.',
       icon: Icons.mic_rounded,
       accent: AppTheme.neonPink,
-      builder: (_) => const _ArcArcAssistantLauncherScreen(),
+      builder: (_) => const _ArcARC AssistantLauncherScreen(),
     ),
     _ArcHubFeature(
       title: 'Feedback',
@@ -231,7 +231,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                       builder: (_) => const RaidPlannerHuntTargetsScreen(),
                     ),
                   ),
-                  onMic: () => UagVoiceArcAssistantSheet.show(context),
+                  onMic: () => UagVoiceARC AssistantSheet.show(context),
                   onTrading: () => _openFeature(
                     _ArcHubFeature(
                       title: 'Trading',
@@ -748,13 +748,13 @@ class _DockButton extends StatelessWidget {
   }
 }
 
-class _ArcArcAssistantLauncherScreen extends StatelessWidget {
-  const _ArcArcAssistantLauncherScreen();
+class _ArcARC AssistantLauncherScreen extends StatelessWidget {
+  const _ArcARC AssistantLauncherScreen();
 
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      UagVoiceArcAssistantSheet.show(context);
+      UagVoiceARC AssistantSheet.show(context);
       Navigator.of(context).maybePop();
     });
 

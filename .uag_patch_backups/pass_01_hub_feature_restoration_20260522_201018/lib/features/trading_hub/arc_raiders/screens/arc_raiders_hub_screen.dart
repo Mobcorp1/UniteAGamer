@@ -72,11 +72,11 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const ProfileSettingsScreen(),
     ),
     _ArcHubFeature(
-      title: 'ARC ARC Assistant',
+      title: 'ARC Assistant',
       subtitle: 'Open the voice assistant from the hub or centre mic.',
       icon: Icons.mic_rounded,
       accent: AppTheme.neonPink,
-      builder: (_) => const _ArcArcAssistantLauncherScreen(),
+      builder: (_) => const _ArcAssistantLauncherScreen(),
     ),
     _ArcHubFeature(
       title: 'Feedback',
@@ -231,7 +231,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                       builder: (_) => const RaidPlannerHuntTargetsScreen(),
                     ),
                   ),
-                  onMic: () => UagVoiceArcAssistantSheet.show(context),
+                  onMic: () => UagVoiceAssistantSheet.show(context),
                   onTrading: () => _openFeature(
                     _ArcHubFeature(
                       title: 'Trading',
@@ -440,7 +440,7 @@ class _HubHeader extends StatelessWidget {
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
-                  'ARC Raiders Command Hub',
+                  'UAG Arc Raiders Hub',
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.neonTextStyle(
                     fontSize: 21,
@@ -748,13 +748,13 @@ class _DockButton extends StatelessWidget {
   }
 }
 
-class _ArcArcAssistantLauncherScreen extends StatelessWidget {
-  const _ArcArcAssistantLauncherScreen();
+class _ArcAssistantLauncherScreen extends StatelessWidget {
+  const _ArcAssistantLauncherScreen();
 
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      UagVoiceArcAssistantSheet.show(context);
+      UagVoiceAssistantSheet.show(context);
       Navigator.of(context).maybePop();
     });
 
