@@ -1,8 +1,0 @@
-Final Hunt Targets Save Fix V2 Report
-Generated: 05/22/2026 02:44:07
-
-Uses FirebaseFirestore: True
-Uses FirebaseAuth: True
-Calls local save helper: True
-No repository save call: True
-Writes arc_blueprints collection: True
