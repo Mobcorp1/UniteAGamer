@@ -476,13 +476,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             vertical: 10,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: AppTheme.neonCyan.withValues(alpha: 0.18),
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: AppTheme.neonPink.withValues(alpha: 0.55),
             ),
@@ -535,7 +535,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.bodyTextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: color,
                     isBold: selected,
                   ),
@@ -559,7 +559,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 28,
+              blurRadius: 18,
               offset: const Offset(0, 8),
             ),
           ],
