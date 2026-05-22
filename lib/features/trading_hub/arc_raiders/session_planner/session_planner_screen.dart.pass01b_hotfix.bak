@@ -71,7 +71,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
         actions: [
           IconButton(
             tooltip: 'Ask UAG Raider',
-            onPressed: () => UagVoiceAssistantSheet.show(context),
+            onPressed: () => UagVoiceArcAssistantSheet.show(context),
             icon: const Icon(Icons.mic_rounded),
           ),
         ],
@@ -215,7 +215,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
-                  '${session.type.toUpperCase()} • ${session.status}',
+                  '${session.type.toUpperCase()} â€¢ ${session.status}',
                   style: AppTheme.tradingHeading(fontSize: 16, color: color),
                 ),
               ),
