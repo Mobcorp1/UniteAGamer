@@ -623,6 +623,7 @@ class _ArcBlueprintDropReportSheetState
         _selectedContainerType = null;
         _raidType = null;
         _timeOfDay = null;
+        _additionalReports.clear();
       }
     });
     _scrollToNextStep();
@@ -985,7 +986,7 @@ class _ArcBlueprintDropReportSheetState
         borderColor: AppTheme.neonCyan.withValues(alpha: 0.22),
       ),
       child: Text(
-        'This report is not tied to a raid location. Save it with the source selected so other players can see it came from a quest reward, trial reward, trade, or another non-loot source. You can also attach additional blueprints from the same source.',
+        'This report is not tied to a raid location. Save it with the source selected so other players can see it came from a quest reward, trial reward or trade.',
         style: AppTheme.bodyTextStyle(
           fontSize: 14,
           color: AppTheme.tradingMutedText,
@@ -1056,8 +1057,22 @@ class _ArcBlueprintDropReportSheetState
   }
 
   Widget _buildAdditionalBlueprintSection() {
-    final isRaidReport = _requiresRaidDetails;
-    final sourceLabel = _acquisitionSource?.label ?? 'selected source';
+    if (!_requiresRaidDetails) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: AppTheme.spaceM),
+        padding: const EdgeInsets.all(AppTheme.spaceM),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: const Text(
+          'Additional blueprint reporting is only available for Loot Drop reports from the same raid.',
+          style: TextStyle(color: Colors.white60),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1066,9 +1081,7 @@ class _ArcBlueprintDropReportSheetState
           children: [
             Expanded(
               child: Text(
-                isRaidReport
-                    ? 'Additional blueprints from this raid'
-                    : 'Additional blueprints from this source',
+                'Additional blueprints from this raid',
                 style: AppTheme.tradingHeading(
                   fontSize: 18,
                   color: AppTheme.neonCyan,
@@ -1076,7 +1089,7 @@ class _ArcBlueprintDropReportSheetState
               ),
             ),
             TextButton.icon(
-              onPressed: _acquisitionSource == null
+              onPressed: _selectedMap == null
                   ? null
                   : _addAnotherBlueprintEntry,
               icon: const Icon(Icons.add_rounded),
@@ -1084,11 +1097,9 @@ class _ArcBlueprintDropReportSheetState
             ),
           ],
         ),
-        Text(
-          isRaidReport
-              ? 'Shared run details stay the same. For each extra blueprint you can keep the same Area / POI and container type, or change them.'
-              : 'These extra blueprints will use the same obtained source: $sourceLabel. Voice search is enabled when selecting each blueprint.',
-          style: const TextStyle(color: Colors.white60, height: 1.35),
+        const Text(
+          'Shared run details stay the same. For each extra blueprint you can keep the same Area / POI and container type, or change them.',
+          style: TextStyle(color: Colors.white60, height: 1.35),
         ),
         if (_additionalReports.isEmpty)
           Container(
@@ -1100,11 +1111,9 @@ class _ArcBlueprintDropReportSheetState
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
-            child: Text(
-              _acquisitionSource == null
-                  ? 'Select how this blueprint was obtained first, then add any extra blueprints from the same source.'
-                  : 'No additional blueprints added yet.',
-              style: const TextStyle(color: Colors.white60),
+            child: const Text(
+              'No additional blueprints added yet.',
+              style: TextStyle(color: Colors.white60),
             ),
           )
         else
