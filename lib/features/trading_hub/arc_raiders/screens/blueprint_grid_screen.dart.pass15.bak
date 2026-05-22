@@ -797,7 +797,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned - $missingCount missing - $dupesCount dupes',
+            ' /  owned -  missing -  dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -1028,7 +1028,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              if (state.hasDuplicates)
+                              if (owned)
                                 _buildBlueprintActionButton(
                                   label: 'Trade',
                                   icon: Icons.swap_horiz_rounded,
