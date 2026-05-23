@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:uag_traders_hub/features/monetisation/models/uag_subscription_tier.dart';
 import 'package:uag_traders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_intent_parser.dart';
@@ -35,7 +35,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   final FlutterTts _tts;
   final ArcBlueprintRepository _blueprintRepository;
   final UagEntitlementService _entitlementService;
-
   final UagVoiceIntentParser _parser = const UagVoiceIntentParser();
   final UagVoiceResponseBuilder _responseBuilder =
       const UagVoiceResponseBuilder();
@@ -48,19 +47,20 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _speakingPreview = false;
   bool _adminBypass = false;
   bool _raidCompanionMode = false;
-  Timer? _companionWatchdogTimer;
   bool _companionRestartQueued = false;
+
+  Timer? _companionWatchdogTimer;
   UagSubscriptionTier _tier = UagSubscriptionTier.free;
   String _transcript = '';
   String? _lastError;
   UagVoiceResponse? _lastResponse;
   String? _pendingSuggestionName;
   _VoiceIntelReportDraft? _pendingIntelReport;
-  Map<String, ArcBlueprintState> _blueprintStates =
-      const <String, ArcBlueprintState>{};
-  List<UagResolvedVoiceProfile> _voiceProfiles =
-      const <UagResolvedVoiceProfile>[];
+
+  Map<String, ArcBlueprintState> _blueprintStates = const {};
+  List<UagResolvedVoiceProfile> _voiceProfiles = const [];
   UagResolvedVoiceProfile? _selectedVoice;
+
   StreamSubscription<Map<String, ArcBlueprintState>>? _blueprintSubscription;
   StreamSubscription<dynamic>? _entitlementSubscription;
 
@@ -85,7 +85,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   UagResolvedVoiceProfile? get selectedVoice => _selectedVoice;
 
   Future<void> initialize() async {
-    if (_initialised || _initialising) return;
+    if (_initialised || _initialising) {
+      return;
+    }
 
     _initialising = true;
     _lastError = null;
@@ -102,12 +104,15 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
           _listening = false;
           debugPrint('UAG voice error: $error');
           notifyListeners();
+          _restartCompanionListeningIfNeeded();
         },
         onStatus: (status) {
           debugPrint('UAG voice status: $status');
+
           if (status == 'done' || status == 'notListening') {
             _listening = false;
             notifyListeners();
+            _restartCompanionListeningIfNeeded();
           }
         },
       );
@@ -126,11 +131,16 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         _speaking = false;
         notifyListeners();
       });
+
       await _loadVoiceProfiles();
 
       if (!_available) {
         _lastError =
             'Microphone permission is blocked or speech recognition is not available on this device/browser.';
+      }
+
+      if (_raidCompanionMode) {
+        _startCompanionWatchdog();
       }
     } catch (error) {
       _available = false;
@@ -144,7 +154,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   }
 
   Future<void> startListening() async {
-    if (!_initialised) await initialize();
+    if (!_initialised) {
+      await initialize();
+    }
 
     if (!_available) {
       _lastError ??=
@@ -153,10 +165,14 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       return;
     }
 
-    await _tts.stop();
-    _speaking = false;
+    if (_listening) {
+      return;
+    }
 
-    if (_listening) return;
+    if (_speaking) {
+      await _tts.stop();
+      _speaking = false;
+    }
 
     _transcript = '';
     _lastError = null;
@@ -171,18 +187,27 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
           if (result.finalResult) {
             _listening = false;
-            _handleTranscript(_transcript);
+            final spoke = _handleTranscript(_transcript);
+            notifyListeners();
 
-            _restartCompanionListeningIfNeeded();
+            if (!spoke) {
+              _restartCompanionListeningIfNeeded();
+            }
+          } else {
+            notifyListeners();
           }
-
-          notifyListeners();
         },
-        listenFor: const Duration(seconds: 20),
-        pauseFor: const Duration(seconds: 4),
+        listenFor: _raidCompanionMode
+            ? const Duration(minutes: 5)
+            : const Duration(seconds: 20),
+        pauseFor: _raidCompanionMode
+            ? const Duration(seconds: 7)
+            : const Duration(seconds: 4),
         localeId: 'en_GB',
         listenOptions: stt.SpeechListenOptions(
-          listenMode: stt.ListenMode.confirmation,
+          listenMode: _raidCompanionMode
+              ? stt.ListenMode.dictation
+              : stt.ListenMode.confirmation,
         ),
       );
     } catch (error) {
@@ -190,6 +215,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       _lastError = 'Could not start microphone: $error';
       debugPrint('UAG voice listen failed: $error');
       notifyListeners();
+      _restartCompanionListeningIfNeeded();
     }
   }
 
@@ -203,12 +229,30 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _listening = false;
 
     if (_transcript.trim().isNotEmpty) {
-      _handleTranscript(_transcript);
+      final spoke = _handleTranscript(_transcript);
 
-      _restartCompanionListeningIfNeeded();
+      if (!spoke) {
+        _restartCompanionListeningIfNeeded();
+      }
     }
 
     notifyListeners();
+  }
+
+  Future<void> stopSpeakingForUser() async {
+    try {
+      await _tts.stop();
+    } catch (error) {
+      debugPrint('UAG voice stop speaking failed: $error');
+    }
+
+    _speaking = false;
+    _lastError = null;
+    notifyListeners();
+
+    if (_raidCompanionMode) {
+      await startListening();
+    }
   }
 
   Future<void> setRaidCompanionMode(bool enabled) async {
@@ -226,12 +270,16 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         _restartCompanionListeningIfNeeded();
       } else {
         _stopCompanionWatchdog();
+
         if (_listening) {
-          await stopListening();
+          await _speech.stop();
         }
+
+        _listening = false;
       }
     } catch (error) {
       _raidCompanionMode = false;
+      _stopCompanionWatchdog();
       _lastError =
           'Could not ${enabled ? 'enable' : 'disable'} Raid Companion Mode: $error';
       notifyListeners();
@@ -256,22 +304,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> stopSpeakingForUser() async {
-    try {
-      await _tts.stop();
-    } catch (error) {
-      debugPrint('UAG voice stop speaking failed: $error');
-    }
-
-    _speaking = false;
-    _lastError = null;
-    notifyListeners();
-
-    if (_raidCompanionMode) {
-      await startListening();
-    }
-  }
-
   Future<void> previewVoice(UagResolvedVoiceProfile voice) async {
     _speakingPreview = true;
     _lastError = null;
@@ -283,6 +315,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       await _tts.speak(
         UagVoicePronunciation.improveSpeech(voice.profile.previewText),
       );
+
       if (_selectedVoice != null) {
         await Future<void>.delayed(const Duration(milliseconds: 250));
         await _applyVoice(_selectedVoice!);
@@ -297,8 +330,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
   Future<void> speak(String text) async {
     await _tts.stop();
-    _speaking = true;
-    notifyListeners();
+
     final selected = _selectedVoice;
     if (selected != null) {
       await _applyVoice(selected);
@@ -306,36 +338,51 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     final prefix = selected?.profile.personalityPrefix ?? '';
     final spokenText = UagVoicePronunciation.improveSpeech('$prefix$text');
+
+    _speaking = true;
+    notifyListeners();
+
     await _tts.speak(spokenText);
   }
 
   void submitText(String text) {
     final trimmed = text.trim();
-    if (trimmed.isEmpty) return;
+    if (trimmed.isEmpty) {
+      return;
+    }
 
     _transcript = trimmed;
     _lastError = null;
-    _handleTranscript(trimmed);
+    final spoke = _handleTranscript(trimmed);
 
-    _restartCompanionListeningIfNeeded();
-    _restartCompanionListeningIfNeeded();
+    if (!spoke) {
+      _restartCompanionListeningIfNeeded();
+    }
+
     notifyListeners();
   }
 
   void confirmSuggestedItem() {
     final suggestion = _pendingSuggestionName;
-    if (suggestion == null || suggestion.trim().isEmpty) return;
+    if (suggestion == null || suggestion.trim().isEmpty) {
+      return;
+    }
 
     final response = _responseBuilder.buildConfirmedSuggestion(
       suggestion,
       blueprintStates: _blueprintStates,
     );
+
     _pendingSuggestionName = null;
     _lastResponse = response;
     _transcript = suggestion;
+
     if (response.shouldSpeak) {
-      speak(response.spokenBody ?? response.body);
+      unawaited(speak(response.spokenBody ?? response.body));
+    } else {
+      _restartCompanionListeningIfNeeded();
     }
+
     notifyListeners();
   }
 
@@ -343,6 +390,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(_companionModePreferenceKey) ?? false;
     _raidCompanionMode = enabled;
+
     if (enabled) {
       await WakelockPlus.enable();
     }
@@ -391,29 +439,16 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     await _tts.setSpeechRate(voice.profile.rate);
     await _tts.setPitch(voice.profile.pitch);
     await _tts.setVolume(1.0);
-    _tts.setStartHandler(() {
-      _speaking = true;
-      notifyListeners();
-    });
-    _tts.setCompletionHandler(() {
-      _speaking = false;
-      notifyListeners();
-      _restartCompanionListeningIfNeeded();
-    });
-    _tts.setCancelHandler(() {
-      _speaking = false;
-      notifyListeners();
-    });
   }
 
-  void _handleTranscript(String text) {
+  bool _handleTranscript(String text) {
     if (_handleIntelReportTranscript(text)) {
-      return;
-      _restartCompanionListeningIfNeeded();
+      return true;
     }
+
     if (_isAffirmative(text) && _pendingSuggestionName != null) {
       confirmSuggestedItem();
-      return;
+      return true;
     }
 
     final intent = _parser.parse(text);
@@ -426,8 +461,11 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _lastResponse = response;
 
     if (response.shouldSpeak) {
-      speak(response.spokenBody ?? response.body);
+      unawaited(speak(response.spokenBody ?? response.body));
+      return true;
     }
+
+    return false;
   }
 
   bool _handleIntelReportTranscript(String text) {
@@ -439,6 +477,55 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     final activeDraft = _pendingIntelReport;
 
     if (activeDraft != null) {
+      final lower = trimmed.toLowerCase();
+
+      if (lower.contains('cancel report') ||
+          lower.contains('stop report') ||
+          lower == 'cancel' ||
+          lower == 'stop') {
+        _pendingIntelReport = null;
+        _pendingSuggestionName = null;
+        _lastResponse = const UagVoiceResponse(
+          title: 'Intel report cancelled',
+          body: 'Intel report cancelled. No report was saved.',
+          spokenBody: 'Intel report cancelled. No report was saved.',
+          shouldSpeak: true,
+        );
+
+        unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+        notifyListeners();
+        return true;
+      }
+
+      if (lower.contains('start over') || lower.contains('restart report')) {
+        activeDraft.reset();
+        _lastResponse = activeDraft.startResponse();
+
+        unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+        notifyListeners();
+        return true;
+      }
+
+      if (lower == 'repeat' ||
+          lower.contains('repeat question') ||
+          lower.contains('say that again')) {
+        _lastResponse = activeDraft.currentPromptResponse();
+
+        unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+        notifyListeners();
+        return true;
+      }
+
+      if (lower.contains('summary') ||
+          lower.contains('read it back') ||
+          lower.contains('what have you got')) {
+        _lastResponse = activeDraft.summaryResponse();
+
+        unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+        notifyListeners();
+        return true;
+      }
+
       final completed = activeDraft.answer(trimmed);
       final response = completed
           ? activeDraft.completedResponse()
@@ -452,11 +539,11 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       }
 
       if (response.shouldSpeak) {
-        speak(response.spokenBody ?? response.body);
+        unawaited(speak(response.spokenBody ?? response.body));
       }
 
       notifyListeners();
-      return true;
+      return response.shouldSpeak;
     }
 
     final blueprint = _resolveFoundBlueprint(trimmed);
@@ -470,7 +557,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _pendingSuggestionName = null;
     _lastResponse = draft.startResponse();
 
-    speak(_lastResponse!.spokenBody ?? _lastResponse!.body);
+    unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
     notifyListeners();
 
     return true;
@@ -530,6 +617,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
   bool _isAffirmative(String text) {
     final normalized = text.toLowerCase().trim();
+
     return normalized == 'yes' ||
         normalized == 'yeah' ||
         normalized == 'yep' ||
@@ -576,9 +664,10 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
                     ),
                   )
                   .toList(growable: false);
+
               if (fallback.isNotEmpty) {
                 _selectedVoice = fallback.first;
-                _applyVoice(_selectedVoice!);
+                unawaited(_applyVoice(_selectedVoice!));
               }
             }
 
@@ -614,6 +703,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     if (!_raidCompanionMode ||
         !_available ||
         _listening ||
+        _speaking ||
         _companionRestartQueued) {
       return;
     }
@@ -635,10 +725,10 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   void dispose() {
     _blueprintSubscription?.cancel();
     _entitlementSubscription?.cancel();
+    _stopCompanionWatchdog();
     WakelockPlus.disable();
     _speech.cancel();
     _tts.stop();
-    _stopCompanionWatchdog();
     super.dispose();
   }
 }
