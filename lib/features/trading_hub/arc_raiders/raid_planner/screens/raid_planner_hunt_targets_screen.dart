@@ -25,7 +25,6 @@ class RaidPlannerHuntTargetsScreen extends StatefulWidget {
 class _RaidPlannerHuntTargetsScreenState
     extends State<RaidPlannerHuntTargetsScreen> {
   final TradingRepository _repository = TradingRepository();
-
   List<String?> _selectedIds = List<String?>.filled(5, null);
   bool _saving = false;
   bool _syncing = false;
