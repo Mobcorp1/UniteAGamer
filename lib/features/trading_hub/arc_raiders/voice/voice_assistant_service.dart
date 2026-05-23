@@ -256,6 +256,22 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> stopSpeakingForUser() async {
+    try {
+      await _tts.stop();
+    } catch (error) {
+      debugPrint('UAG voice stop speaking failed: $error');
+    }
+
+    _speaking = false;
+    _lastError = null;
+    notifyListeners();
+
+    if (_raidCompanionMode) {
+      await startListening();
+    }
+  }
+
   Future<void> previewVoice(UagResolvedVoiceProfile voice) async {
     _speakingPreview = true;
     _lastError = null;

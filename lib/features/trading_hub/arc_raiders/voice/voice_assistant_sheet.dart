@@ -259,11 +259,9 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
 
   Widget _buildMicButton() {
     final label = _service.speaking
-        ? 'Assistant speaking...
-tap to speak'
+        ? 'Assistant speaking...\ntap to speak'
         : _service.listening
-        ? 'Listening...
-tap to stop'
+        ? 'Listening...\ntap to stop'
         : _service.initialising
         ? 'Starting voice system...'
         : 'Tap to speak';
@@ -494,7 +492,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
+                    : 'Locked ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked
