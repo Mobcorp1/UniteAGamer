@@ -3,6 +3,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_bluepr
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/services/arc_blueprint_source_of_truth_service.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/services/automation/smart_trade_assist_engine.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
@@ -20,6 +21,8 @@ class SmartTradeAssistScreen extends StatefulWidget {
 class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   final TradingRepository _repository = TradingRepository();
   final SmartTradeAssistEngine _engine = const SmartTradeAssistEngine();
+  final ArcBlueprintSourceOfTruthService _truthService =
+      const ArcBlueprintSourceOfTruthService();
 
   final Set<String> _busyKeys = <String>{};
   final Set<String> _createdListingKeys = <String>{};
@@ -104,28 +107,26 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   }
 
   List<String> _missingBlueprintsFromStates(
-    Map<String, ArcBlueprintState> states,
-  ) {
-    final missing = <String>[];
-
-    for (final blueprint in ArcBlueprintSeedData.blueprints) {
-      final state =
-          states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
-
-      if (!state.owned) {
-        missing.add(blueprint.id);
-      }
-    }
-
-    return missing;
+    Map<String, ArcBlueprintState> states, [
+    List<TradingListing> listings = const <TradingListing>[],
+  ]) {
+    return _truthService
+        .buildSnapshot(statesByBlueprintId: states, activeListings: listings)
+        .missingBlueprintIds
+        .toList(growable: false);
   }
 
   List<SmartTradeOpportunity> _buildOpportunities(
-    Map<String, ArcBlueprintState> states,
-  ) {
+    Map<String, ArcBlueprintState> states, [
+    List<TradingListing> listings = const <TradingListing>[],
+  ]) {
+    final truth = _truthService.buildSnapshot(
+      statesByBlueprintId: states,
+      activeListings: listings,
+    );
     final duplicates = _duplicateQuantitiesFromStates(states);
-    final topFive = _topFiveWantedFromStates(states);
-    final missing = _missingBlueprintsFromStates(states);
+    final topFive = truth.topFiveWantedBlueprintIds;
+    final missing = _missingBlueprintsFromStates(states, listings);
 
     if (duplicates.isEmpty || topFive.isEmpty) {
       return const <SmartTradeOpportunity>[];
