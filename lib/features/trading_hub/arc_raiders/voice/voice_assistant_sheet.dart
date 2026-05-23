@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/monetisation/models/uag_subscription_tier.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_service.dart';
@@ -33,14 +34,26 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
   @override
   void initState() {
     super.initState();
-    _service = UagVoiceArcAssistantService()..initialize();
-    if (widget.autoStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await _service.setRaidCompanionMode(true);
-        await _service.startListening();
-      });
-    }
+    _service = UagVoiceArcAssistantService();
+    unawaited(_initialiseAssistant());
     _service.addListener(_onServiceChanged);
+  }
+
+  Future<void> _initialiseAssistant() async {
+    await _service.initialize();
+
+    if (!mounted || !widget.autoStart) {
+      return;
+    }
+
+    await _service.setRaidCompanionMode(true);
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+
+    if (!mounted) {
+      return;
+    }
+
+    await _service.startListening();
   }
 
   @override
@@ -493,7 +506,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
+                    : 'Locked ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked

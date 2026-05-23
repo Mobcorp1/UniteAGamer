@@ -409,8 +409,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   void _handleTranscript(String text) {
     if (_handleIntelReportTranscript(text)) {
       return;
-
-      _restartCompanionListeningIfNeeded();
       _restartCompanionListeningIfNeeded();
     }
     if (_isAffirmative(text) && _pendingSuggestionName != null) {
