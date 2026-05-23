@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -32,6 +33,9 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Community Intel',
+      ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
@@ -358,7 +362,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           if (topCombo != null) ...[
             const SizedBox(height: AppTheme.spaceS),
             Text(
-              'Top combo strength: ${topCombo.percentageLabel} • ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
+              'Top combo strength: ${topCombo.percentageLabel} â€¢ ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.white70,
                 fontWeight: FontWeight.w600,
@@ -576,7 +580,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            '${row.percentage.toStringAsFixed(0)}% • ${row.count}',
+            '${row.percentage.toStringAsFixed(0)}% â€¢ ${row.count}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,
@@ -611,7 +615,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${combo.percentageLabel} • ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
+            '${combo.percentageLabel} â€¢ ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,

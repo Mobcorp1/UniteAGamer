@@ -101,12 +101,10 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   }
 
   void _goTo(int index) {
-    if (index < 0 || index >= _features.length) {
-      return;
-    }
+    final target = (index + _features.length) % _features.length;
 
     _controller.animateToPage(
-      index,
+      target,
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
     );
@@ -192,18 +190,14 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                         left: 8,
                         child: _ChevronButton(
                           icon: Icons.chevron_left_rounded,
-                          onPressed: _selectedIndex == 0
-                              ? null
-                              : () => _goTo(_selectedIndex - 1),
+                          onPressed: () => _goTo(_selectedIndex - 1),
                         ),
                       ),
                       Positioned(
                         right: 8,
                         child: _ChevronButton(
                           icon: Icons.chevron_right_rounded,
-                          onPressed: _selectedIndex == _features.length - 1
-                              ? null
-                              : () => _goTo(_selectedIndex + 1),
+                          onPressed: () => _goTo(_selectedIndex + 1),
                         ),
                       ),
                     ],
@@ -311,12 +305,11 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   }
 
   void _goTo(int index) {
-    if (index < 0 || index >= _trackingFeatures.length) {
-      return;
-    }
+    final target =
+        (index + _trackingFeatures.length) % _trackingFeatures.length;
 
     _controller.animateToPage(
-      index,
+      target,
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
     );
@@ -377,19 +370,14 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                         left: 8,
                         child: _ChevronButton(
                           icon: Icons.chevron_left_rounded,
-                          onPressed: _selectedIndex == 0
-                              ? null
-                              : () => _goTo(_selectedIndex - 1),
+                          onPressed: () => _goTo(_selectedIndex - 1),
                         ),
                       ),
                       Positioned(
                         right: 8,
                         child: _ChevronButton(
                           icon: Icons.chevron_right_rounded,
-                          onPressed:
-                              _selectedIndex == _trackingFeatures.length - 1
-                              ? null
-                              : () => _goTo(_selectedIndex + 1),
+                          onPressed: () => _goTo(_selectedIndex + 1),
                         ),
                       ),
                     ],
@@ -440,7 +428,7 @@ class _HubHeader extends StatelessWidget {
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
-                  'ARC Raiders Command Hub',
+                  'UAG Arc Raiders Hub',
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.neonTextStyle(
                     fontSize: 21,

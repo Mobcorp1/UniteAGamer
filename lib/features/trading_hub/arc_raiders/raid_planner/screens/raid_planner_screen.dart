@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
 import 'package:uag_traders_hub/build/app_bar.dart';
 import 'package:uag_traders_hub/build/app_drawer.dart';
@@ -457,12 +458,12 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${opportunity.rule.blueprintName} • ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
+                  '${opportunity.rule.blueprintName} â€¢ ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
                   style: AppTheme.tradingHeading(fontSize: 17),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${opportunity.slot.mapName} • ${opportunity.slot.lane} • ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
+                  '${opportunity.slot.mapName} â€¢ ${opportunity.slot.lane} â€¢ ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 13,
                     color: AppTheme.tradingMutedText,
@@ -976,7 +977,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${entitlement.tier.label} plan • ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
+              '${entitlement.tier.label} plan â€¢ ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
               style: AppTheme.tradingHeading(
                 fontSize: 18,
                 color: AppTheme.neonPink,
@@ -991,6 +992,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Raid Planner',
+      ),
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
         title: 'Raid Planner',

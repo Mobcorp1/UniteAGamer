@@ -254,7 +254,7 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
         ? 'Listening... tap to stop'
         : _service.initialising
         ? 'Starting voice system...'
-        : 'Tap and ask UAG Raider';
+        : 'Open ARC Assistant';
 
     return ElevatedButton.icon(
       onPressed: _service.initialising
@@ -474,7 +474,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked Ã‚Â· ${voice.tierLabel}',
+                    : 'Locked Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked

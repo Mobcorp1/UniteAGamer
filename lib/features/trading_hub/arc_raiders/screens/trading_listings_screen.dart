@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
@@ -258,7 +259,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               if (subtitleBits.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
-                  subtitleBits.join(' • '),
+                  subtitleBits.join(' â€¢ '),
                   style: TextStyle(color: AppTheme.tradingMutedText),
                 ),
               ],
@@ -267,8 +268,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 '${listing.traderName}'
-                '${listing.gamerTag.isNotEmpty ? ' • ${listing.gamerTag}' : ''}'
-                '${listing.preferredPlatform.isNotEmpty ? ' • ${listing.preferredPlatform}' : ''}',
+                '${listing.gamerTag.isNotEmpty ? ' â€¢ ${listing.gamerTag}' : ''}'
+                '${listing.preferredPlatform.isNotEmpty ? ' â€¢ ${listing.preferredPlatform}' : ''}',
                 style: TextStyle(
                   color: AppTheme.tradingMutedText,
                   fontWeight: FontWeight.w600,
@@ -435,6 +436,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Trading'),
       backgroundColor: AppTheme.darkBackground,
       appBar: widget.showAppBar
           ? AppBar(

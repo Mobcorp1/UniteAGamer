@@ -698,6 +698,38 @@ class _VoiceIntelReportDraft {
     }
   }
 
+  void reset() {
+    step = _VoiceIntelReportStep.map;
+    map = null;
+    area = null;
+    source = null;
+    raidRound = null;
+    condition = null;
+    raiderTimeOfDay = null;
+    notes = null;
+  }
+
+  UagVoiceResponse currentPromptResponse() {
+    if (step == _VoiceIntelReportStep.complete) {
+      return completedResponse();
+    }
+
+    return step == _VoiceIntelReportStep.map
+        ? startResponse()
+        : nextPromptResponse();
+  }
+
+  UagVoiceResponse summaryResponse() {
+    return UagVoiceResponse(
+      title: 'Current Intel report summary',
+      body:
+          'Blueprint: $blueprintName\nMap: ${map ?? 'Not set'}\nArea / POI: ${area ?? 'Not set'}\nHow Obtained: ${source ?? 'Not set'}\nRaid Round: ${raidRound ?? 'Not set'}\nCondition / Event: ${condition ?? 'Not set'}\nRaider Time of Day: ${raiderTimeOfDay ?? 'Not set'}\nNotes: ${notes == null || notes!.trim().isEmpty ? 'None' : notes}',
+      spokenBody:
+          'Current report. Blueprint, $blueprintName. Map, ${map ?? 'not set'}. Area, ${area ?? 'not set'}. Source, ${source ?? 'not set'}. Raid round, ${raidRound ?? 'not set'}. Condition, ${condition ?? 'not set'}. Raider time, ${raiderTimeOfDay ?? 'not set'}.',
+      shouldSpeak: true,
+    );
+  }
+
   UagVoiceResponse completedResponse() {
     return UagVoiceResponse(
       title: 'Intel report ready',

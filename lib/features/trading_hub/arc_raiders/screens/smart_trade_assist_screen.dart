@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
@@ -353,6 +354,9 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Smart Trade',
+      ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.cardBackgroundDeep,

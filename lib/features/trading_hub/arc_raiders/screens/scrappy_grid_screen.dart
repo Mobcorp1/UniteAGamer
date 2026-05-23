@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
@@ -212,7 +213,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       0,
       (total, item) => total + item.neededCount,
     );
-    return '$completed / ${items.length} complete • $totalRequired total needed';
+    return '$completed / ${items.length} complete â€¢ $totalRequired total needed';
   }
 
   int _completedCount(
@@ -771,6 +772,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     final allItems = _allItems;
 
     return Scaffold(
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Scrappy Tracker',
+      ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(_modeTitle, style: AppTheme.tradingHeading(fontSize: 25)),
