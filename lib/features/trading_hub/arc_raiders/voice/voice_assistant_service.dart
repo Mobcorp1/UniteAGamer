@@ -44,6 +44,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _initialised = false;
   bool _initialising = false;
   bool _listening = false;
+  bool _speaking = false;
   bool _speakingPreview = false;
   bool _adminBypass = false;
   bool _raidCompanionMode = false;
@@ -67,6 +68,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool get initialised => _initialised;
   bool get initialising => _initialising;
   bool get listening => _listening;
+  bool get speaking => _speaking;
   bool get thinking => _initialising;
   bool get speakingPreview => _speakingPreview;
   bool get adminBypass => _adminBypass;
