@@ -9,15 +9,16 @@ class UagVoiceArcAssistantSheet extends StatefulWidget {
 
   final bool autoStart;
 
-  static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: AppTheme.cardBackgroundDeep,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (_) => UagVoiceArcAssistantSheet(autoStart: autoStart),
-  );
+  static Future<void> show(BuildContext context, {bool autoStart = false}) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: AppTheme.cardBackgroundDeep,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (_) => UagVoiceArcAssistantSheet(autoStart: autoStart),
+      );
 
   @override
   State<UagVoiceArcAssistantSheet> createState() =>
@@ -492,7 +493,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
+                    : 'Locked ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked
