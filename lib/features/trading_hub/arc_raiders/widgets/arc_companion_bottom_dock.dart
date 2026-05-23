@@ -41,7 +41,8 @@ class ArcCompanionBottomDock extends StatelessWidget {
               radius: 999,
               child: InkWell(
                 borderRadius: BorderRadius.circular(999),
-                onTap: () => UagVoiceArcAssistantSheet.show(context),
+                onTap: () =>
+                    UagVoiceArcAssistantSheet.show(context, autoStart: true),
                 child: Container(
                   width: 58,
                   height: 58,

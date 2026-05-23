@@ -5,7 +5,9 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_pro
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class UagVoiceArcAssistantSheet extends StatefulWidget {
-  const UagVoiceArcAssistantSheet({super.key});
+  const UagVoiceArcAssistantSheet({super.key, this.autoStart = false});
+
+  final bool autoStart;
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
     context: context,
@@ -14,7 +16,7 @@ class UagVoiceArcAssistantSheet extends StatefulWidget {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => const UagVoiceArcAssistantSheet(),
+    builder: (_) => UagVoiceArcAssistantSheet(autoStart: autoStart),
   );
 
   @override
@@ -31,6 +33,12 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
   void initState() {
     super.initState();
     _service = UagVoiceArcAssistantService()..initialize();
+    if (widget.autoStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _service.setRaidCompanionMode(true);
+        await _service.startListening();
+      });
+    }
     _service.addListener(_onServiceChanged);
   }
 
@@ -250,19 +258,31 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
   }
 
   Widget _buildMicButton() {
-    final label = _service.listening
-        ? 'Listening... tap to stop'
+    final label = _service.speaking
+        ? 'Assistant speaking...
+tap to speak'
+        : _service.listening
+        ? 'Listening...
+tap to stop'
         : _service.initialising
         ? 'Starting voice system...'
-        : 'Open ARC Assistant';
+        : 'Tap to speak';
 
     return ElevatedButton.icon(
       onPressed: _service.initialising
           ? null
+          : _service.speaking
+          ? _service.stopSpeakingForUser
           : _service.listening
           ? _service.stopListening
           : _service.startListening,
-      icon: Icon(_service.listening ? Icons.stop_rounded : Icons.mic_rounded),
+      icon: Icon(
+        _service.speaking
+            ? Icons.record_voice_over_rounded
+            : _service.listening
+            ? Icons.stop_rounded
+            : Icons.mic_rounded,
+      ),
       label: Text(label),
     );
   }
@@ -474,7 +494,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
+                    : 'Locked ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked

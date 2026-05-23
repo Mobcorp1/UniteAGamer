@@ -113,6 +113,19 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       );
 
       await _tts.setVolume(1.0);
+      _tts.setStartHandler(() {
+        _speaking = true;
+        notifyListeners();
+      });
+      _tts.setCompletionHandler(() {
+        _speaking = false;
+        notifyListeners();
+        _restartCompanionListeningIfNeeded();
+      });
+      _tts.setCancelHandler(() {
+        _speaking = false;
+        notifyListeners();
+      });
       await _loadVoiceProfiles();
 
       if (!_available) {
@@ -140,6 +153,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       return;
     }
 
+    await _tts.stop();
+    _speaking = false;
+
     if (_listening) return;
 
     _transcript = '';
@@ -157,7 +173,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
             _listening = false;
             _handleTranscript(_transcript);
 
-            _restartCompanionListeningIfNeeded();
             _restartCompanionListeningIfNeeded();
           }
 
@@ -190,7 +205,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     if (_transcript.trim().isNotEmpty) {
       _handleTranscript(_transcript);
 
-      _restartCompanionListeningIfNeeded();
       _restartCompanionListeningIfNeeded();
     }
 
@@ -267,6 +281,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
   Future<void> speak(String text) async {
     await _tts.stop();
+    _speaking = true;
+    notifyListeners();
     final selected = _selectedVoice;
     if (selected != null) {
       await _applyVoice(selected);
@@ -359,6 +375,19 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     await _tts.setSpeechRate(voice.profile.rate);
     await _tts.setPitch(voice.profile.pitch);
     await _tts.setVolume(1.0);
+    _tts.setStartHandler(() {
+      _speaking = true;
+      notifyListeners();
+    });
+    _tts.setCompletionHandler(() {
+      _speaking = false;
+      notifyListeners();
+      _restartCompanionListeningIfNeeded();
+    });
+    _tts.setCancelHandler(() {
+      _speaking = false;
+      notifyListeners();
+    });
   }
 
   void _handleTranscript(String text) {
@@ -385,89 +414,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     if (response.shouldSpeak) {
       speak(response.spokenBody ?? response.body);
     }
-  }
-
-  bool _handleItemNeedQuery(String text) {
-    final lower = text.toLowerCase().trim();
-
-    final isNeedQuery =
-        lower.contains('do i need') ||
-        lower.contains('do we need') ||
-        lower.contains('need the') ||
-        lower.contains('need a') ||
-        lower.contains('need an');
-
-    if (!isNeedQuery) {
-      return false;
-    }
-
-    final blueprint = _resolveBlueprintMention(lower);
-
-    if (blueprint == null) {
-      _lastResponse = const UagVoiceResponse(
-        title: 'Item not recognised',
-        body:
-            'I could not match that item yet. Try saying the blueprint or item name more clearly.',
-        spokenBody:
-            'I could not match that item yet. Try saying the blueprint or item name more clearly.',
-        shouldSpeak: true,
-      );
-
-      speak(_lastResponse!.spokenBody ?? _lastResponse!.body);
-      notifyListeners();
-      return true;
-    }
-
-    _lastResponse = UagVoiceResponse(
-      title: 'Blueprint recognised',
-      body:
-          'I matched that to ${blueprint.name}. Ownership checking will use Blueprint Tracker state once this query is wired into the source-of-truth service.',
-      spokenBody:
-          'I matched that to ${blueprint.name}. Next step is checking your Blueprint Tracker ownership state.',
-      shouldSpeak: true,
-    );
-
-    speak(_lastResponse!.spokenBody ?? _lastResponse!.body);
-    notifyListeners();
-    return true;
-  }
-
-  ArcBlueprint? _resolveBlueprintMention(String query) {
-    var bestScore = 0;
-    ArcBlueprint? best;
-
-    final normalisedQuery = query.replaceAll(RegExp(r'[^a-z0-9]+'), ' ');
-
-    for (final blueprint in ArcBlueprintSeedData.blueprints) {
-      final normalisedName = blueprint.name.toLowerCase().replaceAll(
-        RegExp(r'[^a-z0-9]+'),
-        ' ',
-      );
-
-      var score = 0;
-
-      if (normalisedQuery.contains(normalisedName)) {
-        score = 100;
-      } else {
-        final queryTokens = normalisedQuery
-            .split(' ')
-            .where((token) => token.trim().length > 2)
-            .toSet();
-        final nameTokens = normalisedName
-            .split(' ')
-            .where((token) => token.trim().length > 2)
-            .toSet();
-
-        score = queryTokens.intersection(nameTokens).length * 25;
-      }
-
-      if (score > bestScore) {
-        bestScore = score;
-        best = blueprint;
-      }
-    }
-
-    return bestScore >= 25 ? best : null;
   }
 
   bool _handleIntelReportTranscript(String text) {
@@ -663,7 +609,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     Future<void>.delayed(const Duration(milliseconds: 650), () {
       _companionRestartQueued = false;
 
-      if (!_raidCompanionMode || !_available || _listening) {
+      if (!_raidCompanionMode || !_available || _listening || _speaking) {
         return;
       }
 
