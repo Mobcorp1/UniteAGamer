@@ -226,7 +226,7 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Keeps the screen awake while this assistant is open for longer raids.',
+                  'Hands-free while this assistant is open. Say what you need and it will keep listening between raid commands.',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 12,
                     color: Colors.white60,
@@ -237,7 +237,12 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
           ),
           Switch.adaptive(
             value: _service.raidCompanionMode,
-            onChanged: _service.setRaidCompanionMode,
+            onChanged: (enabled) async {
+              await _service.setRaidCompanionMode(enabled);
+              if (enabled) {
+                await _service.startListening();
+              }
+            },
           ),
         ],
       ),
@@ -469,7 +474,7 @@ class _VoiceProfileCard extends StatelessWidget {
                     ? 'Selected'
                     : unlocked
                     ? voice.tierLabel
-                    : 'Locked Â· ${voice.tierLabel}',
+                    : 'Locked Ã‚Â· ${voice.tierLabel}',
                 color: selected
                     ? AppTheme.neonPink
                     : unlocked

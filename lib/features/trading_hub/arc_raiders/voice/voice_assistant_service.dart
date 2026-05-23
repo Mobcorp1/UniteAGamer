@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -45,11 +47,13 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _speakingPreview = false;
   bool _adminBypass = false;
   bool _raidCompanionMode = false;
+  bool _companionRestartQueued = false;
   UagSubscriptionTier _tier = UagSubscriptionTier.free;
   String _transcript = '';
   String? _lastError;
   UagVoiceResponse? _lastResponse;
   String? _pendingSuggestionName;
+  _VoiceIntelReportDraft? _pendingIntelReport;
   Map<String, ArcBlueprintState> _blueprintStates =
       const <String, ArcBlueprintState>{};
   List<UagResolvedVoiceProfile> _voiceProfiles =
@@ -193,6 +197,12 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       await WakelockPlus.toggle(enable: enabled);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_companionModePreferenceKey, enabled);
+
+      if (enabled) {
+        _restartCompanionListeningIfNeeded();
+      } else if (_listening) {
+        await stopListening();
+      }
     } catch (error) {
       _raidCompanionMode = false;
       _lastError =
@@ -336,6 +346,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   }
 
   void _handleTranscript(String text) {
+    if (_handleIntelReportTranscript(text)) {
+      return;
+    }
     if (_isAffirmative(text) && _pendingSuggestionName != null) {
       confirmSuggestedItem();
       return;
@@ -353,6 +366,104 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     if (response.shouldSpeak) {
       speak(response.spokenBody ?? response.body);
     }
+  }
+
+  bool _handleIntelReportTranscript(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
+      return false;
+    }
+
+    final activeDraft = _pendingIntelReport;
+
+    if (activeDraft != null) {
+      final completed = activeDraft.answer(trimmed);
+      final response = completed
+          ? activeDraft.completedResponse()
+          : activeDraft.nextPromptResponse();
+
+      _lastResponse = response;
+      _pendingSuggestionName = null;
+
+      if (completed) {
+        _pendingIntelReport = null;
+      }
+
+      if (response.shouldSpeak) {
+        speak(response.spokenBody ?? response.body);
+      }
+
+      notifyListeners();
+      return true;
+    }
+
+    final blueprint = _resolveFoundBlueprint(trimmed);
+
+    if (blueprint == null) {
+      return false;
+    }
+
+    final draft = _VoiceIntelReportDraft(blueprintName: blueprint.name);
+    _pendingIntelReport = draft;
+    _pendingSuggestionName = null;
+    _lastResponse = draft.startResponse();
+
+    speak(_lastResponse!.spokenBody ?? _lastResponse!.body);
+    notifyListeners();
+
+    return true;
+  }
+
+  ArcBlueprint? _resolveFoundBlueprint(String text) {
+    final normalized = text.toLowerCase();
+
+    final looksLikeReport =
+        normalized.contains('i found') ||
+        normalized.contains('found a') ||
+        normalized.contains('found the') ||
+        normalized.startsWith('found ') ||
+        normalized.contains('report ') ||
+        normalized.contains('add intel') ||
+        normalized.contains('log intel');
+
+    if (!looksLikeReport) {
+      return null;
+    }
+
+    var bestScore = 0;
+    ArcBlueprint? best;
+
+    for (final blueprint in ArcBlueprintSeedData.blueprints) {
+      final name = blueprint.name.toLowerCase();
+      final compactName = name.replaceAll(RegExp(r'[^a-z0-9]+'), ' ');
+      final query = normalized.replaceAll(RegExp(r'[^a-z0-9]+'), ' ');
+
+      var score = 0;
+
+      if (query.contains(name)) {
+        score = 100;
+      } else if (query.contains(compactName)) {
+        score = 96;
+      } else {
+        final nameTokens = compactName
+            .split(' ')
+            .where((token) => token.trim().isNotEmpty)
+            .toSet();
+        final queryTokens = query
+            .split(' ')
+            .where((token) => token.trim().isNotEmpty)
+            .toSet();
+
+        score = nameTokens.intersection(queryTokens).length * 20;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        best = blueprint;
+      }
+    }
+
+    return bestScore >= 20 ? best : null;
   }
 
   bool _isAffirmative(String text) {
@@ -420,6 +531,27 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         );
   }
 
+  void _restartCompanionListeningIfNeeded() {
+    if (!_raidCompanionMode ||
+        !_available ||
+        _listening ||
+        _companionRestartQueued) {
+      return;
+    }
+
+    _companionRestartQueued = true;
+
+    Future<void>.delayed(const Duration(milliseconds: 650), () {
+      _companionRestartQueued = false;
+
+      if (!_raidCompanionMode || !_available || _listening) {
+        return;
+      }
+
+      unawaited(startListening());
+    });
+  }
+
   @override
   void dispose() {
     _blueprintSubscription?.cancel();
@@ -428,5 +560,200 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _speech.cancel();
     _tts.stop();
     super.dispose();
+  }
+}
+
+enum _VoiceIntelReportStep {
+  map,
+  area,
+  source,
+  raidRound,
+  condition,
+  raiderTimeOfDay,
+  notes,
+  complete,
+}
+
+class _VoiceIntelReportDraft {
+  _VoiceIntelReportDraft({required this.blueprintName});
+
+  final String blueprintName;
+  _VoiceIntelReportStep step = _VoiceIntelReportStep.map;
+
+  String? map;
+  String? area;
+  String? source;
+  String? raidRound;
+  String? condition;
+  String? raiderTimeOfDay;
+  String? notes;
+
+  bool answer(String value) {
+    final cleaned = _cleanAnswer(value);
+
+    switch (step) {
+      case _VoiceIntelReportStep.map:
+        map = cleaned;
+        step = _VoiceIntelReportStep.area;
+        return false;
+      case _VoiceIntelReportStep.area:
+        area = cleaned;
+        step = _VoiceIntelReportStep.source;
+        return false;
+      case _VoiceIntelReportStep.source:
+        source = cleaned;
+        step = _VoiceIntelReportStep.raidRound;
+        return false;
+      case _VoiceIntelReportStep.raidRound:
+        raidRound = _normaliseRaidRound(cleaned);
+        step = _VoiceIntelReportStep.condition;
+        return false;
+      case _VoiceIntelReportStep.condition:
+        condition = cleaned;
+        step = _VoiceIntelReportStep.raiderTimeOfDay;
+        return false;
+      case _VoiceIntelReportStep.raiderTimeOfDay:
+        raiderTimeOfDay = _normaliseRaiderTimeOfDay(cleaned);
+        step = _VoiceIntelReportStep.notes;
+        return false;
+      case _VoiceIntelReportStep.notes:
+        notes =
+            cleaned.toLowerCase() == 'no notes' ||
+                cleaned.toLowerCase() == 'skip'
+            ? ''
+            : cleaned;
+        step = _VoiceIntelReportStep.complete;
+        return true;
+      case _VoiceIntelReportStep.complete:
+        return true;
+    }
+  }
+
+  UagVoiceResponse startResponse() {
+    return UagVoiceResponse(
+      title: 'Intel report started',
+      body:
+          'Blueprint: $blueprintName\n\nQuestion 1 of 7: Which map did you find it on?',
+      spokenBody:
+          'Intel report started for $blueprintName. Which map did you find it on?',
+      shouldSpeak: true,
+    );
+  }
+
+  UagVoiceResponse nextPromptResponse() {
+    switch (step) {
+      case _VoiceIntelReportStep.area:
+        return UagVoiceResponse(
+          title: 'Intel report - Area',
+          body:
+              'Blueprint: $blueprintName\nMap: $map\n\nQuestion 2 of 7: Which area or POI?',
+          spokenBody: 'Got it. Which area or P O I?',
+          shouldSpeak: true,
+        );
+      case _VoiceIntelReportStep.source:
+        return UagVoiceResponse(
+          title: 'Intel report - How obtained',
+          body:
+              'Blueprint: $blueprintName\nMap: $map\nArea: $area\n\nQuestion 3 of 7: How was it obtained? For example loot drop, quest reward, trial reward, trading, raider cache, weapon crate, locked room, or enemy.',
+          spokenBody:
+              'How was it obtained? For example, loot drop, quest reward, trial reward, trading, raider cache, weapon crate, locked room, or enemy.',
+          shouldSpeak: true,
+        );
+      case _VoiceIntelReportStep.raidRound:
+        return UagVoiceResponse(
+          title: 'Intel report - Raid round',
+          body:
+              'Blueprint: $blueprintName\nMap: $map\nArea: $area\nHow obtained: $source\n\nQuestion 4 of 7: Which raid round? Full Raid, Mid Raid, or Late Raid?',
+          spokenBody: 'Which raid round? Full raid, mid raid, or late raid?',
+          shouldSpeak: true,
+        );
+      case _VoiceIntelReportStep.condition:
+        return UagVoiceResponse(
+          title: 'Intel report - Condition',
+          body:
+              'Blueprint: $blueprintName\nMap: $map\nArea: $area\nHow obtained: $source\nRaid Round: $raidRound\n\nQuestion 5 of 7: What was the condition or event?',
+          spokenBody: 'What was the map condition or event?',
+          shouldSpeak: true,
+        );
+      case _VoiceIntelReportStep.raiderTimeOfDay:
+        return UagVoiceResponse(
+          title: 'Intel report - Raider time',
+          body:
+              'Blueprint: $blueprintName\nMap: $map\nArea: $area\nHow obtained: $source\nRaid Round: $raidRound\nCondition: $condition\n\nQuestion 6 of 7: What Raider time of day? Early Morning, Mid-Morning, Midday, Mid-Afternoon, Night, or Late Night?',
+          spokenBody:
+              'What Raider time of day? Early morning, mid morning, midday, mid afternoon, night, or late night?',
+          shouldSpeak: true,
+        );
+      case _VoiceIntelReportStep.notes:
+        return UagVoiceResponse(
+          title: 'Intel report - Notes',
+          body:
+              'Blueprint: $blueprintName\nMap: $map\nArea: $area\nHow obtained: $source\nRaid Round: $raidRound\nCondition: $condition\nRaider Time: $raiderTimeOfDay\n\nQuestion 7 of 7: Any notes? Say skip or no notes if not.',
+          spokenBody: 'Any notes? Say skip or no notes if not.',
+          shouldSpeak: true,
+        );
+      case _VoiceIntelReportStep.map:
+      case _VoiceIntelReportStep.complete:
+        return startResponse();
+    }
+  }
+
+  UagVoiceResponse completedResponse() {
+    return UagVoiceResponse(
+      title: 'Intel report ready',
+      body:
+          'Blueprint: $blueprintName\nMap: $map\nArea / POI: $area\nHow Obtained: $source\nRaid Round: $raidRound\nCondition / Event: $condition\nRaider Time of Day: $raiderTimeOfDay\nNotes: ${notes == null || notes!.trim().isEmpty ? 'None' : notes}\n\nOpen the Intel report sheet and save this report using the same details.',
+      spokenBody:
+          'Intel report ready for $blueprintName. Open the Intel report sheet and save it with these details.',
+      shouldSpeak: true,
+    );
+  }
+
+  String _cleanAnswer(String value) {
+    return value.trim().replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  String _normaliseRaidRound(String value) {
+    final lower = value.toLowerCase();
+
+    if (lower.contains('mid')) {
+      return 'Mid Raid';
+    }
+
+    if (lower.contains('late')) {
+      return 'Late Raid';
+    }
+
+    return 'Full Raid';
+  }
+
+  String _normaliseRaiderTimeOfDay(String value) {
+    final lower = value.toLowerCase();
+
+    if (lower.contains('early') && lower.contains('morning')) {
+      return 'Early Morning';
+    }
+
+    if (lower.contains('mid') && lower.contains('morning')) {
+      return 'Mid-Morning';
+    }
+
+    if (lower.contains('midday') || lower.contains('middle of the day')) {
+      return 'Midday';
+    }
+
+    if (lower.contains('afternoon')) {
+      return 'Mid-Afternoon';
+    }
+
+    if (lower.contains('late') && lower.contains('night')) {
+      return 'Late Night';
+    }
+
+    if (lower.contains('night')) {
+      return 'Night';
+    }
+
+    return value;
   }
 }
