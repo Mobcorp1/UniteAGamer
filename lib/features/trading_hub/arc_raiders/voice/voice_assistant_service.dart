@@ -156,6 +156,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
             _handleTranscript(_transcript);
 
             _restartCompanionListeningIfNeeded();
+            _restartCompanionListeningIfNeeded();
           }
 
           notifyListeners();
@@ -187,6 +188,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     if (_transcript.trim().isNotEmpty) {
       _handleTranscript(_transcript);
 
+      _restartCompanionListeningIfNeeded();
       _restartCompanionListeningIfNeeded();
     }
 
@@ -282,6 +284,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _handleTranscript(trimmed);
 
     _restartCompanionListeningIfNeeded();
+    _restartCompanionListeningIfNeeded();
     notifyListeners();
   }
 
@@ -360,6 +363,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     if (_handleIntelReportTranscript(text)) {
       return;
 
+      _restartCompanionListeningIfNeeded();
       _restartCompanionListeningIfNeeded();
     }
     if (_isAffirmative(text) && _pendingSuggestionName != null) {
