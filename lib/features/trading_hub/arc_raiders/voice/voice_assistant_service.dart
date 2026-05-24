@@ -30,6 +30,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   static const String _voicePreferenceKey = 'uag_voice_assistant_profile_id';
   static const String _companionModePreferenceKey =
       'uag_voice_raid_companion_mode';
+  static const String _handsFreePreferenceKey = 'uag_voice_hands_free_enabled';
+  static const String _handsFreePromptedKey = 'uag_voice_hands_free_prompted';
 
   final stt.SpeechToText _speech;
   final FlutterTts _tts;
@@ -47,6 +49,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _speakingPreview = false;
   bool _adminBypass = false;
   bool _raidCompanionMode = false;
+  bool _handsFreeEnabled = false;
+  bool _handsFreePrompted = false;
+  bool _awaitingHandsFreeConsent = false;
   bool _wakeCommandMode = false;
   bool _listenAfterSpeech = false;
 
@@ -75,6 +80,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool get speakingPreview => _speakingPreview;
   bool get adminBypass => _adminBypass;
   bool get raidCompanionMode => _raidCompanionMode;
+  bool get handsFreeEnabled => _handsFreeEnabled;
+  bool get handsFreePrompted => _handsFreePrompted;
   UagSubscriptionTier get tier => _tier;
   String get transcript => _transcript;
   String? get lastError => _lastError;
@@ -182,6 +189,11 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       return;
     }
 
+    if (!_handsFreePrompted && !_awaitingHandsFreeConsent) {
+      await _offerHandsFreeMode();
+      return;
+    }
+
     if (_speaking) {
       await _tts.stop();
       _speaking = false;
@@ -270,6 +282,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
         _clearWakeCommandMode();
         _listenAfterSpeech = false;
+        _handsFreeEnabled = false;
+        _awaitingHandsFreeConsent = false;
         _listening = false;
       }
     } catch (error) {
@@ -373,9 +387,45 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _offerHandsFreeMode() async {
+    _awaitingHandsFreeConsent = true;
+    _handsFreePrompted = true;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_handsFreePromptedKey, true);
+
+    _lastResponse = const UagVoiceResponse(
+      title: 'Hands-free raid mode',
+      body:
+          'Want me to stay hands-free during raids? Say yes and I will listen for Hey Raider while this assistant is active.',
+      spokenBody:
+          'Want me to stay hands-free during raids? Say yes, and I will listen for Hey Raider while this assistant is active.',
+      shouldSpeak: true,
+    );
+
+    _listenAfterSpeech = true;
+    unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+    notifyListeners();
+  }
+
+  Future<void> _setHandsFreeEnabled(bool enabled) async {
+    _handsFreeEnabled = enabled;
+    _awaitingHandsFreeConsent = false;
+    _raidCompanionMode = enabled;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_handsFreePreferenceKey, enabled);
+    await prefs.setBool(_companionModePreferenceKey, enabled);
+    await WakelockPlus.toggle(enable: enabled);
+  }
+
   Future<void> _loadCompanionModePreference() async {
     final prefs = await SharedPreferences.getInstance();
-    final enabled = prefs.getBool(_companionModePreferenceKey) ?? false;
+    _handsFreePrompted = prefs.getBool(_handsFreePromptedKey) ?? false;
+    _handsFreeEnabled = prefs.getBool(_handsFreePreferenceKey) ?? false;
+    final enabled =
+        (prefs.getBool(_companionModePreferenceKey) ?? false) ||
+        _handsFreeEnabled;
     _raidCompanionMode = enabled;
 
     if (enabled) {
@@ -441,6 +491,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     return text.contains('hey raider') ||
         text.contains('okay raider') ||
+        text.contains('arc raider') ||
         text.contains('ok raider') ||
         text.contains('hey arc') ||
         text.contains('okay arc') ||
@@ -455,6 +506,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     final patterns = <RegExp>[
       RegExp(r'\bhey\s+raider\b', caseSensitive: false),
       RegExp(r'\bokay\s+raider\b', caseSensitive: false),
+      RegExp(r'\barc\s+raider\b', caseSensitive: false),
       RegExp(r'\bok\s+raider\b', caseSensitive: false),
       RegExp(r'\bhey\s+arc\b', caseSensitive: false),
       RegExp(r'\bokay\s+arc\b', caseSensitive: false),
@@ -506,7 +558,44 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _handleTranscript(String text) {
     var commandText = text.trim();
 
-    if (_raidCompanionMode) {
+    if (_awaitingHandsFreeConsent) {
+      final accepted = _isAffirmative(commandText);
+      final declined = _isNegative(commandText);
+
+      if (accepted || declined) {
+        unawaited(_setHandsFreeEnabled(accepted));
+
+        _lastResponse = UagVoiceResponse(
+          title: accepted ? 'Hands-free enabled' : 'Hands-free skipped',
+          body: accepted
+              ? 'Done. Say Hey Raider when you need me during raids.'
+              : 'No problem. Tap the mic when you need me.',
+          spokenBody: accepted
+              ? 'Done. Say Hey Raider when you need me during raids.'
+              : 'No problem. Tap the mic when you need me.',
+          shouldSpeak: true,
+        );
+
+        _listenAfterSpeech = accepted;
+        unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+        notifyListeners();
+        return true;
+      }
+
+      _lastResponse = const UagVoiceResponse(
+        title: 'Hands-free raid mode',
+        body: 'Say yes to enable hands-free mode, or no to keep tap-to-talk.',
+        spokenBody:
+            'Say yes to enable hands-free mode, or no to keep tap to talk.',
+        shouldSpeak: true,
+      );
+      _listenAfterSpeech = true;
+      unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+      notifyListeners();
+      return true;
+    }
+
+    if (_raidCompanionMode || _handsFreeEnabled) {
       final hasWakePhrase = _hasWakePhrase(commandText);
 
       if (hasWakePhrase) {
@@ -634,7 +723,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       return false;
     }
 
-    final draft = _VoiceIntelReportDraft(blueprintName: blueprint.name);
+    final draft = _VoiceIntelReportDraft(blueprintName: blueprint.name)
+      ..prefillFromSpeech(trimmed);
     _pendingIntelReport = draft;
     _pendingSuggestionName = null;
     _lastResponse = draft.startResponse();
@@ -650,6 +740,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     final looksLikeReport =
         normalized.contains('i found') ||
+        normalized.contains('just found') ||
         normalized.contains('found a') ||
         normalized.contains('found the') ||
         normalized.startsWith('found ') ||
@@ -660,7 +751,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         normalized.contains('intel on') ||
         normalized.contains('intel for') ||
         normalized.contains('dupe blueprint') ||
-        normalized.contains('duplicate blueprint');
+        normalized.contains('duplicate blueprint') ||
+        normalized.contains('blueprint on') ||
+        normalized.contains('blueprint in');
 
     if (!looksLikeReport) {
       return null;
@@ -712,7 +805,20 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         normalized == 'correct' ||
         normalized == 'that one' ||
         normalized == 'open it' ||
-        normalized == 'show me';
+        normalized == 'show me' ||
+        normalized.contains('turn it on') ||
+        normalized.contains('enable') ||
+        normalized.contains('do it');
+  }
+
+  bool _isNegative(String text) {
+    final normalized = text.toLowerCase().trim();
+
+    return normalized == 'no' ||
+        normalized == 'nope' ||
+        normalized == 'not now' ||
+        normalized.contains('leave it') ||
+        normalized.contains('skip');
   }
 
   void _startBlueprintStateListener() {
@@ -957,6 +1063,108 @@ class _VoiceIntelReportDraft {
           'Intel report ready for $blueprintName. Open the Intel report sheet and save it with these details.',
       shouldSpeak: true,
     );
+  }
+
+  void prefillFromSpeech(String rawText) {
+    final lower = rawText.toLowerCase();
+
+    final mapAliases = <String, String>{
+      'buried city': 'Buried City',
+      'beret city': 'Buried City',
+      'bird city': 'Buried City',
+      'dam battlegrounds': 'Dam Battlegrounds',
+      'spaceport': 'Spaceport',
+      'blue gate': 'Blue Gate',
+      'stella montis': 'Stella Montis',
+    };
+
+    for (final entry in mapAliases.entries) {
+      if (lower.contains(entry.key)) {
+        map ??= entry.value;
+      }
+    }
+
+    final areaMatch = RegExp(
+      r'\b(?:in|at|near) the ([a-z0-9 \-]+?)(?: on | from | during |\.|$)',
+    ).firstMatch(lower);
+    final areaValue = areaMatch?.group(1)?.trim();
+    if (areaValue != null && areaValue.isNotEmpty) {
+      area ??= _titleCase(areaValue);
+    }
+
+    final sourceAliases = <String, String>{
+      'raider cache': 'Raider Cache',
+      'weapon crate': 'Weapon Crate',
+      'weapon cache': 'Weapon Cache',
+      'locker': 'Locker',
+      'locked room': 'Locked Room',
+      'breach room': 'Breach Room',
+      'hidden cache': 'Hidden Cache',
+      'quest reward': 'Quest Reward',
+      'trial reward': 'Trial Reward',
+      'enemy': 'Enemy Drop',
+      'assessor': 'Enemy Drop',
+      'trade': 'Trade',
+    };
+
+    for (final entry in sourceAliases.entries) {
+      if (lower.contains(entry.key)) {
+        source ??= entry.value;
+      }
+    }
+
+    if (lower.contains('full raid')) {
+      raidRound ??= 'Full Raid';
+    } else if (lower.contains('mid raid') || lower.contains('middle raid')) {
+      raidRound ??= 'Mid Raid';
+    } else if (lower.contains('late raid')) {
+      raidRound ??= 'Late Raid';
+    }
+
+    final conditionAliases = <String, String>{
+      'electromagnetic storm': 'Electromagnetic Storm',
+      'em storm': 'Electromagnetic Storm',
+      'hurricane': 'Hurricane',
+      'close scrutiny': 'Close Scrutiny',
+      'hidden bunker': 'Hidden Bunker',
+      'lockgate': 'Lockgate',
+      'bird city': 'Bird City',
+    };
+
+    for (final entry in conditionAliases.entries) {
+      if (lower.contains(entry.key)) {
+        condition ??= entry.value;
+      }
+    }
+
+    if (lower.contains('early morning')) {
+      raiderTimeOfDay ??= 'Early Morning';
+    } else if (lower.contains('mid morning') || lower.contains('mid-morning')) {
+      raiderTimeOfDay ??= 'Mid-Morning';
+    } else if (lower.contains('midday')) {
+      raiderTimeOfDay ??= 'Midday';
+    } else if (lower.contains('afternoon')) {
+      raiderTimeOfDay ??= 'Mid-Afternoon';
+    } else if (lower.contains('late night')) {
+      raiderTimeOfDay ??= 'Late Night';
+    } else if (lower.contains('night')) {
+      raiderTimeOfDay ??= 'Night';
+      condition ??= 'Night Raid';
+    }
+  }
+
+  String _titleCase(String value) {
+    return value
+        .split(RegExp(r'\s+'))
+        .where((part) => part.trim().isNotEmpty)
+        .map((part) {
+          final clean = part.trim();
+          if (clean.length == 1) {
+            return clean.toUpperCase();
+          }
+          return clean[0].toUpperCase() + clean.substring(1);
+        })
+        .join(' ');
   }
 
   String _cleanAnswer(String value) {
