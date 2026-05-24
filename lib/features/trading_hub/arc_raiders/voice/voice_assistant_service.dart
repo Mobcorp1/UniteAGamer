@@ -47,18 +47,16 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _speakingPreview = false;
   bool _adminBypass = false;
   bool _raidCompanionMode = false;
-  bool _companionRestartQueued = false;
+  bool _wakeCommandMode = false;
+  bool _listenAfterSpeech = false;
 
-  Timer? _companionWatchdogTimer;
-  Timer? _companionRestartTimer;
-  int _companionRestartBackoff = 0;
+  Timer? _wakeCommandTimer;
+
   UagSubscriptionTier _tier = UagSubscriptionTier.free;
   String _transcript = '';
   String? _lastError;
   UagVoiceResponse? _lastResponse;
   String? _pendingSuggestionName;
-  bool _wakeCommandMode = false;
-  Timer? _wakeCommandTimer;
   _VoiceIntelReportDraft? _pendingIntelReport;
 
   Map<String, ArcBlueprintState> _blueprintStates = const {};
@@ -104,11 +102,18 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
       _available = await _speech.initialize(
         onError: (error) {
-          _lastError = error.errorMsg;
+          final errorMessage = error.errorMsg.toLowerCase();
           _listening = false;
+
+          if (errorMessage.contains('no_match') ||
+              errorMessage.contains('speech_timeout')) {
+            _lastError = null;
+          } else {
+            _lastError = error.errorMsg;
+          }
+
           debugPrint('UAG voice error: $error');
           notifyListeners();
-          _restartCompanionListeningIfNeeded();
         },
         onStatus: (status) {
           debugPrint('UAG voice status: $status');
@@ -116,7 +121,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
           if (status == 'done' || status == 'notListening') {
             _listening = false;
             notifyListeners();
-            _scheduleCompanionListeningRestart();
           }
         },
       );
@@ -129,7 +133,16 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       _tts.setCompletionHandler(() {
         _speaking = false;
         notifyListeners();
-        _restartCompanionListeningIfNeeded();
+
+        if (_listenAfterSpeech) {
+          _listenAfterSpeech = false;
+
+          Future<void>.delayed(const Duration(milliseconds: 250), () {
+            if (_raidCompanionMode && !_listening && !_speaking) {
+              unawaited(startListening());
+            }
+          });
+        }
       });
       _tts.setCancelHandler(() {
         _speaking = false;
@@ -141,10 +154,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       if (!_available) {
         _lastError =
             'Microphone permission is blocked or speech recognition is not available on this device/browser.';
-      }
-
-      if (_raidCompanionMode) {
-        _startCompanionWatchdog();
       }
     } catch (error) {
       _available = false;
@@ -158,9 +167,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   }
 
   Future<void> startListening() async {
-    _companionRestartTimer?.cancel();
-    _companionRestartTimer = null;
-
     if (!_initialised) {
       await initialize();
     }
@@ -192,33 +198,19 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         onResult: (result) {
           _transcript = result.recognizedWords;
 
-          if (_transcript.trim().isNotEmpty) {
-            _companionRestartBackoff = 0;
-          }
-
           if (result.finalResult) {
             _listening = false;
-            final spoke = _handleTranscript(_transcript);
+            _handleTranscript(_transcript);
             notifyListeners();
-
-            if (!spoke) {
-              _scheduleCompanionListeningRestart();
-            }
           } else {
             notifyListeners();
           }
         },
-        listenFor: _raidCompanionMode
-            ? const Duration(minutes: 5)
-            : const Duration(seconds: 20),
-        pauseFor: _raidCompanionMode
-            ? const Duration(seconds: 7)
-            : const Duration(seconds: 4),
+        listenFor: const Duration(seconds: 20),
+        pauseFor: const Duration(seconds: 4),
         localeId: 'en_GB',
         listenOptions: stt.SpeechListenOptions(
-          listenMode: _raidCompanionMode
-              ? stt.ListenMode.dictation
-              : stt.ListenMode.confirmation,
+          listenMode: stt.ListenMode.confirmation,
         ),
       );
     } catch (error) {
@@ -239,11 +231,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _listening = false;
 
     if (_transcript.trim().isNotEmpty) {
-      final spoke = _handleTranscript(_transcript);
-
-      if (!spoke) {
-        _scheduleCompanionListeningRestart();
-      }
+      _handleTranscript(_transcript);
     }
 
     notifyListeners();
@@ -275,21 +263,17 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_companionModePreferenceKey, enabled);
 
-      if (enabled) {
-        _startCompanionWatchdog();
-        _restartCompanionListeningIfNeeded();
-      } else {
-        _stopCompanionWatchdog();
-
+      if (!enabled) {
         if (_listening) {
           await _speech.stop();
         }
 
+        _clearWakeCommandMode();
+        _listenAfterSpeech = false;
         _listening = false;
       }
     } catch (error) {
       _raidCompanionMode = false;
-      _stopCompanionWatchdog();
       _lastError =
           'Could not ${enabled ? 'enable' : 'disable'} Raid Companion Mode: $error';
       notifyListeners();
@@ -327,7 +311,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       );
 
       if (_selectedVoice != null) {
-        await Future<void>.delayed(const Duration(milliseconds: 75));
+        await Future<void>.delayed(const Duration(milliseconds: 250));
         await _applyVoice(_selectedVoice!);
       }
     } catch (error) {
@@ -363,12 +347,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     _transcript = trimmed;
     _lastError = null;
-    final spoke = _handleTranscript(trimmed);
-
-    if (!spoke) {
-      _restartCompanionListeningIfNeeded();
-    }
-
+    _handleTranscript(trimmed);
     notifyListeners();
   }
 
@@ -389,8 +368,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     if (response.shouldSpeak) {
       unawaited(speak(response.spokenBody ?? response.body));
-    } else {
-      _restartCompanionListeningIfNeeded();
     }
 
     notifyListeners();
@@ -513,6 +490,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
   bool _handleWakePhraseOnly() {
     _armWakeCommandMode();
+    _listenAfterSpeech = true;
     _lastResponse = const UagVoiceResponse(
       title: 'ARC listening',
       body: 'Listening. Ask your command.',
@@ -550,7 +528,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       return true;
     }
 
-    if (_isAffirmative(text) && _pendingSuggestionName != null) {
+    if (_isAffirmative(commandText) && _pendingSuggestionName != null) {
       confirmSuggestedItem();
       return true;
     }
@@ -791,85 +769,11 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         );
   }
 
-  void _startCompanionWatchdog() {
-    _companionWatchdogTimer?.cancel();
-
-    _companionWatchdogTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (!_raidCompanionMode || !_available || _listening || _speaking) {
-        return;
-      }
-
-      _restartCompanionListeningIfNeeded();
-    });
-  }
-
-  void _stopCompanionWatchdog() {
-    _companionWatchdogTimer?.cancel();
-    _companionWatchdogTimer = null;
-  }
-
-  void _scheduleCompanionListeningRestart({
-    Duration? delay,
-    bool backoff = false,
-  }) {
-    if (!_raidCompanionMode || !_available || _listening || _speaking) {
-      return;
-    }
-
-    _companionRestartTimer?.cancel();
-
-    if (backoff) {
-      _companionRestartBackoff = (_companionRestartBackoff + 1)
-          .clamp(1, 6)
-          .toInt();
-    } else {
-      _companionRestartBackoff = 0;
-    }
-
-    final restartDelay =
-        delay ??
-        Duration(
-          milliseconds: backoff ? 900 + (_companionRestartBackoff * 700) : 450,
-        );
-
-    _companionRestartTimer = Timer(restartDelay, () {
-      _companionRestartTimer = null;
-
-      if (!_raidCompanionMode || !_available || _listening || _speaking) {
-        return;
-      }
-
-      _restartCompanionListeningIfNeeded();
-    });
-  }
-
-  void _restartCompanionListeningIfNeeded() {
-    if (!_raidCompanionMode ||
-        !_available ||
-        _listening ||
-        _speaking ||
-        _companionRestartQueued) {
-      return;
-    }
-
-    _companionRestartQueued = true;
-
-    Future<void>.delayed(const Duration(milliseconds: 650), () {
-      _companionRestartQueued = false;
-
-      if (!_raidCompanionMode || !_available || _listening || _speaking) {
-        return;
-      }
-
-      unawaited(startListening());
-    });
-  }
-
   @override
   void dispose() {
+    _wakeCommandTimer?.cancel();
     _blueprintSubscription?.cancel();
     _entitlementSubscription?.cancel();
-    _stopCompanionWatchdog();
     WakelockPlus.disable();
     _speech.cancel();
     _tts.stop();
