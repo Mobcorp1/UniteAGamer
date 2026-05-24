@@ -489,15 +489,48 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _hasWakePhrase(String value) {
     final text = _normaliseWakeText(value);
 
-    return text.contains('hey raider') ||
-        text.contains('okay raider') ||
-        text.contains('arc raider') ||
-        text.contains('ok raider') ||
-        text.contains('hey arc') ||
-        text.contains('okay arc') ||
-        text.contains('ok arc') ||
-        text.contains('arc assistant') ||
-        text.contains('uag raider');
+    const wakePhrases = <String>[
+      'hey raider',
+      'hey radar',
+      'hey reader',
+      'hey rider',
+      'hey rader',
+      'hey rayder',
+      'okay raider',
+      'okay radar',
+      'okay reader',
+      'ok raider',
+      'ok radar',
+      'ok reader',
+      'arc raider',
+      'arc radar',
+      'arc reader',
+      'ark raider',
+      'ark radar',
+      'ark reader',
+      'hey arc',
+      'okay arc',
+      'ok arc',
+      'arc assistant',
+      'uag raider',
+      'uag radar',
+      'uag reader',
+    ];
+
+    if (wakePhrases.any(text.contains)) {
+      return true;
+    }
+
+    return text == 'raider' ||
+        text == 'radar' ||
+        text == 'reader' ||
+        text == 'rider' ||
+        text == 'rader' ||
+        text.startsWith('raider ') ||
+        text.startsWith('radar ') ||
+        text.startsWith('reader ') ||
+        text.startsWith('rider ') ||
+        text.startsWith('rader ');
   }
 
   String _stripWakePhrase(String value) {
@@ -505,14 +538,33 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     final patterns = <RegExp>[
       RegExp(r'\bhey\s+raider\b', caseSensitive: false),
+      RegExp(r'\bhey\s+radar\b', caseSensitive: false),
+      RegExp(r'\bhey\s+reader\b', caseSensitive: false),
+      RegExp(r'\bhey\s+rider\b', caseSensitive: false),
+      RegExp(r'\bhey\s+rader\b', caseSensitive: false),
+      RegExp(r'\bhey\s+rayder\b', caseSensitive: false),
       RegExp(r'\bokay\s+raider\b', caseSensitive: false),
+      RegExp(r'\bokay\s+radar\b', caseSensitive: false),
+      RegExp(r'\bokay\s+reader\b', caseSensitive: false),
       RegExp(r'\barc\s+raider\b', caseSensitive: false),
+      RegExp(r'\barc\s+radar\b', caseSensitive: false),
+      RegExp(r'\barc\s+reader\b', caseSensitive: false),
+      RegExp(r'\bark\s+raider\b', caseSensitive: false),
+      RegExp(r'\bark\s+radar\b', caseSensitive: false),
+      RegExp(r'\bark\s+reader\b', caseSensitive: false),
       RegExp(r'\bok\s+raider\b', caseSensitive: false),
+      RegExp(r'\bok\s+radar\b', caseSensitive: false),
+      RegExp(r'\bok\s+reader\b', caseSensitive: false),
       RegExp(r'\bhey\s+arc\b', caseSensitive: false),
       RegExp(r'\bokay\s+arc\b', caseSensitive: false),
       RegExp(r'\bok\s+arc\b', caseSensitive: false),
       RegExp(r'\barc\s+assistant\b', caseSensitive: false),
       RegExp(r'\buag\s+raider\b', caseSensitive: false),
+      RegExp(r'\buag\s+radar\b', caseSensitive: false),
+      RegExp(r'\buag\s+reader\b', caseSensitive: false),
+      RegExp(r'\braider\b', caseSensitive: false),
+      RegExp(r'\bradar\b', caseSensitive: false),
+      RegExp(r'\breader\b', caseSensitive: false),
     ];
 
     for (final pattern in patterns) {
