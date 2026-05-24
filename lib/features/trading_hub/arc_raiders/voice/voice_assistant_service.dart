@@ -55,6 +55,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   String? _lastError;
   UagVoiceResponse? _lastResponse;
   String? _pendingSuggestionName;
+  bool _wakeCommandMode = false;
+  Timer? _wakeCommandTimer;
   _VoiceIntelReportDraft? _pendingIntelReport;
 
   Map<String, ArcBlueprintState> _blueprintStates = const {};
@@ -441,8 +443,102 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     await _tts.setVolume(1.0);
   }
 
+  String _normaliseWakeText(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9 ]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  bool _hasWakePhrase(String value) {
+    final text = _normaliseWakeText(value);
+
+    return text.contains('hey raider') ||
+        text.contains('okay raider') ||
+        text.contains('ok raider') ||
+        text.contains('hey arc') ||
+        text.contains('okay arc') ||
+        text.contains('ok arc') ||
+        text.contains('arc assistant') ||
+        text.contains('uag raider');
+  }
+
+  String _stripWakePhrase(String value) {
+    var text = value;
+
+    final patterns = <RegExp>[
+      RegExp(r'\bhey\s+raider\b', caseSensitive: false),
+      RegExp(r'\bokay\s+raider\b', caseSensitive: false),
+      RegExp(r'\bok\s+raider\b', caseSensitive: false),
+      RegExp(r'\bhey\s+arc\b', caseSensitive: false),
+      RegExp(r'\bokay\s+arc\b', caseSensitive: false),
+      RegExp(r'\bok\s+arc\b', caseSensitive: false),
+      RegExp(r'\barc\s+assistant\b', caseSensitive: false),
+      RegExp(r'\buag\s+raider\b', caseSensitive: false),
+    ];
+
+    for (final pattern in patterns) {
+      text = text.replaceAll(pattern, ' ');
+    }
+
+    return text
+        .replaceAll(RegExp(r'[,.:;!?]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  void _armWakeCommandMode() {
+    _wakeCommandMode = true;
+    _wakeCommandTimer?.cancel();
+    _wakeCommandTimer = Timer(const Duration(seconds: 12), () {
+      _wakeCommandMode = false;
+      notifyListeners();
+    });
+  }
+
+  void _clearWakeCommandMode() {
+    _wakeCommandMode = false;
+    _wakeCommandTimer?.cancel();
+    _wakeCommandTimer = null;
+  }
+
+  bool _handleWakePhraseOnly() {
+    _armWakeCommandMode();
+    _lastResponse = const UagVoiceResponse(
+      title: 'ARC listening',
+      body: 'Listening. Ask your command.',
+      spokenBody: 'Listening.',
+      shouldSpeak: true,
+    );
+
+    unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+    notifyListeners();
+    return true;
+  }
+
   bool _handleTranscript(String text) {
-    if (_handleIntelReportTranscript(text)) {
+    var commandText = text.trim();
+
+    if (_raidCompanionMode) {
+      final hasWakePhrase = _hasWakePhrase(commandText);
+
+      if (hasWakePhrase) {
+        commandText = _stripWakePhrase(commandText);
+
+        if (commandText.isEmpty) {
+          return _handleWakePhraseOnly();
+        }
+
+        _clearWakeCommandMode();
+      } else if (_wakeCommandMode) {
+        _clearWakeCommandMode();
+      } else if (_pendingIntelReport == null) {
+        return false;
+      }
+    }
+
+    if (_handleIntelReportTranscript(commandText)) {
       return true;
     }
 
@@ -451,7 +547,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       return true;
     }
 
-    final intent = _parser.parse(text);
+    final intent = _parser.parse(commandText);
     final response = _responseBuilder.build(
       intent,
       blueprintStates: _blueprintStates,
