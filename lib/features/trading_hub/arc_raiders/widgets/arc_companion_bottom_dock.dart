@@ -36,7 +36,7 @@ class _ArcCompanionBottomDockState extends State<ArcCompanionBottomDock> {
     }
 
     await _service.setRaidCompanionMode(true);
-    await Future<void>.delayed(const Duration(milliseconds: 250));
+    await Future<void>.delayed(const Duration(milliseconds: 75));
 
     if (!mounted) {
       return;
@@ -63,16 +63,13 @@ class _ArcCompanionBottomDockState extends State<ArcCompanionBottomDock> {
       return;
     }
 
-    if (!_service.listening) {
+    if (_service.listening) {
+      await _service.stopListening();
       await _service.startListening();
       return;
     }
 
-    if (!mounted) {
-      return;
-    }
-
-    await UagVoiceArcAssistantSheet.show(context, autoStart: true);
+    await _service.startListening();
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_item_advice_index.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_voice_item_database.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
@@ -34,6 +35,77 @@ class UagVoiceResponseBuilder {
   }) {
     final query = _resolveQuery(intent);
 
+    if (intent.type == UagVoiceIntentType.blueprintSearch) {
+      final lowerRaw = intent.rawText.toLowerCase();
+      final blueprints = ArcBlueprintSeedData.blueprints;
+
+      if (lowerRaw.contains('hunt') ||
+          lowerRaw.contains('rarest missing') ||
+          lowerRaw.contains('top five') ||
+          lowerRaw.contains('top 5')) {
+        final missing = blueprints
+            .where((blueprint) {
+              final state = blueprintStates[blueprint.id];
+              return !(state?.owned ?? false);
+            })
+            .toList(growable: false);
+
+        if (missing.isEmpty) {
+          return const UagVoiceResponse(
+            title: 'Hunts clear',
+            body:
+                'Blueprint Tracker says you own every tracked blueprint. No missing hunt target found.',
+            spokenBody:
+                'Blueprint Tracker says you own every tracked blueprint.',
+            shouldSpeak: true,
+          );
+        }
+
+        final wanted =
+            missing
+                .where((blueprint) {
+                  final state = blueprintStates[blueprint.id];
+                  final rank = state?.priorityRank ?? 0;
+                  return rank > 0 && rank <= 5;
+                })
+                .toList(growable: false)
+              ..sort((a, b) {
+                final aRank = blueprintStates[a.id]?.priorityRank ?? 99;
+                final bRank = blueprintStates[b.id]?.priorityRank ?? 99;
+                return aRank.compareTo(bRank);
+              });
+
+        final targets = (wanted.isNotEmpty ? wanted : missing).take(5).toList();
+        final names = targets.map((blueprint) => blueprint.name).join(', ');
+
+        return UagVoiceResponse(
+          title: 'Recommended hunt targets',
+          body:
+              'Recommended blueprint hunts: $names.\n\nBased on Blueprint Tracker missing state and Top 5 priority where available.',
+          spokenBody: 'Recommended blueprint hunts are $names.',
+          shouldSpeak: true,
+        );
+      }
+
+      final blueprintDecision = ArcItemAdviceIndex.decide(
+        query: _normaliseSpeechQuery(query),
+        blueprintStates: blueprintStates,
+      );
+
+      if (blueprintDecision != null) {
+        final action =
+            blueprintDecision.primaryAction == ArcItemPrimaryAction.trade
+            ? '\n\nIf this is a duplicate, use it as trade stock or create an Intel report for where it dropped.'
+            : '\n\nIf you found this in-raid, say create intel for ${blueprintDecision.title}.';
+
+        return UagVoiceResponse(
+          title: blueprintDecision.title,
+          body: '${blueprintDecision.displayAdvice}$action',
+          spokenBody: blueprintDecision.spokenAdvice,
+          shouldSpeak: true,
+        );
+      }
+    }
     if (query.trim().isEmpty) {
       return const UagVoiceResponse(
         title: 'Ask UAG Raider',

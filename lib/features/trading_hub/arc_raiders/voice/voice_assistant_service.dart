@@ -317,7 +317,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       );
 
       if (_selectedVoice != null) {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
+        await Future<void>.delayed(const Duration(milliseconds: 75));
         await _applyVoice(_selectedVoice!);
       }
     } catch (error) {
@@ -573,7 +573,12 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         normalized.startsWith('found ') ||
         normalized.contains('report ') ||
         normalized.contains('add intel') ||
-        normalized.contains('log intel');
+        normalized.contains('log intel') ||
+        normalized.contains('create intel') ||
+        normalized.contains('intel on') ||
+        normalized.contains('intel for') ||
+        normalized.contains('dupe blueprint') ||
+        normalized.contains('duplicate blueprint');
 
     if (!looksLikeReport) {
       return null;

@@ -45,7 +45,7 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
 
     if (widget.autoStart) {
       await _service.setRaidCompanionMode(true);
-      await Future<void>.delayed(const Duration(milliseconds: 250));
+      await Future<void>.delayed(const Duration(milliseconds: 75));
 
       if (mounted) {
         await _service.startListening();
