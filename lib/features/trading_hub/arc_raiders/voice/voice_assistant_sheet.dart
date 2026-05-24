@@ -172,7 +172,8 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
     return SwitchListTile.adaptive(
       value: _service.raidCompanionMode,
       onChanged: _service.initialising ? null : _toggleCompanionMode,
-      activeColor: AppTheme.neonCyan,
+      activeThumbColor: AppTheme.neonCyan,
+      activeTrackColor: AppTheme.neonCyan.withValues(alpha: 0.32),
       title: Text(
         'Raid Companion Mode',
         style: AppTheme.bodyTextStyle(

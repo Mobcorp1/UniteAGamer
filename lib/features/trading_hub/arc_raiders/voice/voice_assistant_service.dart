@@ -226,7 +226,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       _lastError = 'Could not start microphone: $error';
       debugPrint('UAG voice listen failed: $error');
       notifyListeners();
-      _scheduleCompanionListeningRestart(backoff: true);
     }
   }
 
