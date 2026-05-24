@@ -528,6 +528,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         text == 'rader' ||
         text.startsWith('raider ') ||
         text.startsWith('radar ') ||
+        text.startsWith('hay raider ') ||
+        text.startsWith('hay radar ') ||
+        text.startsWith('hay reader ') ||
         text.startsWith('reader ') ||
         text.startsWith('rider ') ||
         text.startsWith('rader ');
@@ -538,6 +541,12 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     final patterns = <RegExp>[
       RegExp(r'\bhey\s+raider\b', caseSensitive: false),
+      RegExp(r'\bhay\s+raider\b', caseSensitive: false),
+      RegExp(r'\bhay\s+radar\b', caseSensitive: false),
+      RegExp(r'\bhay\s+reader\b', caseSensitive: false),
+      RegExp(r'\bhay\s+rider\b', caseSensitive: false),
+      RegExp(r'\bhay\s+rader\b', caseSensitive: false),
+      RegExp(r'\bhay\s+rayder\b', caseSensitive: false),
       RegExp(r'\bhey\s+radar\b', caseSensitive: false),
       RegExp(r'\bhey\s+reader\b', caseSensitive: false),
       RegExp(r'\bhey\s+rider\b', caseSensitive: false),
