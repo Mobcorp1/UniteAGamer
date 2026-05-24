@@ -50,6 +50,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _companionRestartQueued = false;
 
   Timer? _companionWatchdogTimer;
+  Timer? _companionRestartTimer;
+  int _companionRestartBackoff = 0;
   UagSubscriptionTier _tier = UagSubscriptionTier.free;
   String _transcript = '';
   String? _lastError;
@@ -114,7 +116,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
           if (status == 'done' || status == 'notListening') {
             _listening = false;
             notifyListeners();
-            _restartCompanionListeningIfNeeded();
+            _scheduleCompanionListeningRestart();
           }
         },
       );
@@ -156,6 +158,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   }
 
   Future<void> startListening() async {
+    _companionRestartTimer?.cancel();
+    _companionRestartTimer = null;
+
     if (!_initialised) {
       await initialize();
     }
@@ -187,13 +192,17 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         onResult: (result) {
           _transcript = result.recognizedWords;
 
+          if (_transcript.trim().isNotEmpty) {
+            _companionRestartBackoff = 0;
+          }
+
           if (result.finalResult) {
             _listening = false;
             final spoke = _handleTranscript(_transcript);
             notifyListeners();
 
             if (!spoke) {
-              _restartCompanionListeningIfNeeded();
+              _scheduleCompanionListeningRestart();
             }
           } else {
             notifyListeners();
@@ -217,7 +226,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       _lastError = 'Could not start microphone: $error';
       debugPrint('UAG voice listen failed: $error');
       notifyListeners();
-      _restartCompanionListeningIfNeeded();
+      _scheduleCompanionListeningRestart(backoff: true);
     }
   }
 
@@ -234,7 +243,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       final spoke = _handleTranscript(_transcript);
 
       if (!spoke) {
-        _restartCompanionListeningIfNeeded();
+        _scheduleCompanionListeningRestart();
       }
     }
 
@@ -798,6 +807,50 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   void _stopCompanionWatchdog() {
     _companionWatchdogTimer?.cancel();
     _companionWatchdogTimer = null;
+  }
+
+  bool _isSoftSpeechError(String? error) {
+    final value = (error ?? '').toLowerCase();
+
+    return value.contains('no_match') ||
+        value.contains('speech_timeout') ||
+        value.contains('error_no_match') ||
+        value.contains('error_speech_timeout');
+  }
+
+  void _scheduleCompanionListeningRestart({
+    Duration? delay,
+    bool backoff = false,
+  }) {
+    if (!_raidCompanionMode || !_available || _listening || _speaking) {
+      return;
+    }
+
+    _companionRestartTimer?.cancel();
+
+    if (backoff) {
+      _companionRestartBackoff = (_companionRestartBackoff + 1)
+          .clamp(1, 6)
+          .toInt();
+    } else {
+      _companionRestartBackoff = 0;
+    }
+
+    final restartDelay =
+        delay ??
+        Duration(
+          milliseconds: backoff ? 900 + (_companionRestartBackoff * 700) : 450,
+        );
+
+    _companionRestartTimer = Timer(restartDelay, () {
+      _companionRestartTimer = null;
+
+      if (!_raidCompanionMode || !_available || _listening || _speaking) {
+        return;
+      }
+
+      _restartCompanionListeningIfNeeded();
+    });
   }
 
   void _restartCompanionListeningIfNeeded() {
