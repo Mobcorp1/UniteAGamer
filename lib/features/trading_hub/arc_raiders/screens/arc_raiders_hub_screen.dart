@@ -225,7 +225,8 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                       builder: (_) => const RaidPlannerHuntTargetsScreen(),
                     ),
                   ),
-                  onMic: () => UagVoiceArcAssistantSheet.show(context),
+                  onMic: () =>
+                      UagVoiceArcAssistantSheet.show(context, autoStart: true),
                   onTrading: () => _openFeature(
                     _ArcHubFeature(
                       title: 'Trading',
@@ -777,7 +778,7 @@ class _ArcArcAssistantLauncherScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      UagVoiceArcAssistantSheet.show(context);
+      UagVoiceArcAssistantSheet.show(context, autoStart: true);
       Navigator.of(context).maybePop();
     });
 
