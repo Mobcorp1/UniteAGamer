@@ -176,6 +176,65 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     }
   }
 
+  Future<void> startRaidHandsFreeSetup() async {
+    if (!_initialised) {
+      await initialize();
+    }
+
+    if (!_available) {
+      _lastError ??=
+          'Microphone permission is blocked or speech recognition is not available.';
+      notifyListeners();
+      return;
+    }
+
+    try {
+      if (_listening) {
+        await _speech.stop();
+      }
+
+      if (_speaking) {
+        await _tts.stop();
+      }
+    } catch (error) {
+      debugPrint('UAG voice raid setup reset failed: $error');
+    }
+
+    _listening = false;
+    _speaking = false;
+    _transcript = '';
+    _lastError = null;
+    _pendingSuggestionName = null;
+    _pendingIntelReport = null;
+    _wakeCommandMode = false;
+    _awaitingHandsFreeConsent = true;
+    _handsFreeOfferShownThisSession = true;
+    _handsFreePrompted = true;
+    _raidCompanionMode = true;
+
+    try {
+      await WakelockPlus.enable();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_handsFreePromptedKey, true);
+      await prefs.setBool(_companionModePreferenceKey, true);
+    } catch (error) {
+      debugPrint('UAG voice raid setup preference failed: $error');
+    }
+
+    _lastResponse = const UagVoiceResponse(
+      title: 'Hands-free raid mode',
+      body:
+          'Do you want to activate hands-free mode for your raid? Say yes and I will listen for Hey Raider while this assistant is open.',
+      spokenBody:
+          'Do you want to activate hands-free mode for your raid? Say yes, and I will listen for Hey Raider while this assistant is open.',
+      shouldSpeak: true,
+    );
+
+    _listenAfterSpeech = true;
+    unawaited(speak(_lastResponse!.spokenBody ?? _lastResponse!.body));
+    notifyListeners();
+  }
+
   Future<void> startListening() async {
     _handsFreeWakeRearmQueued = false;
     _handsFreeWakeRearmTimer?.cancel();
@@ -424,9 +483,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _lastResponse = const UagVoiceResponse(
       title: 'Hands-free raid mode',
       body:
-          'Want me to stay hands-free while this assistant is open? Say yes and I will listen for Hey Raider during raids.',
+          'Do you want to activate hands-free mode for your raid? Say yes and I will listen for Hey Raider while this assistant is open.',
       spokenBody:
-          'Want me to stay hands-free while this assistant is open? Say yes, and I will listen for Hey Raider during raids.',
+          'Do you want to activate hands-free mode for your raid? Say yes, and I will listen for Hey Raider while this assistant is open.',
       shouldSpeak: true,
     );
 
