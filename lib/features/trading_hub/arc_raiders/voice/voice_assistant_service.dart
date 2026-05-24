@@ -52,6 +52,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _handsFreeEnabled = false;
   bool _handsFreePrompted = false;
   bool _awaitingHandsFreeConsent = false;
+  bool _handsFreeOfferShownThisSession = false;
   bool _wakeCommandMode = false;
   bool _listenAfterSpeech = false;
 
@@ -189,7 +190,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
       return;
     }
 
-    if (!_handsFreePrompted && !_awaitingHandsFreeConsent) {
+    if (!_handsFreeEnabled &&
+        !_awaitingHandsFreeConsent &&
+        !_handsFreeOfferShownThisSession) {
       await _offerHandsFreeMode();
       return;
     }
@@ -388,6 +391,7 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   }
 
   Future<void> _offerHandsFreeMode() async {
+    _handsFreeOfferShownThisSession = true;
     _awaitingHandsFreeConsent = true;
     _handsFreePrompted = true;
 
