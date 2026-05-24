@@ -809,15 +809,6 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _companionWatchdogTimer = null;
   }
 
-  bool _isSoftSpeechError(String? error) {
-    final value = (error ?? '').toLowerCase();
-
-    return value.contains('no_match') ||
-        value.contains('speech_timeout') ||
-        value.contains('error_no_match') ||
-        value.contains('error_speech_timeout');
-  }
-
   void _scheduleCompanionListeningRestart({
     Duration? delay,
     bool backoff = false,
