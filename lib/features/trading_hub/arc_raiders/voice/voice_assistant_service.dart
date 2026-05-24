@@ -424,9 +424,9 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
     _lastResponse = const UagVoiceResponse(
       title: 'Hands-free raid mode',
       body:
-          'Want me to stay hands-free during raids? Say yes and I will listen for Hey Raider while this assistant is active.',
+          'Want me to stay hands-free while this assistant is open? Say yes and I will listen for Hey Raider during raids.',
       spokenBody:
-          'Want me to stay hands-free during raids? Say yes, and I will listen for Hey Raider while this assistant is active.',
+          'Want me to stay hands-free while this assistant is open? Say yes, and I will listen for Hey Raider during raids.',
       shouldSpeak: true,
     );
 
