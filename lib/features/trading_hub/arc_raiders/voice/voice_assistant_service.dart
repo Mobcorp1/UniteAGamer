@@ -495,6 +495,12 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
     const wakePhrases = <String>[
       'hey raider',
+      'hay raider',
+      'hay radar',
+      'hay reader',
+      'hay rider',
+      'hay rader',
+      'hay rayder',
       'hey radar',
       'hey reader',
       'hey rider',
