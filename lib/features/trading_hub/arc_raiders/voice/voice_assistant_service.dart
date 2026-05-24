@@ -57,6 +57,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   bool _listenAfterSpeech = false;
 
   Timer? _wakeCommandTimer;
+  Timer? _handsFreeWakeRearmTimer;
+  bool _handsFreeWakeRearmQueued = false;
 
   UagSubscriptionTier _tier = UagSubscriptionTier.free;
   String _transcript = '';
@@ -175,6 +177,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   }
 
   Future<void> startListening() async {
+    _handsFreeWakeRearmQueued = false;
+    _handsFreeWakeRearmTimer?.cancel();
     if (!_initialised) {
       await initialize();
     }
@@ -215,17 +219,36 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
 
           if (result.finalResult) {
             _listening = false;
-            _handleTranscript(_transcript);
+            final handled = _handleTranscript(_transcript);
             notifyListeners();
+
+            if (!handled) {
+              _queueHandsFreeWakeRearm();
+            }
           } else {
             notifyListeners();
           }
         },
-        listenFor: const Duration(seconds: 20),
-        pauseFor: const Duration(seconds: 4),
+        listenFor:
+            _handsFreeEnabled &&
+                !_wakeCommandMode &&
+                _pendingIntelReport == null
+            ? const Duration(seconds: 45)
+            : const Duration(seconds: 24),
+        pauseFor:
+            _handsFreeEnabled &&
+                !_wakeCommandMode &&
+                _pendingIntelReport == null
+            ? const Duration(seconds: 5)
+            : const Duration(seconds: 4),
         localeId: 'en_GB',
         listenOptions: stt.SpeechListenOptions(
-          listenMode: stt.ListenMode.confirmation,
+          listenMode:
+              _handsFreeEnabled &&
+                  !_wakeCommandMode &&
+                  _pendingIntelReport == null
+              ? stt.ListenMode.dictation
+              : stt.ListenMode.confirmation,
         ),
       );
     } catch (error) {
@@ -413,6 +436,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
   }
 
   Future<void> _setHandsFreeEnabled(bool enabled) async {
+    _handsFreeWakeRearmTimer?.cancel();
+    _handsFreeWakeRearmQueued = false;
     _handsFreeEnabled = enabled;
     _awaitingHandsFreeConsent = false;
     _raidCompanionMode = enabled;
@@ -944,6 +969,39 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
             notifyListeners();
           },
         );
+  }
+
+  void _queueHandsFreeWakeRearm({
+    Duration delay = const Duration(milliseconds: 900),
+  }) {
+    if (!_handsFreeEnabled ||
+        !_raidCompanionMode ||
+        _awaitingHandsFreeConsent ||
+        _wakeCommandMode ||
+        _pendingIntelReport != null ||
+        _listening ||
+        _speaking ||
+        _handsFreeWakeRearmQueued) {
+      return;
+    }
+
+    _handsFreeWakeRearmQueued = true;
+    _handsFreeWakeRearmTimer?.cancel();
+    _handsFreeWakeRearmTimer = Timer(delay, () {
+      _handsFreeWakeRearmQueued = false;
+
+      if (!_handsFreeEnabled ||
+          !_raidCompanionMode ||
+          _awaitingHandsFreeConsent ||
+          _wakeCommandMode ||
+          _pendingIntelReport != null ||
+          _listening ||
+          _speaking) {
+        return;
+      }
+
+      unawaited(startListening());
+    });
   }
 
   @override
