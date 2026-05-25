@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
@@ -1241,22 +1241,6 @@ class _BlueprintSearchSheet extends StatefulWidget {
 
   @override
   State<_BlueprintSearchSheet> createState() => _BlueprintSearchSheetState();
-}
-
-class _RaidPlannerCarouselPage {
-  const _RaidPlannerCarouselPage({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.child,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final Widget child;
 }
 
 class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
