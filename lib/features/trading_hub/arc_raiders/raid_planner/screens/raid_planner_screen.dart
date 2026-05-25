@@ -458,12 +458,12 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${opportunity.rule.blueprintName} â€¢ ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
+                  '${opportunity.rule.blueprintName} - ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
                   style: AppTheme.tradingHeading(fontSize: 17),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${opportunity.slot.mapName} â€¢ ${opportunity.slot.lane} â€¢ ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
+                  '${opportunity.slot.mapName} - ${opportunity.slot.lane} - ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 13,
                     color: AppTheme.tradingMutedText,
@@ -889,12 +889,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       nowUtc: utcNow,
       horizonDays: 7,
     );
-
     final activeTargets = _targetsForTier(
       effectiveTargets,
       RaidTargetTier.activeHunt,
     );
-    final intelTargets = activeTargets;
     final nextTargets = _targetsForTier(
       effectiveTargets,
       RaidTargetTier.nextUp,
@@ -904,22 +902,42 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       RaidTargetTier.later,
     );
 
-    return ListView(
-      padding: AppTheme.pagePadding,
-      children: [
-        _entitlementCard(entitlement),
-        const SizedBox(height: 14),
-        _availabilityPlannerCard(
+    final pages = <_RaidPlannerCarouselPage>[
+      _RaidPlannerCarouselPage(
+        title: 'Playtime Match',
+        subtitle:
+            'Your availability matched against active and upcoming target windows.',
+        icon: Icons.schedule_rounded,
+        color: AppTheme.neonPink,
+        child: _availabilityPlannerCard(
           allOpportunities: allOpportunities,
           availability: availability,
           utcNow: utcNow,
         ),
-        const SizedBox(height: 14),
-        _eventFinderCard(utcNow),
-        const SizedBox(height: 14),
-        _communityIntelCard(intelTargets),
-        const SizedBox(height: 14),
-        _targetTierCard(
+      ),
+      _RaidPlannerCarouselPage(
+        title: 'Useful Windows',
+        subtitle:
+            'Search live event and map windows without scrolling through long lists.',
+        icon: Icons.radar_rounded,
+        color: AppTheme.neonCyan,
+        child: _eventFinderCard(utcNow),
+      ),
+      _RaidPlannerCarouselPage(
+        title: 'Community Intel',
+        subtitle:
+            'Seeded rules and player reports for your current hunt targets.',
+        icon: Icons.public_rounded,
+        color: AppTheme.neonCyan,
+        child: _communityIntelCard(activeTargets),
+      ),
+      _RaidPlannerCarouselPage(
+        title: 'Active Hunt Targets',
+        subtitle:
+            'Priority blueprints with exact rule matching where available.',
+        icon: Icons.local_fire_department_rounded,
+        color: AppTheme.neonPink,
+        child: _targetTierCard(
           tier: RaidTargetTier.activeHunt,
           displayTargets: activeTargets,
           storedTargets: targets,
@@ -927,23 +945,166 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           states: states,
           initiallyExpanded: true,
         ),
-        const SizedBox(height: 14),
-        _targetTierCard(
+      ),
+      _RaidPlannerCarouselPage(
+        title: 'Next Up Targets',
+        subtitle:
+            'Backup targets that move up when Active Hunt slots are cleared.',
+        icon: Icons.double_arrow_rounded,
+        color: AppTheme.neonCyan,
+        child: _targetTierCard(
           tier: RaidTargetTier.nextUp,
           displayTargets: nextTargets,
           storedTargets: targets,
           entitlement: entitlement,
           states: states,
-          initiallyExpanded: false,
+          initiallyExpanded: true,
         ),
-        const SizedBox(height: 14),
-        _targetTierCard(
+      ),
+      _RaidPlannerCarouselPage(
+        title: 'Later Targets',
+        subtitle:
+            'Park lower-priority blueprints without cluttering the main planner.',
+        icon: Icons.inventory_2_outlined,
+        color: Colors.white70,
+        child: _targetTierCard(
           tier: RaidTargetTier.later,
           displayTargets: laterTargets,
           storedTargets: targets,
           entitlement: entitlement,
           states: states,
-          initiallyExpanded: false,
+          initiallyExpanded: true,
+        ),
+      ),
+    ];
+
+    final carouselHeight = (MediaQuery.of(context).size.height * 0.68)
+        .clamp(560.0, 760.0)
+        .toDouble();
+
+    return ListView(
+      padding: AppTheme.pagePadding,
+      children: [
+        _entitlementCard(entitlement),
+        const SizedBox(height: 14),
+        Text(
+          'Swipe through Raid Planner cards',
+          style: AppTheme.tradingHeading(
+            fontSize: 22,
+            color: AppTheme.neonCyan,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Playtime, useful windows, community intel and hunt targets are now split into focused carousel cards.',
+          style: AppTheme.bodyTextStyle(
+            fontSize: 13,
+            color: AppTheme.tradingMutedText,
+          ),
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: carouselHeight,
+          child: PageView.builder(
+            controller: PageController(viewportFraction: 0.93),
+            itemCount: pages.length,
+            itemBuilder: (context, index) {
+              final page = pages[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: ElectricChargeBorder(
+                  active: true,
+                  radius: 24,
+                  child: Container(
+                    decoration: AppTheme.tradingCardDecoration(
+                      borderColor: page.color.withValues(alpha: 0.42),
+                      radius: 24,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: page.color.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: page.color.withValues(alpha: 0.45),
+                                  ),
+                                ),
+                                child: Icon(page.icon, color: page.color),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      page.title,
+                                      style: AppTheme.tradingHeading(
+                                        fontSize: 21,
+                                        color: page.color,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      page.subtitle,
+                                      style: AppTheme.bodyTextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.tradingMutedText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${index + 1}/${pages.length}',
+                                style: AppTheme.bodyTextStyle(
+                                  color: page.color,
+                                  isBold: true,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(color: page.color.withValues(alpha: 0.18)),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
+                            child: page.child,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            pages.length,
+            (index) => Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: index == 0
+                    ? AppTheme.neonCyan
+                    : Colors.white.withValues(alpha: 0.22),
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 14),
         if (targets.isNotEmpty)
@@ -977,7 +1138,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${entitlement.tier.label} plan â€¢ ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
+              '${entitlement.tier.label} plan - ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
               style: AppTheme.tradingHeading(
                 fontSize: 18,
                 color: AppTheme.neonPink,
@@ -1049,6 +1210,22 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   }
 }
 
+class _RaidPlannerCarouselPage {
+  const _RaidPlannerCarouselPage({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final Widget child;
+}
+
 class _BlueprintSearchSheet extends StatefulWidget {
   const _BlueprintSearchSheet({
     required this.tier,
@@ -1064,6 +1241,22 @@ class _BlueprintSearchSheet extends StatefulWidget {
 
   @override
   State<_BlueprintSearchSheet> createState() => _BlueprintSearchSheetState();
+}
+
+class _RaidPlannerCarouselPage {
+  const _RaidPlannerCarouselPage({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final Widget child;
 }
 
 class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
