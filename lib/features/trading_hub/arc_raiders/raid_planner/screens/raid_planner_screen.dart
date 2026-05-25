@@ -1,8 +1,6 @@
-﻿import 'dart:async';
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
-
 import 'package:uag_traders_hub/build/app_bar.dart';
 import 'package:uag_traders_hub/build/app_drawer.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
@@ -23,9 +21,7 @@ import 'package:uag_traders_hub/widgets/theme.dart';
 
 class RaidPlannerScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/raid-planner';
-
   const RaidPlannerScreen({super.key});
-
   @override
   State<RaidPlannerScreen> createState() => _RaidPlannerScreenState();
 }
@@ -37,10 +33,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       ArcTraderProfileRepository();
   late final TextEditingController _eventFinderController;
   String _eventFinderQuery = '';
-
   late DateTime _plannerNowUtc;
   Timer? _plannerClockTimer;
-
   @override
   void initState() {
     super.initState();
@@ -107,7 +101,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   int _tierLimit(RaidTargetTier tier, RaidPlannerEntitlement entitlement) {
     switch (tier) {
       case RaidTargetTier.activeHunt:
-        return entitlement.activeHuntSlots.clamp(1, 5).toInt();
+        return 5;
       case RaidTargetTier.nextUp:
       case RaidTargetTier.later:
         return 5;
@@ -169,17 +163,14 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       _showMessage('${blueprint.name} is already marked as owned.');
       return;
     }
-
     final current = _findTarget(targets, blueprint.id);
     final currentTier = current?.tier;
     final tierTargets = _targetsForTier(targets, tier);
     final limit = _tierLimit(tier, entitlement);
-
     if (currentTier != tier && tierTargets.length >= limit) {
       _showMessage('${tier.label} is full. Remove a target first.');
       return;
     }
-
     final next = RaidBlueprintTarget(
       blueprintId: blueprint.id,
       tier: tier,
@@ -188,7 +179,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           : _nextRank(targets, tier),
       createdAt: current?.createdAt,
     );
-
     await _plannerRepository.saveTarget(next);
     _showMessage('${blueprint.name} added to ${tier.label}.');
   }
@@ -221,12 +211,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     final targetedIds = targets.map((target) => target.blueprintId).toSet();
     final tierTargets = _targetsForTier(targets, tier);
     final limit = _tierLimit(tier, entitlement);
-
     if (tierTargets.length >= limit) {
       _showMessage('${tier.label} is full. Remove a target first.');
       return;
     }
-
     final selected = await showModalBottomSheet<ArcBlueprint>(
       context: context,
       isScrollControlled: true,
@@ -244,9 +232,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         );
       },
     );
-
     if (!mounted || selected == null) return;
-
     await _saveTarget(
       blueprint: selected,
       tier: tier,
@@ -304,7 +290,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
-  Widget _targetTile(RaidBlueprintTarget target) {
+  Widget _targetTile(RaidBlueprintTarget target, {int? displayIndex}) {
     final blueprint = RaidPlannerEngine.findBlueprintById(target.blueprintId);
     final rule = RaidPlannerBlueprintRules.byBlueprintId(target.blueprintId);
     final seededHint = blueprint == null
@@ -336,7 +322,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             radius: 15,
             backgroundColor: _tierColor(target.tier).withValues(alpha: 0.16),
             child: Text(
-              '${target.rank + 1}',
+              '${(displayIndex ?? target.rank) + 1}',
               style: AppTheme.bodyTextStyle(
                 color: _tierColor(target.tier),
                 isBold: true,
@@ -398,7 +384,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               color: AppTheme.tradingMutedText,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceS),
           if (displayTargets.isEmpty)
             Text(
               'No ${tier.label} targets selected.',
@@ -495,7 +481,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             nowUtc: utcNow,
             limit: 3,
           );
-
     return CollapsibleSectionCard(
       title: 'Event Finder',
       titleColor: AppTheme.neonCyan,
@@ -504,13 +489,13 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Search any event or map to see the next 3 matching windows. This uses the same live UTC schedule as the planner and converts times to your device timezone.',
+            'Search any event or map to see the next 3 matching windows. ',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceS),
           TextField(
             controller: _eventFinderController,
             style: const TextStyle(color: Colors.white),
@@ -535,7 +520,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceS),
           Text(
             _eventSearchLabel(_eventFinderQuery),
             style: AppTheme.bodyTextStyle(
@@ -611,7 +596,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         ? ArcAvailability.initial().weeks
         : availability.weeks;
     final week = weeks.first;
-
     for (var dayOffset = 0; dayOffset < 7; dayOffset++) {
       final localDay = baseLocalDay.add(Duration(days: dayOffset));
       for (final slot in week.slots.where((slot) => slot.enabled)) {
@@ -631,7 +615,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         );
       }
     }
-
     windows.sort((a, b) => a.startUtc.compareTo(b.startUtc));
     return windows;
   }
@@ -655,7 +638,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         })
         .take(3)
         .toList(growable: false);
-
     final outsidePlaytime = allOpportunities
         .where((opportunity) {
           if (opportunity.isLive) return false;
@@ -670,7 +652,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         })
         .take(3)
         .toList(growable: false);
-
     return CollapsibleSectionCard(
       title: 'Playtime Match',
       titleColor: AppTheme.neonPink,
@@ -680,14 +661,14 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         children: [
           Text(
             windows.isEmpty
-                ? 'No active play windows found in your availability. Set your availability in Trader Profile to unlock playtime planning.'
-                : 'Planner checks your saved availability and shows target events that overlap your usual gaming time.',
+                ? 'No active play windows found in your availability. '
+                : '',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceS),
           Text(
             'Target windows inside your playtime',
             style: AppTheme.tradingHeading(
@@ -708,7 +689,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             ...inPlaytime.map(
               (opportunity) => _opportunityCard(opportunity, utcNow),
             ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceS),
           Text(
             'Useful windows you may need to move for',
             style: AppTheme.tradingHeading(
@@ -798,7 +779,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               const SizedBox(height: 8),
               if (!intel.hasReports) ...[
                 Text(
-                  'No community intel yet. Using seeded blueprint rules until player reports create a stronger route.',
+                  'No community intel yet. ',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 12,
                     color: AppTheme.tradingMutedText,
@@ -850,13 +831,13 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Every Active Hunt target now starts with seeded blueprint rules. Community reports only override the baseline when real player intel exists.',
+            ' Community reports only override the baseline when real player intel exists.',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceS),
           if (activeTargets.isEmpty)
             Text(
               'Add Active Hunt targets to show seeded route guidance and community intel.',
@@ -901,7 +882,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       effectiveTargets,
       RaidTargetTier.later,
     );
-
     final pages = <_RaidPlannerCarouselPage>[
       _RaidPlannerCarouselPage(
         title: 'Playtime Match',
@@ -977,11 +957,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         ),
       ),
     ];
-
     final carouselHeight = (MediaQuery.of(context).size.height * 0.68)
         .clamp(560.0, 760.0)
         .toDouble();
-
     return ListView(
       padding: AppTheme.pagePadding,
       children: [
@@ -1218,7 +1196,6 @@ class _RaidPlannerCarouselPage {
     required this.color,
     required this.child,
   });
-
   final String title;
   final String subtitle;
   final IconData icon;
@@ -1233,12 +1210,10 @@ class _BlueprintSearchSheet extends StatefulWidget {
     required this.targetedIds,
     required this.states,
   });
-
   final RaidTargetTier tier;
   final Color titleColor;
   final Set<String> targetedIds;
   final Map<String, ArcBlueprintState> states;
-
   @override
   State<_BlueprintSearchSheet> createState() => _BlueprintSearchSheetState();
 }
@@ -1246,7 +1221,6 @@ class _BlueprintSearchSheet extends StatefulWidget {
 class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
   late final TextEditingController _controller;
   String _query = '';
-
   @override
   void initState() {
     super.initState();
@@ -1315,7 +1289,7 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppTheme.spaceS),
             TextField(
               controller: _controller,
               autofocus: true,
@@ -1334,7 +1308,7 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: AppTheme.spaceS),
             if (_query.length < 2)
               Text(
                 'Type at least 2 characters to search your missing blueprints.',
@@ -1402,7 +1376,6 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
 
 class _AvailabilityWindow {
   const _AvailabilityWindow({required this.startUtc, required this.endUtc});
-
   final DateTime startUtc;
   final DateTime endUtc;
 }
