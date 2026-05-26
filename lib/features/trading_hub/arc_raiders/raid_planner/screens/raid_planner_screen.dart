@@ -20,6 +20,7 @@ import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_traders_hub/widgets/uag_page_carousel.dart';
 
 class RaidPlannerScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/raid-planner';
@@ -485,6 +486,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _targetTierCarouselPage({
     required RaidTargetTier tier,
     required List<RaidBlueprintTarget> displayTargets,
@@ -1042,62 +1044,68 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       RaidTargetTier.later,
     );
 
-    return ListView(
-      padding: AppTheme.pagePadding,
-      children: [
-        _entitlementCard(entitlement),
-        const SizedBox(height: 14),
-        _availabilityPlannerCard(
-          allOpportunities: allOpportunities,
-          availability: availability,
-          utcNow: utcNow,
-        ),
-        const SizedBox(height: 14),
-        _eventFinderCard(utcNow),
-        const SizedBox(height: 14),
-        _communityIntelCard(intelTargets),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 560,
-          child: PageView(
-            controller: PageController(viewportFraction: 0.92),
-            padEnds: false,
-            children: [
-              _targetTierCarouselPage(
-                tier: RaidTargetTier.activeHunt,
-                displayTargets: activeTargets,
-                storedTargets: syncedTargets,
-                entitlement: entitlement,
-                states: states,
-              ),
-              _targetTierCarouselPage(
-                tier: RaidTargetTier.nextUp,
-                displayTargets: nextTargets,
-                storedTargets: syncedTargets,
-                entitlement: entitlement,
-                states: states,
-              ),
-              _targetTierCarouselPage(
-                tier: RaidTargetTier.later,
-                displayTargets: laterTargets,
-                storedTargets: syncedTargets,
-                entitlement: entitlement,
-                states: states,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        if (syncedTargets.isNotEmpty)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: _smallButton(
-              label: 'Clear Planner Targets',
-              icon: Icons.clear_all_rounded,
-              color: Colors.redAccent,
-              onTap: () => _clearTargets(states),
+    return UagPageCarousel(
+      pages: [
+        UagCarouselPage(
+          children: [
+            _entitlementCard(entitlement),
+            const SizedBox(height: 14),
+            _availabilityPlannerCard(
+              allOpportunities: allOpportunities,
+              availability: availability,
+              utcNow: utcNow,
             ),
-          ),
+          ],
+        ),
+        UagCarouselPage(children: [_eventFinderCard(utcNow)]),
+        UagCarouselPage(children: [_communityIntelCard(intelTargets)]),
+        UagCarouselPage(
+          children: [
+            _targetTierCard(
+              tier: RaidTargetTier.activeHunt,
+              displayTargets: activeTargets,
+              storedTargets: syncedTargets,
+              entitlement: entitlement,
+              states: states,
+              initiallyExpanded: true,
+            ),
+          ],
+        ),
+        UagCarouselPage(
+          children: [
+            _targetTierCard(
+              tier: RaidTargetTier.nextUp,
+              displayTargets: nextTargets,
+              storedTargets: syncedTargets,
+              entitlement: entitlement,
+              states: states,
+              initiallyExpanded: true,
+            ),
+          ],
+        ),
+        UagCarouselPage(
+          children: [
+            _targetTierCard(
+              tier: RaidTargetTier.later,
+              displayTargets: laterTargets,
+              storedTargets: syncedTargets,
+              entitlement: entitlement,
+              states: states,
+              initiallyExpanded: true,
+            ),
+            const SizedBox(height: 14),
+            if (syncedTargets.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _smallButton(
+                  label: 'Clear Planner Targets',
+                  icon: Icons.clear_all_rounded,
+                  color: Colors.redAccent,
+                  onTap: () => _clearTargets(states),
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
