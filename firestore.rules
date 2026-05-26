@@ -325,7 +325,8 @@ service cloud.firestore {
         request.resource.data.ownerUid == request.auth.uid;
       allow update: if isSignedIn() &&
         resource.data.ownerUid == request.auth.uid &&
-        request.resource.data.ownerUid == resource.data.ownerUid;
+        request.resource.data.ownerUid == resource.data.ownerUid &&
+        request.resource.data.code == resource.data.code;
       allow delete: if false;
     }
 
@@ -341,8 +342,17 @@ service cloud.firestore {
 
 
     match /payout_requests/{requestId} {
-      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
-      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn() &&
+        (
+          resource.data.uid == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          isAdminOrDev()
+        );
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.amountPence is int &&
+        request.resource.data.amountPence > 0 &&
+        request.resource.data.amountPence <= 1000000;
       allow update, delete: if isAdminOrDev();
     }
 
@@ -357,7 +367,12 @@ service cloud.firestore {
     }
 
     match /monetisation_checkout_sessions/{sessionId} {
-      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdminOrDev());
+      allow read: if isSignedIn() &&
+        (
+          resource.data.uid == request.auth.uid ||
+          resource.data.userId == request.auth.uid ||
+          isAdminOrDev()
+        );
       allow create, update, delete: if isAdminOrDev();
     }
 
