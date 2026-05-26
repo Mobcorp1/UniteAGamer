@@ -485,6 +485,29 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
+  Widget _targetTierCarouselPage({
+    required RaidTargetTier tier,
+    required List<RaidBlueprintTarget> displayTargets,
+    required List<RaidBlueprintTarget> storedTargets,
+    required RaidPlannerEntitlement entitlement,
+    required Map<String, ArcBlueprintState> states,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: SingleChildScrollView(
+        primary: false,
+        child: _targetTierCard(
+          tier: tier,
+          displayTargets: displayTargets,
+          storedTargets: storedTargets,
+          entitlement: entitlement,
+          states: states,
+          initiallyExpanded: true,
+        ),
+      ),
+    );
+  }
+
   Widget _targetTierCard({
     required RaidTargetTier tier,
     required List<RaidBlueprintTarget> displayTargets,
@@ -569,12 +592,12 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${opportunity.rule.blueprintName} â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
+                  '${opportunity.rule.blueprintName} - ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
                   style: AppTheme.tradingHeading(fontSize: 17),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${opportunity.slot.mapName} â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${opportunity.slot.lane} â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
+                  '${opportunity.slot.mapName} - ${opportunity.slot.lane} - ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 13,
                     color: AppTheme.tradingMutedText,
@@ -1035,43 +1058,31 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         _communityIntelCard(intelTargets),
         const SizedBox(height: 14),
         SizedBox(
-          height: 420,
+          height: 560,
           child: PageView(
             controller: PageController(viewportFraction: 0.92),
             padEnds: false,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _targetTierCard(
-                  tier: RaidTargetTier.activeHunt,
-                  displayTargets: activeTargets,
-                  storedTargets: targets,
-                  entitlement: entitlement,
-                  states: states,
-                  initiallyExpanded: true,
-                ),
+              _targetTierCarouselPage(
+                tier: RaidTargetTier.activeHunt,
+                displayTargets: activeTargets,
+                storedTargets: syncedTargets,
+                entitlement: entitlement,
+                states: states,
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _targetTierCard(
-                  tier: RaidTargetTier.nextUp,
-                  displayTargets: nextTargets,
-                  storedTargets: targets,
-                  entitlement: entitlement,
-                  states: states,
-                  initiallyExpanded: true,
-                ),
+              _targetTierCarouselPage(
+                tier: RaidTargetTier.nextUp,
+                displayTargets: nextTargets,
+                storedTargets: syncedTargets,
+                entitlement: entitlement,
+                states: states,
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _targetTierCard(
-                  tier: RaidTargetTier.later,
-                  displayTargets: laterTargets,
-                  storedTargets: targets,
-                  entitlement: entitlement,
-                  states: states,
-                  initiallyExpanded: true,
-                ),
+              _targetTierCarouselPage(
+                tier: RaidTargetTier.later,
+                displayTargets: laterTargets,
+                storedTargets: syncedTargets,
+                entitlement: entitlement,
+                states: states,
               ),
             ],
           ),
@@ -1108,7 +1119,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${entitlement.tier.label} plan â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
+              '${entitlement.tier.label} plan - ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
               style: AppTheme.tradingHeading(
                 fontSize: 18,
                 color: AppTheme.neonPink,
