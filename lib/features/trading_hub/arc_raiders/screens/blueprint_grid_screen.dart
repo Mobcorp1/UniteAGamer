@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/feature_access_gate.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
@@ -10,12 +9,10 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_blu
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 import 'package:uag_traders_hub/widgets/uag_dialogs.dart';
 
@@ -486,139 +483,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               color: AppTheme.neonPink.withValues(alpha: 0.55),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openDockDestination({
-    required String routeName,
-    String? flag,
-    required String title,
-  }) async {
-    if (flag != null) {
-      final hasAccess = await FeatureAccess.hasAccess(flag);
-      if (!mounted) return;
-      if (!hasAccess) {
-        await FeatureAccess.showLockedDialog(context, title: title);
-        return;
-      }
-    }
-
-    if (!mounted) return;
-    if (routeName == BlueprintGridScreen.routeName) return;
-    Navigator.of(context).pushReplacementNamed(routeName);
-  }
-
-  Widget _buildQuickDock() {
-    Widget item({
-      required IconData icon,
-      required String label,
-      required bool selected,
-      required VoidCallback onTap,
-    }) {
-      final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
-      return Expanded(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 11,
-                    color: color,
-                    isBold: selected,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return SafeArea(
-      top: false,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.14)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 28,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            item(
-              icon: Icons.home_rounded,
-              label: 'Hub',
-              selected: false,
-              onTap: () => _openDockDestination(
-                routeName: ArcRaidersHubScreen.routeName,
-                title: 'ARC Raiders Hub',
-              ),
-            ),
-            item(
-              icon: Icons.insights_rounded,
-              label: 'Intel',
-              selected: false,
-              onTap: () => _openDockDestination(
-                routeName: ArcMarketIntelligenceScreen.routeName,
-                title: 'Intel Snapshot',
-              ),
-            ),
-            item(
-              icon: Icons.grid_view_rounded,
-              label: 'Blueprints',
-              selected: true,
-              onTap: () {},
-            ),
-            item(
-              icon: Icons.widgets_rounded,
-              label: 'Scrappy',
-              selected: false,
-              onTap: () => _openDockDestination(
-                routeName: ScrappyGridScreen.routeName,
-                flag: FeatureAccessFlag.scrappyTracker,
-                title: 'Scrappy Tracker',
-              ),
-            ),
-            item(
-              icon: Icons.route_rounded,
-              label: 'Planner',
-              selected: false,
-              onTap: () => _openDockDestination(
-                routeName: RaidPlannerScreen.routeName,
-                title: 'Raid Planner',
-              ),
-            ),
-            item(
-              icon: Icons.storefront_rounded,
-              label: 'Trader',
-              selected: false,
-              onTap: () => _openDockDestination(
-                routeName: TraderHubScreen.routeName,
-                flag: FeatureAccessFlag.traderHub,
-                title: 'Trader Hub',
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -1193,7 +1057,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           child: _buildSearchAppBarTitle(),
         ),
       ),
-      bottomNavigationBar: _buildQuickDock(),
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Blueprints',
+      ),
       body: Stack(
         children: [
           const Positioned.fill(child: StaticWatermark()),
