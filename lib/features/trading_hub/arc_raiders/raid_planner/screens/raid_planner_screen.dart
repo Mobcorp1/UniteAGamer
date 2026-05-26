@@ -157,6 +157,85 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         1;
   }
 
+  List<RaidBlueprintTarget> _targetsWithBlueprintPriorities({
+    required List<RaidBlueprintTarget> storedTargets,
+    required Map<String, ArcBlueprintState> states,
+  }) {
+    final prioritizedStates =
+        states.values
+            .where((state) => state.priorityRank > 0 && !state.owned)
+            .toList(growable: false)
+          ..sort((a, b) {
+            final rankCompare = a.priorityRank.compareTo(b.priorityRank);
+            if (rankCompare != 0) return rankCompare;
+            return a.blueprintId.compareTo(b.blueprintId);
+          });
+
+    final activeTargets = <RaidBlueprintTarget>[];
+    final activeIds = <String>{};
+
+    for (final state in prioritizedStates.take(5)) {
+      activeIds.add(state.blueprintId);
+      activeTargets.add(
+        RaidBlueprintTarget(
+          blueprintId: state.blueprintId,
+          tier: RaidTargetTier.activeHunt,
+          rank: activeTargets.length,
+          updatedAt: state.updatedAt,
+        ),
+      );
+    }
+
+    final legacyActiveTargets =
+        _targetsForTier(storedTargets, RaidTargetTier.activeHunt).where((
+          target,
+        ) {
+          if (activeIds.contains(target.blueprintId)) return false;
+          final state = states[target.blueprintId];
+          return !(state?.owned ?? false);
+        });
+
+    for (final target in legacyActiveTargets) {
+      if (activeTargets.length >= 5) break;
+      activeIds.add(target.blueprintId);
+      activeTargets.add(
+        target.copyWith(
+          tier: RaidTargetTier.activeHunt,
+          rank: activeTargets.length,
+        ),
+      );
+    }
+
+    final nonActiveTargets = storedTargets
+        .where((target) {
+          if (target.tier == RaidTargetTier.activeHunt) return false;
+          if (activeIds.contains(target.blueprintId)) return false;
+          return true;
+        })
+        .toList(growable: false);
+
+    return <RaidBlueprintTarget>[...activeTargets, ...nonActiveTargets];
+  }
+
+  Future<void> _syncBlueprintPriority({
+    required String blueprintId,
+    required RaidTargetTier tier,
+    required int rank,
+    required Map<String, ArcBlueprintState> states,
+  }) async {
+    final current = states[blueprintId] ?? ArcBlueprintState.empty(blueprintId);
+    final nextPriorityRank = tier == RaidTargetTier.activeHunt ? rank + 1 : 0;
+
+    if (current.priorityRank == nextPriorityRank) return;
+
+    await _blueprintRepository.saveBlueprintState(
+      current.copyWith(
+        priorityRank: nextPriorityRank,
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
   Future<void> _saveTarget({
     required ArcBlueprint blueprint,
     required RaidTargetTier tier,
@@ -190,17 +269,46 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
 
     await _plannerRepository.saveTarget(next);
+    await _syncBlueprintPriority(
+      blueprintId: blueprint.id,
+      tier: tier,
+      rank: next.rank,
+      states: states,
+    );
     _showMessage('${blueprint.name} added to ${tier.label}.');
   }
 
-  Future<void> _removeTarget(String blueprintId) async {
+  Future<void> _removeTarget(
+    String blueprintId, {
+    Map<String, ArcBlueprintState>? states,
+  }) async {
     final blueprint = RaidPlannerEngine.findBlueprintById(blueprintId);
     await _plannerRepository.removeTarget(blueprintId);
+
+    final current = states?[blueprintId];
+    if (current != null && current.priorityRank > 0) {
+      await _blueprintRepository.saveBlueprintState(
+        current.copyWith(priorityRank: 0, updatedAt: DateTime.now()),
+      );
+    }
+
     _showMessage('${blueprint?.name ?? 'Target'} removed.');
   }
 
-  Future<void> _clearTargets() async {
+  Future<void> _clearTargets(Map<String, ArcBlueprintState> states) async {
     await _plannerRepository.clearTargets();
+
+    final priorityUpdates = states.values
+        .where((state) => state.priorityRank > 0)
+        .map(
+          (state) => state.copyWith(priorityRank: 0, updatedAt: DateTime.now()),
+        )
+        .toList(growable: false);
+
+    if (priorityUpdates.isNotEmpty) {
+      await _blueprintRepository.saveBlueprintStates(priorityUpdates);
+    }
+
     _showMessage('Raid Planner targets cleared.');
   }
 
@@ -304,7 +412,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
-  Widget _targetTile(RaidBlueprintTarget target) {
+  Widget _targetTile(
+    RaidBlueprintTarget target,
+    Map<String, ArcBlueprintState> states,
+  ) {
     final blueprint = RaidPlannerEngine.findBlueprintById(target.blueprintId);
     final rule = RaidPlannerBlueprintRules.byBlueprintId(target.blueprintId);
     final seededHint = blueprint == null
@@ -366,7 +477,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           ),
           IconButton(
             tooltip: 'Remove target',
-            onPressed: () => _removeTarget(target.blueprintId),
+            onPressed: () => _removeTarget(target.blueprintId, states: states),
             icon: const Icon(Icons.close_rounded, color: Colors.redAccent),
           ),
         ],
@@ -408,7 +519,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               ),
             )
           else
-            ...displayTargets.map(_targetTile),
+            ...displayTargets.map((target) => _targetTile(target, states)),
           const SizedBox(height: AppTheme.spaceS),
           _smallButton(
             label: canAdd ? 'Search + Add Target' : '${tier.label} Full',
@@ -458,12 +569,12 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${opportunity.rule.blueprintName} ├óÔé¼┬ó ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
+                  '${opportunity.rule.blueprintName} â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
                   style: AppTheme.tradingHeading(fontSize: 17),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${opportunity.slot.mapName} ├óÔé¼┬ó ${opportunity.slot.lane} ├óÔé¼┬ó ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
+                  '${opportunity.slot.mapName} â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${opportunity.slot.lane} â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 13,
                     color: AppTheme.tradingMutedText,
@@ -878,8 +989,12 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     required Map<String, ArcBlueprintState> states,
     required ArcAvailability availability,
   }) {
-    final effectiveTargets = RaidPlannerEngine.effectiveTargets(
+    final syncedTargets = _targetsWithBlueprintPriorities(
       storedTargets: targets,
+      states: states,
+    );
+    final effectiveTargets = RaidPlannerEngine.effectiveTargets(
+      storedTargets: syncedTargets,
       states: states,
       entitlement: entitlement,
     );
@@ -962,14 +1077,14 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           ),
         ),
         const SizedBox(height: 14),
-        if (targets.isNotEmpty)
+        if (syncedTargets.isNotEmpty)
           Align(
             alignment: Alignment.centerLeft,
             child: _smallButton(
               label: 'Clear Planner Targets',
               icon: Icons.clear_all_rounded,
               color: Colors.redAccent,
-              onTap: _clearTargets,
+              onTap: () => _clearTargets(states),
             ),
           ),
       ],
@@ -993,7 +1108,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${entitlement.tier.label} plan ├óÔé¼┬ó ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
+              '${entitlement.tier.label} plan â”œÃ³Ã”Ã©Â¼â”¬Ã³ ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
               style: AppTheme.tradingHeading(
                 fontSize: 18,
                 color: AppTheme.neonPink,
