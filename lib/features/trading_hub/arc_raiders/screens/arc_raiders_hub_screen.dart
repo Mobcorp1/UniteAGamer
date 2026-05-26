@@ -13,6 +13,173 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_ass
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_traders_hub/widgets/uag_page_carousel.dart';
+
+Widget _arcHubShowcaseCarousel() {
+  return SizedBox(
+    height: 320,
+    child: UagPageCarousel(
+      viewportFraction: 0.74,
+      tabletViewportFraction: 0.54,
+      webViewportFraction: 0.36,
+      showIndicator: true,
+      pages: [
+        UagCarouselPage(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          children: [
+            _ArcHubShowcaseCard(
+              title: 'Match a Raider',
+              subtitle:
+                  'Find squadmates, chill raiders and extraction partners.',
+              icon: Icons.groups_rounded,
+              accent: AppTheme.neonPink,
+            ),
+          ],
+        ),
+        UagCarouselPage(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          children: [
+            _ArcHubShowcaseCard(
+              title: 'Blueprint Tracker',
+              subtitle:
+                  'Track owned, missing, duplicate and wanted blueprints.',
+              icon: Icons.grid_view_rounded,
+              accent: AppTheme.neonCyan,
+            ),
+          ],
+        ),
+        UagCarouselPage(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          children: [
+            _ArcHubShowcaseCard(
+              title: 'Raid Planner',
+              subtitle:
+                  'Plan active hunts around target blueprints and raid windows.',
+              icon: Icons.radar_rounded,
+              accent: AppTheme.neonCyan,
+            ),
+          ],
+        ),
+        UagCarouselPage(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          children: [
+            _ArcHubShowcaseCard(
+              title: 'Scrappy Tracker',
+              subtitle: 'Track Scrappy resources, tiers and upgrade progress.',
+              icon: Icons.egg_alt_rounded,
+              accent: AppTheme.neonPink,
+            ),
+          ],
+        ),
+        UagCarouselPage(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          children: [
+            _ArcHubShowcaseCard(
+              title: 'Trading Post',
+              subtitle: 'Create listings, send offers and organise safe swaps.',
+              icon: Icons.swap_horiz_rounded,
+              accent: AppTheme.neonCyan,
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _ArcHubShowcaseCard extends StatelessWidget {
+  const _ArcHubShowcaseCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 230),
+      padding: const EdgeInsets.all(AppTheme.spaceL),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            accent.withValues(alpha: 0.30),
+            AppTheme.neonCyan.withValues(alpha: 0.18),
+            Colors.black.withValues(alpha: 0.38),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: accent.withValues(alpha: 0.46)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.24),
+            blurRadius: 30,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -18,
+            top: -18,
+            child: Icon(
+              icon,
+              size: 116,
+              color: Colors.white.withValues(alpha: 0.055),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.30),
+                  border: Border.all(color: accent.withValues(alpha: 0.58)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.24),
+                      blurRadius: 18,
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Icon(icon, color: accent, size: 34),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  height: 1.25,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class ArcRaidersHubScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders';
@@ -124,6 +291,8 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          _arcHubShowcaseCarousel(),
+          const SizedBox(height: AppTheme.spaceM),
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: Column(
@@ -425,8 +594,6 @@ class _HubHeader extends StatelessWidget {
                   size: 28,
                 ),
               ),
-              Icon(Icons.hexagon_rounded, color: selected.accent, size: 22),
-              const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
                   'UAG Arc Raiders Hub',
