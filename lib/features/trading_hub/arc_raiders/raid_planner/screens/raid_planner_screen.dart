@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
@@ -919,31 +919,47 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         const SizedBox(height: 14),
         _communityIntelCard(intelTargets),
         const SizedBox(height: 14),
-        _targetTierCard(
-          tier: RaidTargetTier.activeHunt,
-          displayTargets: activeTargets,
-          storedTargets: targets,
-          entitlement: entitlement,
-          states: states,
-          initiallyExpanded: true,
-        ),
-        const SizedBox(height: 14),
-        _targetTierCard(
-          tier: RaidTargetTier.nextUp,
-          displayTargets: nextTargets,
-          storedTargets: targets,
-          entitlement: entitlement,
-          states: states,
-          initiallyExpanded: false,
-        ),
-        const SizedBox(height: 14),
-        _targetTierCard(
-          tier: RaidTargetTier.later,
-          displayTargets: laterTargets,
-          storedTargets: targets,
-          entitlement: entitlement,
-          states: states,
-          initiallyExpanded: false,
+        SizedBox(
+          height: 420,
+          child: PageView(
+            controller: PageController(viewportFraction: 0.92),
+            padEnds: false,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _targetTierCard(
+                  tier: RaidTargetTier.activeHunt,
+                  displayTargets: activeTargets,
+                  storedTargets: targets,
+                  entitlement: entitlement,
+                  states: states,
+                  initiallyExpanded: true,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _targetTierCard(
+                  tier: RaidTargetTier.nextUp,
+                  displayTargets: nextTargets,
+                  storedTargets: targets,
+                  entitlement: entitlement,
+                  states: states,
+                  initiallyExpanded: true,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _targetTierCard(
+                  tier: RaidTargetTier.later,
+                  displayTargets: laterTargets,
+                  storedTargets: targets,
+                  entitlement: entitlement,
+                  states: states,
+                  initiallyExpanded: true,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 14),
         if (targets.isNotEmpty)
