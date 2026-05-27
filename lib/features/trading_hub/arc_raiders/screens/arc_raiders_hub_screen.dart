@@ -210,7 +210,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final isWide = constraints.maxWidth >= 900;
         final isTablet =
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
-        final slots = isWide ? const [-2, -1, 0, 1, 2] : const [-1, 0, 1];
+        final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
         final canvasWidth = constraints.maxWidth;
 
         return GestureDetector(
@@ -466,8 +466,8 @@ class _StaticRingFeatureCard extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       Colors.black.withValues(alpha: 0.06),
-                      Colors.black.withValues(alpha: compact ? 0.36 : 0.26),
-                      Colors.black.withValues(alpha: compact ? 0.86 : 0.78),
+                      Colors.black.withValues(alpha: compact ? 0.48 : 0.26),
+                      Colors.black.withValues(alpha: compact ? 0.90 : 0.78),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
