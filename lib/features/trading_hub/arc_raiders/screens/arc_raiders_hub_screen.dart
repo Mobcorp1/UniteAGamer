@@ -117,7 +117,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
           ),
           const Positioned.fill(
             child: IgnorePointer(
-              child: Opacity(opacity: 0.16, child: StaticWatermark()),
+              child: Opacity(opacity: 0.30, child: StaticWatermark()),
             ),
           ),
           SafeArea(
@@ -184,35 +184,34 @@ class _PremiumFeatureCarousel extends StatelessWidget {
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
         final stageWidth = isWide
-            ? math.min(constraints.maxWidth, 1080.0)
+            ? math.min(constraints.maxWidth, 920.0)
             : constraints.maxWidth;
         final canvasWidth = stageWidth;
         final canvasHeight = constraints.maxHeight;
 
         final centreCardWidth = isWide
-            ? 376.0
+            ? 344.0
             : isTablet
-            ? 322.0
-            : 274.0;
-        final centreCardHeight = isWide
-            ? 372.0
-            : isTablet
-            ? 348.0
-            : 320.0;
-
-        final stripTop = (centreCardHeight + (isWide ? 22.0 : 18.0))
-            .clamp(334.0, math.max(334.0, canvasHeight - 154.0))
-            .toDouble();
-        final dotsTop = stripTop + 58;
+            ? 306.0
+            : 258.0;
+        final stripTop =
+            (isWide
+                    ? 356.0
+                    : isTablet
+                    ? 338.0
+                    : 314.0)
+                .clamp(286.0, math.max(286.0, canvasHeight - 126.0))
+                .toDouble();
+        final dotsTop = stripTop + 50;
         final arrowTop =
             (isWide
-                    ? 170.0
-                    : isTablet
                     ? 158.0
-                    : 146.0)
+                    : isTablet
+                    ? 150.0
+                    : 138.0)
                 .clamp(54.0, math.max(54.0, canvasHeight - 132.0))
                 .toDouble();
-        final arrowInset = isWide ? 18.0 : 6.0;
+        final arrowInset = isWide ? 74.0 : 8.0;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -316,29 +315,29 @@ class _StaticRingFeatureSlot extends StatelessWidget {
     final distance = slot.abs();
 
     final centerWidth = isWide
-        ? 376.0
+        ? 344.0
         : isTablet
-        ? 330.0
-        : 286.0;
+        ? 306.0
+        : 258.0;
     final centerHeight = isWide
-        ? 392.0
+        ? 360.0
         : isTablet
-        ? 408.0
-        : 382.0;
+        ? 360.0
+        : 338.0;
 
     final nearWidth = isWide
-        ? 278.0
+        ? 246.0
         : isTablet
-        ? 250.0
-        : 214.0;
+        ? 226.0
+        : 196.0;
     final nearHeight = isWide
-        ? 320.0
+        ? 286.0
         : isTablet
-        ? 336.0
-        : 300.0;
+        ? 300.0
+        : 274.0;
 
-    final outerWidth = isWide ? 190.0 : 0.0;
-    final outerHeight = isWide ? 252.0 : 0.0;
+    final outerWidth = isWide ? 150.0 : 0.0;
+    final outerHeight = isWide ? 218.0 : 0.0;
 
     final width = selected
         ? centerWidth
@@ -355,23 +354,23 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? 0.0
         : distance == 1
         ? (isWide
-              ? 298.0
+              ? 238.0
               : isTablet
-              ? 252.0
-              : 176.0)
-        : (isWide ? 480.0 : 0.0);
+              ? 216.0
+              : 164.0)
+        : (isWide ? 378.0 : 0.0);
 
     final top = selected
-        ? -22.0
+        ? -8.0
         : distance == 1
-        ? (isWide ? 22.0 : 34.0)
-        : 52.0;
+        ? (isWide ? 28.0 : 34.0)
+        : 56.0;
 
     final opacity = selected
         ? 1.0
         : distance == 1
-        ? 0.84
-        : 0.46;
+        ? 0.78
+        : 0.34;
 
     final left = ((canvasWidth - width) / 2) + (slot < 0 ? -offset : offset);
 
@@ -798,7 +797,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
           ),
           const Positioned.fill(
             child: IgnorePointer(
-              child: Opacity(opacity: 0.16, child: StaticWatermark()),
+              child: Opacity(opacity: 0.30, child: StaticWatermark()),
             ),
           ),
           SafeArea(

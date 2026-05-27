@@ -45,7 +45,7 @@ class StaticWatermark extends StatelessWidget {
                           (row.isOdd ? rowOffset : 0.0),
                       top: (-logoHeight * 0.4) + (row * yStep),
                       child: Opacity(
-                        opacity: 0.06,
+                        opacity: 0.14,
                         child: SizedBox(
                           width: logoWidth,
                           height: logoHeight,
