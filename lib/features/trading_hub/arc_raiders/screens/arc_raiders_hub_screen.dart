@@ -182,36 +182,44 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final isWide = constraints.maxWidth >= 900;
         final isTablet =
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
+        final isCompactHeight = constraints.maxHeight < 640;
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
         final stageWidth = isWide
-            ? math.min(constraints.maxWidth, 920.0)
+            ? math.min(constraints.maxWidth, isCompactHeight ? 820.0 : 930.0)
             : constraints.maxWidth;
         final canvasWidth = stageWidth;
         final canvasHeight = constraints.maxHeight;
 
         final centreCardWidth = isWide
-            ? 344.0
+            ? (isCompactHeight ? 300.0 : 326.0)
             : isTablet
-            ? 306.0
-            : 258.0;
-        final stripTop =
-            (isWide
-                    ? 356.0
-                    : isTablet
-                    ? 338.0
-                    : 314.0)
-                .clamp(286.0, math.max(286.0, canvasHeight - 126.0))
-                .toDouble();
-        final dotsTop = stripTop + 50;
-        final arrowTop =
-            (isWide
-                    ? 158.0
-                    : isTablet
-                    ? 150.0
-                    : 138.0)
-                .clamp(54.0, math.max(54.0, canvasHeight - 132.0))
-                .toDouble();
-        final arrowInset = isWide ? 74.0 : 8.0;
+            ? 292.0
+            : 252.0;
+        final centreCardHeight = isWide
+            ? (isCompactHeight ? 312.0 : 338.0)
+            : isTablet
+            ? 334.0
+            : 316.0;
+        final centreTop = isWide
+            ? (isCompactHeight ? 0.0 : -6.0)
+            : isTablet
+            ? 16.0
+            : 22.0;
+        final stripGap = isCompactHeight ? 18.0 : 20.0;
+        final stripTop = (centreTop + centreCardHeight + stripGap)
+            .clamp(288.0, math.max(288.0, canvasHeight - 128.0))
+            .toDouble();
+        final dotsTop = (stripTop + 48)
+            .clamp(stripTop + 38, math.max(stripTop + 38, canvasHeight - 64.0))
+            .toDouble();
+        final arrowTop = (centreTop + (centreCardHeight / 2) - 24)
+            .clamp(58.0, math.max(58.0, canvasHeight - 132.0))
+            .toDouble();
+        final arrowInset = isWide
+            ? (isCompactHeight ? 92.0 : 78.0)
+            : isTablet
+            ? 18.0
+            : 8.0;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -238,6 +246,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                       slot: slot,
                       isWide: isWide,
                       isTablet: isTablet,
+                      isCompactHeight: isCompactHeight,
                       feature: features[_wrap(selectedIndex + slot)],
                       selected: slot == 0,
                       onTap: slot == 0
@@ -247,7 +256,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                   Positioned(
                     top: stripTop,
                     child: SizedBox(
-                      width: centreCardWidth,
+                      width: math.min(centreCardWidth, stageWidth - 32),
                       child: _HubQuickStrip(
                         selected: features[selectedIndex],
                         onOpen: () => onOpen(features[selectedIndex]),
@@ -296,6 +305,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
     required this.slot,
     required this.isWide,
     required this.isTablet,
+    required this.isCompactHeight,
     required this.feature,
     required this.selected,
     required this.onTap,
@@ -306,6 +316,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
   final int slot;
   final bool isWide;
   final bool isTablet;
+  final bool isCompactHeight;
   final _ArcHubFeature feature;
   final bool selected;
   final VoidCallback onTap;
@@ -315,29 +326,29 @@ class _StaticRingFeatureSlot extends StatelessWidget {
     final distance = slot.abs();
 
     final centerWidth = isWide
-        ? 344.0
+        ? (isCompactHeight ? 300.0 : 326.0)
         : isTablet
-        ? 306.0
-        : 258.0;
+        ? 292.0
+        : 252.0;
     final centerHeight = isWide
-        ? 360.0
+        ? (isCompactHeight ? 312.0 : 338.0)
         : isTablet
-        ? 360.0
-        : 338.0;
+        ? 334.0
+        : 316.0;
 
     final nearWidth = isWide
-        ? 246.0
+        ? (isCompactHeight ? 218.0 : 236.0)
         : isTablet
-        ? 226.0
-        : 196.0;
+        ? 218.0
+        : 188.0;
     final nearHeight = isWide
-        ? 286.0
+        ? (isCompactHeight ? 254.0 : 278.0)
         : isTablet
-        ? 300.0
-        : 274.0;
+        ? 286.0
+        : 264.0;
 
-    final outerWidth = isWide ? 150.0 : 0.0;
-    final outerHeight = isWide ? 218.0 : 0.0;
+    final outerWidth = isWide ? (isCompactHeight ? 130.0 : 148.0) : 0.0;
+    final outerHeight = isWide ? (isCompactHeight ? 196.0 : 214.0) : 0.0;
 
     final width = selected
         ? centerWidth
@@ -354,23 +365,31 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? 0.0
         : distance == 1
         ? (isWide
-              ? 238.0
+              ? (isCompactHeight ? 212.0 : 232.0)
               : isTablet
-              ? 216.0
-              : 164.0)
-        : (isWide ? 378.0 : 0.0);
+              ? 202.0
+              : 156.0)
+        : (isWide ? (isCompactHeight ? 342.0 : 374.0) : 0.0);
 
     final top = selected
-        ? -8.0
+        ? (isWide
+              ? (isCompactHeight ? 0.0 : -6.0)
+              : isTablet
+              ? 16.0
+              : 22.0)
         : distance == 1
-        ? (isWide ? 28.0 : 34.0)
-        : 56.0;
+        ? (isWide
+              ? (isCompactHeight ? 34.0 : 30.0)
+              : isTablet
+              ? 38.0
+              : 42.0)
+        : (isCompactHeight ? 62.0 : 58.0);
 
     final opacity = selected
         ? 1.0
         : distance == 1
-        ? 0.78
-        : 0.34;
+        ? 0.76
+        : 0.32;
 
     final left = ((canvasWidth - width) / 2) + (slot < 0 ? -offset : offset);
 
