@@ -551,7 +551,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   late final List<_ArcHubFeature> _trackingFeatures = [
     _ArcHubFeature(
       title: 'Blueprint Grid',
-      subtitle: 'Owned, missing, dupes and blueprint hunt progress.',
+      subtitle:
+          'Blueprint ownership, dupes, missing items and active hunt progress.',
       icon: Icons.grid_on_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.blueprints,
@@ -559,7 +560,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     ),
     _ArcHubFeature(
       title: 'Scrappy Tracker',
-      subtitle: 'Track upgrade materials and useful resource quantities.',
+      subtitle:
+          'Scrappy resources, upgrade materials and trade-ready quantities.',
       icon: Icons.egg_alt_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.scrappy,
@@ -567,8 +569,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     ),
     _ArcHubFeature(
       title: 'Bench Tracker',
-      subtitle: 'Coming soon: bench progress and upgrade requirements.',
-      icon: Icons.build_rounded,
+      subtitle: 'Bench upgrades, resource pressure and progression planning.',
+      icon: Icons.precision_manufacturing_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.targets,
       builder: (_) => const _ComingSoonScreen(
@@ -579,7 +581,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     ),
     _ArcHubFeature(
       title: 'Quest Tracker',
-      subtitle: 'Coming soon: quest items, hand-ins and progress reminders.',
+      subtitle: 'Quest items, hand-ins, raid reminders and progress signals.',
       icon: Icons.assignment_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.intel,
