@@ -1,4 +1,4 @@
-name: uag_traders_hub
+﻿name: uag_traders_hub
 description: "UAG Arc Raiders Hub standalone app."
 publish_to: 'none'
 
@@ -59,6 +59,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/images/arc_raiders/hub/
     - assets/icon/
     - assets/arc_raiders/banners/
     - assets/arc_raiders/blueprints/
@@ -83,3 +84,4 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
+

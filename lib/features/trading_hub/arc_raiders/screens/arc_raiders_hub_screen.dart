@@ -361,6 +361,63 @@ class _StaticRingFeatureSlot extends StatelessWidget {
   }
 }
 
+class _ArcHubRealAssetBackdrop extends StatelessWidget {
+  const _ArcHubRealAssetBackdrop({required this.feature});
+
+  final _ArcHubFeature feature;
+
+  @override
+  Widget build(BuildContext context) {
+    final path = 'assets/images/arc_raiders/hub/${feature.assetName}';
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          path,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          errorBuilder: (context, error, stackTrace) {
+            return _ArcHubArtBackdrop(
+              accent: feature.accent,
+              kind: feature.art,
+            );
+          },
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0, -0.36),
+              radius: 1.08,
+              colors: [
+                feature.accent.withValues(alpha: 0.18),
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.38),
+              ],
+              stops: const [0.0, 0.48, 1.0],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.02),
+                Colors.black.withValues(alpha: 0.10),
+                Colors.black.withValues(alpha: 0.66),
+                Colors.black.withValues(alpha: 0.92),
+              ],
+              stops: const [0.0, 0.42, 0.74, 1.0],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _StaticRingFeatureCard extends StatelessWidget {
   const _StaticRingFeatureCard({
     required this.feature,
@@ -402,20 +459,15 @@ class _StaticRingFeatureCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Positioned.fill(
-              child: _ArcHubArtBackdrop(
-                accent: feature.accent,
-                kind: feature.art,
-              ),
-            ),
+            Positioned.fill(child: _ArcHubRealAssetBackdrop(feature: feature)),
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       Colors.black.withValues(alpha: 0.06),
-                      Colors.black.withValues(alpha: compact ? 0.40 : 0.30),
-                      Colors.black.withValues(alpha: compact ? 0.82 : 0.74),
+                      Colors.black.withValues(alpha: compact ? 0.36 : 0.26),
+                      Colors.black.withValues(alpha: compact ? 0.86 : 0.78),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
