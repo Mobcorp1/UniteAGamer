@@ -29,7 +29,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
 
   final PageController _controller = PageController(
     initialPage: _loopSeedPage,
-    viewportFraction: 0.64,
+    viewportFraction: 0.30,
   );
   int _selectedIndex = _loopSeedPage % 7;
 
@@ -229,9 +229,9 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                 }
               },
               child: PageView.builder(
+                clipBehavior: Clip.none,
                 controller: controller,
                 padEnds: true,
-                itemCount: features.length,
                 onPageChanged: onPageChanged,
                 itemBuilder: (context, index) {
                   final feature = features[index];
@@ -259,9 +259,9 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                       final opacity = distance <= 1
                           ? 1 - (distance * 0.20)
                           : 0.78 - ((distance - 1) * 0.36);
-                      final rotation = -delta * (isWide ? 0.26 : 0.16);
-                      final lift = distance * (isWide ? 24 : 16);
-                      final sideShift = -delta * (isWide ? 18 : 10);
+                      final rotation = -delta * (isWide ? 0.20 : 0.14);
+                      final lift = distance * (isWide ? 18 : 12);
+                      final sideShift = delta * (isWide ? 18 : 10);
 
                       return Opacity(
                         opacity: opacity.clamp(0.0, 1.0),
@@ -320,8 +320,8 @@ class _PremiumFeatureCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            width: selected ? 302 : 252,
-            height: selected ? 404 : 350,
+            width: selected ? 360 : 292,
+            height: selected ? 430 : 370,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
@@ -554,7 +554,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
 
   final PageController _controller = PageController(
     initialPage: _loopSeedPage,
-    viewportFraction: 0.64,
+    viewportFraction: 0.30,
   );
   int _selectedIndex = _loopSeedPage % 7;
 
