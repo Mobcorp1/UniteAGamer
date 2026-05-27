@@ -34,6 +34,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.groups_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.match,
+      assetName: 'arc_hub_match_a_raider.webp',
       builder: (_) => const ArcMatchRiderScreen(),
     ),
     _ArcHubFeature(
@@ -42,6 +43,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.route_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.raid,
+      assetName: 'arc_hub_raid_planner.webp',
       builder: (_) => const RaidPlannerScreen(),
     ),
     _ArcHubFeature(
@@ -50,6 +52,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.grid_view_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.blueprints,
+      assetName: 'arc_hub_tracking.webp',
       builder: (_) => const _TrackingMenuScreen(),
     ),
     _ArcHubFeature(
@@ -58,6 +61,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.track_changes_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.targets,
+      assetName: 'arc_hub_hunt_targets.webp',
       builder: (_) => const RaidPlannerHuntTargetsScreen(),
     ),
     _ArcHubFeature(
@@ -66,6 +70,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
+      assetName: 'arc_hub_trading.webp',
       builder: (_) => const TraderHubScreen(),
     ),
     _ArcHubFeature(
@@ -74,6 +79,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.auto_awesome_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_smart_trade.webp',
       builder: (_) => const SmartTradeAssistScreen(),
     ),
     _ArcHubFeature(
@@ -82,6 +88,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.radar_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_community_intel.webp',
       builder: (_) => const ArcMarketIntelligenceScreen(),
     ),
   ];
@@ -279,7 +286,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? 330.0
         : 286.0;
     final centerHeight = isWide
-        ? 430.0
+        ? 392.0
         : isTablet
         ? 408.0
         : 382.0;
@@ -290,13 +297,13 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? 250.0
         : 214.0;
     final nearHeight = isWide
-        ? 368.0
+        ? 320.0
         : isTablet
         ? 336.0
         : 300.0;
 
     final outerWidth = isWide ? 190.0 : 0.0;
-    final outerHeight = isWide ? 298.0 : 0.0;
+    final outerHeight = isWide ? 252.0 : 0.0;
 
     final width = selected
         ? centerWidth
@@ -320,10 +327,10 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         : (isWide ? 530.0 : 0.0);
 
     final top = selected
-        ? 0.0
+        ? -22.0
         : distance == 1
-        ? (isWide ? 44.0 : 56.0)
-        : 82.0;
+        ? (isWide ? 22.0 : 34.0)
+        : 52.0;
 
     final opacity = selected
         ? 1.0
@@ -628,6 +635,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       icon: Icons.grid_on_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.blueprints,
+      assetName: 'arc_hub_blueprint_grid.webp',
       builder: (_) => const BlueprintGridScreen(),
     ),
     _ArcHubFeature(
@@ -636,6 +644,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       icon: Icons.egg_alt_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.scrappy,
+      assetName: 'arc_hub_scrappy_tracker.webp',
       builder: (_) => const ScrappyGridScreen(),
     ),
     _ArcHubFeature(
@@ -644,6 +653,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       icon: Icons.build_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.targets,
+      assetName: 'arc_hub_bench_tracker.webp',
       builder: (_) => const _ComingSoonScreen(
         title: 'Bench Tracker',
         subtitle:
@@ -656,6 +666,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       icon: Icons.assignment_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_bench_tracker.webp',
       builder: (_) => const _ComingSoonScreen(
         title: 'Quest Tracker',
         subtitle:
@@ -1489,6 +1500,19 @@ class _ComingSoonScreen extends StatelessWidget {
   }
 }
 
+// ARC HUB WEBP ASSET MANIFEST
+// Drop generated/converted files here:
+// assets/images/arc_raiders/hub/arc_hub_match_a_raider.webp
+// assets/images/arc_raiders/hub/arc_hub_raid_planner.webp
+// assets/images/arc_raiders/hub/arc_hub_tracking.webp
+// assets/images/arc_raiders/hub/arc_hub_hunt_targets.webp
+// assets/images/arc_raiders/hub/arc_hub_trading.webp
+// assets/images/arc_raiders/hub/arc_hub_smart_trade.webp
+// assets/images/arc_raiders/hub/arc_hub_community_intel.webp
+// assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp
+// assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp
+// assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp
+// assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp
 enum _ArcHubArtKind {
   match,
   blueprints,
@@ -1507,6 +1531,7 @@ class _ArcHubFeature {
     required this.icon,
     required this.accent,
     required this.art,
+    required this.assetName,
     required this.builder,
   });
 
@@ -1515,5 +1540,6 @@ class _ArcHubFeature {
   final IconData icon;
   final Color accent;
   final _ArcHubArtKind art;
+  final String assetName;
   final WidgetBuilder builder;
 }
