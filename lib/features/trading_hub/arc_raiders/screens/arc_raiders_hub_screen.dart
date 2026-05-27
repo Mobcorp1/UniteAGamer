@@ -212,6 +212,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
         final canvasWidth = constraints.maxWidth;
+        final canvasHeight = constraints.maxHeight;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -231,6 +232,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                 _StaticRingFeatureSlot(
                   key: ValueKey('${selectedIndex}_$slot'),
                   canvasWidth: canvasWidth,
+                  canvasHeight: canvasHeight,
                   slot: slot,
                   isWide: isWide,
                   isTablet: isTablet,
@@ -241,7 +243,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                       : () => onPageChanged(_wrap(selectedIndex + slot)),
                 ),
               Positioned(
-                bottom: 6,
+                bottom: 0,
                 child: _HubPageIndicator(
                   count: features.length,
                   selectedIndex: selectedIndex,
@@ -260,6 +262,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
   const _StaticRingFeatureSlot({
     super.key,
     required this.canvasWidth,
+    required this.canvasHeight,
     required this.slot,
     required this.isWide,
     required this.isTablet,
@@ -269,6 +272,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
   });
 
   final double canvasWidth;
+  final double canvasHeight;
   final int slot;
   final bool isWide;
   final bool isTablet;
@@ -281,7 +285,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
     final distance = slot.abs();
 
     final centerWidth = isWide
-        ? 360.0
+        ? 376.0
         : isTablet
         ? 330.0
         : 286.0;
@@ -324,7 +328,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
               : isTablet
               ? 258.0
               : 180.0)
-        : (isWide ? 530.0 : 0.0);
+        : (isWide ? 575.0 : 0.0);
 
     final top = selected
         ? -22.0
