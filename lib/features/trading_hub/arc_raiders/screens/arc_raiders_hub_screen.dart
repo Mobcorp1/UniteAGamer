@@ -184,42 +184,44 @@ class _PremiumFeatureCarousel extends StatelessWidget {
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
         final isCompactHeight = constraints.maxHeight < 640;
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
+        final shortViewport = constraints.maxHeight < 880;
+        final laptopCompact =
+            constraints.maxWidth < 1500 && constraints.maxHeight < 980;
+
         final stageWidth = isWide
-            ? math.min(constraints.maxWidth, isCompactHeight ? 820.0 : 930.0)
+            ? math.min(constraints.maxWidth, laptopCompact ? 920.0 : 1040.0)
             : constraints.maxWidth;
         final canvasWidth = stageWidth;
         final canvasHeight = constraints.maxHeight;
 
-        final centreCardWidth = isWide
-            ? (isCompactHeight ? 300.0 : 326.0)
-            : isTablet
-            ? 292.0
-            : 252.0;
-        final centreCardHeight = isWide
-            ? (isCompactHeight ? 312.0 : 338.0)
-            : isTablet
-            ? 334.0
-            : 316.0;
-        final centreTop = isWide
-            ? (isCompactHeight ? 0.0 : -6.0)
-            : isTablet
-            ? 16.0
-            : 22.0;
-        final stripGap = isCompactHeight ? 18.0 : 20.0;
-        final stripTop = (centreTop + centreCardHeight + stripGap)
-            .clamp(288.0, math.max(288.0, canvasHeight - 128.0))
+        final widthScale = (canvasWidth / 1080.0).clamp(0.74, 1.0);
+        final heightScale = (canvasHeight / 760.0).clamp(0.70, 1.0);
+        final responsiveScale = math.min(widthScale, heightScale);
+
+        final centreCardWidth =
+            (isWide
+                ? 376.0
+                : isTablet
+                ? 322.0
+                : 274.0) *
+            responsiveScale;
+
+        final centreCardHeight =
+            (isWide
+                ? 392.0
+                : isTablet
+                ? 408.0
+                : 382.0) *
+            responsiveScale;
+
+        final stripGap = shortViewport ? 22.0 : 28.0;
+        final stripTop = centreCardHeight + stripGap;
+        final dotsTop = stripTop + (shortViewport ? 50.0 : 58.0);
+
+        final arrowTop = ((centreCardHeight - 48.0) / 2)
+            .clamp(76.0, math.max(76.0, canvasHeight - 168.0))
             .toDouble();
-        final dotsTop = (stripTop + 48)
-            .clamp(stripTop + 38, math.max(stripTop + 38, canvasHeight - 64.0))
-            .toDouble();
-        final arrowTop = (centreTop + (centreCardHeight / 2) - 24)
-            .clamp(58.0, math.max(58.0, canvasHeight - 132.0))
-            .toDouble();
-        final arrowInset = isWide
-            ? (isCompactHeight ? 92.0 : 78.0)
-            : isTablet
-            ? 18.0
-            : 8.0;
+        final arrowInset = laptopCompact ? 42.0 : 28.0;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -325,30 +327,30 @@ class _StaticRingFeatureSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final distance = slot.abs();
 
-    final centerWidth = isWide
-        ? (isCompactHeight ? 300.0 : 326.0)
-        : isTablet
-        ? 292.0
-        : 252.0;
-    final centerHeight = isWide
-        ? (isCompactHeight ? 312.0 : 338.0)
-        : isTablet
-        ? 334.0
-        : 316.0;
+    final widthScale = (canvasWidth / 1080.0).clamp(0.74, 1.0);
+    final heightScale = (canvasHeight / 760.0).clamp(0.70, 1.0);
+    final responsiveScale = math.min(widthScale, heightScale);
 
-    final nearWidth = isWide
-        ? (isCompactHeight ? 218.0 : 236.0)
-        : isTablet
-        ? 218.0
-        : 188.0;
-    final nearHeight = isWide
-        ? (isCompactHeight ? 254.0 : 278.0)
-        : isTablet
-        ? 286.0
-        : 264.0;
+    final centerWidth =
+        (isWide
+            ? 376.0
+            : isTablet
+            ? 322.0
+            : 274.0) *
+        responsiveScale;
+    final centerHeight =
+        (isWide
+            ? 392.0
+            : isTablet
+            ? 408.0
+            : 382.0) *
+        responsiveScale;
 
-    final outerWidth = isWide ? (isCompactHeight ? 130.0 : 148.0) : 0.0;
-    final outerHeight = isWide ? (isCompactHeight ? 196.0 : 214.0) : 0.0;
+    final nearWidth = centerWidth * (isWide ? 0.72 : 0.76);
+    final nearHeight = centerHeight * (isWide ? 0.80 : 0.82);
+
+    final outerWidth = isWide ? centerWidth * 0.52 : 0.0;
+    final outerHeight = isWide ? centerHeight * 0.64 : 0.0;
 
     final width = selected
         ? centerWidth
@@ -361,35 +363,26 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? nearHeight
         : outerHeight;
 
+    final nearOffset = (centerWidth * 0.78).clamp(210.0, 286.0).toDouble();
+    final outerOffset = (centerWidth * 1.30).clamp(360.0, 458.0).toDouble();
+
     final offset = selected
         ? 0.0
         : distance == 1
-        ? (isWide
-              ? (isCompactHeight ? 212.0 : 232.0)
-              : isTablet
-              ? 202.0
-              : 156.0)
-        : (isWide ? (isCompactHeight ? 342.0 : 374.0) : 0.0);
+        ? nearOffset
+        : outerOffset;
 
     final top = selected
-        ? (isWide
-              ? (isCompactHeight ? 0.0 : -6.0)
-              : isTablet
-              ? 16.0
-              : 22.0)
+        ? 0.0
         : distance == 1
-        ? (isWide
-              ? (isCompactHeight ? 34.0 : 30.0)
-              : isTablet
-              ? 38.0
-              : 42.0)
-        : (isCompactHeight ? 62.0 : 58.0);
+        ? centerHeight * 0.10
+        : centerHeight * 0.18;
 
     final opacity = selected
         ? 1.0
         : distance == 1
-        ? 0.76
-        : 0.32;
+        ? 0.80
+        : 0.34;
 
     final left = ((canvasWidth - width) / 2) + (slot < 0 ? -offset : offset);
 
