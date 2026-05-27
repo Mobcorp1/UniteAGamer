@@ -99,12 +99,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     super.dispose();
   }
 
-  void _goTo(int index) {
-    setState(() {
-      _selectedIndex = (index + _features.length) % _features.length;
-    });
-  }
-
   void _openFeature(_ArcHubFeature feature) {
     Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
   }
@@ -118,9 +112,13 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const Positioned.fill(child: StaticWatermark()),
           Positioned.fill(
             child: _ArcHubScreenBackdrop(accent: selected.accent),
+          ),
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(opacity: 0.16, child: StaticWatermark()),
+            ),
           ),
           SafeArea(
             child: Column(
@@ -138,10 +136,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                     onOpen: _openFeature,
                   ),
                 ),
-                _HubQuickStrip(
-                  selected: selected,
-                  onOpen: () => _openFeature(selected),
-                ),
                 const SizedBox(height: AppTheme.spaceS),
                 _ArcBottomDock(
                   onMatch: () => _openFeature(_features.first),
@@ -151,28 +145,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                   onIntel: () => _openFeature(_features[6]),
                 ),
               ],
-            ),
-          ),
-          Positioned(
-            left: 8,
-            top: 0,
-            bottom: 92,
-            child: Center(
-              child: _ChevronButton(
-                icon: Icons.chevron_left_rounded,
-                onPressed: () => _goTo(_selectedIndex - 1),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 8,
-            top: 0,
-            bottom: 92,
-            child: Center(
-              child: _ChevronButton(
-                icon: Icons.chevron_right_rounded,
-                onPressed: () => _goTo(_selectedIndex + 1),
-              ),
             ),
           ),
         ],
@@ -211,7 +183,10 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final isTablet =
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
-        final canvasWidth = constraints.maxWidth;
+        final stageWidth = constraints.maxWidth >= 1180
+            ? 1180.0
+            : constraints.maxWidth;
+        final canvasWidth = stageWidth;
         final canvasHeight = constraints.maxHeight;
 
         final centreCardWidth = isWide
@@ -231,6 +206,10 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         );
         final stripTop = stageCenterTop + centreCardHeight + AppTheme.spaceS;
         final dotsTop = stripTop + 72;
+        final arrowTop = ((stageCenterTop + centreCardHeight / 2) - 26)
+            .clamp(54.0, math.max(54.0, canvasHeight - 86.0))
+            .toDouble();
+        final arrowInset = isWide ? 24.0 : 6.0;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -242,43 +221,64 @@ class _PremiumFeatureCarousel extends StatelessWidget {
               _step(-1);
             }
           },
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              for (final slot in slots)
-                _StaticRingFeatureSlot(
-                  key: ValueKey('${selectedIndex}_$slot'),
-                  canvasWidth: canvasWidth,
-                  canvasHeight: canvasHeight,
-                  slot: slot,
-                  isWide: isWide,
-                  isTablet: isTablet,
-                  feature: features[_wrap(selectedIndex + slot)],
-                  selected: slot == 0,
-                  onTap: slot == 0
-                      ? () => onOpen(features[selectedIndex])
-                      : () => onPageChanged(_wrap(selectedIndex + slot)),
-                ),
-              Positioned(
-                top: stripTop,
-                child: SizedBox(
-                  width: centreCardWidth,
-                  child: _HubQuickStrip(
-                    selected: features[selectedIndex],
-                    onOpen: () => onOpen(features[selectedIndex]),
+          child: Center(
+            child: SizedBox(
+              width: stageWidth,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  for (final slot in slots)
+                    _StaticRingFeatureSlot(
+                      key: ValueKey('${selectedIndex}_$slot'),
+                      canvasWidth: canvasWidth,
+                      canvasHeight: canvasHeight,
+                      slot: slot,
+                      isWide: isWide,
+                      isTablet: isTablet,
+                      feature: features[_wrap(selectedIndex + slot)],
+                      selected: slot == 0,
+                      onTap: slot == 0
+                          ? () => onOpen(features[selectedIndex])
+                          : () => onPageChanged(_wrap(selectedIndex + slot)),
+                    ),
+                  Positioned(
+                    top: stripTop,
+                    child: SizedBox(
+                      width: centreCardWidth,
+                      child: _HubQuickStrip(
+                        selected: features[selectedIndex],
+                        onOpen: () => onOpen(features[selectedIndex]),
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    left: arrowInset,
+                    top: arrowTop,
+                    child: _ChevronButton(
+                      icon: Icons.chevron_left_rounded,
+                      onPressed: () => _step(-1),
+                    ),
+                  ),
+                  Positioned(
+                    right: arrowInset,
+                    top: arrowTop,
+                    child: _ChevronButton(
+                      icon: Icons.chevron_right_rounded,
+                      onPressed: () => _step(1),
+                    ),
+                  ),
+                  Positioned(
+                    top: dotsTop,
+                    child: _HubPageIndicator(
+                      count: features.length,
+                      selectedIndex: selectedIndex,
+                      accent: features[selectedIndex].accent,
+                    ),
+                  ),
+                ],
               ),
-              Positioned(
-                top: dotsTop,
-                child: _HubPageIndicator(
-                  count: features.length,
-                  selectedIndex: selectedIndex,
-                  accent: features[selectedIndex].accent,
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -765,13 +765,6 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     super.dispose();
   }
 
-  void _goTo(int index) {
-    setState(() {
-      _selectedIndex =
-          (index + _trackingFeatures.length) % _trackingFeatures.length;
-    });
-  }
-
   void _openFeature(_ArcHubFeature feature) {
     Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
   }
@@ -797,9 +790,13 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const Positioned.fill(child: StaticWatermark()),
           Positioned.fill(
             child: _ArcHubScreenBackdrop(accent: selected.accent),
+          ),
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(opacity: 0.16, child: StaticWatermark()),
+            ),
           ),
           SafeArea(
             child: Column(
@@ -816,36 +813,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                     onOpen: _openFeature,
                   ),
                 ),
-                _HubQuickStrip(
-                  selected: selected,
-                  onOpen: () => _openFeature(selected),
-                ),
                 const SizedBox(height: AppTheme.spaceL),
               ],
-            ),
-          ),
-          Positioned(
-            left: 8,
-            top: 0,
-            bottom: 40,
-            child: Center(
-              child: _ChevronButton(
-                icon: Icons.chevron_left_rounded,
-                onPressed: () => _goTo(_selectedIndex - 1),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 8,
-            top: 0,
-            bottom: 40,
-            child: Center(
-              child: _ChevronButton(
-                icon: Icons.chevron_right_rounded,
-                onPressed: _selectedIndex == _trackingFeatures.length - 1
-                    ? null
-                    : () => _goTo(_selectedIndex + 1),
-              ),
             ),
           ),
         ],
@@ -1564,7 +1533,11 @@ class _ComingSoonScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const Positioned.fill(child: StaticWatermark()),
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(opacity: 0.12, child: StaticWatermark()),
+            ),
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spaceL),
