@@ -25,8 +25,13 @@ class ArcRaidersHubScreen extends StatefulWidget {
 }
 
 class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.52);
-  int _selectedIndex = 0;
+  static const int _loopSeedPage = 7000;
+
+  final PageController _controller = PageController(
+    initialPage: _loopSeedPage,
+    viewportFraction: 0.64,
+  );
+  int _selectedIndex = _loopSeedPage % 7;
 
   late final List<_ArcHubFeature> _features = [
     _ArcHubFeature(
@@ -93,12 +98,12 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     super.dispose();
   }
 
-  void _goTo(int index) {
-    var targetIndex = index;
-    if (targetIndex < 0) targetIndex = _features.length - 1;
-    if (targetIndex >= _features.length) targetIndex = 0;
+  void _goTo(int direction) {
+    final currentPage = _controller.hasClients
+        ? (_controller.page ?? _loopSeedPage.toDouble()).round()
+        : _loopSeedPage;
     _controller.animateToPage(
-      targetIndex,
+      currentPage + direction,
       duration: const Duration(milliseconds: 340),
       curve: Curves.easeOutCubic,
     );
@@ -159,7 +164,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
             child: Center(
               child: _ChevronButton(
                 icon: Icons.chevron_left_rounded,
-                onPressed: () => _goTo(_selectedIndex - 1),
+                onPressed: () => _goTo(-1),
               ),
             ),
           ),
@@ -170,7 +175,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
             child: Center(
               child: _ChevronButton(
                 icon: Icons.chevron_right_rounded,
-                onPressed: () => _goTo(_selectedIndex + 1),
+                onPressed: () => _goTo(1),
               ),
             ),
           ),
@@ -235,7 +240,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                     animation: controller,
                     child: _PremiumFeatureCard(
                       feature: feature,
-                      selected: index == selectedIndex,
+                      selected: (index % features.length) == selectedIndex,
                       onTap: () => onOpen(feature),
                     ),
                     builder: (context, child) {
@@ -252,11 +257,11 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                           ? 1 - (distance * 0.16)
                           : 0.84 - ((distance - 1) * 0.18);
                       final opacity = distance <= 1
-                          ? 1 - (distance * 0.28)
+                          ? 1 - (distance * 0.20)
                           : 0.78 - ((distance - 1) * 0.36);
-                      final rotation = -delta * (isWide ? 0.34 : 0.22);
-                      final lift = distance * (isWide ? 38 : 26);
-                      final sideShift = -delta * (isWide ? 52 : 34);
+                      final rotation = -delta * (isWide ? 0.26 : 0.16);
+                      final lift = distance * (isWide ? 24 : 16);
+                      final sideShift = -delta * (isWide ? 18 : 10);
 
                       return Opacity(
                         opacity: opacity.clamp(0.0, 1.0),
@@ -315,8 +320,8 @@ class _PremiumFeatureCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            width: selected ? 292 : 226,
-            height: selected ? 400 : 338,
+            width: selected ? 302 : 252,
+            height: selected ? 404 : 350,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
@@ -545,8 +550,13 @@ class _TrackingMenuScreen extends StatefulWidget {
 }
 
 class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.52);
-  int _selectedIndex = 0;
+  static const int _loopSeedPage = 7000;
+
+  final PageController _controller = PageController(
+    initialPage: _loopSeedPage,
+    viewportFraction: 0.64,
+  );
+  int _selectedIndex = _loopSeedPage % 7;
 
   late final List<_ArcHubFeature> _trackingFeatures = [
     _ArcHubFeature(
@@ -667,7 +677,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
             child: Center(
               child: _ChevronButton(
                 icon: Icons.chevron_left_rounded,
-                onPressed: () => _goTo(_selectedIndex - 1),
+                onPressed: () => _goTo(-1),
               ),
             ),
           ),
@@ -680,7 +690,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                 icon: Icons.chevron_right_rounded,
                 onPressed: _selectedIndex == _trackingFeatures.length - 1
                     ? null
-                    : () => _goTo(_selectedIndex + 1),
+                    : () => _goTo(1),
               ),
             ),
           ),
