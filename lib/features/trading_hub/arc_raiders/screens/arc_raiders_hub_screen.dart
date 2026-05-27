@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
@@ -24,7 +25,7 @@ class ArcRaidersHubScreen extends StatefulWidget {
 }
 
 class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.58);
+  final PageController _controller = PageController(viewportFraction: 0.52);
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _features = [
@@ -93,10 +94,12 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   }
 
   void _goTo(int index) {
-    if (index < 0 || index >= _features.length) return;
+    var targetIndex = index;
+    if (targetIndex < 0) targetIndex = _features.length - 1;
+    if (targetIndex >= _features.length) targetIndex = 0;
     _controller.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 280),
+      targetIndex,
+      duration: const Duration(milliseconds: 340),
       curve: Curves.easeOutCubic,
     );
   }
@@ -156,9 +159,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
             child: Center(
               child: _ChevronButton(
                 icon: Icons.chevron_left_rounded,
-                onPressed: _selectedIndex == 0
-                    ? null
-                    : () => _goTo(_selectedIndex - 1),
+                onPressed: () => _goTo(_selectedIndex - 1),
               ),
             ),
           ),
@@ -169,9 +170,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
             child: Center(
               child: _ChevronButton(
                 icon: Icons.chevron_right_rounded,
-                onPressed: _selectedIndex == _features.length - 1
-                    ? null
-                    : () => _goTo(_selectedIndex + 1),
+                onPressed: () => _goTo(_selectedIndex + 1),
               ),
             ),
           ),
@@ -205,58 +204,78 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         return Stack(
           alignment: Alignment.center,
           children: [
-            PageView.builder(
-              controller: controller,
-              padEnds: true,
-              itemCount: features.length,
-              onPageChanged: onPageChanged,
-              itemBuilder: (context, index) {
-                final feature = features[index];
-
-                return AnimatedBuilder(
-                  animation: controller,
-                  child: _PremiumFeatureCard(
-                    feature: feature,
-                    selected: index == selectedIndex,
-                    onTap: () => onOpen(feature),
-                  ),
-                  builder: (context, child) {
-                    final page =
-                        controller.hasClients &&
-                            controller.position.haveDimensions
-                        ? (controller.page ?? selectedIndex.toDouble())
-                        : selectedIndex.toDouble();
-                    final rawDelta = page - index;
-                    final delta = rawDelta.clamp(-2.0, 2.0);
-                    final distance = delta.abs().clamp(0.0, 2.0);
-
-                    final scale = distance <= 1
-                        ? 1 - (distance * 0.16)
-                        : 0.84 - ((distance - 1) * 0.18);
-                    final opacity = distance <= 1
-                        ? 1 - (distance * 0.22)
-                        : 0.78 - ((distance - 1) * 0.36);
-                    final rotation = -delta * (isWide ? 0.28 : 0.18);
-                    final lift = distance * (isWide ? 30 : 20);
-                    final sideShift = -delta * (isWide ? 34 : 22);
-
-                    return Opacity(
-                      opacity: opacity.clamp(0.0, 1.0),
-                      child: Transform.translate(
-                        offset: Offset(sideShift, lift),
-                        child: Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()
-                            ..setEntry(3, 2, 0.0011)
-                            ..rotateY(rotation)
-                            ..scaleByDouble(scale, scale, scale, 1),
-                          child: child,
-                        ),
-                      ),
-                    );
-                  },
-                );
+            Listener(
+              onPointerSignal: (event) {
+                if (event is PointerScrollEvent) {
+                  final direction =
+                      event.scrollDelta.dy > 0 || event.scrollDelta.dx > 0
+                      ? 1
+                      : -1;
+                  final current = (controller.page ?? selectedIndex.toDouble())
+                      .round();
+                  var next = current + direction;
+                  if (next < 0) next = features.length - 1;
+                  if (next >= features.length) next = 0;
+                  controller.animateToPage(
+                    next,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                  );
+                }
               },
+              child: PageView.builder(
+                controller: controller,
+                padEnds: true,
+                itemCount: features.length,
+                onPageChanged: onPageChanged,
+                itemBuilder: (context, index) {
+                  final feature = features[index];
+
+                  return AnimatedBuilder(
+                    animation: controller,
+                    child: _PremiumFeatureCard(
+                      feature: feature,
+                      selected: index == selectedIndex,
+                      onTap: () => onOpen(feature),
+                    ),
+                    builder: (context, child) {
+                      final page =
+                          controller.hasClients &&
+                              controller.position.haveDimensions
+                          ? (controller.page ?? selectedIndex.toDouble())
+                          : selectedIndex.toDouble();
+                      final rawDelta = page - index;
+                      final delta = rawDelta.clamp(-2.0, 2.0);
+                      final distance = delta.abs().clamp(0.0, 2.0);
+
+                      final scale = distance <= 1
+                          ? 1 - (distance * 0.16)
+                          : 0.84 - ((distance - 1) * 0.18);
+                      final opacity = distance <= 1
+                          ? 1 - (distance * 0.28)
+                          : 0.78 - ((distance - 1) * 0.36);
+                      final rotation = -delta * (isWide ? 0.34 : 0.22);
+                      final lift = distance * (isWide ? 38 : 26);
+                      final sideShift = -delta * (isWide ? 52 : 34);
+
+                      return Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: Transform.translate(
+                          offset: Offset(sideShift, lift),
+                          child: Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.identity()
+                              ..setEntry(3, 2, 0.0011)
+                              ..rotateY(rotation)
+                              ..scaleByDouble(scale, scale, scale, 1),
+                            child: child,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
             Positioned(
               bottom: 6,
@@ -296,8 +315,8 @@ class _PremiumFeatureCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            width: selected ? 300 : 246,
-            height: selected ? 408 : 352,
+            width: selected ? 292 : 226,
+            height: selected ? 400 : 338,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
@@ -526,7 +545,7 @@ class _TrackingMenuScreen extends StatefulWidget {
 }
 
 class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.58);
+  final PageController _controller = PageController(viewportFraction: 0.52);
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _trackingFeatures = [
@@ -646,9 +665,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
             child: Center(
               child: _ChevronButton(
                 icon: Icons.chevron_left_rounded,
-                onPressed: _selectedIndex == 0
-                    ? null
-                    : () => _goTo(_selectedIndex - 1),
+                onPressed: () => _goTo(_selectedIndex - 1),
               ),
             ),
           ),
