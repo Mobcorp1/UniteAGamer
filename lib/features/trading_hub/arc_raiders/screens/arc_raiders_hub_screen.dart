@@ -240,7 +240,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                     animation: controller,
                     child: _PremiumFeatureCard(
                       feature: feature,
-                      selected: (index % features.length) == selectedIndex,
+                      selected: index == selectedIndex,
                       onTap: () => onOpen(feature),
                     ),
                     builder: (context, child) {
