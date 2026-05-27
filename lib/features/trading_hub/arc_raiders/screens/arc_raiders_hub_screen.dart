@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
@@ -94,14 +93,9 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   }
 
   void _goTo(int index) {
-    var targetIndex = index;
-    if (targetIndex < 0) targetIndex = _features.length - 1;
-    if (targetIndex >= _features.length) targetIndex = 0;
-    _controller.animateToPage(
-      targetIndex,
-      duration: const Duration(milliseconds: 340),
-      curve: Curves.easeOutCubic,
-    );
+    setState(() {
+      _selectedIndex = (index + _features.length) % _features.length;
+    });
   }
 
   void _openFeature(_ArcHubFeature feature) {
@@ -182,112 +176,141 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
 
 class _PremiumFeatureCarousel extends StatelessWidget {
   const _PremiumFeatureCarousel({
-    required this.controller,
+    required PageController controller,
     required this.selectedIndex,
     required this.features,
     required this.onPageChanged,
     required this.onOpen,
   });
 
-  final PageController controller;
   final int selectedIndex;
   final List<_ArcHubFeature> features;
   final ValueChanged<int> onPageChanged;
   final ValueChanged<_ArcHubFeature> onOpen;
 
+  int _wrap(int value) => (value + features.length) % features.length;
+
+  void _step(int direction) {
+    onPageChanged(_wrap(selectedIndex + direction));
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (features.isEmpty) return const SizedBox.shrink();
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 700;
+        final isWide = constraints.maxWidth >= 760;
+        final slots = isWide ? const [-2, -1, 0, 1, 2] : const [-1, 0, 1];
 
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            Listener(
-              onPointerSignal: (event) {
-                if (event is PointerScrollEvent) {
-                  final direction =
-                      event.scrollDelta.dy > 0 || event.scrollDelta.dx > 0
-                      ? 1
-                      : -1;
-                  final current = (controller.page ?? selectedIndex.toDouble())
-                      .round();
-                  var next = current + direction;
-                  if (next < 0) next = features.length - 1;
-                  if (next >= features.length) next = 0;
-                  controller.animateToPage(
-                    next,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                  );
-                }
-              },
-              child: PageView.builder(
-                controller: controller,
-                padEnds: true,
-                itemCount: features.length,
-                onPageChanged: onPageChanged,
-                itemBuilder: (context, index) {
-                  final feature = features[index];
-
-                  return AnimatedBuilder(
-                    animation: controller,
-                    child: _PremiumFeatureCard(
-                      feature: feature,
-                      selected: index == selectedIndex,
-                      onTap: () => onOpen(feature),
-                    ),
-                    builder: (context, child) {
-                      final page =
-                          controller.hasClients &&
-                              controller.position.haveDimensions
-                          ? (controller.page ?? selectedIndex.toDouble())
-                          : selectedIndex.toDouble();
-                      final rawDelta = page - index;
-                      final delta = rawDelta.clamp(-2.0, 2.0);
-                      final distance = delta.abs().clamp(0.0, 2.0);
-
-                      final scale = distance <= 1
-                          ? 1 - (distance * 0.16)
-                          : 0.84 - ((distance - 1) * 0.18);
-                      final opacity = distance <= 1
-                          ? 1 - (distance * 0.28)
-                          : 0.78 - ((distance - 1) * 0.36);
-                      final rotation = -delta * (isWide ? 0.34 : 0.22);
-                      final lift = distance * (isWide ? 38 : 26);
-                      final sideShift = -delta * (isWide ? 52 : 34);
-
-                      return Opacity(
-                        opacity: opacity.clamp(0.0, 1.0),
-                        child: Transform.translate(
-                          offset: Offset(sideShift, lift),
-                          child: Transform(
-                            alignment: Alignment.center,
-                            transform: Matrix4.identity()
-                              ..setEntry(3, 2, 0.0011)
-                              ..rotateY(rotation)
-                              ..scaleByDouble(scale, scale, scale, 1),
-                            child: child,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity < -120) {
+              _step(1);
+            } else if (velocity > 120) {
+              _step(-1);
+            }
+          },
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              for (final slot in slots)
+                _PremiumCarouselPreviewSlot(
+                  key: ValueKey('${selectedIndex}_$slot'),
+                  slot: slot,
+                  isWide: isWide,
+                  feature: features[_wrap(selectedIndex + slot)],
+                  selected: slot == 0,
+                  onTap: slot == 0
+                      ? () => onOpen(features[selectedIndex])
+                      : () => onPageChanged(_wrap(selectedIndex + slot)),
+                ),
+              Positioned(
+                bottom: 6,
+                child: _HubPageIndicator(
+                  count: features.length,
+                  selectedIndex: selectedIndex,
+                  accent: features[selectedIndex].accent,
+                ),
               ),
-            ),
-            Positioned(
-              bottom: 6,
-              child: _HubPageIndicator(
-                count: features.length,
-                selectedIndex: selectedIndex,
-                accent: features[selectedIndex].accent,
-              ),
-            ),
-          ],
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _PremiumCarouselPreviewSlot extends StatelessWidget {
+  const _PremiumCarouselPreviewSlot({
+    super.key,
+    required this.slot,
+    required this.isWide,
+    required this.feature,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int slot;
+  final bool isWide;
+  final _ArcHubFeature feature;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final distance = slot.abs();
+    final x = slot * (isWide ? 246.0 : 132.0);
+    final y = distance * (isWide ? 16.0 : 9.0);
+    final scale = selected
+        ? 1.0
+        : distance == 1
+        ? 0.78
+        : 0.58;
+    final opacity = selected
+        ? 1.0
+        : distance == 1
+        ? 0.82
+        : 0.46;
+    final angle = selected
+        ? 0.0
+        : slot < 0
+        ? -0.025
+        : 0.025;
+
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      child: Center(
+        child: IgnorePointer(
+          ignoring: false,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: opacity,
+            child: Transform.translate(
+              offset: Offset(x, y),
+              child: Transform.rotate(
+                angle: angle,
+                child: Transform.scale(
+                  scale: scale,
+                  child: _PremiumFeatureCard(
+                    feature: feature,
+                    selected: selected,
+                    onTap: onTap,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -315,8 +338,8 @@ class _PremiumFeatureCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            width: selected ? 292 : 226,
-            height: selected ? 400 : 338,
+            width: selected ? 360 : 292,
+            height: selected ? 430 : 370,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
@@ -325,7 +348,7 @@ class _PremiumFeatureCard extends StatelessWidget {
                 color: selected
                     ? feature.accent.withValues(alpha: 0.82)
                     : feature.accent.withValues(alpha: 0.28),
-                width: selected ? 1.4 : 1,
+                width: selected ? 360 : 292,
               ),
               boxShadow: [
                 BoxShadow(
@@ -598,12 +621,10 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   }
 
   void _goTo(int index) {
-    if (index < 0 || index >= _trackingFeatures.length) return;
-    _controller.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
+    setState(() {
+      _selectedIndex =
+          (index + _trackingFeatures.length) % _trackingFeatures.length;
+    });
   }
 
   void _openFeature(_ArcHubFeature feature) {
