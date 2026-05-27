@@ -764,7 +764,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       icon: Icons.assignment_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.intel,
-      assetName: 'arc_hub_bench_tracker.webp',
+      assetName: 'arc_hub_quest_tracker.webp',
       builder: (_) => const _ComingSoonScreen(
         title: 'Quest Tracker',
         subtitle:
@@ -826,6 +826,14 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                     },
                     onOpen: _openFeature,
                   ),
+                ),
+                const SizedBox(height: AppTheme.spaceS),
+                _ArcBottomDock(
+                  onMatch: () => Navigator.of(context).pop(),
+                  onRaid: () => Navigator.of(context).pop(),
+                  onMic: () => UagVoiceArcAssistantSheet.show(context),
+                  onTrading: () => Navigator.of(context).pop(),
+                  onIntel: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: AppTheme.spaceL),
               ],
