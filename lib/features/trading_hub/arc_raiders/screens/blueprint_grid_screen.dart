@@ -1062,7 +1062,47 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ),
       body: Stack(
         children: [
-          const Positioned.fill(child: StaticWatermark()),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF040514),
+                    Color.lerp(
+                      AppTheme.neonCyan,
+                      const Color(0xFF050612),
+                      0.86,
+                    )!,
+                    Color(0xFF020208),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppTheme.neonCyan.withValues(alpha: 0.18),
+                      AppTheme.neonPink.withValues(alpha: 0.08),
+                      Colors.transparent,
+                    ],
+                    center: Alignment(0.0, -0.36),
+                    radius: 0.92,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(opacity: 0.30, child: StaticWatermark()),
+            ),
+          ),
           SafeArea(
             child: StreamBuilder<Map<String, ArcBlueprintState>>(
               stream: _repository.watchMyBlueprintStates(),
