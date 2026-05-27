@@ -200,16 +200,19 @@ class _PremiumFeatureCarousel extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 760;
+        final isWide = constraints.maxWidth >= 900;
+        final isTablet =
+            constraints.maxWidth >= 650 && constraints.maxWidth < 900;
         final slots = isWide ? const [-2, -1, 0, 1, 2] : const [-1, 0, 1];
+        final canvasWidth = constraints.maxWidth;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onHorizontalDragEnd: (details) {
             final velocity = details.primaryVelocity ?? 0;
-            if (velocity < -120) {
+            if (velocity < -100) {
               _step(1);
-            } else if (velocity > 120) {
+            } else if (velocity > 100) {
               _step(-1);
             }
           },
@@ -218,10 +221,12 @@ class _PremiumFeatureCarousel extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               for (final slot in slots)
-                _PremiumCarouselPreviewSlot(
+                _StaticRingFeatureSlot(
                   key: ValueKey('${selectedIndex}_$slot'),
+                  canvasWidth: canvasWidth,
                   slot: slot,
                   isWide: isWide,
+                  isTablet: isTablet,
                   feature: features[_wrap(selectedIndex + slot)],
                   selected: slot == 0,
                   onTap: slot == 0
@@ -244,18 +249,22 @@ class _PremiumFeatureCarousel extends StatelessWidget {
   }
 }
 
-class _PremiumCarouselPreviewSlot extends StatelessWidget {
-  const _PremiumCarouselPreviewSlot({
+class _StaticRingFeatureSlot extends StatelessWidget {
+  const _StaticRingFeatureSlot({
     super.key,
+    required this.canvasWidth,
     required this.slot,
     required this.isWide,
+    required this.isTablet,
     required this.feature,
     required this.selected,
     required this.onTap,
   });
 
+  final double canvasWidth;
   final int slot;
   final bool isWide;
+  final bool isTablet;
   final _ArcHubFeature feature;
   final bool selected;
   final VoidCallback onTap;
@@ -263,202 +272,243 @@ class _PremiumCarouselPreviewSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final distance = slot.abs();
-    final x = slot * (isWide ? 246.0 : 132.0);
-    final y = distance * (isWide ? 16.0 : 9.0);
-    final scale = selected
-        ? 1.0
+
+    final centerWidth = isWide
+        ? 360.0
+        : isTablet
+        ? 330.0
+        : 286.0;
+    final centerHeight = isWide
+        ? 430.0
+        : isTablet
+        ? 408.0
+        : 382.0;
+
+    final nearWidth = isWide
+        ? 278.0
+        : isTablet
+        ? 250.0
+        : 214.0;
+    final nearHeight = isWide
+        ? 368.0
+        : isTablet
+        ? 336.0
+        : 300.0;
+
+    final outerWidth = isWide ? 190.0 : 0.0;
+    final outerHeight = isWide ? 298.0 : 0.0;
+
+    final width = selected
+        ? centerWidth
         : distance == 1
-        ? 0.78
-        : 0.58;
+        ? nearWidth
+        : outerWidth;
+    final height = selected
+        ? centerHeight
+        : distance == 1
+        ? nearHeight
+        : outerHeight;
+
+    final offset = selected
+        ? 0.0
+        : distance == 1
+        ? (isWide
+              ? 322.0
+              : isTablet
+              ? 258.0
+              : 180.0)
+        : (isWide ? 530.0 : 0.0);
+
+    final top = selected
+        ? 0.0
+        : distance == 1
+        ? (isWide ? 44.0 : 56.0)
+        : 82.0;
+
     final opacity = selected
         ? 1.0
         : distance == 1
-        ? 0.82
-        : 0.46;
-    final angle = selected
-        ? 0.0
-        : slot < 0
-        ? -0.025
-        : 0.025;
+        ? 0.90
+        : 0.58;
+
+    final left = ((canvasWidth - width) / 2) + (slot < 0 ? -offset : offset);
 
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      child: Center(
-        child: IgnorePointer(
-          ignoring: false,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: opacity,
-            child: Transform.translate(
-              offset: Offset(x, y),
-              child: Transform.rotate(
-                angle: angle,
-                child: Transform.scale(
-                  scale: scale,
-                  child: _PremiumFeatureCard(
-                    feature: feature,
-                    selected: selected,
-                    onTap: onTap,
-                  ),
-                ),
-              ),
-            ),
-          ),
+      left: left,
+      top: top,
+      width: width,
+      height: height,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: opacity,
+        child: _StaticRingFeatureCard(
+          feature: feature,
+          selected: selected,
+          compact: !selected,
+          onTap: onTap,
         ),
       ),
     );
   }
 }
 
-class _PremiumFeatureCard extends StatelessWidget {
-  const _PremiumFeatureCard({
+class _StaticRingFeatureCard extends StatelessWidget {
+  const _StaticRingFeatureCard({
     required this.feature,
     required this.selected,
+    required this.compact,
     required this.onTap,
   });
 
   final _ArcHubFeature feature;
   final bool selected;
+  final bool compact;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ElectricChargeBorder(
-        active: selected,
-        radius: 30,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(30),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            width: selected ? 360 : 292,
-            height: selected ? 430 : 370,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: selected
-                    ? feature.accent.withValues(alpha: 0.82)
-                    : feature.accent.withValues(alpha: 0.28),
-                width: selected ? 360 : 292,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: feature.accent.withValues(
-                    alpha: selected ? 0.36 : 0.14,
-                  ),
-                  blurRadius: selected ? 40 : 22,
-                  offset: const Offset(0, 18),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.56),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-              ],
+    final titleSize = selected ? 28.0 : 19.0;
+    final bodySize = selected ? 15.0 : 12.0;
+    final iconSize = selected ? 34.0 : 24.0;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(selected ? 30 : 22),
+      onTap: onTap,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(selected ? 30 : 22),
+          border: Border.all(
+            color: feature.accent.withValues(alpha: selected ? 0.88 : 0.58),
+            width: selected ? 1.5 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: feature.accent.withValues(alpha: selected ? 0.38 : 0.22),
+              blurRadius: selected ? 38 : 20,
+              offset: const Offset(0, 16),
             ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: _ArcHubArtBackdrop(
-                    accent: feature.accent,
-                    kind: feature.art,
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: _ArcHubArtBackdrop(
+                accent: feature.accent,
+                kind: feature.art,
+              ),
+            ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.06),
+                      Colors.black.withValues(alpha: compact ? 0.40 : 0.30),
+                      Colors.black.withValues(alpha: compact ? 0.82 : 0.74),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black.withValues(alpha: 0.04),
-                          Colors.black.withValues(alpha: 0.34),
-                          Colors.black.withValues(alpha: 0.82),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+              ),
+            ),
+            Positioned(
+              top: selected ? 18 : 16,
+              left: selected ? 18 : 16,
+              child: Container(
+                width: selected ? 58 : 44,
+                height: selected ? 58 : 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.38),
+                  border: Border.all(
+                    color: feature.accent.withValues(alpha: 0.64),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: feature.accent.withValues(alpha: 0.34),
+                      blurRadius: 20,
                     ),
-                  ),
+                  ],
                 ),
-                Positioned(
-                  top: 18,
-                  left: 18,
-                  child: _ArcHubGlassIcon(
-                    icon: feature.icon,
-                    accent: feature.accent,
-                  ),
+                child: Icon(
+                  feature.icon,
+                  color: feature.accent,
+                  size: iconSize,
                 ),
-                Positioned(
-                  top: 18,
-                  right: 18,
-                  child: _ArcHubStatusPill(accent: feature.accent),
-                ),
-                Positioned(
-                  left: 22,
-                  right: 22,
-                  bottom: 18,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        feature.title.toUpperCase(),
-                        style:
-                            AppTheme.neonTextStyle(
-                              fontSize: selected ? 27 : 22,
-                              color: Colors.white,
-                              isBold: true,
-                            ).copyWith(
-                              letterSpacing: 1.0,
-                              shadows: [
-                                Shadow(
-                                  color: feature.accent.withValues(alpha: 0.78),
-                                  blurRadius: 18,
-                                ),
-                              ],
-                            ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      Text(
-                        feature.subtitle,
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.82),
+              ),
+            ),
+            if (selected)
+              Positioned(
+                top: 18,
+                right: 18,
+                child: _ArcHubStatusPill(accent: feature.accent),
+              ),
+            Positioned(
+              left: selected ? 24 : 18,
+              right: selected ? 24 : 18,
+              bottom: selected ? 24 : 18,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    feature.title.toUpperCase(),
+                    maxLines: compact ? 2 : 3,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        AppTheme.neonTextStyle(
+                          fontSize: titleSize,
+                          color: Colors.white,
                           isBold: true,
-                        ).copyWith(height: 1.26),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.touch_app_rounded,
-                            color: feature.accent,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Tap to open',
-                            style: AppTheme.bodyTextStyle(
-                              fontSize: 12,
-                              color: feature.accent,
-                              isBold: true,
+                        ).copyWith(
+                          letterSpacing: 0.8,
+                          shadows: [
+                            Shadow(
+                              color: feature.accent.withValues(alpha: 0.80),
+                              blurRadius: selected ? 18 : 10,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    feature.subtitle,
+                    maxLines: compact ? 3 : 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: bodySize,
+                      color: Colors.white.withValues(alpha: 0.84),
+                      isBold: true,
+                    ).copyWith(height: 1.26),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.touch_app_rounded,
+                        color: feature.accent,
+                        size: compact ? 14 : 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Tap to open',
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: compact ? 10 : 12,
+                          color: feature.accent,
+                          isBold: true,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -953,30 +1003,6 @@ class _TinySystemChip extends StatelessWidget {
           isBold: true,
         ),
       ),
-    );
-  }
-}
-
-class _ArcHubGlassIcon extends StatelessWidget {
-  const _ArcHubGlassIcon({required this.icon, required this.accent});
-
-  final IconData icon;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 58,
-      height: 58,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.black.withValues(alpha: 0.38),
-        border: Border.all(color: accent.withValues(alpha: 0.64)),
-        boxShadow: [
-          BoxShadow(color: accent.withValues(alpha: 0.34), blurRadius: 20),
-        ],
-      ),
-      child: Icon(icon, color: accent, size: 31),
     );
   }
 }
