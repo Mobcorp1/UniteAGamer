@@ -24,7 +24,7 @@ class ArcRaidersHubScreen extends StatefulWidget {
 }
 
 class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.72);
+  final PageController _controller = PageController(viewportFraction: 0.58);
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _features = [
@@ -236,9 +236,9 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                     final opacity = distance <= 1
                         ? 1 - (distance * 0.22)
                         : 0.78 - ((distance - 1) * 0.36);
-                    final rotation = -delta * (isWide ? 0.18 : 0.10);
-                    final lift = distance * (isWide ? 22 : 14);
-                    final sideShift = -delta * (isWide ? 18 : 10);
+                    final rotation = -delta * (isWide ? 0.28 : 0.18);
+                    final lift = distance * (isWide ? 30 : 20);
+                    final sideShift = -delta * (isWide ? 34 : 22);
 
                     return Opacity(
                       opacity: opacity.clamp(0.0, 1.0),
@@ -296,8 +296,8 @@ class _PremiumFeatureCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            width: selected ? 330 : 292,
-            height: selected ? 430 : 382,
+            width: selected ? 300 : 246,
+            height: selected ? 408 : 352,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
@@ -362,7 +362,7 @@ class _PremiumFeatureCard extends StatelessWidget {
                 Positioned(
                   left: 22,
                   right: 22,
-                  bottom: 22,
+                  bottom: 18,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -370,7 +370,7 @@ class _PremiumFeatureCard extends StatelessWidget {
                         feature.title.toUpperCase(),
                         style:
                             AppTheme.neonTextStyle(
-                              fontSize: selected ? 30 : 25,
+                              fontSize: selected ? 27 : 22,
                               color: Colors.white,
                               isBold: true,
                             ).copyWith(
@@ -526,7 +526,7 @@ class _TrackingMenuScreen extends StatefulWidget {
 }
 
 class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.72);
+  final PageController _controller = PageController(viewportFraction: 0.58);
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _trackingFeatures = [
