@@ -214,6 +214,24 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final canvasWidth = constraints.maxWidth;
         final canvasHeight = constraints.maxHeight;
 
+        final centreCardWidth = isWide
+            ? 376.0
+            : isTablet
+            ? 322.0
+            : 274.0;
+        final centreCardHeight = isWide
+            ? 372.0
+            : isTablet
+            ? 348.0
+            : 320.0;
+
+        final stageCenterTop = ((canvasHeight - centreCardHeight) / 2).clamp(
+          52.0,
+          128.0,
+        );
+        final stripTop = stageCenterTop + centreCardHeight + AppTheme.spaceS;
+        final dotsTop = stripTop + 72;
+
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onHorizontalDragEnd: (details) {
@@ -226,7 +244,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
           },
           child: Stack(
             clipBehavior: Clip.none,
-            alignment: const Alignment(0, -0.12),
+            alignment: Alignment.center,
             children: [
               for (final slot in slots)
                 _StaticRingFeatureSlot(
@@ -243,7 +261,17 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                       : () => onPageChanged(_wrap(selectedIndex + slot)),
                 ),
               Positioned(
-                bottom: 0,
+                top: stripTop,
+                child: SizedBox(
+                  width: centreCardWidth,
+                  child: _HubQuickStrip(
+                    selected: features[selectedIndex],
+                    onOpen: () => onOpen(features[selectedIndex]),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: dotsTop,
                 child: _HubPageIndicator(
                   count: features.length,
                   selectedIndex: selectedIndex,
