@@ -272,20 +272,28 @@ class _ManualRingSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final distance = slot.abs().toDouble();
-    final x = slot * (isWide ? 260.0 : 142.0);
-    final y = distance * (isWide ? 18.0 : 12.0);
+    final distance = slot.abs();
+
+    final x = slot * (isWide ? 225.0 : 126.0);
+    final y = distance * (isWide ? 14.0 : 8.0);
+
     final scale = selected
         ? 1.0
         : distance == 1
-        ? 0.78
-        : 0.62;
+        ? 0.82
+        : 0.64;
+
     final opacity = selected
         ? 1.0
         : distance == 1
-        ? 0.78
-        : 0.42;
-    final rotation = -slot * (isWide ? 0.16 : 0.10);
+        ? 0.86
+        : 0.52;
+
+    final quarterTurn = selected
+        ? 0.0
+        : slot < 0
+        ? -0.018
+        : 0.018;
 
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 260),
@@ -294,23 +302,21 @@ class _ManualRingSlot extends StatelessWidget {
       right: 0,
       top: 0,
       bottom: 0,
-      child: IgnorePointer(
-        ignoring: false,
+      child: Center(
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 220),
           opacity: opacity,
           child: Transform.translate(
             offset: Offset(x, y),
-            child: Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.0011)
-                ..rotateY(rotation)
-                ..scaleByDouble(scale, scale, scale, 1),
-              child: _PremiumFeatureCard(
-                feature: feature,
-                selected: selected,
-                onTap: onTap,
+            child: Transform.rotate(
+              angle: quarterTurn,
+              child: Transform.scale(
+                scale: scale,
+                child: _PremiumFeatureCard(
+                  feature: feature,
+                  selected: selected,
+                  onTap: onTap,
+                ),
               ),
             ),
           ),
