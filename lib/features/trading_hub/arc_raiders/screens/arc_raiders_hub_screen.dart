@@ -225,7 +225,7 @@ class _PremiumFeatureCarousel extends StatelessWidget {
           },
           child: Stack(
             clipBehavior: Clip.none,
-            alignment: Alignment.center,
+            alignment: const Alignment(0, -0.12),
             children: [
               for (final slot in slots)
                 _StaticRingFeatureSlot(
@@ -376,7 +376,7 @@ class _ArcHubRealAssetBackdrop extends StatelessWidget {
         Image.asset(
           path,
           fit: BoxFit.cover,
-          alignment: Alignment.center,
+          alignment: const Alignment(0, -0.12),
           errorBuilder: (context, error, stackTrace) {
             return _ArcHubArtBackdrop(
               accent: feature.accent,
