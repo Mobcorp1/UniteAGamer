@@ -183,8 +183,8 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final isTablet =
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
-        final stageWidth = constraints.maxWidth >= 1180
-            ? 1180.0
+        final stageWidth = isWide
+            ? math.min(constraints.maxWidth, 1080.0)
             : constraints.maxWidth;
         final canvasWidth = stageWidth;
         final canvasHeight = constraints.maxHeight;
@@ -200,16 +200,19 @@ class _PremiumFeatureCarousel extends StatelessWidget {
             ? 348.0
             : 320.0;
 
-        final stageCenterTop = ((canvasHeight - centreCardHeight) / 2).clamp(
-          52.0,
-          128.0,
-        );
-        final stripTop = stageCenterTop + centreCardHeight + AppTheme.spaceS;
-        final dotsTop = stripTop + 72;
-        final arrowTop = ((stageCenterTop + centreCardHeight / 2) - 26)
-            .clamp(54.0, math.max(54.0, canvasHeight - 86.0))
+        final stripTop = (centreCardHeight + (isWide ? 22.0 : 18.0))
+            .clamp(334.0, math.max(334.0, canvasHeight - 154.0))
             .toDouble();
-        final arrowInset = isWide ? 24.0 : 6.0;
+        final dotsTop = stripTop + 58;
+        final arrowTop =
+            (isWide
+                    ? 170.0
+                    : isTablet
+                    ? 158.0
+                    : 146.0)
+                .clamp(54.0, math.max(54.0, canvasHeight - 132.0))
+                .toDouble();
+        final arrowInset = isWide ? 18.0 : 6.0;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -352,11 +355,11 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? 0.0
         : distance == 1
         ? (isWide
-              ? 322.0
+              ? 298.0
               : isTablet
-              ? 258.0
-              : 180.0)
-        : (isWide ? 575.0 : 0.0);
+              ? 252.0
+              : 176.0)
+        : (isWide ? 480.0 : 0.0);
 
     final top = selected
         ? -22.0
@@ -367,8 +370,8 @@ class _StaticRingFeatureSlot extends StatelessWidget {
     final opacity = selected
         ? 1.0
         : distance == 1
-        ? 0.90
-        : 0.58;
+        ? 0.84
+        : 0.46;
 
     final left = ((canvasWidth - width) / 2) + (slot < 0 ? -offset : offset);
 
@@ -483,9 +486,9 @@ class _StaticRingFeatureCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: feature.accent.withValues(alpha: selected ? 0.38 : 0.22),
-              blurRadius: selected ? 38 : 20,
-              offset: const Offset(0, 16),
+              color: feature.accent.withValues(alpha: selected ? 0.30 : 0.16),
+              blurRadius: selected ? 30 : 16,
+              offset: const Offset(0, 14),
             ),
           ],
         ),
