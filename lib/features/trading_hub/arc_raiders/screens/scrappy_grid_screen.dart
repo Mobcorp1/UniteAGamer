@@ -103,11 +103,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   String get _headerDescription {
     switch (_mode) {
       case ArcScrappyTrackerMode.scrappy:
-        return 'Track Scrappy upgrade items by tier. Expand only the tier you are working on to keep the screen clean.';
+        return 'Track Scrappy upgrade items by tier using swipeable premium cards.';
       case ArcScrappyTrackerMode.bench:
-        return 'Track materials by exact station and tier. Scrappy upgrade items are excluded from this view.';
+        return 'Track bench materials by station and tier using swipeable premium cards.';
       case ArcScrappyTrackerMode.quest:
-        return 'Track regular quest collection items by trader and quest. Fixed-location special quest items are excluded.';
+        return 'Track quest collection items by trader and quest using swipeable premium cards.';
     }
   }
 
@@ -213,7 +213,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       0,
       (total, item) => total + item.neededCount,
     );
-    return '$completed / ${items.length} complete ÃƒÂ¢Ã¢â€šÂ¬Â¢ $totalRequired total needed';
+    return '$completed / ${items.length} complete - $totalRequired total needed';
   }
 
   int _completedCount(
@@ -618,6 +618,43 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
+  Widget _buildTrackerCarousel(List<Widget> cards) {
+    if (cards.isEmpty) return _buildEmptyState();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final viewportFraction = width >= 1200
+            ? 0.38
+            : width >= 900
+            ? 0.50
+            : width >= 700
+            ? 0.68
+            : 0.90;
+
+        final carouselHeight = width >= 1000 ? 720.0 : 660.0;
+
+        return SizedBox(
+          height: carouselHeight,
+          child: PageView.builder(
+            controller: PageController(viewportFraction: viewportFraction),
+            padEnds: true,
+            itemCount: cards.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spaceS,
+                  vertical: AppTheme.spaceS,
+                ),
+                child: SingleChildScrollView(child: cards[index]),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildScrappyList(
     List<ArcScrappyItem> filtered,
     Map<String, ArcScrappyState> states,
@@ -629,10 +666,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       tierGroups.putIfAbsent(item.tier, () => <ArcScrappyItem>[]).add(item);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final tier in ArcScrappyTier.values)
+    final cards = <Widget>[
+      for (final tier in ArcScrappyTier.values)
+        if ((tierGroups[tier] ?? const <ArcScrappyItem>[]).isNotEmpty)
           _buildExpansionSection(
             id: 'scrappy-${tier.name}',
             title: _tierLabel(tier),
@@ -640,8 +676,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             items: tierGroups[tier] ?? const <ArcScrappyItem>[],
             states: states,
           ),
-      ],
-    );
+    ];
+
+    return _buildTrackerCarousel(cards);
   }
 
   Widget _buildGroupedList(
@@ -650,68 +687,32 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   ) {
     if (filtered.isEmpty) return _buildEmptyState();
 
-    final categories = <String>[];
+    final grouped = <String, List<ArcScrappyItem>>{};
+
     for (final item in filtered) {
-      if (!categories.contains(item.category)) categories.add(item.category);
+      final key = '${item.category}|||${item.group}';
+      grouped.putIfAbsent(key, () => <ArcScrappyItem>[]).add(item);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final category in categories)
-          _buildCategorySection(
-            category: category,
-            items: filtered
-                .where((item) => item.category == category)
-                .toList(growable: false),
-            states: states,
-          ),
-      ],
-    );
-  }
+    final cards = <Widget>[
+      for (final entry in grouped.entries)
+        _buildExpansionSection(
+          id: '${_mode.name}-${entry.key}',
+          title: _mode == ArcScrappyTrackerMode.quest
+              ? entry.value.first.group
+              : '${entry.value.first.category} - ${_displayGroupTitle(entry.value.first.category, entry.value.first.group)}',
+          color: _mode == ArcScrappyTrackerMode.quest
+              ? Colors.amberAccent
+              : _groupColor(entry.value, entry.value.first.group),
+          items: entry.value,
+          states: states,
+          subtitle: _mode == ArcScrappyTrackerMode.quest
+              ? '${entry.value.length} collection items'
+              : '${entry.value.length} upgrade materials',
+        ),
+    ];
 
-  Widget _buildCategorySection({
-    required String category,
-    required List<ArcScrappyItem> items,
-    required Map<String, ArcScrappyState> states,
-  }) {
-    final color = _mode == ArcScrappyTrackerMode.quest
-        ? Colors.amberAccent
-        : AppTheme.neonCyan;
-    final groups = <String>[];
-    for (final item in items) {
-      if (!groups.contains(item.group)) groups.add(item.group);
-    }
-
-    return _buildExpansionSection(
-      id: '${_mode.name}-category-$category',
-      title: category,
-      color: color,
-      items: items,
-      states: states,
-      subtitle: _mode == ArcScrappyTrackerMode.quest
-          ? '${items.length} tracked items across ${groups.length} quests'
-          : '${items.length} materials across ${groups.length} tiers',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final group in groups)
-            _buildExpansionSection(
-              id: '${_mode.name}-$category-$group',
-              title: _displayGroupTitle(category, group),
-              color: _groupColor(items, group),
-              items: items
-                  .where((item) => item.group == group)
-                  .toList(growable: false),
-              states: states,
-              subtitle: _mode == ArcScrappyTrackerMode.quest
-                  ? 'Quest collection items'
-                  : '$category upgrade materials',
-            ),
-        ],
-      ),
-    );
+    return _buildTrackerCarousel(cards);
   }
 
   Color _groupColor(List<ArcScrappyItem> items, String group) {
@@ -777,7 +778,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                         ArcScrappyTrackerMode.scrappy =>
                           'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
                         ArcScrappyTrackerMode.bench =>
-                          'Bench materials are grouped by station then tier. Expand only the station you are upgrading.',
+                          'Bench materials are grouped into carousel cards by station and tier.',
                         ArcScrappyTrackerMode.quest =>
                           'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
                       },
