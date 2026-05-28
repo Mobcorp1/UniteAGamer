@@ -213,7 +213,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       0,
       (total, item) => total + item.neededCount,
     );
-    return '$completed / ${items.length} complete Ã¢â‚¬Â¢ $totalRequired total needed';
+    return '$completed / ${items.length} complete ÃƒÂ¢Ã¢â€šÂ¬Â¢ $totalRequired total needed';
   }
 
   int _completedCount(
@@ -540,22 +540,23 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     });
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+      padding: const EdgeInsets.all(AppTheme.spaceL),
       decoration: AppTheme.tradingCardDecoration(
-        radius: 22,
+        radius: 28,
         borderColor: color.withValues(alpha: 0.34),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Expanded(
                 child: Text(
                   title,
-                  style: AppTheme.tradingHeading(fontSize: 21, color: color),
+                  style: AppTheme.tradingHeading(fontSize: 24, color: color),
                 ),
               ),
               _ProgressPill(text: '$completed / ${items.length}', color: color),
@@ -693,6 +694,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           : '${items.length} materials across ${groups.length} tiers',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           for (final group in groups)
             _buildExpansionSection(
