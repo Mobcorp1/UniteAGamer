@@ -48,6 +48,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.all;
   late ArcScrappyTrackerMode _mode;
+  bool _showFeedScrappy = false;
 
   @override
   void initState() {
@@ -61,6 +62,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     if (oldWidget.initialMode != widget.initialMode) {
       _mode = widget.initialMode;
       _selectedFilter = ArcScrappyFilter.all;
+      _showFeedScrappy = false;
       _expandedSections.clear();
     }
   }
@@ -540,8 +542,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     });
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      padding: const EdgeInsets.all(AppTheme.spaceM),
       decoration: AppTheme.tradingCardDecoration(
         radius: 28,
         borderColor: color.withValues(alpha: 0.34),
@@ -618,6 +620,79 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
+  Widget _buildScrappyFeedTabs() {
+    if (_mode != ArcScrappyTrackerMode.scrappy) {
+      return const SizedBox.shrink();
+    }
+
+    Widget tab({
+      required String label,
+      required bool selected,
+      required VoidCallback onTap,
+      required IconData icon,
+    }) {
+      final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
+
+      return Expanded(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spaceM,
+              vertical: AppTheme.spaceS,
+            ),
+            decoration: AppTheme.tradingCardDecoration(
+              radius: 18,
+              borderColor: color.withValues(alpha: selected ? 0.62 : 0.30),
+              backgroundColor: selected
+                  ? color.withValues(alpha: 0.13)
+                  : AppTheme.cardBackgroundDeep.withValues(alpha: 0.74),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 18),
+                const SizedBox(width: AppTheme.spaceXS),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        tab(
+          label: 'Tracker',
+          icon: Icons.grid_view_rounded,
+          selected: !_showFeedScrappy,
+          onTap: () => setState(() => _showFeedScrappy = false),
+        ),
+        const SizedBox(width: AppTheme.spaceS),
+        tab(
+          label: 'Feed Scrappy',
+          icon: Icons.restaurant_rounded,
+          selected: _showFeedScrappy,
+          onTap: () => setState(() => _showFeedScrappy = true),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTrackerCarousel(List<Widget> cards) {
     if (cards.isEmpty) return _buildEmptyState();
 
@@ -625,30 +700,93 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final viewportFraction = width >= 1200
-            ? 0.38
+            ? 0.34
             : width >= 900
-            ? 0.50
+            ? 0.46
             : width >= 700
-            ? 0.68
-            : 0.90;
+            ? 0.64
+            : 0.88;
 
-        final carouselHeight = width >= 1000 ? 720.0 : 660.0;
+        final carouselHeight = width >= 1000 ? 520.0 : 500.0;
+        final controller = PageController(viewportFraction: viewportFraction);
+
+        Widget arrow({required bool next}) {
+          return Positioned(
+            top: 0,
+            bottom: 0,
+            left: next ? null : AppTheme.spaceS,
+            right: next ? AppTheme.spaceS : null,
+            child: Center(
+              child: Material(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.74),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    if (next) {
+                      controller.nextPage(
+                        duration: const Duration(milliseconds: 240),
+                        curve: Curves.easeOutCubic,
+                      );
+                    } else {
+                      controller.previousPage(
+                        duration: const Duration(milliseconds: 240),
+                        curve: Curves.easeOutCubic,
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppTheme.neonCyan.withValues(alpha: 0.52),
+                        width: 1.4,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.neonCyan.withValues(alpha: 0.28),
+                          blurRadius: 18,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      next
+                          ? Icons.chevron_right_rounded
+                          : Icons.chevron_left_rounded,
+                      color: AppTheme.neonCyan,
+                      size: 34,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
 
         return SizedBox(
           height: carouselHeight,
-          child: PageView.builder(
-            controller: PageController(viewportFraction: viewportFraction),
-            padEnds: true,
-            itemCount: cards.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spaceS,
-                  vertical: AppTheme.spaceS,
-                ),
-                child: SingleChildScrollView(child: cards[index]),
-              );
-            },
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: controller,
+                padEnds: true,
+                itemCount: cards.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceS,
+                      vertical: AppTheme.spaceXS,
+                    ),
+                    child: SingleChildScrollView(child: cards[index]),
+                  );
+                },
+              ),
+              if (cards.length > 1) arrow(next: false),
+              if (cards.length > 1) arrow(next: true),
+            ],
           ),
         );
       },
@@ -767,24 +905,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 return ListView(
                   padding: AppTheme.pagePadding,
                   children: [
-                    ScrappyProgressHeader(
-                      completion: completion,
-                      ownedCount: ownedCount,
-                      totalCount: allItems.length,
-                      landscape: landscape,
-                      title: _headerTitle,
-                      description: _headerDescription,
-                      footer: switch (_mode) {
-                        ArcScrappyTrackerMode.scrappy =>
-                          'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
-                        ArcScrappyTrackerMode.bench =>
-                          'Bench materials are grouped into carousel cards by station and tier.',
-                        ArcScrappyTrackerMode.quest =>
-                          'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
-                      },
-                      accentColor: _modeAccent(),
-                    ),
-                    const SizedBox(height: AppTheme.spaceL),
+                    _buildScrappyFeedTabs(),
+                    if (_mode == ArcScrappyTrackerMode.scrappy)
+                      const SizedBox(height: AppTheme.spaceM),
                     ScrappyFilterBar(
                       selectedFilter: _selectedFilter,
                       counts: counts,
@@ -799,6 +922,27 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     if (_mode == ArcScrappyTrackerMode.scrappy) ...[
                       const SizedBox(height: AppTheme.spaceL),
                       const ScrappyFeedQueueSection(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      ScrappyProgressHeader(
+                        completion: completion,
+                        ownedCount: ownedCount,
+                        totalCount: allItems.length,
+                        landscape: landscape,
+                        title: _headerTitle,
+                        description: _headerDescription,
+                        footer: switch (_mode) {
+                          ArcScrappyTrackerMode.scrappy =>
+                            'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
+                          ArcScrappyTrackerMode.bench =>
+                            'Bench materials are grouped into carousel cards by station and tier.',
+                          ArcScrappyTrackerMode.quest =>
+                            'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
+                        },
+                        accentColor: _modeAccent(),
+                      ),
+                      const SizedBox(height: AppTheme.spaceL),
+
+                      const SizedBox(height: 112),
                     ],
                     const SizedBox(height: AppTheme.spaceXL),
                   ],
