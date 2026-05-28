@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
@@ -15,7 +16,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/scrappy
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/scrappy_filter_bar.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/scrappy_progress_header.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/scrappy_tile.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 enum ArcScrappyTrackerMode { scrappy, bench, quest }
@@ -213,7 +213,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       0,
       (total, item) => total + item.neededCount,
     );
-    return '$completed / ${items.length} complete â€¢ $totalRequired total needed';
+    return '$completed / ${items.length} complete Ã¢â‚¬Â¢ $totalRequired total needed';
   }
 
   int _completedCount(
@@ -429,84 +429,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
-  Widget _buildModeNavigation() {
-    Widget button({
-      required ArcScrappyTrackerMode mode,
-      required String label,
-      required IconData icon,
-      required String routeName,
-    }) {
-      final selected = _mode == mode;
-      final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
-      return Expanded(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: selected
-              ? null
-              : () => Navigator.pushReplacementNamed(context, routeName),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spaceS,
-              vertical: AppTheme.spaceM,
-            ),
-            decoration: AppTheme.tradingCardDecoration(
-              radius: 16,
-              borderColor: color.withValues(alpha: selected ? 0.64 : 0.20),
-              backgroundColor: selected
-                  ? AppTheme.cardBackgroundAlt
-                  : AppTheme.cardBackgroundDeep,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: color, size: 18),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        button(
-          mode: ArcScrappyTrackerMode.scrappy,
-          label: 'Scrappy',
-          icon: Icons.pets_rounded,
-          routeName: ScrappyGridScreen.routeName,
-        ),
-        const SizedBox(width: AppTheme.spaceS),
-        button(
-          mode: ArcScrappyTrackerMode.bench,
-          label: 'Bench',
-          icon: Icons.handyman_rounded,
-          routeName: ScrappyGridScreen.benchRouteName,
-        ),
-        const SizedBox(width: AppTheme.spaceS),
-        button(
-          mode: ArcScrappyTrackerMode.quest,
-          label: 'Quests',
-          icon: Icons.assignment_turned_in_rounded,
-          routeName: ScrappyGridScreen.questRouteName,
-        ),
-      ],
-    );
-  }
-
   Widget _buildAdaptiveTileWrap(
     List<ArcScrappyItem> items,
     Map<String, ArcScrappyState> states,
@@ -576,6 +498,21 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
+  Future<void> _markSectionComplete(
+    List<ArcScrappyItem> items,
+    Map<String, ArcScrappyState> states,
+  ) async {
+    for (final item in items) {
+      final current = states[item.id] ?? ArcScrappyState.empty(item.id);
+      if (current.collectedCount < item.neededCount) {
+        await _repository.saveScrappyState(
+          current.copyWith(collectedCount: item.neededCount),
+          neededCount: item.neededCount,
+        );
+      }
+    }
+  }
+
   Widget _buildExpansionSection({
     required String id,
     required String title,
@@ -587,68 +524,95 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
 
-    final expanded = _expandedSections.contains(id);
     final completed = _completedCount(items, states);
+    final neededTotal = items.fold<int>(
+      0,
+      (total, item) => total + item.neededCount,
+    );
+    final gotTotal = items.fold<int>(0, (total, item) {
+      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+      return total + state.collectedCount.clamp(0, item.neededCount);
+    });
+    final wantedTotal = (neededTotal - gotTotal).clamp(0, neededTotal);
+    final duplicateTotal = items.fold<int>(0, (total, item) {
+      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+      return total + state.surplusFor(item.neededCount);
+    });
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      padding: const EdgeInsets.all(AppTheme.spaceM),
       decoration: AppTheme.tradingCardDecoration(
-        radius: 18,
-        borderColor: color.withValues(alpha: expanded ? 0.42 : 0.20),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        radius: 22,
+        borderColor: color.withValues(alpha: 0.34),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          key: PageStorageKey(id),
-          initiallyExpanded: expanded,
-          onExpansionChanged: (value) {
-            setState(() {
-              if (value) {
-                _expandedSections
-                  ..clear()
-                  ..add(id);
-              } else {
-                _expandedSections.remove(id);
-              }
-            });
-          },
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spaceM,
-            vertical: AppTheme.spaceXS,
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(
-            AppTheme.spaceM,
-            0,
-            AppTheme.spaceM,
-            AppTheme.spaceM,
-          ),
-          iconColor: color,
-          collapsedIconColor: color,
-          title: Text(
-            title,
-            style: AppTheme.tradingHeading(fontSize: 19, color: color),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 3),
-            child: Text(
-              subtitle ?? _sectionSubtitle(items, states),
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              _ProgressPill(text: '$completed / ${items.length}', color: color),
-              const SizedBox(width: 4),
-              Icon(
-                expanded ? Icons.expand_less : Icons.expand_more,
-                color: color,
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTheme.tradingHeading(fontSize: 21, color: color),
+                ),
               ),
+              _ProgressPill(text: '$completed / ${items.length}', color: color),
             ],
           ),
-          children: [child ?? _buildAdaptiveTileWrap(items, states)],
-        ),
+          const SizedBox(height: AppTheme.spaceXS),
+          Text(
+            subtitle ?? _sectionSubtitle(items, states),
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              _ProgressPill(text: 'Need $neededTotal', color: color),
+              _ProgressPill(text: 'Got $gotTotal', color: Colors.greenAccent),
+              _ProgressPill(
+                text: 'Wanted $wantedTotal',
+                color: AppTheme.neonPink,
+              ),
+              if (duplicateTotal > 0)
+                _ProgressPill(
+                  text: 'Dupes $duplicateTotal',
+                  color: Colors.amberAccent,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: wantedTotal == 0
+                  ? null
+                  : () => _markSectionComplete(items, states),
+              icon: Icon(
+                wantedTotal == 0
+                    ? Icons.check_circle_rounded
+                    : Icons.task_alt_rounded,
+              ),
+              label: Text(
+                wantedTotal == 0 ? 'COMPLETE' : 'MARK SECTION COMPLETE',
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: color,
+                side: BorderSide(color: color.withValues(alpha: 0.58)),
+                padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceM),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          child ?? _buildAdaptiveTileWrap(items, states),
+        ],
       ),
     );
   }
@@ -782,7 +746,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       ),
       body: Stack(
         children: [
-          const Positioned.fill(child: StaticWatermark()),
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           SafeArea(
             child: StreamBuilder<Map<String, ArcScrappyState>>(
               stream: _repository.watchMyScrappyStates(),
@@ -800,8 +764,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 return ListView(
                   padding: AppTheme.pagePadding,
                   children: [
-                    _buildModeNavigation(),
-                    const SizedBox(height: AppTheme.spaceL),
                     ScrappyProgressHeader(
                       completion: completion,
                       ownedCount: ownedCount,
