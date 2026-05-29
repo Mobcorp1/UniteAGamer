@@ -492,7 +492,7 @@ class _StaticRingFeatureCard extends StatelessWidget {
           color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(selected ? 30 : 22),
           border: Border.all(
-            color: feature.accent.withValues(alpha: selected ? 0.88 : 0.58),
+            color: feature.accent.withValues(alpha: selected ? 0.82 : 0.58),
             width: selected ? 1.5 : 1.0,
           ),
           boxShadow: [
