@@ -12,8 +12,6 @@ class ScrappyFeedQueueSection extends StatefulWidget {
 }
 
 class _ScrappyFeedQueueSectionState extends State<ScrappyFeedQueueSection> {
-  bool _expanded = false;
-
   @override
   Widget build(BuildContext context) {
     final items = ArcScrappyFoodQueueData.items;
@@ -29,8 +27,7 @@ class _ScrappyFeedQueueSectionState extends State<ScrappyFeedQueueSection> {
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
-              initiallyExpanded: _expanded,
-              onExpansionChanged: (value) => setState(() => _expanded = value),
+              initiallyExpanded: true,
               tilePadding: EdgeInsets.zero,
               childrenPadding: EdgeInsets.zero,
               collapsedIconColor: AppTheme.neonPink,

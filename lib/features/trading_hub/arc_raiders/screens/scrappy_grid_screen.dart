@@ -949,7 +949,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         _buildExpansionSection(
           id: '${_mode.name}-${entry.key}',
           title: _mode == ArcScrappyTrackerMode.quest
-              ? entry.value.first.group
+              ? (entry.value.first.group.trim().isEmpty
+                    ? 'Quest Items'
+                    : entry.value.first.group)
               : '${entry.value.first.category} - ${_displayGroupTitle(entry.value.first.category, entry.value.first.group)}',
           color: _mode == ArcScrappyTrackerMode.quest
               ? Colors.amberAccent

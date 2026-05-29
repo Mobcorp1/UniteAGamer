@@ -750,29 +750,22 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     ),
     _ArcHubFeature(
       title: 'Bench Tracker',
-      subtitle: 'Coming soon: bench progress and upgrade requirements.',
+      subtitle:
+          'Track bench materials, upgrade tiers and missing requirements.',
       icon: Icons.build_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.targets,
       assetName: 'arc_hub_bench_tracker.webp',
-      builder: (_) => const _ComingSoonScreen(
-        title: 'Bench Tracker',
-        subtitle:
-            'Bench tracking will sit inside Tracking once launch features are stable.',
-      ),
+      builder: (_) => const ScrappyGridScreen.bench(),
     ),
     _ArcHubFeature(
       title: 'Quest Tracker',
-      subtitle: 'Coming soon: quest items, hand-ins and progress reminders.',
+      subtitle: 'Track trader quest items, hand-ins and collection progress.',
       icon: Icons.assignment_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.intel,
       assetName: 'arc_hub_quest_tracker.webp',
-      builder: (_) => const _ComingSoonScreen(
-        title: 'Quest Tracker',
-        subtitle:
-            'Quest tracking will be added after the core launch flow is polished.',
-      ),
+      builder: (_) => const ScrappyGridScreen.quest(),
     ),
   ];
 
@@ -1530,55 +1523,6 @@ class _ArcHubArtPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ArcHubArtPainter oldDelegate) {
     return oldDelegate.accent != accent || oldDelegate.kind != kind;
-  }
-}
-
-class _ComingSoonScreen extends StatelessWidget {
-  const _ComingSoonScreen({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        backgroundColor: AppTheme.cardBackgroundDeep,
-        foregroundColor: Colors.white,
-        title: Text(
-          title,
-          style: AppTheme.neonTextStyle(
-            fontSize: 22,
-            color: AppTheme.neonCyan,
-            isBold: true,
-          ),
-        ),
-      ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(opacity: 0.12, child: StaticWatermark()),
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.spaceL),
-              child: Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 15,
-                  color: AppTheme.tradingMutedText,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
