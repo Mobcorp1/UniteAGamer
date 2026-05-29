@@ -1,7 +1,7 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -562,146 +562,376 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final phone = size.width < 430;
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Container(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                decoration: AppTheme.tradingCardDecoration(
-                  borderColor: _borderColor.withValues(alpha: 0.32),
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      AnimatedTextKit(
-                        animatedTexts: [
-                          TypewriterAnimatedText(
-                            _isLogin ? 'Welcome Back' : 'Join Traders Hub',
-                            textStyle: AppTheme.tradingHeading(
-                              fontSize: 28,
-                              color: AppTheme.neonPink,
-                            ),
-                            speed: const Duration(milliseconds: 70),
-                          ),
-                        ],
-                        totalRepeatCount: 1,
-                        displayFullTextOnTap: true,
-                      ),
-                      const SizedBox(height: AppTheme.spaceL),
-                      if (!_isLogin) _buildSignupFields(),
-                      TextFormField(
-                        controller: _emailFieldController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: _inputDecoration('Email'),
-                        onSaved: (value) => _email = value?.trim() ?? '',
-                        validator: (value) =>
-                            value == null || !value.contains('@')
-                            ? 'Enter a valid email'
-                            : null,
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      CheckboxListTile(
-                        value: _rememberEmail,
-                        onChanged: (value) =>
-                            setState(() => _rememberEmail = value ?? true),
-                        controlAffinity: ListTileControlAffinity.leading,
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Remember my email on this device'),
-                      ),
-                      if (_isLogin && _biometricsAvailable) ...[
-                        SwitchListTile(
-                          value: _biometricLoginEnabled,
-                          onChanged: (value) =>
-                              setState(() => _biometricLoginEnabled = value),
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text(
-                            'Enable biometric unlock after login',
-                          ),
-                          subtitle: const Text(
-                            'Uses your device fingerprint/face unlock when an account session is already saved.',
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _UagAuthBackdrop(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                phone ? 20 : 34,
+                phone ? 22 : 32,
+                phone ? 20 : 34,
+                28,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: size.height - 72),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: AppTheme.neonPink,
                           ),
                         ),
-                        if (_biometricLoginEnabled)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton.icon(
-                              onPressed: _tryBiometricUnlock,
-                              icon: const Icon(Icons.fingerprint),
-                              label: const Text('Unlock with biometrics'),
-                            ),
-                          ),
-                      ],
-                      const SizedBox(height: AppTheme.spaceM),
-                      _buildPasswordField(
-                        controller: _passwordFieldController,
-                        label: 'Password',
-                        isVisible: _showPassword,
-                        onToggle: () {
-                          setState(() => _showPassword = !_showPassword);
-                        },
-                        onSaved: (value) => _password = value?.trim() ?? '',
-                        validator: _validatePassword,
-                      ),
-                      if (!_isLogin) ...[
-                        const SizedBox(height: AppTheme.spaceM),
-                        _buildPasswordField(
-                          controller: _confirmPasswordController,
-                          label: 'Confirm Password',
-                          isVisible: _showConfirmPassword,
-                          onToggle: () {
-                            setState(
-                              () =>
-                                  _showConfirmPassword = !_showConfirmPassword,
-                            );
-                          },
-                          validator: (value) =>
-                              value != _passwordFieldController.text
-                              ? 'Passwords do not match'
-                              : null,
-                        ),
-                      ],
-                      const SizedBox(height: AppTheme.spaceL),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submit,
+                        const SizedBox(width: 6),
+                        Expanded(
                           child: Text(
-                            _isLoading
-                                ? 'Please wait...'
-                                : (_isLogin ? 'Log In' : 'Create Account'),
+                            'UAG ARC RAIDERS HUB',
+                            style: AppTheme.tradingHeading(
+                              fontSize: phone ? 16 : 20,
+                              color: Colors.white,
+                            ).copyWith(letterSpacing: 1.1),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      if (_isLogin)
-                        TextButton(
-                          onPressed: _showResetPasswordDialog,
-                          child: const Text('Forgot password?'),
-                        ),
-                      TextButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => setState(() => _isLogin = !_isLogin),
-                        child: Text(
-                          _isLogin
-                              ? 'Need an account? Sign up'
-                              : 'Already have an account? Log in',
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const _AuthIntelCarousel(),
+                    const SizedBox(height: 22),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: AppTheme.tradingCardDecoration(
+                        radius: 28,
+                        borderColor: _borderColor.withValues(alpha: 0.34),
+                        backgroundColor: AppTheme.cardBackgroundDeep.withValues(
+                          alpha: 0.86,
                         ),
                       ),
-                    ],
-                  ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              _isLogin ? 'Welcome Raider' : 'Create Account',
+                              textAlign: TextAlign.center,
+                              style: AppTheme.tradingHeading(
+                                fontSize: 22,
+                                color: AppTheme.neonCyan,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _isLogin
+                                  ? 'Log in to access your operations hub.'
+                                  : 'Build your raider identity.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            if (!_isLogin) _buildSignupFields(),
+                            TextFormField(
+                              controller: _emailFieldController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: _inputDecoration('Email address'),
+                              onSaved: (value) => _email = value?.trim() ?? '',
+                              validator: (value) =>
+                                  value == null || !value.contains('@')
+                                  ? 'Enter a valid email'
+                                  : null,
+                            ),
+                            const SizedBox(height: AppTheme.spaceS),
+                            CheckboxListTile(
+                              value: _rememberEmail,
+                              onChanged: (value) => setState(
+                                () => _rememberEmail = value ?? true,
+                              ),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                              title: const Text(
+                                'Remember email',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                            if (_isLogin && _biometricsAvailable) ...[
+                              SwitchListTile(
+                                value: _biometricLoginEnabled,
+                                onChanged: (value) => setState(
+                                  () => _biometricLoginEnabled = value,
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                dense: true,
+                                title: const Text(
+                                  'Biometric unlock',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                              if (_biometricLoginEnabled)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: TextButton.icon(
+                                    onPressed: _tryBiometricUnlock,
+                                    icon: const Icon(Icons.fingerprint),
+                                    label: const Text('Unlock with biometrics'),
+                                  ),
+                                ),
+                            ],
+                            const SizedBox(height: AppTheme.spaceM),
+                            _buildPasswordField(
+                              controller: _passwordFieldController,
+                              label: 'Password',
+                              isVisible: _showPassword,
+                              onToggle: () {
+                                setState(() => _showPassword = !_showPassword);
+                              },
+                              onSaved: (value) =>
+                                  _password = value?.trim() ?? '',
+                              validator: _validatePassword,
+                            ),
+                            if (!_isLogin) ...[
+                              const SizedBox(height: AppTheme.spaceM),
+                              _buildPasswordField(
+                                controller: _confirmPasswordController,
+                                label: 'Confirm Password',
+                                isVisible: _showConfirmPassword,
+                                onToggle: () {
+                                  setState(
+                                    () => _showConfirmPassword =
+                                        !_showConfirmPassword,
+                                  );
+                                },
+                                validator: (value) =>
+                                    value != _passwordFieldController.text
+                                    ? 'Passwords do not match'
+                                    : null,
+                              ),
+                            ],
+                            const SizedBox(height: AppTheme.spaceL),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      AppTheme.neonPink,
+                                      AppTheme.neonCyan,
+                                    ],
+                                  ),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _submit,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: Text(
+                                    _isLoading
+                                        ? 'Please wait...'
+                                        : (_isLogin
+                                              ? 'Log In'
+                                              : 'Create Account'),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spaceM),
+                            if (_isLogin)
+                              TextButton(
+                                onPressed: _showResetPasswordDialog,
+                                child: const Text('Forgot password?'),
+                              ),
+                            TextButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : () => setState(() => _isLogin = !_isLogin),
+                              child: Text(
+                                _isLogin
+                                    ? 'New here? Create account'
+                                    : 'Already have an account? Log in',
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.shield_outlined,
+                                  size: 14,
+                                  color: Colors.white54,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Protected by UAG Security Protocols',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UagAuthBackdrop extends StatelessWidget {
+  const _UagAuthBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF02030B),
+                AppTheme.cardBackgroundDeep,
+                const Color(0xFF050014),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
+        const Positioned.fill(child: StaticWatermark()),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0.08, -0.32),
+                radius: 0.98,
+                colors: [
+                  AppTheme.neonCyan.withValues(alpha: 0.18),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.black.withValues(alpha: 0.05),
+                  Colors.black.withValues(alpha: 0.78),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthIntelCarousel extends StatelessWidget {
+  const _AuthIntelCarousel();
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = const [
+      ('LIVE INTEL', 'Dam Battlegrounds', 'High value targets detected'),
+      ('EXTRACTION RISK', 'HIGH', 'Risk level elevated'),
+      ('MARKET PULSE', 'RISING', 'Prices moving fast'),
+    ];
+
+    return SizedBox(
+      height: 238,
+      child: PageView.builder(
+        controller: PageController(viewportFraction: 0.78),
+        itemCount: cards.length,
+        itemBuilder: (context, index) {
+          final card = cards[index];
+          final accent = index == 1 ? AppTheme.neonPink : AppTheme.neonCyan;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 7),
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: AppTheme.tradingCardDecoration(
+                radius: 26,
+                borderColor: accent.withValues(alpha: 0.58),
+                backgroundColor: AppTheme.cardBackgroundDeep.withValues(
+                  alpha: 0.82,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    card.$1,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 12,
+                      color: accent,
+                      isBold: true,
+                    ).copyWith(letterSpacing: 1.2),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    index == 0
+                        ? Icons.radar_rounded
+                        : index == 1
+                        ? Icons.warning_amber_rounded
+                        : Icons.show_chart_rounded,
+                    color: accent,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    card.$2,
+                    style: AppTheme.tradingHeading(
+                      fontSize: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    card.$3,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 13,
+                      color: Colors.white70,
+                      isBold: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
