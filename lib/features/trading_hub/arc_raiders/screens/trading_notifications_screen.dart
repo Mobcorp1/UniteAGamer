@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
@@ -47,7 +48,7 @@ class TradingNotificationsScreen extends StatelessWidget {
     final month = value.month.toString().padLeft(2, '0');
     final hour = value.hour.toString().padLeft(2, '0');
     final minute = value.minute.toString().padLeft(2, '0');
-    return '$day/$month/${value.year} • $hour:$minute';
+    return '$day/$month/${value.year} â€¢ $hour:$minute';
   }
 
   Future<void> _openNotification(
@@ -127,6 +128,7 @@ class TradingNotificationsScreen extends StatelessWidget {
           : null,
       body: Stack(
         children: [
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: Center(

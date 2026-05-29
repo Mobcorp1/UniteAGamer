@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
@@ -53,6 +54,7 @@ class _ArcMarketIntelligenceScreenState
       ),
       body: Stack(
         children: [
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: StreamBuilder<List<ArcBlueprintDropReport>>(
@@ -587,7 +589,7 @@ class _ArcMarketIntelligenceScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${blueprint.category} • ${blueprint.rarityLabel}',
+                      '${blueprint.category} â€¢ ${blueprint.rarityLabel}',
                       style: const TextStyle(color: Colors.white60),
                     ),
                   ],
@@ -825,7 +827,7 @@ class _ArcMarketIntelligenceScreenState
           _buildInfoLine('Event', combo.eventLabel),
           _buildInfoLine(
             'Support',
-            '${combo.reportCount} weighted reports • ${combo.percentageLabel}',
+            '${combo.reportCount} weighted reports â€¢ ${combo.percentageLabel}',
           ),
         ],
       ),
@@ -935,7 +937,7 @@ class _ArcMarketIntelligenceScreenState
           ),
           const SizedBox(height: 8),
           Text(
-            'Need ${target.remainingNeeded} more • ${target.item.tierLabel}',
+            'Need ${target.remainingNeeded} more â€¢ ${target.item.tierLabel}',
             style: const TextStyle(color: Colors.white70),
           ),
           if ((target.item.locationHint?.trim().isNotEmpty ?? false)) ...[
@@ -1025,7 +1027,7 @@ class _ArcMarketIntelligenceScreenState
       if (values.isEmpty) return 'No data';
       final sorted = values.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
-      return '${sorted.first.key} • ${sorted.first.value}';
+      return '${sorted.first.key} â€¢ ${sorted.first.value}';
     }
 
     return [
@@ -1061,7 +1063,7 @@ class _ArcMarketIntelligenceScreenState
     }
     if (weather == 'No Special Weather') return event;
     if (event == 'No Map Event') return weather;
-    return '$weather • $event';
+    return '$weather â€¢ $event';
   }
 
   String _buildConfidenceLabel(ArcDropIntel intel) {
@@ -1282,7 +1284,7 @@ class _ArcMarketIntelligenceScreenState
                               style: const TextStyle(color: Colors.white),
                             ),
                             subtitle: Text(
-                              '${blueprint.category} • ${blueprint.rarityLabel}',
+                              '${blueprint.category} â€¢ ${blueprint.rarityLabel}',
                               style: const TextStyle(color: Colors.white60),
                             ),
                             trailing: isSelected

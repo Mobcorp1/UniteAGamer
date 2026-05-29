@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
 import 'package:uag_traders_hub/build/app_bar.dart';
@@ -1153,6 +1154,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       drawer: const AppDrawer(),
       body: Stack(
         children: [
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: StreamBuilder<RaidPlannerEntitlement>(

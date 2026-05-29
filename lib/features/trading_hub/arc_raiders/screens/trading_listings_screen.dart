@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -259,7 +260,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               if (subtitleBits.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
-                  subtitleBits.join(' â€¢ '),
+                  subtitleBits.join(' Ã¢â‚¬Â¢ '),
                   style: TextStyle(color: AppTheme.tradingMutedText),
                 ),
               ],
@@ -268,8 +269,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 '${listing.traderName}'
-                '${listing.gamerTag.isNotEmpty ? ' â€¢ ${listing.gamerTag}' : ''}'
-                '${listing.preferredPlatform.isNotEmpty ? ' â€¢ ${listing.preferredPlatform}' : ''}',
+                '${listing.gamerTag.isNotEmpty ? ' Ã¢â‚¬Â¢ ${listing.gamerTag}' : ''}'
+                '${listing.preferredPlatform.isNotEmpty ? ' Ã¢â‚¬Â¢ ${listing.preferredPlatform}' : ''}',
                 style: TextStyle(
                   color: AppTheme.tradingMutedText,
                   fontWeight: FontWeight.w600,
@@ -448,6 +449,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
           : null,
       body: Stack(
         children: [
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: Center(
