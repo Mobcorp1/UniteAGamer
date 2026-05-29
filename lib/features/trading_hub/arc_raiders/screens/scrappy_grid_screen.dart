@@ -49,6 +49,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.all;
   late ArcScrappyTrackerMode _mode;
   bool _showFeedScrappy = false;
+  int _trackerCarouselIndex = 0;
 
   @override
   void initState() {
@@ -63,6 +64,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       _mode = widget.initialMode;
       _selectedFilter = ArcScrappyFilter.all;
       _showFeedScrappy = false;
+      _trackerCarouselIndex = 0;
       _expandedSections.clear();
     }
   }
@@ -542,8 +544,13 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     });
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spaceM,
+        AppTheme.spaceM,
+        AppTheme.spaceM,
+        AppTheme.spaceS,
+      ),
       decoration: AppTheme.tradingCardDecoration(
         radius: 28,
         borderColor: color.withValues(alpha: 0.34),
@@ -590,6 +597,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           const SizedBox(height: AppTheme.spaceM),
           SizedBox(
             width: double.infinity,
+            height: 38,
             child: OutlinedButton.icon(
               onPressed: wantedTotal == 0
                   ? null
@@ -599,9 +607,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     ? Icons.check_circle_rounded
                     : Icons.task_alt_rounded,
               ),
-              label: Text(
-                wantedTotal == 0 ? 'COMPLETE' : 'MARK SECTION COMPLETE',
-              ),
+              label: Text(wantedTotal == 0 ? 'COMPLETE' : 'COMPLETE'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: color,
                 side: BorderSide(color: color.withValues(alpha: 0.58)),
@@ -696,53 +702,97 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   Widget _buildTrackerCarousel(List<Widget> cards) {
     if (cards.isEmpty) return _buildEmptyState();
 
+    if (_trackerCarouselIndex >= cards.length) {
+      _trackerCarouselIndex = 0;
+    }
+
+    final activeIndex = _trackerCarouselIndex.clamp(0, cards.length - 1);
+    final leftIndex = (activeIndex - 1 + cards.length) % cards.length;
+    final rightIndex = (activeIndex + 1) % cards.length;
+
+    void go(int delta) {
+      setState(() {
+        _trackerCarouselIndex =
+            (_trackerCarouselIndex + delta + cards.length) % cards.length;
+      });
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final viewportFraction = width >= 1200
-            ? 0.34
-            : width >= 900
-            ? 0.46
-            : width >= 700
-            ? 0.64
-            : 0.88;
+        final stageWidth = constraints.maxWidth;
+        final isWide = stageWidth >= 980;
+        final isTablet = stageWidth >= 680;
 
-        final carouselHeight = width >= 1000 ? 520.0 : 500.0;
-        final controller = PageController(viewportFraction: viewportFraction);
+        final centreWidth = isWide
+            ? 390.0
+            : isTablet
+            ? 360.0
+            : (stageWidth * 0.84).clamp(286.0, 340.0).toDouble();
+
+        final centreHeight = isWide ? 510.0 : 492.0;
+        final sideWidth = centreWidth * (isWide ? 0.78 : 0.74);
+        final sideHeight = centreHeight * 0.86;
+        final sideOffset = (centreWidth * (isWide ? 0.72 : 0.62))
+            .clamp(212.0, 292.0)
+            .toDouble();
+
+        Widget ringCard({
+          required int index,
+          required double xOffset,
+          required double width,
+          required double height,
+          required double top,
+          required double scale,
+          required double opacity,
+          required bool active,
+        }) {
+          return AnimatedPositioned(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            left: (stageWidth - width) / 2 + xOffset,
+            top: top,
+            width: width,
+            height: height,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 220),
+              opacity: opacity,
+              child: Transform.scale(
+                scale: scale,
+                child: IgnorePointer(
+                  ignoring: !active,
+                  child: SingleChildScrollView(
+                    physics: active
+                        ? const BouncingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    child: cards[index],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
 
         Widget arrow({required bool next}) {
           return Positioned(
             top: 0,
-            bottom: 0,
+            bottom: 110,
             left: next ? null : AppTheme.spaceS,
             right: next ? AppTheme.spaceS : null,
             child: Center(
               child: Material(
-                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.74),
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.76),
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () {
-                    if (next) {
-                      controller.nextPage(
-                        duration: const Duration(milliseconds: 240),
-                        curve: Curves.easeOutCubic,
-                      );
-                    } else {
-                      controller.previousPage(
-                        duration: const Duration(milliseconds: 240),
-                        curve: Curves.easeOutCubic,
-                      );
-                    }
-                  },
+                  onTap: () => go(next ? 1 : -1),
                   child: Container(
-                    width: 46,
-                    height: 46,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppTheme.neonCyan.withValues(alpha: 0.52),
-                        width: 1.4,
+                        color: AppTheme.neonCyan.withValues(alpha: 0.56),
+                        width: 1.5,
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -757,7 +807,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                           ? Icons.chevron_right_rounded
                           : Icons.chevron_left_rounded,
                       color: AppTheme.neonCyan,
-                      size: 34,
+                      size: 36,
                     ),
                   ),
                 ),
@@ -766,27 +816,89 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           );
         }
 
-        return SizedBox(
-          height: carouselHeight,
-          child: Stack(
-            children: [
-              PageView.builder(
-                controller: controller,
-                padEnds: true,
-                itemCount: cards.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spaceS,
-                      vertical: AppTheme.spaceXS,
-                    ),
-                    child: SingleChildScrollView(child: cards[index]),
-                  );
-                },
-              ),
-              if (cards.length > 1) arrow(next: false),
-              if (cards.length > 1) arrow(next: true),
-            ],
+        return GestureDetector(
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity < -120) {
+              go(1);
+            } else if (velocity > 120) {
+              go(-1);
+            }
+          },
+          child: SizedBox(
+            height: centreHeight + 58,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                if (cards.length > 1)
+                  ringCard(
+                    index: leftIndex,
+                    xOffset: -sideOffset,
+                    width: sideWidth,
+                    height: sideHeight,
+                    top: 38,
+                    scale: 0.96,
+                    opacity: 0.58,
+                    active: false,
+                  ),
+                if (cards.length > 1)
+                  ringCard(
+                    index: rightIndex,
+                    xOffset: sideOffset,
+                    width: sideWidth,
+                    height: sideHeight,
+                    top: 38,
+                    scale: 0.96,
+                    opacity: 0.58,
+                    active: false,
+                  ),
+                ringCard(
+                  index: activeIndex,
+                  xOffset: 0,
+                  width: centreWidth,
+                  height: centreHeight,
+                  top: 0,
+                  scale: 1,
+                  opacity: 1,
+                  active: true,
+                ),
+                if (cards.length > 1) arrow(next: false),
+                if (cards.length > 1) arrow(next: true),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < cards.length; i++)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: i == activeIndex ? 22 : 7,
+                          height: 7,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(99),
+                            color: i == activeIndex
+                                ? AppTheme.neonPink
+                                : Colors.white.withValues(alpha: 0.24),
+                            boxShadow: i == activeIndex
+                                ? [
+                                    BoxShadow(
+                                      color: AppTheme.neonPink.withValues(
+                                        alpha: 0.42,
+                                      ),
+                                      blurRadius: 12,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
