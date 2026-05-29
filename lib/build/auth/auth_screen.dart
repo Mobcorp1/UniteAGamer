@@ -609,7 +609,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 24),
                     const _AuthIntelCarousel(),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(18),
                       decoration: AppTheme.tradingCardDecoration(
@@ -780,7 +780,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ),
                                 SizedBox(width: 6),
                                 Text(
-                                  'Protected by UAG Security Protocols',
+                                  'Protected by UAG security protocols',
                                   style: TextStyle(
                                     color: Colors.white54,
                                     fontSize: 11,
@@ -863,75 +863,100 @@ class _AuthIntelCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cards = const [
-      ('LIVE INTEL', 'Dam Battlegrounds', 'High value targets detected'),
-      ('EXTRACTION RISK', 'HIGH', 'Risk level elevated'),
-      ('MARKET PULSE', 'RISING', 'Prices moving fast'),
-    ];
+    final phone = MediaQuery.sizeOf(context).width < 430;
 
-    return SizedBox(
-      height: 238,
-      child: PageView.builder(
-        controller: PageController(viewportFraction: 0.78),
-        itemCount: cards.length,
-        itemBuilder: (context, index) {
-          final card = cards[index];
-          final accent = index == 1 ? AppTheme.neonPink : AppTheme.neonCyan;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 7),
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: AppTheme.tradingCardDecoration(
-                radius: 26,
-                borderColor: accent.withValues(alpha: 0.58),
-                backgroundColor: AppTheme.cardBackgroundDeep.withValues(
-                  alpha: 0.82,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    card.$1,
+    Widget card({
+      required String label,
+      required String value,
+      required String detail,
+      required IconData icon,
+      required Color accent,
+    }) {
+      return Container(
+        width: phone ? 236 : 260,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: AppTheme.tradingCardDecoration(
+          radius: 24,
+          borderColor: accent.withValues(alpha: 0.50),
+          backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: accent, size: 22),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: accent,
                       isBold: true,
-                    ).copyWith(letterSpacing: 1.2),
+                    ).copyWith(letterSpacing: 1.0),
                   ),
-                  const Spacer(),
-                  Icon(
-                    index == 0
-                        ? Icons.radar_rounded
-                        : index == 1
-                        ? Icons.warning_amber_rounded
-                        : Icons.show_chart_rounded,
-                    color: accent,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    card.$2,
-                    style: AppTheme.tradingHeading(
-                      fontSize: 24,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    card.$3,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 13,
-                      color: Colors.white70,
-                      isBold: true,
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.tradingHeading(
+                fontSize: phone ? 20 : 23,
+                color: Colors.white,
               ),
             ),
-          );
-        },
+            const SizedBox(height: 5),
+            Text(
+              detail,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: Colors.white70,
+                isBold: true,
+              ).copyWith(height: 1.18),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: phone ? 166 : 176,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.zero,
+        children: [
+          card(
+            label: 'LIVE INTEL',
+            value: 'Raid Window',
+            detail: 'Track events, drops and current hunt targets.',
+            icon: Icons.radar_rounded,
+            accent: AppTheme.neonCyan,
+          ),
+          card(
+            label: 'EXTRACTION RISK',
+            value: 'High Value',
+            detail: 'Plan safer runs before you commit gear.',
+            icon: Icons.warning_amber_rounded,
+            accent: AppTheme.neonPink,
+          ),
+          card(
+            label: 'MARKET PULSE',
+            value: 'Trade Ready',
+            detail: 'Blueprints, Scrappy and offers in one hub.',
+            icon: Icons.show_chart_rounded,
+            accent: AppTheme.neonCyan,
+          ),
+        ],
       ),
     );
   }
