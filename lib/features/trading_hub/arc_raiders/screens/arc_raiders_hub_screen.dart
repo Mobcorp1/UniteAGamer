@@ -179,49 +179,36 @@ class _PremiumFeatureCarousel extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final isPhone = constraints.maxWidth < 430;
         final isWide = constraints.maxWidth >= 900;
         final isTablet =
             constraints.maxWidth >= 650 && constraints.maxWidth < 900;
         final isCompactHeight = constraints.maxHeight < 640;
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
-        final shortViewport = constraints.maxHeight < 880;
-        final laptopCompact =
-            constraints.maxWidth < 1500 && constraints.maxHeight < 980;
 
         final stageWidth = isWide
-            ? math.min(constraints.maxWidth, laptopCompact ? 920.0 : 1040.0)
+            ? math.min(constraints.maxWidth, 1040.0)
             : constraints.maxWidth;
-        final canvasWidth = stageWidth;
-        final canvasHeight = constraints.maxHeight;
+        final stageHeight = isPhone
+            ? math.min(constraints.maxHeight, 520.0)
+            : math.min(constraints.maxHeight, isTablet ? 620.0 : 560.0);
 
-        final widthScale = (canvasWidth / 1080.0).clamp(0.74, 1.0);
-        final heightScale = (canvasHeight / 760.0).clamp(0.70, 1.0);
-        final responsiveScale = math.min(widthScale, heightScale);
+        final centreCardHeight = isWide
+            ? (isCompactHeight ? 312.0 : 338.0)
+            : isTablet
+            ? 350.0
+            : 356.0;
 
-        final centreCardWidth =
-            (isWide
-                ? 376.0
-                : isTablet
-                ? 322.0
-                : 274.0) *
-            responsiveScale;
-
-        final centreCardHeight =
-            (isWide
-                ? 392.0
-                : isTablet
-                ? 408.0
-                : 382.0) *
-            responsiveScale;
-
-        final stripGap = shortViewport ? 22.0 : 28.0;
-        final stripTop = centreCardHeight + stripGap;
-        final dotsTop = stripTop + (shortViewport ? 50.0 : 58.0);
+        final dotsTop = centreCardHeight + (isPhone ? 14.0 : 20.0);
+        final stripTop = dotsTop + (isPhone ? 24.0 : 30.0);
+        final stripWidth = isPhone
+            ? math.min(stageWidth - 38.0, 360.0)
+            : math.min(stageWidth - 64.0, 520.0);
 
         final arrowTop = ((centreCardHeight - 48.0) / 2)
-            .clamp(76.0, math.max(76.0, canvasHeight - 168.0))
+            .clamp(72.0, math.max(72.0, stageHeight - 180.0))
             .toDouble();
-        final arrowInset = laptopCompact ? 42.0 : 28.0;
+        final arrowInset = isPhone ? 8.0 : 26.0;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -236,15 +223,16 @@ class _PremiumFeatureCarousel extends StatelessWidget {
           child: Center(
             child: SizedBox(
               width: stageWidth,
+              height: stageHeight,
               child: Stack(
                 clipBehavior: Clip.none,
-                alignment: Alignment.center,
+                alignment: Alignment.topCenter,
                 children: [
                   for (final slot in slots)
                     _StaticRingFeatureSlot(
                       key: ValueKey('${selectedIndex}_$slot'),
-                      canvasWidth: canvasWidth,
-                      canvasHeight: canvasHeight,
+                      canvasWidth: stageWidth,
+                      canvasHeight: stageHeight,
                       slot: slot,
                       isWide: isWide,
                       isTablet: isTablet,
@@ -256,9 +244,17 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                           : () => onPageChanged(_wrap(selectedIndex + slot)),
                     ),
                   Positioned(
+                    top: dotsTop,
+                    child: _HubPageIndicator(
+                      count: features.length,
+                      selectedIndex: selectedIndex,
+                      accent: features[selectedIndex].accent,
+                    ),
+                  ),
+                  Positioned(
                     top: stripTop,
                     child: SizedBox(
-                      width: math.min(centreCardWidth, stageWidth - 32),
+                      width: stripWidth,
                       child: _HubQuickStrip(
                         selected: features[selectedIndex],
                         onOpen: () => onOpen(features[selectedIndex]),
@@ -279,14 +275,6 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                     child: _ChevronButton(
                       icon: Icons.chevron_right_rounded,
                       onPressed: () => _step(1),
-                    ),
-                  ),
-                  Positioned(
-                    top: dotsTop,
-                    child: _HubPageIndicator(
-                      count: features.length,
-                      selectedIndex: selectedIndex,
-                      accent: features[selectedIndex].accent,
                     ),
                   ),
                 ],
@@ -325,32 +313,33 @@ class _StaticRingFeatureSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPhone = canvasWidth < 430;
     final distance = slot.abs();
 
-    final widthScale = (canvasWidth / 1080.0).clamp(0.74, 1.0);
-    final heightScale = (canvasHeight / 760.0).clamp(0.70, 1.0);
-    final responsiveScale = math.min(widthScale, heightScale);
+    final centerWidth = isWide
+        ? (isCompactHeight ? 300.0 : 326.0)
+        : isTablet
+        ? 316.0
+        : math.min(canvasWidth - 56.0, 312.0);
+    final centerHeight = isWide
+        ? (isCompactHeight ? 312.0 : 338.0)
+        : isTablet
+        ? 350.0
+        : 356.0;
 
-    final centerWidth =
-        (isWide
-            ? 376.0
-            : isTablet
-            ? 322.0
-            : 274.0) *
-        responsiveScale;
-    final centerHeight =
-        (isWide
-            ? 392.0
-            : isTablet
-            ? 408.0
-            : 382.0) *
-        responsiveScale;
+    final nearWidth = isWide
+        ? (isCompactHeight ? 218.0 : 236.0)
+        : isTablet
+        ? 236.0
+        : math.min(canvasWidth - 132.0, 210.0);
+    final nearHeight = isWide
+        ? (isCompactHeight ? 254.0 : 278.0)
+        : isTablet
+        ? 294.0
+        : 302.0;
 
-    final nearWidth = centerWidth * (isWide ? 0.72 : 0.76);
-    final nearHeight = centerHeight * (isWide ? 0.80 : 0.82);
-
-    final outerWidth = isWide ? centerWidth * 0.52 : 0.0;
-    final outerHeight = isWide ? centerHeight * 0.64 : 0.0;
+    final outerWidth = isWide ? (isCompactHeight ? 130.0 : 148.0) : 0.0;
+    final outerHeight = isWide ? (isCompactHeight ? 196.0 : 214.0) : 0.0;
 
     final width = selected
         ? centerWidth
@@ -363,27 +352,37 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? nearHeight
         : outerHeight;
 
-    final nearOffset = (centerWidth * 0.78).clamp(210.0, 286.0).toDouble();
-    final outerOffset = (centerWidth * 1.30).clamp(360.0, 458.0).toDouble();
-
     final offset = selected
         ? 0.0
         : distance == 1
-        ? nearOffset
-        : outerOffset;
+        ? (isWide
+              ? (isCompactHeight ? 212.0 : 232.0)
+              : isTablet
+              ? 214.0
+              : math.min(canvasWidth * 0.50, 186.0))
+        : (isWide ? (isCompactHeight ? 342.0 : 374.0) : 0.0);
 
     final top = selected
-        ? 0.0
+        ? (isWide
+              ? (isCompactHeight ? 0.0 : -6.0)
+              : isTablet
+              ? 8.0
+              : 0.0)
         : distance == 1
-        ? centerHeight * 0.10
-        : centerHeight * 0.18;
+        ? (isWide
+              ? (isCompactHeight ? 34.0 : 30.0)
+              : isTablet
+              ? 42.0
+              : 38.0)
+        : (isCompactHeight ? 62.0 : 58.0);
 
     final opacity = selected
         ? 1.0
         : distance == 1
-        ? 0.80
-        : 0.34;
+        ? (isPhone ? 0.52 : 0.76)
+        : 0.32;
 
+    final scale = selected ? 1.0 : (isPhone ? 0.96 : 1.0);
     final left = ((canvasWidth - width) / 2) + (slot < 0 ? -offset : offset);
 
     return AnimatedPositioned(
@@ -396,11 +395,17 @@ class _StaticRingFeatureSlot extends StatelessWidget {
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
         opacity: opacity,
-        child: _StaticRingFeatureCard(
-          feature: feature,
-          selected: selected,
-          compact: !selected,
-          onTap: onTap,
+        child: Transform.scale(
+          scale: scale,
+          child: IgnorePointer(
+            ignoring: !selected && isPhone,
+            child: _StaticRingFeatureCard(
+              feature: feature,
+              selected: selected,
+              compact: !selected,
+              onTap: onTap,
+            ),
+          ),
         ),
       ),
     );
@@ -479,9 +484,10 @@ class _StaticRingFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleSize = selected ? 28.0 : 19.0;
-    final bodySize = selected ? 15.0 : 12.0;
-    final iconSize = selected ? 34.0 : 24.0;
+    final phone = MediaQuery.sizeOf(context).width < 430;
+    final titleSize = selected ? (phone ? 23.0 : 28.0) : (phone ? 16.0 : 19.0);
+    final bodySize = selected ? (phone ? 12.5 : 15.0) : (phone ? 10.5 : 12.0);
+    final iconSize = selected ? (phone ? 28.0 : 34.0) : 24.0;
 
     return InkWell(
       borderRadius: BorderRadius.circular(selected ? 30 : 22),
@@ -492,7 +498,7 @@ class _StaticRingFeatureCard extends StatelessWidget {
           color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(selected ? 30 : 22),
           border: Border.all(
-            color: feature.accent.withValues(alpha: selected ? 0.82 : 0.58),
+            color: feature.accent.withValues(alpha: selected ? 0.88 : 0.58),
             width: selected ? 1.5 : 1.0,
           ),
           boxShadow: [
@@ -511,9 +517,9 @@ class _StaticRingFeatureCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withValues(alpha: 0.06),
-                      Colors.black.withValues(alpha: compact ? 0.48 : 0.26),
-                      Colors.black.withValues(alpha: compact ? 0.90 : 0.78),
+                      Colors.black.withValues(alpha: 0.02),
+                      Colors.black.withValues(alpha: compact ? 0.42 : 0.18),
+                      Colors.black.withValues(alpha: compact ? 0.92 : 0.74),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -522,11 +528,11 @@ class _StaticRingFeatureCard extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: selected ? 18 : 16,
-              left: selected ? 18 : 16,
+              top: selected ? 16 : 14,
+              left: selected ? 16 : 14,
               child: Container(
-                width: selected ? 58 : 44,
-                height: selected ? 58 : 44,
+                width: selected ? (phone ? 50 : 58) : 44,
+                height: selected ? (phone ? 50 : 58) : 44,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.black.withValues(alpha: 0.38),
@@ -547,23 +553,28 @@ class _StaticRingFeatureCard extends StatelessWidget {
                 ),
               ),
             ),
-            if (selected)
+            if (selected && !phone)
               Positioned(
                 top: 18,
                 right: 18,
                 child: _ArcHubStatusPill(accent: feature.accent),
               ),
             Positioned(
-              left: selected ? 24 : 18,
-              right: selected ? 24 : 18,
-              bottom: selected ? 24 : 18,
+              left: selected ? (phone ? 18 : 24) : 16,
+              right: selected ? (phone ? 18 : 24) : 16,
+              bottom: selected ? (phone ? 18 : 24) : 18,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: phone && selected
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     feature.title.toUpperCase(),
-                    maxLines: compact ? 2 : 3,
+                    textAlign: phone && selected
+                        ? TextAlign.center
+                        : TextAlign.start,
+                    maxLines: phone ? 2 : (compact ? 2 : 3),
                     overflow: TextOverflow.ellipsis,
                     style:
                         AppTheme.neonTextStyle(
@@ -571,7 +582,8 @@ class _StaticRingFeatureCard extends StatelessWidget {
                           color: Colors.white,
                           isBold: true,
                         ).copyWith(
-                          letterSpacing: 0.8,
+                          letterSpacing: phone ? 0.35 : 0.8,
+                          height: 1.02,
                           shadows: [
                             Shadow(
                               color: feature.accent.withValues(alpha: 0.80),
@@ -583,27 +595,33 @@ class _StaticRingFeatureCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     feature.subtitle,
-                    maxLines: compact ? 3 : 4,
+                    textAlign: phone && selected
+                        ? TextAlign.center
+                        : TextAlign.start,
+                    maxLines: phone ? 3 : (compact ? 3 : 4),
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
                       fontSize: bodySize,
                       color: Colors.white.withValues(alpha: 0.84),
                       isBold: true,
-                    ).copyWith(height: 1.26),
+                    ).copyWith(height: 1.22),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Row(
+                    mainAxisAlignment: phone && selected
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
                     children: [
                       Icon(
                         Icons.touch_app_rounded,
                         color: feature.accent,
-                        size: compact ? 14 : 18,
+                        size: compact ? 14 : 17,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'Tap to open',
                         style: AppTheme.bodyTextStyle(
-                          fontSize: compact ? 10 : 12,
+                          fontSize: compact ? 10 : 11,
                           color: feature.accent,
                           isBold: true,
                         ),
@@ -661,21 +679,22 @@ class _HubQuickStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final phone = MediaQuery.sizeOf(context).width < 430;
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 180),
       child: Container(
         key: ValueKey(selected.title),
-        margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceM),
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
+          phone ? AppTheme.spaceM : AppTheme.spaceL,
           AppTheme.spaceM,
-          AppTheme.spaceS,
-          AppTheme.spaceS,
-          AppTheme.spaceS,
+          phone ? AppTheme.spaceM : AppTheme.spaceL,
+          AppTheme.spaceM,
         ),
         decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.76),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: selected.accent.withValues(alpha: 0.34)),
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(phone ? 24 : 28),
+          border: Border.all(color: selected.accent.withValues(alpha: 0.36)),
           boxShadow: [
             BoxShadow(
               color: selected.accent.withValues(alpha: 0.12),
@@ -683,32 +702,16 @@ class _HubQuickStrip extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                selected.subtitle,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
-                  color: AppTheme.tradingMutedText,
-                  isBold: true,
-                ),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spaceS),
-            ElevatedButton.icon(
-              onPressed: onOpen,
-              icon: const Icon(Icons.open_in_new_rounded, size: 16),
-              label: const Text('Open'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: selected.accent.withValues(alpha: 0.22),
-                foregroundColor: selected.accent,
-                side: BorderSide(
-                  color: selected.accent.withValues(alpha: 0.42),
-                ),
-              ),
-            ),
-          ],
+        child: Text(
+          selected.subtitle,
+          textAlign: TextAlign.center,
+          maxLines: phone ? 3 : 2,
+          overflow: TextOverflow.ellipsis,
+          style: AppTheme.bodyTextStyle(
+            fontSize: phone ? 13 : 14,
+            color: AppTheme.tradingMutedText,
+            isBold: true,
+          ).copyWith(height: 1.32),
         ),
       ),
     );
