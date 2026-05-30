@@ -563,6 +563,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   @override
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final phone = size.width < 430;
@@ -574,225 +575,250 @@ class _AuthScreenState extends State<AuthScreen> {
         children: [
           const _UagAuthBackdrop(),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                phone ? 20 : 34,
-                phone ? 22 : 32,
-                phone ? 20 : 34,
-                28,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: size.height - 72),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.of(context).maybePop(),
-                          icon: const Icon(
-                            Icons.arrow_back_rounded,
-                            color: AppTheme.neonPink,
-                          ),
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  phone ? 20 : 34,
+                  phone ? 22 : 32,
+                  phone ? 20 : 34,
+                  28,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: phone ? 430 : 920,
+                    minHeight: size.height - 72,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: phone
+                        ? CrossAxisAlignment.stretch
+                        : CrossAxisAlignment.center,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: phone ? 390 : 760,
                         ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'UAG ARC RAIDERS HUB',
-                            style: AppTheme.tradingHeading(
-                              fontSize: phone ? 16 : 20,
-                              color: Colors.white,
-                            ).copyWith(letterSpacing: 1.1),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const _AuthIntelCarousel(),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: AppTheme.tradingCardDecoration(
-                        radius: 28,
-                        borderColor: _borderColor.withValues(alpha: 0.34),
-                        backgroundColor: AppTheme.cardBackgroundDeep.withValues(
-                          alpha: 0.86,
-                        ),
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                        child: Row(
                           children: [
-                            Text(
-                              _isLogin ? 'Welcome Raider' : 'Create Account',
-                              textAlign: TextAlign.center,
-                              style: AppTheme.tradingHeading(
-                                fontSize: 22,
-                                color: AppTheme.neonCyan,
+                            IconButton(
+                              onPressed: () => Navigator.of(context).maybePop(),
+                              icon: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: AppTheme.neonPink,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _isLogin
-                                  ? 'Log in to access your operations hub.'
-                                  : 'Build your raider identity.',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            if (!_isLogin) _buildSignupFields(),
-                            TextFormField(
-                              controller: _emailFieldController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: _inputDecoration('Email address'),
-                              onSaved: (value) => _email = value?.trim() ?? '',
-                              validator: (value) =>
-                                  value == null || !value.contains('@')
-                                  ? 'Enter a valid email'
-                                  : null,
-                            ),
-                            const SizedBox(height: AppTheme.spaceS),
-                            CheckboxListTile(
-                              value: _rememberEmail,
-                              onChanged: (value) => setState(
-                                () => _rememberEmail = value ?? true,
-                              ),
-                              controlAffinity: ListTileControlAffinity.leading,
-                              contentPadding: EdgeInsets.zero,
-                              dense: true,
-                              title: const Text(
-                                'Remember email',
-                                style: TextStyle(color: Colors.white70),
-                              ),
-                            ),
-                            if (_isLogin && _biometricsAvailable) ...[
-                              SwitchListTile(
-                                value: _biometricLoginEnabled,
-                                onChanged: (value) => setState(
-                                  () => _biometricLoginEnabled = value,
-                                ),
-                                contentPadding: EdgeInsets.zero,
-                                dense: true,
-                                title: const Text(
-                                  'Biometric unlock',
-                                  style: TextStyle(color: Colors.white70),
-                                ),
-                              ),
-                              if (_biometricLoginEnabled)
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: TextButton.icon(
-                                    onPressed: _tryBiometricUnlock,
-                                    icon: const Icon(Icons.fingerprint),
-                                    label: const Text('Unlock with biometrics'),
-                                  ),
-                                ),
-                            ],
-                            const SizedBox(height: AppTheme.spaceM),
-                            _buildPasswordField(
-                              controller: _passwordFieldController,
-                              label: 'Password',
-                              isVisible: _showPassword,
-                              onToggle: () {
-                                setState(() => _showPassword = !_showPassword);
-                              },
-                              onSaved: (value) =>
-                                  _password = value?.trim() ?? '',
-                              validator: _validatePassword,
-                            ),
-                            if (!_isLogin) ...[
-                              const SizedBox(height: AppTheme.spaceM),
-                              _buildPasswordField(
-                                controller: _confirmPasswordController,
-                                label: 'Confirm Password',
-                                isVisible: _showConfirmPassword,
-                                onToggle: () {
-                                  setState(
-                                    () => _showConfirmPassword =
-                                        !_showConfirmPassword,
-                                  );
-                                },
-                                validator: (value) =>
-                                    value != _passwordFieldController.text
-                                    ? 'Passwords do not match'
-                                    : null,
-                              ),
-                            ],
-                            const SizedBox(height: AppTheme.spaceL),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      AppTheme.neonPink,
-                                      AppTheme.neonCyan,
-                                    ],
-                                  ),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: _isLoading ? null : _submit,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: Text(
-                                    _isLoading
-                                        ? 'Please wait...'
-                                        : (_isLogin
-                                              ? 'Log In'
-                                              : 'Create Account'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppTheme.spaceM),
-                            if (_isLogin)
-                              TextButton(
-                                onPressed: _showResetPasswordDialog,
-                                child: const Text('Forgot password?'),
-                              ),
-                            TextButton(
-                              onPressed: _isLoading
-                                  ? null
-                                  : () => setState(() => _isLogin = !_isLogin),
+                            const SizedBox(width: 6),
+                            Expanded(
                               child: Text(
-                                _isLogin
-                                    ? 'New here? Create account'
-                                    : 'Already have an account? Log in',
+                                'UAG ARC RAIDERS HUB',
+                                style: AppTheme.tradingHeading(
+                                  fontSize: phone ? 16 : 20,
+                                  color: Colors.white,
+                                ).copyWith(letterSpacing: 1.1),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.shield_outlined,
-                                  size: 14,
-                                  color: Colors.white54,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Protected by UAG security protocols',
-                                  style: TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                      const _AuthIntelCarousel(),
+                      const SizedBox(height: 16),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: AppTheme.tradingCardDecoration(
+                            radius: 28,
+                            borderColor: _borderColor.withValues(alpha: 0.34),
+                            backgroundColor: AppTheme.cardBackgroundDeep
+                                .withValues(alpha: 0.86),
+                          ),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  _isLogin
+                                      ? 'Welcome Raider'
+                                      : 'Create Account',
+                                  textAlign: TextAlign.center,
+                                  style: AppTheme.tradingHeading(
+                                    fontSize: 22,
+                                    color: AppTheme.neonCyan,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _isLogin
+                                      ? 'Log in to access your operations hub.'
+                                      : 'Build your raider identity.',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                if (!_isLogin) _buildSignupFields(),
+                                TextFormField(
+                                  controller: _emailFieldController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  decoration: _inputDecoration('Email address'),
+                                  onSaved: (value) =>
+                                      _email = value?.trim() ?? '',
+                                  validator: (value) =>
+                                      value == null || !value.contains('@')
+                                      ? 'Enter a valid email'
+                                      : null,
+                                ),
+                                const SizedBox(height: AppTheme.spaceS),
+                                CheckboxListTile(
+                                  value: _rememberEmail,
+                                  onChanged: (value) => setState(
+                                    () => _rememberEmail = value ?? true,
+                                  ),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                  title: const Text(
+                                    'Remember email',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                ),
+                                if (_isLogin && _biometricsAvailable) ...[
+                                  SwitchListTile(
+                                    value: _biometricLoginEnabled,
+                                    onChanged: (value) => setState(
+                                      () => _biometricLoginEnabled = value,
+                                    ),
+                                    contentPadding: EdgeInsets.zero,
+                                    dense: true,
+                                    title: const Text(
+                                      'Biometric unlock',
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                  ),
+                                  if (_biometricLoginEnabled)
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: TextButton.icon(
+                                        onPressed: _tryBiometricUnlock,
+                                        icon: const Icon(Icons.fingerprint),
+                                        label: const Text(
+                                          'Unlock with biometrics',
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildPasswordField(
+                                  controller: _passwordFieldController,
+                                  label: 'Password',
+                                  isVisible: _showPassword,
+                                  onToggle: () {
+                                    setState(
+                                      () => _showPassword = !_showPassword,
+                                    );
+                                  },
+                                  onSaved: (value) =>
+                                      _password = value?.trim() ?? '',
+                                  validator: _validatePassword,
+                                ),
+                                if (!_isLogin) ...[
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  _buildPasswordField(
+                                    controller: _confirmPasswordController,
+                                    label: 'Confirm Password',
+                                    isVisible: _showConfirmPassword,
+                                    onToggle: () {
+                                      setState(
+                                        () => _showConfirmPassword =
+                                            !_showConfirmPassword,
+                                      );
+                                    },
+                                    validator: (value) =>
+                                        value != _passwordFieldController.text
+                                        ? 'Passwords do not match'
+                                        : null,
+                                  ),
+                                ],
+                                const SizedBox(height: AppTheme.spaceL),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 54,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          AppTheme.neonPink,
+                                          AppTheme.neonCyan,
+                                        ],
+                                      ),
+                                    ),
+                                    child: ElevatedButton(
+                                      onPressed: _isLoading ? null : _submit,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      child: Text(
+                                        _isLoading
+                                            ? 'Please wait...'
+                                            : (_isLogin
+                                                  ? 'Log In'
+                                                  : 'Create Account'),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                if (_isLogin)
+                                  TextButton(
+                                    onPressed: _showResetPasswordDialog,
+                                    child: const Text('Forgot password?'),
+                                  ),
+                                TextButton(
+                                  onPressed: _isLoading
+                                      ? null
+                                      : () => setState(
+                                          () => _isLogin = !_isLogin,
+                                        ),
+                                  child: Text(
+                                    _isLogin
+                                        ? 'New here? Create account'
+                                        : 'Already have an account? Log in',
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.shield_outlined,
+                                      size: 14,
+                                      color: Colors.white54,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Protected by UAG security protocols',
+                                      style: TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -863,7 +889,9 @@ class _AuthIntelCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final phone = MediaQuery.sizeOf(context).width < 430;
+    final width = MediaQuery.sizeOf(context).width;
+    final phone = width < 430;
+    final cardWidth = phone ? (width - 74).clamp(236.0, 308.0) : 286.0;
 
     Widget card({
       required String label,
@@ -871,92 +899,132 @@ class _AuthIntelCarousel extends StatelessWidget {
       required String detail,
       required IconData icon,
       required Color accent,
+      required String asset,
     }) {
-      return Container(
-        width: phone ? 236 : 260,
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 24,
-          borderColor: accent.withValues(alpha: 0.50),
-          backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: accent, size: 22),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 11,
-                      color: accent,
-                      isBold: true,
-                    ).copyWith(letterSpacing: 1.0),
+      return SizedBox(
+        width: cardWidth,
+        child: Container(
+          margin: const EdgeInsets.only(right: 12),
+          clipBehavior: Clip.antiAlias,
+          decoration: AppTheme.tradingCardDecoration(
+            radius: 24,
+            borderColor: accent.withValues(alpha: 0.54),
+            backgroundColor: AppTheme.cardBackgroundDeep.withValues(
+              alpha: 0.88,
+            ),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                asset,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.32),
+                      AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
+                      Colors.black.withValues(alpha: 0.92),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.tradingHeading(
-                fontSize: phone ? 20 : 23,
-                color: Colors.white,
               ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              detail,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: Colors.white70,
-                isBold: true,
-              ).copyWith(height: 1.18),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(icon, color: accent, size: 21),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 11,
+                              color: accent,
+                              isBold: true,
+                            ).copyWith(letterSpacing: 1.0),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(
+                        fontSize: phone ? 21 : 24,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      detail,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.82),
+                        isBold: true,
+                      ).copyWith(height: 1.18),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return SizedBox(
-      height: phone ? 166 : 176,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.zero,
-        children: [
-          card(
-            label: 'LIVE INTEL',
-            value: 'Raid Window',
-            detail: 'Track events, drops and current hunt targets.',
-            icon: Icons.radar_rounded,
-            accent: AppTheme.neonCyan,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 920),
+        child: SizedBox(
+          height: phone ? 186 : 196,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: phone ? 0 : 4),
+            children: [
+              card(
+                label: 'LIVE INTEL',
+                value: 'Raid Window',
+                detail: 'Track events, drops and current hunt targets.',
+                icon: Icons.radar_rounded,
+                accent: AppTheme.neonCyan,
+                asset: 'assets/images/arc_hub_raid_planner.webp',
+              ),
+              card(
+                label: 'EXTRACTION RISK',
+                value: 'High Value',
+                detail: 'Plan safer runs before you commit gear.',
+                icon: Icons.warning_amber_rounded,
+                accent: AppTheme.neonPink,
+                asset: 'assets/images/arc_hub_tracking.webp',
+              ),
+              card(
+                label: 'MARKET PULSE',
+                value: 'Trade Ready',
+                detail: 'Blueprints, Scrappy and offers in one hub.',
+                icon: Icons.show_chart_rounded,
+                accent: AppTheme.neonCyan,
+                asset: 'assets/images/arc_hub_smart_trade.webp',
+              ),
+            ],
           ),
-          card(
-            label: 'EXTRACTION RISK',
-            value: 'High Value',
-            detail: 'Plan safer runs before you commit gear.',
-            icon: Icons.warning_amber_rounded,
-            accent: AppTheme.neonPink,
-          ),
-          card(
-            label: 'MARKET PULSE',
-            value: 'Trade Ready',
-            detail: 'Blueprints, Scrappy and offers in one hub.',
-            icon: Icons.show_chart_rounded,
-            accent: AppTheme.neonCyan,
-          ),
-        ],
+        ),
       ),
     );
   }

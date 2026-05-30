@@ -10,6 +10,7 @@ class AuthLandingScreen extends StatelessWidget {
 
   @override
   @override
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final phone = size.width < 430;
@@ -21,80 +22,110 @@ class AuthLandingScreen extends StatelessWidget {
         children: [
           const _UagAuthBackdrop(),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                phone ? 22 : 34,
-                phone ? 22 : 30,
-                phone ? 22 : 34,
-                28,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: size.height - 72),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Image.asset(
-                          'assets/icon/uag_traders_icon_transparent.webp',
-                          width: 48,
-                          height: 48,
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  phone ? 22 : 34,
+                  phone ? 22 : 30,
+                  phone ? 22 : 34,
+                  28,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: phone ? 430 : 980,
+                    minHeight: size.height - 72,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: phone
+                        ? CrossAxisAlignment.stretch
+                        : CrossAxisAlignment.center,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: phone ? 390 : 920,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'UAG ARC RAIDERS HUB',
-                            style: AppTheme.tradingHeading(
-                              fontSize: phone ? 17 : 21,
-                              color: Colors.white,
-                            ).copyWith(letterSpacing: 1.1),
-                          ),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              'assets/icon/uag_traders_icon_transparent.webp',
+                              width: 48,
+                              height: 48,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'UAG ARC RAIDERS HUB',
+                                style: AppTheme.tradingHeading(
+                                  fontSize: phone ? 17 : 21,
+                                  color: Colors.white,
+                                ).copyWith(letterSpacing: 1.1),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    SizedBox(height: phone ? 34 : 46),
-                    Text(
-                      'CONNECT.\nTRADE.\nHUNT.\nEXTRACT.',
-                      style: AppTheme.heroTextStyle(
-                        fontSize: phone ? 38 : 52,
-                        color: Colors.white,
-                      ).copyWith(height: 0.95, letterSpacing: 1.1),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Your operations start here.',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 15,
-                        color: Colors.white70,
-                        isBold: true,
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    const _AuthIntelCarousel(),
-                    const SizedBox(height: 18),
-                    _AuthGlassPanel(
-                      title: 'Welcome Raider',
-                      subtitle: 'Fast email access to your trading hub.',
-                      primaryLabel: 'Email Login',
-                      secondaryLabel: 'Create Account',
-                      onPrimary: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const AuthScreen(initialIsLogin: true),
+                      SizedBox(height: phone ? 30 : 38),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: phone ? 390 : 920,
+                        ),
+                        child: Align(
+                          alignment: phone
+                              ? Alignment.centerLeft
+                              : Alignment.center,
+                          child: Text(
+                            'CONNECT.\nTRADE.\nHUNT.\nEXTRACT.',
+                            textAlign: phone
+                                ? TextAlign.left
+                                : TextAlign.center,
+                            style: AppTheme.heroTextStyle(
+                              fontSize: phone ? 38 : 56,
+                              color: Colors.white,
+                            ).copyWith(height: 0.95, letterSpacing: 1.1),
                           ),
-                        );
-                      },
-                      onSecondary: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const AuthScreen(initialIsLogin: false),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Your operations start here.',
+                        textAlign: TextAlign.center,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 15,
+                          color: Colors.white70,
+                          isBold: true,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const _AuthIntelCarousel(),
+                      const SizedBox(height: 18),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: _AuthGlassPanel(
+                          title: 'Welcome Raider',
+                          subtitle: 'Fast email access to your trading hub.',
+                          primaryLabel: 'Email Login',
+                          secondaryLabel: 'Create Account',
+                          onPrimary: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const AuthScreen(initialIsLogin: true),
+                              ),
+                            );
+                          },
+                          onSecondary: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const AuthScreen(initialIsLogin: false),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -165,7 +196,9 @@ class _AuthIntelCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final phone = MediaQuery.sizeOf(context).width < 430;
+    final width = MediaQuery.sizeOf(context).width;
+    final phone = width < 430;
+    final cardWidth = phone ? (width - 74).clamp(236.0, 308.0) : 286.0;
 
     Widget card({
       required String label,
@@ -173,92 +206,132 @@ class _AuthIntelCarousel extends StatelessWidget {
       required String detail,
       required IconData icon,
       required Color accent,
+      required String asset,
     }) {
-      return Container(
-        width: phone ? 236 : 260,
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 24,
-          borderColor: accent.withValues(alpha: 0.50),
-          backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: accent, size: 22),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 11,
-                      color: accent,
-                      isBold: true,
-                    ).copyWith(letterSpacing: 1.0),
+      return SizedBox(
+        width: cardWidth,
+        child: Container(
+          margin: const EdgeInsets.only(right: 12),
+          clipBehavior: Clip.antiAlias,
+          decoration: AppTheme.tradingCardDecoration(
+            radius: 24,
+            borderColor: accent.withValues(alpha: 0.54),
+            backgroundColor: AppTheme.cardBackgroundDeep.withValues(
+              alpha: 0.88,
+            ),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                asset,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.32),
+                      AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
+                      Colors.black.withValues(alpha: 0.92),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.tradingHeading(
-                fontSize: phone ? 20 : 23,
-                color: Colors.white,
               ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              detail,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: Colors.white70,
-                isBold: true,
-              ).copyWith(height: 1.18),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(icon, color: accent, size: 21),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 11,
+                              color: accent,
+                              isBold: true,
+                            ).copyWith(letterSpacing: 1.0),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(
+                        fontSize: phone ? 21 : 24,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      detail,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.82),
+                        isBold: true,
+                      ).copyWith(height: 1.18),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return SizedBox(
-      height: phone ? 166 : 176,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.zero,
-        children: [
-          card(
-            label: 'LIVE INTEL',
-            value: 'Raid Window',
-            detail: 'Track events, drops and current hunt targets.',
-            icon: Icons.radar_rounded,
-            accent: AppTheme.neonCyan,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 920),
+        child: SizedBox(
+          height: phone ? 186 : 196,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: phone ? 0 : 4),
+            children: [
+              card(
+                label: 'LIVE INTEL',
+                value: 'Raid Window',
+                detail: 'Track events, drops and current hunt targets.',
+                icon: Icons.radar_rounded,
+                accent: AppTheme.neonCyan,
+                asset: 'assets/images/arc_hub_raid_planner.webp',
+              ),
+              card(
+                label: 'EXTRACTION RISK',
+                value: 'High Value',
+                detail: 'Plan safer runs before you commit gear.',
+                icon: Icons.warning_amber_rounded,
+                accent: AppTheme.neonPink,
+                asset: 'assets/images/arc_hub_tracking.webp',
+              ),
+              card(
+                label: 'MARKET PULSE',
+                value: 'Trade Ready',
+                detail: 'Blueprints, Scrappy and offers in one hub.',
+                icon: Icons.show_chart_rounded,
+                accent: AppTheme.neonCyan,
+                asset: 'assets/images/arc_hub_smart_trade.webp',
+              ),
+            ],
           ),
-          card(
-            label: 'EXTRACTION RISK',
-            value: 'High Value',
-            detail: 'Plan safer runs before you commit gear.',
-            icon: Icons.warning_amber_rounded,
-            accent: AppTheme.neonPink,
-          ),
-          card(
-            label: 'MARKET PULSE',
-            value: 'Trade Ready',
-            detail: 'Blueprints, Scrappy and offers in one hub.',
-            icon: Icons.show_chart_rounded,
-            accent: AppTheme.neonCyan,
-          ),
-        ],
+        ),
       ),
     );
   }
