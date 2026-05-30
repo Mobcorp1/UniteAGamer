@@ -129,7 +129,7 @@ class _UagAuthBackdrop extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'assets/images/auth_bg_landscape.webp',
+          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
           fit: BoxFit.cover,
           alignment: Alignment.center,
           filterQuality: FilterQuality.high,

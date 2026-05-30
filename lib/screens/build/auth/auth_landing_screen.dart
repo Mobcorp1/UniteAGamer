@@ -145,7 +145,7 @@ class _UagAuthBackdrop extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'assets/images/auth_bg_landscape.webp',
+          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
           fit: BoxFit.cover,
           alignment: Alignment.center,
           filterQuality: FilterQuality.high,
@@ -330,7 +330,7 @@ class _AuthIntelCarousel extends StatelessWidget {
                 detail: 'Track events, drops and current hunt targets.',
                 icon: Icons.radar_rounded,
                 accent: AppTheme.neonCyan,
-                asset: 'assets/images/card_raid_window.webp',
+                asset: 'assets/images/arc_raiders/hub/card_raid_window.webp',
               ),
               card(
                 label: 'EXTRACTION RISK',
@@ -338,7 +338,7 @@ class _AuthIntelCarousel extends StatelessWidget {
                 detail: 'Plan safer runs before you commit gear.',
                 icon: Icons.warning_amber_rounded,
                 accent: AppTheme.neonPink,
-                asset: 'assets/images/card_high_value.webp',
+                asset: 'assets/images/arc_raiders/hub/card_high_value.webp',
               ),
               card(
                 label: 'MARKET PULSE',
@@ -346,7 +346,7 @@ class _AuthIntelCarousel extends StatelessWidget {
                 detail: 'Blueprints, Scrappy and offers in one hub.',
                 icon: Icons.show_chart_rounded,
                 accent: AppTheme.neonCyan,
-                asset: 'assets/images/card_trade_ready.webp',
+                asset: 'assets/images/arc_raiders/hub/card_trade_ready.webp',
               ),
             ],
           ),
