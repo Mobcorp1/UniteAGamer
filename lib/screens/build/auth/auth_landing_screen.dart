@@ -144,48 +144,55 @@ class _UagAuthBackdrop extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
+        Image.asset(
+          'assets/images/auth_bg_landscape.webp',
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (_, _, _) => const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF02030B),
+                  AppTheme.cardBackgroundDeep,
+                  Color(0xFF050014),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+        ),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF02030B),
-                AppTheme.cardBackgroundDeep,
-                const Color(0xFF050014),
+                Colors.black.withValues(alpha: 0.24),
+                AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
+                Colors.black.withValues(alpha: 0.86),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.12, -0.42),
+                  radius: 0.86,
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.20),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
         ),
         const Positioned.fill(child: StaticWatermark()),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0.08, -0.32),
-                radius: 0.98,
-                colors: [
-                  AppTheme.neonCyan.withValues(alpha: 0.18),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.black.withValues(alpha: 0.05),
-                  Colors.black.withValues(alpha: 0.78),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -226,15 +233,27 @@ class _AuthIntelCarousel extends StatelessWidget {
               Image.asset(
                 asset,
                 fit: BoxFit.cover,
+                alignment: Alignment.center,
                 filterQuality: FilterQuality.high,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                errorBuilder: (_, _, _) => DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.30),
+                        AppTheme.cardBackgroundDeep,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                ),
               ),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withValues(alpha: 0.32),
-                      AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
+                      Colors.black.withValues(alpha: 0.26),
+                      AppTheme.cardBackgroundDeep.withValues(alpha: 0.68),
                       Colors.black.withValues(alpha: 0.92),
                     ],
                     begin: Alignment.topCenter,
@@ -311,7 +330,7 @@ class _AuthIntelCarousel extends StatelessWidget {
                 detail: 'Track events, drops and current hunt targets.',
                 icon: Icons.radar_rounded,
                 accent: AppTheme.neonCyan,
-                asset: 'assets/images/arc_hub_raid_planner.webp',
+                asset: 'assets/images/card_raid_window.webp',
               ),
               card(
                 label: 'EXTRACTION RISK',
@@ -319,7 +338,7 @@ class _AuthIntelCarousel extends StatelessWidget {
                 detail: 'Plan safer runs before you commit gear.',
                 icon: Icons.warning_amber_rounded,
                 accent: AppTheme.neonPink,
-                asset: 'assets/images/arc_hub_tracking.webp',
+                asset: 'assets/images/card_high_value.webp',
               ),
               card(
                 label: 'MARKET PULSE',
@@ -327,7 +346,7 @@ class _AuthIntelCarousel extends StatelessWidget {
                 detail: 'Blueprints, Scrappy and offers in one hub.',
                 icon: Icons.show_chart_rounded,
                 accent: AppTheme.neonCyan,
-                asset: 'assets/images/arc_hub_smart_trade.webp',
+                asset: 'assets/images/card_trade_ready.webp',
               ),
             ],
           ),

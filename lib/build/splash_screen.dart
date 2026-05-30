@@ -129,48 +129,55 @@ class _UagAuthBackdrop extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
+        Image.asset(
+          'assets/images/auth_bg_landscape.webp',
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (_, _, _) => const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF02030B),
+                  AppTheme.cardBackgroundDeep,
+                  Color(0xFF050014),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+        ),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF02030B),
-                AppTheme.cardBackgroundDeep,
-                const Color(0xFF050014),
+                Colors.black.withValues(alpha: 0.24),
+                AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
+                Colors.black.withValues(alpha: 0.86),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.12, -0.42),
+                  radius: 0.86,
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.20),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
         ),
         const Positioned.fill(child: StaticWatermark()),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0.10, -0.36),
-                radius: 0.92,
-                colors: [
-                  AppTheme.neonCyan.withValues(alpha: 0.18),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.black.withValues(alpha: 0.10),
-                  Colors.black.withValues(alpha: 0.70),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
