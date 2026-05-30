@@ -781,14 +781,20 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           label: 'Tracker',
           icon: Icons.grid_view_rounded,
           selected: !_showFeedScrappy,
-          onTap: () => setState(() => _showFeedScrappy = false),
+          onTap: () => setState(() {
+            _showFeedScrappy = false;
+            _trackerCarouselIndex = 0;
+          }),
         ),
         const SizedBox(width: AppTheme.spaceS),
         tab(
           label: 'Feed Scrappy',
           icon: Icons.restaurant_rounded,
           selected: _showFeedScrappy,
-          onTap: () => setState(() => _showFeedScrappy = true),
+          onTap: () => setState(() {
+            _showFeedScrappy = true;
+            _trackerCarouselIndex = 0;
+          }),
         ),
       ],
     );
@@ -1117,20 +1123,35 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     _buildScrappyFeedTabs(),
                     if (_mode == ArcScrappyTrackerMode.scrappy)
                       const SizedBox(height: AppTheme.spaceM),
-                    ScrappyFilterBar(
-                      selectedFilter: _selectedFilter,
-                      counts: counts,
-                      onFilterSelected: (filter) {
-                        setState(() => _selectedFilter = filter);
-                      },
-                    ),
-                    const SizedBox(height: AppTheme.spaceL),
-                    _mode == ArcScrappyTrackerMode.scrappy
-                        ? _buildScrappyList(filtered, states)
-                        : _buildGroupedList(filtered, states),
-                    if (_mode == ArcScrappyTrackerMode.scrappy) ...[
-                      const SizedBox(height: AppTheme.spaceL),
+                    if (_mode == ArcScrappyTrackerMode.scrappy &&
+                        _showFeedScrappy) ...[
                       const ScrappyFeedQueueSection(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      ScrappyProgressHeader(
+                        completion: completion,
+                        ownedCount: ownedCount,
+                        totalCount: allItems.length,
+                        landscape: landscape,
+                        title: 'ARC Raiders Feed Scrappy',
+                        description:
+                            'Food queue items and quick location hints for feeding Scrappy.',
+                        footer:
+                            'Feed Scrappy is kept separate from tracker completion so food queue items do not affect upgrade totals.',
+                        accentColor: AppTheme.neonPink,
+                      ),
+                      const SizedBox(height: 112),
+                    ] else ...[
+                      ScrappyFilterBar(
+                        selectedFilter: _selectedFilter,
+                        counts: counts,
+                        onFilterSelected: (filter) {
+                          setState(() => _selectedFilter = filter);
+                        },
+                      ),
+                      const SizedBox(height: AppTheme.spaceL),
+                      _mode == ArcScrappyTrackerMode.scrappy
+                          ? _buildScrappyList(filtered, states)
+                          : _buildGroupedList(filtered, states),
                       const SizedBox(height: AppTheme.spaceL),
                       ScrappyProgressHeader(
                         completion: completion,
@@ -1149,8 +1170,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                         },
                         accentColor: _modeAccent(),
                       ),
-                      const SizedBox(height: AppTheme.spaceL),
-
                       const SizedBox(height: 112),
                     ],
                     const SizedBox(height: AppTheme.spaceXL),
