@@ -437,53 +437,112 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     List<ArcScrappyItem> items,
     Map<String, ArcScrappyState> states,
   ) {
+    return _buildCompactSectionTileLayout(items, states);
+  }
+
+  Widget _buildCompactSectionTileLayout(
+    List<ArcScrappyItem> items,
+    Map<String, ArcScrappyState> states,
+  ) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
-    final maxTileWidth = isLandscape ? 124.0 : 118.0;
-    final minTileWidth = isLandscape ? 104.0 : 96.0;
-    const spacing = AppTheme.spaceS;
+
+    Widget tileFor(ArcScrappyItem item, double width) {
+      return SizedBox(
+        width: width,
+        child: ScrappyTile(
+          item: item,
+          state: states[item.id] ?? ArcScrappyState.empty(item.id),
+          landscape: isLandscape,
+          tierColor: _tierColor(item.tier),
+          onTap: () {
+            final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+            if (state.collectedCount > 0) {
+              _openItemEditor(item, state);
+            } else {
+              _showMissingItemInfo(item, state);
+            }
+          },
+          onLongPress: () {
+            final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+            _openItemEditor(item, state);
+          },
+        ),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final targetWidth = isLandscape ? 116.0 : 108.0;
-        final rawColumns = (constraints.maxWidth / targetWidth).floor();
-        final columns = rawColumns.clamp(2, isLandscape ? 6 : 3);
-        final usableWidth = constraints.maxWidth - (spacing * (columns - 1));
-        final tileWidth = (usableWidth / columns).clamp(
-          minTileWidth,
-          maxTileWidth,
-        );
+        final rawWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : 320.0;
+        final panelWidth = rawWidth.clamp(236.0, 336.0).toDouble();
+        const spacing = AppTheme.spaceS;
 
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          alignment: WrapAlignment.start,
-          children: [
-            for (final item in items)
-              SizedBox(
-                width: tileWidth,
-                child: ScrappyTile(
-                  item: item,
-                  state: states[item.id] ?? ArcScrappyState.empty(item.id),
-                  landscape: isLandscape,
-                  tierColor: _tierColor(item.tier),
-                  onTap: () {
-                    final state =
-                        states[item.id] ?? ArcScrappyState.empty(item.id);
-                    if (state.collectedCount > 0) {
-                      _openItemEditor(item, state);
-                    } else {
-                      _showMissingItemInfo(item, state);
-                    }
-                  },
-                  onLongPress: () {
-                    final state =
-                        states[item.id] ?? ArcScrappyState.empty(item.id);
-                    _openItemEditor(item, state);
-                  },
-                ),
+        if (items.length == 1) {
+          return Center(child: tileFor(items.first, panelWidth));
+        }
+
+        final halfWidth = ((panelWidth - spacing) / 2)
+            .clamp(108.0, 164.0)
+            .toDouble();
+
+        if (items.length == 2) {
+          return Center(
+            child: SizedBox(
+              width: panelWidth,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  tileFor(items[0], halfWidth),
+                  const SizedBox(width: spacing),
+                  tileFor(items[1], halfWidth),
+                ],
               ),
-          ],
+            ),
+          );
+        }
+
+        if (items.length == 3) {
+          return Center(
+            child: SizedBox(
+              width: panelWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  tileFor(items[0], halfWidth),
+                  const SizedBox(height: spacing),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      tileFor(items[1], halfWidth),
+                      const SizedBox(width: spacing),
+                      tileFor(items[2], halfWidth),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final columns = items.length <= 4 ? 2 : 3;
+        final tileWidth = ((panelWidth - (spacing * (columns - 1))) / columns)
+            .clamp(92.0, 156.0)
+            .toDouble();
+
+        return Center(
+          child: SizedBox(
+            width: panelWidth,
+            child: Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              alignment: WrapAlignment.center,
+              children: [for (final item in items) tileFor(item, tileWidth)],
+            ),
+          ),
         );
       },
     );
@@ -543,85 +602,121 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       return total + state.surplusFor(item.neededCount);
     });
 
-    return Container(
-      margin: EdgeInsets.zero,
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spaceM,
-        AppTheme.spaceM,
-        AppTheme.spaceM,
-        AppTheme.spaceS,
-      ),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: 28,
-        borderColor: color.withValues(alpha: 0.34),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTheme.tradingHeading(fontSize: 24, color: color),
-                ),
-              ),
-              _ProgressPill(text: '$completed / ${items.length}', color: color),
-            ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Container(
+          margin: EdgeInsets.zero,
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spaceM,
+            AppTheme.spaceM,
+            AppTheme.spaceM,
+            AppTheme.spaceM,
           ),
-          const SizedBox(height: AppTheme.spaceXS),
-          Text(
-            subtitle ?? _sectionSubtitle(items, states),
-            style: const TextStyle(color: Colors.white60, fontSize: 12),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          Wrap(
-            spacing: AppTheme.spaceS,
-            runSpacing: AppTheme.spaceS,
-            children: [
-              _ProgressPill(text: 'Need $neededTotal', color: color),
-              _ProgressPill(text: 'Got $gotTotal', color: Colors.greenAccent),
-              _ProgressPill(
-                text: 'Wanted $wantedTotal',
-                color: AppTheme.neonPink,
-              ),
-              if (duplicateTotal > 0)
-                _ProgressPill(
-                  text: 'Dupes $duplicateTotal',
-                  color: Colors.amberAccent,
-                ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          SizedBox(
-            width: double.infinity,
-            height: 38,
-            child: OutlinedButton.icon(
-              onPressed: wantedTotal == 0
-                  ? null
-                  : () => _markSectionComplete(items, states),
-              icon: Icon(
-                wantedTotal == 0
-                    ? Icons.check_circle_rounded
-                    : Icons.task_alt_rounded,
-              ),
-              label: Text(wantedTotal == 0 ? 'COMPLETE' : 'COMPLETE'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: color,
-                side: BorderSide(color: color.withValues(alpha: 0.58)),
-                padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceM),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.8,
-                ),
-              ),
+          decoration: AppTheme.tradingCardDecoration(
+            radius: 28,
+            borderColor: color.withValues(alpha: 0.34),
+            backgroundColor: AppTheme.cardBackgroundDeep.withValues(
+              alpha: 0.94,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
-          child ?? _buildAdaptiveTileWrap(items, states),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(
+                        fontSize: 22,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spaceS),
+                  _ProgressPill(
+                    text: '$completed / ${items.length}',
+                    color: color,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceXS),
+              Text(
+                subtitle ?? _sectionSubtitle(items, states),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 336),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: AppTheme.spaceS,
+                  runSpacing: AppTheme.spaceS,
+                  children: [
+                    _ProgressPill(text: 'Need $neededTotal', color: color),
+                    _ProgressPill(
+                      text: 'Got $gotTotal',
+                      color: Colors.greenAccent,
+                    ),
+                    _ProgressPill(
+                      text: 'Wanted $wantedTotal',
+                      color: AppTheme.neonPink,
+                    ),
+                    if (duplicateTotal > 0)
+                      _ProgressPill(
+                        text: 'Dupes $duplicateTotal',
+                        color: Colors.amberAccent,
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 336),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 34,
+                  child: OutlinedButton.icon(
+                    onPressed: wantedTotal == 0
+                        ? null
+                        : () => _markSectionComplete(items, states),
+                    icon: Icon(
+                      wantedTotal == 0
+                          ? Icons.check_circle_rounded
+                          : Icons.task_alt_rounded,
+                      size: 17,
+                    ),
+                    label: Text(wantedTotal == 0 ? 'DONE' : 'COMPLETE'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: color,
+                      side: BorderSide(color: color.withValues(alpha: 0.58)),
+                      padding: EdgeInsets.zero,
+                      textStyle: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              child ?? _buildAdaptiveTileWrap(items, states),
+            ],
+          ),
+        ),
       ),
     );
   }
