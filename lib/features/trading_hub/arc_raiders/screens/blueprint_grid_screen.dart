@@ -488,93 +488,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     );
   }
 
-  Widget _buildBlueprintGridHeader(
-    List<ArcBlueprint> allBlueprints,
-    Map<ArcBlueprintFilter, int> counts,
-  ) {
-    final ownedCount = counts[ArcBlueprintFilter.owned] ?? 0;
-    final missingCount = counts[ArcBlueprintFilter.missing] ?? 0;
-    final dupesCount = counts[ArcBlueprintFilter.duplicates] ?? 0;
-    final completion = allBlueprints.isEmpty
-        ? 0.0
-        : ownedCount / allBlueprints.length;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: 28,
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.30),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Image.asset(
-                'assets/icon/uag_traders_icon_transparent.webp',
-                width: 34,
-                height: 34,
-                errorBuilder: (_, _, _) => const Icon(
-                  Icons.grid_view_rounded,
-                  color: AppTheme.neonCyan,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spaceM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'ARC Raiders Blueprint Grid',
-                      style: AppTheme.tradingHeading(
-                        fontSize: 24,
-                        color: AppTheme.neonCyan,
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spaceXS),
-                    Text(
-                      'Track ownership, duplicates and wanted blueprints.',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
-                        isBold: true,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: completion,
-              minHeight: 11,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppTheme.neonCyan,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceS),
-          Text(
-            '$ownedCount / ${allBlueprints.length} owned - $missingCount missing - $dupesCount dupes',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              height: 1.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBottomControls(
     List<ArcBlueprint> allBlueprints,
     List<ArcBlueprint> filtered,
@@ -1140,14 +1053,33 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        titleSpacing: 0,
-        centerTitle: true,
-        title: Text(
-          'Blueprint Grid',
-          style: AppTheme.tradingHeading(
-            fontSize: 22,
-            color: AppTheme.neonCyan,
-          ),
+        automaticallyImplyLeading: false,
+        titleSpacing: 12,
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/icon/uag_traders_icon_transparent.webp',
+              width: 32,
+              height: 32,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.grid_view_rounded,
+                color: AppTheme.neonCyan,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceS),
+            Expanded(
+              child: Text(
+                'ARC Raiders Blueprint Grid',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(
+                  fontSize: 20,
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: const ArcCompanionBottomDock(
@@ -1173,8 +1105,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     AppTheme.pagePadding.bottom,
                   ),
                   children: [
-                    _buildBlueprintGridHeader(allBlueprints, counts),
-                    const SizedBox(height: AppTheme.spaceM),
                     _buildGrid(context, filtered, states),
                     _buildBottomControls(
                       allBlueprints,
