@@ -1117,8 +1117,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 final landscape =
                     MediaQuery.of(context).orientation == Orientation.landscape;
 
-                return ListView(
-                  padding: AppTheme.pagePadding,
+                return ArcRaidersPageList(
                   children: [
                     _buildScrappyFeedTabs(),
                     if (_mode == ArcScrappyTrackerMode.scrappy)

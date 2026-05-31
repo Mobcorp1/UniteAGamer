@@ -19,7 +19,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/ar
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 import 'package:uag_traders_hub/widgets/uag_page_carousel.dart';
 
@@ -1155,7 +1154,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: StreamBuilder<RaidPlannerEntitlement>(
               stream: _plannerRepository.watchEntitlement(),

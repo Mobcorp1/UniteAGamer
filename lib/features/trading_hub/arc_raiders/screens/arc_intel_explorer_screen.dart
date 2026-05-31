@@ -7,7 +7,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blue
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class ArcIntelExplorerScreen extends StatefulWidget {
@@ -50,7 +49,6 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: ListView(
               padding: AppTheme.pagePadding,
@@ -364,7 +362,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           if (topCombo != null) ...[
             const SizedBox(height: AppTheme.spaceS),
             Text(
-              'Top combo strength: ${topCombo.percentageLabel} Ã¢â‚¬Â¢ ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
+              'Top combo strength: ${topCombo.percentageLabel} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.white70,
                 fontWeight: FontWeight.w600,
@@ -582,7 +580,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            '${row.percentage.toStringAsFixed(0)}% Ã¢â‚¬Â¢ ${row.count}',
+            '${row.percentage.toStringAsFixed(0)}% ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${row.count}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,
@@ -617,7 +615,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${combo.percentageLabel} Ã¢â‚¬Â¢ ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
+            '${combo.percentageLabel} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,

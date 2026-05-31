@@ -12,7 +12,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scra
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class ArcMarketIntelligenceScreen extends StatefulWidget {
@@ -55,7 +54,6 @@ class _ArcMarketIntelligenceScreenState
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: StreamBuilder<List<ArcBlueprintDropReport>>(
               stream: _blueprintRepository.watchRecentReports(limit: 320),
@@ -139,8 +137,7 @@ class _ArcMarketIntelligenceScreenState
       return !state.owned;
     }).length;
 
-    return ListView(
-      padding: AppTheme.pagePadding,
+    return ArcRaidersPageList(
       children: [
         _buildHeroCard(
           context,
@@ -589,7 +586,7 @@ class _ArcMarketIntelligenceScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${blueprint.category} â€¢ ${blueprint.rarityLabel}',
+                      '${blueprint.category} Ã¢â‚¬Â¢ ${blueprint.rarityLabel}',
                       style: const TextStyle(color: Colors.white60),
                     ),
                   ],
@@ -827,7 +824,7 @@ class _ArcMarketIntelligenceScreenState
           _buildInfoLine('Event', combo.eventLabel),
           _buildInfoLine(
             'Support',
-            '${combo.reportCount} weighted reports â€¢ ${combo.percentageLabel}',
+            '${combo.reportCount} weighted reports Ã¢â‚¬Â¢ ${combo.percentageLabel}',
           ),
         ],
       ),
@@ -937,7 +934,7 @@ class _ArcMarketIntelligenceScreenState
           ),
           const SizedBox(height: 8),
           Text(
-            'Need ${target.remainingNeeded} more â€¢ ${target.item.tierLabel}',
+            'Need ${target.remainingNeeded} more Ã¢â‚¬Â¢ ${target.item.tierLabel}',
             style: const TextStyle(color: Colors.white70),
           ),
           if ((target.item.locationHint?.trim().isNotEmpty ?? false)) ...[
@@ -1027,7 +1024,7 @@ class _ArcMarketIntelligenceScreenState
       if (values.isEmpty) return 'No data';
       final sorted = values.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
-      return '${sorted.first.key} â€¢ ${sorted.first.value}';
+      return '${sorted.first.key} Ã¢â‚¬Â¢ ${sorted.first.value}';
     }
 
     return [
@@ -1063,7 +1060,7 @@ class _ArcMarketIntelligenceScreenState
     }
     if (weather == 'No Special Weather') return event;
     if (event == 'No Map Event') return weather;
-    return '$weather â€¢ $event';
+    return '$weather Ã¢â‚¬Â¢ $event';
   }
 
   String _buildConfidenceLabel(ArcDropIntel intel) {
@@ -1284,7 +1281,7 @@ class _ArcMarketIntelligenceScreenState
                               style: const TextStyle(color: Colors.white),
                             ),
                             subtitle: Text(
-                              '${blueprint.category} â€¢ ${blueprint.rarityLabel}',
+                              '${blueprint.category} Ã¢â‚¬Â¢ ${blueprint.rarityLabel}',
                               style: const TextStyle(color: Colors.white60),
                             ),
                             trailing: isSelected

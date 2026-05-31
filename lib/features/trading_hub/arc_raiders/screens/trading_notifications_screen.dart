@@ -8,7 +8,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
 import 'package:uag_traders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class TradingNotificationsScreen extends StatelessWidget {
@@ -48,7 +47,7 @@ class TradingNotificationsScreen extends StatelessWidget {
     final month = value.month.toString().padLeft(2, '0');
     final hour = value.hour.toString().padLeft(2, '0');
     final minute = value.minute.toString().padLeft(2, '0');
-    return '$day/$month/${value.year} â€¢ $hour:$minute';
+    return '$day/$month/${value.year} Ã¢â‚¬Â¢ $hour:$minute';
   }
 
   Future<void> _openNotification(
@@ -129,13 +128,10 @@ class TradingNotificationsScreen extends StatelessWidget {
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppTheme.pageMaxWidth,
-                ),
+                constraints: const BoxConstraints(maxWidth: 920),
                 child: StreamBuilder<List<TradingNotification>>(
                   stream: repository.watchNotifications(),
                   builder: (context, snapshot) {

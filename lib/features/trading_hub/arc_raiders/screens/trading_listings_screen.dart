@@ -11,7 +11,6 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/tr
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 class TradingListingsScreen extends StatefulWidget {
@@ -260,7 +259,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               if (subtitleBits.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
-                  subtitleBits.join(' Ã¢â‚¬Â¢ '),
+                  subtitleBits.join(' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ '),
                   style: TextStyle(color: AppTheme.tradingMutedText),
                 ),
               ],
@@ -269,8 +268,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 '${listing.traderName}'
-                '${listing.gamerTag.isNotEmpty ? ' Ã¢â‚¬Â¢ ${listing.gamerTag}' : ''}'
-                '${listing.preferredPlatform.isNotEmpty ? ' Ã¢â‚¬Â¢ ${listing.preferredPlatform}' : ''}',
+                '${listing.gamerTag.isNotEmpty ? ' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${listing.gamerTag}' : ''}'
+                '${listing.preferredPlatform.isNotEmpty ? ' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${listing.preferredPlatform}' : ''}',
                 style: TextStyle(
                   color: AppTheme.tradingMutedText,
                   fontWeight: FontWeight.w600,
@@ -450,13 +449,10 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          const Positioned.fill(child: StaticWatermark()),
           SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppTheme.pageMaxWidth,
-                ),
+                constraints: const BoxConstraints(maxWidth: 920),
                 child: Padding(
                   padding: AppTheme.pagePadding,
                   child: StreamBuilder<Map<String, ArcBlueprintState>>(
