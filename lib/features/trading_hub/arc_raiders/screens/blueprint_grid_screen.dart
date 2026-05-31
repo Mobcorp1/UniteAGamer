@@ -595,6 +595,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          _buildSearchAppBarTitle(),
+          const SizedBox(height: AppTheme.spaceM),
           Wrap(
             alignment: WrapAlignment.center,
             spacing: 8,
@@ -1051,10 +1053,34 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: _buildSearchAppBarTitle(),
+        automaticallyImplyLeading: false,
+        titleSpacing: 12,
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/icon/uag_traders_icon_transparent.webp',
+              width: 32,
+              height: 32,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.grid_view_rounded,
+                color: AppTheme.neonCyan,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceS),
+            Expanded(
+              child: Text(
+                'ARC Raiders Blueprint Grid',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(
+                  fontSize: 20,
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: const ArcCompanionBottomDock(
