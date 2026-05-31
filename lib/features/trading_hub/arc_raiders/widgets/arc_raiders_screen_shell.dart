@@ -41,9 +41,26 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
             ),
           ),
         ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.08),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.20),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+        ),
         const Positioned.fill(
           child: IgnorePointer(
-            child: Opacity(opacity: 0.30, child: StaticWatermark()),
+            child: Opacity(opacity: 0.24, child: StaticWatermark()),
           ),
         ),
       ],
@@ -52,14 +69,14 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
 }
 
 class ArcRaidersScreenShell extends StatelessWidget {
-  final Widget child;
-  final bool useSafeArea;
-
   const ArcRaidersScreenShell({
     super.key,
     required this.child,
     this.useSafeArea = false,
   });
+
+  final Widget child;
+  final bool useSafeArea;
 
   @override
   Widget build(BuildContext context) {
@@ -150,52 +167,93 @@ class ArcRaidersPageHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.icon,
+    this.logoAsset,
+    this.trailing,
     this.accent = AppTheme.neonCyan,
   });
 
   final String title;
   final String? subtitle;
   final IconData? icon;
+  final String? logoAsset;
+  final Widget? trailing;
   final Color accent;
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 430;
+
+    Widget leadingIcon() {
+      if (logoAsset != null) {
+        return Image.asset(
+          logoAsset!,
+          width: compact ? 34 : 42,
+          height: compact ? 34 : 42,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (_, _, _) => Icon(
+            icon ?? Icons.dashboard_rounded,
+            color: accent,
+            size: compact ? 26 : 30,
+          ),
+        );
+      }
+
+      return Container(
+        width: compact ? 40 : 46,
+        height: compact ? 40 : 46,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: accent.withValues(alpha: 0.12),
+          border: Border.all(color: accent.withValues(alpha: 0.34)),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.12),
+              blurRadius: 18,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Icon(
+          icon ?? Icons.dashboard_rounded,
+          color: accent,
+          size: compact ? 22 : 24,
+        ),
+      );
+    }
+
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      padding: EdgeInsets.all(compact ? AppTheme.spaceM : AppTheme.spaceL),
       decoration: AppTheme.tradingCardDecoration(
-        radius: 28,
+        radius: compact ? 24 : 28,
         borderColor: accent.withValues(alpha: 0.32),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
       ),
       child: Row(
         children: [
-          if (icon != null) ...[
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: accent.withValues(alpha: 0.12),
-                border: Border.all(color: accent.withValues(alpha: 0.34)),
-              ),
-              child: Icon(icon, color: accent, size: 24),
-            ),
-            const SizedBox(width: AppTheme.spaceM),
-          ],
+          leadingIcon(),
+          SizedBox(width: compact ? AppTheme.spaceS : AppTheme.spaceM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: AppTheme.tradingHeading(fontSize: 24, color: accent),
+                  maxLines: compact ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(
+                    fontSize: compact ? 20 : 24,
+                    color: accent,
+                  ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: AppTheme.spaceXS),
                   Text(
                     subtitle!,
+                    maxLines: compact ? 3 : 2,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 13,
+                      fontSize: compact ? 12 : 13,
                       color: Colors.white70,
                       isBold: true,
                     ).copyWith(height: 1.30),
@@ -204,6 +262,10 @@ class ArcRaidersPageHeader extends StatelessWidget {
               ],
             ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: AppTheme.spaceM),
+            trailing!,
+          ],
         ],
       ),
     );
@@ -234,6 +296,98 @@ class ArcRaidersSectionCard extends StatelessWidget {
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
       ),
       child: child,
+    );
+  }
+}
+
+class ArcRaidersFilterPanel extends StatelessWidget {
+  const ArcRaidersFilterPanel({
+    super.key,
+    required this.child,
+    this.accent = AppTheme.neonCyan,
+  });
+
+  final Widget child;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArcRaidersSectionCard(
+      accent: accent,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      radius: 22,
+      child: child,
+    );
+  }
+}
+
+class ArcRaidersProgressPanel extends StatelessWidget {
+  const ArcRaidersProgressPanel({
+    super.key,
+    required this.title,
+    required this.summary,
+    required this.progress,
+    this.accent = AppTheme.neonCyan,
+    this.onClose,
+  });
+
+  final String title;
+  final String summary;
+  final double progress;
+  final Color accent;
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final clampedProgress = progress.clamp(0.0, 1.0);
+
+    return ArcRaidersSectionCard(
+      accent: accent,
+      padding: const EdgeInsets.all(AppTheme.spaceL),
+      radius: 26,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.assignment_turned_in_rounded, color: accent, size: 24),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTheme.tradingHeading(fontSize: 20, color: accent),
+                ),
+              ),
+              if (onClose != null)
+                IconButton(
+                  tooltip: 'Close',
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: clampedProgress,
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            summary,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
