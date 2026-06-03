@@ -1,4 +1,4 @@
-﻿name: uag_arc_raiders_hub
+name: uag_arc_raiders_hub
 description: "UAG Arc Raiders Hub standalone app."
 publish_to: 'none'
 
@@ -49,12 +49,10 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#090529"
-  image: assets/icon/uag_traders_icon_transparent.png
   android: true
   ios: true
   android_12:
     color: "#090529"
-    image: assets/icon/uag_traders_icon_transparent.png
 
 flutter:
   uses-material-design: true
@@ -86,4 +84,5 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
+
 
