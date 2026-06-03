@@ -417,7 +417,7 @@ class ArcItemAdviceIndex {
     required String advice,
     required List<String> reasons,
   }) {
-    final reasonText = reasons.map((reason) => '• $reason').join('\n');
+    final reasonText = reasons.map((reason) => '- $reason').join('\n');
     return '$advice\n\nAction: $action.\n\nWhy:\n$reasonText';
   }
 

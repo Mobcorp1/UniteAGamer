@@ -195,7 +195,7 @@ class _CurrentPlanCard extends StatelessWidget {
           Text(
             hasAdminBypass
                 ? 'Admin/dev bypass active. You can access everything while testing.'
-                : '${tier.label} • $subscriptionStatus',
+                : '${tier.label} - $subscriptionStatus',
             style: const TextStyle(color: Colors.white70, height: 1.35),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -263,7 +263,7 @@ class _PlanCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${plan.monthlyPriceLabel} • ${plan.yearlyPriceLabel}',
+            '${plan.monthlyPriceLabel} - ${plan.yearlyPriceLabel}',
             style: AppTheme.bodyTextStyle(
               fontSize: 15,
               color: Colors.white,
@@ -366,4 +366,4 @@ class _Pill extends StatelessWidget {
   }
 }
 
-String _money(int pence) => '£${(pence / 100).toStringAsFixed(2)}';
+String _money(int pence) => 'Â£${(pence / 100).toStringAsFixed(2)}';

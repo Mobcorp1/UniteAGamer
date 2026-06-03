@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
@@ -264,6 +265,92 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
       );
     }
 
+    Widget heroCard() {
+      return Container(
+        padding: const EdgeInsets.all(AppTheme.spaceL),
+        decoration: AppTheme.tradingCardDecoration(
+          radius: 24,
+          borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.neonCyan.withValues(alpha: 0.10),
+                    border: Border.all(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.45),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.manage_accounts_rounded,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spaceM),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Trader Identity',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 24,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Keep your public trader profile sharp, searchable and trade-ready.',
+                        style: TextStyle(color: Colors.white70, height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget sectionCard({
+      required String title,
+      required IconData icon,
+      required List<Widget> children,
+    }) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+        padding: const EdgeInsets.all(AppTheme.spaceL),
+        decoration: AppTheme.tradingCardDecoration(radius: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: AppTheme.neonPink, size: 22),
+                const SizedBox(width: AppTheme.spaceS),
+                Text(
+                  title,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 20,
+                    color: AppTheme.neonPink,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+            ...children,
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
@@ -271,102 +358,140 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         backgroundColor: AppTheme.darkBackground,
       ),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            children: [
-              _sectionTitle('Identity'),
-              _field(
-                _uagIdController,
-                'UAG ID',
-                helperText: 'Auto-assigned numeric trader ID',
-                enabled: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 860),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(AppTheme.spaceL),
+                children: [
+                  heroCard(),
+                  const SizedBox(height: AppTheme.spaceL),
+                  sectionCard(
+                    title: 'Identity',
+                    icon: Icons.badge_outlined,
+                    children: [
+                      _field(
+                        _uagIdController,
+                        'UAG ID',
+                        helperText: 'Auto-assigned numeric trader ID',
+                        enabled: false,
+                      ),
+                      _field(
+                        _uagNameController,
+                        'UAG Name',
+                        validator: (v) => _required(v, 'UAG Name'),
+                      ),
+                      _field(_embarkIdController, 'Embark ID'),
+                      _field(
+                        _referralCodeController,
+                        'Referral Code',
+                        enabled: false,
+                      ),
+                      _field(_referredByController, 'Referred By Code'),
+                    ],
+                  ),
+                  sectionCard(
+                    title: 'Platform & Server',
+                    icon: Icons.travel_explore_rounded,
+                    children: [
+                      _field(
+                        _regionController,
+                        'Region',
+                        validator: (v) => _required(v, 'Region'),
+                      ),
+                      _dropdown(
+                        label: 'Server Preference',
+                        value: _serverPreference,
+                        values: _serverPreferences,
+                        onChanged: (value) => setState(
+                          () => _serverPreference = value ?? 'Automatic',
+                        ),
+                      ),
+                      _field(
+                        _platformController,
+                        'Preferred Platform',
+                        validator: (v) => _required(v, 'Preferred Platform'),
+                      ),
+                      _field(
+                        _timezoneController,
+                        'Timezone',
+                        validator: (v) => _required(v, 'Timezone'),
+                      ),
+                    ],
+                  ),
+                  sectionCard(
+                    title: 'Trading Preferences',
+                    icon: Icons.tune_rounded,
+                    children: [
+                      _switchTile(
+                        value: _visibleInSearch,
+                        onChanged: (value) =>
+                            setState(() => _visibleInSearch = value),
+                        title: 'Visible in search',
+                        subtitle: 'Allow other traders to find your profile.',
+                      ),
+                      _switchTile(
+                        value: _micOk,
+                        onChanged: (value) => setState(() => _micOk = value),
+                        title: 'Mic okay',
+                        subtitle: 'Show voice chat availability.',
+                      ),
+                      _switchTile(
+                        value: _crossRegionOk,
+                        onChanged: (value) =>
+                            setState(() => _crossRegionOk = value),
+                        title: 'Cross-region okay',
+                        subtitle:
+                            'Open to switching region for raids, trades and event windows.',
+                      ),
+                      _switchTile(
+                        value: _crossplayEnabled,
+                        onChanged: (value) =>
+                            setState(() => _crossplayEnabled = value),
+                        title: 'Crossplay enabled',
+                        subtitle:
+                            'Used for cross-platform matching and trade planning.',
+                      ),
+                    ],
+                  ),
+                  sectionCard(
+                    title: 'Account',
+                    icon: Icons.account_balance_wallet_outlined,
+                    children: [
+                      _dropdown(
+                        label: 'Preferred payout method',
+                        value: _payoutMethod,
+                        values: _payoutMethods,
+                        onChanged: (value) => setState(
+                          () => _payoutMethod = value ?? 'Bank Transfer',
+                        ),
+                      ),
+                      _dropdown(
+                        label: 'Subscription status',
+                        value: _subscriptionStatus,
+                        values: _subscriptionOptions,
+                        onChanged: (value) => setState(
+                          () => _subscriptionStatus = value ?? 'inactive',
+                        ),
+                      ),
+                      _switchTile(
+                        value: _affiliateEnabled,
+                        onChanged: (value) =>
+                            setState(() => _affiliateEnabled = value),
+                        title: 'Affiliate programme enabled',
+                      ),
+                    ],
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _save,
+                    icon: const Icon(Icons.save_rounded),
+                    label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
+                  ),
+                ],
               ),
-              _field(
-                _uagNameController,
-                'UAG Name',
-                validator: (v) => _required(v, 'UAG Name'),
-              ),
-              _field(_embarkIdController, 'Embark ID'),
-              _field(_referralCodeController, 'Referral Code', enabled: false),
-              _field(_referredByController, 'Referred By Code'),
-              _sectionTitle('Platform & Server'),
-              _field(
-                _regionController,
-                'Region',
-                validator: (v) => _required(v, 'Region'),
-              ),
-              _dropdown(
-                label: 'Server Preference',
-                value: _serverPreference,
-                values: _serverPreferences,
-                onChanged: (value) =>
-                    setState(() => _serverPreference = value ?? 'Automatic'),
-              ),
-              _field(
-                _platformController,
-                'Preferred Platform',
-                validator: (v) => _required(v, 'Preferred Platform'),
-              ),
-              _field(
-                _timezoneController,
-                'Timezone',
-                validator: (v) => _required(v, 'Timezone'),
-              ),
-              _sectionTitle('Preferences'),
-              _switchTile(
-                value: _visibleInSearch,
-                onChanged: (value) => setState(() => _visibleInSearch = value),
-                title: 'Visible in search',
-                subtitle: 'Allow other traders to find your profile.',
-              ),
-              _switchTile(
-                value: _micOk,
-                onChanged: (value) => setState(() => _micOk = value),
-                title: 'Mic okay',
-                subtitle: 'Show voice chat availability.',
-              ),
-              _switchTile(
-                value: _crossRegionOk,
-                onChanged: (value) => setState(() => _crossRegionOk = value),
-                title: 'Cross-region okay',
-                subtitle:
-                    'Open to switching region for raids, trades and event windows.',
-              ),
-              _switchTile(
-                value: _crossplayEnabled,
-                onChanged: (value) => setState(() => _crossplayEnabled = value),
-                title: 'Crossplay enabled',
-                subtitle:
-                    'Used for cross-platform matching and trade planning.',
-              ),
-              _sectionTitle('Account'),
-              _dropdown(
-                label: 'Preferred payout method',
-                value: _payoutMethod,
-                values: _payoutMethods,
-                onChanged: (value) =>
-                    setState(() => _payoutMethod = value ?? 'Bank Transfer'),
-              ),
-              _dropdown(
-                label: 'Subscription status',
-                value: _subscriptionStatus,
-                values: _subscriptionOptions,
-                onChanged: (value) =>
-                    setState(() => _subscriptionStatus = value ?? 'inactive'),
-              ),
-              _switchTile(
-                value: _affiliateEnabled,
-                onChanged: (value) => setState(() => _affiliateEnabled = value),
-                title: 'Affiliate programme enabled',
-              ),
-              const SizedBox(height: AppTheme.spaceL),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _save,
-                child: Text(_isSaving ? 'Saving...' : 'Save Changes'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

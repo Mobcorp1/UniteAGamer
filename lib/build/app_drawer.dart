@@ -1,15 +1,15 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
+﻿import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/build/app_entry_gate.dart';
-import 'package:uag_traders_hub/build/auth/auth_landing_screen.dart';
+import 'package:uag_traders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_traders_hub/features/feature_access_gate.dart';
 import 'package:uag_traders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -116,14 +116,19 @@ class _AppDrawerState extends State<AppDrawer>
     return <_DrawerItem>[
       _DrawerItem('Home', Icons.home_outlined, AppEntryGate.routeName),
       _DrawerItem(
+        'My Hub',
+        Icons.dashboard_customize_outlined,
+        MyHubScreen.routeName,
+      ),
+      _DrawerItem(
         'Intel Snapshot',
         Icons.insights_rounded,
         ArcMarketIntelligenceScreen.routeName,
       ),
       _DrawerItem(
-        'Blueprint Grid',
-        Icons.grid_view_rounded,
-        BlueprintGridScreen.routeName,
+        'Tracking',
+        Icons.dashboard_customize_outlined,
+        MyHubScreen.routeName,
       ),
       _DrawerItem(
         'Raid Planner',
@@ -192,7 +197,7 @@ class _AppDrawerState extends State<AppDrawer>
           backgroundColor: AppTheme.cardBackgroundDeep,
           shape: AppTheme.tradingDialogShape(),
           title: Text(
-            '$title — Coming Soon',
+            '$title ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Coming Soon',
             style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
           ),
           content: Text(

@@ -34,10 +34,10 @@ class ArcMyTradeListingsScreen extends StatelessWidget {
               return Card(
                 child: ListTile(
                   title: Text(
-                    '${item.offeredBlueprintName} → ${item.wantedBlueprintName}',
+                    '${item.offeredBlueprintName} â†’ ${item.wantedBlueprintName}',
                   ),
                   subtitle: Text(
-                    '${item.region} • ${item.platform}\n'
+                    '${item.region} - ${item.platform}\n'
                     'Status: ${item.status}\n'
                     '${item.note.isEmpty ? 'No notes' : item.note}',
                   ),

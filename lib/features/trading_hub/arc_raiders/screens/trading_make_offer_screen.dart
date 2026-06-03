@@ -358,7 +358,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                       ),
                                     ),
                                     subtitle: Text(
-                                      '${item.categoryLabel} • ${item.rarityLabel} • ${item.tradeValueLabel} value',
+                                      '${item.categoryLabel} - ${item.rarityLabel} - ${item.tradeValueLabel} value',
                                       style: const TextStyle(
                                         color: Colors.white60,
                                       ),

@@ -130,7 +130,7 @@ class BlueprintGridControlsCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / $totalBlueprints owned • $missingCount missing • $dupesCount with dupes',
+            '$ownedCount / $totalBlueprints owned - $missingCount missing - $dupesCount with dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,

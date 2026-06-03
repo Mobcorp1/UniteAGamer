@@ -12,6 +12,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/sc
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
@@ -89,6 +90,12 @@ class UAGTradersHubApp extends StatelessWidget {
       case ArcRaidersHubScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcRaidersHubScreen(),
+          settings: settings,
+        );
+
+      case MyHubScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const MyHubScreen(),
           settings: settings,
         );
 

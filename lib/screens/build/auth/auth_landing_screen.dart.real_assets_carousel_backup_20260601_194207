@@ -1,0 +1,591 @@
+import 'package:flutter/material.dart';
+
+import 'package:uag_traders_hub/build/auth/auth_screen.dart';
+import 'package:uag_traders_hub/widgets/static_watermark.dart';
+import 'package:uag_traders_hub/widgets/theme.dart';
+
+class AuthLandingScreen extends StatefulWidget {
+  static const String routeName = '/auth-landing';
+
+  const AuthLandingScreen({super.key});
+
+  @override
+  State<AuthLandingScreen> createState() => _AuthLandingScreenState();
+}
+
+class _AuthLandingScreenState extends State<AuthLandingScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _carouselController;
+
+  static const List<_LandingFeature> _features = [
+    _LandingFeature(
+      title: 'Tracking',
+      subtitle: 'Blueprints, dupes, wanted items and completion progress.',
+      icon: Icons.track_changes_rounded,
+      accent: AppTheme.neonCyan,
+    ),
+    _LandingFeature(
+      title: 'Trading',
+      subtitle: 'Listings, offers, sessions and safer swap planning.',
+      icon: Icons.handshake_rounded,
+      accent: AppTheme.neonPink,
+    ),
+    _LandingFeature(
+      title: 'Match a Raider',
+      subtitle: 'Find raiders by playstyle, focus and availability.',
+      icon: Icons.groups_2_rounded,
+      accent: Colors.orangeAccent,
+    ),
+    _LandingFeature(
+      title: 'Intel',
+      subtitle: 'Community drop reports and market intelligence.',
+      icon: Icons.radar_rounded,
+      accent: Colors.lightGreenAccent,
+    ),
+    _LandingFeature(
+      title: 'Raid Planner',
+      subtitle: 'Plan windows, targets and safer extraction runs.',
+      icon: Icons.map_outlined,
+      accent: Colors.amberAccent,
+    ),
+    _LandingFeature(
+      title: 'Scrappy Tracker',
+      subtitle: 'Track resources, upgrades and future trade stock.',
+      icon: Icons.inventory_2_outlined,
+      accent: Colors.cyanAccent,
+    ),
+    _LandingFeature(
+      title: 'Play Like a Pro',
+      subtitle: 'Prep, focus, tilt recovery and performance routines.',
+      icon: Icons.bolt_rounded,
+      accent: Colors.deepPurpleAccent,
+    ),
+    _LandingFeature(
+      title: 'Trust System',
+      subtitle: 'Reputation, completed trades and trader safety.',
+      icon: Icons.verified_user_outlined,
+      accent: AppTheme.neonCyan,
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _carouselController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _carouselController.dispose();
+    super.dispose();
+  }
+
+  void _openAuth({required bool login}) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => AuthScreen(initialIsLogin: login)),
+    );
+  }
+
+  Widget _background() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const Positioned.fill(child: StaticWatermark()),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0.15, -0.25),
+              radius: 1.12,
+              colors: [
+                AppTheme.neonCyan.withValues(alpha: 0.18),
+                AppTheme.neonPink.withValues(alpha: 0.08),
+                AppTheme.darkBackground,
+              ],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.black.withValues(alpha: 0.80),
+                AppTheme.darkBackground.withValues(alpha: 0.48),
+                Colors.black.withValues(alpha: 0.88),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _topLeftBrand(bool compact) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(compact ? 14 : 28, compact ? 12 : 20, 14, 0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            'assets/icon/uag_traders_icon_transparent.webp',
+            width: compact ? 34 : 44,
+            height: compact ? 34 : 44,
+            errorBuilder: (_, _, _) => Icon(
+              Icons.swap_horiz_rounded,
+              color: AppTheme.neonCyan,
+              size: compact ? 30 : 40,
+            ),
+          ),
+          SizedBox(width: compact ? 9 : 12),
+          Flexible(
+            child: Text(
+              'UAG ARC RAIDERS HUB',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.neonTextStyle(
+                fontSize: compact ? 15 : 22,
+                color: Colors.white,
+                isBold: true,
+              ).copyWith(letterSpacing: compact ? 1.2 : 2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroText(BoxConstraints constraints) {
+    final width = constraints.maxWidth;
+    final compact = width < 720;
+    final fontSize = width >= 1280
+        ? 64.0
+        : width >= 1000
+        ? 54.0
+        : width >= 760
+        ? 42.0
+        : 30.0;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 34),
+      child: Column(
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style:
+                    AppTheme.heroTextStyle(
+                      fontSize: fontSize,
+                      color: Colors.white,
+                    ).copyWith(
+                      letterSpacing: compact ? 2.2 : 5.5,
+                      height: 1,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.95),
+                          blurRadius: 18,
+                        ),
+                      ],
+                    ),
+                children: const [
+                  TextSpan(text: 'CONNECT. '),
+                  TextSpan(
+                    text: 'TRADE. ',
+                    style: TextStyle(color: AppTheme.neonCyan),
+                  ),
+                  TextSpan(
+                    text: 'HUNT. ',
+                    style: TextStyle(color: AppTheme.neonPink),
+                  ),
+                  TextSpan(text: 'EXTRACT.'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Your Arc Raiders trading companion. Built for tracking, trust, offers and extraction-ready coordination.',
+            textAlign: TextAlign.center,
+            style: AppTheme.bodyTextStyle(
+              fontSize: compact ? 14 : 18,
+              color: Colors.white.withValues(alpha: 0.82),
+              isBold: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _ctaRow(bool compact) {
+    if (compact) {
+      return Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              onPressed: () => _openAuth(login: false),
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('Create Account'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton.icon(
+              onPressed: () => _openAuth(login: true),
+              icon: const Icon(Icons.login_rounded),
+              label: const Text('Log In'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 210,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: () => _openAuth(login: false),
+            icon: const Icon(Icons.person_add_alt_1_rounded),
+            label: const Text('Create Account'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        SizedBox(
+          width: 170,
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: () => _openAuth(login: true),
+            icon: const Icon(Icons.login_rounded),
+            label: const Text('Log In'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _carousel(BoxConstraints constraints) {
+    final width = constraints.maxWidth;
+    final compact = width < 620;
+    final cardWidth = compact
+        ? 210.0
+        : width >= 1300
+        ? 252.0
+        : width >= 920
+        ? 232.0
+        : 220.0;
+    final cardHeight = compact ? 190.0 : 210.0;
+    const gap = 14.0;
+    final loopWidth = _features.length * (cardWidth + gap);
+
+    return SizedBox(
+      height: cardHeight + 32,
+      width: double.infinity,
+      child: ClipRect(
+        child: AnimatedBuilder(
+          animation: _carouselController,
+          builder: (context, _) {
+            final offset = -_carouselController.value * loopWidth;
+            return Transform.translate(
+              offset: Offset(offset, 0),
+              child: Row(
+                children: [
+                  for (var round = 0; round < 3; round++)
+                    for (final feature in _features)
+                      Padding(
+                        padding: const EdgeInsets.only(right: gap),
+                        child: _FeatureCard(
+                          feature: feature,
+                          width: cardWidth,
+                          height: cardHeight,
+                        ),
+                      ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _trustStrip(bool compact) {
+    final children = [
+      _TrustBadge(icon: Icons.shield_outlined, title: 'Trusted Network'),
+      _TrustBadge(icon: Icons.balance_rounded, title: 'Fair Trading'),
+      _TrustBadge(icon: Icons.radar_rounded, title: 'Live Intel'),
+      _TrustBadge(icon: Icons.groups_2_outlined, title: 'Community First'),
+    ];
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: compact ? 10 : 18,
+      runSpacing: compact ? 10 : 12,
+      children: children,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 720;
+          final short = constraints.maxHeight < 740;
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              _background(),
+              SafeArea(
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: _topLeftBrand(compact),
+                    ),
+                    Container(
+                      height: 1,
+                      margin: EdgeInsets.only(top: compact ? 12 : 18),
+                      color: AppTheme.neonCyan.withValues(alpha: 0.36),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(
+                          compact ? 14 : 24,
+                          short
+                              ? 18
+                              : compact
+                              ? 30
+                              : 46,
+                          compact ? 14 : 24,
+                          compact ? 20 : 28,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight:
+                                constraints.maxHeight - (compact ? 102 : 120),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _heroText(constraints),
+                              SizedBox(height: compact ? 22 : 28),
+                              _ctaRow(compact),
+                              SizedBox(
+                                height: short
+                                    ? 26
+                                    : compact
+                                    ? 34
+                                    : 48,
+                              ),
+                              _carousel(constraints),
+                              SizedBox(height: compact ? 18 : 28),
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: compact ? 10 : 20,
+                                  vertical: compact ? 14 : 18,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.34),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: AppTheme.neonCyan.withValues(
+                                      alpha: 0.14,
+                                    ),
+                                  ),
+                                ),
+                                child: _trustStrip(compact),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LandingFeature {
+  const _LandingFeature({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+}
+
+class _FeatureCard extends StatelessWidget {
+  const _FeatureCard({
+    required this.feature,
+    required this.width,
+    required this.height,
+  });
+
+  final _LandingFeature feature;
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: width,
+        height: height,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.58),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: feature.accent.withValues(alpha: 0.74)),
+          boxShadow: [
+            BoxShadow(
+              color: feature.accent.withValues(alpha: 0.20),
+              blurRadius: 18,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: RadialGradient(
+                    center: Alignment.topCenter,
+                    radius: 0.92,
+                    colors: [
+                      feature.accent.withValues(alpha: 0.18),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.topLeft,
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.42),
+                  border: Border.all(
+                    color: feature.accent.withValues(alpha: 0.8),
+                  ),
+                ),
+                child: Icon(feature.icon, color: feature.accent, size: 24),
+              ),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: Icon(
+                feature.icon,
+                size: 62,
+                color: feature.accent.withValues(alpha: 0.88),
+                shadows: [
+                  Shadow(
+                    color: feature.accent.withValues(alpha: 0.74),
+                    blurRadius: 18,
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    feature.title.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: feature.accent,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    feature.subtitle,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.5,
+                      height: 1.25,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrustBadge extends StatelessWidget {
+  const _TrustBadge({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.30),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppTheme.neonCyan, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

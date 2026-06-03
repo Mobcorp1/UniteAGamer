@@ -387,8 +387,8 @@ class _TradingCreateListingScreenState
                                     ),
                                     subtitle: Text(
                                       state.hasDuplicates
-                                          ? 'Dupes: ${state.dupesOwned} • ${blueprint.category}'
-                                          : '${blueprint.rarityLabel} • ${blueprint.category}',
+                                          ? 'Dupes: ${state.dupesOwned} - ${blueprint.category}'
+                                          : '${blueprint.rarityLabel} - ${blueprint.category}',
                                       style: const TextStyle(
                                         color: Colors.white60,
                                       ),
@@ -615,7 +615,7 @@ class _TradingCreateListingScreenState
                                       ],
                                     ),
                                     subtitle: Text(
-                                      '${item.categoryLabel} • ${item.rarityLabel} • ${item.tradeValueLabel} value',
+                                      '${item.categoryLabel} - ${item.rarityLabel} - ${item.tradeValueLabel} value',
                                       style: const TextStyle(
                                         color: Colors.white60,
                                       ),
@@ -686,12 +686,12 @@ class _TradingCreateListingScreenState
     ];
     if (pieces.isEmpty) return '';
     if (pieces.length == 1) return pieces.first;
-    if (pieces.length <= 3) return pieces.join(' • ');
-    return '${pieces.take(3).join(' • ')} +${pieces.length - 3} more';
+    if (pieces.length <= 3) return pieces.join(' - ');
+    return '${pieces.take(3).join(' - ')} +${pieces.length - 3} more';
   }
 
   String _buildWantedSummary() {
-    if (_wantsNothing) return 'Nothing wanted • free giveaway';
+    if (_wantsNothing) return 'Nothing wanted - free giveaway';
     if (_openToOffers) return 'Open to offers';
     final pieces = <String>[
       ..._selectedWantedBlueprints.map((item) => item.name),
@@ -699,8 +699,8 @@ class _TradingCreateListingScreenState
     ];
     if (pieces.isEmpty) return '';
     if (pieces.length == 1) return pieces.first;
-    if (pieces.length <= 3) return pieces.join(' • ');
-    return '${pieces.take(3).join(' • ')} +${pieces.length - 3} more';
+    if (pieces.length <= 3) return pieces.join(' - ');
+    return '${pieces.take(3).join(' - ')} +${pieces.length - 3} more';
   }
 
   String _buildTitle() {
@@ -713,11 +713,11 @@ class _TradingCreateListingScreenState
     if (offeringNames.isEmpty) return 'Trade Listing';
 
     final lead = offeringNames.first;
-    if (_wantsNothing) return '$lead • Free Giveaway';
+    if (_wantsNothing) return '$lead - Free Giveaway';
     if (_openToOffers) {
       return _tradeAsBundle
-          ? '$lead bundle • Open Offer'
-          : '$lead • Open Offer';
+          ? '$lead bundle - Open Offer'
+          : '$lead - Open Offer';
     }
 
     final wantedNames = <String>[
@@ -1340,7 +1340,7 @@ class _TradingCreateListingScreenState
                                   const SizedBox(height: 8),
                                   Text(
                                     'Format: ${_tradeAsBundle ? 'Bundle preferred' : 'Mix and match'}'
-                                    '${_allowPartialOffers ? ' • Partial/custom offers enabled' : ''}',
+                                    '${_allowPartialOffers ? ' - Partial/custom offers enabled' : ''}',
                                     style: TextStyle(
                                       color: AppTheme.tradingMutedText,
                                     ),

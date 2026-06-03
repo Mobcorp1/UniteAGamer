@@ -101,7 +101,7 @@ class _ArcCreateTradeListingScreenState
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
-                'Listing will use ${profile.region} • ${profile.platform}',
+                'Listing will use ${profile.region} - ${profile.platform}',
               ),
             ),
           TextField(

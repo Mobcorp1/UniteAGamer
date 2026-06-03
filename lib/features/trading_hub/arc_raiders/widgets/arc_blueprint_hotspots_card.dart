@@ -62,7 +62,7 @@ class ArcBlueprintHotspotsCard extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  '${hotspot.mapName} • ${hotspot.areaLabel}',
+                                  '${hotspot.mapName} - ${hotspot.areaLabel}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
@@ -81,7 +81,7 @@ class ArcBlueprintHotspotsCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${hotspot.containerLabel} • ${hotspot.percentageLabel}',
+                            '${hotspot.containerLabel} - ${hotspot.percentageLabel}',
                             style: TextStyle(
                               color: AppTheme.neonCyan.withValues(alpha: 0.9),
                               fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'package:uag_traders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_traders_hub/widgets/static_watermark.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
@@ -23,11 +24,16 @@ class _OnboardingBasicProfileScreenState
 
   bool _isSaving = false;
   bool _isLoading = true;
+  bool _acceptedTraderCode = false;
+  int _stepIndex = 0;
+
   String _selectedCountry = 'United Kingdom';
   String _selectedPlatform = 'PC';
   String _selectedTimeZone = 'Europe/London';
 
-  static const List<String> _countries = <String>[
+  static const int _stepCount = 5;
+
+  static const List<String> _countries = [
     'United Kingdom',
     'United States',
     'Canada',
@@ -45,14 +51,9 @@ class _OnboardingBasicProfileScreenState
     'Japan',
   ];
 
-  static const List<String> _platforms = <String>[
-    'PC',
-    'PlayStation',
-    'Xbox',
-    'Steam',
-  ];
+  static const List<String> _platforms = ['PC', 'PlayStation', 'Xbox', 'Steam'];
 
-  static const List<String> _timeZones = <String>[
+  static const List<String> _timeZones = [
     'Europe/London',
     'Europe/Berlin',
     'Europe/Paris',
@@ -81,18 +82,20 @@ class _OnboardingBasicProfileScreenState
 
   Future<void> _prefillFromFirestore() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
 
     final doc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .get();
-
-    final data = doc.data() ?? <String, dynamic>{};
-    final basicProfile = data['basicProfile'] is Map<String, dynamic>
+    final data = doc.data() ?? {};
+    final basicProfile = data['basicProfile'] is Map
         ? data['basicProfile'] as Map<String, dynamic>
         : <String, dynamic>{};
-    final traderProfile = data['traderProfile'] is Map<String, dynamic>
+    final traderProfile = data['traderProfile'] is Map
         ? data['traderProfile'] as Map<String, dynamic>
         : <String, dynamic>{};
 
@@ -135,12 +138,16 @@ class _OnboardingBasicProfileScreenState
   }
 
   Future<void> _saveProfile() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() => _stepIndex = 3);
+      return;
+    }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     setState(() => _isSaving = true);
+
     try {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'displayName': _displayNameController.text.trim(),
@@ -151,7 +158,7 @@ class _OnboardingBasicProfileScreenState
           'country': _selectedCountry,
           'platform': _selectedPlatform,
           'timeZone': _selectedTimeZone,
-          'platforms': <String>[_selectedPlatform],
+          'platforms': [_selectedPlatform],
         },
         'traderProfile': {
           'uagName': _displayNameController.text.trim(),
@@ -166,40 +173,65 @@ class _OnboardingBasicProfileScreenState
       }, SetOptions(merge: true));
 
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+      setState(() => _stepIndex = 4);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  Widget _sectionCard({required String title, required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+  void _next() {
+    if (_stepIndex == 2 && !_acceptedTraderCode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Accept the Trader Code to continue.')),
+      );
+      return;
+    }
+
+    if (_stepIndex == 3) {
+      _saveProfile();
+      return;
+    }
+
+    if (_stepIndex == 4) {
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+      return;
+    }
+
+    setState(() => _stepIndex = (_stepIndex + 1).clamp(0, _stepCount - 1));
+  }
+
+  void _back() {
+    if (_stepIndex <= 0 || _isSaving) return;
+    setState(() => _stepIndex--);
+  }
+
+  InputDecoration _input(String label) {
+    return AppTheme.inputDecoration(label).copyWith(
+      filled: true,
+      fillColor: Colors.black.withValues(alpha: 0.36),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: AppTheme.neonCyan.withValues(alpha: 0.34),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: AppTheme.titleTextStyle(
-              fontSize: 20,
-              color: AppTheme.neonPink,
-              isBold: true,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          child,
-        ],
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.neonCyan, width: 1.8),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.neonPink, width: 1.4),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.neonPink, width: 1.8),
       ),
     );
   }
-
-  InputDecoration _input(String label) => AppTheme.inputDecoration(label);
 
   Widget _buildDropdown({
     required String label,
@@ -211,11 +243,595 @@ class _OnboardingBasicProfileScreenState
       initialValue: value,
       dropdownColor: AppTheme.cardBackgroundAlt,
       decoration: _input(label),
-      style: AppTheme.bodyTextStyle(fontSize: 16, color: AppTheme.neonCyan),
+      style: AppTheme.bodyTextStyle(
+        fontSize: 16,
+        color: Colors.white,
+        isBold: true,
+      ),
+      iconEnabledColor: AppTheme.neonCyan,
       items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .map(
+            (item) => DropdownMenuItem<String>(value: item, child: Text(item)),
+          )
           .toList(),
       onChanged: onChanged,
+    );
+  }
+
+  Widget _background() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => Image.asset(
+            'assets/images/auth_bg_landscape.webp',
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const StaticWatermark(),
+          ),
+        ),
+        Container(color: Colors.black.withValues(alpha: 0.54)),
+        const StaticWatermark(),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Colors.black.withValues(alpha: 0.84),
+                AppTheme.darkBackground.withValues(alpha: 0.46),
+                Colors.black.withValues(alpha: 0.82),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _logoMark({double size = 82}) {
+    return Image.asset(
+      'assets/icon/uag_traders_icon_transparent.webp',
+      height: size,
+      errorBuilder: (_, _, _) => Icon(
+        Icons.swap_horiz_rounded,
+        size: size * 0.8,
+        color: AppTheme.neonCyan,
+      ),
+    );
+  }
+
+  Widget _stepDots() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_stepCount, (index) {
+        final active = index == _stepIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: active ? 10 : 8,
+          height: active ? 10 : 8,
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: active
+                ? AppTheme.neonCyan
+                : Colors.white.withValues(alpha: 0.28),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.65),
+                      blurRadius: 12,
+                    ),
+                  ]
+                : null,
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _primaryButton(String label, {IconData? icon}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: ElevatedButton.icon(
+        onPressed: _isSaving ? null : _next,
+        icon: _isSaving
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(icon ?? Icons.arrow_forward_rounded),
+        label: Text(_isSaving ? 'SAVING...' : label),
+      ),
+    );
+  }
+
+  Widget _screenTitle(String title, {String? subtitle}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: AppTheme.neonTextStyle(
+            fontSize: 26,
+            color: Colors.white,
+            isBold: true,
+          ).copyWith(letterSpacing: 1.2),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 15,
+              height: 1.38,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _contentShell({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.48),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.46),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
+          ),
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.12),
+            blurRadius: 30,
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _infoTile({
+    required IconData icon,
+    required String title,
+    required String body,
+    bool selected = false,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: selected ? 0.52 : 0.34),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected
+              ? AppTheme.neonCyan
+              : Colors.white.withValues(alpha: 0.16),
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: selected ? AppTheme.neonCyan : Colors.white60,
+            size: 31,
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppTheme.neonCyan,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.28,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            selected
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            color: selected ? AppTheme.neonCyan : Colors.white38,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _leftHeroPanel() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.36),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _logoMark(size: 112),
+          const SizedBox(height: 22),
+          Text(
+            'UAG',
+            textAlign: TextAlign.center,
+            style: AppTheme.heroTextStyle(fontSize: 58, color: Colors.white),
+          ),
+          Text(
+            'TRADERS HUB',
+            textAlign: TextAlign.center,
+            style: AppTheme.neonTextStyle(
+              fontSize: 16,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ).copyWith(letterSpacing: 4),
+          ),
+          const SizedBox(height: 38),
+          Text(
+            _stepIndex == 0
+                ? 'WELCOME TO\nUAG TRADERS HUB'
+                : _stepIndex == 4
+                ? 'READY TO\nLAUNCH'
+                : 'TRACK. TRADE.\nTRUST.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 21,
+              height: 1.25,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            _stepIndex == 0
+                ? 'The trusted network for Arc Raiders traders.'
+                : 'A cleaner onboarding flow built for the trading hub.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70, height: 1.35),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _welcomeStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _screenTitle(
+            'Welcome',
+            subtitle:
+                'Get your UAG Traders Hub account ready for tracking, trading and trust.',
+          ),
+          const SizedBox(height: 24),
+          _infoTile(
+            icon: Icons.track_changes_rounded,
+            title: 'Blueprint Tracking',
+            body: 'Track what you own, what you need and what you can trade.',
+            selected: true,
+          ),
+          const SizedBox(height: 14),
+          _infoTile(
+            icon: Icons.handshake_rounded,
+            title: 'Trading',
+            body: 'Create listings, find offers and plan safer swaps.',
+          ),
+          const SizedBox(height: 14),
+          _infoTile(
+            icon: Icons.radar_rounded,
+            title: 'Intel',
+            body: 'Use reports to make better raid decisions.',
+          ),
+          const Spacer(),
+          _primaryButton('GET STARTED'),
+        ],
+      ),
+    );
+  }
+
+  Widget _featuresStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _screenTitle(
+            'Built for Arc Raiders',
+            subtitle: 'The hub is structured around the trading loop.',
+          ),
+          const SizedBox(height: 24),
+          _infoTile(
+            icon: Icons.inventory_2_outlined,
+            title: 'Track',
+            body: 'Blueprints, resources, duplicates and what you need.',
+            selected: true,
+          ),
+          const SizedBox(height: 14),
+          _infoTile(
+            icon: Icons.swap_horiz_rounded,
+            title: 'Trade',
+            body: 'Find traders, create listings and make offers.',
+          ),
+          const SizedBox(height: 14),
+          _infoTile(
+            icon: Icons.verified_user_outlined,
+            title: 'Trust',
+            body: 'Build a profile that helps people trade with confidence.',
+          ),
+          const Spacer(),
+          _primaryButton('NEXT'),
+        ],
+      ),
+    );
+  }
+
+  Widget _traderCodeStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _screenTitle(
+            'Trader Code',
+            subtitle:
+                'UAG operates on trust. Accept the basics before entering the hub.',
+          ),
+          const SizedBox(height: 26),
+          _codeLine(
+            Icons.shield_outlined,
+            'Be respectful and fair',
+            'Treat all traders with respect.',
+          ),
+          _codeLine(
+            Icons.gpp_bad_outlined,
+            'No scamming or exploits',
+            'Zero tolerance for cheating.',
+          ),
+          _codeLine(
+            Icons.balance_rounded,
+            'Honour your trades',
+            'Follow through on commitments.',
+          ),
+          _codeLine(
+            Icons.groups_2_outlined,
+            'Help the community grow',
+            'Share intel and support others.',
+          ),
+          const Spacer(),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _acceptedTraderCode,
+            activeColor: AppTheme.neonCyan,
+            checkColor: Colors.black,
+            onChanged: (value) {
+              setState(() => _acceptedTraderCode = value ?? false);
+            },
+            title: const Text(
+              'I have read and agree to the UAG Trader Code',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          _primaryButton('I ACCEPT'),
+        ],
+      ),
+    );
+  }
+
+  Widget _codeLine(IconData icon, String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppTheme.neonCyan, size: 25),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 13,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileStep() {
+    return _contentShell(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _screenTitle(
+              'Create Profile',
+              subtitle: 'Build your raider identity.',
+            ),
+            const SizedBox(height: 22),
+            TextFormField(
+              controller: _displayNameController,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                isBold: true,
+              ),
+              decoration: _input('Display Name'),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Enter your display name'
+                  : null,
+            ),
+            const SizedBox(height: 14),
+            _buildDropdown(
+              label: 'Country',
+              value: _selectedCountry,
+              items: _countries,
+              onChanged: (v) {
+                if (v != null) setState(() => _selectedCountry = v);
+              },
+            ),
+            const SizedBox(height: 14),
+            _buildDropdown(
+              label: 'Preferred Platform',
+              value: _selectedPlatform,
+              items: _platforms,
+              onChanged: (v) {
+                if (v != null) setState(() => _selectedPlatform = v);
+              },
+            ),
+            const SizedBox(height: 14),
+            _buildDropdown(
+              label: 'Time Zone',
+              value: _selectedTimeZone,
+              items: _timeZones,
+              onChanged: (v) {
+                if (v != null) setState(() => _selectedTimeZone = v);
+              },
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _bioController,
+              minLines: 2,
+              maxLines: 4,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 15,
+                color: Colors.white,
+                isBold: true,
+              ),
+              decoration: _input('Short Bio (optional)'),
+            ),
+            const Spacer(),
+            _primaryButton('NEXT'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _completeStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Icon(
+            Icons.check_circle_outline_rounded,
+            size: 120,
+            color: AppTheme.neonCyan,
+            shadows: [
+              Shadow(
+                color: AppTheme.neonCyan.withValues(alpha: 0.72),
+                blurRadius: 22,
+              ),
+            ],
+          ),
+          const SizedBox(height: 34),
+          Text(
+            "YOU'RE ALL SET!",
+            textAlign: TextAlign.center,
+            style: AppTheme.neonTextStyle(
+              fontSize: 31,
+              color: Colors.white,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Welcome to the UAG network.\nHappy trading, Raider.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, height: 1.38),
+          ),
+          const Spacer(),
+          _primaryButton('LAUNCH HUB', icon: Icons.rocket_launch_rounded),
+        ],
+      ),
+    );
+  }
+
+  Widget _currentStep() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      child: KeyedSubtree(
+        key: ValueKey<int>(_stepIndex),
+        child: switch (_stepIndex) {
+          0 => _welcomeStep(),
+          1 => _featuresStep(),
+          2 => _traderCodeStep(),
+          3 => _profileStep(),
+          _ => _completeStep(),
+        },
+      ),
+    );
+  }
+
+  Widget _mainLayout(BoxConstraints constraints) {
+    final compact = constraints.maxWidth < 900;
+
+    final stepPanel = SizedBox(
+      height: compact ? null : 650,
+      child: _currentStep(),
+    );
+
+    if (compact) {
+      return Column(
+        children: [
+          _leftHeroPanel(),
+          const SizedBox(height: 18),
+          SizedBox(height: 620, child: stepPanel),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(flex: 9, child: _leftHeroPanel()),
+        const SizedBox(width: 24),
+        Expanded(flex: 13, child: stepPanel),
+      ],
     );
   }
 
@@ -224,114 +840,58 @@ class _OnboardingBasicProfileScreenState
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppTheme.darkBackground,
-        body: Center(child: CircularProgressIndicator()),
+        body: Stack(
+          children: [
+            Positioned.fill(child: StaticWatermark()),
+            Center(child: CircularProgressIndicator(color: AppTheme.neonCyan)),
+          ],
+        ),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        title: Text(
-          'Basic Profile',
-          style: AppTheme.neonTextStyle(
-            fontSize: 24,
-            color: AppTheme.neonCyan,
-            isBold: true,
-          ),
-        ),
-      ),
       body: Stack(
         children: [
-          const Positioned.fill(child: StaticWatermark()),
+          Positioned.fill(child: _background()),
           SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 620),
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: AppTheme.pagePadding,
-                    children: [
-                      _sectionCard(
-                        title: 'Trader Details',
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _displayNameController,
-                              style: AppTheme.bodyTextStyle(
-                                fontSize: 16,
-                                color: AppTheme.neonCyan,
-                              ),
-                              decoration: _input('Display Name'),
-                              validator: (value) =>
-                                  value == null || value.trim().isEmpty
-                                  ? 'Enter your display name'
-                                  : null,
-                            ),
-                            const SizedBox(height: AppTheme.spaceM),
-                            _buildDropdown(
-                              label: 'Country',
-                              value: _selectedCountry,
-                              items: _countries,
-                              onChanged: (v) {
-                                if (v != null) {
-                                  setState(() => _selectedCountry = v);
-                                }
-                              },
-                            ),
-                            const SizedBox(height: AppTheme.spaceM),
-                            _buildDropdown(
-                              label: 'Preferred Platform',
-                              value: _selectedPlatform,
-                              items: _platforms,
-                              onChanged: (v) {
-                                if (v != null) {
-                                  setState(() => _selectedPlatform = v);
-                                }
-                              },
-                            ),
-                            const SizedBox(height: AppTheme.spaceM),
-                            _buildDropdown(
-                              label: 'Time Zone',
-                              value: _selectedTimeZone,
-                              items: _timeZones,
-                              onChanged: (v) {
-                                if (v != null) {
-                                  setState(() => _selectedTimeZone = v);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceL),
-                      _sectionCard(
-                        title: 'Bio',
-                        child: TextFormField(
-                          controller: _bioController,
-                          minLines: 3,
-                          maxLines: 5,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 16,
-                            color: AppTheme.neonCyan,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1260),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              if (_stepIndex > 0 && _stepIndex < 4)
+                                IconButton(
+                                  tooltip: 'Back',
+                                  onPressed: _back,
+                                  icon: const Icon(
+                                    Icons.arrow_back_rounded,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              const Spacer(),
+                              _stepDots(),
+                              const Spacer(),
+                              const SizedBox(width: 48),
+                            ],
                           ),
-                          decoration: _input('Short Bio (optional)'),
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceL),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _saveProfile,
-                          child: Text(
-                            _isSaving ? 'Saving...' : 'Continue to Traders Hub',
+                          const SizedBox(height: 18),
+                          SizedBox(
+                            height: constraints.maxWidth < 900 ? null : 650,
+                            child: _mainLayout(constraints),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ],

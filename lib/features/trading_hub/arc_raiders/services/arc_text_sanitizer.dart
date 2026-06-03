@@ -17,14 +17,14 @@ class ArcTextSanitizer {
     var output = value;
 
     final replacements = <String, String>{
-      'â€¢': 'â€¢',
-      'ÃƒÂ¢Ã¢â€šÂ¬': 'â€¢',
-      'Â·': 'â€¢',
-      'Ãƒâ€šÂ·': 'â€¢',
+      'Ã¢â‚¬Â¢': 'Ã¢â‚¬Â¢',
+      'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬': 'Ã¢â‚¬Â¢',
+      'Ã‚-': 'Ã¢â‚¬Â¢',
+      'ÃƒÆ’Ã¢â‚¬Å¡Ã‚-': 'Ã¢â‚¬Â¢',
       ' ': ' ',
-      'Ãƒâ€š': '',
+      'ÃƒÆ’Ã¢â‚¬Å¡': '',
       '': '',
-      'ï¿½': '',
+      'Ã¯Â¿Â½': '',
       '\uFEFF': '',
       '\u200B': '',
       '\u200C': '',
@@ -37,8 +37,8 @@ class ArcTextSanitizer {
 
     output = output
         .replaceAll(RegExp(r'\s+'), ' ')
-        .replaceAll(' â€¢  â€¢ ', ' â€¢ ')
-        .replaceAll('â€¢â€¢', 'â€¢')
+        .replaceAll(' Ã¢â‚¬Â¢  Ã¢â‚¬Â¢ ', ' Ã¢â‚¬Â¢ ')
+        .replaceAll('Ã¢â‚¬Â¢Ã¢â‚¬Â¢', 'Ã¢â‚¬Â¢')
         .trim();
 
     return output;
@@ -53,9 +53,9 @@ class ArcTextSanitizer {
   }
 
   static bool hasMojibake(String value) {
-    return value.contains('Ãƒ') ||
+    return value.contains('ÃƒÆ’') ||
         value.contains('') ||
-        value.contains('â€¢') ||
-        value.contains('ï¿½');
+        value.contains('Ã¢â‚¬Â¢') ||
+        value.contains('Ã¯Â¿Â½');
   }
 }

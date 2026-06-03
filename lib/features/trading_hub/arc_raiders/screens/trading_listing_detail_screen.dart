@@ -180,10 +180,10 @@ class TradingListingDetailScreen extends StatelessWidget {
                               if (listing.acceptsBlueprints) 'Blueprints',
                               if (listing.acceptsSeeds) 'Seeds',
                               if (listing.acceptsResources) 'Resources',
-                            ].join(' • '),
+                            ].join(' - '),
                           ),
                           if (structureBits.isNotEmpty)
-                            _row('Trade structure', structureBits.join(' • ')),
+                            _row('Trade structure', structureBits.join(' - ')),
                           if (listing.notes.isNotEmpty)
                             _row('Notes', listing.notes),
                           const SizedBox(height: 10),
@@ -204,7 +204,7 @@ class TradingListingDetailScreen extends StatelessWidget {
                           ),
                           _row(
                             'Reputation',
-                            '${listing.completedTrades} completed • ${listing.noShows} no-shows • ${listing.betrayalFlags} flags',
+                            '${listing.completedTrades} completed - ${listing.noShows} no-shows - ${listing.betrayalFlags} flags',
                           ),
                         ],
                       ),

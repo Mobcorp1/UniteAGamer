@@ -1,0 +1,1177 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
+import 'package:uag_traders_hub/build/app_bar.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_traders_hub/screens/build/app_drawer.dart';
+import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_traders_hub/widgets/static_watermark.dart';
+import 'package:uag_traders_hub/widgets/theme.dart';
+
+class MyHubScreen extends StatelessWidget {
+  static const routeName = '/my-hub';
+
+  const MyHubScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: const UagAppBar(
+        title: 'My Hub',
+        subtitle: 'Progress, reputation, referrals and raider priorities.',
+      ),
+      drawer: const AppDrawer(drawerWidth: 300),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _MyHubBackdrop(),
+          SafeArea(
+            child: user == null
+                ? const Center(
+                    child: Text(
+                      'Log in to view My Hub.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  )
+                : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      final data = snapshot.data?.data() ?? {};
+                      return _MyHubContent(userData: data, email: user.email);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MyHubContent extends StatelessWidget {
+  const _MyHubContent({required this.userData, required this.email});
+
+  final Map<String, dynamic> userData;
+  final String? email;
+
+  String _readString(List<String> keys, String fallback) {
+    for (final key in keys) {
+      final value = userData[key];
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+    }
+
+    final basicProfile = userData['basicProfile'];
+    if (basicProfile is Map<String, dynamic>) {
+      for (final key in keys) {
+        final value = basicProfile[key];
+        if (value is String && value.trim().isNotEmpty) return value.trim();
+      }
+    }
+
+    final traderProfile = userData['traderProfile'];
+    if (traderProfile is Map<String, dynamic>) {
+      for (final key in keys) {
+        final value = traderProfile[key];
+        if (value is String && value.trim().isNotEmpty) return value.trim();
+      }
+    }
+
+    return fallback;
+  }
+
+  bool _readBool(String key) => userData[key] == true;
+
+  int _readInt(String key, int fallback) {
+    final value = userData[key];
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return fallback;
+  }
+
+  double _readDouble(String key, double fallback) {
+    final value = userData[key];
+    if (value is num) return value.toDouble();
+    return fallback;
+  }
+
+  String get _displayName =>
+      _readString(['displayName', 'uagName', 'traderName'], 'Raider');
+
+  String get _tier => _readString(['subscriptionTier'], 'Raider');
+
+  String get _referralCode => _readString(['referralCode'], 'SETUP-PENDING');
+
+  String get _region => _readString(['region', 'country'], 'UK');
+
+  String get _platform => _readString(['platform', 'preferredPlatform'], 'PC');
+
+  int get _successfulTrades => _readInt('successfulTrades', 0);
+
+  int get _verifiedIntel => _readInt('verifiedIntelReports', 0);
+
+  int get _activeReferrals => _readInt('activeReferrals', 0);
+
+  double get _commissionRate => _readDouble(
+    'referralCommissionRate',
+    _tier.toLowerCase() == 'overseer'
+        ? 10
+        : _tier.toLowerCase() == 'operator'
+        ? 5
+        : 0,
+  );
+
+  double get _maxCommission => _tier.toLowerCase() == 'overseer'
+      ? 25
+      : _tier.toLowerCase() == 'operator'
+      ? 15
+      : 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 820;
+
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            compact ? 12 : 24,
+            compact ? 12 : 22,
+            compact ? 12 : 24,
+            28,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1240),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HeroPanel(
+                    displayName: _displayName,
+                    tier: _tier,
+                    referralCode: _referralCode,
+                    region: _region,
+                    platform: _platform,
+                    commissionRate: _commissionRate,
+                    maxCommission: _maxCommission,
+                    activeReferrals: _activeReferrals,
+                  ),
+                  const SizedBox(height: 18),
+                  _ResponsiveGrid(
+                    compact: compact,
+                    children: [
+                      _SubscriptionPanel(
+                        tier: _tier,
+                        commissionRate: _commissionRate,
+                        maxCommission: _maxCommission,
+                      ),
+                      _ReferralPanel(
+                        referralCode: _referralCode,
+                        activeReferrals: _activeReferrals,
+                        commissionRate: _commissionRate,
+                        maxCommission: _maxCommission,
+                      ),
+                      _ReputationPanel(
+                        successfulTrades: _successfulTrades,
+                        verifiedIntel: _verifiedIntel,
+                      ),
+                      _MonthlyOperationsPanel(
+                        successfulTrades: _successfulTrades,
+                        verifiedIntel: _verifiedIntel,
+                        activeReferrals: _activeReferrals,
+                      ),
+                      const _HuntPrioritiesPanel(),
+                      const _FavouriteLoadoutPanel(),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  _QuickActionsPanel(
+                    email: email ?? '',
+                    affiliateApplied: _readBool('affiliateApplied'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MyHubBackdrop extends StatelessWidget {
+  const _MyHubBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const StaticWatermark(),
+        ),
+        Container(color: Colors.black.withValues(alpha: 0.62)),
+        const StaticWatermark(),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.78),
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.92),
+              ],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0.1, -0.18),
+              radius: 0.92,
+              colors: [
+                AppTheme.neonCyan.withValues(alpha: 0.12),
+                AppTheme.neonPink.withValues(alpha: 0.06),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroPanel extends StatelessWidget {
+  const _HeroPanel({
+    required this.displayName,
+    required this.tier,
+    required this.referralCode,
+    required this.region,
+    required this.platform,
+    required this.commissionRate,
+    required this.maxCommission,
+    required this.activeReferrals,
+  });
+
+  final String displayName;
+  final String tier;
+  final String referralCode;
+  final String region;
+  final String platform;
+  final double commissionRate;
+  final double maxCommission;
+  final int activeReferrals;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElectricChargeBorder(
+      active: true,
+      radius: 26,
+      padding: const EdgeInsets.all(1.5),
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.46),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 760;
+            final left = Column(
+              crossAxisAlignment: compact
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'assets/icon/uag_traders_icon_transparent.webp',
+                  height: compact ? 78 : 94,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.swap_horiz_rounded,
+                    color: AppTheme.neonCyan,
+                    size: 72,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Welcome back, $displayName',
+                  textAlign: compact ? TextAlign.center : TextAlign.left,
+                  style: AppTheme.tradingHeading(
+                    fontSize: compact ? 25 : 32,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Your command centre for reputation, referrals, subscription progression, monthly operations, hunt priorities and wipe recovery planning.',
+                  textAlign: compact ? TextAlign.center : TextAlign.left,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                    isBold: true,
+                  ),
+                ),
+              ],
+            );
+
+            final right = Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: compact ? WrapAlignment.center : WrapAlignment.end,
+              children: [
+                _MetricPill(
+                  icon: Icons.military_tech_rounded,
+                  label: 'Referral Rank',
+                  value: 'Raider',
+                  color: AppTheme.neonPink,
+                ),
+                _MetricPill(
+                  icon: Icons.workspace_premium_outlined,
+                  label: 'Tier',
+                  value: tier,
+                  color: AppTheme.neonCyan,
+                ),
+                _MetricPill(
+                  icon: Icons.handshake_outlined,
+                  label: 'Referrals',
+                  value: '$activeReferrals active',
+                  color: AppTheme.neonPink,
+                ),
+                _MetricPill(
+                  icon: Icons.percent_rounded,
+                  label: 'Commission',
+                  value: maxCommission <= 0
+                      ? 'Boost locked'
+                      : '${commissionRate.toStringAsFixed(0)}% / ${maxCommission.toStringAsFixed(0)}%',
+                  color: Colors.amberAccent,
+                ),
+                _MetricPill(
+                  icon: Icons.public_rounded,
+                  label: 'Region',
+                  value: region,
+                  color: Colors.lightGreenAccent,
+                ),
+                _MetricPill(
+                  icon: Icons.sports_esports_rounded,
+                  label: 'Platform',
+                  value: platform,
+                  color: Colors.cyanAccent,
+                ),
+                _MetricPill(
+                  icon: Icons.qr_code_2_rounded,
+                  label: 'Code',
+                  value: referralCode,
+                  color: AppTheme.neonPink,
+                ),
+              ],
+            );
+
+            if (compact) {
+              return Column(
+                children: [left, const SizedBox(height: 20), right],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(flex: 11, child: left),
+                const SizedBox(width: 24),
+                Expanded(flex: 10, child: right),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ResponsiveGrid extends StatelessWidget {
+  const _ResponsiveGrid({required this.compact, required this.children});
+
+  final bool compact;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (compact) {
+      return Column(
+        children: children
+            .map(
+              (child) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: child,
+              ),
+            )
+            .toList(),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = ((constraints.maxWidth - 14) / 2).clamp(320.0, 620.0);
+
+        return Wrap(
+          spacing: 14,
+          runSpacing: 14,
+          children: children
+              .map((child) => SizedBox(width: itemWidth, child: child))
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _GlassPanel extends StatelessWidget {
+  const _GlassPanel({
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.subtitle,
+    this.accent = AppTheme.neonCyan,
+  });
+
+  final String title;
+  final String? subtitle;
+  final IconData icon;
+  final Widget child;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 22,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: accent, size: 24),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTheme.tradingHeading(fontSize: 21, color: accent),
+                ),
+              ),
+            ],
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              subtitle!,
+              style: const TextStyle(color: Colors.white60, height: 1.28),
+            ),
+          ],
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _SubscriptionPanel extends StatelessWidget {
+  const _SubscriptionPanel({
+    required this.tier,
+    required this.commissionRate,
+    required this.maxCommission,
+  });
+
+  final String tier;
+  final double commissionRate;
+  final double maxCommission;
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      title: 'Subscription Ladder',
+      icon: Icons.workspace_premium_outlined,
+      accent: AppTheme.neonCyan,
+      subtitle: 'Raider, Operator and Overseer foundations.',
+      child: Column(
+        children: [
+          _TierRow(
+            name: 'Raider',
+            price: 'Free',
+            current: tier.toLowerCase() == 'raider',
+            detail: '2 listings, 6 offers, basic match searches.',
+          ),
+          _TierRow(
+            name: 'Operator',
+            price:
+                'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£4.99',
+            current: tier.toLowerCase() == 'operator',
+            detail: '6 listings, 18 offers, operations boosts.',
+          ),
+          _TierRow(
+            name: 'Overseer',
+            price:
+                'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£8.99',
+            current: tier.toLowerCase() == 'overseer',
+            detail: 'Priority trading, smart assist and max progression.',
+          ),
+          _ProgressLine(
+            label: 'Commission progress',
+            value: maxCommission <= 0 ? 0 : commissionRate / maxCommission,
+            footer: maxCommission <= 0
+                ? 'Upgrade to unlock commission progression.'
+                : '${commissionRate.toStringAsFixed(0)}% of ${maxCommission.toStringAsFixed(0)}% cap',
+            color: AppTheme.neonPink,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReferralPanel extends StatelessWidget {
+  const _ReferralPanel({
+    required this.referralCode,
+    required this.activeReferrals,
+    required this.commissionRate,
+    required this.maxCommission,
+  });
+
+  final String referralCode;
+  final int activeReferrals;
+  final double commissionRate;
+  final double maxCommission;
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      title: 'Referral Network',
+      icon: Icons.hub_outlined,
+      accent: AppTheme.neonPink,
+      subtitle: 'Grow influence by bringing in trusted raiders.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ReferralCodeBox(code: referralCode),
+          const SizedBox(height: 12),
+          _StatRow(label: 'Active referrals', value: '$activeReferrals'),
+          _StatRow(
+            label: 'Current commission',
+            value: '${commissionRate.toStringAsFixed(0)}%',
+          ),
+          _StatRow(
+            label: 'Potential cap',
+            value: maxCommission <= 0
+                ? 'Locked'
+                : '${maxCommission.toStringAsFixed(0)}%',
+          ),
+          const Text(
+            'Future logic: +1% earned through verified monthly operations, strong referrals, successful trades and trusted intel.',
+            style: TextStyle(color: Colors.white60, height: 1.28),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReputationPanel extends StatelessWidget {
+  const _ReputationPanel({
+    required this.successfulTrades,
+    required this.verifiedIntel,
+  });
+
+  final int successfulTrades;
+  final int verifiedIntel;
+
+  @override
+  Widget build(BuildContext context) {
+    final score = ((successfulTrades * 8) + (verifiedIntel * 5)).clamp(0, 100);
+
+    return _GlassPanel(
+      title: 'Reputation Pulse',
+      icon: Icons.verified_user_outlined,
+      accent: Colors.lightGreenAccent,
+      subtitle: 'Trust should be earned, not bought.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ProgressLine(
+            label: 'Trusted Raider score',
+            value: score / 100,
+            footer: '$score / 100 provisional trust score',
+            color: Colors.lightGreenAccent,
+          ),
+          const SizedBox(height: 14),
+          _StatRow(label: 'Successful trades', value: '$successfulTrades'),
+          _StatRow(label: 'Verified intel', value: '$verifiedIntel'),
+          const Text(
+            'No-shows, bad intel and failed sessions will reduce future weighting once reputation automation is wired.',
+            style: TextStyle(color: Colors.white60, height: 1.28),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthlyOperationsPanel extends StatelessWidget {
+  const _MonthlyOperationsPanel({
+    required this.successfulTrades,
+    required this.verifiedIntel,
+    required this.activeReferrals,
+  });
+
+  final int successfulTrades;
+  final int verifiedIntel;
+  final int activeReferrals;
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      title: 'Monthly Operations',
+      icon: Icons.assignment_turned_in_outlined,
+      accent: Colors.amberAccent,
+      subtitle: '28-day challenges that reward quality growth.',
+      child: Column(
+        children: [
+          _OperationRow(
+            title: 'Complete 4 successful trades',
+            progress: successfulTrades / 4,
+            reward: '+1 trade visibility boost',
+          ),
+          _OperationRow(
+            title: 'Submit 3 verified intel reports',
+            progress: verifiedIntel / 3,
+            reward: '+1 intel reputation boost',
+          ),
+          _OperationRow(
+            title: 'Recruit 2 active raiders',
+            progress: activeReferrals / 2,
+            reward: '+1% temporary commission',
+          ),
+          const Text(
+            'Complete all three in a 28-day cycle to unlock the elite monthly bonus.',
+            style: TextStyle(color: Colors.white70, height: 1.28),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HuntPrioritiesPanel extends StatelessWidget {
+  const _HuntPrioritiesPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      title: 'Hunt Priorities',
+      icon: Icons.my_location_rounded,
+      accent: AppTheme.neonCyan,
+      subtitle: 'Set the blueprints you want the hub to optimise around.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _PriorityPlaceholder(index: 1, label: 'Top blueprint target'),
+          const _PriorityPlaceholder(
+            index: 2,
+            label: 'Second blueprint target',
+          ),
+          const _PriorityPlaceholder(index: 3, label: 'Third blueprint target'),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.of(
+                context,
+              ).pushNamed(BlueprintGridScreen.routeName),
+              icon: const Icon(Icons.grid_view_rounded),
+              label: const Text('Open Blueprint Grid'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FavouriteLoadoutPanel extends StatelessWidget {
+  const _FavouriteLoadoutPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      title: 'Favourite Loadout',
+      icon: Icons.construction_rounded,
+      accent: AppTheme.neonPink,
+      subtitle:
+          'Plan wipe recovery around favourite weapons, attachments and utilities.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _LoadoutSlot(
+            icon: Icons.gps_fixed,
+            label: 'Weapon',
+            value: 'Anvil / weapon blueprint',
+          ),
+          const _LoadoutSlot(
+            icon: Icons.tune_rounded,
+            label: 'Attachments',
+            value: 'Optic, barrel, stock, grip',
+          ),
+          const _LoadoutSlot(
+            icon: Icons.bolt_rounded,
+            label: 'Utility',
+            value: 'Grenade, trap or tactical tool',
+          ),
+          const _LoadoutSlot(
+            icon: Icons.auto_awesome_rounded,
+            label: 'Trade Assist Prep',
+            value: 'Missing loadout items feed smart trade hooks',
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const FavouriteLoadoutScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.inventory_2_outlined),
+              label: const Text('Edit Favourite Loadout'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionsPanel extends StatelessWidget {
+  const _QuickActionsPanel({
+    required this.email,
+    required this.affiliateApplied,
+  });
+
+  final String email;
+  final bool affiliateApplied;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.40),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+      ),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        alignment: WrapAlignment.center,
+        children: [
+          _ActionChipButton(
+            icon: Icons.person_outline_rounded,
+            label: 'Edit Profile',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(TradingProfileScreen.routeName),
+          ),
+          _ActionChipButton(
+            icon: Icons.storefront_rounded,
+            label: 'Trader Hub',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(TraderHubScreen.routeName),
+          ),
+          _ActionChipButton(
+            icon: Icons.groups_2_outlined,
+            label: 'Match a Raider',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(ArcMatchRiderScreen.routeName),
+          ),
+          _ActionChipButton(
+            icon: Icons.radar_rounded,
+            label: 'Intel',
+            onPressed: () => Navigator.of(
+              context,
+            ).pushNamed(ArcMarketIntelligenceScreen.routeName),
+          ),
+          _ActionChipButton(
+            icon: affiliateApplied
+                ? Icons.verified_rounded
+                : Icons.workspace_premium_outlined,
+            label: affiliateApplied ? 'Affiliate Applied' : 'Affiliate Pending',
+            onPressed: null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricPill extends StatelessWidget {
+  const _MetricPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 150),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 9),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.7,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TierRow extends StatelessWidget {
+  const _TierRow({
+    required this.name,
+    required this.price,
+    required this.detail,
+    required this.current,
+  });
+
+  final String name;
+  final String price;
+  final String detail;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: current
+            ? AppTheme.neonCyan.withValues(alpha: 0.10)
+            : Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: current
+              ? AppTheme.neonCyan.withValues(alpha: 0.42)
+              : Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            current ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+            color: current ? AppTheme.neonCyan : Colors.white38,
+            size: 18,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '$name - $price\n$detail',
+              style: const TextStyle(color: Colors.white70, height: 1.25),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressLine extends StatelessWidget {
+  const _ProgressLine({
+    required this.label,
+    required this.value,
+    required this.footer,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final String footer;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final safeValue = value.clamp(0.0, 1.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white)),
+        const SizedBox(height: 7),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: LinearProgressIndicator(
+            value: safeValue,
+            minHeight: 9,
+            backgroundColor: Colors.white.withValues(alpha: 0.10),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ),
+        const SizedBox(height: 7),
+        Text(footer, style: const TextStyle(color: Colors.white60)),
+      ],
+    );
+  }
+}
+
+class _ReferralCodeBox extends StatelessWidget {
+  const _ReferralCodeBox({required this.code});
+
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.qr_code_2_rounded, color: AppTheme.neonPink),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              code,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  const _StatRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: const TextStyle(color: Colors.white60)),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppTheme.neonCyan,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OperationRow extends StatelessWidget {
+  const _OperationRow({
+    required this.title,
+    required this.progress,
+    required this.reward,
+  });
+
+  final String title;
+  final double progress;
+  final String reward;
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = progress >= 1;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(
+            complete
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked,
+            color: complete ? Colors.lightGreenAccent : Colors.white38,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _ProgressLine(
+              label: title,
+              value: progress,
+              footer: reward,
+              color: complete ? Colors.lightGreenAccent : Colors.amberAccent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PriorityPlaceholder extends StatelessWidget {
+  const _PriorityPlaceholder({required this.index, required this.label});
+
+  final int index;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '#$index',
+            style: const TextStyle(
+              color: AppTheme.neonCyan,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: const TextStyle(color: Colors.white70)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadoutSlot extends StatelessWidget {
+  const _LoadoutSlot({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 11),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.neonPink, size: 20),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Text(
+              '$label: $value',
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionChipButton extends StatelessWidget {
+  const _ActionChipButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: onPressed == null ? Colors.white38 : AppTheme.neonCyan,
+        side: BorderSide(
+          color: onPressed == null
+              ? Colors.white.withValues(alpha: 0.16)
+              : AppTheme.neonCyan.withValues(alpha: 0.45),
+        ),
+      ),
+    );
+  }
+}

@@ -50,9 +50,9 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
       child: ListTile(
         title: Text(item.uagName.isEmpty ? item.uagId : item.uagName),
         subtitle: Text(
-          '${item.region} • ${item.platform}\n'
-          'Open listings: ${item.openListingsCount} • Matching offers: ${item.matchingOfferCount}\n'
-          '${item.isAway ? 'Away' : 'Available'} • ${item.availabilitySummary}',
+          '${item.region} - ${item.platform}\n'
+          'Open listings: ${item.openListingsCount} - Matching offers: ${item.matchingOfferCount}\n'
+          '${item.isAway ? 'Away' : 'Available'} - ${item.availabilitySummary}',
         ),
         isThreeLine: true,
         trailing: const Icon(Icons.chevron_right),

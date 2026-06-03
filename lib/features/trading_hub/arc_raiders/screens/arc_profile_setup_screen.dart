@@ -143,99 +143,206 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Widget heroCard() {
+      return Container(
+        padding: const EdgeInsets.all(AppTheme.spaceL),
+        decoration: AppTheme.tradingCardDecoration(
+          radius: 24,
+          borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.neonCyan.withValues(alpha: 0.10),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.45),
+                ),
+              ),
+              child: const Icon(
+                Icons.person_add_alt_1_rounded,
+                color: AppTheme.neonCyan,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Set Up Trader Profile',
+                    style: AppTheme.tradingHeading(
+                      fontSize: 24,
+                      color: AppTheme.neonCyan,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Build the public ARC Raiders profile that carries into your UAG trader identity.',
+                    style: TextStyle(color: Colors.white70, height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget sectionCard({
+      required String title,
+      required IconData icon,
+      required List<Widget> children,
+    }) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
+        padding: const EdgeInsets.all(AppTheme.spaceL),
+        decoration: AppTheme.tradingCardDecoration(radius: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: AppTheme.neonPink),
+                const SizedBox(width: AppTheme.spaceS),
+                Text(
+                  title,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 20,
+                    color: AppTheme.neonPink,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+            ...children,
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(title: const Text('Set Up Trader Profile')),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            children: [
-              Text(
-                'Set up the public ARC Raiders profile that can later carry into the wider UAG ecosystem.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 860),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(AppTheme.spaceL),
+                children: [
+                  heroCard(),
+                  const SizedBox(height: AppTheme.spaceL),
+                  sectionCard(
+                    title: 'Identity',
+                    icon: Icons.badge_outlined,
+                    children: [
+                      _field(
+                        _uagIdController,
+                        'UAG ID',
+                        helperText: _isLoadingProfile
+                            ? 'Loading reserved UAG ID...'
+                            : 'Auto-assigned reserved trader ID',
+                        enabled: false,
+                      ),
+                      _field(
+                        _uagNameController,
+                        'UAG Name',
+                        validator: (v) => _required(v, 'UAG Name'),
+                      ),
+                      _field(_embarkIdController, 'Embark ID'),
+                      _field(
+                        _regionController,
+                        'Region',
+                        validator: (v) => _required(v, 'Region'),
+                      ),
+                      _field(
+                        _platformController,
+                        'Preferred Platform',
+                        validator: (v) => _required(v, 'Preferred Platform'),
+                      ),
+                      _field(
+                        _timezoneController,
+                        'Timezone',
+                        validator: (v) => _required(v, 'Timezone'),
+                      ),
+                      _field(
+                        _referredByController,
+                        'Referral Code Used (optional)',
+                      ),
+                    ],
+                  ),
+                  sectionCard(
+                    title: 'Account',
+                    icon: Icons.account_balance_wallet_outlined,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        initialValue: _payoutMethod,
+                        items: _payoutMethods
+                            .map(
+                              (method) => DropdownMenuItem(
+                                value: method,
+                                child: Text(method),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) => setState(() {
+                          _payoutMethod = value ?? 'Bank Transfer';
+                        }),
+                        decoration: AppTheme.tradingInputDecoration(
+                          label: 'Preferred payout method',
+                        ),
+                      ),
+                    ],
+                  ),
+                  sectionCard(
+                    title: 'Preferences',
+                    icon: Icons.tune_rounded,
+                    children: [
+                      SwitchListTile(
+                        value: _visibleInSearch,
+                        onChanged: (value) =>
+                            setState(() => _visibleInSearch = value),
+                        title: const Text('Visible in search'),
+                      ),
+                      SwitchListTile(
+                        value: _micOk,
+                        onChanged: (value) => setState(() => _micOk = value),
+                        title: const Text('Mic okay'),
+                      ),
+                      SwitchListTile(
+                        value: _crossRegionOk,
+                        onChanged: (value) =>
+                            setState(() => _crossRegionOk = value),
+                        title: const Text('Cross-region okay'),
+                      ),
+                      SwitchListTile(
+                        value: _crossPlatformOk,
+                        onChanged: (value) =>
+                            setState(() => _crossPlatformOk = value),
+                        title: const Text('Cross-platform okay'),
+                      ),
+                      SwitchListTile(
+                        value: _affiliateEnabled,
+                        onChanged: (value) =>
+                            setState(() => _affiliateEnabled = value),
+                        title: const Text('Apply for affiliate programme'),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _save,
+                    icon: const Icon(Icons.save_rounded),
+                    label: Text(_isSaving ? 'Saving...' : 'Save Profile'),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppTheme.spaceL),
-              _field(
-                _uagIdController,
-                'UAG ID',
-                helperText: _isLoadingProfile
-                    ? 'Loading reserved UAG ID...'
-                    : 'Auto-assigned reserved trader ID',
-                enabled: false,
-              ),
-              _field(
-                _uagNameController,
-                'UAG Name',
-                validator: (v) => _required(v, 'UAG Name'),
-              ),
-              _field(_embarkIdController, 'Embark ID'),
-              _field(
-                _regionController,
-                'Region',
-                validator: (v) => _required(v, 'Region'),
-              ),
-              _field(
-                _platformController,
-                'Preferred Platform',
-                validator: (v) => _required(v, 'Preferred Platform'),
-              ),
-              _field(
-                _timezoneController,
-                'Timezone',
-                validator: (v) => _required(v, 'Timezone'),
-              ),
-              _field(_referredByController, 'Referral Code Used (optional)'),
-              DropdownButtonFormField<String>(
-                initialValue: _payoutMethod,
-                items: _payoutMethods
-                    .map(
-                      (method) =>
-                          DropdownMenuItem(value: method, child: Text(method)),
-                    )
-                    .toList(),
-                onChanged: (value) => setState(() {
-                  _payoutMethod = value ?? 'Bank Transfer';
-                }),
-                decoration: const InputDecoration(
-                  labelText: 'Preferred payout method',
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-              SwitchListTile(
-                value: _visibleInSearch,
-                onChanged: (value) => setState(() => _visibleInSearch = value),
-                title: const Text('Visible in search'),
-              ),
-              SwitchListTile(
-                value: _micOk,
-                onChanged: (value) => setState(() => _micOk = value),
-                title: const Text('Mic okay'),
-              ),
-              SwitchListTile(
-                value: _crossRegionOk,
-                onChanged: (value) => setState(() => _crossRegionOk = value),
-                title: const Text('Cross-region okay'),
-              ),
-              SwitchListTile(
-                value: _crossPlatformOk,
-                onChanged: (value) => setState(() => _crossPlatformOk = value),
-                title: const Text('Cross-platform okay'),
-              ),
-              SwitchListTile(
-                value: _affiliateEnabled,
-                onChanged: (value) => setState(() => _affiliateEnabled = value),
-                title: const Text('Apply for affiliate programme'),
-              ),
-              const SizedBox(height: AppTheme.spaceL),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _save,
-                child: Text(_isSaving ? 'Saving...' : 'Save Profile'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

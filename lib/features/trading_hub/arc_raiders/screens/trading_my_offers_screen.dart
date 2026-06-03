@@ -31,11 +31,11 @@ class TradingMyOffersScreen extends StatelessWidget {
 
   String _bundleText(TradingOffer offer) {
     final parts = <String>[];
-    if (offer.smallBundles > 0) parts.add('${offer.smallBundles}×10');
-    if (offer.mediumBundles > 0) parts.add('${offer.mediumBundles}×50');
-    if (offer.largeBundles > 0) parts.add('${offer.largeBundles}×100');
+    if (offer.smallBundles > 0) parts.add('${offer.smallBundles}Ã—10');
+    if (offer.mediumBundles > 0) parts.add('${offer.mediumBundles}Ã—50');
+    if (offer.largeBundles > 0) parts.add('${offer.largeBundles}Ã—100');
     if (parts.isEmpty) return 'No seed bundles';
-    return '${parts.join(' • ')} (${offer.seedTotal} total)';
+    return '${parts.join(' - ')} (${offer.seedTotal} total)';
   }
 
   Future<bool> _confirmAction({

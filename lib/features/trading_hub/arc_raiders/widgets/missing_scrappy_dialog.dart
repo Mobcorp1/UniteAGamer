@@ -70,7 +70,7 @@ class _MissingScrappyDialogState extends State<MissingScrappyDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${widget.item.category} • ${widget.item.group} • ${widget.item.tierLabel}',
+              '${widget.item.category} - ${widget.item.group} - ${widget.item.tierLabel}',
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 14),

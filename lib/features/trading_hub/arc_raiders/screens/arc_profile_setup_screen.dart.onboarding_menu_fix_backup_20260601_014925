@@ -1,0 +1,448 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:uag_traders_hub/widgets/theme.dart';
+
+import '../models/arc_trader_profile.dart';
+import '../repositories/arc_trader_profile_repository.dart';
+
+class ArcProfileSetupScreen extends StatefulWidget {
+  static const routeName = '/trading-hub/arc-raiders/profile/setup';
+
+  const ArcProfileSetupScreen({super.key});
+
+  @override
+  State<ArcProfileSetupScreen> createState() => _ArcProfileSetupScreenState();
+}
+
+class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
+  final ArcTraderProfileRepository _repository = ArcTraderProfileRepository();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  late final TextEditingController _uagIdController;
+  late final TextEditingController _uagNameController;
+  late final TextEditingController _embarkIdController;
+  late final TextEditingController _regionController;
+  late final TextEditingController _platformController;
+  late final TextEditingController _timezoneController;
+  late final TextEditingController _referredByController;
+
+  bool _visibleInSearch = true;
+  bool _micOk = true;
+  bool _crossRegionOk = false;
+  bool _crossPlatformOk = true;
+  bool _affiliateEnabled = false;
+  bool _isSaving = false;
+  bool _isLoadingProfile = true;
+  String _payoutMethod = 'Bank Transfer';
+
+  static const List<String> _payoutMethods = <String>[
+    'Bank Transfer',
+    'PayPal',
+    'Stripe Connect',
+    'Not Set',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _uagIdController = TextEditingController();
+    _uagNameController = TextEditingController();
+    _embarkIdController = TextEditingController();
+    _regionController = TextEditingController(text: 'UK');
+    _platformController = TextEditingController();
+    _timezoneController = TextEditingController(text: 'Europe/London');
+    _referredByController = TextEditingController();
+    _loadProfile();
+  }
+
+  @override
+  void dispose() {
+    _uagIdController.dispose();
+    _uagNameController.dispose();
+    _embarkIdController.dispose();
+    _regionController.dispose();
+    _platformController.dispose();
+    _timezoneController.dispose();
+    _referredByController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await _repository.getProfile();
+      if (!mounted) return;
+
+      _uagIdController.text = profile.uagId;
+      _uagNameController.text = profile.uagName;
+      _embarkIdController.text = profile.embarkId;
+      _regionController.text = profile.region.isEmpty ? 'UK' : profile.region;
+      _platformController.text = profile.platform;
+      _timezoneController.text = profile.timezone.isEmpty
+          ? 'Europe/London'
+          : profile.timezone;
+      _referredByController.text = profile.referredByCode;
+      _visibleInSearch = profile.visibleInSearch;
+      _micOk = profile.micOk;
+      _crossRegionOk = profile.crossRegionOk;
+      _crossPlatformOk = profile.crossPlatformOk;
+      _affiliateEnabled = profile.affiliateEnabled;
+      _payoutMethod = profile.payoutMethod.isEmpty
+          ? 'Bank Transfer'
+          : profile.payoutMethod;
+
+      setState(() => _isLoadingProfile = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    setState(() => _isSaving = true);
+
+    final ArcTraderProfile current = await _repository.getProfile();
+    final ArcTraderProfile profile = current.copyWith(
+      uid: uid,
+      uagId: _uagIdController.text.trim(),
+      uagName: _uagNameController.text.trim(),
+      embarkId: _embarkIdController.text.trim(),
+      region: _regionController.text.trim(),
+      platform: _platformController.text.trim(),
+      timezone: _timezoneController.text.trim(),
+      visibleInSearch: _visibleInSearch,
+      micOk: _micOk,
+      crossRegionOk: _crossRegionOk,
+      crossPlatformOk: _crossPlatformOk,
+      affiliateEnabled: _affiliateEnabled,
+      payoutMethod: _payoutMethod == 'Not Set' ? '' : _payoutMethod,
+      referredByCode: _referredByController.text.trim(),
+      isProfileComplete: true,
+      createdAt: current.createdAt ?? DateTime.now(),
+    );
+
+    try {
+      await _repository.saveProfile(profile);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  String? _required(String? value, String label) {
+    if (value == null || value.trim().isEmpty) {
+      return '$label is required';
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      appBar: AppBar(title: const Text('Set Up Trader Profile')),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 840),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: AppTheme.pagePadding,
+                children: [
+                  _heroCard(
+                    icon: Icons.person_add_alt_1_rounded,
+                    eyebrow: 'Step 1 / Trader identity',
+                    title: 'Build your ARC trader profile',
+                    body:
+                        'Keep the same profile details, but set them up in a cleaner command-card flow before entering the hub.',
+                  ),
+                  const SizedBox(height: AppTheme.spaceL),
+                  _sectionCard(
+                    title: 'Public trader details',
+                    subtitle:
+                        'These fields are used to identify you in trading, search and future UAG systems.',
+                    icon: Icons.badge_outlined,
+                    children: [
+                      _field(
+                        _uagIdController,
+                        'UAG ID',
+                        helperText: _isLoadingProfile
+                            ? 'Loading reserved UAG ID...'
+                            : 'Auto-assigned reserved trader ID',
+                        enabled: false,
+                      ),
+                      _field(
+                        _uagNameController,
+                        'UAG Name',
+                        validator: (v) => _required(v, 'UAG Name'),
+                      ),
+                      _field(_embarkIdController, 'Embark ID'),
+                      _field(
+                        _regionController,
+                        'Region',
+                        validator: (v) => _required(v, 'Region'),
+                      ),
+                      _field(
+                        _platformController,
+                        'Preferred Platform',
+                        validator: (v) => _required(v, 'Preferred Platform'),
+                      ),
+                      _field(
+                        _timezoneController,
+                        'Timezone',
+                        validator: (v) => _required(v, 'Timezone'),
+                      ),
+                      _field(
+                        _referredByController,
+                        'Referral Code Used (optional)',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceL),
+                  _sectionCard(
+                    title: 'Trading preferences',
+                    subtitle:
+                        'Same switches as before, presented as cleaner onboarding choices.',
+                    icon: Icons.tune_rounded,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        initialValue: _payoutMethod,
+                        dropdownColor: AppTheme.cardBackgroundDeep,
+                        items: _payoutMethods
+                            .map(
+                              (method) => DropdownMenuItem(
+                                value: method,
+                                child: Text(method),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) => setState(() {
+                          _payoutMethod = value ?? 'Bank Transfer';
+                        }),
+                        decoration: AppTheme.tradingInputDecoration(
+                          label: 'Preferred payout method',
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      _switchTile(
+                        value: _visibleInSearch,
+                        onChanged: (value) =>
+                            setState(() => _visibleInSearch = value),
+                        icon: Icons.search_rounded,
+                        title: 'Visible in search',
+                        subtitle: 'Allow other traders to discover you.',
+                      ),
+                      _switchTile(
+                        value: _micOk,
+                        onChanged: (value) => setState(() => _micOk = value),
+                        icon: Icons.mic_rounded,
+                        title: 'Mic okay',
+                        subtitle: 'Show that voice coordination is okay.',
+                      ),
+                      _switchTile(
+                        value: _crossRegionOk,
+                        onChanged: (value) =>
+                            setState(() => _crossRegionOk = value),
+                        icon: Icons.public_rounded,
+                        title: 'Cross-region okay',
+                        subtitle: 'Open to trades outside your home region.',
+                      ),
+                      _switchTile(
+                        value: _crossPlatformOk,
+                        onChanged: (value) =>
+                            setState(() => _crossPlatformOk = value),
+                        icon: Icons.devices_rounded,
+                        title: 'Cross-platform okay',
+                        subtitle: 'Open to platform-flexible trading.',
+                      ),
+                      _switchTile(
+                        value: _affiliateEnabled,
+                        onChanged: (value) =>
+                            setState(() => _affiliateEnabled = value),
+                        icon: Icons.handshake_outlined,
+                        title: 'Apply for affiliate programme',
+                        subtitle:
+                            'Register interest in creator/referral access.',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceL),
+                  ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _save,
+                    icon: _isSaving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check_rounded),
+                    label: Text(_isSaving ? 'Saving...' : 'Save Profile'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _heroCard({
+    required IconData icon,
+    required String eyebrow,
+    required String title,
+    required String body,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceL),
+      decoration: AppTheme.tradingCardDecoration(
+        radius: 24,
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _iconBadge(icon, AppTheme.neonCyan),
+          const SizedBox(width: AppTheme.spaceM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  eyebrow.toUpperCase(),
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: AppTheme.neonPink,
+                    isBold: true,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceXS),
+                Text(
+                  title,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 28,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceS),
+                Text(
+                  body,
+                  style: const TextStyle(color: Colors.white70, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceL),
+      decoration: AppTheme.tradingCardDecoration(radius: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _iconBadge(icon, AppTheme.neonPink),
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTheme.tradingHeading(
+                        fontSize: 22,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(color: Colors.white60),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceL),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _iconBadge(IconData icon, Color color) {
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Icon(icon, color: color),
+    );
+  }
+
+  Widget _switchTile({
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.035),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: SwitchListTile(
+        value: value,
+        activeThumbColor: AppTheme.neonPink,
+        onChanged: onChanged,
+        secondary: Icon(
+          icon,
+          color: value ? AppTheme.neonCyan : Colors.white54,
+        ),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        subtitle: Text(subtitle, style: const TextStyle(color: Colors.white60)),
+      ),
+    );
+  }
+
+  Widget _field(
+    TextEditingController controller,
+    String label, {
+    String? Function(String?)? validator,
+    bool enabled = true,
+    String? helperText,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      child: TextFormField(
+        controller: controller,
+        enabled: enabled,
+        validator: validator,
+        style: const TextStyle(color: Colors.white),
+        decoration: AppTheme.tradingInputDecoration(label: label).copyWith(
+          helperText: helperText,
+          helperStyle: const TextStyle(color: Colors.white54),
+        ),
+      ),
+    );
+  }
+}

@@ -103,7 +103,7 @@ class _ReportRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${report.mapName} • ${report.areaLabel}',
+            '${report.mapName} - ${report.areaLabel}',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -111,12 +111,12 @@ class _ReportRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${ArcLabels.sourceType(report.sourceType)} • ${report.resolvedContainerLabel} • ${report.raidType.label} • ${report.timeOfDay.label}',
+            '${ArcLabels.sourceType(report.sourceType)} - ${report.resolvedContainerLabel} - ${report.raidType.label} - ${report.timeOfDay.label}',
             style: const TextStyle(color: Colors.white60, height: 1.3),
           ),
           const SizedBox(height: 4),
           Text(
-            '$weather • $mapEvent',
+            '$weather - $mapEvent',
             style: const TextStyle(color: Colors.white60, height: 1.3),
           ),
           if (report.notes.trim().isNotEmpty) ...[

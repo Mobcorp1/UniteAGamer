@@ -1,0 +1,1211 @@
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:uag_traders_hub/features/legal/screens/privacy_policy_screen.dart';
+import 'package:uag_traders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_traders_hub/screens/build/app_entry_gate.dart';
+import 'package:uag_traders_hub/widgets/static_watermark.dart';
+import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_traders_hub/widgets/uag_form_dropdown_field.dart';
+
+class AuthScreen extends StatefulWidget {
+  static const String routeName = '/auth';
+
+  final bool initialIsLogin;
+
+  const AuthScreen({super.key, this.initialIsLogin = true});
+
+  @override
+  State<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _firebase = FirebaseAuth.instance;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+
+  late bool _isLogin;
+
+  String _email = '';
+
+
+  bool _isLoading = false;
+  bool _applyForAffiliate = false;
+  bool _termsAccepted = false;
+  bool _privacyAccepted = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
+  bool _rememberEmail = true;
+  bool _biometricsAvailable = false;
+  bool _biometricLoginEnabled = false;
+
+  int _signupStep = 0;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _resetEmailController = TextEditingController();
+  final TextEditingController _emailFieldController = TextEditingController();
+  final TextEditingController _confirmEmailController = TextEditingController();
+  final TextEditingController _passwordFieldController =
+      TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController _referralCodeController = TextEditingController();
+
+  String _selectedCountry = 'United Kingdom';
+  String _selectedPlatform = 'PC';
+  String _selectedTimeZone = 'Europe/London';
+  String _selectedPayoutMethod = 'Bank Transfer';
+
+
+
+  static const List<String> _countries = <String>[
+    'United Kingdom',
+    'United States',
+    'Canada',
+    'Australia',
+    'Ireland',
+    'Germany',
+    'France',
+    'Spain',
+    'Italy',
+    'Netherlands',
+    'Sweden',
+    'Norway',
+    'Denmark',
+    'Poland',
+    'Japan',
+  ];
+
+  static const List<String> _platforms = <String>[
+    'PC',
+    'PlayStation',
+    'Xbox',
+    'Steam',
+  ];
+
+  static const List<String> _timeZones = <String>[
+    'Europe/London',
+    'Europe/Berlin',
+    'Europe/Paris',
+    'Europe/Madrid',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'America/Toronto',
+    'Australia/Sydney',
+    'Asia/Tokyo',
+  ];
+
+  static const List<String> _payoutMethods = <String>[
+    'Bank Transfer',
+    'PayPal',
+    'Stripe Connect',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _isLogin = widget.initialIsLogin;
+    _loadSavedLoginPreferences();
+
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return false;
+
+      setState(() {
+        AppTheme.neonCyan = AppTheme.neonCyan == AppTheme.neonCyan
+            ? AppTheme.neonPink
+            : AppTheme.neonCyan;
+      });
+
+      return true;
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _resetEmailController.dispose();
+    _emailFieldController.dispose();
+    _confirmEmailController.dispose();
+    _passwordFieldController.dispose();
+    _confirmPasswordController.dispose();
+    _referralCodeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSavedLoginPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedEmail = prefs.getString('uag_last_login_email') ?? '';
+      final rememberEmail = prefs.getBool('uag_remember_email') ?? true;
+      final biometricEnabled =
+          prefs.getBool('uag_biometric_login_enabled') ?? false;
+      final supported = await _localAuth.isDeviceSupported();
+      final canCheck = await _localAuth.canCheckBiometrics;
+
+      if (!mounted) return;
+      setState(() {
+        _rememberEmail = rememberEmail;
+        _biometricLoginEnabled = biometricEnabled;
+        _biometricsAvailable = supported && canCheck;
+        if (savedEmail.isNotEmpty) {
+          _emailFieldController.text = savedEmail;
+          _email = savedEmail;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _biometricsAvailable = false;
+        _biometricLoginEnabled = false;
+      });
+    }
+  }
+
+  Future<void> _persistLoginPreferences(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('uag_remember_email', _rememberEmail);
+    if (_rememberEmail) {
+      await prefs.setString('uag_last_login_email', email.trim());
+    } else {
+      await prefs.remove('uag_last_login_email');
+    }
+    await prefs.setBool('uag_biometric_login_enabled', _biometricLoginEnabled);
+  }
+
+  Future<void> _tryBiometricUnlock() async {
+    if (!_biometricsAvailable || !_biometricLoginEnabled) return;
+
+    final currentUser = _firebase.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Biometric unlock is available after you log in once on this device.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Unlock UAG Arc Raiders Hub',
+        biometricOnly: true,
+      );
+
+      if (!authenticated || !mounted) return;
+
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Biometric unlock failed: $error')),
+      );
+    }
+  }
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+      return 'Enter a valid email';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    final password = value?.trim() ?? '';
+    if (password.length < 6) return 'Minimum 6 characters';
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'Add at least one capital letter';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(password)) {
+      return 'Add at least one number';
+    }
+    return null;
+  }
+
+  bool _validateCurrentStep() {
+    final valid = _formKey.currentState?.validate() ?? false;
+    if (!valid) return false;
+
+    if (!_isLogin &&
+        _signupStep == 1 &&
+        (!_termsAccepted || !_privacyAccepted)) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must accept the Terms of Use and Privacy Policy.'),
+        ),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  void _nextSignupStep() {
+    if (!_validateCurrentStep()) return;
+    if (_signupStep < 2) {
+      setState(() => _signupStep++);
+    }
+  }
+
+  void _previousSignupStep() {
+    if (_isLoading || _signupStep == 0) return;
+    setState(() => _signupStep--);
+  }
+
+  Future<void> _submit() async {
+    FocusScope.of(context).unfocus();
+
+    if (!_validateCurrentStep()) return;
+
+    _formKey.currentState!.save();
+    TextInput.finishAutofillContext();
+
+    final email = _emailFieldController.text.trim();
+    final password = _passwordFieldController.text.trim();
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (_isLogin) {
+        await _firebase.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        await _persistLoginPreferences(email);
+
+        if (!mounted) return;
+
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            backgroundColor: AppTheme.cardBackground,
+            title: Text(
+              'Thanks for joining the beta',
+              style: AppTheme.neonTextStyle(
+                fontSize: 24,
+                color: AppTheme.neonCyan,
+                isBold: true,
+              ),
+            ),
+            content: const Text(
+              'This beta build does not reflect the full finished app yet. Thanks for testing and helping shape the final launch version.',
+              style: TextStyle(color: Colors.white70, height: 1.4),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Got it'),
+              ),
+            ],
+          ),
+        );
+
+        if (!mounted) return;
+
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+      } else {
+        final cred = await _firebase.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        final user = cred.user;
+        if (user == null) {
+          throw FirebaseAuthException(
+            code: 'user-null',
+            message: 'Account created but user session not available.',
+          );
+        }
+
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'email': email,
+          'displayName': _nameController.text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'onboardingComplete': false,
+          'modules': {'trader': true},
+          'region': _selectedCountry == 'United Kingdom'
+              ? 'UK'
+              : _selectedCountry,
+          'uagName': _nameController.text.trim(),
+          'visibleInSearch': true,
+          'affiliateApplied': _applyForAffiliate,
+          'preferredPayoutMethod': _selectedPayoutMethod,
+          'referredByCode': _referralCodeController.text.trim(),
+          'subscriptionStatus': 'inactive',
+          'basicProfile': {
+            'displayName': _nameController.text.trim(),
+            'email': email,
+            'country': _selectedCountry,
+            'platform': _selectedPlatform,
+            'timeZone': _selectedTimeZone,
+            'bio': '',
+            'games': <String>[],
+            'platforms': <String>[_selectedPlatform],
+          },
+          'traderProfile': {
+            'uagName': _nameController.text.trim(),
+            'region': _selectedCountry == 'United Kingdom'
+                ? 'UK'
+                : _selectedCountry,
+            'platform': _selectedPlatform,
+            'timeZone': _selectedTimeZone,
+            'embarkId': '',
+            'uagId': '',
+          },
+          'legalAccepted': {
+            'termsAccepted': true,
+            'termsVersion': 1,
+            'termsAcceptedAt': FieldValue.serverTimestamp(),
+            'privacyAccepted': true,
+            'privacyVersion': 1,
+            'privacyAcceptedAt': FieldValue.serverTimestamp(),
+            'fanDisclaimerAccepted': false,
+            'fanDisclaimerVersion': 1,
+          },
+        }, SetOptions(merge: true));
+
+        await _persistLoginPreferences(email);
+
+        if (!mounted) return;
+
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+      }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Authentication failed')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not complete sign in: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _showResetPasswordDialog() async {
+    final currentTypedEmail = _emailFieldController.text.trim();
+    _resetEmailController.text = currentTypedEmail.isNotEmpty
+        ? currentTypedEmail
+        : _email.trim();
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          title: Text(
+            'Reset password',
+            style: AppTheme.neonTextStyle(
+              fontSize: 26,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ),
+          ),
+          content: TextField(
+            controller: _resetEmailController,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            enableSuggestions: false,
+            style: const TextStyle(color: Colors.white),
+            decoration: _inputDecoration('Email address'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = _resetEmailController.text.trim();
+                if (email.isEmpty) return;
+
+                await _firebase.sendPasswordResetEmail(email: email);
+
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password reset email sent')),
+                );
+              },
+              child: const Text('Send'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, {Widget? suffixIcon}) {
+    return InputDecoration(
+      labelText: label,
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: Colors.black.withValues(alpha: 0.30),
+      labelStyle: const TextStyle(color: Colors.white70),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.64)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppTheme.neonPink, width: 1.6),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.6),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+    );
+  }
+
+  Future<void> _openTerms() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TermsOfUseScreen()));
+  }
+
+  Future<void> _openPrivacy() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required bool isVisible,
+    required VoidCallback onToggle,
+    String? Function(String?)? validator,
+    FormFieldSetter<String>? onSaved,
+  }) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
+      obscureText: !isVisible,
+      decoration: _inputDecoration(
+        label,
+        suffixIcon: IconButton(
+          onPressed: onToggle,
+          icon: Icon(
+            isVisible
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            color: Colors.white70,
+          ),
+        ),
+      ),
+      onSaved: onSaved,
+      validator: validator,
+    );
+  }
+
+  Widget _buildStepHeader() {
+    final titles = ['Trader Profile', 'Legal Check', 'Login Details'];
+    final subtitles = [
+      'Tell us who you are and how you want to trade.',
+      'Review the essentials before entering the network.',
+      'Create the secure login for your UAG account.',
+    ];
+
+    return Column(
+      children: [
+        Row(
+          children: List.generate(3, (index) {
+            final active = index == _signupStep;
+            final done = index < _signupStep;
+            return Expanded(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                height: 7,
+                margin: EdgeInsets.only(right: index == 2 ? 0 : 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(99),
+                  color: done || active
+                      ? (active ? AppTheme.neonPink : AppTheme.neonCyan)
+                      : Colors.white.withValues(alpha: 0.14),
+                  boxShadow: active
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.neonPink.withValues(alpha: 0.45),
+                            blurRadius: 12,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          titles[_signupStep],
+          textAlign: TextAlign.center,
+          style: AppTheme.tradingHeading(
+            fontSize: 24,
+            color: AppTheme.neonCyan,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          subtitles[_signupStep],
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white70, height: 1.35),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignupProfileStep() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _nameController,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration('Display name'),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Display name is required'
+              : null,
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedCountry,
+          label: 'Country',
+          items: _countries,
+          decoration: _inputDecoration('Country'),
+          onChanged: (value) => setState(() {
+            _selectedCountry = value ?? _selectedCountry;
+          }),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedPlatform,
+          label: 'Platform',
+          items: _platforms,
+          decoration: _inputDecoration('Platform'),
+          onChanged: (value) => setState(() {
+            _selectedPlatform = value ?? _selectedPlatform;
+          }),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedTimeZone,
+          label: 'Timezone',
+          items: _timeZones,
+          decoration: _inputDecoration('Timezone'),
+          onChanged: (value) => setState(() {
+            _selectedTimeZone = value ?? _selectedTimeZone;
+          }),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        TextFormField(
+          controller: _referralCodeController,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration('Referral code (optional)'),
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        UagFormDropdownField(
+          value: _selectedPayoutMethod,
+          label: 'Preferred payment method',
+          items: _payoutMethods,
+          decoration: _inputDecoration('Preferred payment method'),
+          onChanged: (value) => setState(() {
+            _selectedPayoutMethod = value ?? _selectedPayoutMethod;
+          }),
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        SwitchListTile(
+          value: _applyForAffiliate,
+          onChanged: (value) => setState(() => _applyForAffiliate = value),
+          contentPadding: EdgeInsets.zero,
+          activeThumbColor: AppTheme.neonCyan,
+          title: const Text(
+            'Apply for affiliate programme',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+          ),
+          subtitle: const Text(
+            'Request access to creator/referral earning features.',
+            style: TextStyle(color: Colors.white60),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _legalCard({
+    required bool value,
+    required ValueChanged<bool?> onChanged,
+    required String title,
+    required String body,
+    required String buttonLabel,
+    required VoidCallback onOpen,
+    required IconData icon,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: value
+              ? AppTheme.neonCyan.withValues(alpha: 0.48)
+              : Colors.white.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Column(
+        children: [
+          CheckboxListTile(
+            value: value,
+            onChanged: onChanged,
+            controlAffinity: ListTileControlAffinity.leading,
+            activeThumbColor: AppTheme.neonCyan,
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            subtitle: Text(
+              body,
+              style: const TextStyle(color: Colors.white60, height: 1.25),
+            ),
+            secondary: Icon(icon, color: AppTheme.neonCyan),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: onOpen,
+              icon: const Icon(Icons.open_in_new_rounded, size: 16),
+              label: Text(buttonLabel),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignupLegalStep() {
+    return Column(
+      children: [
+        _legalCard(
+          value: _termsAccepted,
+          onChanged: (value) => setState(() => _termsAccepted = value ?? false),
+          title: 'I agree to the Terms of Use',
+          body:
+              'Confirms you understand how the UAG Traders Hub should be used.',
+          buttonLabel: 'Read Terms of Use',
+          onOpen: _openTerms,
+          icon: Icons.description_outlined,
+        ),
+        _legalCard(
+          value: _privacyAccepted,
+          onChanged: (value) =>
+              setState(() => _privacyAccepted = value ?? false),
+          title: 'I agree to the Privacy Policy',
+          body:
+              'Confirms you understand how account and profile data is handled.',
+          buttonLabel: 'Read Privacy Policy',
+          onOpen: _openPrivacy,
+          icon: Icons.privacy_tip_outlined,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRememberEmailTile() {
+    return CheckboxListTile(
+      value: _rememberEmail,
+      onChanged: (value) => setState(() => _rememberEmail = value ?? true),
+      controlAffinity: ListTileControlAffinity.leading,
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      activeThumbColor: AppTheme.neonCyan,
+      title: const Text(
+        'Remember email',
+        style: TextStyle(color: Colors.white70),
+      ),
+    );
+  }
+
+  Widget _buildSignupAccountStep() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _emailFieldController,
+          keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          enableSuggestions: false,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration('Email address'),
+          onSaved: (value) => _email = value?.trim() ?? '',
+          validator: _validateEmail,
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        TextFormField(
+          controller: _confirmEmailController,
+          keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          enableSuggestions: false,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration('Confirm email address'),
+          validator: (value) {
+            final error = _validateEmail(value);
+            if (error != null) return error;
+            if (value?.trim().toLowerCase() !=
+                _emailFieldController.text.trim().toLowerCase()) {
+              return 'Email addresses do not match';
+            }
+            return null;
+          },
+        ),
+        _buildRememberEmailTile(),
+        const SizedBox(height: AppTheme.spaceS),
+        _buildPasswordField(
+          controller: _passwordFieldController,
+          label: 'Password',
+          isVisible: _showPassword,
+          onToggle: () => setState(() => _showPassword = !_showPassword),
+          onSaved: (value) => _password = value?.trim() ?? '',
+          validator: _validatePassword,
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        _buildPasswordField(
+          controller: _confirmPasswordController,
+          label: 'Confirm password',
+          isVisible: _showConfirmPassword,
+          onToggle: () =>
+              setState(() => _showConfirmPassword = !_showConfirmPassword),
+          validator: (value) {
+            if (value != _passwordFieldController.text) {
+              return 'Passwords do not match';
+            }
+            return _validatePassword(value);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignupStepBody() {
+    return AnimatedSwitcher(
+      
+      transitionBuilder: (child, animation) {
+        final offsetAnimation = Tween<Offset>(
+          begin: const Offset(0.05, 0),
+          end: Offset.zero,
+        ).animate(animation);
+
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(position: offsetAnimation, child: child),
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey<int>(_signupStep),
+        child: switch (_signupStep) {
+          0 => _buildSignupProfileStep(),
+          1 => _buildSignupLegalStep(),
+          _ => _buildSignupAccountStep(),
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoginBody() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _emailFieldController,
+          keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          enableSuggestions: false,
+          style: const TextStyle(color: Colors.white),
+          decoration: _inputDecoration('Email address'),
+          onSaved: (value) => _email = value?.trim() ?? '',
+          validator: _validateEmail,
+        ),
+        _buildRememberEmailTile(),
+        if (_isLogin && _biometricsAvailable) ...[
+          SwitchListTile(
+            value: _biometricLoginEnabled,
+            onChanged: (value) =>
+                setState(() => _biometricLoginEnabled = value),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            activeThumbColor: AppTheme.neonCyan,
+            title: const Text(
+              'Biometric unlock',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          if (_biometricLoginEnabled)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _tryBiometricUnlock,
+                icon: const Icon(Icons.fingerprint),
+                label: const Text('Unlock with biometrics'),
+              ),
+            ),
+        ],
+        const SizedBox(height: AppTheme.spaceM),
+        _buildPasswordField(
+          controller: _passwordFieldController,
+          label: 'Password',
+          isVisible: _showPassword,
+          onToggle: () => setState(() => _showPassword = !_showPassword),
+          onSaved: (value) => _password = value?.trim() ?? '',
+          validator: _validatePassword,
+        ),
+      ],
+    );
+  }
+
+  Widget _gradientButton({
+    required String label,
+    required VoidCallback? onPressed,
+    IconData? icon,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            colors: [AppTheme.neonPink, AppTheme.neonCyan],
+          ),
+        ),
+        child: ElevatedButton.icon(
+          onPressed: onPressed,
+          icon: _isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(icon ?? Icons.arrow_forward_rounded),
+          label: Text(_isLoading ? 'Please wait...' : label),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignupControls() {
+    final lastStep = _signupStep == 2;
+
+    return Column(
+      children: [
+        if (_signupStep > 0) ...[
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton.icon(
+              onPressed: _isLoading ? null : _previousSignupStep,
+              icon: const Icon(Icons.arrow_back_rounded),
+              label: const Text('Back'),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+        ],
+        _gradientButton(
+          label: lastStep ? 'Create Account' : 'Next',
+          icon: lastStep ? Icons.person_add_alt_1_rounded : Icons.arrow_forward,
+          onPressed: _isLoading
+              ? null
+              : lastStep
+              ? _submit
+              : _nextSignupStep,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAuthCard(bool phone) {
+    return ElectricChargeBorder(
+      borderRadius: 28,
+      glowColor: AppTheme.neonCyan,
+      child: Container(
+      
+      padding: EdgeInsets.all(phone ? 18 : 22),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(28),
+        
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.16),
+            blurRadius: 24,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.42),
+            blurRadius: 30,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BackdropFilter(
+          filter: const ColorFilter.mode(Colors.transparent, BlendMode.srcOver),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  _isLogin ? 'Welcome Raider' : 'Create Account',
+                  textAlign: TextAlign.center,
+                  style: AppTheme.tradingHeading(
+                    fontSize: phone ? 22 : 26,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _isLogin
+                      ? 'Log in to access your operations hub.'
+                      : 'Three quick steps to enter the trader network.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceL),
+                if (!_isLogin) ...[
+                  _buildStepHeader(),
+                  const SizedBox(height: AppTheme.spaceL),
+                  _buildSignupStepBody(),
+                ] else
+                  _buildLoginBody(),
+                const SizedBox(height: AppTheme.spaceL),
+                if (_isLogin)
+                  _gradientButton(
+                    label: 'Log In',
+                    icon: Icons.login_rounded,
+                    onPressed: _isLoading ? null : _submit,
+                  )
+                else
+                  _buildSignupControls(),
+                const SizedBox(height: AppTheme.spaceM),
+                if (_isLogin)
+                  TextButton(
+                    onPressed: _showResetPasswordDialog,
+                    child: const Text('Forgot password?'),
+                  ),
+                TextButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            _isLogin = !_isLogin;
+                            _signupStep = 0;
+                          });
+                        },
+                  child: Text(
+                    _isLogin
+                        ? 'New here? Create account'
+                        : 'Already have an account? Log in',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.shield_outlined,
+                      size: 14,
+                      color: Colors.white54,
+                    ),
+                    SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Protected by UAG security protocols',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white54, fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBrand(bool phone) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.neonPink),
+        ),
+        const SizedBox(width: 6),
+        Image.asset(
+          'assets/icon/uag_traders_icon_transparent.webp',
+          width: phone ? 34 : 42,
+          height: phone ? 34 : 42,
+          errorBuilder: (_, _, _) =>
+              const Icon(Icons.swap_horiz_rounded, color: AppTheme.neonCyan),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'UAG ARC RAIDERS HUB',
+            style: AppTheme.tradingHeading(
+              fontSize: phone ? 16 : 20,
+              color: Colors.white,
+            ).copyWith(letterSpacing: 1.1),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final phone = size.width < 430;
+
+    return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _UagAuthBackdrop(),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  phone ? 16 : 34,
+                  phone ? 18 : 32,
+                  phone ? 16 : 34,
+                  28,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: phone ? 430 : 560,
+                    minHeight: size.height - 72,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTopBrand(phone),
+                      SizedBox(height: phone ? 18 : 28),
+                      _buildAuthCard(phone),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UagAuthBackdrop extends StatelessWidget {
+  const _UagAuthBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (_, _, _) => const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF02030B),
+                  AppTheme.cardBackgroundDeep,
+                  Color(0xFF050014),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.black.withValues(alpha: 0.28),
+                AppTheme.cardBackgroundDeep.withValues(alpha: 0.56),
+                Colors.black.withValues(alpha: 0.88),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.12, -0.42),
+                  radius: 0.86,
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.20),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const Positioned.fill(child: StaticWatermark()),
+      ],
+    );
+  }
+}
+

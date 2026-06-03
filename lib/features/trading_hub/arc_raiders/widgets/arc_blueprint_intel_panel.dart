@@ -312,7 +312,7 @@ class _HintSectionBlock extends StatelessWidget {
             (entry) => Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Text(
-                '• $entry',
+                '- $entry',
                 style: const TextStyle(color: Colors.white70, height: 1.35),
               ),
             ),

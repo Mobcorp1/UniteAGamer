@@ -593,7 +593,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                               ? 'Crossplay'
                               : 'No crossplay',
                           if (profile.lookingNow) 'Looking now',
-                        ].join(' • '),
+                        ].join(' - '),
                         style: AppTheme.bodyTextStyle(
                           fontSize: 13,
                           color: Colors.white70,

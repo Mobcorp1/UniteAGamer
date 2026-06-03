@@ -19,7 +19,7 @@ class ArcQuestRequirement {
     required this.sourceHint,
   });
 
-  String get questLabel => '$trader • $questName';
+  String get questLabel => '$trader - $questName';
 }
 
 class ArcQuestRequirementSeedData {
@@ -194,7 +194,7 @@ class ArcQuestRequirementSeedData {
       itemName: 'Empty Wine Bottle',
       quantity: 1,
       sourceHint:
-          'Best intel: residential/commercial kitchens, bars, cafés, apartments, shelves and counters.',
+          'Best intel: residential/commercial kitchens, bars, cafÃ©s, apartments, shelves and counters.',
     ),
     ArcQuestRequirement(
       questName: 'Pied Piper',
@@ -394,7 +394,7 @@ class ArcQuestRequirementSeedData {
       itemName: 'Espresso Machine Parts',
       quantity: 1,
       sourceHint:
-          'Quest collection item. Best intel: café/commercial kitchen objective areas; check counters, shelves and marked quest route rooms.',
+          'Quest collection item. Best intel: cafÃ©/commercial kitchen objective areas; check counters, shelves and marked quest route rooms.',
     ),
     ArcQuestRequirement(
       questName: 'Espresso',
@@ -404,7 +404,7 @@ class ArcQuestRequirementSeedData {
       itemName: 'Coffee Pot',
       quantity: 1,
       sourceHint:
-          'Best intel: kitchens, cafés, residential counters, commercial interiors and shelves.',
+          'Best intel: kitchens, cafÃ©s, residential counters, commercial interiors and shelves.',
     ),
     ArcQuestRequirement(
       questName: 'A New Type Of Plant',

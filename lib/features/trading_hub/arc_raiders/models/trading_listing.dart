@@ -230,7 +230,7 @@ class TradingListing {
   }
 
   String get acceptedTradeTypesLabel {
-    if (wantsNothing) return 'Free giveaway • no return wanted';
+    if (wantsNothing) return 'Free giveaway - no return wanted';
     final types = <String>[];
     if (acceptsBlueprints) types.add('Blueprints');
     if (acceptsSeeds) types.add('Seeds');
@@ -238,7 +238,7 @@ class TradingListing {
     if (wantedTradeItemNames.isNotEmpty || wantedTradeItemIds.isNotEmpty) {
       types.add('Trade Items');
     }
-    return types.isEmpty ? 'None set' : types.join(' • ');
+    return types.isEmpty ? 'None set' : types.join(' - ');
   }
 
   String get traderDisplayLine {
@@ -250,11 +250,11 @@ class TradingListing {
     final parts = <String>[name];
     if (tag.isNotEmpty) parts.add(tag);
     if (platform.isNotEmpty) parts.add(platform);
-    return parts.join(' • ');
+    return parts.join(' - ');
   }
 
   String get reputationSummary =>
-      'Trades: $completedTrades • No-shows: $noShows • Betrayal flags: $betrayalFlags';
+      'Trades: $completedTrades - No-shows: $noShows - Betrayal flags: $betrayalFlags';
 
   List<String> get allOfferedItems {
     final items = <String>[];
@@ -284,10 +284,10 @@ class TradingListing {
 
   String get tradeFormatLabel => tradeAsBundle
       ? (allowPartialOffers
-            ? 'Bundle preferred • partial offers allowed'
+            ? 'Bundle preferred - partial offers allowed'
             : 'Bundle only')
       : (allowPartialOffers
-            ? 'Mix and match • partial offers allowed'
+            ? 'Mix and match - partial offers allowed'
             : 'Mix and match');
 
   String get offeredSummary {
@@ -300,7 +300,7 @@ class TradingListing {
   }
 
   String get wantedSummary {
-    if (wantsNothing) return 'Nothing wanted • free giveaway';
+    if (wantsNothing) return 'Nothing wanted - free giveaway';
     if (allWantedItems.isEmpty) {
       return wantedText.trim().isNotEmpty
           ? wantedText.trim()

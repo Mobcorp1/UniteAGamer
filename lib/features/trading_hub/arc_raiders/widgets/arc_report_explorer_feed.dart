@@ -84,7 +84,7 @@ class _ReportCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${report.mapName} • ${report.areaLabel}',
+            '${report.mapName} - ${report.areaLabel}',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w700,

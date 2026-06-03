@@ -67,7 +67,7 @@ class ArcScrappySeedData {
       imageAsset: 'assets/arc_raiders/scrappy_resources/olives.webp',
       helperText: 'Need 6 total for this tracker entry.',
       locationHint:
-          'Best intel: Blue Gate • Olive Grove / Olive Garden routes. Also check nature food spawns, gardens and wicker baskets during Lush Blooms.',
+          'Best intel: Blue Gate - Olive Grove / Olive Garden routes. Also check nature food spawns, gardens and wicker baskets during Lush Blooms.',
     ),
     ArcScrappyItem(
       id: 'cat-bed',

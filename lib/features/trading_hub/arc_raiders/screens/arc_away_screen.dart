@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
 
 import '../models/arc_away_status.dart';
@@ -98,57 +98,130 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Widget heroCard() {
+      return Container(
+        padding: const EdgeInsets.all(AppTheme.spaceL),
+        decoration: AppTheme.tradingCardDecoration(
+          radius: 24,
+          borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.neonCyan.withValues(alpha: 0.10),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.45),
+                ),
+              ),
+              child: const Icon(
+                Icons.do_not_disturb_on_outlined,
+                color: AppTheme.neonCyan,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Away Mode',
+                    style: AppTheme.tradingHeading(
+                      fontSize: 24,
+                      color: AppTheme.neonCyan,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Pause trade requests while you are away, working, travelling or taking a break.',
+                    style: TextStyle(color: Colors.white70, height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget actionCard({required List<Widget> children}) {
+      return Container(
+        padding: const EdgeInsets.all(AppTheme.spaceL),
+        decoration: AppTheme.tradingCardDecoration(radius: 22),
+        child: Column(children: children),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(title: const Text('Away Mode')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                children: [
-                  SwitchListTile(
-                    value: _awayStatus.isAway,
-                    onChanged: (value) {
-                      setState(() {
-                        _awayStatus = _awayStatus.copyWith(isAway: value);
-                      });
-                    },
-                    title: const Text('Set yourself away'),
-                    subtitle: const Text(
-                      'Hide from search and pause new trade requests while away.',
-                    ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 820),
+                  child: ListView(
+                    padding: const EdgeInsets.all(AppTheme.spaceL),
+                    children: [
+                      heroCard(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      actionCard(
+                        children: [
+                          SwitchListTile(
+                            value: _awayStatus.isAway,
+                            onChanged: (value) {
+                              setState(() {
+                                _awayStatus = _awayStatus.copyWith(
+                                  isAway: value,
+                                );
+                              });
+                            },
+                            activeThumbColor: AppTheme.neonPink,
+                            title: const Text('Set yourself away'),
+                            subtitle: const Text(
+                              'Hide from search and pause new trade requests while away.',
+                            ),
+                          ),
+                          const Divider(color: Colors.white12),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Away from'),
+                            subtitle: Text(_format(_awayStatus.from)),
+                            trailing: const Icon(Icons.calendar_month),
+                            onTap: () => _pickDateTime(isFrom: true),
+                          ),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Away to'),
+                            subtitle: Text(_format(_awayStatus.to)),
+                            trailing: const Icon(Icons.calendar_month),
+                            onTap: () => _pickDateTime(isFrom: false),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spaceL),
+                      TextField(
+                        controller: _noteController,
+                        decoration: AppTheme.tradingInputDecoration(
+                          label: 'Note',
+                        ),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: AppTheme.spaceL),
+                      ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _save,
+                        icon: const Icon(Icons.save_rounded),
+                        label: Text(
+                          _isSaving ? 'Saving...' : 'Save Away Status',
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Away from'),
-                    subtitle: Text(_format(_awayStatus.from)),
-                    trailing: const Icon(Icons.calendar_month),
-                    onTap: () => _pickDateTime(isFrom: true),
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Away to'),
-                    subtitle: Text(_format(_awayStatus.to)),
-                    trailing: const Icon(Icons.calendar_month),
-                    onTap: () => _pickDateTime(isFrom: false),
-                  ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  TextField(
-                    controller: _noteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Note',
-                      hintText: 'Holiday, break, shift block, etc.',
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  ElevatedButton(
-                    onPressed: _isSaving ? null : _save,
-                    child: Text(_isSaving ? 'Saving...' : 'Save Away Status'),
-                  ),
-                ],
+                ),
               ),
             ),
     );

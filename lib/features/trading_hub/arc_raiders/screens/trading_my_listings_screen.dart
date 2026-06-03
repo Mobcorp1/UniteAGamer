@@ -75,7 +75,7 @@ class TradingMyListingsScreen extends StatelessWidget {
             if (formatBits.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                formatBits.join(' • '),
+                formatBits.join(' - '),
                 style: TextStyle(color: AppTheme.tradingFaintText),
               ),
             ],
