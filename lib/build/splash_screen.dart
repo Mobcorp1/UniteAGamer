@@ -49,6 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Image.asset(
               'assets/arc_raiders/loading/loading_hub_background.webp',
               fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
             ),
           ),
           Container(
@@ -158,8 +159,8 @@ class _UagAuthBackdrop extends StatelessWidget {
         Image.asset(
           'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
           fit: BoxFit.cover,
-          alignment: Alignment.center,
           filterQuality: FilterQuality.high,
+          alignment: Alignment.center,
           errorBuilder: (_, _, _) => const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
