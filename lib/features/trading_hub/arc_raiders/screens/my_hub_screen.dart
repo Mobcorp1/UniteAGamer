@@ -583,7 +583,7 @@ class _HubTabStrip extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active
                     ? section.accent.withValues(alpha: 0.15)
-                    : Colors.black.withValues(alpha: 0.32),
+                    : Colors.black.withValues(alpha: 0.30),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: active
@@ -628,7 +628,7 @@ class _HubCarouselCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.48),
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: section.accent.withValues(alpha: 0.26)),
+        border: Border.all(color: section.accent.withValues(alpha: 0.24)),
         boxShadow: [
           BoxShadow(
             color: section.accent.withValues(alpha: 0.11),

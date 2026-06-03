@@ -243,7 +243,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: accent.withValues(alpha: 0.12),
-          border: Border.all(color: accent.withValues(alpha: 0.32)),
+          border: Border.all(color: accent.withValues(alpha: 0.30)),
           boxShadow: [
             BoxShadow(
               color: accent.withValues(alpha: 0.12),
@@ -264,8 +264,8 @@ class ArcRaidersPageHeader extends StatelessWidget {
       padding: EdgeInsets.all(compact ? AppTheme.spaceM : AppTheme.spaceL),
       decoration: AppTheme.tradingCardDecoration(
         radius: compact ? 24 : 28,
-        borderColor: accent.withValues(alpha: 0.32),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
+        borderColor: accent.withValues(alpha: 0.30),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
       ),
       child: Row(
         children: [
@@ -330,8 +330,8 @@ class ArcRaidersHeroBanner extends StatelessWidget {
       padding: EdgeInsets.all(compact ? 20 : 28),
       decoration: AppTheme.tradingCardDecoration(
         radius: 32,
-        borderColor: accent.withValues(alpha: 0.26),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.90),
+        borderColor: accent.withValues(alpha: 0.24),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
       ),
       child: Stack(
         children: [

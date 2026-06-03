@@ -17,11 +17,11 @@ class ArcCompanionBottomDock extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.26)),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
           boxShadow: [
             BoxShadow(
               color: AppTheme.neonCyan.withValues(alpha: 0.12),
-              blurRadius: 24,
+              blurRadius: 20,
               spreadRadius: 1,
             ),
           ],
@@ -54,8 +54,8 @@ class ArcCompanionBottomDock extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.neonPink.withValues(alpha: 0.26),
-                        blurRadius: 22,
+                        color: AppTheme.neonPink.withValues(alpha: 0.24),
+                        blurRadius: 18,
                         spreadRadius: 1,
                       ),
                     ],
@@ -128,7 +128,7 @@ class _DockButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.neonCyan.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.26)),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
         ),
         child: Row(
           children: [
