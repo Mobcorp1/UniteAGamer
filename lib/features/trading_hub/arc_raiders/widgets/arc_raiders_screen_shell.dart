@@ -243,7 +243,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: accent.withValues(alpha: 0.12),
-          border: Border.all(color: accent.withValues(alpha: 0.34)),
+          border: Border.all(color: accent.withValues(alpha: 0.32)),
           boxShadow: [
             BoxShadow(
               color: accent.withValues(alpha: 0.12),
@@ -301,7 +301,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
             ),
           ),
           if (trailing != null) ...[
-            const SizedBox(width: AppTheme.spaceM),
+            const SizedBox(width: AppTheme.spaceS),
             trailing!,
           ],
         ],
@@ -330,7 +330,7 @@ class ArcRaidersHeroBanner extends StatelessWidget {
       padding: EdgeInsets.all(compact ? 20 : 28),
       decoration: AppTheme.tradingCardDecoration(
         radius: 32,
-        borderColor: accent.withValues(alpha: 0.28),
+        borderColor: accent.withValues(alpha: 0.26),
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.90),
       ),
       child: Stack(

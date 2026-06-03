@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
 import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_traders_hub/widgets/theme.dart';
@@ -17,39 +13,29 @@ class ArcCompanionBottomDock extends StatelessWidget {
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.26)),
           boxShadow: [
             BoxShadow(
               color: AppTheme.neonCyan.withValues(alpha: 0.12),
-              blurRadius: 26,
+              blurRadius: 24,
               spreadRadius: 1,
-            ),
-            BoxShadow(
-              color: AppTheme.neonPink.withValues(alpha: 0.08),
-              blurRadius: 38,
-              spreadRadius: 2,
             ),
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _DockNavButton(
-              icon: Icons.groups_rounded,
-              label: 'Match',
-              isActive: _matches(activeLabel, 'match'),
-              onTap: () => _push(context, ArcMatchRiderScreen.routeName),
+            _DockButton(
+              icon: Icons.arrow_back_rounded,
+              label: 'Back',
+              onTap: () => Navigator.of(context).maybePop(),
             ),
-            _DockNavButton(
-              icon: Icons.route_rounded,
-              label: 'Raid',
-              isActive: _matches(activeLabel, 'raid'),
-              onTap: () => _push(context, RaidPlannerScreen.routeName),
-            ),
+            const SizedBox(width: 8),
+            Expanded(child: _DockStatus(label: activeLabel)),
+            const SizedBox(width: 8),
             ElectricChargeBorder(
               active: true,
               radius: 999,
@@ -58,18 +44,18 @@ class ArcCompanionBottomDock extends StatelessWidget {
                 onTap: () =>
                     UagVoiceArcAssistantSheet.show(context, autoStart: true),
                 child: Container(
-                  width: 64,
-                  height: 64,
+                  width: 58,
+                  height: 58,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.neonPink.withValues(alpha: 0.18),
+                    color: AppTheme.neonPink.withValues(alpha: 0.16),
                     border: Border.all(
-                      color: AppTheme.neonPink.withValues(alpha: 0.76),
+                      color: AppTheme.neonPink.withValues(alpha: 0.72),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.neonPink.withValues(alpha: 0.28),
-                        blurRadius: 24,
+                        color: AppTheme.neonPink.withValues(alpha: 0.26),
+                        blurRadius: 22,
                         spreadRadius: 1,
                       ),
                     ],
@@ -77,77 +63,82 @@ class ArcCompanionBottomDock extends StatelessWidget {
                   child: const Icon(
                     Icons.mic_rounded,
                     color: AppTheme.neonPink,
-                    size: 34,
+                    size: 30,
                   ),
                 ),
               ),
-            ),
-            _DockNavButton(
-              icon: Icons.swap_horiz_rounded,
-              label: 'Trade',
-              isActive:
-                  _matches(activeLabel, 'trade') ||
-                  _matches(activeLabel, 'trading'),
-              onTap: () => _push(context, TraderHubScreen.routeName),
-            ),
-            _DockNavButton(
-              icon: Icons.radar_rounded,
-              label: 'Intel',
-              isActive: _matches(activeLabel, 'intel'),
-              onTap: () => _push(context, ArcIntelExplorerScreen.routeName),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  bool _matches(String source, String value) {
-    return source.toLowerCase().contains(value.toLowerCase());
-  }
+class _DockStatus extends StatelessWidget {
+  final String label;
 
-  void _push(BuildContext context, String routeName) {
-    final current = ModalRoute.of(context)?.settings.name;
-    if (current == routeName) return;
-    Navigator.of(context).pushNamed(routeName);
+  const _DockStatus({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 46,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTheme.neonTextStyle(
+          fontSize: 15,
+          color: AppTheme.neonCyan,
+          isBold: true,
+        ),
+      ),
+    );
   }
 }
 
-class _DockNavButton extends StatelessWidget {
+class _DockButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final bool isActive;
   final VoidCallback onTap;
 
-  const _DockNavButton({
+  const _DockButton({
     required this.icon,
     required this.label,
-    required this.isActive,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppTheme.neonPink : AppTheme.neonCyan;
-
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(999),
       onTap: onTap,
-      child: SizedBox(
-        width: 58,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      child: Container(
+        height: 46,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.neonCyan.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.26)),
+        ),
+        child: Row(
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 5),
+            Icon(icon, color: AppTheme.neonCyan, size: 18),
+            const SizedBox(width: 6),
             Text(
               label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
               style: AppTheme.bodyTextStyle(
-                fontSize: 11,
-                color: isActive ? AppTheme.neonPink : Colors.white70,
+                fontSize: 12,
+                color: AppTheme.neonCyan,
                 isBold: true,
               ),
             ),
