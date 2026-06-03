@@ -383,14 +383,14 @@ class _MyHubCarousel extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
-        final carouselHeight = compact ? 610.0 : 560.0;
+        final carouselHeight = compact ? 520.0 : 500.0;
 
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-            compact ? 12 : 24,
-            compact ? 12 : 22,
-            compact ? 12 : 24,
-            30,
+            compact ? 10 : 20,
+            compact ? 10 : 18,
+            compact ? 10 : 20,
+            22,
           ),
           child: Center(
             child: ConstrainedBox(
@@ -406,7 +406,7 @@ class _MyHubCarousel extends StatelessWidget {
                     onPrevious: activeIndex == 0 ? null : onPrevious,
                     onNext: activeIndex == sections.length - 1 ? null : onNext,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   _HubTabStrip(
                     sections: sections,
                     activeIndex: activeIndex,
@@ -418,7 +418,7 @@ class _MyHubCarousel extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: carouselHeight,
                     child: PageView.builder(
@@ -438,7 +438,7 @@ class _MyHubCarousel extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   _QuickActionRail(
                     onTracking: () => Navigator.of(
                       context,
@@ -489,7 +489,7 @@ class _HubHero extends StatelessWidget {
       radius: 26,
       padding: const EdgeInsets.all(1.4),
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.50),
           borderRadius: BorderRadius.circular(26),
@@ -499,14 +499,14 @@ class _HubHero extends StatelessWidget {
           children: [
             Image.asset(
               'assets/icon/uag_traders_icon_transparent.webp',
-              height: 64,
+              height: 52,
               errorBuilder: (_, _, _) => const Icon(
                 Icons.dashboard_customize_outlined,
                 color: AppTheme.neonCyan,
                 size: 54,
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,20 +514,20 @@ class _HubHero extends StatelessWidget {
                   Text(
                     'Welcome back, $displayName',
                     style: AppTheme.tradingHeading(
-                      fontSize: 26,
+                      fontSize: 22,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     'My Hub is your personal tracking, intel, reputation, loadout and reward space.',
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 13,
+                      fontSize: 11,
                       color: Colors.white70,
                       isBold: true,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     '$tier access • ${activeIndex + 1} / $total',
                     style: const TextStyle(
@@ -566,7 +566,7 @@ class _HubTabStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 46,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: sections.length,
@@ -579,7 +579,7 @@ class _HubTabStrip extends StatelessWidget {
             onTap: () => onTap(index),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: active
                     ? section.accent.withValues(alpha: 0.15)
@@ -595,16 +595,16 @@ class _HubTabStrip extends StatelessWidget {
                 children: [
                   Icon(
                     section.icon,
-                    size: 17,
+                    size: 15,
                     color: active ? section.accent : Colors.white54,
                   ),
-                  const SizedBox(width: 7),
+                  const SizedBox(width: 6),
                   Text(
                     section.title,
                     style: TextStyle(
                       color: active ? section.accent : Colors.white70,
                       fontWeight: FontWeight.w900,
-                      fontSize: 12,
+                      fontSize: 11,
                     ),
                   ),
                 ],
@@ -632,7 +632,7 @@ class _HubCarouselCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: section.accent.withValues(alpha: 0.11),
-            blurRadius: 28,
+            blurRadius: 20,
           ),
         ],
       ),
@@ -660,30 +660,32 @@ class _HubCarouselCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(section.icon, color: section.accent, size: 38),
-                const SizedBox(height: 12),
+                Icon(section.icon, color: section.accent, size: 30),
+                const SizedBox(height: 8),
                 Text(
                   section.title,
                   textAlign: TextAlign.center,
                   style: AppTheme.tradingHeading(
-                    fontSize: 31,
+                    fontSize: 26,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   section.subtitle,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, height: 1.32),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70, height: 1.24),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 Wrap(
-                  spacing: 9,
-                  runSpacing: 9,
+                  spacing: 7,
+                  runSpacing: 7,
                   alignment: WrapAlignment.center,
                   children: section.body
                       .map(
@@ -703,7 +705,7 @@ class _HubCarouselCard extends StatelessWidget {
                 ),
                 if (section.secondaryLabel != null &&
                     section.onSecondary != null) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   OutlinedButton.icon(
                     onPressed: section.onSecondary,
                     icon: const Icon(Icons.open_in_new_rounded),
@@ -735,8 +737,8 @@ class _QuickActionRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 8,
+      runSpacing: 8,
       alignment: WrapAlignment.center,
       children: [
         _HubQuickButton(
@@ -784,6 +786,8 @@ class _HubQuickButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppTheme.neonCyan,
         side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.42)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }
@@ -803,8 +807,8 @@ class _HubMetricPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 135),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      constraints: const BoxConstraints(minWidth: 112),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.44),
         borderRadius: BorderRadius.circular(16),
@@ -818,15 +822,16 @@ class _HubMetricPill extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: accent,
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.7,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             value,
             textAlign: TextAlign.center,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white,
