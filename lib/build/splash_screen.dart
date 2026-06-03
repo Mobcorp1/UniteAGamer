@@ -41,11 +41,29 @@ class _SplashScreenState extends State<SplashScreen> {
     final logoSize = (width * 0.34).clamp(118.0, 170.0);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.black,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const _UagAuthBackdrop(),
+          Positioned.fill(
+            child: Image.asset(
+              'assets/arc_raiders/loading/loading_hub_background.webp',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.58),
+                  Colors.black.withValues(alpha: 0.32),
+                  Colors.black.withValues(alpha: 0.78),
+                ],
+              ),
+            ),
+          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(28),
@@ -102,12 +120,20 @@ class _SplashScreenState extends State<SplashScreen> {
                     ).copyWith(letterSpacing: 1.1),
                   ),
                   const Spacer(),
-                  Text(
-                    'Booting operations hub...',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 13,
-                      color: Colors.white70,
-                      isBold: true,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.82, end: 1),
+                    duration: const Duration(milliseconds: 1400),
+                    curve: Curves.easeInOut,
+                    builder: (context, value, child) {
+                      return Transform.scale(scale: value, child: child);
+                    },
+                    child: Text(
+                      'Booting operations hub...',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 13,
+                        color: Colors.white70,
+                        isBold: true,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 26),
