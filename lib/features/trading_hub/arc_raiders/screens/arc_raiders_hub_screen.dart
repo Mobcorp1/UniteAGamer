@@ -5,6 +5,7 @@ import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/sc
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
@@ -30,6 +31,16 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _features = [
+    _ArcHubFeature(
+      title: 'My Hub',
+      subtitle:
+          'Your personal ARC command centre, progress, subscriptions and daily ops.',
+      icon: Icons.dashboard_customize_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_tracking.webp',
+      builder: (_) => const MyHubScreen(),
+    ),
     _ArcHubFeature(
       title: 'Match a Raider',
       subtitle: 'Find squadmates, chill raiders and extraction partners.',
@@ -105,6 +116,10 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
   }
 
+  _ArcHubFeature _featureByTitle(String title) {
+    return _features.firstWhere((feature) => feature.title == title);
+  }
+
   @override
   Widget build(BuildContext context) {
     final selected = _features[_selectedIndex];
@@ -146,11 +161,13 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                 ),
                 const SizedBox(height: AppTheme.spaceS),
                 _ArcBottomDock(
-                  onMatch: () => _openFeature(_features.first),
-                  onRaid: () => _openFeature(_features[1]),
+                  onMatch: () =>
+                      _openFeature(_featureByTitle('Match a Raider')),
+                  onRaid: () => _openFeature(_featureByTitle('Raid Planner')),
                   onMic: () => UagVoiceArcAssistantSheet.show(context),
-                  onTrading: () => _openFeature(_features[4]),
-                  onIntel: () => _openFeature(_features[6]),
+                  onTrading: () => _openFeature(_featureByTitle('Trading')),
+                  onIntel: () =>
+                      _openFeature(_featureByTitle('Community Intel')),
                 ),
               ],
             ),

@@ -595,6 +595,28 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: completion,
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppTheme.neonCyan,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$ownedCount / ${allBlueprints.length} owned - $missingCount missing - $dupesCount dupes',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 12),
           Wrap(
             alignment: WrapAlignment.center,
             spacing: 8,
@@ -647,28 +669,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: completion,
-              minHeight: 10,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppTheme.neonCyan,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$ownedCount / ${allBlueprints.length} owned - $missingCount missing - $dupesCount dupes',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              height: 1.3,
-            ),
-          ),
+          const SizedBox(height: 12),
+          _buildSearchAppBarTitle(),
           if (_selectionMode) ...[
             const SizedBox(height: 12),
             Text(
@@ -1051,10 +1053,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: _buildSearchAppBarTitle(),
+        titleSpacing: AppTheme.spaceM,
+        title: Text(
+          'Blueprint Tracker',
+          style: AppTheme.tradingHeading(
+            fontSize: 24,
+            color: AppTheme.neonCyan,
+          ),
         ),
       ),
       bottomNavigationBar: const ArcCompanionBottomDock(
