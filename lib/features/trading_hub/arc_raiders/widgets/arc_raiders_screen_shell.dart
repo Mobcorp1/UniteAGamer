@@ -85,6 +85,23 @@ class ArcRaidersScreenShell extends StatelessWidget {
     return Stack(
       children: [
         const Positioned.fill(child: ArcRaidersScreenBackdrop()),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.03),
+                    Colors.transparent,
+                    AppTheme.neonPink.withValues(alpha: 0.04),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+          ),
+        ),
         content,
       ],
     );
@@ -120,6 +137,27 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
     if (!alignTop) return content;
 
     return Align(alignment: Alignment.topCenter, child: content);
+  }
+}
+
+class ArcRaidersPageScaffold extends StatelessWidget {
+  const ArcRaidersPageScaffold({
+    super.key,
+    required this.child,
+    this.maxWidth = 1180,
+    this.useSafeArea = true,
+  });
+
+  final Widget child;
+  final double maxWidth;
+  final bool useSafeArea;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArcRaidersScreenShell(
+      useSafeArea: useSafeArea,
+      child: ArcRaidersResponsiveContent(maxWidth: maxWidth, child: child),
+    );
   }
 }
 
@@ -272,6 +310,72 @@ class ArcRaidersPageHeader extends StatelessWidget {
   }
 }
 
+class ArcRaidersHeroBanner extends StatelessWidget {
+  const ArcRaidersHeroBanner({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.accent = AppTheme.neonCyan,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 600;
+
+    return Container(
+      padding: EdgeInsets.all(compact ? 20 : 28),
+      decoration: AppTheme.tradingCardDecoration(
+        radius: 32,
+        borderColor: accent.withValues(alpha: 0.28),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.90),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -20,
+            right: -20,
+            child: IgnorePointer(
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accent.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTheme.tradingHeading(
+                  fontSize: compact ? 28 : 36,
+                  color: accent,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                subtitle,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: compact ? 13 : 15,
+                  color: Colors.white70,
+                  isBold: true,
+                ).copyWith(height: 1.4),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ArcRaidersSectionCard extends StatelessWidget {
   const ArcRaidersSectionCard({
     super.key,
@@ -296,98 +400,6 @@ class ArcRaidersSectionCard extends StatelessWidget {
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
       ),
       child: child,
-    );
-  }
-}
-
-class ArcRaidersFilterPanel extends StatelessWidget {
-  const ArcRaidersFilterPanel({
-    super.key,
-    required this.child,
-    this.accent = AppTheme.neonCyan,
-  });
-
-  final Widget child;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return ArcRaidersSectionCard(
-      accent: accent,
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      radius: 22,
-      child: child,
-    );
-  }
-}
-
-class ArcRaidersProgressPanel extends StatelessWidget {
-  const ArcRaidersProgressPanel({
-    super.key,
-    required this.title,
-    required this.summary,
-    required this.progress,
-    this.accent = AppTheme.neonCyan,
-    this.onClose,
-  });
-
-  final String title;
-  final String summary;
-  final double progress;
-  final Color accent;
-  final VoidCallback? onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final clampedProgress = progress.clamp(0.0, 1.0);
-
-    return ArcRaidersSectionCard(
-      accent: accent,
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      radius: 26,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.assignment_turned_in_rounded, color: accent, size: 24),
-              const SizedBox(width: AppTheme.spaceS),
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTheme.tradingHeading(fontSize: 20, color: accent),
-                ),
-              ),
-              if (onClose != null)
-                IconButton(
-                  tooltip: 'Close',
-                  onPressed: onClose,
-                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: clampedProgress,
-              minHeight: 10,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
-              valueColor: AlwaysStoppedAnimation<Color>(accent),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceS),
-          Text(
-            summary,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              height: 1.3,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
