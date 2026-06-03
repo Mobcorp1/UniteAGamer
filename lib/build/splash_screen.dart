@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _boot() async {
-    await Future.delayed(const Duration(milliseconds: 2400));
+    await Future.delayed(const Duration(milliseconds: 4200));
 
     if (!mounted) return;
 
