@@ -60,15 +60,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const RaidPlannerScreen(),
     ),
     _ArcHubFeature(
-      title: 'Tracking',
-      subtitle: 'Blueprint Grid, Scrappy, benches and quest tracking.',
-      icon: Icons.grid_view_rounded,
-      accent: AppTheme.neonPink,
-      art: _ArcHubArtKind.blueprints,
-      assetName: 'arc_hub_tracking.webp',
-      builder: (_) => const _TrackingMenuScreen(),
-    ),
-    _ArcHubFeature(
       title: 'Hunt Targets',
       subtitle: 'Edit your 5 active blueprint hunts used by the planner.',
       icon: Icons.track_changes_rounded,
