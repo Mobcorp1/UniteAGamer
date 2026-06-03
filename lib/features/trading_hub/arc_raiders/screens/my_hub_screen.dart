@@ -784,10 +784,10 @@ class _HubQuickButton extends StatelessWidget {
       icon: Icon(icon),
       label: Text(label),
       style: OutlinedButton.styleFrom(
+        visualDensity: VisualDensity.compact,
         foregroundColor: AppTheme.neonCyan,
         side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.42)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        visualDensity: VisualDensity.compact,
       ),
     );
   }
