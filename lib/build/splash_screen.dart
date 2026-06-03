@@ -152,9 +152,9 @@ class _UagAuthBackdrop extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.black.withValues(alpha: 0.24),
+                const Color(0xFF050713).withValues(alpha: 0.24),
                 AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
-                Colors.black.withValues(alpha: 0.86),
+                const Color(0xFF050713).withValues(alpha: 0.86),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
