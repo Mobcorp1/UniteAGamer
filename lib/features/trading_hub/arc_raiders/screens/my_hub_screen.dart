@@ -383,7 +383,7 @@ class _MyHubCarousel extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
-        final carouselHeight = compact ? 520.0 : 500.0;
+        final carouselHeight = compact ? 480.0 : 470.0;
 
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
@@ -406,7 +406,7 @@ class _MyHubCarousel extends StatelessWidget {
                     onPrevious: activeIndex == 0 ? null : onPrevious,
                     onNext: activeIndex == sections.length - 1 ? null : onNext,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _HubTabStrip(
                     sections: sections,
                     activeIndex: activeIndex,
@@ -418,7 +418,7 @@ class _MyHubCarousel extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   SizedBox(
                     height: carouselHeight,
                     child: PageView.builder(
@@ -438,7 +438,7 @@ class _MyHubCarousel extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _QuickActionRail(
                     onTracking: () => Navigator.of(
                       context,
@@ -489,7 +489,7 @@ class _HubHero extends StatelessWidget {
       radius: 26,
       padding: const EdgeInsets.all(1.4),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.50),
           borderRadius: BorderRadius.circular(26),
@@ -499,7 +499,7 @@ class _HubHero extends StatelessWidget {
           children: [
             Image.asset(
               'assets/icon/uag_traders_icon_transparent.webp',
-              height: 52,
+              height: 46,
               errorBuilder: (_, _, _) => const Icon(
                 Icons.dashboard_customize_outlined,
                 color: AppTheme.neonCyan,
@@ -514,7 +514,7 @@ class _HubHero extends StatelessWidget {
                   Text(
                     'Welcome back, $displayName',
                     style: AppTheme.tradingHeading(
-                      fontSize: 22,
+                      fontSize: 20,
                       color: Colors.white,
                     ),
                   ),
@@ -660,7 +660,7 @@ class _HubCarouselCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -670,7 +670,7 @@ class _HubCarouselCard extends StatelessWidget {
                   section.title,
                   textAlign: TextAlign.center,
                   style: AppTheme.tradingHeading(
-                    fontSize: 26,
+                    fontSize: 24,
                     color: Colors.white,
                   ),
                 ),
@@ -682,7 +682,7 @@ class _HubCarouselCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: Colors.white70, height: 1.24),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Wrap(
                   spacing: 7,
                   runSpacing: 7,
@@ -807,7 +807,7 @@ class _HubMetricPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 112),
+      constraints: const BoxConstraints(minWidth: 96),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.44),
