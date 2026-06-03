@@ -21,17 +21,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _boot() async {
-    try {
-      await FirebaseAuth.instance.signOut();
-    } catch (_) {}
-
-    await Future.delayed(const Duration(milliseconds: 1600));
+    await Future.delayed(const Duration(milliseconds: 2400));
 
     if (!mounted) return;
 
-    Navigator.of(
-      context,
-    ).pushNamedAndRemoveUntil(AuthLandingScreen.routeName, (_) => false);
+    final nextRoute = FirebaseAuth.instance.currentUser == null
+        ? AuthLandingScreen.routeName
+        : AppEntryGate.routeName;
+
+    Navigator.of(context).pushNamedAndRemoveUntil(nextRoute, (_) => false);
   }
 
   @override
