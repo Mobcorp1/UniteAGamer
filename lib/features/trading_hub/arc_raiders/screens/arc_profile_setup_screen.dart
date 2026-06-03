@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';

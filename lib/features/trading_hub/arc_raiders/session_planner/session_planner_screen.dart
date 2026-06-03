@@ -2,13 +2,13 @@ import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/embark_id_card.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_creation_sheet.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/embark_id_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_creation_sheet.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class SessionPlannerScreen extends StatefulWidget {
   const SessionPlannerScreen({super.key});

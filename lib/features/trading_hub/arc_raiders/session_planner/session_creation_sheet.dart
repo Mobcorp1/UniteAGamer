@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_repository.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_repository.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class SessionCreationSheet extends StatefulWidget {
   const SessionCreationSheet({super.key, required this.repository});

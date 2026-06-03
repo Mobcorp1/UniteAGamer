@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/build/app_bar.dart';
-import 'package:uag_traders_hub/build/app_drawer.dart';
-import 'package:uag_traders_hub/screens/build/admin_console_screen.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/screens/build/admin_console_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class FeedbackScreenArgs {
   const FeedbackScreenArgs({this.initialTabIndex = 0});

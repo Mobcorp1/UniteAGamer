@@ -1,4 +1,4 @@
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
 
 enum ArcVoiceItemAction { keep, sell, recycle, trade, learn, use, check }
 

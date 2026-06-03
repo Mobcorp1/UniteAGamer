@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingTradeSessionsScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/sessions';

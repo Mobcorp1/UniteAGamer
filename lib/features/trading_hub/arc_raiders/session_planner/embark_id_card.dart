@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class EmbarkIdCard extends StatelessWidget {
   const EmbarkIdCard({super.key, required this.label, required this.embarkId});

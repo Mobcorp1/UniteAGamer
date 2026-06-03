@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMyOffersScreen extends StatelessWidget {
   static const routeName = '/trading-hub/arc-raiders/offers';

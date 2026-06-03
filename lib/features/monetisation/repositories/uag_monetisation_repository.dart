@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:uag_traders_hub/features/monetisation/models/uag_monetisation_models.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisation_models.dart';
 
 class UagMonetisationRepository {
   UagMonetisationRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})

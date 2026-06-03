@@ -1,23 +1,23 @@
-﻿import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/build/app_entry_gate.dart';
-import 'package:uag_traders_hub/screens/build/auth/auth_landing_screen.dart';
-import 'package:uag_traders_hub/features/feature_access_gate.dart';
-import 'package:uag_traders_hub/features/monetisation/screens/monetisation_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
-import 'package:uag_traders_hub/screens/build/admin_console_screen.dart';
-import 'package:uag_traders_hub/screens/build/feedback_screen.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
-import 'package:uag_traders_hub/widgets/uag_drawer_nav_tile.dart';
+import 'package:uag_arc_raiders_hub/build/app_entry_gate.dart';
+import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/screens/build/admin_console_screen.dart';
+import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_drawer_nav_tile.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key, this.drawerWidth = 300});
@@ -197,7 +197,7 @@ class _AppDrawerState extends State<AppDrawer>
           backgroundColor: AppTheme.cardBackgroundDeep,
           shape: AppTheme.tradingDialogShape(),
           title: Text(
-            '$title ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Coming Soon',
+            '$title Ã¢â‚¬â€ Coming Soon',
             style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
           ),
           content: Text(

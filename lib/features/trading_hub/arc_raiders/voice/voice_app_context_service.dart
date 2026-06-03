@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_item_advice_index.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_advice_index.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 
 class UagVoiceTradeMarketResult {
   const UagVoiceTradeMarketResult({

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class BlueprintVoiceSearchButton extends StatefulWidget {
   const BlueprintVoiceSearchButton({super.key, required this.onSearchText});

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/build/auth/auth_screen.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class AuthLandingScreen extends StatefulWidget {
   static const String routeName = '/auth-landing';

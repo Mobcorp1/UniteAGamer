@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 
 enum ArcIntelConfidence { starter, community, confirmed }
 

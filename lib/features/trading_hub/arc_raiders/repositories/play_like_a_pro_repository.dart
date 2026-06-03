@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_state.dart';
 
 class PlayLikeAProRepository {
   PlayLikeAProRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
-import 'package:uag_traders_hub/widgets/uag_dialogs.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_dialogs.dart';
 
 class BlueprintGridScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/blueprints';

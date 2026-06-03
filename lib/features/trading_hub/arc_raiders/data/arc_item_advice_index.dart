@@ -1,8 +1,8 @@
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_voice_item_database.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_voice_item_database.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 
 /// UAG Raider's local item intelligence layer.
 ///

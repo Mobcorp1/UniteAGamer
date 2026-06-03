@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_service.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_service.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagVoiceArcAssistantSheet extends StatefulWidget {
   const UagVoiceArcAssistantSheet({super.key, this.autoStart = false});

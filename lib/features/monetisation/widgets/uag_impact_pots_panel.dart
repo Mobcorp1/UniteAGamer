@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/monetisation/models/uag_monetisation_models.dart';
-import 'package:uag_traders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisation_models.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagImpactPotsPanel extends StatelessWidget {
   const UagImpactPotsPanel({super.key, required this.showAdminDetail});

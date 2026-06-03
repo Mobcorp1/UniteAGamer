@@ -1,4 +1,4 @@
-import 'package:uag_traders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
 
 class UagVoiceProfile {
   const UagVoiceProfile({

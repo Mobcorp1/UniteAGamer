@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 
 @immutable
 class ArcStatsBreakdownItem {

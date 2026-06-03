@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class AnimatedWelcomeText extends StatefulWidget {
   const AnimatedWelcomeText({super.key});

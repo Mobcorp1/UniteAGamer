@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:uag_traders_hub/build/logo_particle_explosion.dart';
+import 'package:uag_arc_raiders_hub/build/logo_particle_explosion.dart';
 
 class AnimatedLogo extends StatefulWidget {
   const AnimatedLogo({

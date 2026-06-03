@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/build/app_bar.dart';
-import 'package:uag_traders_hub/build/app_drawer.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/uag_subscription_plan.dart';
 import '../models/uag_subscription_tier.dart';

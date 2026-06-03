@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
-import 'package:uag_traders_hub/widgets/collapsible_section_card.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingListingsScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/listings';

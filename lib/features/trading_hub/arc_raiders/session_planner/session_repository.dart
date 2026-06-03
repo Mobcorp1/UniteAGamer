@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
 import 'package:uuid/uuid.dart';
 
 class UagSessionRepository {

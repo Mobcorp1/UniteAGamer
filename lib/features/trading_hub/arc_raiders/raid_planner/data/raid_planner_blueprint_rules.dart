@@ -1,4 +1,4 @@
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/raid_planner/models/raid_planner_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/models/raid_planner_models.dart';
 
 class RaidPlannerBlueprintRules {
   static const List<RaidPlannerBlueprintRule> rules = [

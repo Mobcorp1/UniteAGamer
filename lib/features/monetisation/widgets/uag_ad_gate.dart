@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/monetisation/models/uag_ad_policy.dart';
-import 'package:uag_traders_hub/features/monetisation/services/uag_entitlement_service.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_ad_policy.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagAdGate extends StatelessWidget {
   const UagAdGate({

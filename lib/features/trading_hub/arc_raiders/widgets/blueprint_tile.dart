@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class BlueprintTile extends StatelessWidget {
   const BlueprintTile({

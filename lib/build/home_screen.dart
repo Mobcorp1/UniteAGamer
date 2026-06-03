@@ -1,12 +1,12 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/build/trading_hub_screen.dart';
-import 'package:uag_traders_hub/screens/build/app_drawer.dart';
-import 'package:uag_traders_hub/widgets/animated_logo.dart';
-import 'package:uag_traders_hub/widgets/dose_action_button.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/trading_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/screens/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/widgets/animated_logo.dart';
+import 'package:uag_arc_raiders_hub/widgets/dose_action_button.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/home';

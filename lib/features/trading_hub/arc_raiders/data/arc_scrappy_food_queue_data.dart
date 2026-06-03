@@ -1,4 +1,4 @@
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_food_queue_item.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_food_queue_item.dart';
 
 class ArcScrappyFoodQueueData {
   static const String _assetRoot = 'assets/arc_raiders/scrappy_resources';

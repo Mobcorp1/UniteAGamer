@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_traders_hub/build/app_bar.dart';
-import 'package:uag_traders_hub/build/app_drawer.dart';
-import 'package:uag_traders_hub/features/monetisation/models/uag_monetisation_models.dart';
-import 'package:uag_traders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
-import 'package:uag_traders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisation_models.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagPlansScreen extends StatelessWidget {
   static const routeName = '/monetisation/plans';

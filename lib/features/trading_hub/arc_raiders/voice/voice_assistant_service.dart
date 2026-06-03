@@ -4,16 +4,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:uag_traders_hub/features/monetisation/models/uag_subscription_tier.dart';
-import 'package:uag_traders_hub/features/monetisation/services/uag_entitlement_service.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_intent_parser.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_pronunciation.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_profiles.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/voice/voice_response_builder.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_intent_parser.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_pronunciation.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_profiles.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_response_builder.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class UagVoiceArcAssistantService extends ChangeNotifier {

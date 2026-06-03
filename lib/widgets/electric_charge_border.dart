@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ElectricChargeBorder extends StatefulWidget {
   const ElectricChargeBorder({

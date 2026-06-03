@@ -5,13 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:uag_traders_hub/features/legal/screens/privacy_policy_screen.dart';
-import 'package:uag_traders_hub/features/legal/screens/terms_of_use_screen.dart';
-import 'package:uag_traders_hub/screens/build/app_entry_gate.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
-import 'package:uag_traders_hub/widgets/uag_form_dropdown_field.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_form_dropdown_field.dart';
 
 class AuthScreen extends StatefulWidget {
   static const String routeName = '/auth';

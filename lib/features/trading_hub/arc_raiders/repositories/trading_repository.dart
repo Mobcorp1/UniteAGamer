@@ -2,14 +2,14 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_profile.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_profile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
 
 class TradingRepository {
   TradingRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})

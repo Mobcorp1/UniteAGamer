@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 
 @immutable
 class ArcBlueprintDropReport {

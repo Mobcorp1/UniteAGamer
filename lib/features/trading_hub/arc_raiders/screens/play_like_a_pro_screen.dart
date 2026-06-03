@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_state.dart';
-import 'package:uag_traders_hub/features/trading_hub/arc_raiders/repositories/play_like_a_pro_repository.dart';
-import 'package:uag_traders_hub/widgets/dose_action_button.dart';
-import 'package:uag_traders_hub/widgets/dose_section_card.dart';
-import 'package:uag_traders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_traders_hub/widgets/static_watermark.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/play_like_a_pro_repository.dart';
+import 'package:uag_arc_raiders_hub/widgets/dose_action_button.dart';
+import 'package:uag_arc_raiders_hub/widgets/dose_section_card.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class PlayLikeAProScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/play-like-a-pro';

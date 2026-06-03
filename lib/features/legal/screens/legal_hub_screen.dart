@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:uag_traders_hub/features/legal/screens/arc_data_attribution_screen.dart';
-import 'package:uag_traders_hub/features/legal/screens/privacy_policy_screen.dart';
-import 'package:uag_traders_hub/features/legal/screens/terms_of_use_screen.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/arc_data_attribution_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class LegalHubScreen extends StatelessWidget {
   const LegalHubScreen({super.key});

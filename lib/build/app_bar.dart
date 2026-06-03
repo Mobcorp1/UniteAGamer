@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:uag_traders_hub/screens/build/auth/auth_landing_screen.dart';
-import 'package:uag_traders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
   const UagAppBar({
