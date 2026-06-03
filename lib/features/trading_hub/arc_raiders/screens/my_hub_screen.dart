@@ -406,7 +406,7 @@ class _MyHubCarousel extends StatelessWidget {
                     onPrevious: activeIndex == 0 ? null : onPrevious,
                     onNext: activeIndex == sections.length - 1 ? null : onNext,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   _HubTabStrip(
                     sections: sections,
                     activeIndex: activeIndex,
@@ -429,9 +429,12 @@ class _MyHubCarousel extends StatelessWidget {
                         return AnimatedScale(
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeOut,
-                          scale: activeIndex == index ? 1 : 0.95,
+                          scale: activeIndex == index ? 1 : 0.972,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 7),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
                             child: _HubCarouselCard(section: sections[index]),
                           ),
                         );
@@ -489,7 +492,7 @@ class _HubHero extends StatelessWidget {
       radius: 26,
       padding: const EdgeInsets.all(1.4),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.50),
           borderRadius: BorderRadius.circular(26),
@@ -522,7 +525,7 @@ class _HubHero extends StatelessWidget {
                   Text(
                     'My Hub is your personal tracking, intel, reputation, loadout and reward space.',
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       color: Colors.white70,
                       isBold: true,
                     ),
@@ -566,7 +569,7 @@ class _HubTabStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 40,
+      height: 34,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: sections.length,
@@ -604,7 +607,7 @@ class _HubTabStrip extends StatelessWidget {
                     style: TextStyle(
                       color: active ? section.accent : Colors.white70,
                       fontWeight: FontWeight.w900,
-                      fontSize: 11,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -660,7 +663,7 @@ class _HubCarouselCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
