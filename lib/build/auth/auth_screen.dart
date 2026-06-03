@@ -830,7 +830,7 @@ class _AuthScreenState extends State<AuthScreen> {
           value: _applyForAffiliate,
           onChanged: (value) => setState(() => _applyForAffiliate = value),
           contentPadding: EdgeInsets.zero,
-          activeThumbColor: AppTheme.neonCyan,
+          activeColor: AppTheme.neonCyan,
           title: const Text(
             'Apply for affiliate programme',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
@@ -872,7 +872,7 @@ class _AuthScreenState extends State<AuthScreen> {
             value: value,
             onChanged: onChanged,
             controlAffinity: ListTileControlAffinity.leading,
-            activeThumbColor: AppTheme.neonCyan,
+            activeColor: AppTheme.neonCyan,
             contentPadding: EdgeInsets.zero,
             title: Text(
               title,
@@ -941,7 +941,7 @@ class _AuthScreenState extends State<AuthScreen> {
       controlAffinity: ListTileControlAffinity.leading,
       contentPadding: EdgeInsets.zero,
       dense: true,
-      activeThumbColor: AppTheme.neonCyan,
+      activeColor: AppTheme.neonCyan,
       title: const Text(
         'Remember email',
         style: TextStyle(color: Colors.white70),
@@ -1053,7 +1053,7 @@ class _AuthScreenState extends State<AuthScreen> {
             onChanged: _setBiometricLoginEnabled,
             contentPadding: EdgeInsets.zero,
             dense: true,
-            activeThumbColor: AppTheme.neonCyan,
+            activeColor: AppTheme.neonCyan,
             title: const Text(
               'Biometric unlock',
               style: TextStyle(color: Colors.white70),
