@@ -1,4 +1,4 @@
-﻿name: uag_traders_hub
+﻿name: uag_arc_raiders_hub
 description: "UAG Arc Raiders Hub standalone app."
 publish_to: 'none'
 
@@ -36,24 +36,25 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_native_splash: ^2.4.4
+  flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/uag_traders_icon_transparent.webp"
+  image_path: "assets/icon/uag_traders_icon_transparent.png"
   min_sdk_android: 23
   remove_alpha_ios: true
-  adaptive_icon_foreground: "assets/icon/uag_traders_icon_transparent.webp"
+  adaptive_icon_foreground: "assets/icon/uag_traders_icon_transparent.png"
   adaptive_icon_background: "#0A0925"
 
 flutter_native_splash:
   color: "#090529"
-  image: assets/icon/uag_traders_icon_transparent.webp
+  image: assets/icon/uag_traders_icon_transparent.png
   android: true
   ios: true
   android_12:
     color: "#090529"
-    image: assets/icon/uag_traders_icon_transparent.webp
+    image: assets/icon/uag_traders_icon_transparent.png
 
 flutter:
   uses-material-design: true
