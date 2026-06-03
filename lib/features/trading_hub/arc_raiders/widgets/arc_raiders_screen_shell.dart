@@ -156,7 +156,10 @@ class ArcRaidersPageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return ArcRaidersScreenShell(
       useSafeArea: useSafeArea,
-      child: ArcRaidersResponsiveContent(maxWidth: maxWidth, child: child),
+      child: ArcRaidersResponsiveContent(
+        maxWidth: maxWidth,
+        child: child,
+      ),
     );
   }
 }
@@ -397,7 +400,8 @@ class ArcRaidersSectionCard extends StatelessWidget {
       decoration: AppTheme.tradingCardDecoration(
         radius: radius,
         borderColor: accent.withValues(alpha: 0.24),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        backgroundColor:
+            AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
       ),
       child: child,
     );
