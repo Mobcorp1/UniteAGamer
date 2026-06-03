@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
@@ -42,7 +43,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
   }
 
   void _goTo(int index) {
-    if (index < 0 || index > 7) return;
+    if (index < 0 || index > 10) return;
     _controller.animateToPage(
       index,
       duration: const Duration(milliseconds: 320),
@@ -221,14 +222,14 @@ class _MyHubCarousel extends StatelessWidget {
 
     final sections = <_HubSection>[
       _HubSection(
-        title: 'Tracking',
+        title: 'Blueprint Tracker',
         subtitle:
-            'Blueprints, ownership, missing items and hunt targets live here now.',
-        icon: Icons.grid_view_rounded,
+            'Owned, missing, duplicates and priority blueprint hunt progress.',
+        icon: Icons.grid_on_rounded,
         accent: AppTheme.neonCyan,
-        image: 'assets/images/arc_raiders/hub/arc_hub_tracking.webp',
+        image: 'assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp',
         body: [
-          _HubMetric(label: 'Blueprint Grid', value: 'Open tracker'),
+          _HubMetric(label: 'Tracker', value: 'Blueprint Grid'),
           _HubMetric(
             label: 'Loadout wanted',
             value: '${wantedLoadout.length} item(s)',
@@ -238,12 +239,63 @@ class _MyHubCarousel extends StatelessWidget {
             value: '${tradeWanted.length} item(s)',
           ),
         ],
-        primaryLabel: 'Open Tracking',
+        primaryLabel: 'Open Blueprint Grid',
         onPrimary: () =>
             Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
         secondaryLabel: 'Favourite Loadout',
         onSecondary: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const FavouriteLoadoutScreen()),
+        ),
+      ),
+      _HubSection(
+        title: 'Scrappy Tracker',
+        subtitle:
+            'Track upgrade materials, useful resources and collection progress.',
+        icon: Icons.egg_alt_rounded,
+        accent: AppTheme.neonPink,
+        image: 'assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
+        body: const [
+          _HubMetric(label: 'Tracker', value: 'Scrappy'),
+          _HubMetric(label: 'Focus', value: 'Resources'),
+          _HubMetric(label: 'Mode', value: 'Collection'),
+        ],
+        primaryLabel: 'Open Scrappy',
+        onPrimary: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ScrappyGridScreen())),
+      ),
+      _HubSection(
+        title: 'Bench Tracker',
+        subtitle:
+            'Track bench materials, upgrade tiers and missing requirements.',
+        icon: Icons.build_rounded,
+        accent: AppTheme.neonCyan,
+        image: 'assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp',
+        body: const [
+          _HubMetric(label: 'Tracker', value: 'Benches'),
+          _HubMetric(label: 'Focus', value: 'Upgrades'),
+          _HubMetric(label: 'Mode', value: 'Requirements'),
+        ],
+        primaryLabel: 'Open Bench',
+        onPrimary: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ScrappyGridScreen.bench()),
+        ),
+      ),
+      _HubSection(
+        title: 'Quest Tracker',
+        subtitle:
+            'Track trader quest items, hand-ins and collection priorities.',
+        icon: Icons.assignment_rounded,
+        accent: AppTheme.neonPink,
+        image: 'assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp',
+        body: const [
+          _HubMetric(label: 'Tracker', value: 'Quest Items'),
+          _HubMetric(label: 'Focus', value: 'Hand-ins'),
+          _HubMetric(label: 'Mode', value: 'Trader Tasks'),
+        ],
+        primaryLabel: 'Open Quests',
+        onPrimary: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ScrappyGridScreen.quest()),
         ),
       ),
       _HubSection(
@@ -406,7 +458,7 @@ class _MyHubCarousel extends StatelessWidget {
                     onPrevious: activeIndex == 0 ? null : onPrevious,
                     onNext: activeIndex == sections.length - 1 ? null : onNext,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   _HubTabStrip(
                     sections: sections,
                     activeIndex: activeIndex,
@@ -429,12 +481,9 @@ class _MyHubCarousel extends StatelessWidget {
                         return AnimatedScale(
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeOut,
-                          scale: activeIndex == index ? 1 : 0.972,
+                          scale: activeIndex == index ? 1 : 0.95,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 7),
                             child: _HubCarouselCard(section: sections[index]),
                           ),
                         );
@@ -492,7 +541,7 @@ class _HubHero extends StatelessWidget {
       radius: 26,
       padding: const EdgeInsets.all(1.4),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.50),
           borderRadius: BorderRadius.circular(26),
@@ -525,7 +574,7 @@ class _HubHero extends StatelessWidget {
                   Text(
                     'My Hub is your personal tracking, intel, reputation, loadout and reward space.',
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                       color: Colors.white70,
                       isBold: true,
                     ),
@@ -569,7 +618,7 @@ class _HubTabStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 34,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: sections.length,
@@ -607,7 +656,7 @@ class _HubTabStrip extends StatelessWidget {
                     style: TextStyle(
                       color: active ? section.accent : Colors.white70,
                       fontWeight: FontWeight.w900,
-                      fontSize: 10,
+                      fontSize: 11,
                     ),
                   ),
                 ],
@@ -663,7 +712,7 @@ class _HubCarouselCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
