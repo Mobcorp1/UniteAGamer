@@ -506,7 +506,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       required VoidCallback? onPressed,
       bool selected = false,
       bool energized = false,
-      double radius = 12,
+      double radius = 16,
     }) {
       final borderColor = selected ? AppTheme.neonPink : AppTheme.neonCyan;
       final backgroundColor = selected
@@ -531,7 +531,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               border: Border.all(
                 color: onPressed == null
                     ? Colors.white.withValues(alpha: 0.10)
-                    : borderColor.withValues(alpha: 0.75),
+                    : borderColor.withValues(alpha: 0.78),
               ),
             ),
             child: Text(
@@ -585,12 +585,19 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 14),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.12)),
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.10),
+            blurRadius: 22,
+            spreadRadius: 1,
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -608,7 +615,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned - $missingCount missing - $dupesCount dupes',
+            '$ownedCount / ${allBlueprints.length} owned  •  $missingCount missing  •  $dupesCount dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -687,7 +694,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               runSpacing: 8,
               children: [
                 toolButton(
-                  label: 'Select All',
+                  label: 'Select All Visible',
                   onTap: filtered.isEmpty ? null : () => _selectAll(filtered),
                   color: AppTheme.neonCyan,
                   energized: filtered.isNotEmpty,
@@ -1053,11 +1060,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        titleSpacing: AppTheme.spaceM,
+        titleSpacing: 0,
         title: Text(
-          'Blueprint Tracker',
+          'BLUEPRINT TRACKER',
           style: AppTheme.tradingHeading(
-            fontSize: 24,
+            fontSize: 26,
             color: AppTheme.neonCyan,
           ),
         ),
@@ -1082,7 +1089,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     AppTheme.pagePadding.left,
                     8,
                     AppTheme.pagePadding.right,
-                    AppTheme.pagePadding.bottom,
+                    AppTheme.pagePadding.bottom + 108,
                   ),
                   children: [
                     _buildGrid(context, filtered, states),
