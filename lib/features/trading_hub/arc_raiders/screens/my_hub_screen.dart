@@ -33,7 +33,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = PageController(viewportFraction: 0.48);
+    _controller = PageController(viewportFraction: 0.52);
   }
 
   @override
@@ -46,8 +46,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
     if (index < 0 || index > 10) return;
     _controller.animateToPage(
       index,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutExpo,
     );
   }
 
@@ -466,7 +466,7 @@ class _MyHubCarousel extends StatelessWidget {
                       controller.animateToPage(
                         index,
                         duration: const Duration(milliseconds: 280),
-                        curve: Curves.easeOutCubic,
+                        curve: Curves.easeOutExpo,
                       );
                     },
                   ),
