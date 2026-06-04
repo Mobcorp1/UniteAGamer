@@ -33,7 +33,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = PageController(viewportFraction: 0.88);
+    _controller = PageController(viewportFraction: 0.48);
   }
 
   @override
@@ -458,7 +458,7 @@ class _MyHubCarousel extends StatelessWidget {
                     onPrevious: activeIndex == 0 ? null : onPrevious,
                     onNext: activeIndex == sections.length - 1 ? null : onNext,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   _HubTabStrip(
                     sections: sections,
                     activeIndex: activeIndex,
@@ -470,7 +470,7 @@ class _MyHubCarousel extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   SizedBox(
                     height: carouselHeight,
                     child: PageView.builder(
@@ -490,7 +490,7 @@ class _MyHubCarousel extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   _QuickActionRail(
                     onTracking: () => Navigator.of(
                       context,
@@ -541,10 +541,10 @@ class _HubHero extends StatelessWidget {
       radius: 26,
       padding: const EdgeInsets.all(1.4),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.50),
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(34),
           border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
         ),
         child: Row(
@@ -679,12 +679,12 @@ class _HubCarouselCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.48),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(34),
         border: Border.all(color: section.accent.withValues(alpha: 0.24)),
         boxShadow: [
           BoxShadow(
             color: section.accent.withValues(alpha: 0.11),
-            blurRadius: 20,
+            blurRadius: 34,
           ),
         ],
       ),
@@ -697,7 +697,7 @@ class _HubCarouselCard extends StatelessWidget {
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const StaticWatermark(),
           ),
-          Container(color: Colors.black.withValues(alpha: 0.58)),
+          Container(color: Colors.black.withValues(alpha: 0.44)),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -705,24 +705,24 @@ class _HubCarouselCard extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.black.withValues(alpha: 0.15),
-                  Colors.black.withValues(alpha: 0.58),
-                  Colors.black.withValues(alpha: 0.92),
+                  Colors.black.withValues(alpha: 0.44),
+                  Colors.black.withValues(alpha: 0.84),
                 ],
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Icon(section.icon, color: section.accent, size: 30),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 Text(
                   section.title,
                   textAlign: TextAlign.center,
                   style: AppTheme.tradingHeading(
-                    fontSize: 24,
+                    fontSize: 30,
                     color: Colors.white,
                   ),
                 ),
@@ -732,9 +732,9 @@ class _HubCarouselCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white70, height: 1.24),
+                  style: const TextStyle(color: Colors.white70, height: 1.42),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 Wrap(
                   spacing: 7,
                   runSpacing: 7,
@@ -757,7 +757,7 @@ class _HubCarouselCard extends StatelessWidget {
                 ),
                 if (section.secondaryLabel != null &&
                     section.onSecondary != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   OutlinedButton.icon(
                     onPressed: section.onSecondary,
                     icon: const Icon(Icons.open_in_new_rounded),
