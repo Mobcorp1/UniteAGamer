@@ -16,8 +16,6 @@ import 'package:uag_arc_raiders_hub/screens/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_carousel.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_model.dart';
 
 class MyHubScreen extends StatefulWidget {
   static const routeName = '/my-hub';
@@ -83,87 +81,15 @@ class _MyHubScreenState extends State<MyHubScreen> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       final data = snapshot.data?.data() ?? {};
-                      return ArcFeatureCarousel(
-                        items: [
-                          ArcFeatureItem(
-                            title: 'Blueprint Tracker',
-                            subtitle:
-                                'Owned, missing and duplicate blueprint progress.',
-                            image:
-                                'assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp',
-                            icon: Icons.grid_on_rounded,
-                            accent: AppTheme.neonCyan,
-                            onTap: () {
-                              Navigator.of(
-                                context,
-                              ).pushNamed(BlueprintGridScreen.routeName);
-                            },
-                          ),
-                          ArcFeatureItem(
-                            title: 'Scrappy Tracker',
-                            subtitle:
-                                'Track resources, upgrades and collection progress.',
-                            image:
-                                'assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
-                            icon: Icons.egg_alt_rounded,
-                            accent: AppTheme.neonPink,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const ScrappyGridScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          ArcFeatureItem(
-                            title: 'Bench Tracker',
-                            subtitle:
-                                'Bench requirements and upgrade tracking.',
-                            image:
-                                'assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp',
-                            icon: Icons.build_rounded,
-                            accent: AppTheme.neonCyan,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const ScrappyGridScreen.bench(),
-                                ),
-                              );
-                            },
-                          ),
-                          ArcFeatureItem(
-                            title: 'Quest Tracker',
-                            subtitle:
-                                'Trader tasks, hand-ins and quest progression.',
-                            image:
-                                'assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp',
-                            icon: Icons.assignment_rounded,
-                            accent: AppTheme.neonPink,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const ScrappyGridScreen.quest(),
-                                ),
-                              );
-                            },
-                          ),
-                          ArcFeatureItem(
-                            title: 'Trade Assist',
-                            subtitle:
-                                'Use duplicates and wanted hooks for trades.',
-                            image:
-                                'assets/images/arc_raiders/hub/arc_hub_smart_trade.webp',
-                            icon: Icons.auto_awesome_rounded,
-                            accent: Colors.lightGreenAccent,
-                            onTap: () {
-                              Navigator.of(
-                                context,
-                              ).pushNamed(TraderHubScreen.routeName);
-                            },
-                          ),
-                        ],
+                      return _MyHubCarousel(
+                        controller: _controller,
+                        activeIndex: _activeIndex,
+                        onChanged: (index) =>
+                            setState(() => _activeIndex = index),
+                        onPrevious: () => _goTo(_activeIndex - 1),
+                        onNext: () => _goTo(_activeIndex + 1),
+                        userData: data,
+                        email: user.email,
                       );
                     },
                   ),
