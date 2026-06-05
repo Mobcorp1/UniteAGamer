@@ -608,7 +608,7 @@ class _StaticRingFeatureCard extends StatelessWidget {
                           ],
                         ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   Text(
                     feature.subtitle,
                     textAlign: phone && selected
@@ -985,7 +985,7 @@ class _DockButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 7),

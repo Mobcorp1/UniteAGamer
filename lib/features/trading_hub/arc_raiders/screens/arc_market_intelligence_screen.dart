@@ -972,7 +972,7 @@ class _ArcMarketIntelligenceScreenState
       padding: const EdgeInsets.all(AppTheme.spaceM),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
