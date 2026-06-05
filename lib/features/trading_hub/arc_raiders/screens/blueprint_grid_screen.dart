@@ -14,7 +14,6 @@ import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_dialogs.dart';
 
 class BlueprintGridScreen extends StatefulWidget {
@@ -1063,16 +1062,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       appBar: AppBar(
         titleSpacing: 0,
         title: Text(
-          'BLUEPRINT INTELLIGENCE\\n// Command Intelligence Layer',
+          'BLUEPRINT INTEL',
           style: AppTheme.tradingHeading(
             fontSize: 26,
             color: AppTheme.neonCyan,
           ),
         ),
       ),
-      bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Blueprints',
-      ),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Track'),
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
@@ -1092,15 +1089,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     AppTheme.pagePadding.right,
                     AppTheme.pagePadding.bottom + 108,
                   ),
-                  children: [
-                    _buildGrid(context, filtered, states),
-                    _buildBottomControls(
-                      allBlueprints,
-                      filtered,
-                      states,
-                      counts,
-                    ),
-                  ],
+                  children: [_buildGrid(context, filtered, states)],
                 );
               },
             ),
