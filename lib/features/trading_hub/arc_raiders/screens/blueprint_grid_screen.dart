@@ -522,7 +522,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           onTap: onPressed,
           child: AnimatedContainer(
             duration: AppTheme.fastAnimation,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: onPressed == null
                   ? Colors.white.withValues(alpha: 0.03)
@@ -559,7 +559,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           borderRadius: BorderRadius.circular(999),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: onTap == null
                   ? Colors.white.withValues(alpha: 0.03)
@@ -613,7 +613,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           Text(
             '$ownedCount / ${allBlueprints.length} owned  •  $missingCount missing  •  $dupesCount dupes',
             textAlign: TextAlign.center,
@@ -623,7 +623,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               height: 1.3,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           Wrap(
             alignment: WrapAlignment.center,
             spacing: 8,
@@ -676,10 +676,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           _buildSearchAppBarTitle(),
           if (_selectionMode) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 18),
             Text(
               '${_selectedBlueprintIds.length} selected',
               style: AppTheme.tradingHeading(
@@ -762,7 +762,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(999),
@@ -822,7 +822,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               active: owned || state.hasDuplicates,
               radius: 24,
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
                   borderRadius: BorderRadius.circular(24),
@@ -869,10 +869,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.22),
                         borderRadius: BorderRadius.circular(18),
@@ -1062,7 +1062,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       appBar: AppBar(
         titleSpacing: 0,
         title: Text(
-          'BLUEPRINT TRACKER',
+          'BLUEPRINT INTELLIGENCE\\n// Command Intelligence Layer',
           style: AppTheme.tradingHeading(
             fontSize: 26,
             color: AppTheme.neonCyan,
