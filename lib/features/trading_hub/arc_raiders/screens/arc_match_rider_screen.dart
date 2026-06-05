@@ -319,7 +319,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             runSpacing: 10,
             children: [
               _buildStatusPill(
-                profile.lookingNow ? 'Looking now' : 'Available later',
+                profile.lookingNow ? 'Looking now' : 'Ready later',
                 profile.lookingNow ? AppTheme.neonCyan : AppTheme.warningAmber,
               ),
               _buildStatusPill(
