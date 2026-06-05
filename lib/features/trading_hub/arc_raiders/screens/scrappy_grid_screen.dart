@@ -85,22 +85,22 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   String get _modeTitle {
     switch (_mode) {
       case ArcScrappyTrackerMode.scrappy:
-        return 'Scrappy Tracker';
+        return 'Resource Intelligence';
       case ArcScrappyTrackerMode.bench:
-        return 'Bench Tracker';
+        return 'Bench Operations';
       case ArcScrappyTrackerMode.quest:
-        return 'Quest Tracker';
+        return 'Mission Operations';
     }
   }
 
   String get _headerTitle {
     switch (_mode) {
       case ArcScrappyTrackerMode.scrappy:
-        return 'ARC Raiders Scrappy Tracker';
+        return 'ARC Raiders Resource Intelligence';
       case ArcScrappyTrackerMode.bench:
-        return 'ARC Raiders Bench Tracker';
+        return 'ARC Raiders Bench Operations';
       case ArcScrappyTrackerMode.quest:
-        return 'ARC Raiders Quest Tracker';
+        return 'ARC Raiders Mission Operations';
     }
   }
 
@@ -336,11 +336,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           ),
           content: Text(switch (_mode) {
             ArcScrappyTrackerMode.scrappy =>
-              'This will remove all collected Scrappy progress and surplus from the Scrappy tracker only.',
+              'This will remove all collected Scrappy progress and surplus from the Resource Intelligence only.',
             ArcScrappyTrackerMode.bench =>
-              'This will remove all collected bench upgrade material progress from the Bench tracker only.',
+              'This will remove all collected bench upgrade material progress from the Bench Operations only.',
             ArcScrappyTrackerMode.quest =>
-              'This will remove all collected quest item progress from the Quest tracker only.',
+              'This will remove all collected quest item progress from the Mission Operations only.',
           }, style: const TextStyle(color: Colors.white70, height: 1.45)),
           actions: [
             TextButton(
@@ -736,7 +736,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
       return Expanded(
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(24),
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
@@ -1093,7 +1093,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
     return Scaffold(
       bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Scrappy Tracker',
+        activeLabel: 'Resource Intelligence',
       ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
