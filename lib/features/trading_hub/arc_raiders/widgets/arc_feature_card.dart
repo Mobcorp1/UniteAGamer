@@ -19,12 +19,12 @@ class ArcFeatureCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: item.accent.withOpacity(selected ? 0.85 : 0.25),
+              color: item.accent.withValues(alpha: selected ? 0.85 : 0.25),
               width: selected ? 2.2 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: item.accent.withOpacity(selected ? 0.20 : 0.06),
+                color: item.accent.withValues(alpha: selected ? 0.20 : 0.06),
                 blurRadius: 24,
                 spreadRadius: 2,
               ),
@@ -42,8 +42,8 @@ class ArcFeatureCard extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withOpacity(0.05),
-                        Colors.black.withOpacity(0.88),
+                        Colors.black.withValues(alpha: 0.05),
+                        Colors.black.withValues(alpha: 0.88),
                       ],
                     ),
                   ),
