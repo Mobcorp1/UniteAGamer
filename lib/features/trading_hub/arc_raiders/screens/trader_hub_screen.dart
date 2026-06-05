@@ -34,7 +34,7 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
   late final List<GlobalKey<NavigatorState>> _navigatorKeys;
 
   static const List<String> _titles = <String>[
-    'Trader Hub',
+    'Trade Intelligence',
     'Create Listing',
     'Trading Activity',
     'Trade Sessions',

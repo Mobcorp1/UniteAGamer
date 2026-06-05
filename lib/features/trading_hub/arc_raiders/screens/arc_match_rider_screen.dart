@@ -547,7 +547,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 children: [
                   for (final candidate in matches.take(10)) ...[
                     _buildMatchCard(candidate),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                   ],
                 ],
               );
@@ -775,7 +775,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
               ],
             ),
             if (invite.note.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 14),
               Text(
                 invite.note,
                 style: AppTheme.bodyTextStyle(

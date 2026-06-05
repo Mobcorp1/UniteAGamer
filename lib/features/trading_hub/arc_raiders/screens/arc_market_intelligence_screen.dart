@@ -932,13 +932,13 @@ class _ArcMarketIntelligenceScreenState
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           Text(
             'Need ${target.remainingNeeded} more Ã¢â‚¬Â¢ ${target.item.tierLabel}',
             style: const TextStyle(color: Colors.white70),
           ),
           if ((target.item.locationHint?.trim().isNotEmpty ?? false)) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
             Text(
               target.item.locationHint!.trim(),
               style: const TextStyle(color: Colors.white54),
@@ -955,7 +955,7 @@ class _ArcMarketIntelligenceScreenState
       padding: const EdgeInsets.all(AppTheme.spaceL),
       decoration: BoxDecoration(
         color: AppTheme.cardBackgroundDeep,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Text(
@@ -1209,13 +1209,13 @@ class _ArcMarketIntelligenceScreenState
                         color: AppTheme.neonCyan,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 14),
                     Text(
                       'Pick up to five missing blueprints in the order you want to chase them next.',
                       style: Theme.of(sheetContext).textTheme.bodyMedium
                           ?.copyWith(color: Colors.white70, height: 1.35),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     TextField(
                       controller: _prioritySearchController,
                       style: const TextStyle(color: Colors.white),
@@ -1224,7 +1224,7 @@ class _ArcMarketIntelligenceScreenState
                         label: 'Search missing blueprints',
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -1255,7 +1255,7 @@ class _ArcMarketIntelligenceScreenState
                           })
                           .toList(growable: false),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Flexible(
                       child: ListView.separated(
                         shrinkWrap: true,
@@ -1305,7 +1305,7 @@ class _ArcMarketIntelligenceScreenState
                         },
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 18),
                     Row(
                       children: [
                         Expanded(
