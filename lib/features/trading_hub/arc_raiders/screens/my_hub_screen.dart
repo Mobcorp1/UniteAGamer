@@ -16,6 +16,7 @@ import 'package:uag_arc_raiders_hub/screens/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_my_hub_command_header.dart';
 
 class MyHubScreen extends StatefulWidget {
   static const routeName = '/my-hub';
@@ -184,7 +185,11 @@ class _MyHubScreenState extends State<MyHubScreen> {
           SafeArea(
             child: Column(
               children: [
-                _HubHeader(selected: selected),
+                ArcMyHubCommandHeader(
+                  title: 'My Hub',
+                  subtitle: selected.subtitle,
+                  accent: selected.accent,
+                ),
                 const SizedBox(height: AppTheme.spaceS),
                 Expanded(
                   child: _PremiumFeatureCarousel(
