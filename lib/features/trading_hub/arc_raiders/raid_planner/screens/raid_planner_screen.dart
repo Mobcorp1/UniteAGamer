@@ -118,9 +118,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   String _tierHelp(RaidTargetTier tier, RaidPlannerEntitlement entitlement) {
     switch (tier) {
       case RaidTargetTier.activeHunt:
-        return 'Your top priority targets. Exact event windows are shown when these match Surge Coil, Canto or Dolabra. Your ${entitlement.tier.label} plan allows ${_tierLimit(tier, entitlement)} Active Hunt slot${_tierLimit(tier, entitlement) == 1 ? '' : 's'}.';
+        return 'Your top priority targets. Exact event windows are shown when these match Surge Coil, Canto or Dolabra. Your ${entitlement.tier.label} plan allows ${_tierLimit(tier, entitlement)} Active Operations slot${_tierLimit(tier, entitlement) == 1 ? '' : 's'}.';
       case RaidTargetTier.nextUp:
-        return 'Backup targets. When Active Hunt targets are owned or removed, these move up into the planner automatically.';
+        return 'Backup targets. When Active Operations targets are owned or removed, these move up into the planner automatically.';
       case RaidTargetTier.later:
         return 'Lower priority targets to keep parked for later.';
     }
@@ -310,7 +310,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       await _blueprintRepository.saveBlueprintStates(priorityUpdates);
     }
 
-    _showMessage('Raid Planner targets cleared.');
+    _showMessage('Raid Timeline targets cleared.');
   }
 
   void _showMessage(String message) {
@@ -434,7 +434,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             : '${seededConditions.first} seeded route enabled');
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(16),
@@ -571,7 +571,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         : 'Starts in ${_durationLabel(opportunity.timeUntil(utcNow))}';
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(16),
@@ -831,10 +831,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               color: AppTheme.neonCyan,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           if (inPlaytime.isEmpty)
             Text(
-              'No selected Active Hunt target events line up with your saved playtime in the next 7 days.',
+              'No selected Active Operations target events line up with your saved playtime in the next 7 days.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.tradingMutedText,
@@ -852,7 +852,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               color: AppTheme.neonPink,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           if (outsidePlaytime.isEmpty)
             Text(
               'No missed high-priority windows found for your current targets.',
@@ -896,7 +896,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         final intel = snapshot.data ?? ArcDropIntel.empty(target.blueprintId);
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.24),
             borderRadius: BorderRadius.circular(16),
@@ -931,7 +931,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 14),
               if (!intel.hasReports) ...[
                 Text(
                   'No community intel yet. Using seeded blueprint rules until player reports create a stronger route.',
@@ -941,7 +941,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   ),
                 ),
                 if (seededHint != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   _intelLine('Seed map', seededHint.likelyMaps.join(', ')),
                   _intelLine(
                     'Seed containers',
@@ -986,7 +986,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Every Active Hunt target now starts with seeded blueprint rules. Community reports only override the baseline when real player intel exists.',
+            'Every Active Operations target now starts with seeded blueprint rules. Community reports only override the baseline when real player intel exists.',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,
@@ -995,7 +995,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(height: AppTheme.spaceM),
           if (activeTargets.isEmpty)
             Text(
-              'Add Active Hunt targets to show seeded route guidance and community intel.',
+              'Add Active Operations targets to show seeded route guidance and community intel.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.tradingMutedText,
@@ -1127,7 +1127,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${entitlement.tier.label} plan - ${entitlement.activeHuntSlots.clamp(1, 5)} Active Hunt slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
+              '${entitlement.tier.label} plan - ${entitlement.activeHuntSlots.clamp(1, 5)} Active Operations slot${entitlement.activeHuntSlots == 1 ? '' : 's'}',
               style: AppTheme.tradingHeading(
                 fontSize: 18,
                 color: AppTheme.neonPink,
@@ -1143,11 +1143,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Raid Planner',
+        activeLabel: 'Raid Timeline',
       ),
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
-        title: 'Raid Planner',
+        title: 'Raid Timeline',
         subtitle: 'Blueprint-driven event timing and session planning.',
       ),
       drawer: const AppDrawer(),
@@ -1355,7 +1355,7 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
                       subtitle: Text(
                         rule == null
                             ? 'Seeded blueprint route available.'
-                            : '${rule.eventName} - exact Raid Planner windows available.',
+                            : '${rule.eventName} - exact Raid Timeline windows available.',
                         style: AppTheme.bodyTextStyle(
                           fontSize: 12,
                           color: AppTheme.tradingMutedText,
