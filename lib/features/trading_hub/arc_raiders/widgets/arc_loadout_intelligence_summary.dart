@@ -12,6 +12,8 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
     required this.secondaryAttachments,
     required this.equipment,
     required this.consumables,
+    this.ownedBlueprintNames = const <String>{},
+    this.duplicateBlueprintNames = const <String>{},
   });
 
   final ArcLoadoutWeaponSpec primaryWeapon;
@@ -20,15 +22,35 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
   final List<String> secondaryAttachments;
   final List<String> equipment;
   final List<String> consumables;
+  final Set<String> ownedBlueprintNames;
+  final Set<String> duplicateBlueprintNames;
 
-  int get blueprintLinkedCount {
-    var count = 0;
-    if (primaryWeapon.blueprintBased) count++;
-    if (secondaryWeapon.blueprintBased) count++;
-    count += primaryAttachments.length;
-    count += secondaryAttachments.length;
-    return count;
+  List<String> get blueprintLinkedNames {
+    return <String>[
+      if (primaryWeapon.blueprintBased) primaryWeapon.name,
+      if (secondaryWeapon.blueprintBased) secondaryWeapon.name,
+      ...primaryAttachments,
+      ...secondaryAttachments,
+    ];
   }
+
+  int get ownedBlueprintCount {
+    return blueprintLinkedNames
+        .where((name) => ownedBlueprintNames.contains(name.toLowerCase()))
+        .length;
+  }
+
+  int get missingBlueprintCount {
+    return blueprintLinkedNames.length - ownedBlueprintCount;
+  }
+
+  int get duplicateBlueprintCount {
+    return blueprintLinkedNames
+        .where((name) => duplicateBlueprintNames.contains(name.toLowerCase()))
+        .length;
+  }
+
+  int get blueprintLinkedCount => blueprintLinkedNames.length;
 
   int get craftableCount {
     var count = 0;
@@ -114,6 +136,23 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
             color: Colors.lightGreenAccent,
           ),
           const SizedBox(height: 10),
+          if (blueprintLinkedNames.isNotEmpty) ...[
+            Text(
+              'OWNERSHIP BREAKDOWN',
+              style: AppTheme.tradingHeading(
+                fontSize: 15,
+                color: AppTheme.neonCyan,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final name in blueprintLinkedNames)
+              _BlueprintReadinessLine(
+                name: name,
+                owned: ownedBlueprintNames.contains(name.toLowerCase()),
+                duplicate: duplicateBlueprintNames.contains(name.toLowerCase()),
+              ),
+            const SizedBox(height: 10),
+          ],
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -132,6 +171,76 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
                 color: Colors.lightGreenAccent,
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BlueprintReadinessLine extends StatelessWidget {
+  const _BlueprintReadinessLine({
+    required this.name,
+    required this.owned,
+    required this.duplicate,
+  });
+
+  final String name;
+  final bool owned;
+  final bool duplicate;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = duplicate
+        ? Colors.amberAccent
+        : owned
+        ? Colors.lightGreenAccent
+        : AppTheme.neonPink;
+
+    final status = duplicate
+        ? 'Duplicate ready'
+        : owned
+        ? 'Owned'
+        : 'Missing';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            duplicate
+                ? Icons.inventory_2_rounded
+                : owned
+                ? Icons.check_circle_rounded
+                : Icons.warning_amber_rounded,
+            color: color,
+            size: 18,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              name,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.82),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          Text(
+            status.toUpperCase(),
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),

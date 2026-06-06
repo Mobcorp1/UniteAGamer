@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
@@ -22,6 +23,7 @@ class FavouriteLoadoutScreen extends StatefulWidget {
 }
 
 class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
+  final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   ArcLoadoutCategory _selectedCategory = ArcLoadoutCategory.saved;
   ArcPlayerPlayStyle _selectedPlayStyle = ArcPlayerPlayStyle.balanced;
   int _builderStepIndex = 0;
@@ -58,6 +60,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     return ArcLoadoutSeedData.starterLoadouts
         .where((loadout) => loadout.category == _selectedCategory)
         .toList(growable: false);
+  }
+
+  String _normaliseBlueprintName(String name) {
+    return name.trim().toLowerCase();
   }
 
   ArcLoadoutWeaponSpec _weapon(String name) {
@@ -684,13 +690,36 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   }
 
   Widget _buildRealIntelligenceState() {
-    return ArcLoadoutIntelligenceSummary(
-      primaryWeapon: _weapon(_selectedPrimaryWeapon),
-      secondaryWeapon: _weapon(_selectedSecondaryWeapon),
-      primaryAttachments: _selectedPrimaryAttachments,
-      secondaryAttachments: _selectedSecondaryAttachments,
-      equipment: _selectedEquipment,
-      consumables: _selectedConsumables,
+    return StreamBuilder(
+      stream: _blueprintRepository.watchMyBlueprintStates(),
+      builder: (context, snapshot) {
+        final states = snapshot.data ?? const {};
+
+        final ownedNames = <String>{};
+        final duplicateNames = <String>{};
+
+        for (final entry in states.entries) {
+          final state = entry.value;
+          final key = _normaliseBlueprintName(entry.key);
+          if (state.owned) {
+            ownedNames.add(key);
+          }
+          if (state.hasDuplicates) {
+            duplicateNames.add(key);
+          }
+        }
+
+        return ArcLoadoutIntelligenceSummary(
+          primaryWeapon: _weapon(_selectedPrimaryWeapon),
+          secondaryWeapon: _weapon(_selectedSecondaryWeapon),
+          primaryAttachments: _selectedPrimaryAttachments,
+          secondaryAttachments: _selectedSecondaryAttachments,
+          equipment: _selectedEquipment,
+          consumables: _selectedConsumables,
+          ownedBlueprintNames: ownedNames,
+          duplicateBlueprintNames: duplicateNames,
+        );
+      },
     );
   }
 
