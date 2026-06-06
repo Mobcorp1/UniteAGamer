@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_loadout_cards.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -412,6 +416,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         _buildBuilderActions(steps, active),
         const SizedBox(height: 18),
         _buildFinalLoadoutPanel(),
+        const SizedBox(height: 18),
+        _buildIntelligencePanel(),
       ],
     );
   }
@@ -568,6 +574,110 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
 
     _openLoadoutPreview(loadout);
+  }
+
+  Widget _buildIntelligencePanel() {
+    final primary = _weapon(_selectedPrimaryWeapon);
+    final secondary = _weapon(_selectedSecondaryWeapon);
+    final blueprintItems = <String>[
+      if (primary.blueprintBased) primary.name,
+      if (secondary.blueprintBased) secondary.name,
+      ..._selectedPrimaryAttachments,
+      ..._selectedSecondaryAttachments,
+    ];
+
+    final craftableItems = <ArcLoadoutWeaponSpec>[
+      if (primary.craftable) primary,
+      if (secondary.craftable) secondary,
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.34)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonPink.withValues(alpha: 0.10),
+            blurRadius: 22,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'BUILD INTELLIGENCE',
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonPink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This build now links into Blueprint Intel, Trade Assist, Raid Planner and bench readiness.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.68),
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _LoadoutIntelRow(
+            icon: Icons.grid_view_rounded,
+            title: 'Blueprint Intel',
+            value: blueprintItems.isEmpty
+                ? 'No blueprint-based picks detected yet'
+                : ' blueprint-linked picks',
+            color: AppTheme.neonCyan,
+            onTap: () =>
+                Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
+          ),
+          _LoadoutIntelRow(
+            icon: Icons.swap_horiz_rounded,
+            title: 'Trade Assist',
+            value:
+                'Surface missing blueprint and duplicate trade opportunities',
+            color: AppTheme.neonPink,
+            onTap: () =>
+                Navigator.of(context).pushNamed(TraderHubScreen.routeName),
+          ),
+          _LoadoutIntelRow(
+            icon: Icons.route_rounded,
+            title: 'Raid Planner',
+            value: 'Add missing build pieces as raid objectives',
+            color: Colors.amberAccent,
+            onTap: () =>
+                Navigator.of(context).pushNamed(RaidPlannerScreen.routeName),
+          ),
+          _LoadoutIntelRow(
+            icon: Icons.radar_rounded,
+            title: 'Community Intel',
+            value: 'Check where build items are being found',
+            color: Colors.lightGreenAccent,
+            onTap: () => Navigator.of(
+              context,
+            ).pushNamed(ArcMarketIntelligenceScreen.routeName),
+          ),
+          if (craftableItems.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              'CRAFTING READINESS',
+              style: AppTheme.tradingHeading(
+                fontSize: 15,
+                color: Colors.amberAccent,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final weapon in craftableItems)
+              _CraftingReadinessCard(weapon: weapon),
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _buildBuilderFoundation() {
@@ -732,6 +842,113 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _LoadoutIntelRow extends StatelessWidget {
+  const _LoadoutIntelRow({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.withValues(alpha: 0.28)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 11.5,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: color, size: 22),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CraftingReadinessCard extends StatelessWidget {
+  const _CraftingReadinessCard({required this.weapon});
+
+  final ArcLoadoutWeaponSpec weapon;
+
+  @override
+  Widget build(BuildContext context) {
+    final level = weapon.gunsmithLevel == null
+        ? 'Bench level to verify'
+        : 'Gunsmith Level ';
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amberAccent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.30)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.build_rounded, color: Colors.amberAccent, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              ' — . Track bench resources or try your luck through free loadout / loot until verified.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.76),
+                fontSize: 11.5,
+                height: 1.30,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
