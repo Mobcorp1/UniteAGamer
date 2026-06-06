@@ -19,6 +19,27 @@ class FavouriteLoadoutScreen extends StatefulWidget {
 class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   ArcLoadoutCategory _selectedCategory = ArcLoadoutCategory.saved;
   ArcPlayerPlayStyle _selectedPlayStyle = ArcPlayerPlayStyle.balanced;
+  int _builderStepIndex = 0;
+  String _selectedAugment = 'Survivor';
+  String _selectedPrimaryWeapon = 'Anvil';
+  String _selectedSecondaryWeapon = 'Stitcher';
+  final List<String> _selectedPrimaryAttachments = <String>[
+    'Muzzle',
+    'Tech Mod',
+  ];
+  final List<String> _selectedSecondaryAttachments = <String>[
+    'Muzzle',
+    'Underbarrel',
+    'Stock',
+  ];
+  final List<String> _selectedEquipment = <String>[
+    'Shield Level 2',
+    'Snap Hook',
+  ];
+  final List<String> _selectedConsumables = <String>[
+    'Vita Shot',
+    'Lure Grenade',
+  ];
 
   List<ArcSavedLoadoutSeed> get _recommendedLoadouts {
     return ArcLoadoutSeedData.recommendedLoadouts(_selectedPlayStyle);
@@ -82,7 +103,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     const SizedBox(height: 14),
                   ],
                 const SizedBox(height: 18),
-                _buildBuilderFoundation(),
+                _buildGuidedBuilder(),
                 const SizedBox(height: 112),
               ],
             ),
@@ -271,6 +292,284 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  Widget _buildGuidedBuilder() {
+    final steps = <_BuilderStep>[
+      _BuilderStep(
+        title: 'Augment',
+        value: _selectedAugment,
+        description:
+            'Sets the identity of the build before weapons and equipment.',
+        icon: Icons.health_and_safety_rounded,
+        accent: AppTheme.neonPink,
+      ),
+      _BuilderStep(
+        title: 'Primary Weapon',
+        value: _selectedPrimaryWeapon,
+        description: _weapon(_selectedPrimaryWeapon).role,
+        icon: Icons.flash_on_rounded,
+        accent: AppTheme.neonCyan,
+        blueprintBased: _weapon(_selectedPrimaryWeapon).blueprintBased,
+        craftable: _weapon(_selectedPrimaryWeapon).craftable,
+        gunsmithLevel: _weapon(_selectedPrimaryWeapon).gunsmithLevel,
+      ),
+      _BuilderStep(
+        title: 'Primary Attachments',
+        value: _selectedPrimaryAttachments.join(', '),
+        description:
+            'Attachment slots will connect to Blueprint Intel and missing blueprint tracking.',
+        icon: Icons.tune_rounded,
+        accent: Colors.amberAccent,
+        blueprintBased: true,
+      ),
+      _BuilderStep(
+        title: 'Secondary Weapon',
+        value: _selectedSecondaryWeapon,
+        description: _weapon(_selectedSecondaryWeapon).role,
+        icon: Icons.bolt_rounded,
+        accent: AppTheme.neonPink,
+        blueprintBased: _weapon(_selectedSecondaryWeapon).blueprintBased,
+        craftable: _weapon(_selectedSecondaryWeapon).craftable,
+        gunsmithLevel: _weapon(_selectedSecondaryWeapon).gunsmithLevel,
+      ),
+      _BuilderStep(
+        title: 'Secondary Attachments',
+        value: _selectedSecondaryAttachments.join(', '),
+        description:
+            'Secondary attachment slots mirror primary Blueprint Intel behaviour.',
+        icon: Icons.settings_suggest_rounded,
+        accent: Colors.lightGreenAccent,
+        blueprintBased: true,
+      ),
+      _BuilderStep(
+        title: 'Equipment',
+        value: _selectedEquipment.join(', '),
+        description:
+            'Equipment checks craftable and missing states without ammo or safe-pocket clutter.',
+        icon: Icons.shield_rounded,
+        accent: Colors.cyanAccent,
+        craftable: true,
+      ),
+      _BuilderStep(
+        title: 'Consumables',
+        value: _selectedConsumables.join(', '),
+        description:
+            'Lightweight combat-readiness choices for the finished build.',
+        icon: Icons.medical_services_rounded,
+        accent: Colors.lightGreenAccent,
+      ),
+      const _BuilderStep(
+        title: 'Final Preview',
+        value: 'Ready to Review',
+        description: 'Review the full ARC-style loadout summary before saving.',
+        icon: Icons.dashboard_customize_rounded,
+        accent: AppTheme.neonCyan,
+      ),
+    ];
+
+    final active = steps[_builderStepIndex.clamp(0, steps.length - 1)];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'GUIDED BUILDER',
+          style: AppTheme.tradingHeading(
+            fontSize: 19,
+            color: AppTheme.neonPink,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _buildBuilderProgress(steps),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 272,
+          child: PageView.builder(
+            controller: PageController(
+              initialPage: _builderStepIndex,
+              viewportFraction: 0.86,
+            ),
+            itemCount: steps.length,
+            onPageChanged: (index) => setState(() => _builderStepIndex = index),
+            itemBuilder: (context, index) {
+              final step = steps[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: ArcLoadoutSlotCard(
+                  title: step.title,
+                  value: step.value,
+                  description: step.description,
+                  icon: step.icon,
+                  accent: step.accent,
+                  blueprintBased: step.blueprintBased,
+                  craftable: step.craftable,
+                  gunsmithLevel: step.gunsmithLevel,
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
+        _buildBuilderActions(steps, active),
+        const SizedBox(height: 18),
+        _buildFinalLoadoutPanel(),
+      ],
+    );
+  }
+
+  Widget _buildBuilderProgress(List<_BuilderStep> steps) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          for (var index = 0; index < steps.length; index++) ...[
+            Expanded(
+              child: AnimatedContainer(
+                duration: AppTheme.fastAnimation,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: index <= _builderStepIndex
+                      ? AppTheme.neonPink
+                      : Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: index <= _builderStepIndex
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.neonPink.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ),
+            if (index != steps.length - 1) const SizedBox(width: 5),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBuilderActions(List<_BuilderStep> steps, _BuilderStep active) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _builderStepIndex == 0
+                ? null
+                : () => setState(() => _builderStepIndex--),
+            icon: const Icon(Icons.chevron_left_rounded),
+            label: const Text('Previous'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.neonCyan,
+              side: BorderSide(
+                color: AppTheme.neonCyan.withValues(alpha: 0.44),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _builderStepIndex >= steps.length - 1
+                ? () => _showCurrentBuildPreview()
+                : () => setState(() => _builderStepIndex++),
+            icon: Icon(
+              _builderStepIndex >= steps.length - 1
+                  ? Icons.visibility_rounded
+                  : Icons.chevron_right_rounded,
+            ),
+            label: Text(
+              _builderStepIndex >= steps.length - 1 ? 'Preview' : 'Next',
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.neonPink,
+              side: BorderSide(
+                color: AppTheme.neonPink.withValues(alpha: 0.52),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFinalLoadoutPanel() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.34)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.10),
+            blurRadius: 22,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'LIVE LOADOUT PREVIEW',
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _PreviewRow(label: 'Augment', value: _selectedAugment),
+          _PreviewRow(label: 'Primary', value: _selectedPrimaryWeapon),
+          _PreviewRow(
+            label: 'Primary Mods',
+            value: _selectedPrimaryAttachments.join(', '),
+          ),
+          _PreviewRow(label: 'Secondary', value: _selectedSecondaryWeapon),
+          _PreviewRow(
+            label: 'Secondary Mods',
+            value: _selectedSecondaryAttachments.join(', '),
+          ),
+          _PreviewRow(label: 'Equipment', value: _selectedEquipment.join(', ')),
+          _PreviewRow(
+            label: 'Consumables',
+            value: _selectedConsumables.join(', '),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Next pass wires Blueprint Intel, bench readiness, trade hooks and raid planner actions into this preview.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.66),
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCurrentBuildPreview() {
+    final loadout = ArcSavedLoadoutSeed(
+      name: ' Custom Build',
+      category: ArcLoadoutSeedData.recommendedForPlayStyle(_selectedPlayStyle),
+      description: 'Custom build generated around .',
+      augment: _selectedAugment,
+      primaryWeapon: _selectedPrimaryWeapon,
+      secondaryWeapon: _selectedSecondaryWeapon,
+      equipment: _selectedEquipment,
+      consumables: _selectedConsumables,
+    );
+
+    _openLoadoutPreview(loadout);
+  }
+
   Widget _buildBuilderFoundation() {
     final balanced = ArcLoadoutSeedData.starterLoadouts.first;
     final primary = _weapon(balanced.primaryWeapon);
@@ -435,6 +734,28 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       },
     );
   }
+}
+
+class _BuilderStep {
+  const _BuilderStep({
+    required this.title,
+    required this.value,
+    required this.description,
+    required this.icon,
+    required this.accent,
+    this.blueprintBased = false,
+    this.craftable = false,
+    this.gunsmithLevel,
+  });
+
+  final String title;
+  final String value;
+  final String description;
+  final IconData icon;
+  final Color accent;
+  final bool blueprintBased;
+  final bool craftable;
+  final int? gunsmithLevel;
 }
 
 class _PlayStyleChip extends StatelessWidget {
