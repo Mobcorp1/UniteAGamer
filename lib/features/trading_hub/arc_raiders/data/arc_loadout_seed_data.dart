@@ -3,6 +3,37 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 class ArcLoadoutSeedData {
   const ArcLoadoutSeedData._();
 
+  static ArcLoadoutCategory recommendedForPlayStyle(ArcPlayerPlayStyle style) {
+    switch (style) {
+      case ArcPlayerPlayStyle.pvp:
+        return ArcLoadoutCategory.pvp;
+      case ArcPlayerPlayStyle.pve:
+      case ArcPlayerPlayStyle.blueprintHunter:
+      case ArcPlayerPlayStyle.lootRunner:
+      case ArcPlayerPlayStyle.squadSupport:
+      case ArcPlayerPlayStyle.soloSurvivor:
+        return ArcLoadoutCategory.pve;
+      case ArcPlayerPlayStyle.balanced:
+      case ArcPlayerPlayStyle.trader:
+        return ArcLoadoutCategory.balanced;
+    }
+  }
+
+  static List<ArcSavedLoadoutSeed> recommendedLoadouts(
+    ArcPlayerPlayStyle style,
+  ) {
+    final category = recommendedForPlayStyle(style);
+    final matches = starterLoadouts
+        .where((loadout) => loadout.category == category)
+        .toList(growable: false);
+
+    if (matches.isNotEmpty) return matches;
+
+    return starterLoadouts
+        .where((loadout) => loadout.category == ArcLoadoutCategory.balanced)
+        .toList(growable: false);
+  }
+
   static const List<ArcLoadoutWeaponSpec> weapons = [
     ArcLoadoutWeaponSpec(
       name: 'Anvil',

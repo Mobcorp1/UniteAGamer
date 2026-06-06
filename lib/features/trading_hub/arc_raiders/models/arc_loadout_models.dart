@@ -124,3 +124,58 @@ class ArcSavedLoadoutSeed {
   final List<String> equipment;
   final List<String> consumables;
 }
+
+enum ArcPlayerPlayStyle {
+  pve,
+  pvp,
+  balanced,
+  blueprintHunter,
+  lootRunner,
+  trader,
+  squadSupport,
+  soloSurvivor,
+}
+
+extension ArcPlayerPlayStyleLabel on ArcPlayerPlayStyle {
+  String get label {
+    switch (this) {
+      case ArcPlayerPlayStyle.pve:
+        return 'PvE-focused';
+      case ArcPlayerPlayStyle.pvp:
+        return 'PvP-focused';
+      case ArcPlayerPlayStyle.balanced:
+        return 'Balanced PvP/PvE';
+      case ArcPlayerPlayStyle.blueprintHunter:
+        return 'Blueprint hunter';
+      case ArcPlayerPlayStyle.lootRunner:
+        return 'Loot runner';
+      case ArcPlayerPlayStyle.trader:
+        return 'Trader';
+      case ArcPlayerPlayStyle.squadSupport:
+        return 'Squad support';
+      case ArcPlayerPlayStyle.soloSurvivor:
+        return 'Solo survivor';
+    }
+  }
+
+  String get shortLabel {
+    switch (this) {
+      case ArcPlayerPlayStyle.pve:
+        return 'PvE';
+      case ArcPlayerPlayStyle.pvp:
+        return 'PvP';
+      case ArcPlayerPlayStyle.balanced:
+        return 'Balanced';
+      case ArcPlayerPlayStyle.blueprintHunter:
+        return 'Blueprints';
+      case ArcPlayerPlayStyle.lootRunner:
+        return 'Loot';
+      case ArcPlayerPlayStyle.trader:
+        return 'Trader';
+      case ArcPlayerPlayStyle.squadSupport:
+        return 'Support';
+      case ArcPlayerPlayStyle.soloSurvivor:
+        return 'Solo';
+    }
+  }
+}

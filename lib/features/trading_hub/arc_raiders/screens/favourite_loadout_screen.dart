@@ -18,6 +18,11 @@ class FavouriteLoadoutScreen extends StatefulWidget {
 
 class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   ArcLoadoutCategory _selectedCategory = ArcLoadoutCategory.saved;
+  ArcPlayerPlayStyle _selectedPlayStyle = ArcPlayerPlayStyle.balanced;
+
+  List<ArcSavedLoadoutSeed> get _recommendedLoadouts {
+    return ArcLoadoutSeedData.recommendedLoadouts(_selectedPlayStyle);
+  }
 
   List<ArcSavedLoadoutSeed> get _visibleLoadouts {
     if (_selectedCategory == ArcLoadoutCategory.saved) {
@@ -59,6 +64,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             child: ArcRaidersPageList(
               children: [
                 _buildHero(),
+                const SizedBox(height: 18),
+                _buildPlayStyleSelector(),
+                const SizedBox(height: 18),
+                _buildRecommendedSection(),
                 const SizedBox(height: 18),
                 _buildCategoryChips(),
                 const SizedBox(height: 18),
@@ -142,6 +151,90 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPlayStyleSelector() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.30)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonPink.withValues(alpha: 0.10),
+            blurRadius: 22,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'BUILD AROUND YOUR PLAY STYLE',
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonPink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choose the way you usually raid first. Meta builds and saved builds come after your own style.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.70),
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final style in ArcPlayerPlayStyle.values)
+                _PlayStyleChip(
+                  label: style.shortLabel,
+                  selected: _selectedPlayStyle == style,
+                  onTap: () => setState(() {
+                    _selectedPlayStyle = style;
+                    _selectedCategory =
+                        ArcLoadoutSeedData.recommendedForPlayStyle(style);
+                  }),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendedSection() {
+    final loadouts = _recommendedLoadouts;
+
+    if (loadouts.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'RECOMMENDED FOR ',
+          style: AppTheme.tradingHeading(
+            fontSize: 18,
+            color: AppTheme.neonCyan,
+          ),
+        ),
+        const SizedBox(height: 10),
+        for (final loadout in loadouts) ...[
+          ArcSavedLoadoutCard(
+            loadout: loadout,
+            onTap: () => _openLoadoutPreview(loadout),
+          ),
+          const SizedBox(height: 14),
+        ],
+      ],
     );
   }
 
@@ -340,6 +433,48 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _PlayStyleChip extends StatelessWidget {
+  const _PlayStyleChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppTheme.fastAnimation,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: selected ? 0.18 : 0.07),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: color.withValues(alpha: selected ? 0.75 : 0.34),
+          ),
+        ),
+        child: Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ),
     );
   }
 }
