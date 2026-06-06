@@ -85,7 +85,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   String get _modeTitle {
     switch (_mode) {
       case ArcScrappyTrackerMode.scrappy:
-        return 'Resource Intelligence';
+        return 'Scrappy Intel';
       case ArcScrappyTrackerMode.bench:
         return 'Bench Operations';
       case ArcScrappyTrackerMode.quest:
@@ -96,7 +96,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   String get _headerTitle {
     switch (_mode) {
       case ArcScrappyTrackerMode.scrappy:
-        return 'ARC Raiders Resource Intelligence';
+        return 'ARC Raiders Scrappy Intel';
       case ArcScrappyTrackerMode.bench:
         return 'ARC Raiders Bench Operations';
       case ArcScrappyTrackerMode.quest:
@@ -336,7 +336,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           ),
           content: Text(switch (_mode) {
             ArcScrappyTrackerMode.scrappy =>
-              'This will remove all collected Scrappy progress and surplus from the Resource Intelligence only.',
+              'This will remove all collected Scrappy progress and surplus from the Scrappy Intel only.',
             ArcScrappyTrackerMode.bench =>
               'This will remove all collected bench upgrade material progress from the Bench Operations only.',
             ArcScrappyTrackerMode.quest =>
@@ -1093,7 +1093,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
     return Scaffold(
       bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Resource Intelligence',
+        activeLabel: 'Scrappy Intel',
       ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(

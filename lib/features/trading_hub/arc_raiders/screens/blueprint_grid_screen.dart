@@ -1089,7 +1089,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     AppTheme.pagePadding.right,
                     AppTheme.pagePadding.bottom + 108,
                   ),
-                  children: [_buildGrid(context, filtered, states)],
+                  children: [
+                    _buildGrid(context, filtered, states),
+                    const SizedBox(height: 18),
+                    _buildBottomControls(
+                      allBlueprints,
+                      filtered,
+                      states,
+                      counts,
+                    ),
+                  ],
                 );
               },
             ),
