@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_loadout_cards.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_loadout_intelligence_summary.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -418,6 +419,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         _buildFinalLoadoutPanel(),
         const SizedBox(height: 18),
         _buildIntelligencePanel(),
+        const SizedBox(height: 18),
+        _buildRealIntelligenceState(),
       ],
     );
   }
@@ -677,6 +680,17 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildRealIntelligenceState() {
+    return ArcLoadoutIntelligenceSummary(
+      primaryWeapon: _weapon(_selectedPrimaryWeapon),
+      secondaryWeapon: _weapon(_selectedSecondaryWeapon),
+      primaryAttachments: _selectedPrimaryAttachments,
+      secondaryAttachments: _selectedSecondaryAttachments,
+      equipment: _selectedEquipment,
+      consumables: _selectedConsumables,
     );
   }
 
