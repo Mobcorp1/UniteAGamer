@@ -718,6 +718,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           consumables: _selectedConsumables,
           ownedBlueprintNames: ownedNames,
           duplicateBlueprintNames: duplicateNames,
+          onOpenBlueprintIntel: () =>
+              Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
+          onOpenTradeAssist: () =>
+              Navigator.of(context).pushNamed(TraderHubScreen.routeName),
+          onOpenRaidPlanner: () =>
+              Navigator.of(context).pushNamed(RaidPlannerScreen.routeName),
+          onOpenCommunityIntel: () => Navigator.of(
+            context,
+          ).pushNamed(ArcMarketIntelligenceScreen.routeName),
         );
       },
     );

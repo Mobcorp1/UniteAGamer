@@ -12,6 +12,10 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
     required this.secondaryAttachments,
     required this.equipment,
     required this.consumables,
+    this.onOpenBlueprintIntel,
+    this.onOpenTradeAssist,
+    this.onOpenRaidPlanner,
+    this.onOpenCommunityIntel,
     this.ownedBlueprintNames = const <String>{},
     this.duplicateBlueprintNames = const <String>{},
   });
@@ -22,6 +26,10 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
   final List<String> secondaryAttachments;
   final List<String> equipment;
   final List<String> consumables;
+  final VoidCallback? onOpenBlueprintIntel;
+  final VoidCallback? onOpenTradeAssist;
+  final VoidCallback? onOpenRaidPlanner;
+  final VoidCallback? onOpenCommunityIntel;
   final Set<String> ownedBlueprintNames;
   final Set<String> duplicateBlueprintNames;
 
@@ -158,7 +166,9 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
             runSpacing: 8,
             children: [
               _IntelPill(
-                label: 'Blueprint ownership pending',
+                label: missingBlueprintCount == 0
+                    ? 'Blueprints ready'
+                    : 'Missing blueprints: ',
                 color: AppTheme.neonCyan,
               ),
               _IntelPill(
@@ -167,10 +177,62 @@ class ArcLoadoutIntelligenceSummary extends StatelessWidget {
               ),
               _IntelPill(label: 'Trade scan pending', color: AppTheme.neonPink),
               _IntelPill(
-                label: 'Raid target ready',
+                label: missingBlueprintCount == 0
+                    ? 'No raid targets needed'
+                    : 'Raid targets ready',
                 color: Colors.lightGreenAccent,
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'SUGGESTED ACTIONS',
+            style: AppTheme.tradingHeading(
+              fontSize: 15,
+              color: AppTheme.neonPink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _LoadoutActionCard(
+            icon: Icons.grid_view_rounded,
+            title: missingBlueprintCount == 0
+                ? 'Review Blueprint Intel'
+                : 'Check Missing Blueprint Intel',
+            value: missingBlueprintCount == 0
+                ? 'Open your Blueprint Intel for build confirmation.'
+                : 'Open Blueprint Intel for  missing build piece.',
+            color: AppTheme.neonCyan,
+            onTap: onOpenBlueprintIntel,
+          ),
+          _LoadoutActionCard(
+            icon: Icons.swap_horiz_rounded,
+            title: duplicateBlueprintCount == 0
+                ? 'Open Trade Assist'
+                : 'Use Duplicate Trade Leverage',
+            value: duplicateBlueprintCount == 0
+                ? 'Scan for offers once missing build pieces are known.'
+                : ' duplicate-linked item can support trade offers.',
+            color: AppTheme.neonPink,
+            onTap: onOpenTradeAssist,
+          ),
+          _LoadoutActionCard(
+            icon: Icons.route_rounded,
+            title: missingBlueprintCount == 0
+                ? 'Raid Planner Optional'
+                : 'Add Missing Pieces To Raid Planner',
+            value: missingBlueprintCount == 0
+                ? 'No missing blueprint raid targets detected.'
+                : 'Create raid objectives around missing build pieces.',
+            color: Colors.amberAccent,
+            onTap: onOpenRaidPlanner,
+          ),
+          _LoadoutActionCard(
+            icon: Icons.radar_rounded,
+            title: 'Open Community Intel',
+            value:
+                'Check player-reported locations and source hints for build pieces.',
+            color: Colors.lightGreenAccent,
+            onTap: onOpenCommunityIntel,
           ),
         ],
       ),
@@ -243,6 +305,73 @@ class _BlueprintReadinessLine extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LoadoutActionCard extends StatelessWidget {
+  const _LoadoutActionCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.withValues(alpha: 0.28)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 21),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 11.5,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: color, size: 22),
+            ],
+          ),
+        ),
       ),
     );
   }
