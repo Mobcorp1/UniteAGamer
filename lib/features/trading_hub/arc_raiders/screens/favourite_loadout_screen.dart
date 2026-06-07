@@ -95,7 +95,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           SafeArea(
             child: ArcRaidersPageList(
               children: [
-                _buildHero(),
+                _buildCinematicLoadoutHero(),
                 const SizedBox(height: 18),
                 _buildPlayStyleSelector(),
                 const SizedBox(height: 18),
@@ -117,6 +117,46 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 _buildGuidedBuilder(),
                 const SizedBox(height: 112),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCinematicLoadoutHero() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(34),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+            const Color(0xFF101827).withValues(alpha: 0.96),
+            const Color(0xFF07111B).withValues(alpha: 0.98),
+          ],
+        ),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.34)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'TACTICAL LOADOUT COMMAND',
+            style: AppTheme.tradingHeading(
+              fontSize: 24,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Cinematic ARC Raiders build intelligence system',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              fontSize: 12,
             ),
           ),
         ],
@@ -422,6 +462,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         const SizedBox(height: 14),
         _buildBuilderActions(steps, active),
         const SizedBox(height: 18),
+        _buildCinematicPreviewDial(),
+        const SizedBox(height: 18),
         _buildFinalLoadoutPanel(),
         const SizedBox(height: 18),
         _buildIntelligencePanel(),
@@ -510,6 +552,63 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCinematicPreviewDial() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.95),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.30)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'LIVE BUILD RADAR',
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonPink,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: 240,
+            height: 240,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 240,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.18),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 24,
+                  child: _DialNode(
+                    label: _selectedPrimaryWeapon,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+                Positioned(
+                  bottom: 24,
+                  child: _DialNode(
+                    label: _selectedSecondaryWeapon,
+                    color: AppTheme.neonPink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1000,6 +1099,37 @@ class _CraftingReadinessCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DialNode extends StatelessWidget {
+  const _DialNode({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 90),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.34)),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.84),
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
