@@ -32,13 +32,19 @@ class TradingMyOffersScreen extends StatelessWidget {
   String _bundleText(TradingOffer offer) {
     final parts = <String>[];
     if (offer.smallBundles > 0) {
-      parts.add('${offer.smallBundles}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â10');
+      parts.add(
+        '${offer.smallBundles}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â10',
+      );
     }
     if (offer.mediumBundles > 0) {
-      parts.add('${offer.mediumBundles}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â50');
+      parts.add(
+        '${offer.mediumBundles}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â50',
+      );
     }
     if (offer.largeBundles > 0) {
-      parts.add('${offer.largeBundles}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â100');
+      parts.add(
+        '${offer.largeBundles}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â100',
+      );
     }
     if (parts.isEmpty) return 'No seed bundles';
     return '${parts.join(' - ')} (${offer.seedTotal} total)';
@@ -365,7 +371,7 @@ class TradingMyOffersScreen extends StatelessWidget {
               if (offers.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: AppTheme.pagePadding,
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                     child: Text(
                       'No offers yet. Send offers from listing details and manage them here.',
                       textAlign: TextAlign.center,
@@ -379,7 +385,7 @@ class TradingMyOffersScreen extends StatelessWidget {
               }
 
               return ListView.builder(
-                padding: AppTheme.pagePadding,
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                 itemCount: offers.length,
                 itemBuilder: (context, index) =>
                     _offerCard(context, repository, offers[index]),
@@ -400,6 +406,7 @@ class TradingMyOffersScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text('My Offers', style: AppTheme.tradingHeading(fontSize: 25)),

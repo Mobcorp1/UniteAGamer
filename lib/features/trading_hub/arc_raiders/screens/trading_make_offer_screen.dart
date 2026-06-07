@@ -488,6 +488,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     final listing = widget.listing;
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text('Make Offer', style: AppTheme.tradingHeading(fontSize: 25)),
@@ -504,7 +505,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                 child: Form(
                   key: _formKey,
                   child: ListView(
-                    padding: AppTheme.pagePadding,
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                     children: [
                       _sectionCard(
                         title: 'Listing Summary',

@@ -354,6 +354,7 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Smart Trade',
       ),

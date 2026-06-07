@@ -33,6 +33,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Community Intel',
       ),
@@ -51,7 +52,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           SafeArea(
             child: ListView(
-              padding: AppTheme.pagePadding,
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
               children: [
                 Text(
                   'Pick a blueprint to see the strongest player-confirmed signals instead of scrolling through individual reports.',
@@ -60,9 +61,9 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
                     height: 1.35,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
                 _buildBlueprintSelector(context),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
                 if (_selectedBlueprint == null)
                   _buildEmptyState(context)
                 else
@@ -184,14 +185,14 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderCard(context, blueprint, intel),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Best Chance',
           initiallyExpanded: true,
           titleColor: AppTheme.neonPink,
           child: _buildBestChanceCard(context, intel),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Top Signals',
           initiallyExpanded: true,
@@ -209,7 +210,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
             ],
           ),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Map Breakdown',
           initiallyExpanded: false,
@@ -221,7 +222,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
             items: intel.mapBreakdown,
           ),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Container Breakdown',
           initiallyExpanded: false,
@@ -233,7 +234,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
             items: intel.containerBreakdown,
           ),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Weather Breakdown',
           initiallyExpanded: false,
@@ -245,7 +246,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
             items: intel.weatherBreakdown,
           ),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Best Confirmed Combinations',
           initiallyExpanded: false,
@@ -362,7 +363,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           if (topCombo != null) ...[
             const SizedBox(height: AppTheme.spaceS),
             Text(
-              'Top combo strength: ${topCombo.percentageLabel} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
+              'Top combo strength: ${topCombo.percentageLabel} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.white70,
                 fontWeight: FontWeight.w600,
@@ -580,7 +581,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            '${row.percentage.toStringAsFixed(0)}% ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${row.count}',
+            '${row.percentage.toStringAsFixed(0)}% ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${row.count}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,
@@ -615,7 +616,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${combo.percentageLabel} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
+            '${combo.percentageLabel} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,

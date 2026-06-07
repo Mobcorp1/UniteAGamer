@@ -215,6 +215,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
   Widget build(BuildContext context) {
     final profile = _profile;
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
@@ -254,7 +255,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                     padding: const EdgeInsets.all(AppTheme.spaceL),
                     children: [
                       _buildHeroCard(profile),
-                      const SizedBox(height: AppTheme.spaceL),
+                      const SizedBox(height: AppTheme.spaceM),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final wide = constraints.maxWidth >= 900;
@@ -277,7 +278,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                           return Column(
                             children: [
                               _buildProfileEditor(profile),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               _buildFeedAndInvites(profile),
                             ],
                           );
@@ -367,7 +368,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             'Choose the kind of run you want so the feed can surface raiders that actually fit what you are trying to do.',
             style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppTheme.spaceM),
           _buildSection(
             'Playstyle',
             _playstyleOptions,
@@ -459,7 +460,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                   'Example: After blueprint farming, chill comms, not hard sweating.',
             ),
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppTheme.spaceM),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -478,7 +479,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildMatchesFeed(profile),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         _buildInvitesPanels(),
       ],
     );
@@ -665,7 +666,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         return Column(
           children: [
             incoming,
-            const SizedBox(height: AppTheme.spaceL),
+            const SizedBox(height: AppTheme.spaceM),
             outgoing,
           ],
         );

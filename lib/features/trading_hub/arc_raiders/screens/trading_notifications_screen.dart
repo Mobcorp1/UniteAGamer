@@ -47,7 +47,7 @@ class TradingNotificationsScreen extends StatelessWidget {
     final month = value.month.toString().padLeft(2, '0');
     final hour = value.hour.toString().padLeft(2, '0');
     final minute = value.minute.toString().padLeft(2, '0');
-    return '$day/$month/${value.year} Ã¢â‚¬Â¢ $hour:$minute';
+    return '$day/$month/${value.year} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ $hour:$minute';
   }
 
   Future<void> _openNotification(
@@ -116,6 +116,7 @@ class TradingNotificationsScreen extends StatelessWidget {
     final repository = TradingRepository();
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: showAppBar
           ? AppBar(
@@ -138,7 +139,7 @@ class TradingNotificationsScreen extends StatelessWidget {
                     if (snapshot.hasError) {
                       return Center(
                         child: Padding(
-                          padding: AppTheme.pagePadding,
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                           child: Text(
                             'Could not load notifications.\n${snapshot.error}',
                             textAlign: TextAlign.center,
@@ -165,7 +166,7 @@ class TradingNotificationsScreen extends StatelessWidget {
                     if (notifications.isEmpty) {
                       return Center(
                         child: Padding(
-                          padding: AppTheme.pagePadding,
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                           child: Text(
                             'No trading notifications yet. Offer updates, booking proposals, confirmed slots and session alerts will land here.',
                             textAlign: TextAlign.center,
@@ -179,7 +180,7 @@ class TradingNotificationsScreen extends StatelessWidget {
                     }
 
                     return ListView.builder(
-                      padding: AppTheme.pagePadding,
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                       itemCount: notifications.length,
                       itemBuilder: (context, index) {
                         final notification = notifications[index];

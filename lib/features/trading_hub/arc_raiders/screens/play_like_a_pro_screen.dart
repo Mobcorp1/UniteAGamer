@@ -520,7 +520,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ',
+                    'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ',
                     style: TextStyle(color: color, fontSize: 18),
                   ),
                   Expanded(
@@ -544,6 +544,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
@@ -592,7 +593,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               final latestDate = state.history.isEmpty
                   ? null
                   : DateFormat(
-                      'dd MMM ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ HH:mm',
+                      'dd MMM ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ HH:mm',
                     ).format(state.history.first.createdAt);
 
               return SafeArea(
@@ -691,7 +692,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spaceL),
+                        const SizedBox(height: AppTheme.spaceM),
                         DoseSectionCard(
                           title: 'Setup & Personal Baseline',
                           icon: Icons.tune_rounded,
@@ -711,7 +712,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                   label: 'Music Trigger (optional)',
                                 ),
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               Text(
                                 'Preferred reset',
                                 style: AppTheme.tradingHeading(fontSize: 18),
@@ -724,7 +725,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                 onChanged: (value) =>
                                     _preferredResetStyle = value,
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               Text(
                                 'Target session length',
                                 style: AppTheme.tradingHeading(fontSize: 18),
@@ -743,7 +744,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                 '$_preferredSessionMinutes minutes',
                                 style: const TextStyle(color: Colors.white70),
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: DoseActionButton(
@@ -760,7 +761,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spaceL),
+                        const SizedBox(height: AppTheme.spaceM),
                         DoseSectionCard(
                           title: 'Pre-Session Prep',
                           icon: Icons.bolt_rounded,
@@ -778,7 +779,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                 label: _goalLabel,
                                 onChanged: (value) => _goal = value,
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               _scorePicker(
                                 label: 'Energy',
                                 value: _energy,
@@ -826,14 +827,14 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                   label: 'Pre-session notes',
                                 ),
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               _routineCard(
                                 title: 'Recommended Warm-Up',
                                 icon: Icons.flag_rounded,
                                 bullets: preRoutine,
                                 color: AppTheme.neonCyan,
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               DoseActionButton(
                                 label: _savingPre
                                     ? 'Saving...'
@@ -845,7 +846,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spaceL),
+                        const SizedBox(height: AppTheme.spaceM),
                         DoseSectionCard(
                           title: 'Mid-Session Reset',
                           icon: Icons.monitor_heart_outlined,
@@ -906,14 +907,14 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                   label: 'What is going wrong?',
                                 ),
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               _routineCard(
                                 title: 'Reset Plan',
                                 icon: Icons.health_and_safety_outlined,
                                 bullets: midRoutine,
                                 color: AppTheme.warningAmber,
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               DoseActionButton(
                                 label: _savingMid
                                     ? 'Saving...'
@@ -926,7 +927,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spaceL),
+                        const SizedBox(height: AppTheme.spaceM),
                         DoseSectionCard(
                           title: 'Post-Session Review',
                           icon: Icons.analytics_outlined,
@@ -972,7 +973,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                   label: 'Post-session notes',
                                 ),
                               ),
-                              const SizedBox(height: AppTheme.spaceL),
+                              const SizedBox(height: AppTheme.spaceM),
                               DoseActionButton(
                                 label: _savingPost
                                     ? 'Saving...'
@@ -986,7 +987,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spaceL),
+                        const SizedBox(height: AppTheme.spaceM),
                         DoseSectionCard(
                           title: 'Pattern Readout',
                           icon: Icons.insights_rounded,
@@ -1051,7 +1052,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                '${DateFormat('dd MMM').format(entry.createdAt)} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${_goalLabel(entry.goal)}',
+                                                '${DateFormat('dd MMM').format(entry.createdAt)} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${_goalLabel(entry.goal)}',
                                                 style: AppTheme.bodyTextStyle(
                                                   fontSize: 14,
                                                   color: AppTheme.neonCyan,
@@ -1060,7 +1061,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                'Perf ${entry.performance}/5 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Enjoyment ${entry.enjoyment}/5 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Tilt Control ${entry.tiltControl}/5',
+                                                'Perf ${entry.performance}/5 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Enjoyment ${entry.enjoyment}/5 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Tilt Control ${entry.tiltControl}/5',
                                                 style: const TextStyle(
                                                   color: Colors.white60,
                                                 ),

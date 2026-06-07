@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class MyIntelScreen extends StatelessWidget {
@@ -15,6 +15,7 @@ class MyIntelScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: Colors.black.withValues(alpha: 0.86),
@@ -562,10 +563,10 @@ class _IntelBackdrop extends StatelessWidget {
         Image.asset(
           'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const StaticWatermark(),
+          errorBuilder: (_, _, _) => const ArcRaidersScreenBackdrop(),
         ),
         Container(color: Colors.black.withValues(alpha: 0.66)),
-        const StaticWatermark(),
+        const ArcRaidersScreenBackdrop(),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

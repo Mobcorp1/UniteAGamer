@@ -64,6 +64,7 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(title: const Text('Search Traders')),
       body: ListView(
         padding: const EdgeInsets.all(16),

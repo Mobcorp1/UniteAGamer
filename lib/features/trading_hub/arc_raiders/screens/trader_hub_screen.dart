@@ -183,6 +183,7 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
             Navigator.maybeOf(context)?.pop();
           },
           child: Scaffold(
+            extendBody: true,
             backgroundColor: AppTheme.darkBackground,
             appBar: UagAppBar(
               leading: IconButton(

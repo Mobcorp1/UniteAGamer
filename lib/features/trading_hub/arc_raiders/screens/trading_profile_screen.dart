@@ -104,6 +104,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   Widget build(BuildContext context) {
     if (_isInitialising) {
       return const Scaffold(
+        extendBody: true,
         backgroundColor: AppTheme.darkBackground,
         body: Center(child: CircularProgressIndicator()),
       );
@@ -111,6 +112,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
     if (_initError != null) {
       return Scaffold(
+        extendBody: true,
         backgroundColor: AppTheme.darkBackground,
         appBar: widget.showAppBar
             ? const UagAppBar(
@@ -140,7 +142,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70, height: 1.35),
                 ),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
                 ElevatedButton(onPressed: _retry, child: const Text('Retry')),
               ],
             ),
@@ -150,6 +152,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: widget.showAppBar
           ? const UagAppBar(
@@ -183,7 +186,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Colors.white70),
                       ),
-                      const SizedBox(height: AppTheme.spaceL),
+                      const SizedBox(height: AppTheme.spaceM),
                       ElevatedButton(
                         onPressed: _retry,
                         child: const Text('Retry'),
@@ -208,7 +211,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               padding: const EdgeInsets.all(AppTheme.spaceL),
               children: [
                 _summaryCard(profile),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
                 _detailCard(
                   title: 'Public Profile Details',
                   children: [
@@ -241,7 +244,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceL),
                   decoration: AppTheme.tradingCardDecoration(
@@ -292,7 +295,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
                 _actionTile(
                   icon: Icons.edit_outlined,
                   title: 'Edit Trader Profile',
@@ -326,7 +329,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                     MaterialPageRoute(builder: (_) => const ArcAwayScreen()),
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceL),
+                const SizedBox(height: AppTheme.spaceM),
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceL),
                   decoration: AppTheme.tradingCardDecoration(
@@ -407,7 +410,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               ),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceL),
+          const SizedBox(height: AppTheme.spaceM),
           Wrap(
             spacing: AppTheme.spaceS,
             runSpacing: AppTheme.spaceS,

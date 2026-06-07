@@ -142,6 +142,7 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(title: const Text('Availability')),
       body: _isLoading
@@ -154,7 +155,7 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                     padding: const EdgeInsets.all(AppTheme.spaceL),
                     children: [
                       heroCard(),
-                      const SizedBox(height: AppTheme.spaceL),
+                      const SizedBox(height: AppTheme.spaceM),
                       Container(
                         padding: const EdgeInsets.all(AppTheme.spaceL),
                         decoration: AppTheme.tradingCardDecoration(radius: 22),
@@ -183,7 +184,7 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                           },
                         ),
                       ),
-                      const SizedBox(height: AppTheme.spaceL),
+                      const SizedBox(height: AppTheme.spaceM),
                       ...List.generate(_availability.weeks.length, (weekIndex) {
                         final week = _availability.weeks[weekIndex];
                         return _weekCard(week, weekIndex);

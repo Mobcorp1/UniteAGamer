@@ -128,6 +128,7 @@ class TradingListingDetailScreen extends StatelessWidget {
     ];
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
@@ -145,7 +146,7 @@ class TradingListingDetailScreen extends StatelessWidget {
                   maxWidth: AppTheme.pageMaxWidth,
                 ),
                 child: ListView(
-                  padding: AppTheme.pagePadding,
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                   children: [
                     Container(
                       decoration: AppTheme.tradingCardDecoration(),
@@ -167,7 +168,7 @@ class TradingListingDetailScreen extends StatelessWidget {
                               _chip(listing.playWindow, AppTheme.neonPink),
                             ],
                           ),
-                          const SizedBox(height: AppTheme.spaceL),
+                          const SizedBox(height: AppTheme.spaceM),
                           _section('Offering', offeredList),
                           if (listing.listingType ==
                               TradingListingType.openToOffers)
@@ -209,7 +210,7 @@ class TradingListingDetailScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spaceL),
+                    const SizedBox(height: AppTheme.spaceM),
                     Container(
                       decoration: AppTheme.tradingCardDecoration(),
                       padding: AppTheme.sectionCardPadding,
@@ -221,7 +222,7 @@ class TradingListingDetailScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spaceL),
+                    const SizedBox(height: AppTheme.spaceM),
                     Row(
                       children: [
                         Expanded(

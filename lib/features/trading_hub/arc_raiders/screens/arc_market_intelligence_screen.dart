@@ -41,6 +41,7 @@ class _ArcMarketIntelligenceScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(
@@ -146,7 +147,7 @@ class _ArcMarketIntelligenceScreenState
           priorityCount: priorityBlueprints.length,
           wantedResourceCount: wantedResources.length,
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Priority 5 Targets',
           initiallyExpanded: false,
@@ -217,7 +218,7 @@ class _ArcMarketIntelligenceScreenState
             ],
           ),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Best Next Missing Blueprints',
           initiallyExpanded: false,
@@ -263,7 +264,7 @@ class _ArcMarketIntelligenceScreenState
             ],
           ),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Wanted Scrappy Resources',
           initiallyExpanded: false,
@@ -296,7 +297,7 @@ class _ArcMarketIntelligenceScreenState
             ],
           ),
         ),
-        const SizedBox(height: AppTheme.spaceL),
+        const SizedBox(height: AppTheme.spaceM),
         CollapsibleSectionCard(
           title: 'Community Pulse',
           initiallyExpanded: false,
@@ -586,7 +587,7 @@ class _ArcMarketIntelligenceScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${blueprint.category} Ã¢â‚¬Â¢ ${blueprint.rarityLabel}',
+                      '${blueprint.category} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${blueprint.rarityLabel}',
                       style: const TextStyle(color: Colors.white60),
                     ),
                   ],
@@ -694,7 +695,7 @@ class _ArcMarketIntelligenceScreenState
             builder: (context, scrollController) {
               return ListView(
                 controller: scrollController,
-                padding: AppTheme.pagePadding,
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                 children: [
                   Row(
                     children: [
@@ -744,7 +745,7 @@ class _ArcMarketIntelligenceScreenState
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppTheme.spaceM),
                   if (intel.topCombinations.isNotEmpty) ...[
                     Text(
                       'Strongest Reported Conditions',
@@ -764,7 +765,7 @@ class _ArcMarketIntelligenceScreenState
                             child: _buildCombinationCard(combo),
                           ),
                         ),
-                    const SizedBox(height: AppTheme.spaceL),
+                    const SizedBox(height: AppTheme.spaceM),
                   ],
                   Text(
                     'Recent Reports',
@@ -824,7 +825,7 @@ class _ArcMarketIntelligenceScreenState
           _buildInfoLine('Event', combo.eventLabel),
           _buildInfoLine(
             'Support',
-            '${combo.reportCount} weighted reports Ã¢â‚¬Â¢ ${combo.percentageLabel}',
+            '${combo.reportCount} weighted reports ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${combo.percentageLabel}',
           ),
         ],
       ),
@@ -934,7 +935,7 @@ class _ArcMarketIntelligenceScreenState
           ),
           const SizedBox(height: 14),
           Text(
-            'Need ${target.remainingNeeded} more Ã¢â‚¬Â¢ ${target.item.tierLabel}',
+            'Need ${target.remainingNeeded} more ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${target.item.tierLabel}',
             style: const TextStyle(color: Colors.white70),
           ),
           if ((target.item.locationHint?.trim().isNotEmpty ?? false)) ...[
@@ -1024,7 +1025,7 @@ class _ArcMarketIntelligenceScreenState
       if (values.isEmpty) return 'No data';
       final sorted = values.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
-      return '${sorted.first.key} Ã¢â‚¬Â¢ ${sorted.first.value}';
+      return '${sorted.first.key} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${sorted.first.value}';
     }
 
     return [
@@ -1060,7 +1061,7 @@ class _ArcMarketIntelligenceScreenState
     }
     if (weather == 'No Special Weather') return event;
     if (event == 'No Map Event') return weather;
-    return '$weather Ã¢â‚¬Â¢ $event';
+    return '$weather ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ $event';
   }
 
   String _buildConfidenceLabel(ArcDropIntel intel) {
@@ -1281,7 +1282,7 @@ class _ArcMarketIntelligenceScreenState
                               style: const TextStyle(color: Colors.white),
                             ),
                             subtitle: Text(
-                              '${blueprint.category} Ã¢â‚¬Â¢ ${blueprint.rarityLabel}',
+                              '${blueprint.category} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${blueprint.rarityLabel}',
                               style: const TextStyle(color: Colors.white60),
                             ),
                             trailing: isSelected

@@ -865,6 +865,7 @@ class _TradingCreateListingScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: widget.showAppBar
           ? AppBar(
@@ -906,7 +907,7 @@ class _TradingCreateListingScreenState
                           maxWidth: AppTheme.pageMaxWidth,
                         ),
                         child: ListView(
-                          padding: AppTheme.pagePadding,
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                           children: [
                             _profilePrefillCard(profile),
                             _sectionCard(

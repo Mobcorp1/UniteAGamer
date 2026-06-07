@@ -156,6 +156,7 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(title: const Text('Away Mode')),
       body: _isLoading
@@ -168,7 +169,7 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                     padding: const EdgeInsets.all(AppTheme.spaceL),
                     children: [
                       heroCard(),
-                      const SizedBox(height: AppTheme.spaceL),
+                      const SizedBox(height: AppTheme.spaceM),
                       actionCard(
                         children: [
                           SwitchListTile(
@@ -203,7 +204,7 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppTheme.spaceL),
+                      const SizedBox(height: AppTheme.spaceM),
                       TextField(
                         controller: _noteController,
                         decoration: AppTheme.tradingInputDecoration(
@@ -211,7 +212,7 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                         ),
                         maxLines: 3,
                       ),
-                      const SizedBox(height: AppTheme.spaceL),
+                      const SizedBox(height: AppTheme.spaceM),
                       ElevatedButton.icon(
                         onPressed: _isSaving ? null : _save,
                         icon: const Icon(Icons.save_rounded),

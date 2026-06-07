@@ -141,7 +141,7 @@ class TradingMyListingsScreen extends StatelessWidget {
               if (items.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: AppTheme.pagePadding,
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                     child: Text(
                       'No listings yet. Create your first listing from the Trader Hub.',
                       textAlign: TextAlign.center,
@@ -155,7 +155,7 @@ class TradingMyListingsScreen extends StatelessWidget {
               }
 
               return ListView(
-                padding: AppTheme.pagePadding,
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                 children: [
                   for (final item in items)
                     _listingCard(context, repository, item),
@@ -177,6 +177,7 @@ class TradingMyListingsScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text(

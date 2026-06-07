@@ -140,10 +140,15 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
     );
 
     if (!widget.showAppBar) {
-      return Scaffold(backgroundColor: AppTheme.darkBackground, body: content);
+      return Scaffold(
+        extendBody: true,
+        backgroundColor: AppTheme.darkBackground,
+        body: content,
+      );
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         title: Text('Activity', style: AppTheme.tradingHeading(fontSize: 25)),

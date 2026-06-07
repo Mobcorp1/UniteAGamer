@@ -379,7 +379,7 @@ class _TradingTradeSessionsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Propose 3 days ÃƒÆ’Ã¢â‚¬â€ 3 times',
+                      'Propose 3 days ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 3 times',
                       style: AppTheme.tradingHeading(fontSize: 24),
                     ),
                     const SizedBox(height: 8),
@@ -849,7 +849,7 @@ class _TradingTradeSessionsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${session.traderOneName} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Â ${session.traderTwoName}',
+              '${session.traderOneName} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${session.traderTwoName}',
               style: AppTheme.tradingHeading(fontSize: 22),
             ),
             const SizedBox(height: 10),
@@ -1080,7 +1080,7 @@ class _TradingTradeSessionsScreenState
             Divider(color: AppTheme.tradingDivider),
             const SizedBox(height: 10),
             Text(
-              'Flow: accept offer ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ propose 3 days ÃƒÆ’Ã¢â‚¬â€ 3 times ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ other trader confirms one slot ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ share Embark IDs ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ assign first drop ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ both mark ready.',
+              'Flow: accept offer ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ propose 3 days ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 3 times ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ other trader confirms one slot ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ share Embark IDs ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ assign first drop ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ both mark ready.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.tradingMutedText,
@@ -1095,7 +1095,7 @@ class _TradingTradeSessionsScreenState
   Widget _emptyState() {
     return Center(
       child: Padding(
-        padding: AppTheme.pagePadding,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
         child: Text(
           'No trade sessions yet. Once an offer is accepted, the live session will appear here for both traders.',
           textAlign: TextAlign.center,
@@ -1111,6 +1111,7 @@ class _TradingTradeSessionsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: widget.showAppBar
           ? AppBar(
@@ -1135,7 +1136,7 @@ class _TradingTradeSessionsScreenState
                     if (snapshot.hasError) {
                       return Center(
                         child: Padding(
-                          padding: AppTheme.pagePadding,
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                           child: Text(
                             'Could not load trade sessions.\n${snapshot.error}',
                             textAlign: TextAlign.center,
@@ -1162,7 +1163,7 @@ class _TradingTradeSessionsScreenState
                     }
 
                     return ListView.builder(
-                      padding: AppTheme.pagePadding,
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                       itemCount: sessions.length,
                       itemBuilder: (context, index) =>
                           _buildSessionCard(sessions[index]),

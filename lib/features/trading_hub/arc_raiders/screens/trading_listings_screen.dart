@@ -259,7 +259,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               if (subtitleBits.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
-                  subtitleBits.join(' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ '),
+                  subtitleBits.join(' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ '),
                   style: TextStyle(color: AppTheme.tradingMutedText),
                 ),
               ],
@@ -268,8 +268,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 '${listing.traderName}'
-                '${listing.gamerTag.isNotEmpty ? ' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${listing.gamerTag}' : ''}'
-                '${listing.preferredPlatform.isNotEmpty ? ' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${listing.preferredPlatform}' : ''}',
+                '${listing.gamerTag.isNotEmpty ? ' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${listing.gamerTag}' : ''}'
+                '${listing.preferredPlatform.isNotEmpty ? ' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${listing.preferredPlatform}' : ''}',
                 style: TextStyle(
                   color: AppTheme.tradingMutedText,
                   fontWeight: FontWeight.w600,
@@ -436,6 +436,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Trading'),
       backgroundColor: AppTheme.darkBackground,
       appBar: widget.showAppBar
@@ -454,7 +455,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 920),
                 child: Padding(
-                  padding: AppTheme.pagePadding,
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                   child: StreamBuilder<Map<String, ArcBlueprintState>>(
                     stream: _blueprintRepository.watchMyBlueprintStates(),
                     builder: (context, statesSnapshot) {
@@ -489,7 +490,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                           ),
                           const SizedBox(height: AppTheme.spaceM),
                           _buildFilterPanel(missingBlueprintNames.length),
-                          const SizedBox(height: AppTheme.spaceL),
+                          const SizedBox(height: AppTheme.spaceM),
                           Expanded(
                             child: StreamBuilder<List<TradingListing>>(
                               stream: _repository.watchActiveListings(),
