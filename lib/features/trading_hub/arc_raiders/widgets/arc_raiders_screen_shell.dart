@@ -14,9 +14,9 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF040514),
+                  const Color(0xFF02030B),
                   Color.lerp(AppTheme.neonCyan, const Color(0xFF050612), 0.86)!,
-                  const Color(0xFF020208),
+                  const Color(0xFF010106),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -30,8 +30,8 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.18),
-                    AppTheme.neonPink.withValues(alpha: 0.08),
+                    AppTheme.neonCyan.withValues(alpha: 0.22),
+                    AppTheme.neonPink.withValues(alpha: 0.10),
                     Colors.transparent,
                   ],
                   center: const Alignment(0.0, -0.36),
@@ -49,7 +49,7 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
                   colors: [
                     Colors.black.withValues(alpha: 0.08),
                     Colors.transparent,
-                    Colors.black.withValues(alpha: 0.20),
+                    Colors.black.withValues(alpha: 0.32),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -96,9 +96,9 @@ class ArcRaidersScreenShell extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.03),
+                    AppTheme.neonCyan.withValues(alpha: 0.045),
                     Colors.transparent,
-                    AppTheme.neonPink.withValues(alpha: 0.04),
+                    AppTheme.neonPink.withValues(alpha: 0.055),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -271,9 +271,9 @@ class ArcRaidersPageHeader extends StatelessWidget {
         vertical: compact ? AppTheme.spaceXS : AppTheme.spaceS,
       ),
       decoration: AppTheme.tradingCardDecoration(
-        radius: compact ? 18 : 20,
-        borderColor: accent.withValues(alpha: 0.30),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        radius: compact ? 16 : 18,
+        borderColor: accent.withValues(alpha: 0.38),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
       ),
       child: Row(
         children: [
@@ -296,7 +296,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                   const SizedBox(height: AppTheme.spaceXS),
                   Text(
                     subtitle!,
-                    maxLines: compact ? 3 : 2,
+                    maxLines: compact ? 2 : 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
                       fontSize: compact ? 11.5 : 12.5,
@@ -338,8 +338,8 @@ class ArcRaidersHeroBanner extends StatelessWidget {
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: AppTheme.tradingCardDecoration(
         radius: 22,
-        borderColor: accent.withValues(alpha: 0.24),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
+        borderColor: accent.withValues(alpha: 0.32),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
       ),
       child: Stack(
         children: [
@@ -404,8 +404,8 @@ class ArcRaidersSectionCard extends StatelessWidget {
       padding: padding,
       decoration: AppTheme.tradingCardDecoration(
         radius: radius,
-        borderColor: accent.withValues(alpha: 0.24),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        borderColor: accent.withValues(alpha: 0.32),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
       ),
       child: child,
     );

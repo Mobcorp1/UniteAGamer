@@ -17,21 +17,21 @@ class ArcFeatureCard extends StatelessWidget {
         onTap: item.onTap,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: item.accent.withValues(alpha: selected ? 0.85 : 0.25),
-              width: selected ? 2.2 : 1,
+              color: item.accent.withValues(alpha: selected ? 0.92 : 0.34),
+              width: selected ? 2.4 : 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: item.accent.withValues(alpha: selected ? 0.20 : 0.06),
-                blurRadius: 24,
+                color: item.accent.withValues(alpha: selected ? 0.28 : 0.10),
+                blurRadius: 30,
                 spreadRadius: 2,
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(22),
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -42,23 +42,23 @@ class ArcFeatureCard extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.05),
-                        Colors.black.withValues(alpha: 0.88),
+                        Colors.black.withValues(alpha: 0.16),
+                        Colors.black.withValues(alpha: 0.92),
                       ],
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(item.icon, color: item.accent, size: 30),
+                      Icon(item.icon, color: item.accent, size: 26),
                       const Spacer(),
                       Text(
                         item.title,
                         style: AppTheme.neonTextStyle(
-                          fontSize: 26,
+                          fontSize: 23,
                           color: Colors.white,
                         ),
                       ),
@@ -67,7 +67,7 @@ class ArcFeatureCard extends StatelessWidget {
                         item.subtitle,
                         style: const TextStyle(
                           color: Colors.white70,
-                          fontSize: 13,
+                          fontSize: 12,
                           height: 1.35,
                         ),
                       ),
