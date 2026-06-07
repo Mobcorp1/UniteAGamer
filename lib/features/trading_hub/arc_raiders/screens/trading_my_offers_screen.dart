@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMyOffersScreen extends StatelessWidget {
@@ -31,9 +31,15 @@ class TradingMyOffersScreen extends StatelessWidget {
 
   String _bundleText(TradingOffer offer) {
     final parts = <String>[];
-    if (offer.smallBundles > 0) parts.add('${offer.smallBundles}Ã—10');
-    if (offer.mediumBundles > 0) parts.add('${offer.mediumBundles}Ã—50');
-    if (offer.largeBundles > 0) parts.add('${offer.largeBundles}Ã—100');
+    if (offer.smallBundles > 0) {
+      parts.add('${offer.smallBundles}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â10');
+    }
+    if (offer.mediumBundles > 0) {
+      parts.add('${offer.mediumBundles}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â50');
+    }
+    if (offer.largeBundles > 0) {
+      parts.add('${offer.largeBundles}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â100');
+    }
     if (parts.isEmpty) return 'No seed bundles';
     return '${parts.join(' - ')} (${offer.seedTotal} total)';
   }
@@ -344,7 +350,7 @@ class TradingMyOffersScreen extends StatelessWidget {
   Widget _buildBody(BuildContext context, TradingRepository repository) {
     return Stack(
       children: [
-        const Positioned.fill(child: StaticWatermark()),
+        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
         SafeArea(
           child: StreamBuilder<List<TradingOffer>>(
             stream: repository.watchMyOffers(),

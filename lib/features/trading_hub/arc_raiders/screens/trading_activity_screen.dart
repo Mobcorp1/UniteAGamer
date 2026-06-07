@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingActivityScreen extends StatefulWidget {
@@ -92,7 +92,7 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
 
     final content = Stack(
       children: [
-        const Positioned.fill(child: StaticWatermark()),
+        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
         SafeArea(
           child: Column(
             children: [

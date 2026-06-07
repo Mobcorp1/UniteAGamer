@@ -30,9 +30,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   ArcLoadoutCategory _selectedCategory = ArcLoadoutCategory.saved;
   ArcPlayerPlayStyle _selectedPlayStyle = ArcPlayerPlayStyle.balanced;
   int _builderStepIndex = 0;
-  String _selectedAugment = 'Survivor';
-  String _selectedPrimaryWeapon = 'Anvil';
-  String _selectedSecondaryWeapon = 'Stitcher';
+  final String _selectedAugment = 'Survivor';
+  final String _selectedPrimaryWeapon = 'Anvil';
+  final String _selectedSecondaryWeapon = 'Stitcher';
   final List<String> _selectedPrimaryAttachments = <String>[
     'Muzzle',
     'Tech Mod',
@@ -87,7 +87,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         title: Text(
           'FAVOURITE LOADOUTS',
           style: AppTheme.tradingHeading(
-            fontSize: 24,
+            fontSize: 22,
             color: AppTheme.neonCyan,
           ),
         ),
@@ -99,15 +99,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             child: ArcRaidersPageList(
               children: [
                 _buildCinematicLoadoutHero(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 _buildPlayStyleSelector(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 _buildRecommendedSection(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 _buildCategoryChips(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 _buildSavedLoadoutsSection(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 if (loadouts.isEmpty)
                   _buildEmptyState()
                 else
@@ -116,11 +116,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                       loadout: loadout,
                       onTap: () => _openLoadoutPreview(loadout),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                   ],
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 _buildGuidedBuilder(),
-                const SizedBox(height: 112),
+                const SizedBox(height: 96),
               ],
             ),
           ),
@@ -132,9 +132,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   Widget _buildCinematicLoadoutHero() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(34),
+        borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -152,7 +152,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           Text(
             'TACTICAL LOADOUT COMMAND',
             style: AppTheme.tradingHeading(
-              fontSize: 24,
+              fontSize: 22,
               color: AppTheme.neonCyan,
             ),
           ),
@@ -169,6 +169,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildHero() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -237,7 +238,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.30)),
         boxShadow: [
           BoxShadow(
@@ -253,7 +254,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           Text(
             'BUILD AROUND YOUR PLAY STYLE',
             style: AppTheme.tradingHeading(
-              fontSize: 18,
+              fontSize: 17,
               color: AppTheme.neonPink,
             ),
           ),
@@ -299,7 +300,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         Text(
           'RECOMMENDED FOR ',
           style: AppTheme.tradingHeading(
-            fontSize: 18,
+            fontSize: 17,
             color: AppTheme.neonCyan,
           ),
         ),
@@ -309,7 +310,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             loadout: loadout,
             onTap: () => _openLoadoutPreview(loadout),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
         ],
       ],
     );
@@ -436,7 +437,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         ),
         const SizedBox(height: 10),
         _buildBuilderProgress(steps),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         SizedBox(
           height: 272,
           child: PageView.builder(
@@ -464,17 +465,17 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             },
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _buildBuilderActions(steps, active),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
         _buildCinematicPreviewDial(),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
         _buildFinalLoadoutPanel(),
         const SizedBox(height: 12),
         _buildSaveCurrentLoadoutButton(),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
         _buildIntelligencePanel(),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
         _buildRealIntelligenceState(),
       ],
     );
@@ -576,7 +577,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           Text(
             'LIVE BUILD RADAR',
             style: AppTheme.tradingHeading(
-              fontSize: 18,
+              fontSize: 17,
               color: AppTheme.neonPink,
             ),
           ),
@@ -625,7 +626,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.34)),
         boxShadow: [
           BoxShadow(
@@ -641,7 +642,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           Text(
             'LIVE LOADOUT PREVIEW',
             style: AppTheme.tradingHeading(
-              fontSize: 18,
+              fontSize: 17,
               color: AppTheme.neonCyan,
             ),
           ),
@@ -759,7 +760,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.34)),
         boxShadow: [
           BoxShadow(
@@ -775,7 +776,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           Text(
             'BUILD INTELLIGENCE',
             style: AppTheme.tradingHeading(
-              fontSize: 18,
+              fontSize: 17,
               color: AppTheme.neonPink,
             ),
           ),
@@ -788,7 +789,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               height: 1.35,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           _LoadoutIntelRow(
             icon: Icons.grid_view_rounded,
             title: 'Blueprint Intel',
@@ -909,7 +910,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 Text(
                   'SAVED LOADOUTS',
                   style: AppTheme.tradingHeading(
-                    fontSize: 18,
+                    fontSize: 17,
                     color: AppTheme.neonCyan,
                   ),
                 ),
@@ -933,7 +934,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             Text(
               'SAVED LOADOUTS',
               style: AppTheme.tradingHeading(
-                fontSize: 18,
+                fontSize: 17,
                 color: AppTheme.neonCyan,
               ),
             ),
@@ -982,6 +983,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     _openLoadoutPreview(loadout);
   }
 
+  // ignore: unused_element
   Widget _buildBuilderFoundation() {
     final balanced = ArcLoadoutSeedData.starterLoadouts.first;
     final primary = _weapon(balanced.primaryWeapon);
@@ -1108,19 +1110,19 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 loadout.name.toUpperCase(),
                 textAlign: TextAlign.center,
                 style: AppTheme.tradingHeading(
-                  fontSize: 24,
+                  fontSize: 22,
                   color: AppTheme.neonCyan,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               _PreviewRow(label: 'Augment', value: loadout.augment),
               _PreviewRow(
                 label: 'Primary',
-                value: '${primary.name} — ${primary.category}',
+                value: '${primary.name} Ã¢â‚¬â€ ${primary.category}',
               ),
               _PreviewRow(
                 label: 'Secondary',
-                value: '${secondary.name} — ${secondary.category}',
+                value: '${secondary.name} Ã¢â‚¬â€ ${secondary.category}',
               ),
               _PreviewRow(
                 label: 'Equipment',
@@ -1130,7 +1132,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 label: 'Consumables',
                 value: loadout.consumables.join(', '),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Text(
                 'Blueprint Intel, Bench Readiness, Trade Assist and Raid Planner actions will hook into this preview in the next passes.',
                 textAlign: TextAlign.center,
@@ -1202,7 +1204,7 @@ class _SavedLoadoutManagementCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    ' •  / ',
+                    ' Ã¢â‚¬Â¢  / ',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -1308,6 +1310,7 @@ class _CraftingReadinessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
     final level = weapon.gunsmithLevel == null
         ? 'Bench level to verify'
         : 'Gunsmith Level ';
@@ -1327,7 +1330,7 @@ class _CraftingReadinessCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              ' — . Track bench resources or try your luck through free loadout / loot until verified.',
+              ' Ã¢â‚¬â€ . Track bench resources or try your luck through free loadout / loot until verified.',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.76),
                 fontSize: 11.5,

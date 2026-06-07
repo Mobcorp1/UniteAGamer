@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -7,7 +8,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/arc_blueprint_source_of_truth_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/automation/smart_trade_assist_engine.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class SmartTradeAssistScreen extends StatefulWidget {
@@ -373,7 +373,7 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const Positioned.fill(child: StaticWatermark()),
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           SafeArea(
             child: StreamBuilder<Map<String, ArcBlueprintState>>(
               stream: _repository.watchBlueprintStates(),

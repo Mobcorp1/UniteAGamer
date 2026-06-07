@@ -179,3 +179,97 @@ extension ArcPlayerPlayStyleLabel on ArcPlayerPlayStyle {
     }
   }
 }
+
+class ArcSavedLoadout {
+  const ArcSavedLoadout({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.playStyle,
+    required this.augment,
+    required this.primaryWeapon,
+    required this.primaryAttachments,
+    required this.secondaryWeapon,
+    required this.secondaryAttachments,
+    required this.equipment,
+    required this.consumables,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  final String id;
+  final String name;
+  final ArcLoadoutCategory category;
+  final ArcPlayerPlayStyle playStyle;
+  final String augment;
+  final String primaryWeapon;
+  final List<String> primaryAttachments;
+  final String secondaryWeapon;
+  final List<String> secondaryAttachments;
+  final List<String> equipment;
+  final List<String> consumables;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'category': category.name,
+      'playStyle': playStyle.name,
+      'augment': augment,
+      'primaryWeapon': primaryWeapon,
+      'primaryAttachments': primaryAttachments,
+      'secondaryWeapon': secondaryWeapon,
+      'secondaryAttachments': secondaryAttachments,
+      'equipment': equipment,
+      'consumables': consumables,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  static ArcSavedLoadout fromMap(String id, Map<String, dynamic> data) {
+    ArcLoadoutCategory parseCategory(String? value) {
+      return ArcLoadoutCategory.values.firstWhere(
+        (category) => category.name == value,
+        orElse: () => ArcLoadoutCategory.saved,
+      );
+    }
+
+    ArcPlayerPlayStyle parsePlayStyle(String? value) {
+      return ArcPlayerPlayStyle.values.firstWhere(
+        (style) => style.name == value,
+        orElse: () => ArcPlayerPlayStyle.balanced,
+      );
+    }
+
+    DateTime parseDate(dynamic value) {
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+      return DateTime.now();
+    }
+
+    List<String> parseList(dynamic value) {
+      if (value is List) {
+        return value.map((item) => item.toString()).toList(growable: false);
+      }
+      return const <String>[];
+    }
+
+    return ArcSavedLoadout(
+      id: id,
+      name: (data['name'] ?? 'Saved Loadout').toString(),
+      category: parseCategory(data['category']?.toString()),
+      playStyle: parsePlayStyle(data['playStyle']?.toString()),
+      augment: (data['augment'] ?? 'Survivor').toString(),
+      primaryWeapon: (data['primaryWeapon'] ?? 'Anvil').toString(),
+      primaryAttachments: parseList(data['primaryAttachments']),
+      secondaryWeapon: (data['secondaryWeapon'] ?? 'Stitcher').toString(),
+      secondaryAttachments: parseList(data['secondaryAttachments']),
+      equipment: parseList(data['equipment']),
+      consumables: parseList(data['consumables']),
+      createdAt: parseDate(data['createdAt']),
+      updatedAt: parseDate(data['updatedAt']),
+    );
+  }
+}

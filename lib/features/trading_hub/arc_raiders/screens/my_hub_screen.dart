@@ -706,6 +706,7 @@ class _StaticRingFeatureCard extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _HubHeader extends StatelessWidget {
   const _HubHeader({required this.selected});
 

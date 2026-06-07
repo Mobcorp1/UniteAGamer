@@ -60,7 +60,12 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
         ),
         const Positioned.fill(
           child: IgnorePointer(
-            child: Opacity(opacity: 0.24, child: StaticWatermark()),
+            child: Opacity(opacity: 0.30, child: StaticWatermark()),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(painter: _ArcCommandGridPainter()),
           ),
         ),
       ],
@@ -112,8 +117,8 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
   const ArcRaidersResponsiveContent({
     super.key,
     required this.child,
-    this.maxWidth = 920,
-    this.padding = AppTheme.pagePadding,
+    this.maxWidth = 1160,
+    this.padding = const EdgeInsets.fromLTRB(10, 6, 10, 10),
     this.alignTop = true,
   });
 
@@ -144,7 +149,7 @@ class ArcRaidersPageScaffold extends StatelessWidget {
   const ArcRaidersPageScaffold({
     super.key,
     required this.child,
-    this.maxWidth = 1180,
+    this.maxWidth = 1320,
     this.useSafeArea = true,
   });
 
@@ -165,9 +170,9 @@ class ArcRaidersPageList extends StatelessWidget {
   const ArcRaidersPageList({
     super.key,
     required this.children,
-    this.maxWidth = 920,
-    this.padding = AppTheme.pagePadding,
-    this.bottomPadding = 112,
+    this.maxWidth = 1160,
+    this.padding = const EdgeInsets.fromLTRB(10, 6, 10, 10),
+    this.bottomPadding = 96,
     this.physics,
   });
 
@@ -238,8 +243,8 @@ class ArcRaidersPageHeader extends StatelessWidget {
       }
 
       return Container(
-        width: compact ? 40 : 46,
-        height: compact ? 40 : 46,
+        width: compact ? 34 : 40,
+        height: compact ? 34 : 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: accent.withValues(alpha: 0.12),
@@ -255,15 +260,18 @@ class ArcRaidersPageHeader extends StatelessWidget {
         child: Icon(
           icon ?? Icons.dashboard_rounded,
           color: accent,
-          size: compact ? 22 : 24,
+          size: compact ? 19 : 22,
         ),
       );
     }
 
     return Container(
-      padding: EdgeInsets.all(compact ? AppTheme.spaceM : AppTheme.spaceL),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? AppTheme.spaceS : AppTheme.spaceM,
+        vertical: compact ? AppTheme.spaceXS : AppTheme.spaceS,
+      ),
       decoration: AppTheme.tradingCardDecoration(
-        radius: compact ? 24 : 28,
+        radius: compact ? 18 : 20,
         borderColor: accent.withValues(alpha: 0.30),
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
       ),
@@ -280,7 +288,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                   maxLines: compact ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.tradingHeading(
-                    fontSize: compact ? 20 : 24,
+                    fontSize: compact ? 17 : 21,
                     color: accent,
                   ),
                 ),
@@ -291,7 +299,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                     maxLines: compact ? 3 : 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: compact ? 12 : 13,
+                      fontSize: compact ? 11.5 : 12.5,
                       color: Colors.white70,
                       isBold: true,
                     ).copyWith(height: 1.30),
@@ -327,9 +335,9 @@ class ArcRaidersHeroBanner extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 600;
 
     return Container(
-      padding: EdgeInsets.all(compact ? 20 : 28),
+      padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: AppTheme.tradingCardDecoration(
-        radius: 32,
+        radius: 22,
         borderColor: accent.withValues(alpha: 0.24),
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
       ),
@@ -355,7 +363,7 @@ class ArcRaidersHeroBanner extends StatelessWidget {
               Text(
                 title,
                 style: AppTheme.tradingHeading(
-                  fontSize: compact ? 28 : 36,
+                  fontSize: compact ? 21 : 28,
                   color: accent,
                 ),
               ),
@@ -363,7 +371,7 @@ class ArcRaidersHeroBanner extends StatelessWidget {
               Text(
                 subtitle,
                 style: AppTheme.bodyTextStyle(
-                  fontSize: compact ? 13 : 15,
+                  fontSize: compact ? 12 : 14,
                   color: Colors.white70,
                   isBold: true,
                 ).copyWith(height: 1.4),
@@ -381,8 +389,8 @@ class ArcRaidersSectionCard extends StatelessWidget {
     super.key,
     required this.child,
     this.accent = AppTheme.neonCyan,
-    this.padding = const EdgeInsets.all(AppTheme.spaceL),
-    this.radius = 26,
+    this.padding = const EdgeInsets.all(AppTheme.spaceS),
+    this.radius = 18,
   });
 
   final Widget child;
@@ -402,4 +410,37 @@ class ArcRaidersSectionCard extends StatelessWidget {
       child: child,
     );
   }
+}
+
+class _ArcCommandGridPainter extends CustomPainter {
+  const _ArcCommandGridPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = AppTheme.neonCyan.withValues(alpha: 0.030)
+      ..strokeWidth = 1;
+    final heavyPaint = Paint()
+      ..color = AppTheme.neonPink.withValues(alpha: 0.024)
+      ..strokeWidth = 1.2;
+
+    const smallStep = 32.0;
+    const largeStep = 128.0;
+
+    for (double x = 0; x <= size.width; x += smallStep) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+    }
+    for (double y = 0; y <= size.height; y += smallStep) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+    }
+    for (double x = 0; x <= size.width; x += largeStep) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), heavyPaint);
+    }
+    for (double y = 0; y <= size.height; y += largeStep) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), heavyPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArcCommandGridPainter oldDelegate) => false;
 }

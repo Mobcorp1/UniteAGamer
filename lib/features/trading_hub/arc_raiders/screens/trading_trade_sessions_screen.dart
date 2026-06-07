@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingTradeSessionsScreen extends StatefulWidget {
@@ -379,7 +379,7 @@ class _TradingTradeSessionsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Propose 3 days Ã— 3 times',
+                      'Propose 3 days ÃƒÆ’Ã¢â‚¬â€ 3 times',
                       style: AppTheme.tradingHeading(fontSize: 24),
                     ),
                     const SizedBox(height: 8),
@@ -849,7 +849,7 @@ class _TradingTradeSessionsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${session.traderOneName} â†” ${session.traderTwoName}',
+              '${session.traderOneName} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Â ${session.traderTwoName}',
               style: AppTheme.tradingHeading(fontSize: 22),
             ),
             const SizedBox(height: 10),
@@ -1080,7 +1080,7 @@ class _TradingTradeSessionsScreenState
             Divider(color: AppTheme.tradingDivider),
             const SizedBox(height: 10),
             Text(
-              'Flow: accept offer â†’ propose 3 days Ã— 3 times â†’ other trader confirms one slot â†’ share Embark IDs â†’ assign first drop â†’ both mark ready.',
+              'Flow: accept offer ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ propose 3 days ÃƒÆ’Ã¢â‚¬â€ 3 times ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ other trader confirms one slot ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ share Embark IDs ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ assign first drop ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ both mark ready.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.tradingMutedText,
@@ -1122,7 +1122,7 @@ class _TradingTradeSessionsScreenState
           : null,
       body: Stack(
         children: [
-          const Positioned.fill(child: StaticWatermark()),
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           SafeArea(
             child: Center(
               child: ConstrainedBox(

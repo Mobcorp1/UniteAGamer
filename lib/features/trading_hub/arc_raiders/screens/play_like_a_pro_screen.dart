@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:intl/intl.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/play_like_a_pro_repository.dart';
 import 'package:uag_arc_raiders_hub/widgets/dose_action_button.dart';
 import 'package:uag_arc_raiders_hub/widgets/dose_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class PlayLikeAProScreen extends StatefulWidget {
@@ -519,7 +519,10 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('â€¢ ', style: TextStyle(color: color, fontSize: 18)),
+                  Text(
+                    'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ',
+                    style: TextStyle(color: color, fontSize: 18),
+                  ),
                   Expanded(
                     child: Text(
                       bullet,
@@ -554,7 +557,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
       ),
       body: Stack(
         children: [
-          const Positioned.fill(child: StaticWatermark()),
+          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
           StreamBuilder<PlayLikeAProState>(
             stream: _repository.watchState(),
             builder: (context, snapshot) {
@@ -589,7 +592,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               final latestDate = state.history.isEmpty
                   ? null
                   : DateFormat(
-                      'dd MMM â€¢ HH:mm',
+                      'dd MMM ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ HH:mm',
                     ).format(state.history.first.createdAt);
 
               return SafeArea(
@@ -1048,7 +1051,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                '${DateFormat('dd MMM').format(entry.createdAt)} â€¢ ${_goalLabel(entry.goal)}',
+                                                '${DateFormat('dd MMM').format(entry.createdAt)} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${_goalLabel(entry.goal)}',
                                                 style: AppTheme.bodyTextStyle(
                                                   fontSize: 14,
                                                   color: AppTheme.neonCyan,
@@ -1057,7 +1060,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                'Perf ${entry.performance}/5 â€¢ Enjoyment ${entry.enjoyment}/5 â€¢ Tilt Control ${entry.tiltControl}/5',
+                                                'Perf ${entry.performance}/5 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Enjoyment ${entry.enjoyment}/5 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Tilt Control ${entry.tiltControl}/5',
                                                 style: const TextStyle(
                                                   color: Colors.white60,
                                                 ),

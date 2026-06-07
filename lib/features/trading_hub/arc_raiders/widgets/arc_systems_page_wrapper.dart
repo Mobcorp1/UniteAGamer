@@ -13,7 +13,7 @@ class ArcSystemsPageWrapper extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             const Color(0xFF050816),
-            AppTheme.neonCyan.withValues(alpha: 0.04),
+            AppTheme.neonCyan.withValues(alpha: 0.08),
             const Color(0xFF04050C),
           ],
           begin: Alignment.topLeft,
@@ -23,8 +23,11 @@ class ArcSystemsPageWrapper extends StatelessWidget {
       child: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1440),
-            child: Padding(padding: const EdgeInsets.all(18), child: child),
+            constraints: const BoxConstraints(maxWidth: 1320),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+              child: child,
+            ),
           ),
         ),
       ),
