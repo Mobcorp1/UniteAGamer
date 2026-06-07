@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -23,6 +24,8 @@ class FavouriteLoadoutScreen extends StatefulWidget {
 }
 
 class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
+  final ArcSavedLoadoutRepository _savedLoadoutRepository =
+      ArcSavedLoadoutRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   ArcLoadoutCategory _selectedCategory = ArcLoadoutCategory.saved;
   ArcPlayerPlayStyle _selectedPlayStyle = ArcPlayerPlayStyle.balanced;
@@ -102,6 +105,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 _buildRecommendedSection(),
                 const SizedBox(height: 18),
                 _buildCategoryChips(),
+                const SizedBox(height: 18),
+                _buildSavedLoadoutsSection(),
                 const SizedBox(height: 18),
                 if (loadouts.isEmpty)
                   _buildEmptyState()
@@ -465,6 +470,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         _buildCinematicPreviewDial(),
         const SizedBox(height: 18),
         _buildFinalLoadoutPanel(),
+        const SizedBox(height: 12),
+        _buildSaveCurrentLoadoutButton(),
         const SizedBox(height: 18),
         _buildIntelligencePanel(),
         const SizedBox(height: 18),
@@ -669,6 +676,54 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  Widget _buildSaveCurrentLoadoutButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _saveCurrentLoadout,
+        icon: const Icon(Icons.save_rounded),
+        label: const Text('Save Current Loadout'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppTheme.neonCyan,
+          side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.46)),
+          padding: const EdgeInsets.symmetric(vertical: 13),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveCurrentLoadout() async {
+    final now = DateTime.now();
+    final loadout = ArcSavedLoadout(
+      id: 'loadout_',
+      name: ' Custom Build',
+      category: ArcLoadoutCategory.saved,
+      playStyle: _selectedPlayStyle,
+      augment: _selectedAugment,
+      primaryWeapon: _selectedPrimaryWeapon,
+      primaryAttachments: _selectedPrimaryAttachments,
+      secondaryWeapon: _selectedSecondaryWeapon,
+      secondaryAttachments: _selectedSecondaryAttachments,
+      equipment: _selectedEquipment,
+      consumables: _selectedConsumables,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    try {
+      await _savedLoadoutRepository.saveLoadout(loadout);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Loadout saved.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save loadout: ')));
+    }
+  }
+
   void _showCurrentBuildPreview() {
     final loadout = ArcSavedLoadoutSeed(
       name: ' Custom Build',
@@ -831,6 +886,102 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  Widget _buildSavedLoadoutsSection() {
+    return StreamBuilder<List<ArcSavedLoadout>>(
+      stream: _savedLoadoutRepository.watchSavedLoadouts(),
+      builder: (context, snapshot) {
+        final saved = snapshot.data ?? const <ArcSavedLoadout>[];
+
+        if (saved.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.26),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'SAVED LOADOUTS',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 18,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'No custom loadouts saved yet. Build one below, then save it here.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.68),
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'SAVED LOADOUTS',
+              style: AppTheme.tradingHeading(
+                fontSize: 18,
+                color: AppTheme.neonCyan,
+              ),
+            ),
+            const SizedBox(height: 10),
+            for (final loadout in saved) ...[
+              _SavedLoadoutManagementCard(
+                loadout: loadout,
+                onOpen: () => _openSavedLoadoutPreview(loadout),
+                onDelete: () => _deleteSavedLoadout(loadout),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteSavedLoadout(ArcSavedLoadout loadout) async {
+    try {
+      await _savedLoadoutRepository.deleteLoadout(loadout.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(' deleted.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not delete loadout: ')));
+    }
+  }
+
+  void _openSavedLoadoutPreview(ArcSavedLoadout saved) {
+    final loadout = ArcSavedLoadoutSeed(
+      name: saved.name,
+      category: saved.category,
+      description: 'Saved custom build for .',
+      augment: saved.augment,
+      primaryWeapon: saved.primaryWeapon,
+      secondaryWeapon: saved.secondaryWeapon,
+      equipment: saved.equipment,
+      consumables: saved.consumables,
+    );
+
+    _openLoadoutPreview(loadout);
+  }
+
   Widget _buildBuilderFoundation() {
     final balanced = ArcLoadoutSeedData.starterLoadouts.first;
     final primary = _weapon(balanced.primaryWeapon);
@@ -922,7 +1073,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: cards.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, index) => cards[index],
           ),
         ),
@@ -993,6 +1144,92 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _SavedLoadoutManagementCard extends StatelessWidget {
+  const _SavedLoadoutManagementCard({
+    required this.loadout,
+    required this.onOpen,
+    required this.onDelete,
+  });
+
+  final ArcSavedLoadout loadout;
+  final VoidCallback onOpen;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (loadout.category) {
+      ArcLoadoutCategory.meta => Colors.amberAccent,
+      ArcLoadoutCategory.pvp => AppTheme.neonPink,
+      ArcLoadoutCategory.pve => Colors.lightGreenAccent,
+      ArcLoadoutCategory.balanced => Colors.cyanAccent,
+      ArcLoadoutCategory.saved => AppTheme.neonCyan,
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withValues(alpha: 0.32)),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.10), blurRadius: 18),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.bookmark_rounded, color: color, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: InkWell(
+              onTap: onOpen,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    loadout.name.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    ' •  / ',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.70),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Open',
+            onPressed: onOpen,
+            icon: Icon(Icons.visibility_rounded, color: AppTheme.neonCyan),
+          ),
+          IconButton(
+            tooltip: 'Delete',
+            onPressed: onDelete,
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.redAccent,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
