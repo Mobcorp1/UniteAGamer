@@ -1,4 +1,4 @@
-package com.example.uag_traders_hub
+package com.mobcorp.uagtradershub
 
 import io.flutter.embedding.android.FlutterActivity
 

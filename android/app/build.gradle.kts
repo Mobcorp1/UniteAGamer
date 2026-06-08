@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.uag_traders_hub"
+    namespace = "com.mobcorp.uagtradershub"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.uag_traders_hub"
+        applicationId = "com.mobcorp.uagtradershub"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
