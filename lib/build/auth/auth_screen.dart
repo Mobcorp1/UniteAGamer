@@ -344,7 +344,7 @@ class _AuthScreenState extends State<AuthScreen> {
           'displayName': _nameController.text.trim(),
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
-          'onboardingComplete': false,
+          'onboardingComplete': true,
           'modules': {'trader': true},
           'region': _selectedCountry == 'United Kingdom'
               ? 'UK'
@@ -721,7 +721,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Operator',
-          price: 'Ãƒâ€šÃ‚Â£4.99/month',
+          price: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£4.99/month',
           summary:
               'More listings, more offers, monthly operations and progression.',
           commission: 'Starts at 5% commission path, can progress toward 15%.',
@@ -730,7 +730,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Overseer',
-          price: 'Ãƒâ€šÃ‚Â£8.99/month',
+          price: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£8.99/month',
           summary:
               'Priority trading, stronger referral tools and future smart assist.',
           commission: 'Starts at 10% commission path, can progress toward 25%.',

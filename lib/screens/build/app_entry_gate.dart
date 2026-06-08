@@ -24,13 +24,33 @@ class _AppEntryGateState extends State<AppEntryGate> {
   final ArcUserInitializer _initializer = ArcUserInitializer();
 
   Future<bool> _prepareUser(String uid) async {
-    await _initializer.initialize();
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .get();
-    final data = doc.data() ?? <String, dynamic>{};
-    return !(data['onboardingComplete'] == true);
+    try {
+      await _initializer.initialize();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      final data = doc.data() ?? <String, dynamic>{};
+
+      // Signup already captures the basic/trader profile. If the profile exists,
+      // do not send the user through the older duplicate onboarding flow.
+      final hasBasicProfile = data['basicProfile'] is Map;
+      final hasTraderProfile = data['traderProfile'] is Map;
+      if (hasBasicProfile || hasTraderProfile) return false;
+
+      return !(data['onboardingComplete'] == true);
+    } on FirebaseException catch (error, stackTrace) {
+      debugPrint('AppEntryGate prepare user failed: ${error.code}');
+      debugPrintStack(stackTrace: stackTrace);
+
+      // Do not trap the user on an endless loading screen if Firestore rules or
+      // first-run propagation blocks the profile read. Auth has succeeded, so let
+      // the app open and surface any feature-specific permission issue later.
+      if (error.code == 'permission-denied' || error.code == 'unavailable') {
+        return false;
+      }
+      rethrow;
+    }
   }
 
   Future<void> _runLegalGateOnce() async {

@@ -95,7 +95,8 @@ class _UagAppLockGateState extends State<UagAppLockGate>
       setState(() {
         _unlocked = authenticated;
         if (!authenticated) {
-          _message = 'Unlock cancelled. Authenticate to enter the hub.';
+          _message =
+              'Unlock cancelled. Use biometrics or use password instead.';
         }
       });
     } on PlatformException catch (error) {
@@ -219,7 +220,7 @@ class _UagAppLockGateState extends State<UagAppLockGate>
                       TextButton.icon(
                         onPressed: _signOutAndReturn,
                         icon: const Icon(Icons.logout_rounded),
-                        label: const Text('Sign out and use password'),
+                        label: const Text('Use password instead'),
                       ),
                     ],
                   ),

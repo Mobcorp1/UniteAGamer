@@ -509,7 +509,7 @@ class _OnboardingBasicProfileScreenState
           Text(
             _stepIndex == 0
                 ? 'The trusted network for Arc Raiders traders.'
-                : 'A cleaner onboarding flow built for the trading hub.',
+                : 'Your ARC command centre is ready.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, height: 1.35),
           ),
@@ -526,14 +526,14 @@ class _OnboardingBasicProfileScreenState
           _screenTitle(
             'Welcome',
             subtitle:
-                'Get your UAG Traders Hub account ready for tracking, trading and trust.',
+                'Your account unlocks tracking, trading, intel and trusted raider tools.',
           ),
           const SizedBox(height: 24),
           _infoTile(
             icon: Icons.track_changes_rounded,
             title: 'Blueprint Tracking',
             body: 'Track what you own, what you need and what you can trade.',
-            selected: true,
+            selected: false,
           ),
           const SizedBox(height: 14),
           _infoTile(
@@ -561,14 +561,15 @@ class _OnboardingBasicProfileScreenState
         children: [
           _screenTitle(
             'Built for Arc Raiders',
-            subtitle: 'The hub is structured around the trading loop.',
+            subtitle:
+                'Tracking, trading and trust are enabled for your account.',
           ),
           const SizedBox(height: 24),
           _infoTile(
             icon: Icons.inventory_2_outlined,
             title: 'Track',
             body: 'Blueprints, resources, duplicates and what you need.',
-            selected: true,
+            selected: false,
           ),
           const SizedBox(height: 14),
           _infoTile(
