@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
+import 'package:uag_arc_raiders_hub/features/security/uag_app_lock_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_initializer.dart';
 import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
@@ -84,7 +85,7 @@ class _AppEntryGateState extends State<AppEntryGate> {
               _runLegalGateOnce();
             });
 
-            return const HomeScreen();
+            return const UagAppLockGate(child: HomeScreen());
           },
         );
       },

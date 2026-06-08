@@ -721,7 +721,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Operator',
-          price: 'Ã‚Â£4.99/month',
+          price: 'Ãƒâ€šÃ‚Â£4.99/month',
           summary:
               'More listings, more offers, monthly operations and progression.',
           commission: 'Starts at 5% commission path, can progress toward 15%.',
@@ -730,7 +730,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Overseer',
-          price: 'Ã‚Â£8.99/month',
+          price: 'Ãƒâ€šÃ‚Â£8.99/month',
           summary:
               'Priority trading, stronger referral tools and future smart assist.',
           commission: 'Starts at 10% commission path, can progress toward 25%.',

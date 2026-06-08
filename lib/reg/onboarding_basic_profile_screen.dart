@@ -411,13 +411,13 @@ class _OnboardingBasicProfileScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: selected ? 0.52 : 0.34),
+        color: Colors.black.withValues(alpha: selected ? 0.58 : 0.40),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: selected
               ? AppTheme.neonCyan
               : Colors.white.withValues(alpha: 0.16),
-          width: selected ? 1.5 : 1,
+          width: selected ? 1.8 : 1.1,
         ),
       ),
       child: Row(
@@ -454,9 +454,7 @@ class _OnboardingBasicProfileScreenState
             ),
           ),
           Icon(
-            selected
-                ? Icons.check_circle_rounded
-                : Icons.radio_button_unchecked_rounded,
+            selected ? Icons.check_circle_rounded : Icons.info_outline_rounded,
             color: selected ? AppTheme.neonCyan : Colors.white38,
           ),
         ],
@@ -549,7 +547,7 @@ class _OnboardingBasicProfileScreenState
             title: 'Intel',
             body: 'Use reports to make better raid decisions.',
           ),
-          const Spacer(),
+          const SizedBox(height: 22),
           _primaryButton('GET STARTED'),
         ],
       ),
@@ -584,7 +582,7 @@ class _OnboardingBasicProfileScreenState
             title: 'Trust',
             body: 'Build a profile that helps people trade with confidence.',
           ),
-          const Spacer(),
+          const SizedBox(height: 22),
           _primaryButton('NEXT'),
         ],
       ),
@@ -743,7 +741,7 @@ class _OnboardingBasicProfileScreenState
               ),
               decoration: _input('Short Bio (optional)'),
             ),
-            const Spacer(),
+            const SizedBox(height: 22),
             _primaryButton('NEXT'),
           ],
         ),
@@ -784,7 +782,7 @@ class _OnboardingBasicProfileScreenState
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, height: 1.38),
           ),
-          const Spacer(),
+          const SizedBox(height: 22),
           _primaryButton('LAUNCH HUB', icon: Icons.rocket_launch_rounded),
         ],
       ),
@@ -820,7 +818,7 @@ class _OnboardingBasicProfileScreenState
         children: [
           _leftHeroPanel(),
           const SizedBox(height: 18),
-          SizedBox(height: 620, child: stepPanel),
+          SizedBox(height: 680, child: stepPanel),
         ],
       );
     }
