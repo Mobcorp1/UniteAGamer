@@ -6,6 +6,12 @@ class UagAdMobConfig {
   // Keep this false for all local development and emulator/device testing.
   // Flip to true only for a signed production release after GDPR consent is wired.
   static const bool useProductionAds = false;
+
+  // Production ad serving is deliberately double-locked.
+  // Keep both false until Play Store release checks, GDPR consent, app-ads.txt,
+  // and internal QA have all passed.
+  static const bool releaseBuildAllowsProductionAds = false;
+  static const bool releaseChecklistComplete = false;
   static const bool adsEnabled = true;
   static const bool requiresConsentBeforeProductionAds = true;
   static const bool productionAdsLockedUntilConsentComplete = true;
@@ -23,4 +29,13 @@ class UagAdMobConfig {
         ? androidProductionBannerAdUnitId
         : androidTestBannerAdUnitId;
   }
+
+  static bool get productionAdsCanBeServed =>
+      adsEnabled &&
+      useProductionAds &&
+      releaseBuildAllowsProductionAds &&
+      releaseChecklistComplete &&
+      !productionAdsLockedUntilConsentComplete;
+
+  static bool get shouldUseTestAds => !productionAdsCanBeServed;
 }
