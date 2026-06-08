@@ -75,8 +75,9 @@ class _LegalPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black.withValues(alpha: 0.86),
+        backgroundColor: Colors.black.withValues(alpha: 0.58),
         elevation: 0,
         title: Text(
           title,
@@ -187,6 +188,15 @@ class _LegalHero extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
+            'TACTICAL LEGAL BRIEF',
+            style: AppTheme.neonTextStyle(
+              fontSize: 13,
+              color: accent,
+              isBold: true,
+            ).copyWith(letterSpacing: 1.7),
+          ),
+          const SizedBox(height: 8),
+          Text(
             subtitle,
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, height: 1.35),
@@ -208,7 +218,7 @@ class _LegalSectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.44),
+        color: Colors.black.withValues(alpha: 0.58),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: accent.withValues(alpha: 0.18)),
       ),
@@ -250,7 +260,7 @@ class _LegalFooter extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: accent.withValues(alpha: 0.22)),
       ),
       child: const Text(
