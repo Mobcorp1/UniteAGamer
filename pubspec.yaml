@@ -30,6 +30,7 @@ dependencies:
   flutter_timezone: ^4.0.0
   add_2_calendar: ^3.0.1
   wakelock_plus: ^1.2.8
+  google_mobile_ads: ^8.0.0
 
 dev_dependencies:
   flutter_test:
