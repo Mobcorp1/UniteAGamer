@@ -6,6 +6,7 @@ class UagAdMobConfig {
   // Keep this false for all local development and emulator/device testing.
   // Flip to true only for a signed production release after GDPR consent is wired.
   static const bool useProductionAds = false;
+  static const bool adsEnabled = true;
 
   static const String androidAppId = 'ca-app-pub-2994575443987525~1687376946';
   static const String androidProductionBannerAdUnitId =

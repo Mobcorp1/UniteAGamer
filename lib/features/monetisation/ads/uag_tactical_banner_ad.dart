@@ -156,3 +156,37 @@ class _UagTacticalAdLoadingStrip extends StatelessWidget {
     );
   }
 }
+
+class UagAdAwareBottomDock extends StatelessWidget {
+  const UagAdAwareBottomDock({
+    super.key,
+    required this.child,
+    this.showAds = true,
+    this.reserveAdSpace = true,
+  });
+
+  final Widget child;
+  final bool showAds;
+  final bool reserveAdSpace;
+
+  @override
+  Widget build(BuildContext context) {
+    final shouldShowAd = showAds && UagAdMobConfig.adsEnabled;
+    return SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (shouldShowAd)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(10, 4, 10, 6),
+              child: UagTacticalBannerAd(),
+            )
+          else if (reserveAdSpace)
+            const SizedBox(height: 0),
+          child,
+        ],
+      ),
+    );
+  }
+}
