@@ -163,30 +163,79 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _persistLoginPreferences(String email, String uid) async {
     final prefs = await SharedPreferences.getInstance();
+    final biometricEnabled = _biometricsAvailable && _biometricLoginEnabled;
+    final keepSignedIn = _keepSignedIn || biometricEnabled;
+
     await prefs.setBool('uag_remember_email', _rememberEmail);
-    await prefs.setBool('uag_keep_signed_in', _keepSignedIn);
+    await prefs.setBool('uag_keep_signed_in', keepSignedIn);
     if (_rememberEmail) {
       await prefs.setString('uag_last_login_email', email.trim());
     } else {
       await prefs.remove('uag_last_login_email');
     }
-    await prefs.setBool(
-      'uag_biometric_login_enabled',
-      _biometricsAvailable && _biometricLoginEnabled,
+
+    await UagSessionGateController.setBiometricRelockEnabled(
+      enabled: biometricEnabled,
+      uid: biometricEnabled ? uid : null,
     );
     await UagSessionGateController.markAuthenticated(
       uid: uid,
-      keepSignedIn: _keepSignedIn,
+      keepSignedIn: keepSignedIn,
     );
   }
 
   Future<void> _setBiometricLoginEnabled(bool value) async {
-    final enabled = value && _biometricsAvailable;
+    if (!value) {
+      setState(() => _biometricLoginEnabled = false);
+      await UagSessionGateController.setBiometricRelockEnabled(enabled: false);
+      return;
+    }
 
-    setState(() => _biometricLoginEnabled = enabled);
+    if (!_biometricsAvailable) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Biometric unlock is not available on this device.'),
+        ),
+      );
+      return;
+    }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('uag_biometric_login_enabled', enabled);
+    try {
+      final authenticated = await _localAuth.authenticate(
+        localizedReason:
+            'Allow UAG Arc Raiders Hub to use biometric unlock on this device',
+        biometricOnly: true,
+      );
+
+      if (!authenticated || !mounted) return;
+
+      final currentUser = _firebase.currentUser;
+      setState(() {
+        _biometricLoginEnabled = true;
+        _keepSignedIn = true;
+      });
+
+      await UagSessionGateController.setBiometricRelockEnabled(
+        enabled: true,
+        uid: currentUser?.uid,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Biometric unlock enabled for this device.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _biometricLoginEnabled = false);
+      await UagSessionGateController.setBiometricRelockEnabled(enabled: false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Biometric setup failed: $error')));
+    }
   }
 
   Future<void> _tryBiometricUnlock() async {
@@ -219,6 +268,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
       if (!authenticated || !mounted) return;
 
+      await UagSessionGateController.markBiometricUnlocked(
+        uid: currentUser.uid,
+      );
+
+      if (!mounted) return;
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
@@ -1095,6 +1149,14 @@ class _AuthScreenState extends State<AuthScreen> {
             title: const Text(
               'Biometric unlock',
               style: TextStyle(color: Colors.white70),
+            ),
+            subtitle: const Text(
+              'Shows the device fingerprint or Face ID prompt when enabled, then relocks the app after restart or app switch.',
+              style: TextStyle(
+                color: Colors.white38,
+                fontSize: 11,
+                height: 1.25,
+              ),
             ),
           ),
           if (_biometricLoginEnabled)

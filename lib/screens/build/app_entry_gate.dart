@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/auth/session/uag_biometric_relock_screen.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_initializer.dart';
@@ -19,11 +20,46 @@ class AppEntryGate extends StatefulWidget {
   State<AppEntryGate> createState() => _AppEntryGateState();
 }
 
-class _AppEntryGateState extends State<AppEntryGate> {
+class _AppEntryGateState extends State<AppEntryGate>
+    with WidgetsBindingObserver {
   bool _fanDisclaimerChecked = false;
   final ArcUserInitializer _initializer = ArcUserInitializer();
   Future<bool>? _sessionAllowedFuture;
+  Future<bool>? _biometricRelockFuture;
   String? _sessionUid;
+  String? _biometricUid;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      UagSessionGateController.markAppBackgrounded();
+      _biometricRelockFuture = null;
+      _biometricUid = null;
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed && mounted) {
+      setState(() {
+        _biometricRelockFuture = null;
+        _biometricUid = null;
+      });
+    }
+  }
 
   Future<bool> _sessionAllowedFor(User user) {
     if (_sessionUid != user.uid || _sessionAllowedFuture == null) {
@@ -35,10 +71,28 @@ class _AppEntryGateState extends State<AppEntryGate> {
     return _sessionAllowedFuture!;
   }
 
+  Future<bool> _biometricRelockRequiredFor(User user) {
+    if (_biometricUid != user.uid || _biometricRelockFuture == null) {
+      _biometricUid = user.uid;
+      _biometricRelockFuture =
+          UagSessionGateController.isBiometricRelockRequired(user.uid);
+    }
+    return _biometricRelockFuture!;
+  }
+
+  Future<void> _handleBiometricUnlocked() async {
+    _biometricRelockFuture = null;
+    _biometricUid = null;
+    if (!mounted) return;
+    setState(() {});
+  }
+
   Future<void> _clearSilentFirebaseLogin() async {
     _fanDisclaimerChecked = false;
     _sessionAllowedFuture = null;
+    _biometricRelockFuture = null;
     _sessionUid = null;
+    _biometricUid = null;
     await UagSessionGateController.clearSession();
     await FirebaseAuth.instance.signOut();
   }
@@ -117,32 +171,52 @@ class _AppEntryGateState extends State<AppEntryGate> {
             }
 
             return FutureBuilder<bool>(
-              future: _prepareUser(user.uid),
-              builder: (context, onboardingSnapshot) {
-                if (onboardingSnapshot.connectionState ==
+              future: _biometricRelockRequiredFor(user),
+              builder: (context, biometricSnapshot) {
+                if (biometricSnapshot.connectionState ==
                     ConnectionState.waiting) {
                   return const _GateLoadingScaffold();
                 }
 
-                if (onboardingSnapshot.hasError) {
-                  return _GateErrorScaffold(
-                    message: 'Could not prepare your trader profile.',
-                    details: onboardingSnapshot.error,
+                final relockRequired = biometricSnapshot.data ?? false;
+                if (relockRequired) {
+                  _fanDisclaimerChecked = false;
+                  return UagBiometricRelockScreen(
+                    user: user,
+                    onUnlocked: _handleBiometricUnlocked,
+                    onSignOut: _clearSilentFirebaseLogin,
                   );
                 }
 
-                final needsOnboarding = onboardingSnapshot.data ?? true;
-                if (needsOnboarding) {
-                  _fanDisclaimerChecked = false;
-                  return const OnboardingBasicProfileScreen();
-                }
+                return FutureBuilder<bool>(
+                  future: _prepareUser(user.uid),
+                  builder: (context, onboardingSnapshot) {
+                    if (onboardingSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const _GateLoadingScaffold();
+                    }
 
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted) return;
-                  _runLegalGateOnce();
-                });
+                    if (onboardingSnapshot.hasError) {
+                      return _GateErrorScaffold(
+                        message: 'Could not prepare your trader profile.',
+                        details: onboardingSnapshot.error,
+                      );
+                    }
 
-                return const HomeScreen();
+                    final needsOnboarding = onboardingSnapshot.data ?? true;
+                    if (needsOnboarding) {
+                      _fanDisclaimerChecked = false;
+                      return const OnboardingBasicProfileScreen();
+                    }
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      _runLegalGateOnce();
+                    });
+
+                    return const HomeScreen();
+                  },
+                );
               },
             );
           },
