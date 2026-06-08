@@ -7,6 +7,8 @@ class UagAdMobConfig {
   // Flip to true only for a signed production release after GDPR consent is wired.
   static const bool useProductionAds = false;
   static const bool adsEnabled = true;
+  static const bool requiresConsentBeforeProductionAds = true;
+  static const bool productionAdsLockedUntilConsentComplete = true;
 
   static const String androidAppId = 'ca-app-pub-2994575443987525~1687376946';
   static const String androidProductionBannerAdUnitId =
