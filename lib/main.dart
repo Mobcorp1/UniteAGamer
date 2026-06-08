@@ -39,20 +39,35 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
-  await UagAdConsentController.instance.initialiseForDevelopment();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  if (!kIsWeb) {
+  runApp(const UAGTradersHubApp());
+
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
     try {
-      await TradingPushService.instance.initialize();
+      await MobileAds.instance.initialize();
     } catch (e, st) {
-      debugPrint('TradingPushService init failed: $e');
+      debugPrint('MobileAds init failed: $e');
       debugPrintStack(stackTrace: st);
     }
-  }
 
-  runApp(const UAGTradersHubApp());
+    try {
+      await UagAdConsentController.instance.initialiseForDevelopment();
+    } catch (e, st) {
+      debugPrint('Consent init failed: $e');
+      debugPrintStack(stackTrace: st);
+    }
+
+    if (!kIsWeb) {
+      try {
+        await TradingPushService.instance.initialize();
+      } catch (e, st) {
+        debugPrint('TradingPushService init failed: $e');
+        debugPrintStack(stackTrace: st);
+      }
+    }
+  });
 }
 
 class UAGTradersHubApp extends StatelessWidget {
@@ -263,6 +278,7 @@ class UAGTradersHubApp extends StatelessWidget {
         final args = settings.arguments is FeedbackScreenArgs
             ? settings.arguments! as FeedbackScreenArgs
             : const FeedbackScreenArgs();
+
         return MaterialPageRoute(
           builder: (_) => FeedbackScreen(initialTabIndex: args.initialTabIndex),
           settings: settings,
@@ -300,7 +316,9 @@ class UAGTradersHubApp extends StatelessWidget {
             );
           }
 
-          if (snapshot.hasData) return const AppEntryGate();
+          if (snapshot.hasData) {
+            return const AppEntryGate();
+          }
 
           return const AuthLandingScreen();
         },

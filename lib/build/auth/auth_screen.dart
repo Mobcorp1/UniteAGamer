@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
@@ -40,6 +41,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
   bool _rememberEmail = true;
+  bool _keepSignedIn = false;
   bool _biometricsAvailable = false;
   bool _biometricLoginEnabled = false;
 
@@ -132,6 +134,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final rememberEmail = prefs.getBool('uag_remember_email') ?? true;
       final biometricEnabled =
           prefs.getBool('uag_biometric_login_enabled') ?? false;
+      final keepSignedIn = prefs.getBool('uag_keep_signed_in') ?? false;
       final supported = await _localAuth.isDeviceSupported();
       final canCheck = await _localAuth.canCheckBiometrics;
       final availableBiometrics = await _localAuth.getAvailableBiometrics();
@@ -141,6 +144,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (!mounted) return;
       setState(() {
         _rememberEmail = rememberEmail;
+        _keepSignedIn = keepSignedIn;
         _biometricsAvailable = biometricsAvailable;
         _biometricLoginEnabled = biometricEnabled && biometricsAvailable;
         if (savedEmail.isNotEmpty) {
@@ -157,9 +161,10 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  Future<void> _persistLoginPreferences(String email) async {
+  Future<void> _persistLoginPreferences(String email, String uid) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('uag_remember_email', _rememberEmail);
+    await prefs.setBool('uag_keep_signed_in', _keepSignedIn);
     if (_rememberEmail) {
       await prefs.setString('uag_last_login_email', email.trim());
     } else {
@@ -168,6 +173,10 @@ class _AuthScreenState extends State<AuthScreen> {
     await prefs.setBool(
       'uag_biometric_login_enabled',
       _biometricsAvailable && _biometricLoginEnabled,
+    );
+    await UagSessionGateController.markAuthenticated(
+      uid: uid,
+      keepSignedIn: _keepSignedIn,
     );
   }
 
@@ -287,11 +296,18 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_isLogin) {
-        await _firebase.signInWithEmailAndPassword(
+        final credential = await _firebase.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
-        await _persistLoginPreferences(email);
+        final uid = credential.user?.uid;
+        if (uid == null) {
+          throw FirebaseAuthException(
+            code: 'user-null',
+            message: 'Login succeeded but user session was not available.',
+          );
+        }
+        await _persistLoginPreferences(email, uid);
 
         if (!mounted) return;
 
@@ -400,7 +416,7 @@ class _AuthScreenState extends State<AuthScreen> {
           },
         }, SetOptions(merge: true));
 
-        await _persistLoginPreferences(email);
+        await _persistLoginPreferences(email, user.uid);
 
         if (!mounted) return;
 
@@ -981,6 +997,7 @@ class _AuthScreenState extends State<AuthScreen> {
           },
         ),
         _buildRememberEmailTile(),
+        _buildKeepSignedInTile(),
         const SizedBox(height: AppTheme.spaceS),
         _buildPasswordField(
           controller: _passwordFieldController,
@@ -1033,6 +1050,26 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  Widget _buildKeepSignedInTile() {
+    return SwitchListTile(
+      value: _keepSignedIn,
+      onChanged: _isLoading
+          ? null
+          : (value) => setState(() => _keepSignedIn = value),
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      activeThumbColor: AppTheme.neonCyan,
+      title: const Text(
+        'Keep me signed in on this device',
+        style: TextStyle(color: Colors.white70),
+      ),
+      subtitle: const Text(
+        'Leave off on shared devices. Silent Firebase login is blocked after a cold restart.',
+        style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.25),
+      ),
+    );
+  }
+
   Widget _buildLoginBody() {
     return Column(
       children: [
@@ -1047,6 +1084,7 @@ class _AuthScreenState extends State<AuthScreen> {
           validator: _validateEmail,
         ),
         _buildRememberEmailTile(),
+        _buildKeepSignedInTile(),
         if (_isLogin && _biometricsAvailable) ...[
           SwitchListTile(
             value: _biometricLoginEnabled,

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_initializer.dart';
 import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
@@ -21,6 +22,26 @@ class AppEntryGate extends StatefulWidget {
 class _AppEntryGateState extends State<AppEntryGate> {
   bool _fanDisclaimerChecked = false;
   final ArcUserInitializer _initializer = ArcUserInitializer();
+  Future<bool>? _sessionAllowedFuture;
+  String? _sessionUid;
+
+  Future<bool> _sessionAllowedFor(User user) {
+    if (_sessionUid != user.uid || _sessionAllowedFuture == null) {
+      _sessionUid = user.uid;
+      _sessionAllowedFuture = UagSessionGateController.isSessionAllowed(
+        user.uid,
+      );
+    }
+    return _sessionAllowedFuture!;
+  }
+
+  Future<void> _clearSilentFirebaseLogin() async {
+    _fanDisclaimerChecked = false;
+    _sessionAllowedFuture = null;
+    _sessionUid = null;
+    await UagSessionGateController.clearSession();
+    await FirebaseAuth.instance.signOut();
+  }
 
   Future<bool> _prepareUser(String uid) async {
     try {
@@ -80,31 +101,50 @@ class _AppEntryGateState extends State<AppEntryGate> {
         }
 
         return FutureBuilder<bool>(
-          future: _prepareUser(user.uid),
-          builder: (context, onboardingSnapshot) {
-            if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
+          future: _sessionAllowedFor(user),
+          builder: (context, sessionSnapshot) {
+            if (sessionSnapshot.connectionState == ConnectionState.waiting) {
               return const _GateLoadingScaffold();
             }
 
-            if (onboardingSnapshot.hasError) {
-              return _GateErrorScaffold(
-                message: 'Could not prepare your trader profile.',
-                details: onboardingSnapshot.error,
-              );
+            final sessionAllowed = sessionSnapshot.data ?? false;
+            if (!sessionAllowed) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _clearSilentFirebaseLogin();
+              });
+              return const AuthLandingScreen();
             }
 
-            final needsOnboarding = onboardingSnapshot.data ?? true;
-            if (needsOnboarding) {
-              _fanDisclaimerChecked = false;
-              return const OnboardingBasicProfileScreen();
-            }
+            return FutureBuilder<bool>(
+              future: _prepareUser(user.uid),
+              builder: (context, onboardingSnapshot) {
+                if (onboardingSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const _GateLoadingScaffold();
+                }
 
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _runLegalGateOnce();
-            });
+                if (onboardingSnapshot.hasError) {
+                  return _GateErrorScaffold(
+                    message: 'Could not prepare your trader profile.',
+                    details: onboardingSnapshot.error,
+                  );
+                }
 
-            return const HomeScreen();
+                final needsOnboarding = onboardingSnapshot.data ?? true;
+                if (needsOnboarding) {
+                  _fanDisclaimerChecked = false;
+                  return const OnboardingBasicProfileScreen();
+                }
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _runLegalGateOnce();
+                });
+
+                return const HomeScreen();
+              },
+            );
           },
         );
       },
