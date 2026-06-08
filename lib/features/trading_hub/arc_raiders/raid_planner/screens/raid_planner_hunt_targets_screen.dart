@@ -446,10 +446,12 @@ class _RaidPlannerHuntTargetsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Hunt Targets',
       ),
-      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.cardBackgroundDeep,
         foregroundColor: Colors.white,

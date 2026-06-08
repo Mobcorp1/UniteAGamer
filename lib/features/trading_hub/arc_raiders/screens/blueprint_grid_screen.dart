@@ -615,7 +615,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned  •  $missingCount missing  •  $dupesCount dupes',
+            '$ownedCount / ${allBlueprints.length} owned  â€¢  $missingCount missing  â€¢  $dupesCount dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -1058,6 +1058,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Scaffold(
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         titleSpacing: 0,

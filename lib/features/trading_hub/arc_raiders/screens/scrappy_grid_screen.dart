@@ -1092,6 +1092,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     final allItems = _allItems;
 
     return Scaffold(
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Scrappy Intel',
       ),

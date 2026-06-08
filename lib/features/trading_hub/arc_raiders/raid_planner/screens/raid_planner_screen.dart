@@ -1142,10 +1142,12 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Raid Timeline',
       ),
-      backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
         title: 'Raid Timeline',
         subtitle: 'Blueprint-driven event timing and session planning.',
