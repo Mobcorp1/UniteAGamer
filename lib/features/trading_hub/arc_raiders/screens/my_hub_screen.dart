@@ -186,6 +186,12 @@ class _MyHubScreenState extends State<MyHubScreen> {
           SafeArea(
             child: Column(
               children: [
+                _MyHubSectionLabel(
+                  title: 'Personal Command Centre',
+                  subtitle:
+                      'Track progress, manage loadouts, monitor trading and review operations.',
+                  color: selected.accent,
+                ),
                 ArcMyHubCommandHeader(
                   title: 'My Hub',
                   subtitle: selected.subtitle,
@@ -216,6 +222,43 @@ class _MyHubScreenState extends State<MyHubScreen> {
                   onIntel: () => _openFeature(_featureByTitle('My Intel')),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MyHubSectionLabel extends StatelessWidget {
+  const _MyHubSectionLabel({
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: AppTheme.tradingHeading(fontSize: 15, color: color),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 11,
+              color: Colors.white70,
+              isBold: true,
             ),
           ),
         ],
