@@ -1,3 +1,24 @@
+// UAG ARC SHARED ARCHITECTURE LAYER
+//
+// This file is the official shared ARC Raiders screen architecture layer.
+//
+// LIVE RESPONSIBILITIES:
+// - cinematic ARC backdrop
+// - shared watermark/background visual foundation
+// - shared responsive page content helpers
+// - shared page list spacing helpers
+// - shared section/header/banner card foundations
+//
+// IMPORTANT:
+// Do not delete this file while live screens import:
+// - ArcRaidersScreenBackdrop
+// - ArcRaidersPageList
+// - ArcRaidersPageHeader
+// - ArcRaidersHeroBanner
+// - ArcRaidersSectionCard
+//
+// Keep blueprint grid rendering, portrait carousel logic, ownership/dupe logic,
+// _buildGrid, and BlueprintTile structure isolated from architecture cleanup passes.
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
