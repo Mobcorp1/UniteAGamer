@@ -198,6 +198,10 @@ class _MyHubScreenState extends State<MyHubScreen> {
                   accent: selected.accent,
                 ),
                 const SizedBox(height: AppTheme.spaceS),
+                const _MyHubDividerSpacer(
+                  label: 'Personal Systems',
+                  color: AppTheme.neonCyan,
+                ),
                 Expanded(
                   child: _PremiumFeatureCarousel(
                     controller: _controller,
@@ -260,6 +264,41 @@ class _MyHubSectionLabel extends StatelessWidget {
               color: Colors.white70,
               isBold: true,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MyHubDividerSpacer extends StatelessWidget {
+  const _MyHubDividerSpacer({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(height: 1, color: color.withValues(alpha: 0.22)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              label.toUpperCase(),
+              style: AppTheme.bodyTextStyle(
+                fontSize: 10,
+                color: color,
+                isBold: true,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(height: 1, color: color.withValues(alpha: 0.22)),
           ),
         ],
       ),
@@ -927,6 +966,10 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
             child: Column(
               children: [
                 const SizedBox(height: AppTheme.spaceM),
+                const _MyHubDividerSpacer(
+                  label: 'Personal Systems',
+                  color: AppTheme.neonCyan,
+                ),
                 Expanded(
                   child: _PremiumFeatureCarousel(
                     controller: _controller,
