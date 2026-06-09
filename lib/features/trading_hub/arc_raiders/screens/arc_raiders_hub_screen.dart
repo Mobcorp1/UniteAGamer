@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../widgets/arc_ad_banner_card.dart';
 
 import '../../../../screens/build/app_bar.dart';
 import '../../../../screens/build/app_drawer.dart';
@@ -152,6 +153,8 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceS),
+                const ArcAdBannerCard(),
+                const SizedBox(height: AppTheme.spaceXS),
                 _ArcBottomDock(
                   onMatch: () =>
                       _openFeature(_featureByTitle('Match a Raider')),
@@ -841,6 +844,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceS),
+                const ArcAdBannerCard(),
+                const SizedBox(height: AppTheme.spaceXS),
                 _ArcBottomDock(
                   onMatch: () => Navigator.of(context).pop(),
                   onRaid: () => Navigator.of(context).pop(),

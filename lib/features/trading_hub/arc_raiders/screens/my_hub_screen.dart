@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../widgets/arc_ad_banner_card.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -203,6 +204,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceS),
+                const ArcAdBannerCard(),
+                const SizedBox(height: AppTheme.spaceXS),
                 _ArcBottomDock(
                   onMatch: () =>
                       _openFeature(_featureByTitle('Profile & Reputation')),
@@ -893,6 +896,8 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceS),
+                const ArcAdBannerCard(),
+                const SizedBox(height: AppTheme.spaceXS),
                 _ArcBottomDock(
                   onMatch: () => Navigator.of(context).pop(),
                   onRaid: () => Navigator.of(context).pop(),

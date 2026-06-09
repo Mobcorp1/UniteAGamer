@@ -1,232 +1,175 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
-class ArcAdBannerCard extends StatelessWidget {
+enum ArcAdAccessTier { free, traderPro, elite }
+
+class ArcAdBannerCard extends StatefulWidget {
   const ArcAdBannerCard({
     super.key,
-    this.isAdFree = false,
-    this.isPremium = false,
-    this.title,
-    this.message,
-    this.onUpgradePressed,
-    this.onManagePressed,
+    this.tier = ArcAdAccessTier.free,
+    this.showForTraderPro = false,
   });
 
-  final bool isAdFree;
-  final bool isPremium;
-  final String? title;
-  final String? message;
-  final VoidCallback? onUpgradePressed;
-  final VoidCallback? onManagePressed;
+  final ArcAdAccessTier tier;
+  final bool showForTraderPro;
+
+  static bool shouldShowForTier({
+    required ArcAdAccessTier tier,
+    bool showForTraderPro = false,
+  }) {
+    switch (tier) {
+      case ArcAdAccessTier.free:
+        return true;
+      case ArcAdAccessTier.traderPro:
+        return showForTraderPro;
+      case ArcAdAccessTier.elite:
+        return false;
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final compact = width < 520;
-    final accent = isAdFree ? AppTheme.neonPink : AppTheme.neonCyan;
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(compact ? 14 : 18),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: compact ? 20 : 24,
-        borderColor: accent.withValues(alpha: 0.30),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -28,
-            right: -18,
-            child: IgnorePointer(
-              child: Container(
-                width: compact ? 94 : 132,
-                height: compact ? 94 : 132,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: accent.withValues(alpha: 0.07),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.08),
-                      blurRadius: 28,
-                      spreadRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: compact ? 38 : 44,
-                height: compact ? 38 : 44,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: accent.withValues(alpha: 0.10),
-                  border: Border.all(color: accent.withValues(alpha: 0.42)),
-                ),
-                child: Icon(
-                  isAdFree
-                      ? Icons.workspace_premium_rounded
-                      : Icons.campaign_rounded,
-                  color: accent,
-                  size: compact ? 22 : 25,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title ??
-                          (isAdFree
-                              ? 'AD-FREE ACTIVE'
-                              : 'SUPPORTED FREE ACCESS'),
-                      style: AppTheme.tradingHeading(
-                        fontSize: compact ? 17 : 19,
-                        color: accent,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      message ??
-                          (isAdFree
-                              ? 'Premium access is active. In-app banner placements stay hidden while your entitlement is valid.'
-                              : 'Free access may show cinematic in-app sponsor placements. Upgrade later to remove supported banner slots.'),
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: compact ? 12 : 13,
-                        color: Colors.white70,
-                        isBold: true,
-                      ).copyWith(height: 1.32),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: [
-                        _ArcAdPill(
-                          label: isAdFree ? 'Premium' : 'Free tier',
-                          icon: isAdFree
-                              ? Icons.lock_open_rounded
-                              : Icons.visibility_rounded,
-                          color: accent,
-                        ),
-                        _ArcAdPill(
-                          label: isPremium
-                              ? 'Ad-free eligible'
-                              : 'Banner ready',
-                          icon: isPremium
-                              ? Icons.verified_rounded
-                              : Icons.view_agenda_rounded,
-                          color: AppTheme.neonCyan,
-                        ),
-                        _ArcAdPill(
-                          label: 'Future AdMob slot',
-                          icon: Icons.bolt_rounded,
-                          color: AppTheme.neonPink,
-                        ),
-                      ],
-                    ),
-                    if (onUpgradePressed != null ||
-                        onManagePressed != null) ...[
-                      const SizedBox(height: 14),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 8,
-                        children: [
-                          if (onUpgradePressed != null)
-                            _ArcAdActionButton(
-                              label: isPremium ? 'Upgrade plan' : 'Remove ads',
-                              icon: Icons.arrow_upward_rounded,
-                              onPressed: onUpgradePressed!,
-                              color: AppTheme.neonCyan,
-                            ),
-                          if (onManagePressed != null)
-                            _ArcAdActionButton(
-                              label: 'Manage',
-                              icon: Icons.tune_rounded,
-                              onPressed: onManagePressed!,
-                              color: AppTheme.neonPink,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  State<ArcAdBannerCard> createState() => _ArcAdBannerCardState();
 }
 
-class _ArcAdPill extends StatelessWidget {
-  const _ArcAdPill({
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
+class _ArcAdBannerCardState extends State<ArcAdBannerCard> {
+  BannerAd? _bannerAd;
+  bool _isLoaded = false;
+  bool _failed = false;
 
-  final String label;
-  final IconData icon;
-  final Color color;
+  bool get _shouldShow => ArcAdBannerCard.shouldShowForTier(
+    tier: widget.tier,
+    showForTraderPro: widget.showForTraderPro,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (_shouldShow && !kIsWeb) {
+      _loadBanner();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ArcAdBannerCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.tier == widget.tier &&
+        oldWidget.showForTraderPro == widget.showForTraderPro) {
+      return;
+    }
+
+    _bannerAd?.dispose();
+    _bannerAd = null;
+    _isLoaded = false;
+    _failed = false;
+
+    if (_shouldShow && !kIsWeb) {
+      _loadBanner();
+    }
+  }
+
+  void _loadBanner() {
+    final banner = BannerAd(
+      size: AdSize.banner,
+      adUnitId: _getAdUnitId(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (!mounted) return;
+
+          setState(() {
+            _bannerAd = ad as BannerAd;
+            _isLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+
+          if (!mounted) return;
+
+          setState(() {
+            _failed = true;
+          });
+
+          debugPrint('UAG Banner failed: $error');
+        },
+      ),
+      request: const AdRequest(),
+    );
+
+    banner.load();
+  }
+
+  String _getAdUnitId() {
+    if (Platform.isAndroid) {
+      return 'ca-app-pub-3940256099942544/6300978111';
+    }
+
+    return 'ca-app-pub-3940256099942544/2934735716';
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: AppTheme.tradingPillDecoration(color: color),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.82),
-              isBold: true,
+    if (!_shouldShow) {
+      return const SizedBox.shrink();
+    }
+
+    if (kIsWeb) {
+      return const SizedBox.shrink();
+    }
+
+    if (_isLoaded && _bannerAd != null) {
+      return SafeArea(
+        top: false,
+        child: Container(
+          width: double.infinity,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+            border: Border(
+              top: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.26)),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
+          child: SizedBox(
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          ),
+        ),
+      );
+    }
 
-class _ArcAdActionButton extends StatelessWidget {
-  const _ArcAdActionButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    required this.color,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.52)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        textStyle: AppTheme.bodyTextStyle(
-          fontSize: 12,
-          color: color,
-          isBold: true,
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 56,
+        width: double.infinity,
+        alignment: Alignment.center,
+        margin: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+        decoration: AppTheme.tradingCardDecoration(
+          radius: 14,
+          borderColor: (_failed ? AppTheme.neonPink : AppTheme.neonCyan)
+              .withValues(alpha: 0.36),
+          backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
+        ),
+        child: Text(
+          _failed ? 'AD LOAD FAILED' : 'LOADING AD...',
+          style: AppTheme.bodyTextStyle(
+            fontSize: 12,
+            color: _failed ? AppTheme.neonPink : AppTheme.neonCyan,
+            isBold: true,
+          ),
         ),
       ),
     );

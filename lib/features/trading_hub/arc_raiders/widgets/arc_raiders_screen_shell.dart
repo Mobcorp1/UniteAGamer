@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
 
 class ArcRaidersScreenBackdrop extends StatelessWidget {
   const ArcRaidersScreenBackdrop({super.key});
@@ -78,14 +79,26 @@ class ArcRaidersScreenShell extends StatelessWidget {
     super.key,
     required this.child,
     this.useSafeArea = false,
+    this.showAdBanner = true,
+    this.adTier = ArcAdAccessTier.free,
+    this.showAdsForTraderPro = false,
   });
 
   final Widget child;
   final bool useSafeArea;
+  final bool showAdBanner;
+  final ArcAdAccessTier adTier;
+  final bool showAdsForTraderPro;
 
   @override
   Widget build(BuildContext context) {
     final content = useSafeArea ? SafeArea(child: child) : child;
+    final shouldReserveAdSlot =
+        showAdBanner &&
+        ArcAdBannerCard.shouldShowForTier(
+          tier: adTier,
+          showForTraderPro: showAdsForTraderPro,
+        );
 
     return Stack(
       children: [
@@ -107,7 +120,18 @@ class ArcRaidersScreenShell extends StatelessWidget {
             ),
           ),
         ),
-        content,
+        Positioned.fill(
+          child: Column(
+            children: [
+              Expanded(child: content),
+              if (shouldReserveAdSlot)
+                ArcAdBannerCard(
+                  tier: adTier,
+                  showForTraderPro: showAdsForTraderPro,
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -151,16 +175,25 @@ class ArcRaidersPageScaffold extends StatelessWidget {
     required this.child,
     this.maxWidth = 1320,
     this.useSafeArea = true,
+    this.showAdBanner = true,
+    this.adTier = ArcAdAccessTier.free,
+    this.showAdsForTraderPro = false,
   });
 
   final Widget child;
   final double maxWidth;
   final bool useSafeArea;
+  final bool showAdBanner;
+  final ArcAdAccessTier adTier;
+  final bool showAdsForTraderPro;
 
   @override
   Widget build(BuildContext context) {
     return ArcRaidersScreenShell(
       useSafeArea: useSafeArea,
+      showAdBanner: showAdBanner,
+      adTier: adTier,
+      showAdsForTraderPro: showAdsForTraderPro,
       child: ArcRaidersResponsiveContent(maxWidth: maxWidth, child: child),
     );
   }
