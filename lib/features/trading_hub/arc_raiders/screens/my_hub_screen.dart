@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../widgets/arc_ad_banner_card.dart';
+import '../widgets/arc_profile_status_card.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -198,6 +199,26 @@ class _MyHubScreenState extends State<MyHubScreen> {
                   accent: selected.accent,
                 ),
                 const SizedBox(height: AppTheme.spaceS),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+                  child: Column(
+                    children: const [
+                      ArcProfileStatusCard(
+                        title: 'Founder Status',
+                        value: 'Inner Circle',
+                        icon: Icons.workspace_premium_rounded,
+                        color: AppTheme.neonPink,
+                      ),
+                      SizedBox(height: 10),
+                      ArcProfileStatusCard(
+                        title: 'Trader Reputation',
+                        value: 'Trusted Raider',
+                        icon: Icons.verified_rounded,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ],
+                  ),
+                ),
                 const _MyHubDividerSpacer(
                   label: 'Personal Systems',
                   color: AppTheme.neonCyan,
@@ -966,6 +987,26 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
             child: Column(
               children: [
                 const SizedBox(height: AppTheme.spaceM),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+                  child: Column(
+                    children: const [
+                      ArcProfileStatusCard(
+                        title: 'Founder Status',
+                        value: 'Inner Circle',
+                        icon: Icons.workspace_premium_rounded,
+                        color: AppTheme.neonPink,
+                      ),
+                      SizedBox(height: 10),
+                      ArcProfileStatusCard(
+                        title: 'Trader Reputation',
+                        value: 'Trusted Raider',
+                        icon: Icons.verified_rounded,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ],
+                  ),
+                ),
                 const _MyHubDividerSpacer(
                   label: 'Personal Systems',
                   color: AppTheme.neonCyan,
