@@ -85,7 +85,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
       appBar: AppBar(
         title: Text(
-          'FAVOURITE LOADOUTS',
+          'Loadout Command CentreS',
           style: AppTheme.tradingHeading(
             fontSize: 22,
             color: AppTheme.neonCyan,
