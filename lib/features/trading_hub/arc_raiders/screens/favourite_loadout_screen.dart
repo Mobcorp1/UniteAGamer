@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/arc_loadout_category_banner.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
@@ -95,6 +96,26 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),
+          SafeArea(
+            child: Column(
+              children: const [
+                ArcLoadoutCategoryBanner(
+                  title: 'PvP Operator Builds',
+                  subtitle:
+                      'Close-range aggression, survival pressure and fast engagement loadouts.',
+                  color: AppTheme.neonPink,
+                  icon: Icons.flash_on_rounded,
+                ),
+                ArcLoadoutCategoryBanner(
+                  title: 'PvE Raid Builds',
+                  subtitle:
+                      'ARC clearing, sustain, ammo efficiency and long-session preparation.',
+                  color: AppTheme.neonCyan,
+                  icon: Icons.shield_rounded,
+                ),
+              ],
+            ),
+          ),
           SafeArea(
             child: ArcRaidersPageList(
               children: [
