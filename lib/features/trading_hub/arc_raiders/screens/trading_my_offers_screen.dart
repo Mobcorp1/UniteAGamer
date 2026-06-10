@@ -33,17 +33,17 @@ class TradingMyOffersScreen extends StatelessWidget {
     final parts = <String>[];
     if (offer.smallBundles > 0) {
       parts.add(
-        '${offer.smallBundles}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â10',
+        '${offer.smallBundles}Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â10',
       );
     }
     if (offer.mediumBundles > 0) {
       parts.add(
-        '${offer.mediumBundles}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â50',
+        '${offer.mediumBundles}Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â50',
       );
     }
     if (offer.largeBundles > 0) {
       parts.add(
-        '${offer.largeBundles}ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â100',
+        '${offer.largeBundles}Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â100',
       );
     }
     if (parts.isEmpty) return 'No seed bundles';
