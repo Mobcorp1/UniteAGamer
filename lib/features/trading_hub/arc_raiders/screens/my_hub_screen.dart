@@ -18,6 +18,8 @@ import 'package:uag_arc_raiders_hub/screens/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_responsive_status_grid.dart';
+import 'package:uag_arc_raiders_hub/widgets/responsive_layout_helper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_my_hub_command_header.dart';
 
 class MyHubScreen extends StatefulWidget {
@@ -185,68 +187,91 @@ class _MyHubScreenState extends State<MyHubScreen> {
             ),
           ),
           SafeArea(
-            child: Column(
-              children: [
-                _MyHubSectionLabel(
-                  title: 'Personal Command Centre',
-                  subtitle:
-                      'Track progress, manage loadouts, monitor trading and review operations.',
-                  color: selected.accent,
-                ),
-                ArcMyHubCommandHeader(
-                  title: 'My Hub',
-                  subtitle: selected.subtitle,
-                  accent: selected.accent,
-                ),
-                const SizedBox(height: AppTheme.spaceS),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-                  child: Column(
-                    children: const [
-                      ArcProfileStatusCard(
-                        title: 'Founder Status',
-                        value: 'Inner Circle',
-                        icon: Icons.workspace_premium_rounded,
-                        color: AppTheme.neonPink,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
+                final carouselHeight = isDesktop
+                    ? math.min(520.0, constraints.maxHeight * 0.54)
+                    : math.min(560.0, constraints.maxHeight * 0.58);
+
+                return Scrollbar(
+                  thumbVisibility: isDesktop,
+                  interactive: true,
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.only(
+                      bottom: isDesktop ? AppTheme.spaceL : AppTheme.spaceM,
+                    ),
+                    child: ResponsiveContentWrapper(
+                      child: Column(
+                        children: [
+                          _MyHubSectionLabel(
+                            title: 'Personal Command Centre',
+                            subtitle:
+                                'Track progress, manage loadouts, monitor trading and review operations.',
+                            color: selected.accent,
+                          ),
+                          ArcMyHubCommandHeader(
+                            title: 'My Hub',
+                            subtitle: selected.subtitle,
+                            accent: selected.accent,
+                          ),
+                          const SizedBox(height: AppTheme.spaceS),
+                          const ArcResponsiveStatusGrid(
+                            children: [
+                              ArcProfileStatusCard(
+                                title: 'Founder Status',
+                                value: 'Inner Circle',
+                                icon: Icons.workspace_premium_rounded,
+                                color: AppTheme.neonPink,
+                              ),
+                              ArcProfileStatusCard(
+                                title: 'Trader Reputation',
+                                value: 'Trusted Raider',
+                                icon: Icons.verified_rounded,
+                                color: AppTheme.neonCyan,
+                              ),
+                            ],
+                          ),
+                          const _MyHubDividerSpacer(
+                            label: 'Personal Systems',
+                            color: AppTheme.neonCyan,
+                          ),
+                          SizedBox(
+                            height: carouselHeight,
+                            child: _PremiumFeatureCarousel(
+                              controller: _controller,
+                              selectedIndex: _selectedIndex,
+                              features: _features,
+                              onPageChanged: (index) {
+                                setState(() => _selectedIndex = index);
+                              },
+                              onOpen: _openFeature,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceS),
+                          const ArcAdBannerCard(),
+                          const SizedBox(height: AppTheme.spaceXS),
+                          _ArcBottomDock(
+                            onMatch: () => _openFeature(
+                              _featureByTitle('Profile & Reputation'),
+                            ),
+                            onRaid: () => _openFeature(
+                              _featureByTitle('Blueprint Tracker'),
+                            ),
+                            onMic: () =>
+                                UagVoiceArcAssistantSheet.show(context),
+                            onTrading: () =>
+                                _openFeature(_featureByTitle('Trading')),
+                            onIntel: () =>
+                                _openFeature(_featureByTitle('My Intel')),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 10),
-                      ArcProfileStatusCard(
-                        title: 'Trader Reputation',
-                        value: 'Trusted Raider',
-                        icon: Icons.verified_rounded,
-                        color: AppTheme.neonCyan,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const _MyHubDividerSpacer(
-                  label: 'Personal Systems',
-                  color: AppTheme.neonCyan,
-                ),
-                Expanded(
-                  child: _PremiumFeatureCarousel(
-                    controller: _controller,
-                    selectedIndex: _selectedIndex,
-                    features: _features,
-                    onPageChanged: (index) {
-                      setState(() => _selectedIndex = index);
-                    },
-                    onOpen: _openFeature,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceS),
-                const ArcAdBannerCard(),
-                const SizedBox(height: AppTheme.spaceXS),
-                _ArcBottomDock(
-                  onMatch: () =>
-                      _openFeature(_featureByTitle('Profile & Reputation')),
-                  onRaid: () =>
-                      _openFeature(_featureByTitle('Blueprint Tracker')),
-                  onMic: () => UagVoiceArcAssistantSheet.show(context),
-                  onTrading: () => _openFeature(_featureByTitle('Trading')),
-                  onIntel: () => _openFeature(_featureByTitle('My Intel')),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],
