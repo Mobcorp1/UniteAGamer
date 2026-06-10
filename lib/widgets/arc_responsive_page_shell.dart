@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'arc_responsive_chrome.dart';
 
 import 'responsive_layout_helper.dart';
 import 'theme.dart';
@@ -44,7 +45,12 @@ class ArcResponsivePageShell extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: maxWidth ?? ResponsiveLayoutHelper.maxContentWidth(context),
         ),
-        child: Padding(padding: resolvedPadding, child: child),
+        child: Padding(
+          padding: resolvedPadding.copyWith(
+            bottom: ArcResponsiveChrome.bottomSafePadding(context),
+          ),
+          child: child,
+        ),
       ),
     );
 
@@ -109,7 +115,9 @@ class ArcResponsiveSliverShell extends StatelessWidget {
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             SliverPadding(
-              padding: resolvedPadding,
+              padding: resolvedPadding.copyWith(
+                bottom: ArcResponsiveChrome.bottomSafePadding(context),
+              ),
               sliver: SliverToBoxAdapter(
                 child: Align(
                   alignment: Alignment.topCenter,

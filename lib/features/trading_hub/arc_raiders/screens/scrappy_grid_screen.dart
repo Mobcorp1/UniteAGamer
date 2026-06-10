@@ -876,7 +876,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         Widget arrow({required bool next}) {
           return Positioned(
             top: 0,
-            bottom: 110,
+            bottom: 8,
             left: next ? null : AppTheme.spaceS,
             right: next ? AppTheme.spaceS : null,
             child: Center(
