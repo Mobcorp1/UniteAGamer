@@ -21,20 +21,21 @@ class ArcCompanionBottomDock extends StatelessWidget {
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       child: Container(
+        clipBehavior: Clip.hardEdge,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceS,
           vertical: AppTheme.spaceS,
         ),
         decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+          color: Colors.black.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.32)),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.12)),
           boxShadow: [
             BoxShadow(
               color: AppTheme.neonCyan.withValues(alpha: 0.13),
-              blurRadius: 22,
-              spreadRadius: 1,
+              blurRadius: 8,
+              spreadRadius: 0,
             ),
           ],
         ),
@@ -99,6 +100,7 @@ class _ArcMicButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           onTap: onTap,
           child: Container(
+            clipBehavior: Clip.hardEdge,
             width: 64,
             height: 64,
             decoration: BoxDecoration(
@@ -111,7 +113,7 @@ class _ArcMicButton extends StatelessWidget {
                 BoxShadow(
                   color: AppTheme.neonPink.withValues(alpha: 0.22),
                   blurRadius: 18,
-                  spreadRadius: 1,
+                  spreadRadius: 0,
                 ),
               ],
             ),
