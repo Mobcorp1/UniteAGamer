@@ -114,7 +114,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.verified_user_outlined,
       accent: Colors.lightGreenAccent,
       art: _ArcHubArtKind.smart,
-      assetName: 'arc_hub_unite_hub.webp',
+      assetName: 'my_hub_card.webp',
       builder: (_) => const TradingProfileScreen(),
     ),
     _ArcHubFeature(
