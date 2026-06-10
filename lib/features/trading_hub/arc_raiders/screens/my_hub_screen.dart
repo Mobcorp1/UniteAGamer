@@ -256,7 +256,7 @@ class _MyHubDividerSpacer extends StatelessWidget {
             child: Container(height: 1, color: color.withValues(alpha: 0.22)),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
               label.toUpperCase(),
               style: AppTheme.bodyTextStyle(
