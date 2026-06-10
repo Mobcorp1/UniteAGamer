@@ -114,7 +114,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.verified_user_outlined,
       accent: Colors.lightGreenAccent,
       art: _ArcHubArtKind.smart,
-      assetName: 'my_hub_card.webp',
+      assetName: 'arc_hub_profile_reputation.webp',
       builder: (_) => const TradingProfileScreen(),
     ),
     _ArcHubFeature(
@@ -123,7 +123,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.hub_outlined,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
-      assetName: 'arc_hub_market_watch.webp',
+      assetName: 'arc_hub_referral_tools.webp',
       builder: (_) => const TradingProfileScreen(),
     ),
     _ArcHubFeature(
@@ -132,7 +132,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.workspace_premium_outlined,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.trading,
-      assetName: 'arc_hub_market_watch.webp',
+      assetName: 'arc_hub_subscriptions.webp',
       builder: (_) => const MonetisationScreen(),
     ),
     _ArcHubFeature(
