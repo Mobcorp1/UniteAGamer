@@ -3,6 +3,7 @@ import 'features/monetisation/ads/uag_ad_consent_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_app_scroll_behavior.dart';
 
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -304,6 +305,7 @@ class UAGTradersHubApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'UAG Arc Raiders Hub',
       theme: AppTheme.theme,
+      scrollBehavior: const ArcAppScrollBehavior(),
       navigatorKey: TradingPushService.instance.navigatorKey,
       onGenerateRoute: _buildRoute,
       home: StreamBuilder<User?>(

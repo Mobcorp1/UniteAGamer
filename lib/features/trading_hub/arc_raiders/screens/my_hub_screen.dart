@@ -188,7 +188,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
               builder: (context, constraints) {
                 final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
                 final carouselHeight = isDesktop
-                    ? math.min(430.0, constraints.maxHeight * 0.44)
+                    ? math.min(360.0, constraints.maxHeight * 0.38)
                     : math.min(500.0, constraints.maxHeight * 0.52);
 
                 return SingleChildScrollView(
@@ -199,10 +199,6 @@ class _MyHubScreenState extends State<MyHubScreen> {
                   child: ResponsiveContentWrapper(
                     child: Column(
                       children: [
-                        const _MyHubDividerSpacer(
-                          label: 'Personal Systems',
-                          color: AppTheme.neonCyan,
-                        ),
                         SizedBox(
                           height: carouselHeight,
                           child: _PremiumFeatureCarousel(
@@ -236,43 +232,6 @@ class _MyHubScreenState extends State<MyHubScreen> {
                   ),
                 );
               },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MyHubSectionLabel extends StatelessWidget {
-  const _MyHubSectionLabel({
-    required this.title,
-    required this.subtitle,
-    required this.color,
-  });
-
-  final String title;
-  final String subtitle;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 6, 18, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: AppTheme.tradingHeading(fontSize: 15, color: color),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 11,
-              color: Colors.white70,
-              isBold: true,
             ),
           ),
         ],
