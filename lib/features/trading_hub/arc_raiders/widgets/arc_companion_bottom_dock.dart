@@ -28,13 +28,13 @@ class ArcCompanionBottomDock extends StatelessWidget {
           vertical: AppTheme.spaceS,
         ),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.08),
+          color: Colors.black.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.12)),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
               color: AppTheme.neonCyan.withValues(alpha: 0.13),
-              blurRadius: 8,
+              blurRadius: 4,
               spreadRadius: 0,
             ),
           ],
