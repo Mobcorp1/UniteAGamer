@@ -998,14 +998,14 @@ class _ArcBottomDock extends StatelessWidget {
         vertical: AppTheme.spaceS,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+        color: Colors.black.withValues(alpha: 0.035),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.32)),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.10)),
         boxShadow: [
           BoxShadow(
             color: AppTheme.neonCyan.withValues(alpha: 0.13),
-            blurRadius: 22,
-            spreadRadius: 1,
+            blurRadius: 4,
+            spreadRadius: 0,
           ),
         ],
       ),
