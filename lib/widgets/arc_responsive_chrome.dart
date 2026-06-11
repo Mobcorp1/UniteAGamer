@@ -41,19 +41,33 @@ class ArcResponsiveChrome {
     final w = width(context);
     if (w < 700) return h < 720 ? 104 : 116;
     if (w < 1100) return 108;
-    return 98;
+    return 76;
+  }
+
+  static double dockMaxWidth(BuildContext context) {
+    final w = width(context);
+    if (w >= 1100) return 820;
+    if (w >= 700) return 760;
+    return w;
   }
 
   static double adHeight(BuildContext context) {
     final w = width(context);
-    if (w < 700) return 72;
-    if (w < 1100) return 78;
-    return 86;
+    if (w < 700) return 58;
+    return 90;
+  }
+
+  static double adMaxWidth(BuildContext context) {
+    final w = width(context);
+    if (w >= 700) return 728;
+    return 320;
   }
 
   static double bottomSafePadding(BuildContext context, {bool hasAd = true}) {
     final safe = MediaQuery.paddingOf(context).bottom;
-    return safe + dockHeight(context) + (hasAd ? adHeight(context) : 0) + 28;
+    final w = width(context);
+    final gap = w >= 1100 ? 18.0 : 28.0;
+    return safe + dockHeight(context) + (hasAd ? adHeight(context) : 0) + gap;
   }
 
   static EdgeInsets scrollPadding(BuildContext context, {bool hasAd = true}) {

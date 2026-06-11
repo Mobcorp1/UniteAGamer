@@ -30,7 +30,7 @@ class MyHubScreen extends StatefulWidget {
 }
 
 class _MyHubScreenState extends State<MyHubScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.52);
+  final PageController _controller = PageController(viewportFraction: 0.42);
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _features = [
@@ -198,7 +198,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
                   );
                   final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
                   final carouselHeight = isDesktop
-                      ? math.min(430.0, remainingHeight * 0.84)
+                      ? math.min(395.0, remainingHeight * 0.76)
                       : math.min(460.0, remainingHeight * 0.82);
 
                   return Padding(
@@ -239,7 +239,10 @@ class _MyHubScreenState extends State<MyHubScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: ArcResponsiveChrome.maxContentWidth(context),
+                    maxWidth: math.max(
+                      ArcResponsiveChrome.dockMaxWidth(context),
+                      ArcResponsiveChrome.adMaxWidth(context),
+                    ),
                   ),
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
@@ -251,7 +254,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const ArcAdBannerCard(),
+                        const _HubAdSlot(),
                         const SizedBox(height: AppTheme.spaceXS),
                         _ArcBottomDock(
                           onMatch: () => _openFeature(
@@ -348,23 +351,23 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final slots = isWide ? const [-2, 2, -1, 1, 0] : const [-1, 1, 0];
 
         final stageWidth = isWide
-            ? math.min(constraints.maxWidth, 1040.0)
+            ? math.min(constraints.maxWidth, 1180.0)
             : constraints.maxWidth;
         final stageHeight = isPhone
             ? math.min(constraints.maxHeight, 520.0)
-            : math.min(constraints.maxHeight, isTablet ? 620.0 : 560.0);
+            : math.min(constraints.maxHeight, isTablet ? 620.0 : 510.0);
 
         final centreCardHeight = isWide
-            ? (isCompactHeight ? 312.0 : 338.0)
+            ? (isCompactHeight ? 278.0 : 304.0)
             : isTablet
             ? 350.0
             : 356.0;
 
-        final dotsTop = centreCardHeight + (isPhone ? 14.0 : 20.0);
-        final stripTop = dotsTop + (isPhone ? 24.0 : 30.0);
+        final dotsTop = centreCardHeight + (isPhone ? 14.0 : 16.0);
+        final stripTop = dotsTop + (isPhone ? 24.0 : 24.0);
         final stripWidth = isPhone
             ? math.min(stageWidth - 38.0, 360.0)
-            : math.min(stageWidth - 64.0, 520.0);
+            : math.min(stageWidth - 64.0, 560.0);
 
         final arrowTop = ((centreCardHeight - 48.0) / 2)
             .clamp(72.0, math.max(72.0, stageHeight - 180.0))
@@ -478,29 +481,29 @@ class _StaticRingFeatureSlot extends StatelessWidget {
     final distance = slot.abs();
 
     final centerWidth = isWide
-        ? (isCompactHeight ? 300.0 : 326.0)
+        ? (isCompactHeight ? 274.0 : 298.0)
         : isTablet
         ? 316.0
         : math.min(canvasWidth - 56.0, 312.0);
     final centerHeight = isWide
-        ? (isCompactHeight ? 312.0 : 338.0)
+        ? (isCompactHeight ? 278.0 : 304.0)
         : isTablet
         ? 350.0
         : 356.0;
 
     final nearWidth = isWide
-        ? (isCompactHeight ? 218.0 : 236.0)
+        ? (isCompactHeight ? 196.0 : 214.0)
         : isTablet
         ? 236.0
         : math.min(canvasWidth - 132.0, 210.0);
     final nearHeight = isWide
-        ? (isCompactHeight ? 254.0 : 278.0)
+        ? (isCompactHeight ? 226.0 : 248.0)
         : isTablet
         ? 294.0
         : 302.0;
 
-    final outerWidth = isWide ? (isCompactHeight ? 130.0 : 148.0) : 0.0;
-    final outerHeight = isWide ? (isCompactHeight ? 196.0 : 214.0) : 0.0;
+    final outerWidth = isWide ? (isCompactHeight ? 124.0 : 138.0) : 0.0;
+    final outerHeight = isWide ? (isCompactHeight ? 172.0 : 192.0) : 0.0;
 
     final width = selected
         ? centerWidth
@@ -517,11 +520,11 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? 0.0
         : distance == 1
         ? (isWide
-              ? (isCompactHeight ? 212.0 : 232.0)
+              ? (isCompactHeight ? 198.0 : 216.0)
               : isTablet
               ? 214.0
               : math.min(canvasWidth * 0.50, 186.0))
-        : (isWide ? (isCompactHeight ? 342.0 : 374.0) : 0.0);
+        : (isWide ? (isCompactHeight ? 334.0 : 362.0) : 0.0);
 
     final top = selected
         ? (isWide
@@ -808,9 +811,11 @@ class _HubHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppTheme.spaceM,
-        AppTheme.spaceM,
+        ArcResponsiveChrome.width(context) >= 1100
+            ? AppTheme.spaceS
+            : AppTheme.spaceM,
         AppTheme.spaceM,
         0,
       ),
@@ -820,7 +825,7 @@ class _HubHeader extends StatelessWidget {
             child: Text(
               'My Hub',
               style: AppTheme.neonTextStyle(
-                fontSize: 25,
+                fontSize: ArcResponsiveChrome.width(context) >= 1100 ? 21 : 25,
                 color: selected.accent,
                 isBold: true,
               ),
@@ -888,7 +893,7 @@ class _TrackingMenuScreen extends StatefulWidget {
 }
 
 class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.52);
+  final PageController _controller = PageController(viewportFraction: 0.42);
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _trackingFeatures = [
@@ -989,7 +994,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceS),
-                const ArcAdBannerCard(),
+                const _HubAdSlot(),
                 const SizedBox(height: AppTheme.spaceXS),
                 _ArcBottomDock(
                   onMatch: () => Navigator.of(context).pop(),
@@ -1003,6 +1008,21 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HubAdSlot extends StatelessWidget {
+  const _HubAdSlot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: ArcResponsiveChrome.adMaxWidth(context),
+        height: ArcResponsiveChrome.adHeight(context),
+        child: const ArcAdBannerCard(),
       ),
     );
   }
@@ -1026,15 +1046,19 @@ class _ArcBottomDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(
+      margin: EdgeInsets.fromLTRB(
         AppTheme.spaceM,
         0,
         AppTheme.spaceM,
-        AppTheme.spaceM,
+        ArcResponsiveChrome.width(context) >= 1100
+            ? AppTheme.spaceXS
+            : AppTheme.spaceM,
       ),
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: AppTheme.spaceS,
-        vertical: AppTheme.spaceS,
+        vertical: ArcResponsiveChrome.width(context) >= 1100
+            ? AppTheme.spaceXS
+            : AppTheme.spaceS,
       ),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.035),
@@ -1101,8 +1125,8 @@ class _ArcMicButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           onTap: onTap,
           child: Container(
-            width: 64,
-            height: 64,
+            width: ArcResponsiveChrome.width(context) >= 1100 ? 54 : 64,
+            height: ArcResponsiveChrome.width(context) >= 1100 ? 54 : 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppTheme.neonPink.withValues(alpha: 0.22),
