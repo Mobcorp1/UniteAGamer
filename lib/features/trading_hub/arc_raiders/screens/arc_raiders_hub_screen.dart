@@ -8,6 +8,7 @@ import '../../../../screens/build/app_drawer.dart';
 import '../../../../widgets/electric_charge_border.dart';
 import '../../../../widgets/static_watermark.dart';
 import '../../../../widgets/theme.dart';
+import '../../../../widgets/arc_responsive_chrome.dart';
 import '../raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import '../raid_planner/screens/raid_planner_screen.dart';
 import '../voice/voice_assistant_sheet.dart';
@@ -136,35 +137,90 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
               child: Opacity(opacity: 0.30, child: StaticWatermark()),
             ),
           ),
-          SafeArea(
-            child: Column(
-              children: [
-                _HubHeader(selected: selected),
-                const SizedBox(height: AppTheme.spaceS),
-                Expanded(
-                  child: _PremiumFeatureCarousel(
-                    controller: _controller,
-                    selectedIndex: _selectedIndex,
-                    features: _features,
-                    onPageChanged: (index) {
-                      setState(() => _selectedIndex = index);
-                    },
-                    onOpen: _openFeature,
+          Positioned.fill(
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final bottomReserve = ArcResponsiveChrome.bottomSafePadding(
+                    context,
+                  );
+                  final maxWidth = ArcResponsiveChrome.maxContentWidth(context);
+
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppTheme.spaceS,
+                      AppTheme.spaceS,
+                      AppTheme.spaceS,
+                      bottomReserve,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxWidth),
+                        child: Column(
+                          children: [
+                            _HubHeader(selected: selected),
+                            const SizedBox(height: AppTheme.spaceS),
+                            Expanded(
+                              child: Center(
+                                child: _PremiumFeatureCarousel(
+                                  controller: _controller,
+                                  selectedIndex: _selectedIndex,
+                                  features: _features,
+                                  onPageChanged: (index) {
+                                    setState(() => _selectedIndex = index);
+                                  },
+                                  onOpen: _openFeature,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: ArcResponsiveChrome.maxContentWidth(context),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppTheme.spaceS,
+                      0,
+                      AppTheme.spaceS,
+                      AppTheme.spaceXS,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const ArcAdBannerCard(),
+                        const SizedBox(height: AppTheme.spaceXS),
+                        _ArcBottomDock(
+                          onMatch: () =>
+                              _openFeature(_featureByTitle('Match a Raider')),
+                          onRaid: () =>
+                              _openFeature(_featureByTitle('Raid Planner')),
+                          onMic: () => UagVoiceArcAssistantSheet.show(context),
+                          onTrading: () =>
+                              _openFeature(_featureByTitle('Trading')),
+                          onIntel: () =>
+                              _openFeature(_featureByTitle('Community Intel')),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceS),
-                const ArcAdBannerCard(),
-                const SizedBox(height: AppTheme.spaceXS),
-                _ArcBottomDock(
-                  onMatch: () =>
-                      _openFeature(_featureByTitle('Match a Raider')),
-                  onRaid: () => _openFeature(_featureByTitle('Raid Planner')),
-                  onMic: () => UagVoiceArcAssistantSheet.show(context),
-                  onTrading: () => _openFeature(_featureByTitle('Trading')),
-                  onIntel: () =>
-                      _openFeature(_featureByTitle('Community Intel')),
-                ),
-              ],
+              ),
             ),
           ),
         ],

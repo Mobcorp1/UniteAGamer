@@ -18,6 +18,7 @@ import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/responsive_layout_helper.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_responsive_chrome.dart';
 
 class MyHubScreen extends StatefulWidget {
   static const routeName = '/my-hub';
@@ -183,23 +184,34 @@ class _MyHubScreenState extends State<MyHubScreen> {
               child: Opacity(opacity: 0.30, child: StaticWatermark()),
             ),
           ),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
-                final carouselHeight = isDesktop
-                    ? math.min(360.0, constraints.maxHeight * 0.38)
-                    : math.min(500.0, constraints.maxHeight * 0.52);
+          Positioned.fill(
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final bottomReserve = ArcResponsiveChrome.bottomSafePadding(
+                    context,
+                  );
+                  final maxWidth = ArcResponsiveChrome.maxContentWidth(context);
+                  final remainingHeight = math.max(
+                    260.0,
+                    constraints.maxHeight - bottomReserve,
+                  );
+                  final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
+                  final carouselHeight = isDesktop
+                      ? math.min(430.0, remainingHeight * 0.84)
+                      : math.min(460.0, remainingHeight * 0.82);
 
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.only(
-                    bottom: isDesktop ? AppTheme.spaceL : AppTheme.spaceM,
-                  ),
-                  child: ResponsiveContentWrapper(
-                    child: Column(
-                      children: [
-                        SizedBox(
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppTheme.spaceS,
+                      AppTheme.spaceS,
+                      AppTheme.spaceS,
+                      bottomReserve,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxWidth),
+                        child: SizedBox(
                           height: carouselHeight,
                           child: _PremiumFeatureCarousel(
                             controller: _controller,
@@ -211,7 +223,34 @@ class _MyHubScreenState extends State<MyHubScreen> {
                             onOpen: _openFeature,
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spaceS),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: ArcResponsiveChrome.maxContentWidth(context),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppTheme.spaceS,
+                      0,
+                      AppTheme.spaceS,
+                      AppTheme.spaceXS,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         const ArcAdBannerCard(),
                         const SizedBox(height: AppTheme.spaceXS),
                         _ArcBottomDock(
@@ -230,8 +269,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
                       ],
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ],
