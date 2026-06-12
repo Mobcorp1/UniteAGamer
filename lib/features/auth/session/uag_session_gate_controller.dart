@@ -8,6 +8,8 @@ class UagSessionGateController {
 
   static String? _runtimeAuthenticatedUid;
   static String? _runtimeBiometricUnlockedUid;
+  static DateTime? _lastBackgroundedAt;
+  static const Duration _gracePeriod = Duration(minutes: 5);
 
   const UagSessionGateController._();
 
@@ -78,6 +80,11 @@ class UagSessionGateController {
   }
 
   static Future<bool> isBiometricRelockRequired(String uid) async {
+    if (_runtimeBiometricUnlockedUid == uid &&
+        _lastBackgroundedAt != null &&
+        DateTime.now().difference(_lastBackgroundedAt!) < _gracePeriod) {
+      return false;
+    }
     if (_runtimeBiometricUnlockedUid == uid) return false;
 
     final prefs = await SharedPreferences.getInstance();
@@ -93,7 +100,7 @@ class UagSessionGateController {
   }
 
   static void markAppBackgrounded() {
-    _runtimeBiometricUnlockedUid = null;
+    _lastBackgroundedAt = DateTime.now();
   }
 
   static Future<void> clearSession() async {
