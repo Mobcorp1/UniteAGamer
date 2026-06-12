@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import '../widgets/arc_ad_banner_card.dart';
 
 import '../../../../screens/build/app_bar.dart';
@@ -168,6 +169,15 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     final selected = _features[_selectedIndex];
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen()));
+        },
+        icon: const Icon(Icons.feedback_outlined),
+        label: const Text('Feedback'),
+      ),
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
         title: 'ARC Raiders Hub',
@@ -933,6 +943,15 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     final selected = _trackingFeatures[_selectedIndex];
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen()));
+        },
+        icon: const Icon(Icons.feedback_outlined),
+        label: const Text('Feedback'),
+      ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.cardBackgroundDeep,

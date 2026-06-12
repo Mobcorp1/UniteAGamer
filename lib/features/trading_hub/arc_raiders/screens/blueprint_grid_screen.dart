@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -1451,6 +1452,15 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen()));
+        },
+        icon: const Icon(Icons.feedback_outlined),
+        label: const Text('Feedback'),
+      ),
       extendBody: true,
       extendBodyBehindAppBar: true,
       backgroundColor: AppTheme.darkBackground,
