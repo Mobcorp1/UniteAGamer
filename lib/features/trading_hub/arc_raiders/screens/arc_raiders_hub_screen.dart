@@ -38,9 +38,9 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
 
   late final List<_ArcHubFeature> _features = [
     _ArcHubFeature(
-      title: 'My Hub',
+      title: 'Blueprint Tracker',
       subtitle:
-          'Your personal ARC command centre, progress, subscriptions and daily ops.',
+          'Track owned, missing and duplicate blueprints and collection progress.',
       icon: Icons.dashboard_customize_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
@@ -180,8 +180,8 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       ),
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
-        title: 'ARC Raiders Hub',
-        subtitle: 'Tracker, intel, trading and raid tools',
+        title: 'Blueprint Tracker Beta',
+        subtitle: 'Track owned, missing and duplicate blueprints',
         showLogout: true,
       ),
       drawer: const AppDrawer(),
