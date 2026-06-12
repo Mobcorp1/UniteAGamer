@@ -528,6 +528,10 @@ class _RaidPlannerHuntTargetsScreenState
                     return ListView(
                       padding: const EdgeInsets.all(AppTheme.spaceM),
                       children: [
+                        const _ExpeditionResetFocusPanel(),
+                        const SizedBox(height: AppTheme.spaceM),
+                        const _NomadicRiderGuidancePanel(),
+                        const SizedBox(height: AppTheme.spaceM),
                         ElectricChargeBorder(
                           active: true,
                           radius: 18,
@@ -655,6 +659,264 @@ class _RaidPlannerHuntTargetsScreenState
                   },
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpeditionResetFocusPanel extends StatelessWidget {
+  const _ExpeditionResetFocusPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElectricChargeBorder(
+      active: true,
+      radius: 18,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spaceM),
+        decoration: AppTheme.tradingCardDecoration(radius: 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.route_rounded,
+                  color: AppTheme.neonCyan.withValues(alpha: 0.95),
+                  size: 22,
+                ),
+                const SizedBox(width: AppTheme.spaceS),
+                Expanded(
+                  child: Text(
+                    'Expedition Reset Focus',
+                    style: AppTheme.neonTextStyle(
+                      fontSize: 22,
+                      color: AppTheme.neonCyan,
+                      isBold: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spaceS),
+            Text(
+              'Early wipe guidance without extra XP, stash or currency admin.',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 13,
+                color: AppTheme.tradingMutedText,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+            const _GuidanceStep(
+              icon: Icons.assignment_turned_in_rounded,
+              title: 'Complete quests first',
+              body:
+                  'Contracts move progression forward and can reward items, blueprints and useful unlock momentum.',
+              color: AppTheme.neonCyan,
+            ),
+            const _GuidanceStep(
+              icon: Icons.security_rounded,
+              title: 'Build your Favourite Loadout',
+              body:
+                  'Lock in a reliable setup before chasing higher-risk routes or ARC kills.',
+              color: AppTheme.neonPink,
+            ),
+            const _GuidanceStep(
+              icon: Icons.construction_rounded,
+              title: 'Upgrade benches as resources allow',
+              body:
+                  'Bench progress makes later raids more efficient without turning the hub into a spreadsheet.',
+              color: Colors.amber,
+            ),
+            const _GuidanceStep(
+              icon: Icons.inventory_2_rounded,
+              title: 'Loot consistently',
+              body:
+                  'If your weapons are not ready for ARC fights, extract value and build resources first.',
+              color: Colors.white70,
+            ),
+            const _GuidanceStep(
+              icon: Icons.bolt_rounded,
+              title: 'Kill ARC when your gear supports it',
+              body:
+                  'Once the loadout is ready, ARC kills can accelerate resource, sell-value and upgrade progress.',
+              color: AppTheme.neonCyan,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NomadicRiderGuidancePanel extends StatelessWidget {
+  const _NomadicRiderGuidancePanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.32)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonPink.withValues(alpha: 0.08),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.explore_rounded,
+                color: AppTheme.neonPink.withValues(alpha: 0.95),
+                size: 22,
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: Text(
+                  'Nomadic Rider Path',
+                  style: AppTheme.neonTextStyle(
+                    fontSize: 22,
+                    color: AppTheme.neonPink,
+                    isBold: true,
+                  ),
+                ),
+              ),
+              const _StatusPill(label: 'Guidance', color: AppTheme.neonPink),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            'When Nomadic Rider rewards are the long-term target, start by improving storage and raid efficiency before chasing high-value cash-ins.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: const [
+              _PathChip(order: '1', label: 'Backpack Expansion'),
+              _PathChip(order: '2', label: 'Storage Upgrade'),
+              _PathChip(order: '3', label: 'Value Runs'),
+              _PathChip(order: '4', label: 'Nomadic Rider Rewards'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuidanceStep extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String body;
+  final Color color;
+
+  const _GuidanceStep({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: color.withValues(alpha: 0.25)),
+            ),
+            child: Icon(icon, color: color, size: 17),
+          ),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    isBold: true,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  body,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PathChip extends StatelessWidget {
+  final String order;
+  final String label;
+
+  const _PathChip({required this.order, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.neonCyan.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 10,
+            backgroundColor: AppTheme.neonCyan.withValues(alpha: 0.16),
+            child: Text(
+              order,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 11,
+                color: AppTheme.neonCyan,
+                isBold: true,
+              ),
+            ),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: Colors.white,
+              isBold: true,
             ),
           ),
         ],
