@@ -19,6 +19,7 @@ import 'blueprint_grid_screen.dart';
 import 'my_hub_screen.dart';
 import 'scrappy_grid_screen.dart';
 import 'smart_trade_assist_screen.dart';
+import '../../../../features/feature_access_gate.dart';
 import 'trader_hub_screen.dart';
 
 class ArcRaidersHubScreen extends StatefulWidget {
@@ -136,6 +137,25 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
+    const lockedTitles = {
+      'Match a Raider',
+      'Raid Planner',
+      'Trading',
+      'Smart Trade',
+      'Community Intel',
+      'Referral Tools',
+      'Subscriptions',
+    };
+
+    if (lockedTitles.contains(feature.title)) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FeatureLockedScreen(title: feature.title),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
   }
 
@@ -886,6 +906,25 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
+    const lockedTitles = {
+      'Match a Raider',
+      'Raid Planner',
+      'Trading',
+      'Smart Trade',
+      'Community Intel',
+      'Referral Tools',
+      'Subscriptions',
+    };
+
+    if (lockedTitles.contains(feature.title)) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FeatureLockedScreen(title: feature.title),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
   }
 
