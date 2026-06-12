@@ -86,7 +86,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
       appBar: AppBar(
         title: Text(
-          'Loadout Command CentreS',
+          'Loadout Command Centre',
           style: AppTheme.tradingHeading(
             fontSize: 22,
             color: AppTheme.neonCyan,
@@ -120,6 +120,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             child: ArcRaidersPageList(
               children: [
                 _buildCinematicLoadoutHero(),
+                const SizedBox(height: 12),
+                _buildExpeditionResetFocusCard(),
+                const SizedBox(height: 12),
+                _buildLoadoutCommandCards(),
                 const SizedBox(height: 12),
                 _buildPlayStyleSelector(),
                 const SizedBox(height: 12),
@@ -183,6 +187,229 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.72),
               fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpeditionResetFocusCard() {
+    final focusItems = <_ResetFocusItem>[
+      const _ResetFocusItem(
+        icon: Icons.assignment_turned_in_rounded,
+        title: 'Push quests first',
+        body:
+            'Quest chains move progression forward and can award blueprints, items and XP without extra tracking.',
+        color: AppTheme.neonCyan,
+      ),
+      const _ResetFocusItem(
+        icon: Icons.inventory_2_rounded,
+        title: 'Secure your favourite loadout',
+        body:
+            'Build one reliable kit before chasing PvP, PvE, balanced or meta variants.',
+        color: AppTheme.neonPink,
+      ),
+      const _ResetFocusItem(
+        icon: Icons.precision_manufacturing_rounded,
+        title: 'Upgrade benches early',
+        body:
+            'Loot consistently so resources feed bench upgrades, future crafts and stronger raid options.',
+        color: Colors.amberAccent,
+      ),
+      const _ResetFocusItem(
+        icon: Icons.radar_rounded,
+        title: 'Loot first, fight when ready',
+        body:
+            'Kill ARC when the weapons support it. If not, extract value and keep the raids efficient.',
+        color: Colors.lightGreenAccent,
+      ),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.30)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.10),
+            blurRadius: 22,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.neonCyan.withValues(alpha: 0.12),
+                  border: Border.all(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.38),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.restart_alt_rounded,
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'EXPEDITION RESET FOCUS',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 18,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'After a wipe, avoid admin. Follow the route that gets raids efficient fastest.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.68),
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final useGrid = constraints.maxWidth >= 680;
+              if (useGrid) {
+                return Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    for (final item in focusItems)
+                      SizedBox(
+                        width: (constraints.maxWidth - 10) / 2,
+                        child: _ResetFocusTile(item: item),
+                      ),
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  for (final item in focusItems) ...[
+                    _ResetFocusTile(item: item),
+                    if (item != focusItems.last) const SizedBox(height: 10),
+                  ],
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadoutCommandCards() {
+    final buildCards = <_BuildCommandCardData>[
+      _BuildCommandCardData(
+        title: 'My Favourite Loadout',
+        subtitle: 'Primary personal build',
+        body:
+            'Finish this first. Extra PvP, PvE, balanced and meta cards make more sense once your core kit is set.',
+        icon: Icons.star_rounded,
+        accent: AppTheme.neonCyan,
+        complete: true,
+        onTap: () =>
+            setState(() => _selectedCategory = ArcLoadoutCategory.saved),
+      ),
+      _BuildCommandCardData(
+        title: 'Add PvP Build',
+        subtitle: 'Raider pressure setup',
+        body: 'Create after your favourite loadout is ready.',
+        icon: Icons.flash_on_rounded,
+        accent: AppTheme.neonPink,
+        onTap: () => setState(() => _selectedCategory = ArcLoadoutCategory.pvp),
+      ),
+      _BuildCommandCardData(
+        title: 'Add PvE Build',
+        subtitle: 'ARC clearing setup',
+        body: 'Focus sustain, ARC damage and extraction safety.',
+        icon: Icons.shield_rounded,
+        accent: Colors.lightGreenAccent,
+        onTap: () => setState(() => _selectedCategory = ArcLoadoutCategory.pve),
+      ),
+      _BuildCommandCardData(
+        title: 'Add Balanced Build',
+        subtitle: 'PvP/PvE hybrid',
+        body: 'Good for mixed raids where raiders and ARC are both likely.',
+        icon: Icons.balance_rounded,
+        accent: Colors.cyanAccent,
+        onTap: () =>
+            setState(() => _selectedCategory = ArcLoadoutCategory.balanced),
+      ),
+      _BuildCommandCardData(
+        title: 'Add Meta Build',
+        subtitle: 'Community-proven kit',
+        body:
+            'Use later for high-confidence setups and creator/community builds.',
+        icon: Icons.workspace_premium_rounded,
+        accent: Colors.amberAccent,
+        onTap: () =>
+            setState(() => _selectedCategory = ArcLoadoutCategory.meta),
+      ),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.26)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'BUILD SLOTS',
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonPink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start with your favourite loadout. Add specialist cards once the main build is complete.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.68),
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 172,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: buildCards.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                return SizedBox(
+                  width: 238,
+                  child: _BuildCommandCard(data: buildCards[index]),
+                );
+              },
             ),
           ),
         ],
@@ -1167,6 +1394,200 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _ResetFocusItem {
+  const _ResetFocusItem({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+  final Color color;
+}
+
+class _ResetFocusTile extends StatelessWidget {
+  const _ResetFocusTile({required this.item});
+
+  final _ResetFocusItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: item.color.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(item.icon, color: item.color, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title.toUpperCase(),
+                  style: TextStyle(
+                    color: item.color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.body,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.68),
+                    fontSize: 11.5,
+                    height: 1.28,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BuildCommandCardData {
+  const _BuildCommandCardData({
+    required this.title,
+    required this.subtitle,
+    required this.body,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+    this.complete = false,
+  });
+
+  final String title;
+  final String subtitle;
+  final String body;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback onTap;
+  final bool complete;
+}
+
+class _BuildCommandCard extends StatelessWidget {
+  const _BuildCommandCard({required this.data});
+
+  final _BuildCommandCardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: data.onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: data.accent.withValues(alpha: 0.34)),
+          boxShadow: [
+            BoxShadow(
+              color: data.accent.withValues(alpha: 0.10),
+              blurRadius: 18,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: data.accent.withValues(alpha: 0.12),
+                    border: Border.all(
+                      color: data.accent.withValues(alpha: 0.34),
+                    ),
+                  ),
+                  child: Icon(data.icon, color: data.accent, size: 21),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: data.complete
+                        ? AppTheme.neonCyan.withValues(alpha: 0.12)
+                        : data.accent.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: data.complete
+                          ? AppTheme.neonCyan.withValues(alpha: 0.32)
+                          : data.accent.withValues(alpha: 0.28),
+                    ),
+                  ),
+                  child: Text(
+                    data.complete ? 'ACTIVE' : '+ ADD',
+                    style: TextStyle(
+                      color: data.complete ? AppTheme.neonCyan : data.accent,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              data.title.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: data.accent,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.7,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              data.subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.78),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              data.body,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.62),
+                fontSize: 11.5,
+                height: 1.25,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
