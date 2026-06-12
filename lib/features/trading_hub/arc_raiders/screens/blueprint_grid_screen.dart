@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
@@ -31,6 +32,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
   ArcBlueprintFilter _selectedFilter = ArcBlueprintFilter.all;
   bool _selectionMode = false;
+  bool _overviewMode = false;
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
 
@@ -656,6 +658,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 ),
               ),
               miniButton(
+                label: _overviewMode ? 'Standard View' : 'Overview View',
+                selected: _overviewMode,
+                energized: _overviewMode,
+                onPressed: () => setState(() => _overviewMode = !_overviewMode),
+              ),
+              miniButton(
                 label: _selectionMode ? 'Selecting' : 'Select Multiple',
                 selected: _selectionMode,
                 energized: _selectionMode,
@@ -781,6 +789,378 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildIntelLine({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    if (value.trim().isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 17),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  height: 1.35,
+                ),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: TextStyle(color: color, fontWeight: FontWeight.w800),
+                  ),
+                  TextSpan(text: value),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openBlueprintPreview(
+    ArcBlueprint blueprint,
+    ArcBlueprintState state,
+  ) async {
+    final accent = _rarityColor(blueprint.rarity);
+    final intel = ArcBlueprintIntelLibrary.resolve(blueprint);
+    final maps = ArcBlueprintIntelLibrary.isAllMaps(intel.likelyMaps)
+        ? 'All maps / community intel still improving.'
+        : intel.likelyMaps.join(', ');
+    final containers = intel.likelyContainers.isEmpty
+        ? 'Check Community Intel and recent reports.'
+        : intel.likelyContainers.join(', ');
+    final conditions = intel.bestConditions.isEmpty
+        ? 'Any raid condition.'
+        : intel.bestConditions.join(', ');
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 14,
+            right: 14,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 14,
+          ),
+          child: ElectricChargeBorder(
+            active: true,
+            radius: 28,
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(sheetContext).size.height * 0.88,
+              ),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: accent.withValues(alpha: 0.46)),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.18),
+                    blurRadius: 34,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            blueprint.name.toUpperCase(),
+                            style: AppTheme.tradingHeading(
+                              fontSize: 24,
+                              color: accent,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Close',
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 260,
+                      child: BlueprintTile(
+                        blueprint: blueprint,
+                        state: state,
+                        landscape: false,
+                        rarityColor: accent,
+                        isSelectionMode: _selectionMode,
+                        isSelected: _selectedBlueprintIds.contains(
+                          blueprint.id,
+                        ),
+                        onTap: () {},
+                        onLongPress: () {},
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      state.owned
+                          ? state.hasDuplicates
+                                ? 'Owned - ${state.dupesOwned} duplicate${state.dupesOwned == 1 ? '' : 's'} available.'
+                                : 'Owned - no duplicates registered.'
+                          : 'Missing - use the tips below to target likely sources.',
+                      textAlign: TextAlign.center,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                        isBold: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildIntelLine(
+                      icon: Icons.tips_and_updates_rounded,
+                      label: 'Tip',
+                      value: intel.tip,
+                      color: AppTheme.neonCyan,
+                    ),
+                    _buildIntelLine(
+                      icon: Icons.inventory_2_rounded,
+                      label: 'Likely Sources',
+                      value: containers,
+                      color: accent,
+                    ),
+                    _buildIntelLine(
+                      icon: Icons.map_rounded,
+                      label: 'Maps',
+                      value: maps,
+                      color: AppTheme.neonPink,
+                    ),
+                    _buildIntelLine(
+                      icon: Icons.wb_twilight_rounded,
+                      label: 'Conditions',
+                      value: conditions,
+                      color: Colors.amberAccent,
+                    ),
+                    if (intel.specialSource != null)
+                      _buildIntelLine(
+                        icon: Icons.verified_rounded,
+                        label: 'Special Source',
+                        value: intel.specialSource!,
+                        color: Colors.lightGreenAccent,
+                      ),
+                    _buildIntelLine(
+                      icon: Icons.insights_rounded,
+                      label: 'Confidence',
+                      value: intel.confidenceLabel,
+                      color: Colors.white70,
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildBlueprintActionButton(
+                          label: state.hasDuplicates
+                              ? 'Trade'
+                              : 'Where to Find',
+                          icon: state.hasDuplicates
+                              ? Icons.swap_horiz_rounded
+                              : Icons.radar_rounded,
+                          color: state.hasDuplicates
+                              ? AppTheme.neonPink
+                              : AppTheme.neonCyan,
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            Navigator.of(context).pushNamed(
+                              state.hasDuplicates
+                                  ? TraderHubScreen.routeName
+                                  : ArcMarketIntelligenceScreen.routeName,
+                            );
+                          },
+                        ),
+                        _buildBlueprintActionButton(
+                          label: state.owned ? 'Add Intel' : 'Mark Owned',
+                          icon: state.owned
+                              ? Icons.add_location_alt_rounded
+                              : Icons.check_circle_rounded,
+                          color: state.owned
+                              ? AppTheme.neonCyan
+                              : AppTheme.neonPink,
+                          onTap: () async {
+                            Navigator.of(sheetContext).pop();
+                            if (state.owned) {
+                              await _openBlueprintEditor(blueprint, state);
+                            } else {
+                              await _markMissingAsOwned(blueprint, state);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOverviewGrid(
+    BuildContext context,
+    List<ArcBlueprint> filtered,
+    Map<String, ArcBlueprintState> states,
+  ) {
+    if (filtered.isEmpty) {
+      return Container(
+        padding: AppTheme.sectionCardPadding,
+        decoration: AppTheme.tradingCardDecoration(
+          borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
+        ),
+        child: Text(
+          _searchQuery.trim().isNotEmpty
+              ? 'No blueprints matched "${_searchQuery.trim()}".'
+              : 'No blueprints match this filter yet.',
+          style: const TextStyle(color: Colors.white70, height: 1.35),
+        ),
+      );
+    }
+
+    const crossAxisCount = _gridColumns;
+    const spacing = _landscapeSpacing;
+    const childAspectRatio = 0.98;
+    const naturalTileWidth = 96.0;
+    final rowCount = (filtered.length / crossAxisCount).ceil();
+    final naturalTileHeight = naturalTileWidth / childAspectRatio;
+    final naturalWidth =
+        (naturalTileWidth * crossAxisCount) + (spacing * (crossAxisCount - 1));
+    final naturalHeight =
+        (naturalTileHeight * rowCount) + (spacing * (rowCount - 1));
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = (constraints.maxWidth / naturalWidth)
+            .clamp(0.42, 1.0)
+            .toDouble();
+        final fittedHeight = naturalHeight * scale;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.90),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                ),
+              ),
+              child: Text(
+                'Overview keeps the exact in-game order. Double tap any tile to enlarge it and view where-to-find tips.',
+                textAlign: TextAlign.center,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                  isBold: true,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: constraints.maxWidth,
+              height: fittedHeight,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: naturalWidth,
+                  height: naturalHeight,
+                  child: GridView.builder(
+                    itemCount: filtered.length,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: spacing,
+                          mainAxisSpacing: spacing,
+                          childAspectRatio: childAspectRatio,
+                        ),
+                    itemBuilder: (context, index) {
+                      final blueprint = filtered[index];
+                      final state =
+                          states[blueprint.id] ??
+                          ArcBlueprintState.empty(blueprint.id);
+
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onDoubleTap: () =>
+                            _openBlueprintPreview(blueprint, state),
+                        child: BlueprintTile(
+                          blueprint: blueprint,
+                          state: state,
+                          landscape: true,
+                          rarityColor: _rarityColor(blueprint.rarity),
+                          isSelectionMode: _selectionMode,
+                          isSelected: _selectedBlueprintIds.contains(
+                            blueprint.id,
+                          ),
+                          onTap: () async {
+                            if (_selectionMode) {
+                              _toggleSelection(blueprint.id);
+                              return;
+                            }
+
+                            if (state.owned) {
+                              await _openBlueprintEditor(blueprint, state);
+                            } else {
+                              await _markMissingAsOwned(blueprint, state);
+                            }
+                          },
+                          onLongPress: () {
+                            if (_selectionMode) {
+                              _toggleSelection(blueprint.id);
+                            } else {
+                              _enterSelectionMode(blueprint.id);
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1092,7 +1472,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     AppTheme.pagePadding.bottom + 108,
                   ),
                   children: [
-                    _buildGrid(context, filtered, states),
+                    _overviewMode
+                        ? _buildOverviewGrid(context, filtered, states)
+                        : _buildGrid(context, filtered, states),
                     const SizedBox(height: 18),
                     _buildBottomControls(
                       allBlueprints,
