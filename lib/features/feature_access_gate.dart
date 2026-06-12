@@ -11,6 +11,15 @@ class FeatureAccessFlag {
   static const traderHub = 'canAccessTraderHub';
   static const matchRaider = 'canAccessMatchRaider';
   static const playLockerPro = 'canAccessPlayLockerPro';
+
+  static const blueprintTracker = 'canAccessBlueprintTracker';
+  static const intelExplorer = 'canAccessIntelExplorer';
+  static const benchTracker = 'canAccessBenchTracker';
+  static const questTracker = 'canAccessQuestTracker';
+  static const raidPlanner = 'canAccessRaidPlanner';
+  static const voiceAssistant = 'canAccessVoiceAssistant';
+  static const monetisation = 'canAccessMonetisation';
+  static const smartTradeAssist = 'canAccessSmartTradeAssist';
 }
 
 class FeatureAccess {
@@ -21,6 +30,14 @@ class FeatureAccess {
     FeatureAccessFlag.traderHub: 'traderHubEnabled',
     FeatureAccessFlag.matchRaider: 'matchRaiderEnabled',
     FeatureAccessFlag.playLockerPro: 'playLockerProEnabled',
+    FeatureAccessFlag.blueprintTracker: 'blueprintTrackerEnabled',
+    FeatureAccessFlag.intelExplorer: 'intelExplorerEnabled',
+    FeatureAccessFlag.benchTracker: 'benchTrackerEnabled',
+    FeatureAccessFlag.questTracker: 'questTrackerEnabled',
+    FeatureAccessFlag.raidPlanner: 'raidPlannerEnabled',
+    FeatureAccessFlag.voiceAssistant: 'voiceAssistantEnabled',
+    FeatureAccessFlag.monetisation: 'monetisationEnabled',
+    FeatureAccessFlag.smartTradeAssist: 'smartTradeAssistEnabled',
   };
 
   static Stream<bool> watchFlag(String flag) {
@@ -100,7 +117,7 @@ class FeatureAccess {
             ),
           ),
           content: Text(
-            '$title is not available yet. We\'ll open this area when it is ready for testing.',
+            '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
             style: const TextStyle(color: Colors.white70, height: 1.4),
           ),
           actions: [
@@ -156,7 +173,7 @@ class FeatureLockedScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppTheme.spaceS),
                       Text(
-                        '$title is not available yet. We\'ll open this area when it is ready for testing.',
+                        '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white70,
