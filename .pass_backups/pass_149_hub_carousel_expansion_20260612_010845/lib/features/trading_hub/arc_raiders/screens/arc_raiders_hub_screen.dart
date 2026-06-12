@@ -13,7 +13,6 @@ import '../raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import '../raid_planner/screens/raid_planner_screen.dart';
 import '../voice/voice_assistant_sheet.dart';
 import 'arc_market_intelligence_screen.dart';
-import 'arc_profile_edit_screen.dart';
 import 'arc_match_rider_screen.dart';
 import 'blueprint_grid_screen.dart';
 import 'my_hub_screen.dart';
@@ -43,34 +42,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
       assetName: 'my_hub_card.webp',
-      builder: (_) => const MyHubScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Profile & Reputation',
-      subtitle: 'Edit your trader profile, trust signals and raider identity.',
-      icon: Icons.verified_user_rounded,
-      accent: AppTheme.neonPink,
-      art: _ArcHubArtKind.intel,
-      assetName: 'arc_hub_profile_reputation.webp',
-      builder: (_) => const ArcProfileEditScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Referral Tools',
-      subtitle:
-          'Community referrals, creator rewards and supporter growth tools.',
-      icon: Icons.campaign_rounded,
-      accent: AppTheme.neonCyan,
-      art: _ArcHubArtKind.smart,
-      assetName: 'arc_hub_referral_tools.webp',
-      builder: (_) => const MyHubScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Subscriptions',
-      subtitle: 'Premium access, supporter perks and account upgrade options.',
-      icon: Icons.workspace_premium_rounded,
-      accent: AppTheme.neonPink,
-      art: _ArcHubArtKind.trading,
-      assetName: 'arc_hub_subscriptions.webp',
       builder: (_) => const MyHubScreen(),
     ),
     _ArcHubFeature(
@@ -1659,9 +1630,6 @@ class _ArcHubArtPainter extends CustomPainter {
 
 // ARC HUB WEBP ASSET MANIFEST
 // Drop generated/converted files here:
-// assets/images/arc_raiders/hub/arc_hub_profile_reputation.webp
-// assets/images/arc_raiders/hub/arc_hub_referral_tools.webp
-// assets/images/arc_raiders/hub/arc_hub_subscriptions.webp
 // assets/images/arc_raiders/hub/arc_hub_match_a_raider.webp
 // assets/images/arc_raiders/hub/arc_hub_raid_planner.webp
 // assets/images/arc_raiders/hub/arc_hub_tracking.webp
