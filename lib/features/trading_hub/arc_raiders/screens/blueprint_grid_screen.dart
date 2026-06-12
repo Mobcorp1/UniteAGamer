@@ -618,7 +618,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            '$ownedCount / ${allBlueprints.length} owned  â€¢  $missingCount missing  â€¢  $dupesCount dupes',
+            '$ownedCount / ${allBlueprints.length} owned  •  $missingCount missing  •  $dupesCount dupes',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -659,7 +659,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 ),
               ),
               miniButton(
-                label: _overviewMode ? 'Standard View' : 'Overview View',
+                label: _overviewMode ? 'Standard View' : 'Full View',
                 selected: _overviewMode,
                 energized: _overviewMode,
                 onPressed: () => setState(() => _overviewMode = !_overviewMode),
