@@ -1065,8 +1065,21 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = (constraints.maxWidth / naturalWidth)
-            .clamp(0.42, 1.0)
+        final mediaQuery = MediaQuery.of(context);
+        final safeHeight =
+            mediaQuery.size.height -
+            mediaQuery.padding.top -
+            mediaQuery.padding.bottom;
+        final reservedChromeHeight =
+            mediaQuery.orientation == Orientation.landscape ? 138.0 : 232.0;
+        final availableGridHeight = (safeHeight - reservedChromeHeight).clamp(
+          160.0,
+          safeHeight,
+        );
+        final widthScale = constraints.maxWidth / naturalWidth;
+        final heightScale = availableGridHeight / naturalHeight;
+        final scale = (widthScale < heightScale ? widthScale : heightScale)
+            .clamp(0.20, 1.0)
             .toDouble();
         final fittedHeight = naturalHeight * scale;
 
