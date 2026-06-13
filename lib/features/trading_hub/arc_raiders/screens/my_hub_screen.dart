@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -111,6 +112,16 @@ class _MyHubScreenState extends State<MyHubScreen> {
       builder: (_) => const TraderHubScreen(),
     ),
     _ArcHubFeature(
+      title: 'Nomadic Trader',
+      subtitle:
+          'Track Ermal target value, accepted resource tiers and progression goals.',
+      icon: Icons.calculate_outlined,
+      accent: Colors.amberAccent,
+      art: _ArcHubArtKind.trading,
+      assetName: 'arc_hub_trading.webp',
+      builder: (_) => const NomadicTraderScreen(),
+    ),
+    _ArcHubFeature(
       title: 'Profile & Reputation',
       subtitle: 'Your trader profile, trust layer and account reputation.',
       icon: Icons.verified_user_outlined,
@@ -155,7 +166,11 @@ class _MyHubScreenState extends State<MyHubScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
-    const betaOpenTitles = {'Blueprint Tracker', 'Blueprint Grid'};
+    const betaOpenTitles = {
+      'Blueprint Tracker',
+      'Blueprint Grid',
+      'Nomadic Trader',
+    };
 
     if (!betaOpenTitles.contains(feature.title)) {
       Navigator.of(context).push(
@@ -955,7 +970,11 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
-    const betaOpenTitles = {'Blueprint Tracker', 'Blueprint Grid'};
+    const betaOpenTitles = {
+      'Blueprint Tracker',
+      'Blueprint Grid',
+      'Nomadic Trader',
+    };
 
     if (!betaOpenTitles.contains(feature.title)) {
       Navigator.of(context).push(
