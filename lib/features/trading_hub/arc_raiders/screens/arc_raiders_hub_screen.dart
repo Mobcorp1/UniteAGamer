@@ -138,17 +138,14 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
-    const lockedTitles = {
-      'Match a Raider',
-      'Raid Planner',
-      'Trading',
-      'Smart Trade',
-      'Community Intel',
-      'Referral Tools',
-      'Subscriptions',
+    const betaOpenTitles = {
+      'Blueprint Tracker',
+      'Blueprint Tracker Beta',
+      'Blueprint Grid',
+      'My Hub',
     };
 
-    if (lockedTitles.contains(feature.title)) {
+    if (!betaOpenTitles.contains(feature.title)) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => FeatureLockedScreen(title: feature.title),
@@ -916,17 +913,14 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
-    const lockedTitles = {
-      'Match a Raider',
-      'Raid Planner',
-      'Trading',
-      'Smart Trade',
-      'Community Intel',
-      'Referral Tools',
-      'Subscriptions',
+    const betaOpenTitles = {
+      'Blueprint Tracker',
+      'Blueprint Tracker Beta',
+      'Blueprint Grid',
+      'My Hub',
     };
 
-    if (lockedTitles.contains(feature.title)) {
+    if (!betaOpenTitles.contains(feature.title)) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => FeatureLockedScreen(title: feature.title),

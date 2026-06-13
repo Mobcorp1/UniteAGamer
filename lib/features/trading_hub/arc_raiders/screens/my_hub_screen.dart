@@ -19,6 +19,7 @@ import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/responsive_layout_helper.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_responsive_chrome.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 
 class MyHubScreen extends StatefulWidget {
   static const routeName = '/my-hub';
@@ -154,6 +155,17 @@ class _MyHubScreenState extends State<MyHubScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
+    const betaOpenTitles = {'Blueprint Tracker', 'Blueprint Grid'};
+
+    if (!betaOpenTitles.contains(feature.title)) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FeatureLockedScreen(title: feature.title),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
   }
 
@@ -943,6 +955,17 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   }
 
   void _openFeature(_ArcHubFeature feature) {
+    const betaOpenTitles = {'Blueprint Tracker', 'Blueprint Grid'};
+
+    if (!betaOpenTitles.contains(feature.title)) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FeatureLockedScreen(title: feature.title),
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
   }
 
