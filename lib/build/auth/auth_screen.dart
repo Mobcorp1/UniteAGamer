@@ -284,6 +284,59 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _showVerifyEmailDialog({
+    required User user,
+    required String email,
+    required bool accountCreated,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text(
+          'Verify your email',
+          style: AppTheme.neonTextStyle(
+            fontSize: 24,
+            color: AppTheme.neonCyan,
+            isBold: true,
+          ),
+        ),
+        content: Text(
+          accountCreated
+              ? 'Your account has been created. We have sent a verification email to $email. Verify your email address, then log in to enter the Blueprint Tracker beta.'
+              : 'This account has not been verified yet. We have sent a verification email to $email. Verify your email address, then log in again.',
+          style: const TextStyle(color: Colors.white70, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await user.sendEmailVerification();
+              if (!dialogContext.mounted) return;
+              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                const SnackBar(content: Text('Verification email sent again.')),
+              );
+            },
+            child: const Text('Resend email'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(accountCreated ? 'Go to login' : 'Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _rememberEmailOnly(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('uag_remember_email', _rememberEmail);
+    if (_rememberEmail) {
+      await prefs.setString('uag_last_login_email', email.trim());
+    } else {
+      await prefs.remove('uag_last_login_email');
+    }
+  }
+
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
@@ -361,6 +414,21 @@ class _AuthScreenState extends State<AuthScreen> {
             message: 'Login succeeded but user session was not available.',
           );
         }
+        await credential.user?.reload();
+        final refreshedUser = _firebase.currentUser ?? credential.user;
+        if (refreshedUser != null && !refreshedUser.emailVerified) {
+          await refreshedUser.sendEmailVerification();
+          await _rememberEmailOnly(email);
+          await _firebase.signOut();
+          if (!mounted) return;
+          await _showVerifyEmailDialog(
+            user: refreshedUser,
+            email: email,
+            accountCreated: false,
+          );
+          return;
+        }
+
         await _persistLoginPreferences(email, uid);
 
         if (!mounted) return;
@@ -472,13 +540,24 @@ class _AuthScreenState extends State<AuthScreen> {
           },
         }, SetOptions(merge: true));
 
-        await _persistLoginPreferences(email, user.uid);
+        await _rememberEmailOnly(email);
+        await _firebase.signOut();
 
         if (!mounted) return;
 
-        Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
+        await _showVerifyEmailDialog(
+          user: user,
+          email: email,
+          accountCreated: true,
+        );
+
+        if (!mounted) return;
+        setState(() {
+          _isLogin = true;
+          _signupStep = 0;
+          _passwordFieldController.clear();
+          _confirmPasswordController.clear();
+        });
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -519,8 +598,9 @@ class _AuthScreenState extends State<AuthScreen> {
           content: TextField(
             controller: _resetEmailController,
             keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
             autocorrect: false,
-            enableSuggestions: false,
+            enableSuggestions: true,
             style: const TextStyle(color: Colors.white),
             decoration: _inputDecoration('Email address'),
           ),
@@ -605,6 +685,9 @@ class _AuthScreenState extends State<AuthScreen> {
       controller: controller,
       style: const TextStyle(color: Colors.white),
       obscureText: !isVisible,
+      autofillHints: _isLogin
+          ? const [AutofillHints.password]
+          : const [AutofillHints.newPassword],
       decoration: _inputDecoration(
         label,
         suffixIcon: IconButton(
@@ -779,7 +862,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Start free, upgrade later, or join with referral progression ready from day one.',
+          'Blueprint Tracker beta access is currently free. Paid tiers are hidden until a later beta phase.',
           style: TextStyle(color: Colors.white60, height: 1.28),
         ),
         const SizedBox(height: AppTheme.spaceM),
@@ -793,19 +876,21 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Operator',
-          price: '£4.99/month',
+          price: 'Coming Soon',
           summary:
-              'More listings, more offers, monthly operations and progression.',
-          commission: 'Starts at 5% commission path, can progress toward 15%.',
+              'Premium tools are locked during the Blueprint Tracker beta.',
+          commission:
+              'No payments, referrals or commissions are active during this beta.',
           icon: Icons.workspace_premium_outlined,
           accent: AppTheme.neonPink,
         ),
         _tierOption(
           tier: 'Overseer',
-          price: '£8.99/month',
+          price: 'Coming Soon',
           summary:
-              'Priority trading, stronger referral tools and future smart assist.',
-          commission: 'Starts at 10% commission path, can progress toward 25%.',
+              'Advanced supporter features will return in a future beta phase.',
+          commission:
+              'No payments, referrals or commissions are active during this beta.',
           icon: Icons.military_tech_rounded,
           accent: Colors.amberAccent,
         ),
@@ -1027,8 +1112,9 @@ class _AuthScreenState extends State<AuthScreen> {
         TextFormField(
           controller: _emailFieldController,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
           autocorrect: false,
-          enableSuggestions: false,
+          enableSuggestions: true,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration('Email address'),
           onSaved: (value) => _email = value?.trim() ?? '',
@@ -1038,8 +1124,9 @@ class _AuthScreenState extends State<AuthScreen> {
         TextFormField(
           controller: _confirmEmailController,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
           autocorrect: false,
-          enableSuggestions: false,
+          enableSuggestions: true,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration('Confirm email address'),
           validator: (value) {
@@ -1132,8 +1219,9 @@ class _AuthScreenState extends State<AuthScreen> {
         TextFormField(
           controller: _emailFieldController,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
           autocorrect: false,
-          enableSuggestions: false,
+          enableSuggestions: true,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration('Email address'),
           onSaved: (value) => _email = value?.trim() ?? '',
