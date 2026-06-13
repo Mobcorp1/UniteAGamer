@@ -119,7 +119,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       builder: (_) => const TradingProfileScreen(),
     ),
     _ArcHubFeature(
-      title: 'Referral Tools',
+      title: 'Coming Soon',
       subtitle: 'Share your code, track signups and grow your trader network.',
       icon: Icons.hub_outlined,
       accent: AppTheme.neonPink,
@@ -128,8 +128,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
       builder: (_) => const TradingProfileScreen(),
     ),
     _ArcHubFeature(
-      title: 'Subscriptions',
-      subtitle: 'Manage access tier, billing, rewards and premium unlocks.',
+      title: 'Coming Soon',
+      subtitle: 'Premium features will unlock in a future beta phase.',
       icon: Icons.workspace_premium_outlined,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.trading,
@@ -137,7 +137,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       builder: (_) => const MonetisationScreen(),
     ),
     _ArcHubFeature(
-      title: 'Operations & Rewards',
+      title: 'Coming Soon',
       subtitle: 'Monthly goals, reward progress and future operation badges.',
       icon: Icons.assignment_turned_in_outlined,
       accent: Colors.amberAccent,

@@ -409,6 +409,8 @@ class _AuthScreenState extends State<AuthScreen> {
           );
         }
 
+        await user.sendEmailVerification();
+
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'email': email,
           'displayName': _nameController.text.trim(),
@@ -791,7 +793,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Operator',
-          price: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£4.99/month',
+          price: '£4.99/month',
           summary:
               'More listings, more offers, monthly operations and progression.',
           commission: 'Starts at 5% commission path, can progress toward 15%.',
@@ -800,7 +802,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Overseer',
-          price: 'ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£8.99/month',
+          price: '£8.99/month',
           summary:
               'Priority trading, stronger referral tools and future smart assist.',
           commission: 'Starts at 10% commission path, can progress toward 25%.',

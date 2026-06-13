@@ -57,7 +57,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const ArcProfileEditScreen(),
     ),
     _ArcHubFeature(
-      title: '_REMOVE_Referral Tools',
+      title: 'Coming Soon',
       subtitle:
           'Community referrals, creator rewards and supporter growth tools.',
       icon: Icons.campaign_rounded,
@@ -67,7 +67,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const MyHubScreen(),
     ),
     _ArcHubFeature(
-      title: '_REMOVE_Subscriptions',
+      title: 'Coming Soon',
       subtitle: 'Premium access, supporter perks and account upgrade options.',
       icon: Icons.workspace_premium_rounded,
       accent: AppTheme.neonPink,
