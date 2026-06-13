@@ -154,14 +154,6 @@ class _AppEntryGateState extends State<AppEntryGate>
           return const AuthLandingScreen();
         }
 
-        if (!user.emailVerified) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _clearSilentFirebaseLogin();
-          });
-          return const AuthLandingScreen();
-        }
-
         return FutureBuilder<bool>(
           future: _sessionAllowedFor(user),
           builder: (context, sessionSnapshot) {

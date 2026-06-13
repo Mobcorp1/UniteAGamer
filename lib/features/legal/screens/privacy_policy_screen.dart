@@ -38,22 +38,6 @@ class PrivacyPolicyScreen extends StatelessWidget {
           'The app may remember your email locally if you choose that option. Biometric settings are device-level preferences used for login convenience.',
           Icons.fingerprint_rounded,
         ),
-
-        _LegalSection(
-          'Email verification and account security',
-          'We use Firebase Authentication to manage sign in, email verification, password reset and account sessions. Your verified email may be used for account recovery, abuse prevention and important service notices.',
-          Icons.mark_email_read_outlined,
-        ),
-        _LegalSection(
-          'Analytics and beta feedback',
-          'During beta we may review registrations, feature usage, blueprint updates, feedback submissions and error patterns to improve stability, prioritise fixes and understand whether the Blueprint Tracker is useful.',
-          Icons.insights_rounded,
-        ),
-        _LegalSection(
-          'Advertising and partners',
-          'Web advertising and partner banners may be introduced later. Where third-party services such as Google advertising tools are used, their own privacy and cookie policies may also apply.',
-          Icons.campaign_rounded,
-        ),
         _LegalSection(
           'Safety and abuse prevention',
           'Data may be used to detect spam, fake intel, suspicious referrals, marketplace manipulation, repeated no-shows and behaviour that harms the community.',

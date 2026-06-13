@@ -68,8 +68,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     ),
     _ArcHubFeature(
       title: 'Coming Soon',
-      subtitle:
-          'Premium access and supporter perks will unlock in a future beta phase.',
+      subtitle: 'Premium access, supporter perks and account upgrade options.',
       icon: Icons.workspace_premium_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
@@ -147,15 +146,12 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       'Community Intel',
       'Referral Tools',
       'Subscriptions',
-      'Coming Soon',
     };
 
-    final cleanTitle = feature.title.replaceFirst('_REMOVE_', '');
-    if (lockedTitles.contains(feature.title) ||
-        feature.title.startsWith('_REMOVE_')) {
+    if (lockedTitles.contains(feature.title)) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => FeatureLockedScreen(title: cleanTitle),
+          builder: (_) => FeatureLockedScreen(title: feature.title),
         ),
       );
       return;
@@ -928,7 +924,6 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       'Community Intel',
       'Referral Tools',
       'Subscriptions',
-      'Coming Soon',
     };
 
     if (lockedTitles.contains(feature.title)) {

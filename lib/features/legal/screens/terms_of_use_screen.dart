@@ -43,32 +43,6 @@ class TermsOfUseScreen extends StatelessWidget {
           'Referral discounts, commissions, boosts, monthly operations and progression may change during beta. Rewards are for quality contribution, not spam volume.',
           Icons.auto_graph_rounded,
         ),
-
-        _LegalSection(
-          'Email verification',
-          'You must use an email address you control and may be required to verify it before accessing beta features. Accounts using false, disposable, abusive or unreachable email addresses may be limited or removed.',
-          Icons.mark_email_read_outlined,
-        ),
-        _LegalSection(
-          'No real-money trading',
-          'The hub is designed for coordination, tracking and community tools. Users must not use the service to sell in-game items, accounts, currency or access for real-world money unless a future official policy expressly allows it.',
-          Icons.money_off_csred_outlined,
-        ),
-        _LegalSection(
-          'Account suspension',
-          'We may restrict, suspend or remove accounts that submit false intel, abuse feedback systems, harass users, manipulate reputation, attempt fraud, evade bans or create risk for the community.',
-          Icons.block_rounded,
-        ),
-        _LegalSection(
-          'Unofficial fan project',
-          'ARC Raiders names, concepts and related game content belong to their respective owners. This hub is an unofficial fan-made companion tool and is not endorsed by, affiliated with or operated by Embark Studios.',
-          Icons.info_outline_rounded,
-        ),
-        _LegalSection(
-          'Limitation of liability',
-          'The hub is provided on a beta and as-is basis. We do not guarantee uninterrupted access, perfect accuracy, successful trades, item availability, game outcomes or financial results. Use the service at your own discretion.',
-          Icons.gavel_rounded,
-        ),
         _LegalSection(
           'Beta notice',
           'Features, limits, tiers, rewards, marketplace tools and terms may change while UAG Traders Hub is tested and improved.',
