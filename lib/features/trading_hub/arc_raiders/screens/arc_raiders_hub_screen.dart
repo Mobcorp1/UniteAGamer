@@ -38,7 +38,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
 
   late final List<_ArcHubFeature> _features = [
     _ArcHubFeature(
-      title: 'Blueprint Tracker',
+      title: 'My Hub',
       subtitle:
           'Track owned, missing and duplicate blueprints and collection progress.',
       icon: Icons.dashboard_customize_rounded,
@@ -793,7 +793,7 @@ class _HubHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              'ARC Raiders Systems',
+              'UAG ARC Raiders Systems',
               style: AppTheme.neonTextStyle(
                 fontSize: ArcResponsiveChrome.width(context) >= 1100 ? 21 : 25,
                 color: selected.accent,
