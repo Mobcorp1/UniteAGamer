@@ -65,8 +65,8 @@ flutter:
     - assets/arc_raiders/blueprints/
     - assets/arc_raiders/scrappy_resources/
     - assets/arc_raiders/items/
-    - assets/arc_raiders/loading/
 
+    - assets/arc_raiders/hero_cards/
   fonts:
     - family: VT323
       fonts:
@@ -85,5 +85,6 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
+
 
 
