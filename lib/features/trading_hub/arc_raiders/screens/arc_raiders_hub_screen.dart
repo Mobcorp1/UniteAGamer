@@ -137,24 +137,83 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     super.dispose();
   }
 
-  void _openFeature(_ArcHubFeature feature) {
+  Future<void> _openFeature(_ArcHubFeature feature) async {
+    if (await FeatureAccess.isAdminOrDev()) {
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
     const betaOpenTitles = {
       'Blueprint Tracker',
       'Blueprint Tracker Beta',
       'Blueprint Grid',
+      'Nomadic Trader',
       'My Hub',
     };
 
-    if (!betaOpenTitles.contains(feature.title)) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => FeatureLockedScreen(title: feature.title),
-        ),
-      );
+    if (betaOpenTitles.contains(feature.title)) {
+      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
-    Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+    final flag = _featureAccessFlagForTitle(feature.title);
+    final hasAccess = flag != null && await FeatureAccess.hasAccess(flag);
+
+    if (!mounted) return;
+
+    if (hasAccess) {
+      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FeatureLockedScreen(title: feature.title),
+      ),
+    );
+  }
+
+  String? _featureAccessFlagForTitle(String title) {
+    switch (title) {
+      case 'Scrappy Tracker':
+        return FeatureAccessFlag.scrappyTracker;
+      case 'Bench Tracker':
+        return FeatureAccessFlag.benchTracker;
+      case 'Quest Tracker':
+        return FeatureAccessFlag.questTracker;
+      case 'Trading':
+      case 'Trading Overview':
+      case 'Trader Hub':
+        return FeatureAccessFlag.traderHub;
+      case 'Match a Raider':
+      case 'Match Raider':
+        return FeatureAccessFlag.matchRaider;
+      case 'Raid Planner':
+      case 'Hunt Targets':
+        return FeatureAccessFlag.raidPlanner;
+      case 'Community Intel':
+      case 'My Intel':
+      case 'Intel Explorer':
+        return FeatureAccessFlag.intelExplorer;
+      case 'Smart Trade':
+      case 'Smart Trade Assist':
+        return FeatureAccessFlag.smartTradeAssist;
+      case 'Subscriptions':
+      case 'Plans & Referrals':
+      case 'Referral Tools':
+      case 'Refer a Raider':
+      case 'Operations':
+      case 'Operation Rewards':
+        return FeatureAccessFlag.monetisation;
+      case 'Voice Assistant':
+        return FeatureAccessFlag.voiceAssistant;
+      case 'Play Like A Pro':
+      case 'Play Locker Pro':
+        return FeatureAccessFlag.playLockerPro;
+      default:
+        return null;
+    }
   }
 
   _ArcHubFeature _featureByTitle(String title) {
@@ -912,24 +971,83 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     super.dispose();
   }
 
-  void _openFeature(_ArcHubFeature feature) {
+  Future<void> _openFeature(_ArcHubFeature feature) async {
+    if (await FeatureAccess.isAdminOrDev()) {
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
     const betaOpenTitles = {
       'Blueprint Tracker',
       'Blueprint Tracker Beta',
       'Blueprint Grid',
+      'Nomadic Trader',
       'My Hub',
     };
 
-    if (!betaOpenTitles.contains(feature.title)) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => FeatureLockedScreen(title: feature.title),
-        ),
-      );
+    if (betaOpenTitles.contains(feature.title)) {
+      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
-    Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+    final flag = _featureAccessFlagForTitle(feature.title);
+    final hasAccess = flag != null && await FeatureAccess.hasAccess(flag);
+
+    if (!mounted) return;
+
+    if (hasAccess) {
+      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FeatureLockedScreen(title: feature.title),
+      ),
+    );
+  }
+
+  String? _featureAccessFlagForTitle(String title) {
+    switch (title) {
+      case 'Scrappy Tracker':
+        return FeatureAccessFlag.scrappyTracker;
+      case 'Bench Tracker':
+        return FeatureAccessFlag.benchTracker;
+      case 'Quest Tracker':
+        return FeatureAccessFlag.questTracker;
+      case 'Trading':
+      case 'Trading Overview':
+      case 'Trader Hub':
+        return FeatureAccessFlag.traderHub;
+      case 'Match a Raider':
+      case 'Match Raider':
+        return FeatureAccessFlag.matchRaider;
+      case 'Raid Planner':
+      case 'Hunt Targets':
+        return FeatureAccessFlag.raidPlanner;
+      case 'Community Intel':
+      case 'My Intel':
+      case 'Intel Explorer':
+        return FeatureAccessFlag.intelExplorer;
+      case 'Smart Trade':
+      case 'Smart Trade Assist':
+        return FeatureAccessFlag.smartTradeAssist;
+      case 'Subscriptions':
+      case 'Plans & Referrals':
+      case 'Referral Tools':
+      case 'Refer a Raider':
+      case 'Operations':
+      case 'Operation Rewards':
+        return FeatureAccessFlag.monetisation;
+      case 'Voice Assistant':
+        return FeatureAccessFlag.voiceAssistant;
+      case 'Play Like A Pro':
+      case 'Play Locker Pro':
+        return FeatureAccessFlag.playLockerPro;
+      default:
+        return null;
+    }
   }
 
   @override

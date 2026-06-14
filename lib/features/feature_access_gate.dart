@@ -96,6 +96,19 @@ class FeatureAccess {
     return configData[globalField] == true;
   }
 
+  static Future<bool> isAdminOrDev() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    final data = snapshot.data() ?? {};
+    return data['isAdmin'] == true || data['isDev'] == true;
+  }
+
   static Future<void> showLockedDialog(
     BuildContext context, {
     required String title,
