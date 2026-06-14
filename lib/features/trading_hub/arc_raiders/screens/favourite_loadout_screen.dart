@@ -1366,11 +1366,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               _PreviewRow(label: 'Augment', value: loadout.augment),
               _PreviewRow(
                 label: 'Primary',
-                value: '${primary.name} Ã¢â‚¬â€ ${primary.category}',
+                value: '${primary.name}  ${primary.category}',
               ),
               _PreviewRow(
                 label: 'Secondary',
-                value: '${secondary.name} Ã¢â‚¬â€ ${secondary.category}',
+                value: '${secondary.name}  ${secondary.category}',
               ),
               _PreviewRow(
                 label: 'Equipment',
@@ -1772,7 +1772,7 @@ class _CraftingReadinessCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              ' Ã¢â‚¬â€ . Track bench resources or try your luck through free loadout / loot until verified.',
+              '  . Track bench resources or try your luck through free loadout / loot until verified.',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.76),
                 fontSize: 11.5,

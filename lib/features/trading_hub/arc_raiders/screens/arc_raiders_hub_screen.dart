@@ -57,7 +57,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const ArcProfileEditScreen(),
     ),
     _ArcHubFeature(
-      title: 'Coming Soon',
+      title: 'Refer a Raider',
       subtitle:
           'Community referrals, creator rewards and supporter growth tools.',
       icon: Icons.campaign_rounded,
@@ -67,7 +67,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => const MyHubScreen(),
     ),
     _ArcHubFeature(
-      title: 'Coming Soon',
+      title: 'Subscriptions',
       subtitle: 'Premium access, supporter perks and account upgrade options.',
       icon: Icons.workspace_premium_rounded,
       accent: AppTheme.neonPink,
