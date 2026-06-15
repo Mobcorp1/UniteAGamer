@@ -59,9 +59,36 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     ),
     _NomadicGoal(
       name: 'Backpack Charm',
-      target: 25000,
+      target: 100000,
       icon: Icons.star_border_rounded,
     ),
+    _NomadicGoal(
+      name: 'Raider Tokens',
+      target: 150000,
+      icon: Icons.toll_outlined,
+    ),
+    _NomadicGoal(
+      name: 'Cosmetic',
+      target: 100000,
+      icon: Icons.checkroom_outlined,
+    ),
+    _NomadicGoal(
+      name: 'Emote',
+      target: 100000,
+      icon: Icons.emoji_emotions_outlined,
+    ),
+    _NomadicGoal(name: 'Quick Use', target: 100000, icon: Icons.bolt_outlined),
+    _NomadicGoal(
+      name: 'Recyclable',
+      target: 100000,
+      icon: Icons.recycling_rounded,
+    ),
+    _NomadicGoal(
+      name: 'Blueprint',
+      target: 100000,
+      icon: Icons.article_outlined,
+    ),
+    _NomadicGoal(name: 'Weapon', target: 100000, icon: Icons.gps_fixed_rounded),
   ];
 
   static const _highTierResources = <_NomadicTraderResource>[
@@ -227,12 +254,16 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   final PageController _cardController = PageController(viewportFraction: 0.88);
   final Map<String, TextEditingController> _controllers = {};
   final TextEditingController _customTargetController = TextEditingController();
+  final Map<String, int> _goalTargetOverrides = {};
 
   String _goalName = 'Stash Expansion';
   bool _highTier = true;
   int _targetValue = 200000;
   int _activeCard = 0;
   bool _loaded = false;
+
+  int _targetForGoal(_NomadicGoal goal) =>
+      _goalTargetOverrides[goal.name] ?? goal.target;
 
   List<_NomadicTraderResource> get _resources =>
       _highTier ? _highTierResources : _lowTierResources;
@@ -283,6 +314,15 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       _controllers[resource.id]?.text = value == 0 ? '' : value.toString();
     }
 
+    for (final goal in _defaultGoals) {
+      final savedTarget = prefs.getInt(
+        '${_prefsPrefix}goal_target_${goal.name}',
+      );
+      if (savedTarget != null && savedTarget > 0) {
+        _goalTargetOverrides[goal.name] = savedTarget;
+      }
+    }
+
     if (mounted) setState(() => _loaded = true);
   }
 
@@ -291,6 +331,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     await prefs.setString('${_prefsPrefix}goal_name', _goalName);
     await prefs.setBool('${_prefsPrefix}high_tier', _highTier);
     await prefs.setInt('${_prefsPrefix}target_value', _targetValue);
+    await prefs.setInt('${_prefsPrefix}goal_target_$_goalName', _targetValue);
 
     for (final resource in [..._highTierResources, ..._lowTierResources]) {
       final qty =
@@ -307,8 +348,9 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   void _setGoal(_NomadicGoal goal) {
     setState(() {
       _goalName = goal.name;
-      _targetValue = goal.target;
-      _customTargetController.text = goal.target.toString();
+      final target = _targetForGoal(goal);
+      _targetValue = target;
+      _customTargetController.text = target.toString();
     });
   }
 
@@ -802,7 +844,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           const SizedBox(height: 18),
           Expanded(
             child: ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
               itemCount: equivalents.length,
               separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) => equivalents[index],
@@ -862,15 +904,16 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           const SizedBox(height: 18),
           Expanded(
             child: ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
               itemCount: _defaultGoals.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final goal = _defaultGoals[index];
                 final selected = goal.name == _goalName;
-                final progress = goal.target == 0
+                final target = _targetForGoal(goal);
+                final progress = target == 0
                     ? 0.0
-                    : (_currentValue / goal.target).clamp(0.0, 1.0);
+                    : (_currentValue / target).clamp(0.0, 1.0);
                 return InkWell(
                   onTap: () => _setGoal(goal),
                   borderRadius: BorderRadius.circular(18),
@@ -918,7 +961,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Target ${_format(goal.target)}',
+                                'Target ${_format(target)}',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.60),
                                   fontSize: 12,
@@ -1044,7 +1087,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      'Target ${_format(goal.target)}',
+                      'Target ${_format(_targetForGoal(goal))}',
                       style: const TextStyle(color: Colors.white60),
                     ),
                   ),
@@ -1061,8 +1104,8 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                   final parsed = int.tryParse(value.trim());
                   if (parsed != null && parsed > 0) {
                     setState(() {
-                      _goalName = 'Custom Goal';
                       _targetValue = parsed;
+                      _goalTargetOverrides[_goalName] = parsed;
                     });
                     setSheetState(() {});
                   }

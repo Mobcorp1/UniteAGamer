@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_arc_raiders_hub/screens/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/build/trading_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -78,3 +78,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+

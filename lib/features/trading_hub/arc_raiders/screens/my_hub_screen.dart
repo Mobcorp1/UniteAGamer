@@ -14,7 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
-import 'package:uag_arc_raiders_hub/screens/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -108,7 +108,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
-      assetName: 'arc_hub_trading.webp',
+      assetName: 'arc_nomadic_trader_hero.webp',
       builder: (_) => const TraderHubScreen(),
     ),
     _ArcHubFeature(
@@ -118,7 +118,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.calculate_outlined,
       accent: Colors.amberAccent,
       art: _ArcHubArtKind.trading,
-      assetName: 'arc_hub_trading.webp',
+      assetName: 'arc_nomadic_trader_hero.webp',
       builder: (_) => const NomadicTraderScreen(),
     ),
     _ArcHubFeature(
@@ -167,7 +167,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
 
   Future<void> _openFeature(_ArcHubFeature feature) async {
     if (await FeatureAccess.isAdminOrDev()) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
       return;
     }
@@ -670,7 +670,9 @@ class _ArcHubRealAssetBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = 'assets/images/arc_raiders/hub/${feature.assetName}';
+    final path = feature.assetName.startsWith('assets/')
+        ? feature.assetName
+        : 'assets/images/arc_raiders/hub/${feature.assetName}';
 
     return Stack(
       fit: StackFit.expand,
@@ -1031,7 +1033,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
 
   Future<void> _openFeature(_ArcHubFeature feature) async {
     if (await FeatureAccess.isAdminOrDev()) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
       return;
     }

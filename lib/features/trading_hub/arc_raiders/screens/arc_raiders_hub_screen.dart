@@ -5,7 +5,7 @@ import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import '../widgets/arc_ad_banner_card.dart';
 
 import '../../../../screens/build/app_bar.dart';
-import '../../../../screens/build/app_drawer.dart';
+import '../../../../build/app_drawer.dart';
 import '../../../../widgets/electric_charge_border.dart';
 import '../../../../widgets/static_watermark.dart';
 import '../../../../widgets/theme.dart';
@@ -108,7 +108,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
-      assetName: 'arc_hub_trading.webp',
+      assetName: 'arc_nomadic_trader_hero.webp',
       builder: (_) => const TraderHubScreen(),
     ),
     _ArcHubFeature(
@@ -139,7 +139,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
 
   Future<void> _openFeature(_ArcHubFeature feature) async {
     if (await FeatureAccess.isAdminOrDev()) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
       return;
     }
@@ -613,7 +613,9 @@ class _ArcHubRealAssetBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = 'assets/images/arc_raiders/hub/${feature.assetName}';
+    final path = feature.assetName.startsWith('assets/')
+        ? feature.assetName
+        : 'assets/images/arc_raiders/hub/${feature.assetName}';
 
     return Stack(
       fit: StackFit.expand,
@@ -973,7 +975,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
 
   Future<void> _openFeature(_ArcHubFeature feature) async {
     if (await FeatureAccess.isAdminOrDev()) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
       return;
     }
