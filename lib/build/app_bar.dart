@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uag_arc_raiders_hub/screens/build/admin_console_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -31,8 +33,31 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     final baseActions = <Widget>[
       ...(actions ?? const <Widget>[]),
+      if (user != null)
+        FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          future: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get(),
+          builder: (context, snapshot) {
+            final data = snapshot.data?.data() ?? <String, dynamic>{};
+            final adminMode = data['isAdmin'] == true || data['isDev'] == true;
+
+            if (!adminMode) return const SizedBox.shrink();
+
+            return IconButton(
+              tooltip: 'Admin Console',
+              icon: const Icon(Icons.admin_panel_settings_outlined),
+              onPressed: () {
+                Navigator.of(context).pushNamed(AdminConsoleScreen.routeName);
+              },
+            );
+          },
+        ),
       if (showLogout)
         IconButton(
           tooltip: 'Logout',

@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class NomadicTraderScreen extends StatefulWidget {
@@ -251,7 +252,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     ),
   ];
 
-  final PageController _cardController = PageController(viewportFraction: 0.88);
+  final PageController _cardController = PageController(viewportFraction: 0.76);
   final Map<String, TextEditingController> _controllers = {};
   final TextEditingController _customTargetController = TextEditingController();
   final Map<String, int> _goalTargetOverrides = {};
@@ -262,11 +263,11 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   int _activeCard = 0;
   bool _loaded = false;
 
-  int _targetForGoal(_NomadicGoal goal) =>
-      _goalTargetOverrides[goal.name] ?? goal.target;
-
   List<_NomadicTraderResource> get _resources =>
       _highTier ? _highTierResources : _lowTierResources;
+
+  int _targetForGoal(_NomadicGoal goal) =>
+      _goalTargetOverrides[goal.name] ?? goal.target;
 
   int get _currentValue {
     var total = 0;
@@ -383,22 +384,20 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
   Widget _frostedPanel({
     required Widget child,
-    EdgeInsets padding = const EdgeInsets.all(16),
+    EdgeInsets padding = const EdgeInsets.all(14),
     Color? border,
   }) {
+    final borderColor = border ?? _accent;
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: (border ?? _accent).withValues(alpha: 0.48),
-          width: 1.15,
-        ),
+        color: AppTheme.cardBackground.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: borderColor.withValues(alpha: 0.46)),
         boxShadow: [
           BoxShadow(
-            color: (border ?? _accent).withValues(alpha: 0.12),
-            blurRadius: 24,
+            color: borderColor.withValues(alpha: 0.10),
+            blurRadius: 22,
             spreadRadius: 1,
           ),
         ],
@@ -407,13 +406,13 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     );
   }
 
-  Widget _hero() {
+  Widget _heroImage() {
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
       child: Stack(
         children: [
           AspectRatio(
-            aspectRatio: 16 / 7.2,
+            aspectRatio: 16 / 6.5,
             child: Image.asset(
               _heroAsset,
               fit: BoxFit.cover,
@@ -438,9 +437,9 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.black.withValues(alpha: 0.10),
-                    Colors.black.withValues(alpha: 0.48),
-                    AppTheme.darkBackground.withValues(alpha: 0.96),
+                    Colors.black.withValues(alpha: 0.06),
+                    Colors.black.withValues(alpha: 0.18),
+                    AppTheme.darkBackground.withValues(alpha: 0.46),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -448,21 +447,20 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               ),
             ),
           ),
-          Positioned(
-            left: 18,
-            right: 18,
-            bottom: 18,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('NOMADIC TRADER', style: _valueStyle(size: 30)),
-                const SizedBox(height: 2),
-                Text(
-                  'Track Ermal goals, accepted ARC parts and trader progress.',
-                  style: _labelStyle(color: _accent, size: 13),
-                ),
-              ],
-            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroTitle() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Track Ermal goals, accepted ARC parts and trader progress.',
+            style: _labelStyle(color: _accent, size: 13),
           ),
         ],
       ),
@@ -473,7 +471,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     final percent = (_progress * 100).round();
 
     return _frostedPanel(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -486,8 +484,8 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('CURRENT GOAL', style: _labelStyle(color: _accent)),
-                    const SizedBox(height: 4),
-                    Text(_goalName.toUpperCase(), style: _valueStyle(size: 22)),
+                    const SizedBox(height: 3),
+                    Text(_goalName.toUpperCase(), style: _valueStyle(size: 21)),
                   ],
                 ),
               ),
@@ -499,7 +497,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -521,17 +519,17 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 15),
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
               value: _progress,
-              minHeight: 11,
+              minHeight: 10,
               color: _accent,
               backgroundColor: Colors.white.withValues(alpha: 0.09),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             children: [
               Text('$percent% COMPLETE', style: _labelStyle(color: _accent)),
@@ -551,23 +549,23 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: _labelStyle(size: 11)),
-        const SizedBox(height: 6),
-        Text(value, style: _valueStyle(color: color, size: 20)),
+        Text(label, style: _labelStyle(size: 10.5)),
+        const SizedBox(height: 5),
+        Text(value, style: _valueStyle(color: color, size: 18)),
       ],
     );
   }
 
   Widget _iconBadge(IconData icon, Color color) {
     return Container(
-      width: 42,
-      height: 42,
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         shape: BoxShape.circle,
-        border: Border.all(color: color.withValues(alpha: 0.72)),
+        border: Border.all(color: color.withValues(alpha: 0.70)),
       ),
-      child: Icon(icon, color: color, size: 22),
+      child: Icon(icon, color: color, size: 20),
     );
   }
 
@@ -581,31 +579,32 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     return Column(
       children: [
         SizedBox(
-          height: 390,
+          height: 310,
           child: PageView.builder(
             controller: _cardController,
             onPageChanged: (index) => setState(() => _activeCard = index),
             itemCount: cards.length,
+            padEnds: false,
             itemBuilder: (context, index) => AnimatedPadding(
               duration: const Duration(milliseconds: 220),
               padding: EdgeInsets.fromLTRB(
                 index == 0 ? 0 : 6,
-                index == _activeCard ? 0 : 14,
+                index == _activeCard ? 0 : 12,
                 index == cards.length - 1 ? 0 : 6,
-                index == _activeCard ? 0 : 14,
+                index == _activeCard ? 0 : 12,
               ),
               child: cards[index],
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             for (var i = 0; i < cards.length; i++)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
-                width: _activeCard == i ? 28 : 8,
+                width: _activeCard == i ? 26 : 8,
                 height: 8,
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
@@ -624,17 +623,22 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   Widget _sectionTitle(IconData icon, String title, String subtitle) {
     return Row(
       children: [
-        Icon(icon, color: _accent, size: 24),
-        const SizedBox(width: 10),
+        Icon(icon, color: _accent, size: 22),
+        const SizedBox(width: 9),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: _valueStyle(size: 19)),
-              const SizedBox(height: 2),
+              Text(title, style: _valueStyle(size: 18)),
+              const SizedBox(height: 1),
               Text(
                 subtitle,
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.62)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.62),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -644,7 +648,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   }
 
   Widget _inventoryPreviewCard() {
-    final visible = _resources.take(5).toList();
+    final visible = _resources.take(3).toList();
 
     return _frostedPanel(
       border: _activeCard == 0 ? _accent : AppTheme.neonCyan,
@@ -656,27 +660,27 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
             'Inventory',
             _highTier ? 'High Tier ARC Parts' : 'Low / Mid Tier ARC Parts',
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _tierButton(
-                  'High Tier',
+                  'High',
                   _highTier,
                   () => setState(() => _highTier = true),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: _tierButton(
-                  'Low / Mid',
+                  'Low/Mid',
                   !_highTier,
                   () => setState(() => _highTier = false),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Expanded(
             child: ListView.separated(
               physics: const BouncingScrollPhysics(),
@@ -687,7 +691,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                   _compactResourceRow(visible[index]),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _openInventorySheet,
             icon: const Icon(Icons.edit_note_rounded),
@@ -695,6 +699,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: _accent,
               side: BorderSide(color: _accent.withValues(alpha: 0.75)),
+              visualDensity: VisualDensity.compact,
             ),
           ),
         ],
@@ -707,7 +712,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: selected
               ? _accent.withValues(alpha: 0.18)
@@ -720,7 +725,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: _labelStyle(color: selected ? _accent : Colors.white70),
+          style: _labelStyle(
+            color: selected ? _accent : Colors.white70,
+            size: 11,
+          ),
         ),
       ),
     );
@@ -728,6 +736,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
   Widget _compactResourceRow(_NomadicTraderResource resource) {
     final controller = _controllers[resource.id]!;
+    final qty = int.tryParse(controller.text.trim()) ?? 0;
 
     return Row(
       children: [
@@ -735,50 +744,61 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           resource.icon,
           resource.highTier ? _accent : AppTheme.neonCyan,
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 9),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 resource.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
+                  fontSize: 13,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 'Value ${_format(resource.value)}',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.58),
-                  fontSize: 12,
+                  fontSize: 11,
                 ),
               ),
             ],
           ),
         ),
         SizedBox(
-          width: 68,
+          width: 58,
           child: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textAlign: TextAlign.center,
-            style: _valueStyle(size: 18, color: _accent),
+            style: _valueStyle(size: 16, color: _accent),
             decoration: InputDecoration(
               isDense: true,
               hintText: '0',
               hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35)),
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 8,
+                horizontal: 6,
+                vertical: 7,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
             onChanged: (_) => setState(() {}),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          '= ${_format(qty * resource.value)}',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.58),
+            fontSize: 10,
           ),
         ),
       ],
@@ -826,27 +846,27 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           _sectionTitle(
             Icons.balance_rounded,
             'Equivalents',
-            'See what your remaining value equals',
+            'Remaining value context',
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           Center(
             child: Column(
               children: [
-                Text('REMAINING VALUE', style: _labelStyle()),
-                const SizedBox(height: 6),
+                Text('REMAINING VALUE', style: _labelStyle(size: 10.5)),
+                const SizedBox(height: 2),
                 Text(
                   _format(remaining),
-                  style: _valueStyle(color: _accent, size: 34),
+                  style: _valueStyle(color: _accent, size: 26),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           Expanded(
             child: ListView.separated(
               physics: const BouncingScrollPhysics(),
               itemCount: equivalents.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) => equivalents[index],
             ),
           ),
@@ -864,24 +884,27 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   ) {
     final count = remaining == 0 ? 0 : (remaining / value).ceil();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
       ),
       child: Row(
         children: [
           _iconBadge(icon, color),
-          const SizedBox(width: 12),
-          Text('$count', style: _valueStyle(size: 25)),
           const SizedBox(width: 10),
+          Text('$count', style: _valueStyle(size: 23)),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Colors.white70,
                 fontWeight: FontWeight.w800,
+                fontSize: 12,
               ),
             ),
           ),
@@ -899,96 +922,19 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           _sectionTitle(
             Icons.star_rounded,
             'Saved Goals',
-            'Your top 3 priorities',
+            'Priorities and custom targets',
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           Expanded(
             child: ListView.separated(
               physics: const BouncingScrollPhysics(),
               itemCount: _defaultGoals.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final goal = _defaultGoals[index];
-                final selected = goal.name == _goalName;
-                final target = _targetForGoal(goal);
-                final progress = target == 0
-                    ? 0.0
-                    : (_currentValue / target).clamp(0.0, 1.0);
-                return InkWell(
-                  onTap: () => _setGoal(goal),
-                  borderRadius: BorderRadius.circular(18),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? _accent.withValues(alpha: 0.14)
-                          : Colors.black.withValues(alpha: 0.24),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: selected
-                            ? _accent.withValues(alpha: 0.72)
-                            : Colors.white.withValues(alpha: 0.10),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: _accent),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${index + 1}',
-                            style: _labelStyle(color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        _iconBadge(goal.icon, _accent),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                goal.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Target ${_format(target)}',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.60),
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 7),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(99),
-                                child: LinearProgressIndicator(
-                                  value: progress,
-                                  minHeight: 5,
-                                  color: _accent,
-                                  backgroundColor: Colors.white.withValues(
-                                    alpha: 0.08,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemBuilder: (context, index) =>
+                  _goalCompactTile(_defaultGoals[index], index),
             ),
           ),
+          const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _openGoalSheet,
             icon: const Icon(Icons.tune_rounded),
@@ -996,6 +942,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: _accent,
               side: BorderSide(color: _accent.withValues(alpha: 0.75)),
+              visualDensity: VisualDensity.compact,
             ),
           ),
         ],
@@ -1003,28 +950,112 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     );
   }
 
-  Widget _tradeCompleteCard() {
-    return _frostedPanel(
-      padding: const EdgeInsets.all(16),
-      border: _accent,
-      child: Row(
-        children: [
-          _iconBadge(Icons.handshake_outlined, _accent),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TRADE COMPLETE',
-                  style: _labelStyle(color: _accent, size: 14),
-                ),
-                const SizedBox(height: 4),
-              ],
-            ),
+  Widget _goalCompactTile(_NomadicGoal goal, int index) {
+    final selected = goal.name == _goalName;
+    final target = _targetForGoal(goal);
+    final progress = target == 0
+        ? 0.0
+        : (_currentValue / target).clamp(0.0, 1.0);
+
+    return InkWell(
+      onTap: () => _setGoal(goal),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(9),
+        decoration: BoxDecoration(
+          color: selected
+              ? _accent.withValues(alpha: 0.14)
+              : Colors.black.withValues(alpha: 0.24),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? _accent.withValues(alpha: 0.72)
+                : Colors.white.withValues(alpha: 0.10),
           ),
-        ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border.all(color: _accent),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '${index + 1}',
+                style: _labelStyle(color: Colors.white, size: 10),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(goal.icon, color: _accent, size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    goal.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 4,
+                      color: _accent,
+                      backgroundColor: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _format(target),
+              style: _labelStyle(
+                color: selected ? _accent : Colors.white70,
+                size: 10.5,
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _tradeCompleteButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () {},
+        icon: const Icon(Icons.handshake_outlined),
+        label: const Text('Trade Complete'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _accent.withValues(alpha: 0.22),
+          foregroundColor: Colors.white,
+          side: BorderSide(color: _accent.withValues(alpha: 0.72)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _adSlot() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: const ArcAdBannerCard(),
     );
   }
 
@@ -1036,90 +1067,111 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (_) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            18,
-            18,
-            18,
-            MediaQuery.of(context).viewInsets.bottom + 18,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _sheetHandle(),
-              const SizedBox(height: 14),
-              _sectionTitle(
-                Icons.star_rounded,
-                'Manage Goals',
-                'Pick this week’s top priority',
-              ),
-              const SizedBox(height: 18),
-              for (final goal in _defaultGoals)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    onTap: () {
-                      _setGoal(goal);
-                      Navigator.pop(context);
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.86,
+          minChildSize: 0.48,
+          maxChildSize: 0.94,
+          builder: (context, scrollController) => Padding(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              18,
+              18,
+              MediaQuery.of(context).viewInsets.bottom + 18,
+            ),
+            child: Column(
+              children: [
+                _sheetHandle(),
+                const SizedBox(height: 12),
+                _sectionTitle(
+                  Icons.star_rounded,
+                  'Manage Goals',
+                  'Pick this week’s top priority',
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.separated(
+                    controller: scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _defaultGoals.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final goal = _defaultGoals[index];
+                      final selected = goal.name == _goalName;
+                      return ListTile(
+                        dense: true,
+                        onTap: () {
+                          _setGoal(goal);
+                          setSheetState(() {});
+                        },
+                        tileColor: selected
+                            ? _accent.withValues(alpha: 0.15)
+                            : Colors.white.withValues(alpha: 0.04),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          side: BorderSide(
+                            color: selected
+                                ? _accent.withValues(alpha: 0.72)
+                                : Colors.white.withValues(alpha: 0.09),
+                          ),
+                        ),
+                        leading: Icon(goal.icon, color: _accent),
+                        title: Text(
+                          goal.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Target ${_format(_targetForGoal(goal))}',
+                          style: const TextStyle(color: Colors.white60),
+                        ),
+                      );
                     },
-                    tileColor: goal.name == _goalName
-                        ? _accent.withValues(alpha: 0.15)
-                        : Colors.white.withValues(alpha: 0.04),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(
-                        color: goal.name == _goalName
-                            ? _accent.withValues(alpha: 0.72)
-                            : Colors.white.withValues(alpha: 0.09),
-                      ),
-                    ),
-                    leading: Icon(goal.icon, color: _accent),
-                    title: Text(
-                      goal.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Target ${_format(_targetForGoal(goal))}',
-                      style: const TextStyle(color: Colors.white60),
-                    ),
                   ),
                 ),
-              TextField(
-                controller: _customTargetController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Custom target value',
-                ),
-                onChanged: (value) {
-                  final parsed = int.tryParse(value.trim());
-                  if (parsed != null && parsed > 0) {
-                    setState(() {
-                      _targetValue = parsed;
-                      _goalTargetOverrides[_goalName] = parsed;
-                    });
-                    setSheetState(() {});
-                  }
-                },
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    _saveGoal();
-                    Navigator.pop(context);
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _customTargetController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    labelText: 'Custom target for selected goal',
+                    helperText: 'Select a goal above, change value, then save.',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    final parsed = int.tryParse(value.trim());
+                    if (parsed != null && parsed > 0) {
+                      setState(() {
+                        _targetValue = parsed;
+                        _goalTargetOverrides[_goalName] = parsed;
+                      });
+                      setSheetState(() {});
+                    }
                   },
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text('Save Goal'),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      _saveGoal();
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.save_outlined),
+                    label: const Text('Save Goal'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1134,7 +1186,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (_) => StatefulBuilder(
+      builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) => DraggableScrollableSheet(
           expand: false,
           initialChildSize: 0.86,
@@ -1173,6 +1225,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                 Expanded(
                   child: ListView.separated(
                     controller: scrollController,
+                    physics: const BouncingScrollPhysics(),
                     itemCount: _resources.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 8),
@@ -1202,7 +1255,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
   Widget _sheetResourceRow(_NomadicTraderResource resource) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.045),
         borderRadius: BorderRadius.circular(18),
@@ -1234,10 +1287,9 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        title: const Text('Nomadic Trader'),
-        backgroundColor: AppTheme.cardBackground,
-        foregroundColor: Colors.white,
+      appBar: const UagAppBar(
+        title: 'Nomadic Trader',
+        subtitle: 'Ermal Progress Tracker',
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -1250,21 +1302,22 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                   constraints: BoxConstraints(maxWidth: wide ? 980 : 520),
                   child: Column(
                     children: [
-                      _hero(),
-                      Transform.translate(
-                        offset: const Offset(0, -18),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          child: Column(
-                            children: [
-                              _goalPanel(),
-                              const SizedBox(height: 18),
-                              _carousel(),
-                              const SizedBox(height: 18),
-                              _tradeCompleteCard(),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
+                      _heroImage(),
+                      _heroTitle(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 14),
+                            _goalPanel(),
+                            const SizedBox(height: 14),
+                            _carousel(),
+                            const SizedBox(height: 12),
+                            _adSlot(),
+                            const SizedBox(height: 12),
+                            _tradeCompleteButton(),
+                            const SizedBox(height: 22),
+                          ],
                         ),
                       ),
                     ],
