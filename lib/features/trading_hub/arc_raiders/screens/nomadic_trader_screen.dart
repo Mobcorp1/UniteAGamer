@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import '../widgets/foundation/arc_bottom_action_dock.dart';
+import '../widgets/arc_companion_bottom_dock.dart';
+import '../widgets/arc_ad_banner_card.dart';
 
 class NomadicTraderScreen extends StatefulWidget {
   const NomadicTraderScreen({super.key});
@@ -455,8 +458,6 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('NOMADIC TRADER', style: _valueStyle(size: 30)),
-                const SizedBox(height: 2),
                 Text(
                   'Track Ermal goals, accepted ARC parts and trader progress.',
                   style: _labelStyle(color: _accent, size: 13),
@@ -1004,26 +1005,21 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   }
 
   Widget _tradeCompleteCard() {
-    return _frostedPanel(
-      padding: const EdgeInsets.all(16),
-      border: _accent,
-      child: Row(
-        children: [
-          _iconBadge(Icons.handshake_outlined, _accent),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TRADE COMPLETE',
-                  style: _labelStyle(color: _accent, size: 14),
-                ),
-                const SizedBox(height: 4),
-              ],
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _saveGoal,
+        icon: const Icon(Icons.check_circle_outline),
+        label: const Text('Trade Complete'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _accent.withValues(alpha: 0.18),
+          foregroundColor: Colors.white,
+          side: BorderSide(color: _accent.withValues(alpha: 0.72)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1052,7 +1048,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               _sectionTitle(
                 Icons.star_rounded,
                 'Manage Goals',
-                'Pick this week’s top priority',
+                'Pick this weekâ€™s top priority',
               ),
               const SizedBox(height: 18),
               for (final goal in _defaultGoals)
@@ -1259,6 +1255,8 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                             children: [
                               _goalPanel(),
                               const SizedBox(height: 18),
+                              const ArcAdBannerCard(),
+                              const SizedBox(height: 18),
                               _carousel(),
                               const SizedBox(height: 18),
                               _tradeCompleteCard(),
@@ -1274,6 +1272,38 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
             );
           },
         ),
+      ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const ArcCompanionBottomDock(activeLabel: 'trade'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            child: ArcBottomActionDock(
+              accent: _accent,
+              actions: [
+                ArcDockAction(
+                  label: 'Goals',
+                  icon: Icons.flag_rounded,
+                  accent: _accent,
+                  onTap: _openGoalSheet,
+                ),
+                ArcDockAction(
+                  label: 'Inventory',
+                  icon: Icons.inventory_2_outlined,
+                  accent: AppTheme.neonCyan,
+                  onTap: _openInventorySheet,
+                ),
+                ArcDockAction(
+                  label: 'Save',
+                  icon: Icons.save_outlined,
+                  accent: AppTheme.neonPink,
+                  onTap: _saveGoal,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

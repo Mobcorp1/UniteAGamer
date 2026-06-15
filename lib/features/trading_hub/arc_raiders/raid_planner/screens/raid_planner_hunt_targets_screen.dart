@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -449,8 +450,30 @@ class _RaidPlannerHuntTargetsScreenState
       backgroundColor: Colors.transparent,
       extendBody: true,
       extendBodyBehindAppBar: true,
-      bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Hunt Targets',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const ArcCompanionBottomDock(activeLabel: 'Hunt Targets'),
+          ArcBottomActionDock(
+            actions: [
+              ArcDockAction(
+                label: 'Back',
+                icon: Icons.arrow_back_rounded,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+              ArcDockAction(
+                label: 'Assist',
+                icon: Icons.auto_awesome_rounded,
+                onTap: () {},
+              ),
+              ArcDockAction(
+                label: 'Status',
+                icon: Icons.sensors_rounded,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ],
       ),
       appBar: AppBar(
         backgroundColor: AppTheme.cardBackgroundDeep,

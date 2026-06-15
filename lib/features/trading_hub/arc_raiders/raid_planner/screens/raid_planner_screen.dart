@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
@@ -1145,8 +1146,30 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       backgroundColor: Colors.transparent,
       extendBody: true,
       extendBodyBehindAppBar: true,
-      bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Raid Timeline',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const ArcCompanionBottomDock(activeLabel: 'Raid Timeline'),
+          ArcBottomActionDock(
+            actions: [
+              ArcDockAction(
+                label: 'Back',
+                icon: Icons.arrow_back_rounded,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+              ArcDockAction(
+                label: 'Assist',
+                icon: Icons.auto_awesome_rounded,
+                onTap: () {},
+              ),
+              ArcDockAction(
+                label: 'Status',
+                icon: Icons.sensors_rounded,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ],
       ),
       appBar: const UagAppBar(
         title: 'Raid Timeline',

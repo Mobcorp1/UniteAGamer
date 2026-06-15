@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -355,8 +356,30 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Smart Trade',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const ArcCompanionBottomDock(activeLabel: 'Smart Trade'),
+          ArcBottomActionDock(
+            actions: [
+              ArcDockAction(
+                label: 'Back',
+                icon: Icons.arrow_back_rounded,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+              ArcDockAction(
+                label: 'Assist',
+                icon: Icons.auto_awesome_rounded,
+                onTap: () {},
+              ),
+              ArcDockAction(
+                label: 'Status',
+                icon: Icons.sensors_rounded,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ],
       ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(

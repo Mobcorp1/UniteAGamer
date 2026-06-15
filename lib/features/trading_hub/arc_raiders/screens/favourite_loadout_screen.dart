@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import '../widgets/arc_loadout_category_banner.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
@@ -83,7 +84,31 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const ArcCompanionBottomDock(activeLabel: 'Loadout'),
+          ArcBottomActionDock(
+            actions: [
+              ArcDockAction(
+                label: 'Back',
+                icon: Icons.arrow_back_rounded,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
+              ArcDockAction(
+                label: 'Assist',
+                icon: Icons.auto_awesome_rounded,
+                onTap: () {},
+              ),
+              ArcDockAction(
+                label: 'Status',
+                icon: Icons.sensors_rounded,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ],
+      ),
       appBar: AppBar(
         title: Text(
           'Loadout Command Centre',
@@ -1646,7 +1671,7 @@ class _SavedLoadoutManagementCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    ' Ã¢â‚¬Â¢  / ',
+                    ' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢  / ',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
