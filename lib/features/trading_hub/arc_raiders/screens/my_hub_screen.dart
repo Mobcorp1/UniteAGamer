@@ -108,7 +108,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
-      assetName: 'arc_nomadic_trader_hero.webp',
+      assetName: 'arc_hub_trading.webp',
       builder: (_) => const TraderHubScreen(),
     ),
     _ArcHubFeature(

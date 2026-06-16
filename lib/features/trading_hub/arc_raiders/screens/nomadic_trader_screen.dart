@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import '../widgets/foundation/arc_bottom_action_dock.dart';
-import '../widgets/arc_companion_bottom_dock.dart';
 import '../widgets/arc_ad_banner_card.dart';
 
 class NomadicTraderScreen extends StatefulWidget {
@@ -416,7 +415,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       child: Stack(
         children: [
           AspectRatio(
-            aspectRatio: 16 / 7.2,
+            aspectRatio: 16 / 5.25,
             child: Image.asset(
               _heroAsset,
               fit: BoxFit.cover,
@@ -454,7 +453,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           Positioned(
             left: 18,
             right: 18,
-            bottom: 18,
+            bottom: 10,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1048,7 +1047,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               _sectionTitle(
                 Icons.star_rounded,
                 'Manage Goals',
-                'Pick this weekâ€™s top priority',
+                'Pick this weekÃ¢â‚¬â„¢s top priority',
               ),
               const SizedBox(height: 18),
               for (final goal in _defaultGoals)
@@ -1219,6 +1218,68 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     );
   }
 
+  void _openFeedbackSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppTheme.darkBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _sheetHandle(),
+            const SizedBox(height: 14),
+            _sectionTitle(
+              Icons.feedback_outlined,
+              'Beta Feedback',
+              'Send quick notes while testing Nomadic Trader',
+            ),
+            const SizedBox(height: 14),
+            _feedbackTile(Icons.bug_report_outlined, 'Bug Report'),
+            _feedbackTile(Icons.lightbulb_outline_rounded, 'Suggestion'),
+            _feedbackTile(Icons.extension_outlined, 'Missing Feature'),
+            _feedbackTile(Icons.balance_rounded, 'Balance Feedback'),
+            _feedbackTile(Icons.swap_horiz_rounded, 'Trading Feedback'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _feedbackTile(IconData icon, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        onTap: () {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$label captured for beta feedback')),
+          );
+        },
+        tileColor: Colors.white.withValues(alpha: 0.045),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        leading: Icon(icon, color: _accent),
+        title: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: Colors.white.withValues(alpha: 0.52),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_loaded) {
@@ -1230,80 +1291,111 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        title: const Text('Nomadic Trader'),
-        backgroundColor: AppTheme.cardBackground,
-        foregroundColor: Colors.white,
-      ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 760;
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: wide ? 980 : 520),
-                  child: Column(
-                    children: [
-                      _hero(),
-                      Transform.translate(
-                        offset: const Offset(0, -18),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          child: Column(
-                            children: [
-                              _goalPanel(),
-                              const SizedBox(height: 18),
-                              const ArcAdBannerCard(),
-                              const SizedBox(height: 18),
-                              _carousel(),
-                              const SizedBox(height: 18),
-                              _tradeCompleteCard(),
-                              const SizedBox(height: 24),
-                            ],
+        child: Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final wide = constraints.maxWidth >= 760;
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: wide ? 980 : 520),
+                      child: Column(
+                        children: [
+                          _hero(),
+                          Transform.translate(
+                            offset: const Offset(0, -8),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                              ),
+                              child: Column(
+                                children: [
+                                  _goalPanel(),
+                                  const SizedBox(height: 18),
+                                  _carousel(),
+                                  const SizedBox(height: 18),
+                                  _tradeCompleteCard(),
+                                  const SizedBox(height: 12),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              top: 8,
+              left: 10,
+              child: Material(
+                color: Colors.black.withValues(alpha: 0.48),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => Navigator.of(context).maybePop(),
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Icon(
+                      Icons.arrow_back_rounded,
+                      color: Colors.white.withValues(alpha: 0.92),
+                    ),
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const ArcCompanionBottomDock(activeLabel: 'trade'),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-            child: ArcBottomActionDock(
-              accent: _accent,
-              actions: [
-                ArcDockAction(
-                  label: 'Goals',
-                  icon: Icons.flag_rounded,
-                  accent: _accent,
-                  onTap: _openGoalSheet,
-                ),
-                ArcDockAction(
-                  label: 'Inventory',
-                  icon: Icons.inventory_2_outlined,
-                  accent: AppTheme.neonCyan,
-                  onTap: _openInventorySheet,
-                ),
-                ArcDockAction(
-                  label: 'Save',
-                  icon: Icons.save_outlined,
-                  accent: AppTheme.neonPink,
-                  onTap: _saveGoal,
-                ),
-              ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 4, 12, 8),
+              child: ArcAdBannerCard(),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: ArcBottomActionDock(
+                accent: _accent,
+                actions: [
+                  ArcDockAction(
+                    label: 'Goals',
+                    icon: Icons.flag_rounded,
+                    accent: _accent,
+                    onTap: _openGoalSheet,
+                  ),
+                  ArcDockAction(
+                    label: 'Inventory',
+                    icon: Icons.inventory_2_outlined,
+                    accent: AppTheme.neonCyan,
+                    onTap: _openInventorySheet,
+                  ),
+                  ArcDockAction(
+                    label: 'Save',
+                    icon: Icons.save_outlined,
+                    accent: AppTheme.neonPink,
+                    onTap: _saveGoal,
+                  ),
+                  ArcDockAction(
+                    label: 'Feedback',
+                    icon: Icons.feedback_outlined,
+                    accent: Colors.lightGreenAccent,
+                    onTap: _openFeedbackSheet,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
