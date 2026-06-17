@@ -420,7 +420,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     'Vaporizer Regulator',
     'Electrocore',
   ];
-  final PageController _cardController = PageController(viewportFraction: 0.88);
+  final PageController _cardController = PageController(viewportFraction: 0.78);
   final Map<String, TextEditingController> _controllers = {};
   final TextEditingController _customTargetController = TextEditingController();
   final Map<String, int> _goalTargetOverrides = {};
@@ -836,7 +836,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       builder: (context, constraints) {
         final showArrows = constraints.maxWidth >= 720;
         final carouselWidth = constraints.maxWidth >= 1180
-            ? 1040.0
+            ? 880.0
             : math.max(320.0, constraints.maxWidth);
         final carouselHeight = constraints.maxWidth >= 720 ? 390.0 : 372.0;
 
@@ -946,6 +946,157 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     );
   }
 
+  Widget _verticalBarrel<T>({
+    required List<T> items,
+    required Widget Function(T item, int index) itemBuilder,
+    double itemExtent = 86,
+    double height = 210,
+    String emptyLabel = 'No items tracked yet',
+    Color? accent,
+  }) {
+    if (items.isEmpty) {
+      return Center(
+        child: Text(
+          emptyLabel,
+          style: _labelStyle(color: Colors.white60),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    final wheelAccent = accent ?? _accent;
+    final controller = FixedExtentScrollController();
+    var activeIndex = 0;
+
+    return StatefulBuilder(
+      builder: (context, setBarrelState) {
+        void move(int delta) {
+          final target = (activeIndex + delta).clamp(0, items.length - 1);
+          controller.animateToItem(
+            target,
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+          );
+          setBarrelState(() => activeIndex = target);
+        }
+
+        Widget verticalArrow(IconData icon, int delta) {
+          final disabled =
+              (delta < 0 && activeIndex <= 0) ||
+              (delta > 0 && activeIndex >= items.length - 1);
+          return AnimatedOpacity(
+            duration: const Duration(milliseconds: 160),
+            opacity: disabled ? 0.28 : 1,
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.34),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: disabled ? null : () => move(delta),
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(icon, color: AppTheme.neonPink, size: 28),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final showArrows = constraints.maxWidth >= 640 && items.length > 1;
+            final wheel = SizedBox(
+              height: height,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.34),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.34),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: Container(
+                      height: itemExtent + 8,
+                      decoration: BoxDecoration(
+                        color: wheelAccent.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: wheelAccent.withValues(alpha: 0.34),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ListWheelScrollView.useDelegate(
+                    controller: controller,
+                    itemExtent: itemExtent,
+                    diameterRatio: 1.55,
+                    perspective: 0.0035,
+                    physics: const FixedExtentScrollPhysics(),
+                    overAndUnderCenterOpacity: 0.42,
+                    onSelectedItemChanged: (index) {
+                      setBarrelState(() => activeIndex = index);
+                    },
+                    childDelegate: ListWheelChildBuilderDelegate(
+                      childCount: items.length,
+                      builder: (context, index) {
+                        if (index < 0 || index >= items.length) return null;
+                        final selected = index == activeIndex;
+                        return AnimatedScale(
+                          duration: const Duration(milliseconds: 160),
+                          scale: selected ? 1 : 0.92,
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 160),
+                            opacity: selected ? 1 : 0.68,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 4,
+                              ),
+                              child: itemBuilder(items[index], index),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+
+            if (!showArrows) return wheel;
+
+            return Row(
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    verticalArrow(Icons.keyboard_arrow_up_rounded, -1),
+                    const SizedBox(height: 10),
+                    verticalArrow(Icons.keyboard_arrow_down_rounded, 1),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: wheel),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _inventoryPreviewCard() {
     final visible = _resources.take(5).toList();
 
@@ -981,13 +1132,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              itemCount: visible.length,
-              separatorBuilder: (context, index) =>
-                  Divider(color: Colors.white.withValues(alpha: 0.08)),
-              itemBuilder: (context, index) =>
-                  _compactResourceRow(visible[index]),
+            child: _verticalBarrel<_NomadicTraderResource>(
+              items: visible,
+              itemExtent: 78,
+              height: 205,
+              emptyLabel: 'No inventory resources available',
+              itemBuilder: (resource, index) => _compactResourceRow(resource),
             ),
           ),
           const SizedBox(height: 12),
@@ -1146,11 +1296,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           ),
           const SizedBox(height: 18),
           Expanded(
-            child: ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              itemCount: equivalents.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 10),
-              itemBuilder: (context, index) => equivalents[index],
+            child: _verticalBarrel<Widget>(
+              items: equivalents,
+              itemExtent: 74,
+              height: 220,
+              emptyLabel: 'No equivalent values available',
+              itemBuilder: (item, index) => item,
             ),
           ),
         ],
@@ -1231,12 +1382,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           ),
           const SizedBox(height: 18),
           Expanded(
-            child: ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              itemCount: _defaultGoals.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final goal = _defaultGoals[index];
+            child: _verticalBarrel<_NomadicGoal>(
+              items: _defaultGoals,
+              itemExtent: 104,
+              height: 238,
+              emptyLabel: 'No saved goals available',
+              itemBuilder: (goal, index) {
                 final selected = goal.name == _goalName;
                 final target = _targetForGoal(goal);
                 final progress = selected && target > 0
@@ -1282,9 +1433,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 goal.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -1295,6 +1449,8 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                                 selected
                                     ? 'Target ${_format(target)}'
                                     : 'Waiting for priority slot',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.60),
                                   fontSize: 12,
@@ -1380,13 +1536,13 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           Expanded(
             child: _nomadicPurchases.isEmpty
                 ? _emptyNomadicPurchases()
-                : ListView.separated(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: _nomadicPurchases.length,
-                    separatorBuilder: (context, index) =>
-                        Divider(color: Colors.white.withValues(alpha: 0.08)),
-                    itemBuilder: (context, index) =>
-                        _nomadicPurchaseRow(_nomadicPurchases[index]),
+                : _verticalBarrel<_NomadicPurchase>(
+                    items: _nomadicPurchases,
+                    itemExtent: 148,
+                    height: 225,
+                    emptyLabel: 'No purchases tracked yet',
+                    itemBuilder: (purchase, index) =>
+                        _nomadicPurchaseRow(purchase),
                   ),
           ),
           const SizedBox(height: 12),
@@ -2083,7 +2239,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               _sectionTitle(
                 Icons.star_rounded,
                 'Manage Goals',
-                'Pick this weekÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢s top priority',
+                'Pick this weeks top priority',
               ),
               const SizedBox(height: 18),
               for (final goal in _defaultGoals)

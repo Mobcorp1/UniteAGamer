@@ -32,19 +32,13 @@ class TradingMyOffersScreen extends StatelessWidget {
   String _bundleText(TradingOffer offer) {
     final parts = <String>[];
     if (offer.smallBundles > 0) {
-      parts.add(
-        '${offer.smallBundles}Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â10',
-      );
+      parts.add('${offer.smallBundles}†â€™ƒâ€ ¢â‚¬â„¢‚‚¬Å¡‚Â¬ƒÂ¢¢â€šÂ¬‚Â10');
     }
     if (offer.mediumBundles > 0) {
-      parts.add(
-        '${offer.mediumBundles}Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â50',
-      );
+      parts.add('${offer.mediumBundles}†â€™ƒâ€ ¢â‚¬â„¢‚‚¬Å¡‚Â¬ƒÂ¢¢â€šÂ¬‚Â50');
     }
     if (offer.largeBundles > 0) {
-      parts.add(
-        '${offer.largeBundles}Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â100',
-      );
+      parts.add('${offer.largeBundles}†â€™ƒâ€ ¢â‚¬â„¢‚‚¬Å¡‚Â¬ƒÂ¢¢â€šÂ¬‚Â100');
     }
     if (parts.isEmpty) return 'No seed bundles';
     return '${parts.join(' - ')} (${offer.seedTotal} total)';

@@ -363,7 +363,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           if (topCombo != null) ...[
             const SizedBox(height: AppTheme.spaceS),
             Text(
-              'Top combo strength: ${topCombo.percentageLabel} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
+              'Top combo strength: ${topCombo.percentageLabel}  ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.white70,
                 fontWeight: FontWeight.w600,
@@ -581,7 +581,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            '${row.percentage.toStringAsFixed(0)}% ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${row.count}',
+            '${row.percentage.toStringAsFixed(0)}%  ${row.count}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,
@@ -616,7 +616,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${combo.percentageLabel} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
+            '${combo.percentageLabel} ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.neonPink,
               fontWeight: FontWeight.w700,

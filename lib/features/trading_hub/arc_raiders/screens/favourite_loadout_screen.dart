@@ -1671,7 +1671,7 @@ class _SavedLoadoutManagementCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    ' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢  / ',
+                    ' ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢  / ',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

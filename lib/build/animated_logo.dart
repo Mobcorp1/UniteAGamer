@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:uag_arc_raiders_hub/build/logo_particle_explosion.dart';
 
@@ -35,7 +35,6 @@ class _AnimatedLogoState extends State<AnimatedLogo>
   void initState() {
     super.initState();
 
-    // âœ… Explosion first
     _explosionController =
         AnimationController(
             vsync: this,
@@ -47,7 +46,6 @@ class _AnimatedLogoState extends State<AnimatedLogo>
             _animationController.forward();
           });
 
-    // âœ… Bounce + spin timing
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 5600),
@@ -91,12 +89,10 @@ class _AnimatedLogoState extends State<AnimatedLogo>
       ),
     ]).animate(_animationController);
 
-    // âœ… Spin like before (3 full rotations)
     _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi * 3).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.linear),
     );
 
-    // âœ… Glow colour animation (cyan â†” pink)
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
@@ -128,14 +124,12 @@ class _AnimatedLogoState extends State<AnimatedLogo>
         builder: (context, child) {
           final glowColor = (_glowColorAnimation.value ?? _neonCyan);
 
-          // âœ… Key settings for "thin edge glowâ€
           // - spreadRadius NEGATIVE pulls glow tight to the edge
           // - blurRadius small keeps it subtle
           // - alpha moderate so it reads but doesn't halo
           final thinGlow = BoxShadow(
             color: glowColor.withValues(alpha: 0.45),
             blurRadius: 6, // small, soft
-            spreadRadius: -6, // âœ… tight to edge (prevents bubble look)
           );
 
           return Transform.translate(
@@ -146,7 +140,6 @@ class _AnimatedLogoState extends State<AnimatedLogo>
                 height: widget.size,
                 width: widget.size,
                 child: DecoratedBox(
-                  // âœ… Glow is OUTSIDE the clip now (no clipped ring)
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [thinGlow],

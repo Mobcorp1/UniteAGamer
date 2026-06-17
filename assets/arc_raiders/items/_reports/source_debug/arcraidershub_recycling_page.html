@@ -1222,7 +1222,7 @@
                         <img src="/images/items/${item.id}.webp" alt="${item.name}" class="item-icon" loading="lazy" onerror="this.style.display='none'">
                         <div class="item-info">
                             <div class="item-name">${item.name}</div>
-                            <div class="item-rarity">${item.rarity}${item.itemType ? ` â¢ ${item.itemType}` : ''}</div>
+                            <div class="item-rarity">${item.rarity}${item.itemType ? `${item.itemType}` : ''}</div>
                         </div>
                     </div>
                     ${item.description ? `<div class="item-description">${item.description}</div>` : ''}

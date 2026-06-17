@@ -259,7 +259,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               if (subtitleBits.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spaceM),
                 Text(
-                  subtitleBits.join(' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ '),
+                  subtitleBits.join(' ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ '),
                   style: TextStyle(color: AppTheme.tradingMutedText),
                 ),
               ],
@@ -268,8 +268,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 '${listing.traderName}'
-                '${listing.gamerTag.isNotEmpty ? ' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${listing.gamerTag}' : ''}'
-                '${listing.preferredPlatform.isNotEmpty ? ' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${listing.preferredPlatform}' : ''}',
+                '${listing.gamerTag.isNotEmpty ? ' ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ ${listing.gamerTag}' : ''}'
+                '${listing.preferredPlatform.isNotEmpty ? ' ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ ${listing.preferredPlatform}' : ''}',
                 style: TextStyle(
                   color: AppTheme.tradingMutedText,
                   fontWeight: FontWeight.w600,

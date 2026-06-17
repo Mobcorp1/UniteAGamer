@@ -379,7 +379,7 @@ class _TradingTradeSessionsScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Propose 3 days Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 3 times',
+                      'Propose 3 days ‚ 3 times',
                       style: AppTheme.tradingHeading(fontSize: 24),
                     ),
                     const SizedBox(height: 8),
@@ -849,7 +849,7 @@ class _TradingTradeSessionsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${session.traderOneName} Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${session.traderTwoName}',
+              '${session.traderOneName} ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬‚Â ${session.traderTwoName}',
               style: AppTheme.tradingHeading(fontSize: 22),
             ),
             const SizedBox(height: 10),
@@ -1080,7 +1080,7 @@ class _TradingTradeSessionsScreenState
             Divider(color: AppTheme.tradingDivider),
             const SizedBox(height: 10),
             Text(
-              'Flow: accept offer Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ propose 3 days Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 3 times Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ other trader confirms one slot Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ share Embark IDs Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ assign first drop Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ both mark ready.',
+              'Flow: accept offer ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ propose 3 days †â€™ƒÂ¢¢â€šÂ¬¢â‚¬Â 3 times ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ other trader confirms one slot ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ share Embark IDs ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ assign first drop ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ both mark ready.',
               style: AppTheme.bodyTextStyle(
                 fontSize: 13,
                 color: AppTheme.tradingMutedText,
