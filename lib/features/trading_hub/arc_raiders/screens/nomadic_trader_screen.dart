@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -41,6 +42,146 @@ class _NomadicGoal {
   final String name;
   final int target;
   final IconData icon;
+}
+
+class _NomadicPurchaseRequirement {
+  const _NomadicPurchaseRequirement({
+    required this.id,
+    required this.name,
+    required this.requiredQty,
+    required this.ownedQty,
+    required this.isCustom,
+  });
+
+  final String id;
+  final String name;
+  final int requiredQty;
+  final int ownedQty;
+  final bool isCustom;
+
+  int get remainingQty => math.max(0, requiredQty - ownedQty);
+  double get progress =>
+      requiredQty <= 0 ? 0 : (ownedQty / requiredQty).clamp(0, 1);
+
+  _NomadicPurchaseRequirement copyWith({
+    String? id,
+    String? name,
+    int? requiredQty,
+    int? ownedQty,
+    bool? isCustom,
+  }) {
+    return _NomadicPurchaseRequirement(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      requiredQty: requiredQty ?? this.requiredQty,
+      ownedQty: ownedQty ?? this.ownedQty,
+      isCustom: isCustom ?? this.isCustom,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'requiredQty': requiredQty,
+      'ownedQty': ownedQty,
+      'isCustom': isCustom,
+    };
+  }
+
+  factory _NomadicPurchaseRequirement.fromJson(Map<String, dynamic> json) {
+    return _NomadicPurchaseRequirement(
+      id:
+          (json['id'] as String?) ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      name: (json['name'] as String?) ?? 'Custom Resource',
+      requiredQty: (json['requiredQty'] as num?)?.toInt() ?? 1,
+      ownedQty: (json['ownedQty'] as num?)?.toInt() ?? 0,
+      isCustom: (json['isCustom'] as bool?) ?? true,
+    );
+  }
+}
+
+class _NomadicPurchase {
+  const _NomadicPurchase({
+    required this.id,
+    required this.name,
+    required this.requiredQty,
+    required this.ownedQty,
+    required this.isGalleryProject,
+    required this.isCustom,
+    this.requirements = const [],
+  });
+
+  final String id;
+  final String name;
+  final int requiredQty;
+  final int ownedQty;
+  final bool isGalleryProject;
+  final bool isCustom;
+  final List<_NomadicPurchaseRequirement> requirements;
+
+  int get remainingQty => math.max(0, requiredQty - ownedQty);
+  double get progress =>
+      requiredQty <= 0 ? 0 : (ownedQty / requiredQty).clamp(0, 1);
+
+  _NomadicPurchase copyWith({
+    String? id,
+    String? name,
+    int? requiredQty,
+    int? ownedQty,
+    bool? isGalleryProject,
+    bool? isCustom,
+    List<_NomadicPurchaseRequirement>? requirements,
+  }) {
+    return _NomadicPurchase(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      requiredQty: requiredQty ?? this.requiredQty,
+      ownedQty: ownedQty ?? this.ownedQty,
+      isGalleryProject: isGalleryProject ?? this.isGalleryProject,
+      isCustom: isCustom ?? this.isCustom,
+      requirements: requirements ?? this.requirements,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'requiredQty': requiredQty,
+      'ownedQty': ownedQty,
+      'isGalleryProject': isGalleryProject,
+      'isCustom': isCustom,
+      'requirements': requirements
+          .map((requirement) => requirement.toJson())
+          .toList(),
+    };
+  }
+
+  factory _NomadicPurchase.fromJson(Map<String, dynamic> json) {
+    final decodedRequirements = json['requirements'];
+    return _NomadicPurchase(
+      id:
+          (json['id'] as String?) ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      name: (json['name'] as String?) ?? 'Custom Resource',
+      requiredQty: (json['requiredQty'] as num?)?.toInt() ?? 1,
+      ownedQty: (json['ownedQty'] as num?)?.toInt() ?? 0,
+      isGalleryProject: (json['isGalleryProject'] as bool?) ?? false,
+      isCustom: (json['isCustom'] as bool?) ?? true,
+      requirements: decodedRequirements is List
+          ? decodedRequirements
+                .whereType<Map>()
+                .map(
+                  (item) => _NomadicPurchaseRequirement.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList()
+          : const [],
+    );
+  }
 }
 
 class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
@@ -253,10 +394,37 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     ),
   ];
 
+  static const _nomadicPurchaseSuggestions = <String>[
+    'Industrial Magnet',
+    'Number Plate',
+    'Air Freshener',
+    'ARC Thermal Lining',
+    'Train Model',
+    'Vintage Steering Wheel',
+    'Spectrum Analyser',
+    'Silver Tunic',
+    'Teaspoon Set',
+    'Vinyl Wristwatch',
+    'Sextant',
+    'Equatorial Sundial',
+    'Metal Bracket',
+    'ARC Performance Steel',
+    'Teleron',
+    'Elephant Obelisk',
+    'Light Bulb',
+    'ARC Coolant',
+    'Colourful Shoes',
+    'ARC Synthetic Resin',
+    'Queen Reactor',
+    'Matriarch Reactor',
+    'Vaporizer Regulator',
+    'Electrocore',
+  ];
   final PageController _cardController = PageController(viewportFraction: 0.88);
   final Map<String, TextEditingController> _controllers = {};
   final TextEditingController _customTargetController = TextEditingController();
   final Map<String, int> _goalTargetOverrides = {};
+  final List<_NomadicPurchase> _nomadicPurchases = [];
 
   String _goalName = 'Stash Expansion';
   bool _highTier = true;
@@ -325,6 +493,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       }
     }
 
+    final purchasesJson = prefs.getString('${_prefsPrefix}nomadic_purchases');
+    _nomadicPurchases
+      ..clear()
+      ..addAll(_decodeNomadicPurchases(purchasesJson));
     if (mounted) setState(() => _loaded = true);
   }
 
@@ -341,6 +513,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       await prefs.setInt('${_prefsPrefix}qty_${resource.id}', qty);
     }
 
+    await prefs.setString(
+      '${_prefsPrefix}nomadic_purchases',
+      jsonEncode(
+        _nomadicPurchases.map((purchase) => purchase.toJson()).toList(),
+      ),
+    );
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -354,6 +532,52 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       _targetValue = target;
       _customTargetController.text = target.toString();
     });
+  }
+
+  List<_NomadicPurchase> _decodeNomadicPurchases(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      return decoded
+          .whereType<Map>()
+          .map(
+            (item) =>
+                _NomadicPurchase.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _saveNomadicPurchases() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      '${_prefsPrefix}nomadic_purchases',
+      jsonEncode(
+        _nomadicPurchases.map((purchase) => purchase.toJson()).toList(),
+      ),
+    );
+  }
+
+  Future<void> _upsertNomadicPurchase(_NomadicPurchase purchase) async {
+    setState(() {
+      final index = _nomadicPurchases.indexWhere(
+        (item) => item.id == purchase.id,
+      );
+      if (index == -1) {
+        _nomadicPurchases.add(purchase);
+      } else {
+        _nomadicPurchases[index] = purchase;
+      }
+    });
+    await _saveNomadicPurchases();
+  }
+
+  Future<void> _deleteNomadicPurchase(String id) async {
+    setState(() => _nomadicPurchases.removeWhere((item) => item.id == id));
+    await _saveNomadicPurchases();
   }
 
   String _format(int value) {
@@ -576,48 +800,127 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       _inventoryPreviewCard(),
       _equivalentsCard(),
       _savedGoalsCard(),
+      _nomadicPurchasesCard(),
     ];
 
-    return Column(
-      children: [
-        SizedBox(
-          height: 390,
-          child: PageView.builder(
-            controller: _cardController,
-            onPageChanged: (index) => setState(() => _activeCard = index),
-            itemCount: cards.length,
-            itemBuilder: (context, index) => AnimatedPadding(
-              duration: const Duration(milliseconds: 220),
-              padding: EdgeInsets.fromLTRB(
-                index == 0 ? 0 : 6,
-                index == _activeCard ? 0 : 14,
-                index == cards.length - 1 ? 0 : 6,
-                index == _activeCard ? 0 : 14,
-              ),
-              child: cards[index],
+    void goToCard(int index) {
+      final target = index.clamp(0, cards.length - 1);
+      _cardController.animateToPage(
+        target,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    Widget arrowButton({required IconData icon, required VoidCallback? onTap}) {
+      return AnimatedOpacity(
+        duration: const Duration(milliseconds: 180),
+        opacity: onTap == null ? 0.28 : 1,
+        child: Material(
+          color: Colors.black.withValues(alpha: 0.38),
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: SizedBox(
+              width: 46,
+              height: 46,
+              child: Icon(icon, color: AppTheme.neonPink, size: 34),
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < cards.length; i++)
-              AnimatedContainer(
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showArrows = constraints.maxWidth >= 720;
+        final carouselWidth = constraints.maxWidth >= 1180
+            ? 1040.0
+            : math.max(320.0, constraints.maxWidth);
+        final carouselHeight = constraints.maxWidth >= 720 ? 390.0 : 372.0;
+
+        final pager = SizedBox(
+          width: carouselWidth,
+          height: carouselHeight,
+          child: PageView.builder(
+            controller: _cardController,
+            clipBehavior: Clip.none,
+            padEnds: true,
+            onPageChanged: (index) => setState(() => _activeCard = index),
+            itemCount: cards.length,
+            itemBuilder: (context, index) {
+              final selected = index == _activeCard;
+              return AnimatedScale(
                 duration: const Duration(milliseconds: 220),
-                width: _activeCard == i ? 28 : 8,
-                height: 8,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: _activeCard == i
-                      ? _accent
-                      : Colors.white.withValues(alpha: 0.24),
-                  borderRadius: BorderRadius.circular(99),
+                scale: selected ? 1 : 0.92,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 220),
+                  opacity: selected ? 1 : 0.72,
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 220),
+                    padding: EdgeInsets.fromLTRB(
+                      index == 0 ? 0 : 8,
+                      selected ? 0 : 18,
+                      index == cards.length - 1 ? 0 : 8,
+                      selected ? 0 : 18,
+                    ),
+                    child: cards[index],
+                  ),
                 ),
-              ),
+              );
+            },
+          ),
+        );
+
+        return Column(
+          children: [
+            if (showArrows)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  arrowButton(
+                    icon: Icons.chevron_left_rounded,
+                    onTap: _activeCard <= 0
+                        ? null
+                        : () => goToCard(_activeCard - 1),
+                  ),
+                  const SizedBox(width: 12),
+                  pager,
+                  const SizedBox(width: 12),
+                  arrowButton(
+                    icon: Icons.chevron_right_rounded,
+                    onTap: _activeCard >= cards.length - 1
+                        ? null
+                        : () => goToCard(_activeCard + 1),
+                  ),
+                ],
+              )
+            else
+              pager,
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < cards.length; i++)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    width: _activeCard == i ? 28 : 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: _activeCard == i
+                          ? _accent
+                          : Colors.white.withValues(alpha: 0.24),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -896,10 +1199,35 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _sectionTitle(
-            Icons.star_rounded,
-            'Saved Goals',
-            'Your top 3 priorities',
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _sectionTitle(
+                  Icons.star_rounded,
+                  'Saved Goals',
+                  'Priority progress only',
+                ),
+              ),
+              const SizedBox(width: 10),
+              OutlinedButton.icon(
+                onPressed: _saveGoal,
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('Complete'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _accent,
+                  side: BorderSide(color: _accent.withValues(alpha: 0.75)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 18),
           Expanded(
@@ -911,9 +1239,9 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                 final goal = _defaultGoals[index];
                 final selected = goal.name == _goalName;
                 final target = _targetForGoal(goal);
-                final progress = target == 0
-                    ? 0.0
-                    : (_currentValue / target).clamp(0.0, 1.0);
+                final progress = selected && target > 0
+                    ? (_currentValue / target).clamp(0.0, 1.0)
+                    : 0.0;
                 return InkWell(
                   onTap: () => _setGoal(goal),
                   borderRadius: BorderRadius.circular(18),
@@ -946,7 +1274,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        _iconBadge(goal.icon, _accent),
+                        _iconBadge(
+                          goal.icon,
+                          selected ? _accent : Colors.white54,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -961,7 +1292,9 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Target ${_format(target)}',
+                                selected
+                                    ? 'Target ${_format(target)}'
+                                    : 'Waiting for priority slot',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.60),
                                   fontSize: 12,
@@ -973,7 +1306,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                                 child: LinearProgressIndicator(
                                   value: progress,
                                   minHeight: 5,
-                                  color: _accent,
+                                  color: selected ? _accent : Colors.white54,
                                   backgroundColor: Colors.white.withValues(
                                     alpha: 0.08,
                                   ),
@@ -1003,24 +1336,727 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     );
   }
 
-  Widget _tradeCompleteCard() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _saveGoal,
-        icon: const Icon(Icons.check_circle_outline),
-        label: const Text('Trade Complete'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _accent.withValues(alpha: 0.18),
-          foregroundColor: Colors.white,
-          side: BorderSide(color: _accent.withValues(alpha: 0.72)),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+  Widget _nomadicPurchasesCard() {
+    final totalRequired = _nomadicPurchases.fold<int>(
+      0,
+      (total, item) => total + item.requiredQty,
+    );
+    final totalOwned = _nomadicPurchases.fold<int>(
+      0,
+      (total, item) => total + item.ownedQty,
+    );
+
+    return _frostedPanel(
+      border: _activeCard == 3 ? _accent : AppTheme.neonCyan,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionTitle(
+            Icons.shopping_bag_outlined,
+            'Nomadic Purchases',
+            'Track trader items for Gallery or personal progress',
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _miniStatTile('OWNED', '$totalOwned', AppTheme.neonCyan),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _miniStatTile('REQUIRED', '$totalRequired', _accent),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _miniStatTile(
+                  'GALLERY',
+                  '${_nomadicPurchases.where((item) => item.isGalleryProject).length}',
+                  AppTheme.neonPink,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _nomadicPurchases.isEmpty
+                ? _emptyNomadicPurchases()
+                : ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _nomadicPurchases.length,
+                    separatorBuilder: (context, index) =>
+                        Divider(color: Colors.white.withValues(alpha: 0.08)),
+                    itemBuilder: (context, index) =>
+                        _nomadicPurchaseRow(_nomadicPurchases[index]),
+                  ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => _openNomadicPurchaseSheet(),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add Purchase Item'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _accent,
+              side: BorderSide(color: _accent.withValues(alpha: 0.75)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniStatTile(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.24),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: color.withValues(alpha: 0.34)),
+      ),
+      child: Column(
+        children: [
+          Text(label, style: _labelStyle(size: 10, color: Colors.white60)),
+          const SizedBox(height: 4),
+          Text(value, style: _valueStyle(size: 18, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyNomadicPurchases() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.shopping_bag_outlined,
+              color: _accent.withValues(alpha: 0.82),
+              size: 38,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No purchases tracked yet',
+              style: _valueStyle(size: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Add items the Nomadic Trader sells that help your Gallery or personal collection progress.',
+              style: _labelStyle(),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _nomadicPurchaseRow(_NomadicPurchase purchase) {
+    return InkWell(
+      onTap: () => _openNomadicPurchaseSheet(existing: purchase),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                _iconBadge(
+                  purchase.isGalleryProject
+                      ? Icons.collections_bookmark_outlined
+                      : Icons.shopping_bag_outlined,
+                  purchase.isGalleryProject ? AppTheme.neonPink : _accent,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    purchase.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${purchase.ownedQty}/${purchase.requiredQty}',
+                  style: _valueStyle(size: 18, color: _accent),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                minHeight: 7,
+                value: purchase.progress,
+                backgroundColor: Colors.white.withValues(alpha: 0.10),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  purchase.isGalleryProject ? AppTheme.neonPink : _accent,
+                ),
+              ),
+            ),
+            if (purchase.requirements.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _purchaseRequirementsPreview(purchase),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                if (purchase.isCustom) _tagPill('Custom', AppTheme.neonCyan),
+                if (purchase.isGalleryProject) ...[
+                  if (purchase.isCustom) const SizedBox(width: 8),
+                  _tagPill('Gallery Project', AppTheme.neonPink),
+                ],
+                const Spacer(),
+                IconButton(
+                  tooltip: 'Decrease owned',
+                  onPressed: purchase.ownedQty <= 0
+                      ? null
+                      : () => _upsertNomadicPurchase(
+                          purchase.copyWith(
+                            ownedQty: math.max(0, purchase.ownedQty - 1),
+                          ),
+                        ),
+                  icon: const Icon(Icons.remove_circle_outline_rounded),
+                  color: Colors.white70,
+                ),
+                IconButton(
+                  tooltip: 'Increase owned',
+                  onPressed: () => _upsertNomadicPurchase(
+                    purchase.copyWith(ownedQty: purchase.ownedQty + 1),
+                  ),
+                  icon: const Icon(Icons.add_circle_outline_rounded),
+                  color: _accent,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _requirementStatusLabel(_NomadicPurchaseRequirement requirement) {
+    if (requirement.remainingQty > 0) {
+      return 'Hunt Target Ready';
+    }
+    if (requirement.ownedQty > requirement.requiredQty) {
+      return 'Trade Assist Ready';
+    }
+    return 'Complete';
+  }
+
+  Color _requirementStatusColor(_NomadicPurchaseRequirement requirement) {
+    if (requirement.remainingQty > 0) {
+      return AppTheme.neonCyan;
+    }
+    if (requirement.ownedQty > requirement.requiredQty) {
+      return AppTheme.neonPink;
+    }
+    return Colors.lightGreenAccent;
+  }
+
+  Widget _purchaseRequirementsPreview(_NomadicPurchase purchase) {
+    final visible = purchase.requirements.take(2).toList();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Purchase Requirements', style: _labelStyle(size: 10)),
+          const SizedBox(height: 6),
+          for (final requirement in visible)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      requirement.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('/', style: _labelStyle(color: _accent, size: 12)),
+                      Text(
+                        _requirementStatusLabel(requirement),
+                        style: _labelStyle(
+                          color: _requirementStatusColor(requirement),
+                          size: 9,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          if (purchase.requirements.length > visible.length)
+            Text(
+              '+${purchase.requirements.length - visible.length} more',
+              style: _labelStyle(color: AppTheme.neonCyan, size: 11),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tagPill(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: color.withValues(alpha: 0.42)),
+      ),
+      child: Text(label, style: _labelStyle(size: 10, color: color)),
+    );
+  }
+
+  Future<void> _openNomadicPurchaseSheet({_NomadicPurchase? existing}) async {
+    final nameController = TextEditingController(text: existing?.name ?? '');
+    final requiredController = TextEditingController(
+      text: (existing?.requiredQty ?? 1).toString(),
+    );
+    final ownedController = TextEditingController(
+      text: (existing?.ownedQty ?? 0).toString(),
+    );
+    final requirementNameController = TextEditingController();
+    final requirementRequiredController = TextEditingController(text: '1');
+    final requirementOwnedController = TextEditingController(text: '0');
+
+    var isGalleryProject = existing?.isGalleryProject ?? false;
+    var isCustom = existing?.isCustom ?? true;
+    var requirementIsCustom = true;
+    var selectedSuggestion =
+        _nomadicPurchaseSuggestions.contains(existing?.name)
+        ? existing?.name
+        : null;
+    String? selectedRequirementSuggestion;
+    final requirements = <_NomadicPurchaseRequirement>[
+      ...?existing?.requirements,
+    ];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.darkBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          void addRequirement() {
+            final name = requirementNameController.text.trim();
+            final requiredQty =
+                int.tryParse(requirementRequiredController.text.trim()) ?? 0;
+            final ownedQty =
+                int.tryParse(requirementOwnedController.text.trim()) ?? 0;
+
+            if (name.isEmpty || requiredQty <= 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Add requirement name and required quantity'),
+                ),
+              );
+              return;
+            }
+
+            setSheetState(() {
+              requirements.add(
+                _NomadicPurchaseRequirement(
+                  id: DateTime.now().microsecondsSinceEpoch.toString(),
+                  name: name,
+                  requiredQty: requiredQty,
+                  ownedQty: math.max(0, ownedQty),
+                  isCustom: requirementIsCustom,
+                ),
+              );
+              requirementNameController.clear();
+              requirementRequiredController.text = '1';
+              requirementOwnedController.text = '0';
+              selectedRequirementSuggestion = null;
+              requirementIsCustom = true;
+            });
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              18,
+              18,
+              MediaQuery.of(context).viewInsets.bottom + 18,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _sheetHandle(),
+                  const SizedBox(height: 14),
+                  _sectionTitle(
+                    Icons.shopping_bag_outlined,
+                    existing == null
+                        ? 'Add Nomadic Purchase'
+                        : 'Edit Nomadic Purchase',
+                    'Track items bought from the Nomadic Trader',
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _tierButton('Existing Item', !isCustom, () {
+                          setSheetState(() => isCustom = false);
+                        }),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _tierButton('Custom Item', isCustom, () {
+                          setSheetState(() => isCustom = true);
+                        }),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  if (isCustom)
+                    TextField(
+                      controller: nameController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Purchase item name',
+                        hintText: 'Train Model, Vintage Steering Wheel...',
+                      ),
+                    )
+                  else
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedSuggestion,
+                      dropdownColor: AppTheme.cardBackground,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Purchase item',
+                      ),
+                      items: [
+                        for (final item in _nomadicPurchaseSuggestions)
+                          DropdownMenuItem(
+                            value: item,
+                            child: Text(
+                              item,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setSheetState(() {
+                          selectedSuggestion = value;
+                          nameController.text = value;
+                        });
+                      },
+                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: requiredController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Required qty',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: ownedController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Owned qty',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _sectionTitle(
+                    Icons.construction_rounded,
+                    'Purchase Requirements',
+                    'Add each required resource, quantity needed, and owned amount',
+                  ),
+                  const SizedBox(height: 12),
+                  for (final requirement in requirements)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.045),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                requirement.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${requirement.ownedQty}/${requirement.requiredQty}',
+                              style: _labelStyle(color: _accent),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setSheetState(() {
+                                  requirements.removeWhere(
+                                    (item) => item.id == requirement.id,
+                                  );
+                                });
+                              },
+                              icon: const Icon(Icons.close_rounded),
+                              color: Colors.white54,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _tierButton(
+                          'Existing Req',
+                          !requirementIsCustom,
+                          () {
+                            setSheetState(() => requirementIsCustom = false);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _tierButton(
+                          'Custom Req',
+                          requirementIsCustom,
+                          () {
+                            setSheetState(() => requirementIsCustom = true);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (requirementIsCustom)
+                    TextField(
+                      controller: requirementNameController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Requirement name',
+                        hintText: 'Industrial Magnet, Number Plate...',
+                      ),
+                    )
+                  else
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedRequirementSuggestion,
+                      dropdownColor: AppTheme.cardBackground,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Requirement item',
+                      ),
+                      items: [
+                        for (final item in _nomadicPurchaseSuggestions)
+                          DropdownMenuItem(
+                            value: item,
+                            child: Text(
+                              item,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setSheetState(() {
+                          selectedRequirementSuggestion = value;
+                          requirementNameController.text = value;
+                        });
+                      },
+                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: requirementRequiredController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Required qty',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: requirementOwnedController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: 'Owned qty',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: addRequirement,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Add Requirement'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.neonCyan,
+                      side: BorderSide(
+                        color: AppTheme.neonCyan.withValues(alpha: 0.70),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile(
+                    value: isGalleryProject,
+                    onChanged: (value) =>
+                        setSheetState(() => isGalleryProject = value),
+                    activeThumbColor: AppTheme.neonPink,
+                    title: const Text(
+                      'Required for Gallery Project',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Can later feed the Projects/Gallery tracker.',
+                      style: _labelStyle(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      if (existing != null)
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _deleteNomadicPurchase(existing.id);
+                            },
+                            icon: const Icon(Icons.delete_outline_rounded),
+                            label: const Text('Delete'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.redAccent,
+                              side: const BorderSide(color: Colors.redAccent),
+                            ),
+                          ),
+                        ),
+                      if (existing != null) const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final name = nameController.text.trim();
+                            final requiredQty =
+                                int.tryParse(requiredController.text.trim()) ??
+                                0;
+                            final ownedQty =
+                                int.tryParse(ownedController.text.trim()) ?? 0;
+
+                            if (name.isEmpty || requiredQty <= 0) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Add an item name and required quantity',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final purchase = _NomadicPurchase(
+                              id:
+                                  existing?.id ??
+                                  DateTime.now().microsecondsSinceEpoch
+                                      .toString(),
+                              name: name,
+                              requiredQty: requiredQty,
+                              ownedQty: math.max(0, ownedQty),
+                              isGalleryProject: isGalleryProject,
+                              isCustom: isCustom,
+                              requirements: requirements,
+                            );
+
+                            Navigator.pop(context);
+                            _upsertNomadicPurchase(purchase);
+                          },
+                          icon: const Icon(Icons.save_outlined),
+                          label: const Text('Save Item'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    nameController.dispose();
+    requiredController.dispose();
+    ownedController.dispose();
+    requirementNameController.dispose();
+    requirementRequiredController.dispose();
+    requirementOwnedController.dispose();
   }
 
   Future<void> _openGoalSheet() async {
@@ -1047,7 +2083,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               _sectionTitle(
                 Icons.star_rounded,
                 'Manage Goals',
-                'Pick this weekÃ¢â‚¬â„¢s top priority',
+                'Pick this weekÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢s top priority',
               ),
               const SizedBox(height: 18),
               for (final goal in _defaultGoals)
@@ -1110,7 +2146,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                     _saveGoal();
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.save_outlined),
+                  icon: const Icon(Icons.home_rounded),
                   label: const Text('Save Goal'),
                 ),
               ),
@@ -1183,7 +2219,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                       _saveGoal();
                       Navigator.pop(context);
                     },
-                    icon: const Icon(Icons.save_outlined),
+                    icon: const Icon(Icons.home_rounded),
                     label: const Text('Save Inventory'),
                   ),
                 ),
@@ -1301,7 +2337,11 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                   physics: const BouncingScrollPhysics(),
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: wide ? 980 : 520),
+                      constraints: BoxConstraints(
+                        maxWidth: wide
+                            ? math.min(constraints.maxWidth - 24, 1280.0)
+                            : math.min(constraints.maxWidth - 16, 520.0),
+                      ),
                       child: Column(
                         children: [
                           _hero(),
@@ -1316,8 +2356,6 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                                   _goalPanel(),
                                   const SizedBox(height: 18),
                                   _carousel(),
-                                  const SizedBox(height: 18),
-                                  _tradeCompleteCard(),
                                   const SizedBox(height: 12),
                                 ],
                               ),
@@ -1344,7 +2382,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                     height: 44,
                     child: Icon(
                       Icons.arrow_back_rounded,
-                      color: Colors.white.withValues(alpha: 0.92),
+                      color: AppTheme.neonPink,
                     ),
                   ),
                 ),
@@ -1380,10 +2418,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                     onTap: _openInventorySheet,
                   ),
                   ArcDockAction(
-                    label: 'Save',
-                    icon: Icons.save_outlined,
+                    label: 'My Hub',
+                    icon: Icons.home_rounded,
                     accent: AppTheme.neonPink,
-                    onTap: _saveGoal,
+                    onTap: () => Navigator.of(context).maybePop(),
                   ),
                   ArcDockAction(
                     label: 'Feedback',
