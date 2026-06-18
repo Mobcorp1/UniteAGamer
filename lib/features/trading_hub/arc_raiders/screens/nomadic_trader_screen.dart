@@ -706,7 +706,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
         children: [
           Row(
             children: [
-              _iconBadge(Icons.inventory_2_outlined, _accent),
+              _itemThumbnail(
+                _goalName,
+                fallbackIcon: Icons.inventory_2_outlined,
+                color: _accent,
+                size: 46,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -785,19 +790,6 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     );
   }
 
-  Widget _iconBadge(IconData icon, Color color) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(color: color.withValues(alpha: 0.72)),
-      ),
-      child: Icon(icon, color: color, size: 22),
-    );
-  }
-
   Widget _itemThumbnail(
     String itemName, {
     required IconData fallbackIcon,
@@ -826,7 +818,8 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
         borderRadius: BorderRadius.circular(size * 0.20),
         child: Image.asset(
           assetPath,
-          fit: BoxFit.contain,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
           errorBuilder: (context, error, stackTrace) =>
               Icon(fallbackIcon, color: color, size: size * 0.52),
         ),
@@ -894,12 +887,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       'turbine compressors': 'turbine_compressor',
       'leaper pulse unit': 'leaper_pulse_unit',
       'leaper pulse units': 'leaper_pulse_unit',
-      'bastion cell': 'bastion_cells',
-      'bastion cells': 'bastion_cells',
+      'bastion cell': 'bastion_cell',
+      'bastion cells': 'bastion_cell',
       'vaporizer regulator': 'vaporizer_regulator',
       'vaporizer regulators': 'vaporizer_regulator',
       'rocketeer driver': 'rocketeer_driver',
-      'rocketeer drivers': 'rocketeer_drivers',
+      'rocketeer drivers': 'rocketeer_driver',
       'train model': 'train_model',
       'train models': 'train_model',
       'trade model': 'train_model',
@@ -914,6 +907,24 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       'light bulbs': 'light_bulb',
       'air freshener': 'air_freshener',
       'air fresheners': 'air_freshener',
+      'hornet driver': 'hornet_driver',
+      'hornet drivers': 'hornet_driver',
+      'sentinel firing core': 'sentinel_firing_core',
+      'sentinel firing cores': 'sentinel_firing_core',
+      'snitch scanner': 'snitch_scanner',
+      'snitch scanners': 'snitch_scanner',
+      'tick pod': 'tick_pod',
+      'tick pods': 'tick_pod',
+      'wasp driver': 'wasp_driver',
+      'wasp drivers': 'wasp_driver',
+      'fireball burner': 'fireball_burner',
+      'fireball burners': 'fireball_burner',
+      'pop trigger': 'pop_trigger',
+      'pop triggers': 'pop_trigger',
+      'surveyor vault': 'surveyor_vault',
+      'surveyor vaults': 'surveyor_vault',
+      'explosive compound': 'explosive_compound',
+      'explosive compounds': 'explosive_compound',
     };
 
     final override = overrides[key];
@@ -2367,89 +2378,110 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => StatefulBuilder(
-        builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            18,
-            18,
-            18,
-            MediaQuery.of(context).viewInsets.bottom + 18,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _sheetHandle(),
-              const SizedBox(height: 14),
-              _sectionTitle(
-                Icons.star_rounded,
-                'Manage Goals',
-                'Pick this weeks top priority',
-              ),
-              const SizedBox(height: 18),
-              for (final goal in _defaultGoals)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    onTap: () {
-                      _setGoal(goal);
-                      Navigator.pop(context);
-                    },
-                    tileColor: goal.name == _goalName
-                        ? _accent.withValues(alpha: 0.15)
-                        : Colors.white.withValues(alpha: 0.04),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(
-                        color: goal.name == _goalName
-                            ? _accent.withValues(alpha: 0.72)
-                            : Colors.white.withValues(alpha: 0.09),
+        builder: (context, setSheetState) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.86,
+          minChildSize: 0.48,
+          maxChildSize: 0.94,
+          builder: (context, scrollController) => Padding(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              18,
+              18,
+              MediaQuery.of(context).viewInsets.bottom + 18,
+            ),
+            child: Column(
+              children: [
+                _sheetHandle(),
+                const SizedBox(height: 14),
+                _sectionTitle(
+                  Icons.star_rounded,
+                  'Manage Goals',
+                  'Pick this weeks top priority',
+                ),
+                const SizedBox(height: 14),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      for (final goal in _defaultGoals)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            onTap: () {
+                              _setGoal(goal);
+                              Navigator.pop(context);
+                            },
+                            tileColor: goal.name == _goalName
+                                ? _accent.withValues(alpha: 0.15)
+                                : Colors.white.withValues(alpha: 0.04),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              side: BorderSide(
+                                color: goal.name == _goalName
+                                    ? _accent.withValues(alpha: 0.72)
+                                    : Colors.white.withValues(alpha: 0.09),
+                              ),
+                            ),
+                            leading: _itemThumbnail(
+                              goal.name,
+                              fallbackIcon: goal.icon,
+                              color: goal.name == _goalName
+                                  ? _accent
+                                  : Colors.white54,
+                            ),
+                            title: Text(
+                              goal.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Target ${_format(_targetForGoal(goal))}',
+                              style: const TextStyle(color: Colors.white60),
+                            ),
+                          ),
+                        ),
+                      TextField(
+                        controller: _customTargetController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Custom target value',
+                        ),
+                        onChanged: (value) {
+                          final parsed = int.tryParse(value.trim());
+                          if (parsed != null && parsed > 0) {
+                            setState(() {
+                              _targetValue = parsed;
+                              _goalTargetOverrides[_goalName] = parsed;
+                            });
+                            setSheetState(() {});
+                          }
+                        },
                       ),
-                    ),
-                    leading: Icon(goal.icon, color: _accent),
-                    title: Text(
-                      goal.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Target ${_format(_targetForGoal(goal))}',
-                      style: const TextStyle(color: Colors.white60),
-                    ),
+                      const SizedBox(height: 14),
+                    ],
                   ),
                 ),
-              TextField(
-                controller: _customTargetController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Custom target value',
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      _saveGoal();
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.home_rounded),
+                    label: const Text('Save Goal'),
+                  ),
                 ),
-                onChanged: (value) {
-                  final parsed = int.tryParse(value.trim());
-                  if (parsed != null && parsed > 0) {
-                    setState(() {
-                      _targetValue = parsed;
-                      _goalTargetOverrides[_goalName] = parsed;
-                    });
-                    setSheetState(() {});
-                  }
-                },
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    _saveGoal();
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.home_rounded),
-                  label: const Text('Save Goal'),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
