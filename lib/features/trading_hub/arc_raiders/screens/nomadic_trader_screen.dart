@@ -420,7 +420,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     'Vaporizer Regulator',
     'Electrocore',
   ];
-  final PageController _cardController = PageController(viewportFraction: 0.78);
+  final PageController _cardController = PageController(
+    initialPage: 400,
+    viewportFraction: 0.78,
+  );
   final Map<String, TextEditingController> _controllers = {};
   final TextEditingController _customTargetController = TextEditingController();
   final Map<String, int> _goalTargetOverrides = {};
@@ -803,10 +806,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       _nomadicPurchasesCard(),
     ];
 
-    void goToCard(int index) {
-      final target = index.clamp(0, cards.length - 1);
+    void goToCard(int delta) {
+      final currentPage = _cardController.hasClients
+          ? (_cardController.page ?? 400.0 + _activeCard).round()
+          : 400 + _activeCard;
       _cardController.animateToPage(
-        target,
+        currentPage + delta,
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutCubic,
       );
@@ -847,10 +852,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
             controller: _cardController,
             clipBehavior: Clip.none,
             padEnds: true,
-            onPageChanged: (index) => setState(() => _activeCard = index),
-            itemCount: cards.length,
+            onPageChanged: (index) =>
+                setState(() => _activeCard = index % cards.length),
+
             itemBuilder: (context, index) {
-              final selected = index == _activeCard;
+              final logicalIndex = index % cards.length;
+              final selected = logicalIndex == _activeCard;
               return AnimatedScale(
                 duration: const Duration(milliseconds: 220),
                 scale: selected ? 1 : 0.92,
@@ -860,12 +867,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                   child: AnimatedPadding(
                     duration: const Duration(milliseconds: 220),
                     padding: EdgeInsets.fromLTRB(
-                      index == 0 ? 0 : 8,
+                      logicalIndex == 0 ? 0 : 8,
                       selected ? 0 : 18,
-                      index == cards.length - 1 ? 0 : 8,
+                      logicalIndex == cards.length - 1 ? 0 : 8,
                       selected ? 0 : 18,
                     ),
-                    child: cards[index],
+                    child: cards[logicalIndex],
                   ),
                 ),
               );
@@ -882,18 +889,14 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                 children: [
                   arrowButton(
                     icon: Icons.chevron_left_rounded,
-                    onTap: _activeCard <= 0
-                        ? null
-                        : () => goToCard(_activeCard - 1),
+                    onTap: () => goToCard(-1),
                   ),
                   const SizedBox(width: 12),
                   pager,
                   const SizedBox(width: 12),
                   arrowButton(
                     icon: Icons.chevron_right_rounded,
-                    onTap: _activeCard >= cards.length - 1
-                        ? null
-                        : () => goToCard(_activeCard + 1),
+                    onTap: () => goToCard(1),
                   ),
                 ],
               )
@@ -971,28 +974,28 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     return StatefulBuilder(
       builder: (context, setBarrelState) {
         void move(int delta) {
-          final target = (activeIndex + delta).clamp(0, items.length - 1);
+          final currentItem = controller.hasClients
+              ? controller.selectedItem
+              : items.length * 200 + activeIndex;
+          final target = currentItem + delta;
           controller.animateToItem(
             target,
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeOutCubic,
           );
-          setBarrelState(() => activeIndex = target);
+          setBarrelState(() => activeIndex = target % items.length);
         }
 
         Widget verticalArrow(IconData icon, int delta) {
-          final disabled =
-              (delta < 0 && activeIndex <= 0) ||
-              (delta > 0 && activeIndex >= items.length - 1);
           return AnimatedOpacity(
             duration: const Duration(milliseconds: 160),
-            opacity: disabled ? 0.28 : 1,
+            opacity: 1,
             child: Material(
               color: Colors.black.withValues(alpha: 0.34),
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: disabled ? null : () => move(delta),
+                onTap: items.length <= 1 ? null : () => move(delta),
                 child: SizedBox(
                   width: 40,
                   height: 40,
@@ -1046,29 +1049,32 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                     physics: const FixedExtentScrollPhysics(),
                     overAndUnderCenterOpacity: 0.42,
                     onSelectedItemChanged: (index) {
-                      setBarrelState(() => activeIndex = index);
+                      setBarrelState(() => activeIndex = index % items.length);
                     },
-                    childDelegate: ListWheelChildBuilderDelegate(
-                      childCount: items.length,
-                      builder: (context, index) {
-                        if (index < 0 || index >= items.length) return null;
-                        final selected = index == activeIndex;
-                        return AnimatedScale(
-                          duration: const Duration(milliseconds: 160),
-                          scale: selected ? 1 : 0.92,
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 160),
-                            opacity: selected ? 1 : 0.68,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 4,
-                              ),
-                              child: itemBuilder(items[index], index),
-                            ),
+                    childDelegate: ListWheelChildLoopingListDelegate(
+                      children: [
+                        for (var index = 0; index < items.length; index++)
+                          Builder(
+                            builder: (context) {
+                              final selected = index == activeIndex;
+                              return AnimatedScale(
+                                duration: const Duration(milliseconds: 160),
+                                scale: selected ? 1 : 0.92,
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 160),
+                                  opacity: selected ? 1 : 0.68,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 4,
+                                    ),
+                                    child: itemBuilder(items[index], index),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                      ],
                     ),
                   ),
                 ],
@@ -1510,7 +1516,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           _sectionTitle(
             Icons.shopping_bag_outlined,
             'Nomadic Purchases',
-            'Track trader items for Gallery or personal progress',
+            'Gallery and personal progress',
           ),
           const SizedBox(height: 12),
           Row(
@@ -1562,7 +1568,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
   Widget _miniStatTile(String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(15),
@@ -1579,31 +1585,28 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   }
 
   Widget _emptyNomadicPurchases() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shopping_bag_outlined,
-              color: _accent.withValues(alpha: 0.82),
-              size: 38,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'No purchases tracked yet',
-              style: _valueStyle(size: 18),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Add items the Nomadic Trader sells that help your Gallery or personal collection progress.',
-              style: _labelStyle(),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _accent.withValues(alpha: 0.20)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'SELECTED PURCHASE',
+            style: _labelStyle(),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'No purchase selected',
+            style: _valueStyle(size: 16),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
