@@ -798,6 +798,134 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     );
   }
 
+  Widget _itemThumbnail(
+    String itemName, {
+    required IconData fallbackIcon,
+    required Color color,
+    double size = 42,
+  }) {
+    final assetPath = _itemAssetPathFromName(itemName);
+
+    return Container(
+      width: size,
+      height: size,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(size * 0.28),
+        border: Border.all(color: color.withValues(alpha: 0.72)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.20),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.20),
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(fallbackIcon, color: color, size: size * 0.52),
+        ),
+      ),
+    );
+  }
+
+  String _itemAssetPathFromName(String itemName) {
+    return 'assets/arc_raiders/items/${_itemAssetSlug(itemName)}.webp';
+  }
+
+  String _itemAssetSlug(String itemName) {
+    final key = itemName.trim().toLowerCase();
+
+    const overrides = <String, String>{
+      'queen reactors': 'queen_reactor',
+      'queen reactor': 'queen_reactor',
+      'bombardier cells': 'bombardier_cells',
+      'bombardier cell': 'bombardier_cells',
+      'shredder gyros': 'shredder_gyro',
+      'shredder gyro': 'shredder_gyro',
+      'arc parts': 'arc_alloy',
+      'arc powercells': 'arc_powercells',
+      'arc powercell': 'arc_powercells',
+      'arc motion cores': 'arc_motion_cores',
+      'arc motion core': 'arc_motion_cores',
+      'arc circuitry': 'arc_circuitry',
+      'arc coolant': 'arc_coolant',
+      'arc coolants': 'arc_coolant',
+      'arc synthetic resin': 'arc_synthetic_resin',
+      'arc thermo lining': 'arc_thermo_lining',
+      'arc thermal lining': 'arc_thermo_lining',
+      'arc performance steel': 'arc_performance_steel',
+      'industrial magnet': 'industrial_magnet',
+      'industrial magnets': 'industrial_magnet',
+      'number plate': 'number_plate',
+      'number plates': 'number_plate',
+      'blueprints': 'blueprint',
+      'blueprint': 'blueprint',
+      'duplicate blueprint': 'blueprint',
+      'duplicate blueprints': 'blueprint',
+      'stash expansion': 'stash_expansion',
+      'expedition vault': 'expedition_vault',
+      'backpack charm': 'backpack_charm',
+      'pack charm': 'backpack_charm',
+      'raider token': 'raider_tokens',
+      'raider tokens': 'raider_tokens',
+      'raiders token': 'raider_tokens',
+      'raiders tokens': 'raider_tokens',
+      'cosmetic': 'cosmetics',
+      'cosmetics': 'cosmetics',
+      'emote': 'emotes',
+      'emotes': 'emotes',
+      'quick use': 'quick_use',
+      'quick-use': 'quick_use',
+      'recyclable': 'recyclable',
+      'recyclables': 'recyclable',
+      'weapon': 'weapon',
+      'weapons': 'weapon',
+      'matriarch reactors': 'matriarch_reactor',
+      'matriarch reactor': 'matriarch_reactor',
+      'assessor matrix': 'assessor_matrix',
+      'assessor matrices': 'assessor_matrix',
+      'turbine compressor': 'turbine_compressor',
+      'turbine compressors': 'turbine_compressor',
+      'leaper pulse unit': 'leaper_pulse_unit',
+      'leaper pulse units': 'leaper_pulse_unit',
+      'bastion cell': 'bastion_cells',
+      'bastion cells': 'bastion_cells',
+      'vaporizer regulator': 'vaporizer_regulator',
+      'vaporizer regulators': 'vaporizer_regulator',
+      'rocketeer driver': 'rocketeer_driver',
+      'rocketeer drivers': 'rocketeer_drivers',
+      'train model': 'train_model',
+      'train models': 'train_model',
+      'trade model': 'train_model',
+      'vintage steering wheel': 'vintage_steering_wheel',
+      'vintage steering wheels': 'vintage_steering_wheel',
+      'tellyron': 'tellyron',
+      'teleron': 'tellyron',
+      'elephant obelisk': 'elephant_obelisk',
+      'equatorial sundial': 'equatorial_sundial',
+      'sextant': 'sextant',
+      'light bulb': 'light_bulb',
+      'light bulbs': 'light_bulb',
+      'air freshener': 'air_freshener',
+      'air fresheners': 'air_freshener',
+    };
+
+    final override = overrides[key];
+    if (override != null) return override;
+
+    return key
+        .replaceAll('&', 'and')
+        .replaceAll(RegExp('[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+'), '')
+        .replaceAll(RegExp(r'_+$'), '');
+  }
+
   Widget _carousel() {
     final cards = <Widget>[
       _inventoryPreviewCard(),
@@ -1104,7 +1232,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   }
 
   Widget _inventoryPreviewCard() {
-    final visible = _resources.take(5).toList();
+    final visible = _resources;
 
     return _frostedPanel(
       border: _activeCard == 0 ? _accent : AppTheme.neonCyan,
@@ -1190,9 +1318,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
     return Row(
       children: [
-        _iconBadge(
-          resource.icon,
-          resource.highTier ? _accent : AppTheme.neonCyan,
+        _itemThumbnail(
+          resource.name,
+          fallbackIcon: resource.icon,
+          color: resource.highTier ? _accent : AppTheme.neonCyan,
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -1332,7 +1461,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       ),
       child: Row(
         children: [
-          _iconBadge(icon, color),
+          _itemThumbnail(label, fallbackIcon: icon, color: color),
           const SizedBox(width: 12),
           Text('$count', style: _valueStyle(size: 25)),
           const SizedBox(width: 10),
@@ -1431,9 +1560,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        _iconBadge(
-                          goal.icon,
-                          selected ? _accent : Colors.white54,
+                        _itemThumbnail(
+                          goal.name,
+                          fallbackIcon: goal.icon,
+                          color: selected ? _accent : Colors.white54,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1626,11 +1756,14 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
           children: [
             Row(
               children: [
-                _iconBadge(
-                  purchase.isGalleryProject
+                _itemThumbnail(
+                  purchase.name,
+                  fallbackIcon: purchase.isGalleryProject
                       ? Icons.collections_bookmark_outlined
                       : Icons.shopping_bag_outlined,
-                  purchase.isGalleryProject ? AppTheme.neonPink : _accent,
+                  color: purchase.isGalleryProject
+                      ? AppTheme.neonPink
+                      : _accent,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1744,6 +1877,13 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(
                 children: [
+                  _itemThumbnail(
+                    requirement.name,
+                    fallbackIcon: Icons.construction_rounded,
+                    color: _requirementStatusColor(requirement),
+                    size: 28,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       requirement.name,
