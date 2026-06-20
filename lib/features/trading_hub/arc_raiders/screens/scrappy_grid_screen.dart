@@ -1102,84 +1102,81 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         title: Text(_modeTitle, style: AppTheme.tradingHeading(fontSize: 25)),
         actions: [ScrappyActionsMenu(onResetGrid: _confirmResetGrid)],
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: StreamBuilder<Map<String, ArcScrappyState>>(
-              stream: _repository.watchMyScrappyStates(),
-              builder: (context, snapshot) {
-                final states = snapshot.data ?? <String, ArcScrappyState>{};
-                final filtered = _applyFilter(allItems, states);
-                final counts = _buildCounts(allItems, states);
-                final ownedCount = counts[ArcScrappyFilter.owned] ?? 0;
-                final completion = allItems.isEmpty
-                    ? 0.0
-                    : ownedCount / allItems.length;
-                final landscape =
-                    MediaQuery.of(context).orientation == Orientation.landscape;
+      body: ArcRaidersScreenShell(
+        useSafeArea: true,
+        showAdBanner: false,
+        child: StreamBuilder<Map<String, ArcScrappyState>>(
+          stream: _repository.watchMyScrappyStates(),
+          builder: (context, snapshot) {
+            final states = snapshot.data ?? <String, ArcScrappyState>{};
+            final filtered = _applyFilter(allItems, states);
+            final counts = _buildCounts(allItems, states);
+            final ownedCount = counts[ArcScrappyFilter.owned] ?? 0;
+            final completion = allItems.isEmpty
+                ? 0.0
+                : ownedCount / allItems.length;
+            final landscape =
+                MediaQuery.of(context).orientation == Orientation.landscape;
 
-                return ArcRaidersPageList(
-                  children: [
-                    _buildScrappyFeedTabs(),
-                    if (_mode == ArcScrappyTrackerMode.scrappy)
-                      const SizedBox(height: AppTheme.spaceM),
-                    if (_mode == ArcScrappyTrackerMode.scrappy &&
-                        _showFeedScrappy) ...[
-                      const ScrappyFeedQueueSection(),
-                      const SizedBox(height: AppTheme.spaceL),
-                      ScrappyProgressHeader(
-                        completion: completion,
-                        ownedCount: ownedCount,
-                        totalCount: allItems.length,
-                        landscape: landscape,
-                        title: 'ARC Raiders Feed Scrappy',
-                        description:
-                            'Food queue items and quick location hints for feeding Scrappy.',
-                        footer:
-                            'Feed Scrappy is kept separate from tracker completion so food queue items do not affect upgrade totals.',
-                        accentColor: AppTheme.neonPink,
-                      ),
-                      const SizedBox(height: 112),
-                    ] else ...[
-                      ScrappyFilterBar(
-                        selectedFilter: _selectedFilter,
-                        counts: counts,
-                        onFilterSelected: (filter) {
-                          setState(() => _selectedFilter = filter);
-                        },
-                      ),
-                      const SizedBox(height: AppTheme.spaceL),
-                      _mode == ArcScrappyTrackerMode.scrappy
-                          ? _buildScrappyList(filtered, states)
-                          : _buildGroupedList(filtered, states),
-                      const SizedBox(height: AppTheme.spaceL),
-                      ScrappyProgressHeader(
-                        completion: completion,
-                        ownedCount: ownedCount,
-                        totalCount: allItems.length,
-                        landscape: landscape,
-                        title: _headerTitle,
-                        description: _headerDescription,
-                        footer: switch (_mode) {
-                          ArcScrappyTrackerMode.scrappy =>
-                            'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
-                          ArcScrappyTrackerMode.bench =>
-                            'Bench materials are grouped into carousel cards by station and tier.',
-                          ArcScrappyTrackerMode.quest =>
-                            'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
-                        },
-                        accentColor: _modeAccent(),
-                      ),
-                      const SizedBox(height: 112),
-                    ],
-                    const SizedBox(height: AppTheme.spaceXL),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+            return ArcRaidersPageList(
+              children: [
+                _buildScrappyFeedTabs(),
+                if (_mode == ArcScrappyTrackerMode.scrappy)
+                  const SizedBox(height: AppTheme.spaceM),
+                if (_mode == ArcScrappyTrackerMode.scrappy &&
+                    _showFeedScrappy) ...[
+                  const ScrappyFeedQueueSection(),
+                  const SizedBox(height: AppTheme.spaceL),
+                  ScrappyProgressHeader(
+                    completion: completion,
+                    ownedCount: ownedCount,
+                    totalCount: allItems.length,
+                    landscape: landscape,
+                    title: 'ARC Raiders Feed Scrappy',
+                    description:
+                        'Food queue items and quick location hints for feeding Scrappy.',
+                    footer:
+                        'Feed Scrappy is kept separate from tracker completion so food queue items do not affect upgrade totals.',
+                    accentColor: AppTheme.neonPink,
+                  ),
+                  const SizedBox(height: 112),
+                ] else ...[
+                  ScrappyFilterBar(
+                    selectedFilter: _selectedFilter,
+                    counts: counts,
+                    onFilterSelected: (filter) {
+                      setState(() => _selectedFilter = filter);
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spaceL),
+                  _mode == ArcScrappyTrackerMode.scrappy
+                      ? _buildScrappyList(filtered, states)
+                      : _buildGroupedList(filtered, states),
+                  const SizedBox(height: AppTheme.spaceL),
+                  ScrappyProgressHeader(
+                    completion: completion,
+                    ownedCount: ownedCount,
+                    totalCount: allItems.length,
+                    landscape: landscape,
+                    title: _headerTitle,
+                    description: _headerDescription,
+                    footer: switch (_mode) {
+                      ArcScrappyTrackerMode.scrappy =>
+                        'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
+                      ArcScrappyTrackerMode.bench =>
+                        'Bench materials are grouped into carousel cards by station and tier.',
+                      ArcScrappyTrackerMode.quest =>
+                        'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
+                    },
+                    accentColor: _modeAccent(),
+                  ),
+                  const SizedBox(height: 112),
+                ],
+                const SizedBox(height: AppTheme.spaceXL),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
