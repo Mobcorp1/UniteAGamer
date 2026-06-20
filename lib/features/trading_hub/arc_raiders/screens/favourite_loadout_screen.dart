@@ -118,63 +118,66 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: Column(
-              children: const [
-                ArcLoadoutCategoryBanner(
-                  title: 'PvP Operator Builds',
-                  subtitle:
-                      'Close-range aggression, survival pressure and fast engagement loadouts.',
-                  color: AppTheme.neonPink,
-                  icon: Icons.flash_on_rounded,
-                ),
-                ArcLoadoutCategoryBanner(
-                  title: 'PvE Raid Builds',
-                  subtitle:
-                      'ARC clearing, sustain, ammo efficiency and long-session preparation.',
-                  color: AppTheme.neonCyan,
-                  icon: Icons.shield_rounded,
-                ),
-              ],
+      body: ArcRaidersScreenShell(
+        useSafeArea: false,
+        showAdBanner: false,
+        child: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                children: const [
+                  ArcLoadoutCategoryBanner(
+                    title: 'PvP Operator Builds',
+                    subtitle:
+                        'Close-range aggression, survival pressure and fast engagement loadouts.',
+                    color: AppTheme.neonPink,
+                    icon: Icons.flash_on_rounded,
+                  ),
+                  ArcLoadoutCategoryBanner(
+                    title: 'PvE Raid Builds',
+                    subtitle:
+                        'ARC clearing, sustain, ammo efficiency and long-session preparation.',
+                    color: AppTheme.neonCyan,
+                    icon: Icons.shield_rounded,
+                  ),
+                ],
+              ),
             ),
-          ),
-          SafeArea(
-            child: ArcRaidersPageList(
-              children: [
-                _buildCinematicLoadoutHero(),
-                const SizedBox(height: 12),
-                _buildExpeditionResetFocusCard(),
-                const SizedBox(height: 12),
-                _buildLoadoutCommandCards(),
-                const SizedBox(height: 12),
-                _buildPlayStyleSelector(),
-                const SizedBox(height: 12),
-                _buildRecommendedSection(),
-                const SizedBox(height: 12),
-                _buildCategoryChips(),
-                const SizedBox(height: 12),
-                _buildSavedLoadoutsSection(),
-                const SizedBox(height: 12),
-                if (loadouts.isEmpty)
-                  _buildEmptyState()
-                else
-                  for (final loadout in loadouts) ...[
-                    ArcSavedLoadoutCard(
-                      loadout: loadout,
-                      onTap: () => _openLoadoutPreview(loadout),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                const SizedBox(height: 12),
-                _buildGuidedBuilder(),
-                const SizedBox(height: 96),
-              ],
+            SafeArea(
+              child: ArcRaidersPageList(
+                children: [
+                  _buildCinematicLoadoutHero(),
+                  const SizedBox(height: 12),
+                  _buildExpeditionResetFocusCard(),
+                  const SizedBox(height: 12),
+                  _buildLoadoutCommandCards(),
+                  const SizedBox(height: 12),
+                  _buildPlayStyleSelector(),
+                  const SizedBox(height: 12),
+                  _buildRecommendedSection(),
+                  const SizedBox(height: 12),
+                  _buildCategoryChips(),
+                  const SizedBox(height: 12),
+                  _buildSavedLoadoutsSection(),
+                  const SizedBox(height: 12),
+                  if (loadouts.isEmpty)
+                    _buildEmptyState()
+                  else
+                    for (final loadout in loadouts) ...[
+                      ArcSavedLoadoutCard(
+                        loadout: loadout,
+                        onTap: () => _openLoadoutPreview(loadout),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  const SizedBox(height: 12),
+                  _buildGuidedBuilder(),
+                  const SizedBox(height: 96),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1671,7 +1674,7 @@ class _SavedLoadoutManagementCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    ' ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢  / ',
+                    ' â€šâ€šÂ¬Ã…Â¡â€šÃ‚Â¬Æ’Ã¢â‚¬Å¡â€šÃ‚Â¢  / ',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

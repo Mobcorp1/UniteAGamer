@@ -1176,49 +1176,44 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         subtitle: 'Blueprint-driven event timing and session planning.',
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: StreamBuilder<RaidPlannerEntitlement>(
-              stream: _plannerRepository.watchEntitlement(),
-              builder: (context, entitlementSnapshot) {
-                final entitlement =
-                    entitlementSnapshot.data ??
-                    const RaidPlannerEntitlement(tier: RaidPlannerTier.free);
-                return StreamBuilder<List<RaidBlueprintTarget>>(
-                  stream: _plannerRepository.watchTargets(),
-                  builder: (context, targetsSnapshot) {
-                    final targets =
-                        targetsSnapshot.data ?? <RaidBlueprintTarget>[];
-                    return StreamBuilder<Map<String, ArcBlueprintState>>(
-                      stream: _blueprintRepository.watchMyBlueprintStates(),
-                      builder: (context, statesSnapshot) {
-                        final states =
-                            statesSnapshot.data ??
-                            <String, ArcBlueprintState>{};
-                        return StreamBuilder<ArcAvailability>(
-                          stream: _profileRepository.watchAvailability(),
-                          builder: (context, availabilitySnapshot) {
-                            final availability =
-                                availabilitySnapshot.data ??
-                                ArcAvailability.initial();
-                            return _buildContent(
-                              targets: targets,
-                              entitlement: entitlement,
-                              states: states,
-                              availability: availability,
-                            );
-                          },
+      body: ArcRaidersScreenShell(
+        useSafeArea: true,
+        showAdBanner: false,
+        child: StreamBuilder<RaidPlannerEntitlement>(
+          stream: _plannerRepository.watchEntitlement(),
+          builder: (context, entitlementSnapshot) {
+            final entitlement =
+                entitlementSnapshot.data ??
+                const RaidPlannerEntitlement(tier: RaidPlannerTier.free);
+            return StreamBuilder<List<RaidBlueprintTarget>>(
+              stream: _plannerRepository.watchTargets(),
+              builder: (context, targetsSnapshot) {
+                final targets = targetsSnapshot.data ?? <RaidBlueprintTarget>[];
+                return StreamBuilder<Map<String, ArcBlueprintState>>(
+                  stream: _blueprintRepository.watchMyBlueprintStates(),
+                  builder: (context, statesSnapshot) {
+                    final states =
+                        statesSnapshot.data ?? <String, ArcBlueprintState>{};
+                    return StreamBuilder<ArcAvailability>(
+                      stream: _profileRepository.watchAvailability(),
+                      builder: (context, availabilitySnapshot) {
+                        final availability =
+                            availabilitySnapshot.data ??
+                            ArcAvailability.initial();
+                        return _buildContent(
+                          targets: targets,
+                          entitlement: entitlement,
+                          states: states,
+                          availability: availability,
                         );
                       },
                     );
                   },
                 );
               },
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -394,91 +394,86 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
           ),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: StreamBuilder<Map<String, ArcBlueprintState>>(
-              stream: _repository.watchBlueprintStates(),
-              builder: (context, stateSnapshot) {
-                final states =
-                    stateSnapshot.data ?? const <String, ArcBlueprintState>{};
-                final opportunities = _buildOpportunities(states);
-                final duplicateTotal = _duplicateQuantitiesFromStates(
-                  states,
-                ).values.fold<int>(0, (total, quantity) => total + quantity);
-                final topFive = _topFiveWantedFromStates(states);
+      body: ArcRaidersScreenShell(
+        useSafeArea: true,
+        showAdBanner: false,
+        child: StreamBuilder<Map<String, ArcBlueprintState>>(
+          stream: _repository.watchBlueprintStates(),
+          builder: (context, stateSnapshot) {
+            final states =
+                stateSnapshot.data ?? const <String, ArcBlueprintState>{};
+            final opportunities = _buildOpportunities(states);
+            final duplicateTotal = _duplicateQuantitiesFromStates(
+              states,
+            ).values.fold<int>(0, (total, quantity) => total + quantity);
+            final topFive = _topFiveWantedFromStates(states);
 
-                return StreamBuilder<List<TradingListing>>(
-                  stream: _repository.watchActiveListings(),
-                  builder: (context, listingSnapshot) {
-                    final listings =
-                        listingSnapshot.data ?? const <TradingListing>[];
+            return StreamBuilder<List<TradingListing>>(
+              stream: _repository.watchActiveListings(),
+              builder: (context, listingSnapshot) {
+                final listings =
+                    listingSnapshot.data ?? const <TradingListing>[];
 
-                    return ListView(
-                      padding: const EdgeInsets.all(AppTheme.spaceM),
-                      children: [
-                        _IntroCard(
-                          opportunityCount: opportunities.length,
-                          duplicateTotal: duplicateTotal,
-                          targetCount: topFive.length,
-                          onCreateAll: opportunities.isEmpty
-                              ? null
-                              : () => _createAllListings(opportunities),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        if (opportunities.isEmpty)
-                          const _EmptyStateCard()
-                        else ...[
-                          _SummaryCard(opportunities: opportunities),
-                          const SizedBox(height: AppTheme.spaceM),
-                          ...opportunities.map((opportunity) {
-                            final matches = _matchesForOpportunity(
-                              listings,
-                              opportunity,
-                            );
+                return ListView(
+                  padding: const EdgeInsets.all(AppTheme.spaceM),
+                  children: [
+                    _IntroCard(
+                      opportunityCount: opportunities.length,
+                      duplicateTotal: duplicateTotal,
+                      targetCount: topFive.length,
+                      onCreateAll: opportunities.isEmpty
+                          ? null
+                          : () => _createAllListings(opportunities),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    if (opportunities.isEmpty)
+                      const _EmptyStateCard()
+                    else ...[
+                      _SummaryCard(opportunities: opportunities),
+                      const SizedBox(height: AppTheme.spaceM),
+                      ...opportunities.map((opportunity) {
+                        final matches = _matchesForOpportunity(
+                          listings,
+                          opportunity,
+                        );
 
-                            final key = _opportunityKey(opportunity);
+                        final key = _opportunityKey(opportunity);
 
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: AppTheme.spaceS,
-                              ),
-                              child: _OpportunityCard(
-                                opportunity: opportunity,
-                                duplicateLabel: _labelForBlueprint(
-                                  opportunity.duplicateBlueprintId,
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppTheme.spaceS,
+                          ),
+                          child: _OpportunityCard(
+                            opportunity: opportunity,
+                            duplicateLabel: _labelForBlueprint(
+                              opportunity.duplicateBlueprintId,
+                            ),
+                            targetLabel: _targetLabel(opportunity),
+                            directMatches: matches,
+                            created: _createdListingKeys.contains(key),
+                            busy: _busyKeys.contains(key),
+                            onCreateListing: () => _createListing(opportunity),
+                            onSendOffer: matches.isEmpty
+                                ? null
+                                : () => _sendOffer(
+                                    listing: matches.first,
+                                    opportunity: opportunity,
+                                  ),
+                            offerSent:
+                                matches.isNotEmpty &&
+                                _sentOfferKeys.contains(
+                                  '${matches.first.id}::$key',
                                 ),
-                                targetLabel: _targetLabel(opportunity),
-                                directMatches: matches,
-                                created: _createdListingKeys.contains(key),
-                                busy: _busyKeys.contains(key),
-                                onCreateListing: () =>
-                                    _createListing(opportunity),
-                                onSendOffer: matches.isEmpty
-                                    ? null
-                                    : () => _sendOffer(
-                                        listing: matches.first,
-                                        opportunity: opportunity,
-                                      ),
-                                offerSent:
-                                    matches.isNotEmpty &&
-                                    _sentOfferKeys.contains(
-                                      '${matches.first.id}::$key',
-                                    ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ],
-                    );
-                  },
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
                 );
               },
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }
