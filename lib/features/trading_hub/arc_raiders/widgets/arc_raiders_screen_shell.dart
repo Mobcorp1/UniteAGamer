@@ -31,9 +31,9 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     return const UagCinematicBackground(
       backgroundAsset: UagVisualAssets.arcBackground,
-      backgroundOpacity: 0.30,
-      watermarkOpacity: 0.18,
-      showGrid: true,
+      backgroundOpacity: 0.34,
+      watermarkOpacity: 0.10,
+      showGrid: false,
     );
   }
 }

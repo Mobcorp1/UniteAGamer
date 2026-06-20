@@ -28,6 +28,7 @@ class ArcCinematicScaffold extends StatelessWidget {
           accent: accent,
           backgroundAsset: backgroundAsset ?? UagVisualAssets.arcBackground,
           showWatermark: showWatermark,
+          showGrid: false,
         ),
         SafeArea(
           child: Padding(padding: padding, child: child),

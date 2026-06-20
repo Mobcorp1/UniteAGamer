@@ -16,8 +16,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_background.dart';
 import 'package:uag_arc_raiders_hub/widgets/responsive_layout_helper.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_responsive_chrome.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
@@ -264,13 +264,12 @@ class _MyHubScreenState extends State<MyHubScreen> {
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            child: _ArcHubScreenBackdrop(accent: selected.accent),
-          ),
-          const Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(opacity: 0.30, child: StaticWatermark()),
+            child: UagCinematicBackground(
+              accent: selected.accent,
+              showWatermark: true,
             ),
           ),
+
           Positioned.fill(
             child: SafeArea(
               child: LayoutBuilder(
@@ -1132,13 +1131,12 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            child: _ArcHubScreenBackdrop(accent: selected.accent),
-          ),
-          const Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(opacity: 0.30, child: StaticWatermark()),
+            child: UagCinematicBackground(
+              accent: selected.accent,
+              showWatermark: true,
             ),
           ),
+
           SafeArea(
             child: Column(
               children: [
@@ -1478,17 +1476,6 @@ class _ArcHubStatusPill extends StatelessWidget {
   }
 }
 
-class _ArcHubScreenBackdrop extends StatelessWidget {
-  const _ArcHubScreenBackdrop({required this.accent});
-
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _ArcHubScreenBackdropPainter(accent: accent));
-  }
-}
-
 class _ArcHubArtBackdrop extends StatelessWidget {
   const _ArcHubArtBackdrop({required this.accent, required this.kind});
 
@@ -1500,52 +1487,6 @@ class _ArcHubArtBackdrop extends StatelessWidget {
     return CustomPaint(
       painter: _ArcHubArtPainter(accent: accent, kind: kind),
     );
-  }
-}
-
-class _ArcHubScreenBackdropPainter extends CustomPainter {
-  const _ArcHubScreenBackdropPainter({required this.accent});
-
-  final Color accent;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bg = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFF040514),
-          Color.lerp(accent, const Color(0xFF050612), 0.86)!,
-          const Color(0xFF020208),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, bg);
-
-    final glow = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [
-              accent.withValues(alpha: 0.18),
-              accent.withValues(alpha: 0.0),
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.50, size.height * 0.32),
-              radius: math.max(size.width, size.height) * 0.42,
-            ),
-          );
-
-    canvas.drawCircle(
-      Offset(size.width * 0.50, size.height * 0.32),
-      math.max(size.width, size.height) * 0.42,
-      glow,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _ArcHubScreenBackdropPainter oldDelegate) {
-    return oldDelegate.accent != accent;
   }
 }
 

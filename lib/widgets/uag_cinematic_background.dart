@@ -16,10 +16,10 @@ class UagCinematicBackground extends StatelessWidget {
     this.accent = AppTheme.neonCyan,
     this.secondaryAccent = AppTheme.neonPink,
     this.backgroundAsset = UagVisualAssets.arcBackground,
-    this.backgroundOpacity = 0.28,
+    this.backgroundOpacity = 0.34,
     this.showWatermark = true,
-    this.watermarkOpacity = 0.16,
-    this.showGrid = true,
+    this.watermarkOpacity = 0.10,
+    this.showGrid = false,
   });
 
   final Color accent;
@@ -53,8 +53,8 @@ class UagCinematicBackground extends StatelessWidget {
               center: const Alignment(0, -0.42),
               radius: 1.18,
               colors: [
-                accent.withValues(alpha: 0.22),
-                secondaryAccent.withValues(alpha: 0.08),
+                accent.withValues(alpha: 0.10),
+                secondaryAccent.withValues(alpha: 0.04),
                 AppTheme.darkBackground.withValues(alpha: 0.90),
                 Colors.black.withValues(alpha: 0.98),
               ],
@@ -84,55 +84,7 @@ class UagCinematicBackground extends StatelessWidget {
               ),
             ),
           ),
-        if (showGrid)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(
-                painter: _UagCommandGridPainter(
-                  accent: accent.withValues(alpha: 0.075),
-                ),
-              ),
-            ),
-          ),
       ],
     );
-  }
-}
-
-class _UagCommandGridPainter extends CustomPainter {
-  const _UagCommandGridPainter({required this.accent});
-
-  final Color accent;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = accent
-      ..strokeWidth = 0.55;
-
-    const step = 34.0;
-
-    for (double x = 0; x <= size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-
-    for (double y = 0; y <= size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-
-    final glowPaint = Paint()
-      ..color = accent.withValues(alpha: 0.42)
-      ..strokeWidth = 1.2;
-
-    canvas.drawLine(
-      Offset(0, size.height * 0.16),
-      Offset(size.width, size.height * 0.16),
-      glowPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _UagCommandGridPainter oldDelegate) {
-    return oldDelegate.accent != accent;
   }
 }
