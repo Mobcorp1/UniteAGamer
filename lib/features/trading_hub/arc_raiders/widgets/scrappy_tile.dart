@@ -72,10 +72,11 @@ class ScrappyTile extends StatelessWidget {
                       item.imageAsset,
                       width: double.infinity,
                       height: double.infinity,
-                      fit: BoxFit.contain,
+                      fit: BoxFit.cover,
                       alignment: Alignment.center,
                       filterQuality: FilterQuality.high,
                       isAntiAlias: true,
+                      gaplessPlayback: true,
                       errorBuilder: (context, error, stackTrace) {
                         return Center(
                           child: Icon(
