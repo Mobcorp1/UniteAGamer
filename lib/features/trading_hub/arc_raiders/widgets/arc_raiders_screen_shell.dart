@@ -20,7 +20,7 @@
 // Keep blueprint grid rendering, portrait carousel logic, ownership/dupe logic,
 // _buildGrid, and BlueprintTile structure isolated from architecture cleanup passes.
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_background.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
 
@@ -29,68 +29,11 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF02030B),
-                  Color.lerp(AppTheme.neonCyan, const Color(0xFF050612), 0.86)!,
-                  const Color(0xFF010106),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.22),
-                    AppTheme.neonPink.withValues(alpha: 0.10),
-                    Colors.transparent,
-                  ],
-                  center: const Alignment(0.0, -0.36),
-                  radius: 0.92,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withValues(alpha: 0.08),
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.32),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const Positioned.fill(
-          child: IgnorePointer(
-            child: Opacity(opacity: 0.30, child: StaticWatermark()),
-          ),
-        ),
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(painter: _ArcCommandGridPainter()),
-          ),
-        ),
-      ],
+    return const UagCinematicBackground(
+      backgroundAsset: UagVisualAssets.arcBackground,
+      backgroundOpacity: 0.30,
+      watermarkOpacity: 0.18,
+      showGrid: true,
     );
   }
 }
@@ -464,37 +407,4 @@ class ArcRaidersSectionCard extends StatelessWidget {
       child: child,
     );
   }
-}
-
-class _ArcCommandGridPainter extends CustomPainter {
-  const _ArcCommandGridPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = AppTheme.neonCyan.withValues(alpha: 0.030)
-      ..strokeWidth = 1;
-    final heavyPaint = Paint()
-      ..color = AppTheme.neonPink.withValues(alpha: 0.024)
-      ..strokeWidth = 1.2;
-
-    const smallStep = 32.0;
-    const largeStep = 128.0;
-
-    for (double x = 0; x <= size.width; x += smallStep) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
-    }
-    for (double y = 0; y <= size.height; y += smallStep) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
-    }
-    for (double x = 0; x <= size.width; x += largeStep) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), heavyPaint);
-    }
-    for (double y = 0; y <= size.height; y += largeStep) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), heavyPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ArcCommandGridPainter oldDelegate) => false;
 }
