@@ -47,45 +47,38 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-              children: [
-                Text(
-                  'Pick a blueprint to see the strongest player-confirmed signals instead of scrolling through individual reports.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white70,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                _buildBlueprintSelector(context),
-                const SizedBox(height: AppTheme.spaceM),
-                if (_selectedBlueprint == null)
-                  _buildEmptyState(context)
-                else
-                  StreamBuilder<ArcDropIntel>(
-                    stream: _repository.watchIntelForBlueprint(
-                      _selectedBlueprint!.id,
-                    ),
-                    builder: (context, snapshot) {
-                      final intel =
-                          snapshot.data ??
-                          ArcDropIntel.empty(_selectedBlueprint!.id);
-                      return _buildIntelBody(
-                        context,
-                        _selectedBlueprint!,
-                        intel,
-                      );
-                    },
-                  ),
-              ],
+      body: ArcRaidersScreenShell(
+        useSafeArea: true,
+        showAdBanner: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+          children: [
+            Text(
+              'Pick a blueprint to see the strongest player-confirmed signals instead of scrolling through individual reports.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white70,
+                height: 1.35,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: AppTheme.spaceM),
+            _buildBlueprintSelector(context),
+            const SizedBox(height: AppTheme.spaceM),
+            if (_selectedBlueprint == null)
+              _buildEmptyState(context)
+            else
+              StreamBuilder<ArcDropIntel>(
+                stream: _repository.watchIntelForBlueprint(
+                  _selectedBlueprint!.id,
+                ),
+                builder: (context, snapshot) {
+                  final intel =
+                      snapshot.data ??
+                      ArcDropIntel.empty(_selectedBlueprint!.id);
+                  return _buildIntelBody(context, _selectedBlueprint!, intel);
+                },
+              ),
+          ],
+        ),
       ),
     );
   }

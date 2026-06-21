@@ -227,69 +227,72 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          if (_loading)
-            const Center(child: CircularProgressIndicator())
-          else if (_error != null || profile == null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                child: Text(
-                  _error ?? 'Could not load Match-a-Raider.',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
+      body: ArcRaidersScreenShell(
+        useSafeArea: false,
+        showAdBanner: false,
+        child: Stack(
+          children: [
+            if (_loading)
+              const Center(child: CircularProgressIndicator())
+            else if (_error != null || profile == null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spaceL),
+                  child: Text(
+                    _error ?? 'Could not load Match-a-Raider.',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-            )
-          else
-            SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1080),
-                  child: ListView(
-                    padding: const EdgeInsets.all(AppTheme.spaceL),
-                    children: [
-                      _buildHeroCard(profile),
-                      const SizedBox(height: AppTheme.spaceM),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final wide = constraints.maxWidth >= 900;
-                          if (wide) {
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+              )
+            else
+              SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1080),
+                    child: ListView(
+                      padding: const EdgeInsets.all(AppTheme.spaceL),
+                      children: [
+                        _buildHeroCard(profile),
+                        const SizedBox(height: AppTheme.spaceM),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final wide = constraints.maxWidth >= 900;
+                            if (wide) {
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 11,
+                                    child: _buildProfileEditor(profile),
+                                  ),
+                                  const SizedBox(width: AppTheme.spaceL),
+                                  Expanded(
+                                    flex: 12,
+                                    child: _buildFeedAndInvites(profile),
+                                  ),
+                                ],
+                              );
+                            }
+                            return Column(
                               children: [
-                                Expanded(
-                                  flex: 11,
-                                  child: _buildProfileEditor(profile),
-                                ),
-                                const SizedBox(width: AppTheme.spaceL),
-                                Expanded(
-                                  flex: 12,
-                                  child: _buildFeedAndInvites(profile),
-                                ),
+                                _buildProfileEditor(profile),
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildFeedAndInvites(profile),
                               ],
                             );
-                          }
-                          return Column(
-                            children: [
-                              _buildProfileEditor(profile),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _buildFeedAndInvites(profile),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

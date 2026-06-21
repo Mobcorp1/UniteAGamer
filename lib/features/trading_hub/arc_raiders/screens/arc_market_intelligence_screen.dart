@@ -52,47 +52,44 @@ class _ArcMarketIntelligenceScreenState
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: StreamBuilder<List<ArcBlueprintDropReport>>(
-              stream: _blueprintRepository.watchRecentReports(limit: 320),
-              builder: (context, reportsSnapshot) {
-                final reports =
-                    reportsSnapshot.data ?? const <ArcBlueprintDropReport>[];
+      body: ArcRaidersScreenShell(
+        useSafeArea: true,
+        showAdBanner: false,
+        child: StreamBuilder<List<ArcBlueprintDropReport>>(
+          stream: _blueprintRepository.watchRecentReports(limit: 320),
+          builder: (context, reportsSnapshot) {
+            final reports =
+                reportsSnapshot.data ?? const <ArcBlueprintDropReport>[];
 
-                return StreamBuilder<Map<String, ArcBlueprintState>>(
-                  stream: _blueprintRepository.watchMyBlueprintStates(),
-                  builder: (context, blueprintStateSnapshot) {
-                    final blueprintStates =
-                        blueprintStateSnapshot.data ??
-                        <String, ArcBlueprintState>{};
+            return StreamBuilder<Map<String, ArcBlueprintState>>(
+              stream: _blueprintRepository.watchMyBlueprintStates(),
+              builder: (context, blueprintStateSnapshot) {
+                final blueprintStates =
+                    blueprintStateSnapshot.data ??
+                    <String, ArcBlueprintState>{};
 
-                    return StreamBuilder<Map<String, ArcScrappyState>>(
-                      stream: _scrappyRepository.watchMyScrappyStates(),
-                      builder: (context, scrappySnapshot) {
-                        final scrappyStates =
-                            scrappySnapshot.data ?? <String, ArcScrappyState>{};
+                return StreamBuilder<Map<String, ArcScrappyState>>(
+                  stream: _scrappyRepository.watchMyScrappyStates(),
+                  builder: (context, scrappySnapshot) {
+                    final scrappyStates =
+                        scrappySnapshot.data ?? <String, ArcScrappyState>{};
 
-                        return _buildBody(
-                          context,
-                          reports: reports,
-                          blueprintStates: blueprintStates,
-                          scrappyStates: scrappyStates,
-                          loading:
-                              reportsSnapshot.connectionState ==
-                                  ConnectionState.waiting &&
-                              reports.isEmpty,
-                        );
-                      },
+                    return _buildBody(
+                      context,
+                      reports: reports,
+                      blueprintStates: blueprintStates,
+                      scrappyStates: scrappyStates,
+                      loading:
+                          reportsSnapshot.connectionState ==
+                              ConnectionState.waiting &&
+                          reports.isEmpty,
                     );
                   },
                 );
               },
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }
