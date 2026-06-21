@@ -1098,7 +1098,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 ),
               ),
               child: Text(
-                'Overview keeps the exact in-game order. Double tap any tile to enlarge it and view where-to-find tips.',
+                mediaQuery.orientation == Orientation.landscape
+                    ? 'Overview keeps the exact in-game order. Pinch to zoom, drag to pan, double tap any tile to enlarge it.'
+                    : 'Overview keeps the exact in-game order. Double tap any tile to enlarge it and view where-to-find tips.',
                 textAlign: TextAlign.center,
                 style: AppTheme.bodyTextStyle(
                   fontSize: 12,
@@ -1110,64 +1112,75 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             SizedBox(
               width: constraints.maxWidth,
               height: fittedHeight,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: naturalWidth,
-                  height: naturalHeight,
-                  child: GridView.builder(
-                    itemCount: filtered.length,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: spacing,
-                          mainAxisSpacing: spacing,
-                          childAspectRatio: childAspectRatio,
-                        ),
-                    itemBuilder: (context, index) {
-                      final blueprint = filtered[index];
-                      final state =
-                          states[blueprint.id] ??
-                          ArcBlueprintState.empty(blueprint.id);
-
-                      return GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onDoubleTap: () =>
-                            _openBlueprintPreview(blueprint, state),
-                        child: BlueprintTile(
-                          blueprint: blueprint,
-                          state: state,
-                          landscape: true,
-                          rarityColor: _rarityColor(blueprint.rarity),
-                          isSelectionMode: _selectionMode,
-                          isSelected: _selectedBlueprintIds.contains(
-                            blueprint.id,
+              child: InteractiveViewer(
+                panEnabled: true,
+                scaleEnabled: true,
+                constrained: true,
+                minScale: 1.0,
+                maxScale: mediaQuery.orientation == Orientation.landscape
+                    ? 4.0
+                    : 2.4,
+                boundaryMargin: const EdgeInsets.all(96),
+                clipBehavior: Clip.none,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: naturalWidth,
+                    height: naturalHeight,
+                    child: GridView.builder(
+                      itemCount: filtered.length,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: spacing,
+                            mainAxisSpacing: spacing,
+                            childAspectRatio: childAspectRatio,
                           ),
-                          onTap: () async {
-                            if (_selectionMode) {
-                              _toggleSelection(blueprint.id);
-                              return;
-                            }
+                      itemBuilder: (context, index) {
+                        final blueprint = filtered[index];
+                        final state =
+                            states[blueprint.id] ??
+                            ArcBlueprintState.empty(blueprint.id);
 
-                            if (state.owned) {
-                              await _openBlueprintEditor(blueprint, state);
-                            } else {
-                              await _markMissingAsOwned(blueprint, state);
-                            }
-                          },
-                          onLongPress: () {
-                            if (_selectionMode) {
-                              _toggleSelection(blueprint.id);
-                            } else {
-                              _enterSelectionMode(blueprint.id);
-                            }
-                          },
-                        ),
-                      );
-                    },
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onDoubleTap: () =>
+                              _openBlueprintPreview(blueprint, state),
+                          child: BlueprintTile(
+                            blueprint: blueprint,
+                            state: state,
+                            landscape: true,
+                            rarityColor: _rarityColor(blueprint.rarity),
+                            isSelectionMode: _selectionMode,
+                            isSelected: _selectedBlueprintIds.contains(
+                              blueprint.id,
+                            ),
+                            onTap: () async {
+                              if (_selectionMode) {
+                                _toggleSelection(blueprint.id);
+                                return;
+                              }
+
+                              if (state.owned) {
+                                await _openBlueprintEditor(blueprint, state);
+                              } else {
+                                await _markMissingAsOwned(blueprint, state);
+                              }
+                            },
+                            onLongPress: () {
+                              if (_selectionMode) {
+                                _toggleSelection(blueprint.id);
+                              } else {
+                                _enterSelectionMode(blueprint.id);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

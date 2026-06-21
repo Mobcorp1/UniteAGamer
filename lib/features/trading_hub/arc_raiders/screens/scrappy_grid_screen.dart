@@ -259,7 +259,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           title: Text(
             'Clear ${item.name}?',
             style: AppTheme.tradingHeading(
-              fontSize: 22,
+              fontSize: 20,
               color: Colors.redAccent,
             ),
           ),
@@ -478,8 +478,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         final rawWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : 320.0;
-        final panelWidth = rawWidth.clamp(236.0, 336.0).toDouble();
-        const spacing = AppTheme.spaceS;
+        final isWide = rawWidth >= 720;
+        final panelWidth = rawWidth
+            .clamp(236.0, isWide ? 420.0 : 328.0)
+            .toDouble();
+        const spacing = 6.0;
 
         if (items.length == 1) {
           return Center(child: tileFor(items.first, panelWidth));
@@ -505,32 +508,13 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           );
         }
 
-        if (items.length == 3) {
-          return Center(
-            child: SizedBox(
-              width: panelWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  tileFor(items[0], halfWidth),
-                  const SizedBox(height: spacing),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      tileFor(items[1], halfWidth),
-                      const SizedBox(width: spacing),
-                      tileFor(items[2], halfWidth),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final columns = items.length <= 4 ? 2 : 3;
+        final columns = items.length <= 4
+            ? 2
+            : rawWidth >= 720
+            ? 4
+            : 3;
         final tileWidth = ((panelWidth - (spacing * (columns - 1))) / columns)
-            .clamp(92.0, 156.0)
+            .clamp(88.0, 156.0)
             .toDouble();
 
         return Center(
@@ -604,15 +588,10 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
+        constraints: const BoxConstraints(maxWidth: 430),
         child: Container(
           margin: EdgeInsets.zero,
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.spaceM,
-            AppTheme.spaceM,
-            AppTheme.spaceM,
-            AppTheme.spaceM,
-          ),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
           decoration: AppTheme.tradingCardDecoration(
             radius: 28,
             borderColor: color.withValues(alpha: 0.34),
@@ -657,9 +636,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   height: 1.25,
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceM),
+              const SizedBox(height: 8),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 336),
+                constraints: const BoxConstraints(maxWidth: 392),
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   spacing: AppTheme.spaceS,
@@ -682,9 +661,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceS),
+              const SizedBox(height: 8),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 336),
+                constraints: const BoxConstraints(maxWidth: 392),
                 child: SizedBox(
                   width: double.infinity,
                   height: 34,
@@ -712,7 +691,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceM),
+              const SizedBox(height: 10),
               child ?? _buildAdaptiveTileWrap(items, states),
             ],
           ),
@@ -825,16 +804,20 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         final isTablet = stageWidth >= 680;
 
         final centreWidth = isWide
-            ? 390.0
+            ? 430.0
             : isTablet
-            ? 360.0
-            : (stageWidth * 0.84).clamp(286.0, 340.0).toDouble();
+            ? 392.0
+            : (stageWidth * 0.88).clamp(286.0, 348.0).toDouble();
 
-        final centreHeight = isWide ? 510.0 : 492.0;
-        final sideWidth = centreWidth * (isWide ? 0.78 : 0.74);
-        final sideHeight = centreHeight * 0.86;
-        final sideOffset = (centreWidth * (isWide ? 0.72 : 0.62))
-            .clamp(212.0, 292.0)
+        final centreHeight = isWide
+            ? 456.0
+            : isTablet
+            ? 444.0
+            : 430.0;
+        final sideWidth = centreWidth * (isWide ? 0.76 : 0.72);
+        final sideHeight = centreHeight * 0.84;
+        final sideOffset = (centreWidth * (isWide ? 0.76 : 0.66))
+            .clamp(204.0, 326.0)
             .toDouble();
 
         Widget ringCard({
@@ -927,7 +910,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             }
           },
           child: SizedBox(
-            height: centreHeight + 58,
+            height: centreHeight + 42,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -937,7 +920,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     xOffset: -sideOffset,
                     width: sideWidth,
                     height: sideHeight,
-                    top: 38,
+                    top: 30,
                     scale: 0.96,
                     opacity: 0.58,
                     active: false,
@@ -948,7 +931,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     xOffset: sideOffset,
                     width: sideWidth,
                     height: sideHeight,
-                    top: 38,
+                    top: 30,
                     scale: 0.96,
                     opacity: 0.58,
                     active: false,
