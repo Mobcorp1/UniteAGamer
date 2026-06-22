@@ -1111,7 +1111,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               ),
               child: Text(
                 mediaQuery.orientation == Orientation.landscape
-                    ? 'Overview keeps the exact in-game order. Pinch to zoom, drag to pan, double tap any tile to enlarge it.'
+                    ? 'Overview keeps the exact in-game order. Pinch to zoom, drag to pan, and use mouse or trackpad zoom on web.'
                     : 'Overview keeps the exact in-game order. Double tap any tile to enlarge it and view where-to-find tips.',
                 textAlign: TextAlign.center,
                 style: AppTheme.bodyTextStyle(
@@ -1130,9 +1130,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 constrained: true,
                 minScale: 1.0,
                 maxScale: mediaQuery.orientation == Orientation.landscape
-                    ? 4.0
+                    ? 5.0
                     : 2.4,
-                boundaryMargin: const EdgeInsets.all(96),
+                boundaryMargin: const EdgeInsets.all(192),
                 clipBehavior: Clip.none,
                 child: FittedBox(
                   fit: BoxFit.contain,
