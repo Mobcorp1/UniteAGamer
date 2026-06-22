@@ -75,171 +75,129 @@ class ArcBetaFirstRun {
   }
 }
 
+class ArcProfileCompletionTask {
+  const ArcProfileCompletionTask({
+    required this.label,
+    required this.complete,
+    required this.weight,
+    required this.action,
+  });
+
+  final String label;
+  final bool complete;
+  final int weight;
+  final String action;
+}
+
 class ArcProfileCompletionSummary {
   const ArcProfileCompletionSummary({
     required this.percent,
     required this.completed,
     required this.total,
+    required this.tasks,
   });
 
   final int percent;
   final int completed;
   final int total;
+  final List<ArcProfileCompletionTask> tasks;
+
+  ArcProfileCompletionTask? get nextTask {
+    for (final task in tasks) {
+      if (!task.complete) return task;
+    }
+    return null;
+  }
+
+  String get strengthLabel {
+    if (percent >= 90) return 'Elite';
+    if (percent >= 70) return 'Strong';
+    if (percent >= 40) return 'Good';
+    return 'Weak';
+  }
 
   static Future<ArcProfileCompletionSummary> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final checks = <bool>[
-      (prefs.getString('displayName') ?? '').trim().isNotEmpty,
-      (prefs.getString('region') ?? '').trim().isNotEmpty,
-      (prefs.getStringList('platforms') ?? const <String>[]).isNotEmpty,
-      (prefs.getString('communicationStyle') ?? '').trim().isNotEmpty,
-      (prefs.getStringList('playstyles') ?? const <String>[]).isNotEmpty,
-      (prefs.getStringList('topFiveBlueprints') ?? const <String>[]).isNotEmpty,
+    final tasks = <ArcProfileCompletionTask>[
+      ArcProfileCompletionTask(
+        label: 'Add display name',
+        complete: (prefs.getString('displayName') ?? '').trim().isNotEmpty,
+        weight: 10,
+        action: 'Finish your basic profile',
+      ),
+      ArcProfileCompletionTask(
+        label: 'Add region',
+        complete: (prefs.getString('region') ?? '').trim().isNotEmpty,
+        weight: 15,
+        action: 'Add your region for better squad and trade matching',
+      ),
+      ArcProfileCompletionTask(
+        label: 'Add platforms',
+        complete:
+            (prefs.getStringList('platforms') ?? const <String>[]).isNotEmpty,
+        weight: 15,
+        action: 'Choose your gaming platforms',
+      ),
+      ArcProfileCompletionTask(
+        label: 'Add communication style',
+        complete: (prefs.getString('communicationStyle') ?? '')
+            .trim()
+            .isNotEmpty,
+        weight: 15,
+        action: 'Set voice, text, pings or no preference',
+      ),
+      ArcProfileCompletionTask(
+        label: 'Add playstyles',
+        complete:
+            (prefs.getStringList('playstyles') ?? const <String>[]).isNotEmpty,
+        weight: 15,
+        action: 'Pick the kind of raider you are',
+      ),
+      ArcProfileCompletionTask(
+        label: 'Add Top 5 blueprints',
+        complete:
+            (prefs.getStringList('topFiveBlueprints') ?? const <String>[])
+                .length >=
+            5,
+        weight: 15,
+        action: 'Choose your Top 5 wanted blueprints',
+      ),
+      ArcProfileCompletionTask(
+        label: 'Create first listing',
+        complete: prefs.getBool('hasCreatedFirstTradeListing') ?? false,
+        weight: 10,
+        action: 'Create your first duplicate-for-wanted trade listing',
+      ),
+      ArcProfileCompletionTask(
+        label: 'Save favourite loadout',
+        complete: prefs.getBool('hasSavedFavouriteLoadout') ?? false,
+        weight: 5,
+        action: 'Save one personal go-to ARC loadout',
+      ),
     ];
-    final completed = checks.where((item) => item).length;
-    final percent = ((completed / checks.length) * 100).round();
+
+    final completed = tasks.where((task) => task.complete).length;
+    final totalWeight = tasks.fold<int>(0, (sum, task) => sum + task.weight);
+    final completeWeight = tasks
+        .where((task) => task.complete)
+        .fold<int>(0, (sum, task) => sum + task.weight);
+    final percent = totalWeight == 0
+        ? 0
+        : ((completeWeight / totalWeight) * 100).round();
+
     return ArcProfileCompletionSummary(
       percent: percent,
       completed: completed,
-      total: checks.length,
-    );
-  }
-}
-
-class ArcDeveloperToolsCard extends StatefulWidget {
-  const ArcDeveloperToolsCard({super.key, this.compact = false});
-
-  final bool compact;
-
-  @override
-  State<ArcDeveloperToolsCard> createState() => _ArcDeveloperToolsCardState();
-}
-
-class _ArcDeveloperToolsCardState extends State<ArcDeveloperToolsCard> {
-  String _status = 'Ready';
-
-  Future<void> _run(String label, Future<void> Function() action) async {
-    await action();
-    if (!mounted) return;
-    setState(() => _status = label);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(label), backgroundColor: AppTheme.darkBackground),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(widget.compact ? 10 : 14),
-      decoration: BoxDecoration(
-        color: AppTheme.tradingCardBackground.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.4)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonPink.withValues(alpha: 0.12),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.developer_mode_rounded,
-                color: AppTheme.neonPink,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Developer Tools',
-                  style: AppTheme.tradingHeading(
-                    fontSize: widget.compact ? 15 : 18,
-                    color: AppTheme.neonPink,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Closed beta reset controls: $_status',
-            style: AppTheme.bodyTextStyle(fontSize: 11, color: Colors.white70),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _DevButton(
-                label: 'Reset onboarding',
-                onPressed: () =>
-                    _run('Onboarding reset', ArcBetaFirstRun.resetOnboarding),
-              ),
-              _DevButton(
-                label: 'Force onboarding',
-                onPressed: () => _run(
-                  'Onboarding forced',
-                  () => ArcBetaFirstRun.setFlag(
-                    ArcBetaFirstRunKeys.forceOnboarding,
-                    true,
-                  ),
-                ),
-              ),
-              _DevButton(
-                label: 'Complete onboarding',
-                onPressed: () => _run(
-                  'Onboarding complete',
-                  ArcBetaFirstRun.markOnboardingComplete,
-                ),
-              ),
-              _DevButton(
-                label: 'Reset tutorials',
-                onPressed: () =>
-                    _run('Tutorials reset', ArcBetaFirstRun.resetTutorials),
-              ),
-              _DevButton(
-                label: 'Reset all',
-                onPressed: () => _run(
-                  'Beta progress reset',
-                  ArcBetaFirstRun.resetAllBetaProgress,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DevButton extends StatelessWidget {
-  const _DevButton({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppTheme.neonCyan,
-        side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.5)),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-      ),
-      child: Text(label),
+      total: tasks.length,
+      tasks: tasks,
     );
   }
 }
 
 class ArcProfileCompletionCard extends StatefulWidget {
-  const ArcProfileCompletionCard({super.key});
+  const ArcProfileCompletionCard({super.key, this.compact = false});
+
+  final bool compact;
 
   @override
   State<ArcProfileCompletionCard> createState() =>
@@ -252,22 +210,36 @@ class _ArcProfileCompletionCardState extends State<ArcProfileCompletionCard> {
   @override
   void initState() {
     super.initState();
-    ArcProfileCompletionSummary.load().then((value) {
-      if (mounted) setState(() => _summary = value);
-    });
+    _load();
+  }
+
+  Future<void> _load() async {
+    final value = await ArcProfileCompletionSummary.load();
+    if (mounted) setState(() => _summary = value);
   }
 
   @override
   Widget build(BuildContext context) {
     final summary = _summary;
     if (summary == null) return const SizedBox.shrink();
+    final nextTask = summary.nextTask;
+    final visibleTasks = summary.tasks
+        .take(widget.compact ? 4 : summary.tasks.length)
+        .toList();
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(widget.compact ? 12 : 14),
       decoration: BoxDecoration(
-        color: AppTheme.tradingCardBackground.withValues(alpha: 0.9),
+        color: AppTheme.tradingCardBackground.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.36)),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.38)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,13 +247,16 @@ class _ArcProfileCompletionCardState extends State<ArcProfileCompletionCard> {
         children: [
           Row(
             children: [
-              const Icon(Icons.person_search_rounded, color: AppTheme.neonCyan),
+              const Icon(
+                Icons.verified_user_outlined,
+                color: AppTheme.neonCyan,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Profile Completion',
+                  'Complete Your Profile',
                   style: AppTheme.tradingHeading(
-                    fontSize: 17,
+                    fontSize: widget.compact ? 15 : 18,
                     color: AppTheme.neonCyan,
                   ),
                 ),
@@ -309,8 +284,93 @@ class _ArcProfileCompletionCardState extends State<ArcProfileCompletionCard> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${summary.completed}/${summary.total} beta essentials complete',
+            'Profile Strength: ${summary.strengthLabel} • ${summary.completed}/${summary.total} essentials complete',
             style: AppTheme.bodyTextStyle(fontSize: 11, color: Colors.white70),
+          ),
+          if (nextTask != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.neonPink.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppTheme.neonPink.withValues(alpha: 0.28),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.bolt_rounded,
+                    color: AppTheme.neonPink,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Next: ${nextTask.action}',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        isBold: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final task in visibleTasks) _CompletionChip(task: task),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompletionChip extends StatelessWidget {
+  const _CompletionChip({required this.task});
+
+  final ArcProfileCompletionTask task;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = task.complete ? AppTheme.neonCyan : Colors.white54;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: task.complete ? 0.12 : 0.06),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: color.withValues(alpha: task.complete ? 0.42 : 0.24),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            task.complete
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            color: color,
+            size: 14,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            task.label,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 10,
+              color: color,
+              isBold: task.complete,
+            ),
           ),
         ],
       ),

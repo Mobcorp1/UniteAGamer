@@ -341,7 +341,9 @@ class _MyHubScreenState extends State<MyHubScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const ArcDeveloperToolsCard(compact: true),
+                        const ArcProfileCompletionCard(),
+                        const SizedBox(height: AppTheme.spaceXS),
+                        const SizedBox.shrink(),
                         const SizedBox(height: AppTheme.spaceXS),
                         const _HubAdSlot(),
                         const SizedBox(height: AppTheme.spaceXS),
