@@ -19,17 +19,17 @@ class ArcCompanionBottomDock extends StatelessWidget {
     final active = activeLabel.trim().toLowerCase();
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      minimum: const EdgeInsets.fromLTRB(18, 0, 18, 6),
       child: Container(
         clipBehavior: Clip.hardEdge,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 22),
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceS,
-          vertical: AppTheme.spaceS,
+          vertical: 4,
         ),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.035),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
@@ -101,8 +101,8 @@ class _ArcMicButton extends StatelessWidget {
           onTap: onTap,
           child: Container(
             clipBehavior: Clip.hardEdge,
-            width: 64,
-            height: 64,
+            width: 58,
+            height: 58,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppTheme.neonPink.withValues(alpha: 0.22),
@@ -120,7 +120,7 @@ class _ArcMicButton extends StatelessWidget {
             child: const Icon(
               Icons.mic_rounded,
               color: AppTheme.neonPink,
-              size: 32,
+              size: 29,
             ),
           ),
         ),
@@ -150,17 +150,17 @@ class _DockButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7),
+        padding: const EdgeInsets.symmetric(vertical: 3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 3),
+            Icon(icon, color: color, size: 19),
+            const SizedBox(height: 1),
             Text(
               label,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 color: active ? AppTheme.neonPink : Colors.white70,
                 isBold: true,
               ),

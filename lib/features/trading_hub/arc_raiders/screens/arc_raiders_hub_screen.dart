@@ -40,11 +40,11 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     _ArcHubFeature(
       title: 'My Hub',
       subtitle:
-          'Track owned, missing and duplicate blueprints and collection progress.',
+          'Your ARC command centre: loadouts, hunts, trades, intel and progression.',
       icon: Icons.dashboard_customize_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
-      assetName: 'my_hub_card.webp',
+      assetName: 'arc_hub_unite_hub.webp',
       builder: (_) => const MyHubScreen(),
     ),
     _ArcHubFeature(

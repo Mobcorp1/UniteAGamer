@@ -106,7 +106,7 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
     super.key,
     required this.child,
     this.maxWidth = 1160,
-    this.padding = const EdgeInsets.fromLTRB(10, 6, 10, 10),
+    this.padding = const EdgeInsets.fromLTRB(8, 2, 8, 8),
     this.alignTop = true,
   });
 
@@ -168,8 +168,8 @@ class ArcRaidersPageList extends StatelessWidget {
     super.key,
     required this.children,
     this.maxWidth = 1160,
-    this.padding = const EdgeInsets.fromLTRB(10, 6, 10, 10),
-    this.bottomPadding = 96,
+    this.padding = const EdgeInsets.fromLTRB(8, 2, 8, 8),
+    this.bottomPadding = 76,
     this.physics,
   });
 
@@ -228,8 +228,8 @@ class ArcRaidersPageHeader extends StatelessWidget {
       if (logoAsset != null) {
         return Image.asset(
           logoAsset!,
-          width: compact ? 34 : 42,
-          height: compact ? 34 : 42,
+          width: compact ? 28 : 34,
+          height: compact ? 28 : 34,
           filterQuality: FilterQuality.high,
           errorBuilder: (_, _, _) => Icon(
             icon ?? Icons.dashboard_rounded,
@@ -240,8 +240,8 @@ class ArcRaidersPageHeader extends StatelessWidget {
       }
 
       return Container(
-        width: compact ? 34 : 40,
-        height: compact ? 34 : 40,
+        width: compact ? 28 : 32,
+        height: compact ? 28 : 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: accent.withValues(alpha: 0.12),
@@ -257,7 +257,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
         child: Icon(
           icon ?? Icons.dashboard_rounded,
           color: accent,
-          size: compact ? 19 : 22,
+          size: compact ? 16 : 18,
         ),
       );
     }
@@ -265,12 +265,12 @@ class ArcRaidersPageHeader extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? AppTheme.spaceS : AppTheme.spaceM,
-        vertical: compact ? AppTheme.spaceXS : AppTheme.spaceS,
+        vertical: compact ? 2 : 4,
       ),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: compact ? 16 : 18,
-        borderColor: accent.withValues(alpha: 0.38),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(compact ? 12 : 14),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
       ),
       child: Row(
         children: [
@@ -285,7 +285,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                   maxLines: compact ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.tradingHeading(
-                    fontSize: compact ? 17 : 21,
+                    fontSize: compact ? 15 : 18,
                     color: accent,
                   ),
                 ),
@@ -293,10 +293,10 @@ class ArcRaidersPageHeader extends StatelessWidget {
                   const SizedBox(height: AppTheme.spaceXS),
                   Text(
                     subtitle!,
-                    maxLines: compact ? 2 : 2,
+                    maxLines: compact ? 1 : 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: compact ? 11.5 : 12.5,
+                      fontSize: compact ? 10.5 : 11.5,
                       color: Colors.white70,
                       isBold: true,
                     ).copyWith(height: 1.30),
