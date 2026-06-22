@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../widgets/arc_ad_banner_card.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -341,10 +340,6 @@ class _MyHubScreenState extends State<MyHubScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const ArcProfileCompletionCard(),
-                        const SizedBox(height: AppTheme.spaceXS),
-                        const ArcBetaAnnouncementCard(compact: true),
-                        const SizedBox(height: AppTheme.spaceXS),
                         const _HubAdSlot(),
                         const SizedBox(height: AppTheme.spaceXS),
                         _ArcBottomDock(
