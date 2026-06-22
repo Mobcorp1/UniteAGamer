@@ -139,7 +139,7 @@ class _OnboardingBasicProfileScreenState
 
   Future<void> _saveProfile() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
-      setState(() => _stepIndex = 3);
+      setState(() => _stepIndex = 0);
       return;
     }
 
@@ -180,19 +180,19 @@ class _OnboardingBasicProfileScreenState
   }
 
   void _next() {
-    if (_stepIndex == 2 && !_acceptedTraderCode) {
+    if (_stepIndex == 0) {
+      _saveProfile();
+      return;
+    }
+
+    if (_stepIndex == 1 && !_acceptedTraderCode) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Accept the Trader Code to continue.')),
       );
       return;
     }
 
-    if (_stepIndex == 3) {
-      _saveProfile();
-      return;
-    }
-
-    if (_stepIndex == 4) {
+    if (_stepIndex == 2) {
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
@@ -494,9 +494,9 @@ class _OnboardingBasicProfileScreenState
           Text(
             _stepIndex == 0
                 ? 'BUILD YOUR RAIDER PROFILE'
-                : _stepIndex == 2
-                ? 'READY TO LAUNCH'
-                : 'TRUSTED TRADING',
+                : _stepIndex == 1
+                ? 'TRUSTED TRADING'
+                : 'READY TO LAUNCH',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -508,83 +508,13 @@ class _OnboardingBasicProfileScreenState
           const SizedBox(height: 14),
           Text(
             _stepIndex == 0
-                ? 'Three quick steps, then the rest can be completed inside My Hub.'
+                ? 'Add the essentials first. Advanced setup can wait.'
+                : _stepIndex == 1
+                ? 'Accept the trust rules before entering the trading network.'
                 : 'Your ARC command centre is ready.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, height: 1.35),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _welcomeStep() {
-    return _contentShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _screenTitle(
-            'Welcome',
-            subtitle:
-                'Your account unlocks tracking, trading, intel and trusted raider tools.',
-          ),
-          const SizedBox(height: 24),
-          _infoTile(
-            icon: Icons.track_changes_rounded,
-            title: 'Blueprint Tracking',
-            body: 'Track what you own, what you need and what you can trade.',
-            selected: false,
-          ),
-          const SizedBox(height: 14),
-          _infoTile(
-            icon: Icons.handshake_rounded,
-            title: 'Trading',
-            body: 'Create listings, find offers and plan safer swaps.',
-          ),
-          const SizedBox(height: 14),
-          _infoTile(
-            icon: Icons.radar_rounded,
-            title: 'Intel',
-            body: 'Use reports to make better raid decisions.',
-          ),
-          const SizedBox(height: 22),
-          _primaryButton('GET STARTED'),
-        ],
-      ),
-    );
-  }
-
-  Widget _featuresStep() {
-    return _contentShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _screenTitle(
-            'Built for Arc Raiders',
-            subtitle:
-                'Tracking, trading and trust are enabled for your account.',
-          ),
-          const SizedBox(height: 24),
-          _infoTile(
-            icon: Icons.inventory_2_outlined,
-            title: 'Track',
-            body: 'Blueprints, resources, duplicates and what you need.',
-            selected: false,
-          ),
-          const SizedBox(height: 14),
-          _infoTile(
-            icon: Icons.swap_horiz_rounded,
-            title: 'Trade',
-            body: 'Find traders, create listings and make offers.',
-          ),
-          const SizedBox(height: 14),
-          _infoTile(
-            icon: Icons.verified_user_outlined,
-            title: 'Trust',
-            body: 'Build a profile that helps people trade with confidence.',
-          ),
-          const SizedBox(height: 22),
-          _primaryButton('NEXT'),
         ],
       ),
     );
@@ -689,7 +619,7 @@ class _OnboardingBasicProfileScreenState
             _screenTitle(
               'Step 1 of 3 - Raider Profile',
               subtitle:
-                  'Add the essentials now. Everything advanced moves into Complete Your Profile after launch.',
+                  'Add only the launch essentials now. Advanced setup moves into Profile Settings after onboarding.',
             ),
             const SizedBox(height: 22),
             TextFormField(
@@ -770,7 +700,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 34),
           Text(
-            "YOU'RE ALL SET!",
+            'Step 3 of 3 - Ready to Launch',
             textAlign: TextAlign.center,
             style: AppTheme.neonTextStyle(
               fontSize: 31,
@@ -780,7 +710,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 14),
           const Text(
-            'Welcome to the UAG network.\\nAdvanced setup now lives in Complete Your Profile.',
+            'Welcome to the UAG network.\\nBlueprints, trades, squads and alerts are ready from My Hub.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, height: 1.38),
           ),
@@ -797,10 +727,8 @@ class _OnboardingBasicProfileScreenState
       child: KeyedSubtree(
         key: ValueKey<int>(_stepIndex),
         child: switch (_stepIndex) {
-          0 => _welcomeStep(),
-          1 => _featuresStep(),
-          2 => _traderCodeStep(),
-          3 => _profileStep(),
+          0 => _profileStep(),
+          1 => _traderCodeStep(),
           _ => _completeStep(),
         },
       ),
@@ -866,7 +794,7 @@ class _OnboardingBasicProfileScreenState
                         children: [
                           Row(
                             children: [
-                              if (_stepIndex > 0 && _stepIndex < 2)
+                              if (_stepIndex > 0 && _stepIndex < _stepCount - 1)
                                 IconButton(
                                   tooltip: 'Back',
                                   onPressed: _back,
