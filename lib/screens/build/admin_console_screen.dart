@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -246,6 +247,15 @@ class _AdminConsoleBody extends StatelessWidget {
                         );
                       },
                     ),
+
+                    const SizedBox(height: AppTheme.spaceXL),
+                    _sectionHeader(
+                      title: 'Closed Beta Tools',
+                      subtitle:
+                          'Admin-only reset controls for onboarding, tutorial replay and beta testing utilities.',
+                    ),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const ArcBetaDeveloperToolsCard(),
                     const SizedBox(height: AppTheme.spaceXL),
                     Row(
                       children: [

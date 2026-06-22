@@ -343,8 +343,6 @@ class _MyHubScreenState extends State<MyHubScreen> {
                       children: [
                         const ArcProfileCompletionCard(),
                         const SizedBox(height: AppTheme.spaceXS),
-                        const ArcBetaDeveloperToolsCard(compact: true),
-                        const SizedBox(height: AppTheme.spaceXS),
                         const ArcBetaAnnouncementCard(compact: true),
                         const SizedBox(height: AppTheme.spaceXS),
                         const _HubAdSlot(),
