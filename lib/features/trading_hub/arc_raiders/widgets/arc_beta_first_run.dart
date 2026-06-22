@@ -378,6 +378,215 @@ class _CompletionChip extends StatelessWidget {
   }
 }
 
+class ArcBetaDeveloperToolsCard extends StatefulWidget {
+  const ArcBetaDeveloperToolsCard({super.key, this.compact = false});
+
+  final bool compact;
+
+  @override
+  State<ArcBetaDeveloperToolsCard> createState() =>
+      _ArcBetaDeveloperToolsCardState();
+}
+
+class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
+  bool _busy = false;
+
+  Future<void> _run(String message, Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    await action();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.darkBackground.withValues(alpha: 0.96),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = <_ArcBetaDevAction>[
+      _ArcBetaDevAction(
+        label: 'Reset onboarding',
+        icon: Icons.restart_alt_rounded,
+        onTap: () => _run(
+          'Onboarding reset. Relaunch or return to onboarding to test.',
+          ArcBetaFirstRun.resetOnboarding,
+        ),
+      ),
+      _ArcBetaDevAction(
+        label: 'Complete onboarding',
+        icon: Icons.check_circle_outline_rounded,
+        onTap: () => _run(
+          'Onboarding marked complete.',
+          ArcBetaFirstRun.markOnboardingComplete,
+        ),
+      ),
+      _ArcBetaDevAction(
+        label: 'Replay Blueprint guide',
+        icon: Icons.grid_view_rounded,
+        onTap: () => _run(
+          'Blueprint tutorial will replay on next Blueprint Tracker visit.',
+          () => ArcBetaFirstRun.setFlag(
+            ArcBetaFirstRunKeys.hasSeenBlueprintTutorial,
+            false,
+          ),
+        ),
+      ),
+      _ArcBetaDevAction(
+        label: 'Replay Trading guide',
+        icon: Icons.swap_horiz_rounded,
+        onTap: () => _run(
+          'Trading tutorial will replay on next Trading visit.',
+          () => ArcBetaFirstRun.setFlag(
+            ArcBetaFirstRunKeys.hasSeenTradingTutorial,
+            false,
+          ),
+        ),
+      ),
+      _ArcBetaDevAction(
+        label: 'Replay all tutorials',
+        icon: Icons.replay_circle_filled_rounded,
+        onTap: () => _run(
+          'All tutorials reset for closed beta testing.',
+          ArcBetaFirstRun.resetTutorials,
+        ),
+      ),
+      _ArcBetaDevAction(
+        label: 'Reset beta progress',
+        icon: Icons.warning_amber_rounded,
+        onTap: () => _run(
+          'Closed beta progress reset.',
+          ArcBetaFirstRun.resetAllBetaProgress,
+        ),
+      ),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(widget.compact ? 10 : 14),
+      decoration: BoxDecoration(
+        color: AppTheme.tradingCardBackground.withValues(alpha: 0.90),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.34)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonPink.withValues(alpha: 0.08),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.developer_mode_rounded,
+                size: widget.compact ? 17 : 20,
+                color: AppTheme.neonPink,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Closed Beta Tools',
+                  style: AppTheme.tradingHeading(
+                    fontSize: widget.compact ? 14 : 17,
+                    color: AppTheme.neonPink,
+                  ),
+                ),
+              ),
+              if (_busy)
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Reset onboarding, replay tutorials and test first-run flows without reinstalling.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: widget.compact ? 10 : 12,
+              color: Colors.white.withValues(alpha: 0.72),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final action in actions)
+                _ArcBetaDevChip(action: action, disabled: _busy),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ArcBetaDevAction {
+  const _ArcBetaDevAction({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+}
+
+class _ArcBetaDevChip extends StatelessWidget {
+  const _ArcBetaDevChip({required this.action, required this.disabled});
+
+  final _ArcBetaDevAction action;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: disabled ? null : action.onTap,
+      child: Opacity(
+        opacity: disabled ? 0.45 : 1,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppTheme.neonPink.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: AppTheme.neonPink.withValues(alpha: 0.28),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(action.icon, color: AppTheme.neonPink, size: 14),
+              const SizedBox(width: 5),
+              Text(
+                action.label,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white.withValues(alpha: 0.86),
+                  isBold: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ArcFirstRunDialog extends StatelessWidget {
   const _ArcFirstRunDialog({
     required this.title,
