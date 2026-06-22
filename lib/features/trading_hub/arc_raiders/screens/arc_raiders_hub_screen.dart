@@ -44,7 +44,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       icon: Icons.dashboard_customize_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
-      assetName: 'arc_hub_unite_hub.webp',
+      assetName: 'my_hub_card.webp',
       builder: (_) => const MyHubScreen(),
     ),
     _ArcHubFeature(
