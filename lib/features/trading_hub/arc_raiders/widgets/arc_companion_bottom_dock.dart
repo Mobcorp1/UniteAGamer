@@ -19,22 +19,22 @@ class ArcCompanionBottomDock extends StatelessWidget {
     final active = activeLabel.trim().toLowerCase();
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(18, 0, 18, 6),
+      minimum: const EdgeInsets.fromLTRB(12, 0, 12, 3),
       child: Container(
-        clipBehavior: Clip.hardEdge,
-        margin: const EdgeInsets.symmetric(horizontal: 22),
+        clipBehavior: Clip.none,
+        margin: const EdgeInsets.symmetric(horizontal: 36),
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceS,
-          vertical: 4,
+          vertical: 1,
         ),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.035),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
               color: AppTheme.neonCyan.withValues(alpha: 0.13),
-              blurRadius: 4,
+              blurRadius: 3,
               spreadRadius: 0,
             ),
           ],
@@ -92,35 +92,38 @@ class _ArcMicButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceS),
-      child: ElectricChargeBorder(
-        active: true,
-        radius: 999,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onTap,
-          child: Container(
-            clipBehavior: Clip.hardEdge,
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.neonPink.withValues(alpha: 0.22),
-              border: Border.all(
-                color: AppTheme.neonPink.withValues(alpha: 0.78),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.neonPink.withValues(alpha: 0.22),
-                  blurRadius: 18,
-                  spreadRadius: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Transform.translate(
+        offset: const Offset(0, -5),
+        child: ElectricChargeBorder(
+          active: true,
+          radius: 999,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: onTap,
+            child: Container(
+              clipBehavior: Clip.hardEdge,
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.neonPink.withValues(alpha: 0.22),
+                border: Border.all(
+                  color: AppTheme.neonPink.withValues(alpha: 0.78),
                 ),
-              ],
-            ),
-            child: const Icon(
-              Icons.mic_rounded,
-              color: AppTheme.neonPink,
-              size: 29,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.neonPink.withValues(alpha: 0.22),
+                    blurRadius: 14,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.mic_rounded,
+                color: AppTheme.neonPink,
+                size: 25,
+              ),
             ),
           ),
         ),
@@ -150,17 +153,17 @@ class _DockButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
+        padding: const EdgeInsets.symmetric(vertical: 1),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 19),
-            const SizedBox(height: 1),
+            Icon(icon, color: color, size: 17),
+            const SizedBox(height: 0),
             Text(
               label,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
-                fontSize: 9,
+                fontSize: 8.5,
                 color: active ? AppTheme.neonPink : Colors.white70,
                 isBold: true,
               ),

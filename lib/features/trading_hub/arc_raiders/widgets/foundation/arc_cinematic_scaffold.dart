@@ -31,6 +31,7 @@ class ArcCinematicScaffold extends StatelessWidget {
           showGrid: false,
         ),
         SafeArea(
+          minimum: const EdgeInsets.fromLTRB(0, 0, 0, 0),
           child: Padding(padding: padding, child: child),
         ),
       ],

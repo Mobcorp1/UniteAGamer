@@ -13,11 +13,12 @@ class ArcSystemsPageWrapper extends StatelessWidget {
       children: [
         const UagCinematicBackground(),
         SafeArea(
+          minimum: const EdgeInsets.fromLTRB(0, 0, 0, 0),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1320),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
                 child: child,
               ),
             ),
