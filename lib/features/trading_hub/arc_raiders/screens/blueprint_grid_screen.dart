@@ -35,6 +35,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   ArcBlueprintFilter _selectedFilter = ArcBlueprintFilter.all;
   bool _selectionMode = false;
   bool _overviewMode = false;
+  bool _showOverviewHint = true;
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
 
@@ -1084,7 +1085,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             mediaQuery.padding.top -
             mediaQuery.padding.bottom;
         final reservedChromeHeight =
-            mediaQuery.orientation == Orientation.landscape ? 138.0 : 232.0;
+            mediaQuery.orientation == Orientation.landscape ? 96.0 : 178.0;
         final availableGridHeight = (safeHeight - reservedChromeHeight).clamp(
           160.0,
           safeHeight,
@@ -1099,28 +1100,65 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.90),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.20),
+            if (_showOverviewHint)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  constraints: BoxConstraints(
+                    maxWidth: mediaQuery.orientation == Orientation.landscape
+                        ? 430
+                        : constraints.maxWidth,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.22),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.help_outline,
+                        color: AppTheme.neonCyan.withValues(alpha: 0.88),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Exact in-game order • Pinch to zoom • Drag to pan',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 12,
+                            color: Colors.white70,
+                            isBold: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () => setState(() => _showOverviewHint = false),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: Icon(
+                            Icons.close,
+                            color: Colors.white.withValues(alpha: 0.72),
+                            size: 15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: Text(
-                mediaQuery.orientation == Orientation.landscape
-                    ? 'Overview keeps the exact in-game order. Pinch to zoom, drag to pan, and use mouse or trackpad zoom on web.'
-                    : 'Overview keeps the exact in-game order. Double tap any tile to enlarge it and view where-to-find tips.',
-                textAlign: TextAlign.center,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
-                  isBold: true,
-                ),
-              ),
-            ),
             SizedBox(
               width: constraints.maxWidth,
               height: fittedHeight,
@@ -1477,27 +1515,53 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen()));
-        },
-        icon: const Icon(Icons.feedback_outlined),
-        label: const Text('Feedback'),
-      ),
       extendBody: true,
       extendBodyBehindAppBar: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
+        toolbarHeight: 48,
         titleSpacing: 0,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         title: Text(
           'BLUEPRINT INTEL',
           style: AppTheme.tradingHeading(
-            fontSize: 26,
+            fontSize: 24,
             color: AppTheme.neonCyan,
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                );
+              },
+              icon: const Icon(Icons.feedback_outlined, size: 15),
+              label: const Text('Feedback'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.neonPink,
+                side: BorderSide(
+                  color: AppTheme.neonPink.withValues(alpha: 0.65),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
+                minimumSize: const Size(0, 34),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Track'),
       body: Stack(
@@ -1517,7 +1581,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     AppTheme.pagePadding.left,
                     8,
                     AppTheme.pagePadding.right,
-                    AppTheme.pagePadding.bottom + 108,
+                    AppTheme.pagePadding.bottom + 82,
                   ),
                   children: [
                     _overviewMode
