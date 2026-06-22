@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/arc_trade_listing.dart';
@@ -88,59 +90,71 @@ class _ArcCreateTradeListingScreenState
     final profile = _profile;
 
     return Scaffold(
+      extendBody: true,
+      backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(title: const Text('Create Trade Listing')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (profile == null)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16),
-              child: Text('Load or complete your trader profile first.'),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                'Listing will use ${profile.region} - ${profile.platform}',
-              ),
+      body: ArcRaidersScreenShell(
+        useSafeArea: true,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+              children: [
+                if (profile == null)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: Text('Load or complete your trader profile first.'),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      'Listing will use ${profile.region} - ${profile.platform}',
+                    ),
+                  ),
+                TextField(
+                  controller: _offeredBlueprintIdController,
+                  decoration: AppTheme.tradingInputDecoration(
+                    label: 'Offered Blueprint ID',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _offeredBlueprintNameController,
+                  decoration: AppTheme.tradingInputDecoration(
+                    label: 'Offered Blueprint Name',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _wantedBlueprintIdController,
+                  decoration: AppTheme.tradingInputDecoration(
+                    label: 'Wanted Blueprint ID',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _wantedBlueprintNameController,
+                  decoration: AppTheme.tradingInputDecoration(
+                    label: 'Wanted Blueprint Name',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _noteController,
+                  maxLines: 4,
+                  decoration: AppTheme.tradingInputDecoration(label: 'Notes'),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _saving || profile == null ? null : _save,
+                  child: Text(_saving ? 'Saving...' : 'Create Listing'),
+                ),
+              ],
             ),
-          TextField(
-            controller: _offeredBlueprintIdController,
-            decoration: const InputDecoration(
-              labelText: 'Offered Blueprint ID',
-            ),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _offeredBlueprintNameController,
-            decoration: const InputDecoration(
-              labelText: 'Offered Blueprint Name',
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _wantedBlueprintIdController,
-            decoration: const InputDecoration(labelText: 'Wanted Blueprint ID'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _wantedBlueprintNameController,
-            decoration: const InputDecoration(
-              labelText: 'Wanted Blueprint Name',
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _noteController,
-            maxLines: 4,
-            decoration: const InputDecoration(labelText: 'Notes'),
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _saving || profile == null ? null : _save,
-            child: Text(_saving ? 'Saving...' : 'Create Listing'),
-          ),
-        ],
+        ),
       ),
     );
   }

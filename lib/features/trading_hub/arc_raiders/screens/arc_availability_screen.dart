@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import '../models/arc_availability.dart';
 import '../repositories/arc_trader_profile_repository.dart';
@@ -145,62 +146,69 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
       extendBody: true,
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(title: const Text('Availability')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: ListView(
-                    padding: const EdgeInsets.all(AppTheme.spaceL),
-                    children: [
-                      heroCard(),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Container(
-                        padding: const EdgeInsets.all(AppTheme.spaceL),
-                        decoration: AppTheme.tradingCardDecoration(radius: 22),
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _availability.scheduleType,
-                          decoration: AppTheme.tradingInputDecoration(
-                            label: 'Schedule Type',
+      body: ArcRaidersScreenShell(
+        useSafeArea: false,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 900),
+                    child: ListView(
+                      padding: const EdgeInsets.all(AppTheme.spaceL),
+                      children: [
+                        heroCard(),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Container(
+                          padding: const EdgeInsets.all(AppTheme.spaceL),
+                          decoration: AppTheme.tradingCardDecoration(
+                            radius: 22,
                           ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'weekly',
-                              child: Text('Same every week'),
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _availability.scheduleType,
+                            decoration: AppTheme.tradingInputDecoration(
+                              label: 'Schedule Type',
                             ),
-                            DropdownMenuItem(
-                              value: 'rotation',
-                              child: Text('Two-week rotation'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'flexible',
-                              child: Text('Flexible / shift-based'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value == null) return;
-                            _setScheduleType(value);
-                          },
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'weekly',
+                                child: Text('Same every week'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'rotation',
+                                child: Text('Two-week rotation'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'flexible',
+                                child: Text('Flexible / shift-based'),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value == null) return;
+                              _setScheduleType(value);
+                            },
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      ...List.generate(_availability.weeks.length, (weekIndex) {
-                        final week = _availability.weeks[weekIndex];
-                        return _weekCard(week, weekIndex);
-                      }),
-                      ElevatedButton.icon(
-                        onPressed: _isSaving ? null : _save,
-                        icon: const Icon(Icons.save_rounded),
-                        label: Text(
-                          _isSaving ? 'Saving...' : 'Save Availability',
+                        const SizedBox(height: AppTheme.spaceM),
+                        ...List.generate(_availability.weeks.length, (
+                          weekIndex,
+                        ) {
+                          final week = _availability.weeks[weekIndex];
+                          return _weekCard(week, weekIndex);
+                        }),
+                        ElevatedButton.icon(
+                          onPressed: _isSaving ? null : _save,
+                          icon: const Icon(Icons.save_rounded),
+                          label: Text(
+                            _isSaving ? 'Saving...' : 'Save Availability',
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
