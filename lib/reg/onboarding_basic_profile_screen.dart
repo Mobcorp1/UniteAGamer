@@ -401,67 +401,6 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
-  Widget _infoTile({
-    required IconData icon,
-    required String title,
-    required String body,
-    bool selected = false,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: selected ? 0.58 : 0.40),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: selected
-              ? AppTheme.neonCyan
-              : Colors.white.withValues(alpha: 0.16),
-          width: selected ? 1.8 : 1.1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: selected ? AppTheme.neonCyan : Colors.white60,
-            size: 31,
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppTheme.neonCyan,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.8,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    height: 1.28,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            selected ? Icons.check_circle_rounded : Icons.info_outline_rounded,
-            color: selected ? AppTheme.neonCyan : Colors.white38,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _leftHeroPanel() {
     return Container(
       width: double.infinity,
