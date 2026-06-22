@@ -21,7 +21,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
     _FeatureSlide(
       title: 'My Hub',
       subtitle: 'Track rewards, referrals, reputation and hunt priorities.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_my_hub.webp',
+      image: 'assets/images/arc_raiders/hub/my_hub_card.webp',
       icon: Icons.dashboard_customize_outlined,
       accent: AppTheme.neonCyan,
     ),
