@@ -106,6 +106,169 @@ class TradingRepository {
     }
   }
 
+  void _ensureNonNegativeBundles({
+    required int smallBundles,
+    required int mediumBundles,
+    required int largeBundles,
+  }) {
+    if (smallBundles < 0 || mediumBundles < 0 || largeBundles < 0) {
+      throw Exception('Bundle quantities cannot be negative.');
+    }
+  }
+
+  List<String> _normalisedUniqueTextItems(Iterable<String> values) {
+    final seen = <String>{};
+    final output = <String>[];
+    for (final raw in values) {
+      final value = raw.trim();
+      if (value.isEmpty) continue;
+      final key = value.toLowerCase().replaceAll(RegExp(r'\\s+'), ' ');
+      if (seen.add(key)) output.add(value);
+    }
+    return output;
+  }
+
+  void _ensureListingInputSafe({
+    required String offeredItem,
+    required String wantedText,
+    required TradingListingType listingType,
+    required bool wantsNothing,
+    required int smallBundles,
+    required int mediumBundles,
+    required int largeBundles,
+    required List<String> offeredBlueprintNames,
+    required List<String> offeredAssetNames,
+    required List<String> offeredTradeItemIds,
+    required List<String> wantedBlueprintNames,
+    required List<String> wantedAssetNames,
+    required List<String> wantedTradeItemIds,
+  }) {
+    _ensureNonNegativeBundles(
+      smallBundles: smallBundles,
+      mediumBundles: mediumBundles,
+      largeBundles: largeBundles,
+    );
+
+    final offeredCount = _normalisedUniqueTextItems([
+      offeredItem,
+      ...offeredBlueprintNames,
+      ...offeredAssetNames,
+      ...offeredTradeItemIds,
+    ]).length;
+
+    if (offeredCount == 0 &&
+        smallBundles == 0 &&
+        mediumBundles == 0 &&
+        largeBundles == 0) {
+      throw Exception(
+        'Add at least one item, blueprint or seed bundle before listing.',
+      );
+    }
+
+    if (!wantsNothing && listingType == TradingListingType.specificWant) {
+      final wantedCount = _normalisedUniqueTextItems([
+        wantedText,
+        ...wantedBlueprintNames,
+        ...wantedAssetNames,
+        ...wantedTradeItemIds,
+      ]).length;
+      if (wantedCount == 0) {
+        throw Exception(
+          'Add what you want back, or switch to open offers/free giveaway.',
+        );
+      }
+    }
+  }
+
+  void _ensureListingCanReceiveOffer(TradingListing listing, String senderUid) {
+    if (listing.id.trim().isEmpty) {
+      throw Exception('This listing cannot receive offers yet.');
+    }
+    if (listing.ownerUid == senderUid) {
+      throw Exception('You cannot make an offer on your own listing.');
+    }
+    if (!listing.active) {
+      throw Exception('This listing is no longer active.');
+    }
+    if (listing.expiresAt.isBefore(DateTime.now())) {
+      throw Exception('This listing has expired.');
+    }
+  }
+
+  void _ensureOfferInputSafe({
+    required TradingListing listing,
+    required String senderUid,
+    required String offeredBlueprintText,
+    required int smallBundles,
+    required int mediumBundles,
+    required int largeBundles,
+    required bool includesResources,
+    required String resourcesText,
+    required List<String> offeredTradeItemIds,
+    required bool isGiveawayClaim,
+  }) {
+    _ensureListingCanReceiveOffer(listing, senderUid);
+    _ensureNonNegativeBundles(
+      smallBundles: smallBundles,
+      mediumBundles: mediumBundles,
+      largeBundles: largeBundles,
+    );
+
+    if (isGiveawayClaim || listing.wantsNothing) return;
+
+    final seedTotal =
+        (smallBundles * 10) + (mediumBundles * 50) + (largeBundles * 100);
+    final hasBlueprintText = offeredBlueprintText.trim().isNotEmpty;
+    final hasResources = includesResources && resourcesText.trim().isNotEmpty;
+    final hasTradeItems = offeredTradeItemIds.any(
+      (item) => item.trim().isNotEmpty,
+    );
+
+    if (!hasBlueprintText &&
+        !hasResources &&
+        !hasTradeItems &&
+        seedTotal == 0) {
+      throw Exception(
+        'Add at least one blueprint, resource or seed bundle before sending an offer.',
+      );
+    }
+  }
+
+  Future<void> _ensureNoDuplicatePendingOffer({
+    required String senderUid,
+    required String listingId,
+  }) async {
+    final duplicate = await _offersCollection
+        .where('senderUid', isEqualTo: senderUid)
+        .where('listingId', isEqualTo: listingId)
+        .where('status', isEqualTo: TradingOfferStatus.pending.name)
+        .limit(1)
+        .get();
+
+    if (duplicate.docs.isNotEmpty) {
+      throw Exception('You already have a pending offer on this listing.');
+    }
+  }
+
+  Future<void> _ensureNoSessionAlreadyExistsForOffer(String offerId) async {
+    final existing = await _sessionsCollection
+        .where('offerId', isEqualTo: offerId)
+        .limit(1)
+        .get();
+    if (existing.docs.isNotEmpty) {
+      throw Exception('A trade session already exists for this offer.');
+    }
+  }
+
+  void _ensureSessionCanBeUpdated(TradingSession session) {
+    if (session.status == TradingSessionStatus.completed ||
+        session.status == TradingSessionStatus.cancelled ||
+        session.status == TradingSessionStatus.betrayal ||
+        session.status == TradingSessionStatus.noShow) {
+      throw Exception('This trade session is already closed.');
+    }
+  }
+
   Map<String, dynamic>? _buildNotificationPayload({
     required String targetUid,
     required TradingNotificationType type,
@@ -450,6 +613,22 @@ class TradingRepository {
     final uid = currentUid;
     if (uid == null) return;
 
+    _ensureListingInputSafe(
+      offeredItem: offeredItem,
+      wantedText: wantedText,
+      listingType: listingType,
+      wantsNothing: wantsNothing,
+      smallBundles: smallBundles,
+      mediumBundles: mediumBundles,
+      largeBundles: largeBundles,
+      offeredBlueprintNames: offeredBlueprintNames,
+      offeredAssetNames: offeredAssetNames,
+      offeredTradeItemIds: offeredTradeItemIds,
+      wantedBlueprintNames: wantedBlueprintNames,
+      wantedAssetNames: wantedAssetNames,
+      wantedTradeItemIds: wantedTradeItemIds,
+    );
+
     await ensureTradingProfileExists();
     final profile = await getTradingProfile();
 
@@ -605,6 +784,20 @@ class TradingRepository {
     final uid = currentUid;
     if (uid == null) return;
 
+    _ensureOfferInputSafe(
+      listing: listing,
+      senderUid: uid,
+      offeredBlueprintText: offeredBlueprintText,
+      smallBundles: smallBundles,
+      mediumBundles: mediumBundles,
+      largeBundles: largeBundles,
+      includesResources: includesResources,
+      resourcesText: resourcesText,
+      offeredTradeItemIds: offeredTradeItemIds,
+      isGiveawayClaim: isGiveawayClaim,
+    );
+    await _ensureNoDuplicatePendingOffer(senderUid: uid, listingId: listing.id);
+
     await ensureTradingProfileExists();
     final profile = await getTradingProfile();
 
@@ -674,6 +867,13 @@ class TradingRepository {
     if (listing.ownerUid != uid) {
       throw Exception('Only the listing owner can accept this offer.');
     }
+    if (!listing.active) {
+      throw Exception('This listing is no longer active.');
+    }
+    if (listing.expiresAt.isBefore(DateTime.now())) {
+      throw Exception('This listing has expired.');
+    }
+    await _ensureNoSessionAlreadyExistsForOffer(offer.id);
 
     Future<String> loadEmbarkId(String traderUid) async {
       try {
@@ -1060,6 +1260,7 @@ class TradingRepository {
   }) async {
     final uid = currentUid;
     _ensureSessionParticipant(session, uid);
+    _ensureSessionCanBeUpdated(session);
 
     if (session.bookingProposedByUid.isNotEmpty &&
         session.bookingProposedByUid == uid) {
@@ -1177,6 +1378,7 @@ class TradingRepository {
   Future<void> shareMyEmbarkId(TradingSession session, String embarkId) async {
     final uid = currentUid;
     _ensureSessionParticipant(session, uid);
+    _ensureSessionCanBeUpdated(session);
 
     final trimmedEmbarkId = embarkId.trim();
     final now = DateTime.now();
@@ -1218,6 +1420,7 @@ class TradingRepository {
   Future<void> setMyReadyState(TradingSession session, bool ready) async {
     final uid = currentUid;
     _ensureSessionParticipant(session, uid);
+    _ensureSessionCanBeUpdated(session);
 
     final nextSession = uid == session.traderOneUid
         ? session.copyWith(traderOneReady: ready, updatedAt: DateTime.now())
@@ -1254,6 +1457,7 @@ class TradingRepository {
   }) async {
     final uid = currentUid;
     _ensureSessionParticipant(session, uid);
+    _ensureSessionCanBeUpdated(session);
     if (firstDropUid != session.traderOneUid &&
         firstDropUid != session.traderTwoUid) {
       throw Exception('First drop must be one of the session traders.');
@@ -1293,6 +1497,15 @@ class TradingRepository {
     if (uid == null) throw Exception('You must be signed in.');
     if (uid != session.traderOneUid && uid != session.traderTwoUid) {
       throw Exception('You are not part of this trade session.');
+    }
+
+    _ensureSessionCanBeUpdated(session);
+    if (outcome != TradingSessionStatus.completed &&
+        outcome != TradingSessionStatus.noShow &&
+        outcome != TradingSessionStatus.betrayal) {
+      throw Exception(
+        'Choose completed, no-show or betrayal as the final session outcome.',
+      );
     }
 
     final updates = <String, dynamic>{
