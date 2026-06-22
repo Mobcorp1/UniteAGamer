@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
@@ -44,7 +45,18 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Intro prompt disabled for launch polish; help remains available in UI.
+      ArcBetaFirstRun.showOnce(
+        context: context,
+        key: ArcBetaFirstRunKeys.hasSeenBlueprintTutorial,
+        title: 'WELCOME TO BLUEPRINT TRACKER',
+        accent: AppTheme.neonCyan,
+        steps: const [
+          'Tap owned blueprints to build your collection.',
+          'Add duplicates so Trade Assist can find useful swaps.',
+          'Set your Top 5 wanted blueprints for faster matching.',
+          'Use missing, owned and duplicate filters to plan your next raid.',
+        ],
+      );
     });
   }
 

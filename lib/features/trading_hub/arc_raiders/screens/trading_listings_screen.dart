@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
@@ -40,6 +41,25 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   bool _showLowRiskOnly = false;
   bool _showSeedsOnly = false;
   bool _showBundleOnly = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ArcBetaFirstRun.showOnce(
+        context: context,
+        key: ArcBetaFirstRunKeys.hasSeenTradingTutorial,
+        title: 'WELCOME TO TRADING',
+        accent: AppTheme.neonPink,
+        steps: const [
+          'Create or find a listing that matches your missing blueprints.',
+          'Request a trade and agree the item swap before the session.',
+          'Schedule the run, attend on time and complete safely.',
+          'Confirm the result afterwards to build trader reputation.',
+        ],
+      );
+    });
+  }
 
   @override
   void dispose() {
