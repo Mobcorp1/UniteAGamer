@@ -587,6 +587,188 @@ class _ArcBetaDevChip extends StatelessWidget {
   }
 }
 
+class ArcBetaAnnouncementCard extends StatelessWidget {
+  const ArcBetaAnnouncementCard({super.key, this.compact = false});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <String>[
+      'Trade reminders',
+      'Match reminders',
+      'Blueprint alerts',
+      'Beta news',
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(compact ? 10 : 14),
+      decoration: BoxDecoration(
+        color: AppTheme.tradingCardBackground.withValues(alpha: 0.90),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.32)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.08),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.campaign_rounded,
+                color: AppTheme.neonCyan,
+                size: compact ? 17 : 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Closed Beta Comms',
+                  style: AppTheme.tradingHeading(
+                    fontSize: compact ? 14 : 17,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: AppTheme.tradingPillDecoration(
+                  color: AppTheme.neonPink,
+                ),
+                child: Text(
+                  'LIVE',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: AppTheme.neonPink,
+                    isBold: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Notifications now support beta announcements, trade reminders and session action prompts.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: compact ? 10 : 12,
+              color: Colors.white.withValues(alpha: 0.72),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in items)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.28),
+                    ),
+                  ),
+                  child: Text(
+                    item,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 10,
+                      color: Colors.white.withValues(alpha: 0.86),
+                      isBold: true,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ArcNotificationActionStrip extends StatelessWidget {
+  const ArcNotificationActionStrip({
+    super.key,
+    required this.accent,
+    required this.isSessionReminder,
+    required this.onOpen,
+  });
+
+  final Color accent;
+  final bool isSessionReminder;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = isSessionReminder
+        ? <_ArcNotificationAction>[
+            _ArcNotificationAction(
+              'Attend',
+              Icons.check_circle_outline_rounded,
+            ),
+            _ArcNotificationAction('Reschedule', Icons.schedule_rounded),
+            _ArcNotificationAction('Cancel', Icons.cancel_outlined),
+          ]
+        : <_ArcNotificationAction>[
+            _ArcNotificationAction('Open', Icons.open_in_new_rounded),
+            _ArcNotificationAction('Review', Icons.fact_check_outlined),
+            _ArcNotificationAction('Later', Icons.access_time_rounded),
+          ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final action in actions)
+          InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: onOpen,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: accent.withValues(alpha: 0.26)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(action.icon, size: 14, color: accent),
+                  const SizedBox(width: 5),
+                  Text(
+                    action.label,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 10,
+                      color: Colors.white.withValues(alpha: 0.86),
+                      isBold: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ArcNotificationAction {
+  const _ArcNotificationAction(this.label, this.icon);
+
+  final String label;
+  final IconData icon;
+}
+
 class _ArcFirstRunDialog extends StatelessWidget {
   const _ArcFirstRunDialog({
     required this.title,

@@ -345,6 +345,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
                         const SizedBox(height: AppTheme.spaceXS),
                         const ArcBetaDeveloperToolsCard(compact: true),
                         const SizedBox(height: AppTheme.spaceXS),
+                        const ArcBetaAnnouncementCard(compact: true),
+                        const SizedBox(height: AppTheme.spaceXS),
                         const _HubAdSlot(),
                         const SizedBox(height: AppTheme.spaceXS),
                         _ArcBottomDock(
