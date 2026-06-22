@@ -31,7 +31,7 @@ class _OnboardingBasicProfileScreenState
   String _selectedPlatform = 'PC';
   String _selectedTimeZone = 'Europe/London';
 
-  static const int _stepCount = 5;
+  static const int _stepCount = 3;
 
   static const List<String> _countries = [
     'United Kingdom',
@@ -173,7 +173,7 @@ class _OnboardingBasicProfileScreenState
       }, SetOptions(merge: true));
 
       if (!mounted) return;
-      setState(() => _stepIndex = 4);
+      setState(() => _stepIndex = 1);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -493,10 +493,10 @@ class _OnboardingBasicProfileScreenState
           const SizedBox(height: 38),
           Text(
             _stepIndex == 0
-                ? 'WELCOME TO\nUAG TRADERS HUB'
-                : _stepIndex == 4
-                ? 'READY TO\nLAUNCH'
-                : 'TRACK. TRADE.\nTRUST.',
+                ? 'BUILD YOUR RAIDER PROFILE'
+                : _stepIndex == 2
+                ? 'READY TO LAUNCH'
+                : 'TRUSTED TRADING',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -508,7 +508,7 @@ class _OnboardingBasicProfileScreenState
           const SizedBox(height: 14),
           Text(
             _stepIndex == 0
-                ? 'The trusted network for Arc Raiders traders.'
+                ? 'Three quick steps, then the rest can be completed inside My Hub.'
                 : 'Your ARC command centre is ready.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, height: 1.35),
@@ -596,7 +596,7 @@ class _OnboardingBasicProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Trader Code',
+            'Step 2 of 3 - Trader Code',
             subtitle:
                 'UAG operates on trust. Accept the basics before entering the hub.',
           ),
@@ -687,8 +687,9 @@ class _OnboardingBasicProfileScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _screenTitle(
-              'Create Profile',
-              subtitle: 'Build your raider identity.',
+              'Step 1 of 3 - Raider Profile',
+              subtitle:
+                  'Add the essentials now. Everything advanced moves into Complete Your Profile after launch.',
             ),
             const SizedBox(height: 22),
             TextFormField(
@@ -779,7 +780,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 14),
           const Text(
-            'Welcome to the UAG network.\nHappy trading, Raider.',
+            'Welcome to the UAG network.\\nAdvanced setup now lives in Complete Your Profile.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, height: 1.38),
           ),
@@ -865,7 +866,7 @@ class _OnboardingBasicProfileScreenState
                         children: [
                           Row(
                             children: [
-                              if (_stepIndex > 0 && _stepIndex < 4)
+                              if (_stepIndex > 0 && _stepIndex < 2)
                                 IconButton(
                                   tooltip: 'Back',
                                   onPressed: _back,
