@@ -38,14 +38,14 @@ class BlueprintTile extends StatelessWidget {
 
     return ElectricChargeBorder(
       active: isSelected,
-      radius: 12,
+      radius: 10,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
           decoration: AppTheme.tradingCardDecoration(
-            radius: 12,
+            radius: 10,
             borderColor: accent.withValues(
               alpha: isSelected
                   ? 0.88
@@ -61,10 +61,10 @@ class BlueprintTile extends StatelessWidget {
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-              landscape ? 3 : 5,
-              landscape ? 3 : 5,
-              landscape ? 3 : 5,
-              landscape ? 2 : 3,
+              landscape ? 3 : 4,
+              landscape ? 3 : 4,
+              landscape ? 3 : 4,
+              landscape ? 2 : 2,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,13 +79,13 @@ class BlueprintTile extends StatelessWidget {
                     isSelected: isSelected,
                   ),
                 ),
-                SizedBox(height: landscape ? 2 : 4),
+                SizedBox(height: landscape ? 2 : 2),
                 Text(
                   blueprint.name,
                   maxLines: landscape ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.tradingHeading(
-                    fontSize: landscape ? 9 : 12,
+                    fontSize: landscape ? 9 : 10,
                     color: owned ? Colors.white : Colors.white70,
                   ),
                 ),
@@ -95,7 +95,7 @@ class BlueprintTile extends StatelessWidget {
                     blueprint.rarityLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white54, fontSize: 10),
+                    style: const TextStyle(color: Colors.white54, fontSize: 9),
                   ),
                 ],
               ],

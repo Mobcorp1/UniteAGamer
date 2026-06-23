@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
-import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class BlueprintFilterBar extends StatelessWidget {
@@ -29,96 +28,73 @@ class BlueprintFilterBar extends StatelessWidget {
     MapEntry(ArcBlueprintFilter.duplicates, 'Dupes'),
   ];
 
-  String _filterLabel(ArcBlueprintFilter filter) {
-    final label = _filters.firstWhere((entry) => entry.key == filter).value;
-    return '$label (${counts[filter] ?? 0})';
-  }
-
-  Widget _buildViewField() {
-    return ElectricChargeBorder(
-      active: true,
-      radius: 14,
-      child: DropdownButtonFormField<ArcBlueprintFilter>(
-        initialValue: selectedFilter,
-        decoration: AppTheme.tradingInputDecoration(label: 'View'),
-        dropdownColor: AppTheme.cardBackgroundAlt,
-        items: _filters
-            .map(
-              (entry) => DropdownMenuItem<ArcBlueprintFilter>(
-                value: entry.key,
-                child: Text(_filterLabel(entry.key)),
-              ),
-            )
-            .toList(growable: false),
-        onChanged: (value) {
-          if (value != null) {
-            onFilterSelected(value);
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildSelectionField() {
-    if (!selectionMode) {
-      return OutlinedButton.icon(
-        onPressed: onEnterSelectionMode,
-        icon: const Icon(Icons.bolt_rounded),
-        label: const Text('Select'),
-      );
-    }
-
-    return ElectricChargeBorder(
-      active: true,
-      radius: 14,
-      child: DropdownButtonFormField<String>(
-        initialValue: null,
-        decoration: AppTheme.tradingInputDecoration(label: 'Select'),
-        dropdownColor: AppTheme.cardBackgroundAlt,
-        items: const [
-          DropdownMenuItem(value: 'all', child: Text('Select all visible')),
-          DropdownMenuItem(value: 'row', child: Text('Select row')),
-          DropdownMenuItem(value: 'column', child: Text('Select column')),
-          DropdownMenuItem(value: 'clear', child: Text('Clear selection')),
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          for (final entry in _filters) ...[
+            _BlueprintFilterChip(
+              label: '${entry.value} (${counts[entry.key] ?? 0})',
+              selected: selectedFilter == entry.key,
+              onTap: () => onFilterSelected(entry.key),
+            ),
+            const SizedBox(width: 8),
+          ],
+          _BlueprintFilterChip(
+            label: selectionMode ? 'Selecting' : 'Select',
+            selected: selectionMode,
+            onTap: onEnterSelectionMode,
+            accent: AppTheme.neonPink,
+          ),
         ],
-        onChanged: (value) {
-          if (value != null) {
-            onSelectionToolSelected?.call(value);
-          }
-        },
       ),
     );
   }
+}
+
+class _BlueprintFilterChip extends StatelessWidget {
+  const _BlueprintFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.accent = AppTheme.neonCyan,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 700;
-        final viewField = _buildViewField();
-        final selectionField = _buildSelectionField();
-
-        if (compact) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              viewField,
-              const SizedBox(height: AppTheme.spaceM),
-              selectionField,
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: viewField),
-            const SizedBox(width: AppTheme.spaceM),
-            Expanded(child: selectionField),
-          ],
-        );
-      },
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppTheme.fastAnimation,
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected
+              ? accent.withValues(alpha: 0.16)
+              : Colors.black.withValues(alpha: 0.20),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected
+                ? accent.withValues(alpha: 0.72)
+                : Colors.white.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTheme.buttonTextStyle(
+            color: selected ? accent : Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ),
     );
   }
 }
