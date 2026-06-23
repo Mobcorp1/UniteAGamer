@@ -226,14 +226,14 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     final selected = _features[_selectedIndex];
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.small(
+        tooltip: 'Feedback',
         onPressed: () {
           Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen()));
         },
-        icon: const Icon(Icons.feedback_outlined),
-        label: const Text('Feedback'),
+        child: const Icon(Icons.feedback_outlined),
       ),
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
@@ -1058,14 +1058,14 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     final selected = _trackingFeatures[_selectedIndex];
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.small(
+        tooltip: 'Feedback',
         onPressed: () {
           Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen()));
         },
-        icon: const Icon(Icons.feedback_outlined),
-        label: const Text('Feedback'),
+        child: const Icon(Icons.feedback_outlined),
       ),
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(

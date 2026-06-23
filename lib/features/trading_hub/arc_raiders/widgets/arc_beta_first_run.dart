@@ -57,6 +57,7 @@ class ArcBetaFirstRun {
     required String title,
     required List<String> steps,
     required Color accent,
+    Future<void> Function()? onShowMe,
   }) async {
     if (await hasSeen(key)) return;
     if (!context.mounted) return;
@@ -66,6 +67,7 @@ class ArcBetaFirstRun {
         title: title,
         steps: steps,
         accent: accent,
+        onShowMe: onShowMe,
         onDone: () async {
           await setFlag(key, true);
           if (dialogContext.mounted) Navigator.of(dialogContext).pop();
@@ -775,12 +777,14 @@ class _ArcFirstRunDialog extends StatelessWidget {
     required this.steps,
     required this.accent,
     required this.onDone,
+    this.onShowMe,
   });
 
   final String title;
   final List<String> steps;
   final Color accent;
   final Future<void> Function() onDone;
+  final Future<void> Function()? onShowMe;
 
   @override
   Widget build(BuildContext context) {
@@ -842,7 +846,16 @@ class _ArcFirstRunDialog extends StatelessWidget {
               children: [
                 TextButton(onPressed: onDone, child: const Text('Skip')),
                 const SizedBox(width: 8),
-                ElevatedButton(onPressed: onDone, child: const Text('Show Me')),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (onShowMe != null) {
+                      await onShowMe!();
+                      return;
+                    }
+                    await onDone();
+                  },
+                  child: const Text('Show Me'),
+                ),
               ],
             ),
           ],

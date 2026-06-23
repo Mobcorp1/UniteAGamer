@@ -29,7 +29,6 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
   bool _checking = true;
   bool _unlocking = false;
   bool _canUseBiometrics = false;
-  String? _message;
 
   @override
   void initState() {
@@ -57,7 +56,6 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
       setState(() {
         _checking = false;
         _canUseBiometrics = false;
-        _message = 'Biometric security is not available on this device.';
       });
     }
   }
@@ -67,7 +65,6 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
 
     setState(() {
       _unlocking = true;
-      _message = null;
     });
 
     try {
@@ -81,7 +78,6 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
       if (!authenticated) {
         setState(() {
           _unlocking = false;
-          _message = 'Biometric unlock was cancelled.';
         });
         return;
       }
@@ -94,7 +90,6 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
       if (!mounted) return;
       setState(() {
         _unlocking = false;
-        _message = 'Biometric unlock failed. Use password sign in instead.';
       });
     }
   }
@@ -152,7 +147,7 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
                         ),
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
-                          'SECURE RELOCK',
+                          'UNLOCK',
                           textAlign: TextAlign.center,
                           style: AppTheme.neonTextStyle(
                             fontSize: 30,
@@ -169,17 +164,6 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
                             height: 1.35,
                           ),
                         ),
-                        if (_message != null) ...[
-                          const SizedBox(height: AppTheme.spaceM),
-                          Text(
-                            _message!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppTheme.warningAmber,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
                         const SizedBox(height: AppTheme.spaceL),
                         if (_checking || _unlocking)
                           const CircularProgressIndicator(
