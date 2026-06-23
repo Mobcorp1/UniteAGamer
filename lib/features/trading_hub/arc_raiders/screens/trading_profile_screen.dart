@@ -267,10 +267,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: profile.referralCode.trim().isEmpty
-                                  ? null
-                                  : () =>
-                                        _copyReferralCode(profile.referralCode),
+                              onPressed: null,
                               icon: const Icon(Icons.copy_all_rounded),
                               label: const Text('Copy Code'),
                             ),
@@ -278,11 +275,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                           const SizedBox(width: AppTheme.spaceM),
                           Expanded(
                             child: OutlinedButton.icon(
-                              onPressed: profile.referralCode.trim().isEmpty
-                                  ? null
-                                  : () => _shareReferralCode(
-                                      profile.referralCode,
-                                    ),
+                              onPressed: null,
                               icon: const Icon(Icons.share_outlined),
                               label: const Text('Share Code'),
                             ),
