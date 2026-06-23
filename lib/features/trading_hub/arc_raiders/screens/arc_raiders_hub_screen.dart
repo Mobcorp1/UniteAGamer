@@ -64,7 +64,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
       assetName: 'arc_hub_referral_tools.webp',
-      builder: (_) => const MyHubScreen(),
+      builder: (_) => const ReferralToolsScreen(),
     ),
     _ArcHubFeature(
       title: 'Subscriptions',
