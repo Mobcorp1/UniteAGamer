@@ -72,7 +72,9 @@ Future<void> main() async {
 }
 
 class UAGTradersHubApp extends StatelessWidget {
-  const UAGTradersHubApp({super.key});
+  const UAGTradersHubApp({super.key, this.testMode = false});
+
+  final bool testMode;
 
   Route<dynamic> _buildRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -306,10 +308,12 @@ class UAGTradersHubApp extends StatelessWidget {
       title: 'UAG Arc Raiders Hub',
       theme: AppTheme.theme,
       scrollBehavior: const ArcAppScrollBehavior(),
-      navigatorKey: null,
+      navigatorKey: testMode ? null : TradingPushService.instance.navigatorKey,
       onGenerateRoute: _buildRoute,
       home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
+        stream: testMode
+            ? Stream<User?>.value(null)
+            : FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
