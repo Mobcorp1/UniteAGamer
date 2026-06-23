@@ -18,6 +18,7 @@ import 'arc_profile_edit_screen.dart';
 import 'arc_match_rider_screen.dart';
 import 'blueprint_grid_screen.dart';
 import 'my_hub_screen.dart';
+import 'referral_tools_screen.dart';
 import 'scrappy_grid_screen.dart';
 import 'smart_trade_assist_screen.dart';
 import '../../../../features/feature_access_gate.dart';
