@@ -480,16 +480,16 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             : 320.0;
         final isWide = rawWidth >= 720;
         final panelWidth = rawWidth
-            .clamp(236.0, isWide ? 420.0 : 328.0)
+            .clamp(252.0, isWide ? 560.0 : 372.0)
             .toDouble();
-        const spacing = 6.0;
+        const spacing = 5.0;
 
         if (items.length == 1) {
           return Center(child: tileFor(items.first, panelWidth));
         }
 
         final halfWidth = ((panelWidth - spacing) / 2)
-            .clamp(108.0, 164.0)
+            .clamp(112.0, 180.0)
             .toDouble();
 
         if (items.length == 2) {
@@ -508,13 +508,15 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           );
         }
 
-        final columns = items.length <= 4
-            ? 2
-            : rawWidth >= 720
+        final columns = rawWidth >= 900
+            ? 5
+            : rawWidth >= 640
             ? 4
+            : items.length <= 2
+            ? 2
             : 3;
         final tileWidth = ((panelWidth - (spacing * (columns - 1))) / columns)
-            .clamp(88.0, 156.0)
+            .clamp(82.0, 148.0)
             .toDouble();
 
         return Center(
@@ -588,12 +590,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 430),
+        constraints: const BoxConstraints(maxWidth: 580),
         child: Container(
           margin: EdgeInsets.zero,
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
           decoration: AppTheme.tradingCardDecoration(
-            radius: 28,
+            radius: 22,
             borderColor: color.withValues(alpha: 0.34),
             backgroundColor: AppTheme.cardBackgroundDeep.withValues(
               alpha: 0.94,
@@ -608,11 +610,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   Expanded(
                     child: Text(
                       title,
-                      maxLines: 2,
+                      maxLines: 1,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
                       style: AppTheme.tradingHeading(
-                        fontSize: 22,
+                        fontSize: 18,
                         color: color,
                       ),
                     ),
@@ -624,25 +626,25 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppTheme.spaceXS),
+              const SizedBox(height: 3),
               Text(
                 subtitle ?? _sectionSubtitle(items, states),
                 textAlign: TextAlign.center,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white60,
-                  fontSize: 12,
+                  fontSize: 11,
                   height: 1.25,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 392),
+                constraints: const BoxConstraints(maxWidth: 540),
                 child: Wrap(
                   alignment: WrapAlignment.center,
-                  spacing: AppTheme.spaceS,
-                  runSpacing: AppTheme.spaceS,
+                  spacing: 5,
+                  runSpacing: 5,
                   children: [
                     _ProgressPill(text: 'Need $neededTotal', color: color),
                     _ProgressPill(
@@ -661,12 +663,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 392),
+                constraints: const BoxConstraints(maxWidth: 540),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 34,
+                  height: 30,
                   child: OutlinedButton.icon(
                     onPressed: wantedTotal == 0
                         ? null
@@ -691,7 +693,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 7),
               child ?? _buildAdaptiveTileWrap(items, states),
             ],
           ),
@@ -804,16 +806,16 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         final isTablet = stageWidth >= 680;
 
         final centreWidth = isWide
-            ? 430.0
+            ? 520.0
             : isTablet
-            ? 392.0
-            : (stageWidth * 0.88).clamp(286.0, 348.0).toDouble();
+            ? 456.0
+            : (stageWidth * 0.94).clamp(304.0, 382.0).toDouble();
 
         final centreHeight = isWide
-            ? 456.0
+            ? 382.0
             : isTablet
-            ? 444.0
-            : 430.0;
+            ? 372.0
+            : 356.0;
         final sideWidth = centreWidth * (isWide ? 0.76 : 0.72);
         final sideHeight = centreHeight * 0.84;
         final sideOffset = (centreWidth * (isWide ? 0.76 : 0.66))
@@ -891,7 +893,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                           ? Icons.chevron_right_rounded
                           : Icons.chevron_left_rounded,
                       color: AppTheme.neonCyan,
-                      size: 36,
+                      size: 30,
                     ),
                   ),
                 ),
@@ -910,7 +912,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             }
           },
           child: SizedBox(
-            height: centreHeight + 42,
+            height: centreHeight + 28,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -1109,7 +1111,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 if (_mode == ArcScrappyTrackerMode.scrappy &&
                     _showFeedScrappy) ...[
                   const ScrappyFeedQueueSection(),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppTheme.spaceS),
                   ScrappyProgressHeader(
                     completion: completion,
                     ownedCount: ownedCount,
@@ -1122,7 +1124,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                         'Feed Scrappy is kept separate from tracker completion so food queue items do not affect upgrade totals.',
                     accentColor: AppTheme.neonPink,
                   ),
-                  const SizedBox(height: 112),
+                  const SizedBox(height: 74),
                 ] else ...[
                   ScrappyFilterBar(
                     selectedFilter: _selectedFilter,
@@ -1131,11 +1133,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       setState(() => _selectedFilter = filter);
                     },
                   ),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppTheme.spaceS),
                   _mode == ArcScrappyTrackerMode.scrappy
                       ? _buildScrappyList(filtered, states)
                       : _buildGroupedList(filtered, states),
-                  const SizedBox(height: AppTheme.spaceL),
+                  const SizedBox(height: AppTheme.spaceS),
                   ScrappyProgressHeader(
                     completion: completion,
                     ownedCount: ownedCount,
@@ -1153,7 +1155,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     },
                     accentColor: _modeAccent(),
                   ),
-                  const SizedBox(height: 112),
+                  const SizedBox(height: 74),
                 ],
                 const SizedBox(height: AppTheme.spaceXL),
               ],
