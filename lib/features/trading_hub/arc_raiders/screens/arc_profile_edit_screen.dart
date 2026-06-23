@@ -24,8 +24,6 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   final TextEditingController _regionController = TextEditingController();
   final TextEditingController _platformController = TextEditingController();
   final TextEditingController _timezoneController = TextEditingController();
-  final TextEditingController _referralCodeController = TextEditingController();
-  final TextEditingController _referredByController = TextEditingController();
 
   bool _visibleInSearch = true;
   bool _micOk = true;
@@ -78,8 +76,6 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     _regionController.dispose();
     _platformController.dispose();
     _timezoneController.dispose();
-    _referralCodeController.dispose();
-    _referredByController.dispose();
     super.dispose();
   }
 
@@ -92,8 +88,6 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     _regionController.text = profile.region;
     _platformController.text = profile.platform;
     _timezoneController.text = profile.timezone;
-    _referralCodeController.text = profile.referralCode;
-    _referredByController.text = profile.referredByCode;
     _serverPreference = _serverPreferences.contains(profile.serverPreference)
         ? profile.serverPreference
         : 'Automatic';
@@ -133,7 +127,6 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
           affiliateEnabled: _affiliateEnabled,
           payoutMethod: _payoutMethod == 'Not Set' ? '' : _payoutMethod,
           subscriptionStatus: _subscriptionStatus,
-          referredByCode: _referredByController.text.trim(),
           createdAt: _createdAt,
         ),
       );
@@ -298,7 +291,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Trader Identity',
+                        'Trader Identity + Reputation',
                         style: AppTheme.tradingHeading(
                           fontSize: 24,
                           color: AppTheme.neonCyan,
@@ -306,7 +299,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Keep your public trader profile sharp, searchable and trade-ready.',
+                        'Keep your profile focused on reputation, badges, archetypes and squad fit.',
                         style: TextStyle(color: Colors.white70, height: 1.35),
                       ),
                     ],
@@ -384,12 +377,6 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         validator: (v) => _required(v, 'UAG Name'),
                       ),
                       _field(_embarkIdController, 'Embark ID'),
-                      _field(
-                        _referralCodeController,
-                        'Referral Code',
-                        enabled: false,
-                      ),
-                      _field(_referredByController, 'Referred By Code'),
                     ],
                   ),
                   sectionCard(
