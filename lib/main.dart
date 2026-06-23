@@ -306,7 +306,7 @@ class UAGTradersHubApp extends StatelessWidget {
       title: 'UAG Arc Raiders Hub',
       theme: AppTheme.theme,
       scrollBehavior: const ArcAppScrollBehavior(),
-      navigatorKey: TradingPushService.instance.navigatorKey,
+      navigatorKey: null,
       onGenerateRoute: _buildRoute,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
