@@ -314,18 +314,95 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     _clearSelection();
   }
 
-  Future<void> _applyBulkDupes(Map<String, ArcBlueprintState> states) async {
-    final updates = _selectedBlueprintIds
-        .map((id) {
-          final current = states[id] ?? ArcBlueprintState.empty(id);
-          return current.copyWith(dupesOwned: current.dupesOwned + 1);
+  Future<void> _applySelectedMissingAndOwnRest(
+    List<ArcBlueprint> allBlueprints,
+    Map<String, ArcBlueprintState> states,
+  ) async {
+    if (_selectedBlueprintIds.isEmpty || allBlueprints.isEmpty) return;
+
+    final selectedMissingCount = _selectedBlueprintIds.length;
+    final ownedCount = allBlueprints.length - selectedMissingCount;
+
+    final confirmed = await UagDialogs.confirm(
+      context: context,
+      title: 'Mark selected as missing?',
+      message:
+          'This will mark $selectedMissingCount selected blueprints as missing and automatically mark the other $ownedCount blueprints as owned. No intel or duplicate prompts will be shown.',
+      confirmLabel: 'Apply Missing Selection',
+      cancelLabel: 'Cancel',
+      borderColor: AppTheme.neonPink,
+    );
+
+    if (confirmed != true) return;
+
+    final now = DateTime.now();
+    final updates = allBlueprints
+        .map((blueprint) {
+          final isMissing = _selectedBlueprintIds.contains(blueprint.id);
+          final current =
+              states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+          return current.copyWith(
+            owned: !isMissing,
+            dupesOwned: isMissing ? 0 : current.dupesOwned,
+            updatedAt: now,
+          );
         })
         .toList(growable: false);
 
     await _repository.saveBlueprintStates(updates);
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added 1 dupe to ${updates.length} blueprints.')),
+      SnackBar(
+        content: Text(
+          '$selectedMissingCount marked missing. $ownedCount marked owned.',
+        ),
+      ),
+    );
+
+    setState(() {
+      _selectedFilter = ArcBlueprintFilter.missing;
+      _selectionMode = false;
+      _selectedBlueprintIds.clear();
+    });
+  }
+
+  Future<void> _applyBulkDupes(Map<String, ArcBlueprintState> states) async {
+    if (_selectedBlueprintIds.isEmpty) return;
+
+    final selectedIndex = await UagDialogs.chooseIndex(
+      context: context,
+      title: 'Set duplicate amount',
+      itemCount: 10,
+      labelBuilder: (index) {
+        final count = index + 1;
+        return count == 1 ? 'Add 1 duplicate' : 'Add $count duplicates';
+      },
+    );
+
+    if (selectedIndex == null) return;
+
+    final dupeAmount = selectedIndex + 1;
+    final updates = _selectedBlueprintIds
+        .map((id) {
+          final current = states[id] ?? ArcBlueprintState.empty(id);
+          return current.copyWith(
+            owned: true,
+            dupesOwned: current.dupesOwned + dupeAmount,
+            updatedAt: DateTime.now(),
+          );
+        })
+        .toList(growable: false);
+
+    await _repository.saveBlueprintStates(updates);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Added $dupeAmount duplicate${dupeAmount == 1 ? '' : 's'} to ${updates.length} blueprints.',
+        ),
+      ),
     );
     _clearSelection();
   }
@@ -689,7 +766,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               ),
               Tooltip(
                 message:
-                    'Tap missing to mark owned. Tap owned to edit reports or duplicates. Long press to select quickly.',
+                    'Tap missing to mark owned. Tap owned to edit reports or duplicates. Use Select Multiple for owned, missing and duplicate bulk edits.',
                 child: const Icon(
                   Icons.info_outline_rounded,
                   color: Colors.white70,
@@ -744,7 +821,18 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   energized: _selectedBlueprintIds.isNotEmpty,
                 ),
                 toolButton(
-                  label: 'Add 1 Dupe',
+                  label: 'Selected Missing',
+                  onTap: _selectedBlueprintIds.isEmpty
+                      ? null
+                      : () => _applySelectedMissingAndOwnRest(
+                          allBlueprints,
+                          states,
+                        ),
+                  color: Colors.amberAccent,
+                  energized: _selectedBlueprintIds.isNotEmpty,
+                ),
+                toolButton(
+                  label: 'Bulk Dupes',
                   onTap: _selectedBlueprintIds.isEmpty
                       ? null
                       : () => _applyBulkDupes(states),
