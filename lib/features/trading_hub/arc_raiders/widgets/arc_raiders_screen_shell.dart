@@ -106,7 +106,7 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
     super.key,
     required this.child,
     this.maxWidth = 1160,
-    this.padding = const EdgeInsets.fromLTRB(8, 0, 8, 6),
+    this.padding = const EdgeInsets.fromLTRB(8, 0, 8, 2),
     this.alignTop = true,
   });
 
@@ -168,8 +168,8 @@ class ArcRaidersPageList extends StatelessWidget {
     super.key,
     required this.children,
     this.maxWidth = 1160,
-    this.padding = const EdgeInsets.fromLTRB(8, 0, 8, 6),
-    this.bottomPadding = 54,
+    this.padding = const EdgeInsets.fromLTRB(8, 0, 8, 2),
+    this.bottomPadding = 38,
     this.physics,
   });
 
@@ -248,10 +248,10 @@ class ArcRaidersPageHeader extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        compact ? 4 : 6,
-        compact ? 0 : 1,
-        compact ? 4 : 6,
-        compact ? 2 : 4,
+        compact ? 3 : 5,
+        0,
+        compact ? 3 : 5,
+        compact ? 1 : 2,
       ),
       child: Row(
         children: [
@@ -267,7 +267,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.tradingHeading(
-                    fontSize: compact ? 15 : 18,
+                    fontSize: compact ? 14.5 : 17,
                     color: accent,
                   ),
                 ),
@@ -278,7 +278,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 10.5,
+                      fontSize: 10,
                       color: Colors.white60,
                       isBold: true,
                     ).copyWith(height: 1.15),
@@ -311,9 +311,9 @@ class ArcRaidersHeroBanner extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 600;
 
     return Container(
-      padding: EdgeInsets.all(compact ? 10 : 12),
+      padding: EdgeInsets.all(compact ? 8 : 10),
       decoration: AppTheme.tradingCardDecoration(
-        radius: 22,
+        radius: 18,
         borderColor: accent.withValues(alpha: 0.32),
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
       ),
@@ -339,11 +339,11 @@ class ArcRaidersHeroBanner extends StatelessWidget {
               Text(
                 title,
                 style: AppTheme.tradingHeading(
-                  fontSize: compact ? 19 : 24,
+                  fontSize: compact ? 18 : 22,
                   color: accent,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 5),
               Text(
                 subtitle,
                 style: AppTheme.bodyTextStyle(

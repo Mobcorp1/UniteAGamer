@@ -19,22 +19,19 @@ class ArcCompanionBottomDock extends StatelessWidget {
     final active = activeLabel.trim().toLowerCase();
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(12, 0, 12, 3),
+      minimum: const EdgeInsets.fromLTRB(14, 0, 14, 0),
       child: Container(
         clipBehavior: Clip.none,
-        margin: const EdgeInsets.symmetric(horizontal: 36),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spaceS,
-          vertical: 1,
-        ),
+        margin: const EdgeInsets.symmetric(horizontal: 58),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 0),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.035),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
               color: AppTheme.neonCyan.withValues(alpha: 0.13),
-              blurRadius: 3,
+              blurRadius: 2,
               spreadRadius: 0,
             ),
           ],
@@ -92,9 +89,9 @@ class _ArcMicButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Transform.translate(
-        offset: const Offset(0, -5),
+        offset: const Offset(0, -7),
         child: ElectricChargeBorder(
           active: true,
           radius: 999,
@@ -103,8 +100,8 @@ class _ArcMicButton extends StatelessWidget {
             onTap: onTap,
             child: Container(
               clipBehavior: Clip.hardEdge,
-              width: 50,
-              height: 50,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppTheme.neonPink.withValues(alpha: 0.22),
@@ -114,7 +111,7 @@ class _ArcMicButton extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     color: AppTheme.neonPink.withValues(alpha: 0.22),
-                    blurRadius: 14,
+                    blurRadius: 10,
                     spreadRadius: 0,
                   ),
                 ],
@@ -122,7 +119,7 @@ class _ArcMicButton extends StatelessWidget {
               child: const Icon(
                 Icons.mic_rounded,
                 color: AppTheme.neonPink,
-                size: 25,
+                size: 22,
               ),
             ),
           ),
@@ -153,17 +150,17 @@ class _DockButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 1),
+        padding: const EdgeInsets.symmetric(vertical: 0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 17),
+            Icon(icon, color: color, size: 16),
             const SizedBox(height: 0),
             Text(
               label,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
-                fontSize: 8.5,
+                fontSize: 8,
                 color: active ? AppTheme.neonPink : Colors.white70,
                 isBold: true,
               ),

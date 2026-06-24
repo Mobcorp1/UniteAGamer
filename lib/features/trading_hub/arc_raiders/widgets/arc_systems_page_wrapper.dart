@@ -18,7 +18,7 @@ class ArcSystemsPageWrapper extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1320),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 2),
                 child: child,
               ),
             ),
