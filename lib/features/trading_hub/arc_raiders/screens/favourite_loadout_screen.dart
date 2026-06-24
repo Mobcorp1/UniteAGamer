@@ -147,18 +147,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               child: ArcRaidersPageList(
                 children: [
                   _buildCinematicLoadoutHero(),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Blueprint-linked loadout board active: use Blueprint Intel long-press actions to add missing or owned items into your favourite build workflow.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+                  _buildInGameLoadoutBoard(),
                   const SizedBox(height: 12),
                   _buildExpeditionResetFocusCard(),
                   const SizedBox(height: 12),
@@ -184,11 +173,413 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     ],
                   const SizedBox(height: 12),
                   _buildGuidedBuilder(),
-                  const SizedBox(height: 96),
+                  const SizedBox(height: 72),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInGameLoadoutBoard() {
+    final utilitySlots = <String>[
+      ..._selectedEquipment,
+      ..._selectedConsumables,
+    ];
+    while (utilitySlots.length < 5) {
+      utilitySlots.add('Empty Slot');
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 820;
+        final weaponColumn = _buildLoadoutWeaponColumn();
+        final coreColumn = _buildCoreLoadoutColumn();
+        final utilityColumn = _buildUtilityColumn(
+          utilitySlots.take(5).toList(),
+        );
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+                const Color(0xFF0A1320).withValues(alpha: 0.96),
+              ],
+            ),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.26),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.neonCyan.withValues(alpha: 0.08),
+                blurRadius: 22,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.view_module_rounded,
+                    color: AppTheme.neonCyan,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'IN-GAME FAVOURITE LOADOUT',
+                    style: AppTheme.tradingHeading(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const Spacer(),
+                  _buildLoadoutStatusChip(
+                    'Blueprint linked',
+                    AppTheme.neonCyan,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (wide)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 44, child: weaponColumn),
+                    const SizedBox(width: 12),
+                    Expanded(flex: 25, child: coreColumn),
+                    const SizedBox(width: 12),
+                    Expanded(flex: 31, child: utilityColumn),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    weaponColumn,
+                    const SizedBox(height: 12),
+                    coreColumn,
+                    const SizedBox(height: 12),
+                    utilityColumn,
+                  ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadoutWeaponColumn() {
+    return Column(
+      children: [
+        _buildWeaponBoardCard(
+          label: 'PRIMARY',
+          weaponName: _selectedPrimaryWeapon,
+          attachments: _selectedPrimaryAttachments,
+          accent: AppTheme.neonCyan,
+        ),
+        const SizedBox(height: 12),
+        _buildWeaponBoardCard(
+          label: 'SECONDARY',
+          weaponName: _selectedSecondaryWeapon,
+          attachments: _selectedSecondaryAttachments,
+          accent: AppTheme.neonPink,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeaponBoardCard({
+    required String label,
+    required String weaponName,
+    required List<String> attachments,
+    required Color accent,
+  }) {
+    final spec = _weapon(weaponName);
+    final slots = attachments.isEmpty
+        ? <String>['No Attachments']
+        : attachments;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1421).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.26)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: accent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const Spacer(),
+              _buildLoadoutStatusChip('Owned / Missing aware', accent),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            height: 86,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: LinearGradient(
+                colors: [
+                  accent.withValues(alpha: 0.18),
+                  Colors.black.withValues(alpha: 0.22),
+                ],
+              ),
+              border: Border.all(color: accent.withValues(alpha: 0.16)),
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Icon(
+                    true ? Icons.gps_fixed_rounded : Icons.flash_on_rounded,
+                    color: accent.withValues(alpha: 0.20),
+                    size: 70,
+                  ),
+                ),
+                Positioned(
+                  left: 12,
+                  bottom: 10,
+                  right: 12,
+                  child: Text(
+                    weaponName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.tradingHeading(
+                      fontSize: 22,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: slots
+                .map(
+                  (slot) => _buildLoadoutMiniSlot(
+                    label: slot,
+                    icon: slot == 'No Attachments'
+                        ? Icons.block_rounded
+                        : Icons.settings_input_component_rounded,
+                    accent: accent,
+                    compact: true,
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoreLoadoutColumn() {
+    return Column(
+      children: [
+        _buildLoadoutMiniSlot(
+          label: 'Shield',
+          value: 'Level 2',
+          icon: Icons.shield_rounded,
+          accent: AppTheme.neonCyan,
+        ),
+        const SizedBox(height: 12),
+        _buildLoadoutMiniSlot(
+          label: 'Augment',
+          value: _selectedAugment,
+          icon: Icons.auto_awesome_rounded,
+          accent: AppTheme.neonPink,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUtilityColumn(List<String> utilitySlots) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1421).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'FAVOURITE EQUIPMENT',
+                style: TextStyle(
+                  color: AppTheme.neonPink,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const Spacer(),
+              _buildLoadoutStatusChip('5 slots', AppTheme.neonPink),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (final slot in utilitySlots) ...[
+            _buildLoadoutMiniSlot(
+              label: slot,
+              icon: _utilityIcon(slot),
+              accent: slot == 'Empty Slot'
+                  ? Colors.white38
+                  : _utilityAccent(slot),
+            ),
+            if (slot != utilitySlots.last) const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            _loadoutInference(utilitySlots),
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 11,
+              height: 1.25,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _utilityIcon(String value) {
+    final lower = value.toLowerCase();
+    if (lower.contains('grenade') || lower.contains('lure')) {
+      return Icons.blur_circular_rounded;
+    }
+    if (lower.contains('shot') || lower.contains('vita')) {
+      return Icons.healing_rounded;
+    }
+    if (lower.contains('shield')) return Icons.shield_rounded;
+    if (lower.contains('hook')) return Icons.cable_rounded;
+    return Icons.inventory_2_rounded;
+  }
+
+  Color _utilityAccent(String value) {
+    final lower = value.toLowerCase();
+    if (lower.contains('grenade') ||
+        lower.contains('smoke') ||
+        lower.contains('barricade')) {
+      return AppTheme.neonPink;
+    }
+    if (lower.contains('lure') ||
+        lower.contains('wolf') ||
+        lower.contains('seeker')) {
+      return AppTheme.neonCyan;
+    }
+    return AppTheme.neonCyan;
+  }
+
+  String _loadoutInference(List<String> slots) {
+    final joined = slots.join(' ').toLowerCase();
+    if (joined.contains('grenade') ||
+        joined.contains('smoke') ||
+        joined.contains('barricade')) {
+      return 'Profile read: PvP leaning utility selection.';
+    }
+    if (joined.contains('lure') ||
+        joined.contains('wolf') ||
+        joined.contains('seeker')) {
+      return 'Profile read: PvE / ARC clearing utility selection.';
+    }
+    return 'Profile read: balanced utility selection.';
+  }
+
+  Widget _buildLoadoutMiniSlot({
+    required String label,
+    required IconData icon,
+    required Color accent,
+    String? value,
+    bool compact = false,
+  }) {
+    return Container(
+      constraints: BoxConstraints(minHeight: compact ? 42 : 64),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 9 : 11,
+        vertical: compact ? 7 : 10,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+        children: [
+          Icon(icon, color: accent, size: compact ? 15 : 18),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: compact ? 11 : 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (value != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white60, fontSize: 11),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadoutStatusChip(String label, Color accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: accent,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );

@@ -664,8 +664,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         ),
       ),
       child: Container(
-        width: 72,
-        height: 78,
+        width: 64,
+        height: 70,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.78),
@@ -675,7 +675,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppTheme.neonCyan, size: 24),
+            Icon(icon, color: AppTheme.neonCyan, size: 22),
             const SizedBox(height: 6),
             Text(
               label,
