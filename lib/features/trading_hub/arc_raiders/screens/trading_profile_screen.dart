@@ -237,55 +237,6 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: AppTheme.spaceM),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppTheme.spaceM,
-                    AppTheme.spaceS,
-                    AppTheme.spaceM,
-                    AppTheme.spaceL,
-                  ),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: AppTheme.neonPink.withValues(alpha: 0.20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Referral Tools',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 20,
-                          color: AppTheme.neonPink,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      const Text(
-                        'Copy or share your referral code for signup tracking and future affiliate rewards.',
-                        style: TextStyle(color: Colors.white70, height: 1.35),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: null,
-                              icon: const Icon(Icons.copy_all_rounded),
-                              label: const Text('Copy Code'),
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.spaceM),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: null,
-                              icon: const Icon(Icons.share_outlined),
-                              label: const Text('Share Code'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
                 _actionTile(
                   icon: Icons.edit_outlined,
                   title: 'Edit Trader Profile',
@@ -497,6 +448,34 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         copy: 'Resource hunter',
       ),
       (icon: Icons.handshake_rounded, label: 'Trader', copy: 'Swap ready'),
+      (icon: Icons.explore_rounded, label: 'Scout', copy: 'Route finder'),
+      (
+        icon: Icons.center_focus_strong_rounded,
+        label: 'Sniper',
+        copy: 'Long range',
+      ),
+      (icon: Icons.shield_rounded, label: 'Tank', copy: 'Front line'),
+      (
+        icon: Icons.track_changes_rounded,
+        label: 'Hunter',
+        copy: 'Target focused',
+      ),
+      (
+        icon: Icons.assignment_turned_in_rounded,
+        label: 'Quester',
+        copy: 'Objective first',
+      ),
+      (
+        icon: Icons.local_fire_department_rounded,
+        label: 'PvP Specialist',
+        copy: 'Fight ready',
+      ),
+      (
+        icon: Icons.bug_report_rounded,
+        label: 'ARC Exterminator',
+        copy: 'PvE cleaner',
+      ),
+      (icon: Icons.flag_rounded, label: 'Leader', copy: 'Shot caller'),
     ];
 
     return _profilePanel(
@@ -521,11 +500,16 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
   Widget _badgeGallery() {
     const badges = <({IconData icon, String label})>[
-      (icon: Icons.military_tech_rounded, label: 'Beta'),
+      (icon: Icons.military_tech_rounded, label: 'Beta Access'),
       (icon: Icons.route_rounded, label: 'Pathfinder'),
       (icon: Icons.local_fire_department_rounded, label: 'Trailblazer'),
       (icon: Icons.diamond_rounded, label: 'Supporter'),
       (icon: Icons.workspace_premium_rounded, label: 'Trusted'),
+      (icon: Icons.verified_rounded, label: 'Verified Trader'),
+      (icon: Icons.handshake_rounded, label: 'Good Trade'),
+      (icon: Icons.groups_rounded, label: 'Squad Ready'),
+      (icon: Icons.radar_rounded, label: 'Intel Dropper'),
+      (icon: Icons.auto_awesome_rounded, label: 'Collector'),
     ];
 
     return _profilePanel(
