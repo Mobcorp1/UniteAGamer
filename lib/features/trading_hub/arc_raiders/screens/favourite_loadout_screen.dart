@@ -352,7 +352,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               children: [
                 Positioned.fill(
                   child: Icon(
-                    true ? Icons.gps_fixed_rounded : Icons.flash_on_rounded,
+                    Icons.gps_fixed_rounded,
                     color: accent.withValues(alpha: 0.20),
                     size: 70,
                   ),
