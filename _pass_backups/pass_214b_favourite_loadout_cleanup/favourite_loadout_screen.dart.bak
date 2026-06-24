@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
+import '../widgets/arc_loadout_category_banner.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
@@ -54,6 +55,16 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
   List<ArcSavedLoadoutSeed> get _recommendedLoadouts {
     return ArcLoadoutSeedData.recommendedLoadouts(_selectedPlayStyle);
+  }
+
+  List<ArcSavedLoadoutSeed> get _visibleLoadouts {
+    if (_selectedCategory == ArcLoadoutCategory.saved) {
+      return ArcLoadoutSeedData.starterLoadouts;
+    }
+
+    return ArcLoadoutSeedData.starterLoadouts
+        .where((loadout) => loadout.category == _selectedCategory)
+        .toList(growable: false);
   }
 
   String _normaliseBlueprintName(String name) {
@@ -481,6 +492,26 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  Widget _buildLoadoutWeaponColumn() {
+    return Column(
+      children: [
+        _buildWeaponBoardCard(
+          label: 'PRIMARY',
+          weaponName: _selectedPrimaryWeapon,
+          attachments: _selectedPrimaryAttachments,
+          accent: AppTheme.neonCyan,
+        ),
+        const SizedBox(height: 12),
+        _buildWeaponBoardCard(
+          label: 'SECONDARY',
+          weaponName: _selectedSecondaryWeapon,
+          attachments: _selectedSecondaryAttachments,
+          accent: AppTheme.neonPink,
+        ),
+      ],
+    );
+  }
+
   Widget _buildWeaponBoardCard({
     required String label,
     required String weaponName,
@@ -572,6 +603,77 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                   ),
                 )
                 .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoreLoadoutColumn() {
+    return Column(
+      children: [
+        _buildLoadoutMiniSlot(
+          label: 'Shield',
+          value: 'Level 2',
+          icon: Icons.shield_rounded,
+          accent: AppTheme.neonCyan,
+        ),
+        const SizedBox(height: 12),
+        _buildLoadoutMiniSlot(
+          label: 'Augment',
+          value: _selectedAugment,
+          icon: Icons.auto_awesome_rounded,
+          accent: AppTheme.neonPink,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUtilityColumn(List<String> utilitySlots) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1421).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'FAVOURITE EQUIPMENT',
+                style: TextStyle(
+                  color: AppTheme.neonPink,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const Spacer(),
+              _buildLoadoutStatusChip('5 slots', AppTheme.neonPink),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (final slot in utilitySlots) ...[
+            _buildLoadoutMiniSlot(
+              label: slot,
+              icon: _utilityIcon(slot),
+              accent: slot == 'Empty Slot'
+                  ? Colors.white38
+                  : _utilityAccent(slot),
+            ),
+            if (slot != utilitySlots.last) const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            _loadoutInference(utilitySlots),
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 11,
+              height: 1.25,
+            ),
           ),
         ],
       ),
@@ -1160,6 +1262,24 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             onTap: () => setState(() => _selectedCategory = category),
           ),
       ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.90),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        'No loadouts in this category yet.',
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.72),
+          fontSize: 13,
+        ),
+      ),
     );
   }
 
