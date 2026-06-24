@@ -147,7 +147,7 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
                         ),
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
-                          'UNLOCK',
+                          '',
                           textAlign: TextAlign.center,
                           style: AppTheme.neonTextStyle(
                             fontSize: 30,
