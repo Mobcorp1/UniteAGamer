@@ -194,7 +194,7 @@ class ArcQuestRequirementSeedData {
       itemName: 'Empty Wine Bottle',
       quantity: 1,
       sourceHint:
-          'Best intel: residential/commercial kitchens, bars, cafÃ©s, apartments, shelves and counters.',
+          'Best intel: residential/commercial kitchens, bars, cafes, apartments, shelves and counters.',
     ),
     ArcQuestRequirement(
       questName: 'Pied Piper',

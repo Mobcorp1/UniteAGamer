@@ -655,7 +655,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           radius: 24,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
               borderRadius: BorderRadius.circular(24),
@@ -719,19 +719,44 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         icon: Icons.search_rounded,
         title: 'Search',
         subtitle: 'Find a blueprint without leaving the full grid.',
-        children: [SizedBox(width: 300, child: _buildSearchAppBarTitle())],
+        children: [SizedBox(width: 420, child: _buildSearchAppBarTitle())],
       ),
       barrelCard(
         icon: Icons.filter_alt_rounded,
         title: 'Filters',
-        subtitle: 'Roll through collection states without widening the card.',
-        children: [_buildVerticalFilterBarrel(counts: counts)],
+        subtitle: 'Keep the collection visible and rotate your filter set.',
+        children: [
+          barrelChip(
+            label: 'All (${counts[ArcBlueprintFilter.all] ?? 0})',
+            selected: _selectedFilter == ArcBlueprintFilter.all,
+            onTap: () =>
+                setState(() => _selectedFilter = ArcBlueprintFilter.all),
+          ),
+          barrelChip(
+            label: 'Owned ($ownedCount)',
+            selected: _selectedFilter == ArcBlueprintFilter.owned,
+            onTap: () =>
+                setState(() => _selectedFilter = ArcBlueprintFilter.owned),
+          ),
+          barrelChip(
+            label: 'Missing ($missingCount)',
+            selected: _selectedFilter == ArcBlueprintFilter.missing,
+            onTap: () =>
+                setState(() => _selectedFilter = ArcBlueprintFilter.missing),
+          ),
+          barrelChip(
+            label: 'Dupes ($dupesCount)',
+            selected: _selectedFilter == ArcBlueprintFilter.duplicates,
+            onTap: () =>
+                setState(() => _selectedFilter = ArcBlueprintFilter.duplicates),
+          ),
+        ],
       ),
       barrelCard(
         icon: Icons.analytics_rounded,
         title: 'Progress',
         subtitle:
-            '$ownedCount / $totalCount owned Ã¢â‚¬Â¢ $missingCount missing Ã¢â‚¬Â¢ $dupesCount dupes',
+            '$ownedCount / $totalCount owned • $missingCount missing • $dupesCount dupes',
         children: [
           SizedBox(
             width: 280,
@@ -863,23 +888,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 900;
         final cardHeight = desktop
-            ? (_selectionMode ? 206.0 : 152.0)
-            : (_selectionMode ? 264.0 : 166.0);
-        final maxCardWidth = desktop
-            ? switch (_commandBarrelIndex) {
-                0 => 390.0,
-                1 => 330.0,
-                2 => 330.0,
-                3 => 350.0,
-                4 => _selectionMode ? 430.0 : 330.0,
-                _ => 350.0,
-              }
-            : constraints.maxWidth;
+            ? (_selectionMode ? 218.0 : 164.0)
+            : (_selectionMode ? 276.0 : 178.0);
+        final maxCardWidth = desktop ? 900.0 : constraints.maxWidth;
 
-        final pageView = AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          width: maxCardWidth,
+        final pageView = ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxCardWidth),
           child: SizedBox(
             height: cardHeight,
@@ -943,180 +956,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 }),
               ),
             ],
-          ),
-        );
-      },
-    );
-  }
-
-  List<ArcBlueprintFilter> get _filterBarrelOrder => const [
-    ArcBlueprintFilter.all,
-    ArcBlueprintFilter.owned,
-    ArcBlueprintFilter.missing,
-    ArcBlueprintFilter.duplicates,
-  ];
-
-  String _filterBarrelLabel(
-    ArcBlueprintFilter filter,
-    Map<ArcBlueprintFilter, int> counts,
-  ) {
-    final count = counts[filter] ?? 0;
-    return switch (filter) {
-      ArcBlueprintFilter.all => 'All ($count)',
-      ArcBlueprintFilter.owned => 'Owned ($count)',
-      ArcBlueprintFilter.missing => 'Missing ($count)',
-      ArcBlueprintFilter.duplicates => 'Dupes ($count)',
-    };
-  }
-
-  ArcBlueprintFilter _filterAtOffset(int offset) {
-    final order = _filterBarrelOrder;
-    final selectedIndex = order.indexOf(_selectedFilter);
-    final safeIndex = selectedIndex < 0 ? 0 : selectedIndex;
-    final nextIndex = (safeIndex + offset) % order.length;
-    return order[nextIndex < 0 ? nextIndex + order.length : nextIndex];
-  }
-
-  void _rotateFilterBarrel(int offset) {
-    setState(() => _selectedFilter = _filterAtOffset(offset));
-  }
-
-  Widget _filterBarrelRow({
-    required ArcBlueprintFilter filter,
-    required Map<ArcBlueprintFilter, int> counts,
-    required bool active,
-  }) {
-    final color = active ? AppTheme.neonCyan : Colors.white60;
-    return AnimatedContainer(
-      duration: AppTheme.fastAnimation,
-      width: double.infinity,
-      margin: EdgeInsets.symmetric(horizontal: active ? 0 : 10),
-      padding: EdgeInsets.symmetric(
-        horizontal: active ? 14 : 12,
-        vertical: active ? 9 : 6,
-      ),
-      decoration: BoxDecoration(
-        color: active
-            ? AppTheme.neonCyan.withValues(alpha: 0.13)
-            : Colors.black.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(active ? 18 : 14),
-        border: Border.all(
-          color: active
-              ? AppTheme.neonCyan.withValues(alpha: 0.46)
-              : Colors.white.withValues(alpha: 0.12),
-        ),
-        boxShadow: active
-            ? [
-                BoxShadow(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.12),
-                  blurRadius: 18,
-                ),
-              ]
-            : null,
-      ),
-      child: Text(
-        _filterBarrelLabel(filter, counts).toUpperCase(),
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: AppTheme.buttonTextStyle(
-          color: color,
-          fontSize: active ? 13 : 11,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVerticalFilterBarrel({
-    required Map<ArcBlueprintFilter, int> counts,
-  }) {
-    Widget arrowButton(IconData icon, VoidCallback onTap) {
-      return SizedBox(
-        width: 34,
-        height: 34,
-        child: IconButton.filledTonal(
-          tooltip: icon == Icons.keyboard_arrow_up_rounded
-              ? 'Previous filter'
-              : 'Next filter',
-          onPressed: onTap,
-          icon: Icon(icon, size: 20),
-          color: AppTheme.neonCyan,
-          padding: EdgeInsets.zero,
-          style: IconButton.styleFrom(
-            backgroundColor: AppTheme.cardBackgroundDeep.withValues(
-              alpha: 0.82,
-            ),
-            side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.26)),
-          ),
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final desktop = MediaQuery.of(context).size.width >= 900;
-        final barrelWidth = desktop
-            ? 300.0
-            : constraints.maxWidth.clamp(240.0, 320.0);
-
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onVerticalDragEnd: (details) {
-            final velocity = details.primaryVelocity ?? 0;
-            if (velocity > 0) {
-              _rotateFilterBarrel(-1);
-            } else if (velocity < 0) {
-              _rotateFilterBarrel(1);
-            }
-          },
-          child: SizedBox(
-            width: barrelWidth,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _filterBarrelRow(
-                        filter: _filterAtOffset(-1),
-                        counts: counts,
-                        active: false,
-                      ),
-                      const SizedBox(height: 5),
-                      _filterBarrelRow(
-                        filter: _selectedFilter,
-                        counts: counts,
-                        active: true,
-                      ),
-                      const SizedBox(height: 5),
-                      _filterBarrelRow(
-                        filter: _filterAtOffset(1),
-                        counts: counts,
-                        active: false,
-                      ),
-                    ],
-                  ),
-                ),
-                if (desktop) ...[
-                  const SizedBox(width: 8),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      arrowButton(
-                        Icons.keyboard_arrow_up_rounded,
-                        () => _rotateFilterBarrel(-1),
-                      ),
-                      const SizedBox(height: 8),
-                      arrowButton(
-                        Icons.keyboard_arrow_down_rounded,
-                        () => _rotateFilterBarrel(1),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
           ),
         );
       },
@@ -1497,6 +1336,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     ),
                     const SizedBox(height: 16),
                     Wrap(
+                      alignment: WrapAlignment.center,
                       spacing: 8,
                       runSpacing: 8,
                       children: [
@@ -1580,6 +1420,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             child: Container(
               width: 34,
               height: 34,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
                 shape: BoxShape.circle,
@@ -1682,6 +1523,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           children: [
             if (_showOverviewHint)
               Align(
+                alignment: Alignment.centerLeft,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   constraints: BoxConstraints(
@@ -1711,7 +1553,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          'Exact in-game order Ã¢â‚¬Â¢ Pinch to zoom Ã¢â‚¬Â¢ Drag to pan',
+                          'Exact in-game order • Pinch to zoom • Drag to pan',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTheme.bodyTextStyle(
@@ -1761,6 +1603,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         clipBehavior: Clip.none,
                         child: FittedBox(
                           fit: BoxFit.contain,
+                          alignment: Alignment.topCenter,
                           child: SizedBox(
                             width: naturalWidth,
                             height: naturalHeight,

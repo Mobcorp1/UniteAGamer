@@ -655,7 +655,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           radius: 24,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
               borderRadius: BorderRadius.circular(24),
@@ -719,7 +719,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         icon: Icons.search_rounded,
         title: 'Search',
         subtitle: 'Find a blueprint without leaving the full grid.',
-        children: [SizedBox(width: 300, child: _buildSearchAppBarTitle())],
+        children: [SizedBox(width: 360, child: _buildSearchAppBarTitle())],
       ),
       barrelCard(
         icon: Icons.filter_alt_rounded,
@@ -731,7 +731,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         icon: Icons.analytics_rounded,
         title: 'Progress',
         subtitle:
-            '$ownedCount / $totalCount owned Ã¢â‚¬Â¢ $missingCount missing Ã¢â‚¬Â¢ $dupesCount dupes',
+            '$ownedCount / $totalCount owned â€¢ $missingCount missing â€¢ $dupesCount dupes',
         children: [
           SizedBox(
             width: 280,
@@ -867,12 +867,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             : (_selectionMode ? 264.0 : 166.0);
         final maxCardWidth = desktop
             ? switch (_commandBarrelIndex) {
-                0 => 390.0,
-                1 => 330.0,
-                2 => 330.0,
-                3 => 350.0,
-                4 => _selectionMode ? 430.0 : 330.0,
-                _ => 350.0,
+                0 => 520.0,
+                1 => 380.0,
+                2 => 390.0,
+                3 => 430.0,
+                4 => _selectionMode ? 560.0 : 390.0,
+                _ => 420.0,
               }
             : constraints.maxWidth;
 
@@ -1497,6 +1497,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     ),
                     const SizedBox(height: 16),
                     Wrap(
+                      alignment: WrapAlignment.center,
                       spacing: 8,
                       runSpacing: 8,
                       children: [
@@ -1580,6 +1581,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             child: Container(
               width: 34,
               height: 34,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
                 shape: BoxShape.circle,
@@ -1682,6 +1684,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           children: [
             if (_showOverviewHint)
               Align(
+                alignment: Alignment.centerLeft,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   constraints: BoxConstraints(
@@ -1711,7 +1714,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          'Exact in-game order Ã¢â‚¬Â¢ Pinch to zoom Ã¢â‚¬Â¢ Drag to pan',
+                          'Exact in-game order â€¢ Pinch to zoom â€¢ Drag to pan',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTheme.bodyTextStyle(
@@ -1761,6 +1764,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         clipBehavior: Clip.none,
                         child: FittedBox(
                           fit: BoxFit.contain,
+                          alignment: Alignment.topCenter,
                           child: SizedBox(
                             width: naturalWidth,
                             height: naturalHeight,
