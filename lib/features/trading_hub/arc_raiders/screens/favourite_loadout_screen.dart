@@ -305,7 +305,6 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required List<String> attachments,
     required Color accent,
   }) {
-    final spec = _weapon(weaponName);
     final slots = attachments.isEmpty
         ? <String>['No Attachments']
         : attachments;
