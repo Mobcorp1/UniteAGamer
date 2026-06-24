@@ -154,7 +154,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     ),
                     child: const Center(
                       child: Text(
-                        'In-game loadout board coming in PASS 246',
+                        'Blueprint-linked loadout board active: use Blueprint Intel long-press actions to add missing or owned items into your favourite build workflow.',
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -953,7 +953,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Next pass wires Blueprint Intel, bench readiness, trade hooks and raid planner actions into this preview.',
+            'Blueprint Intel now feeds this build workflow. Missing items can be selected from Blueprint Intel and pushed toward trades, hunts and raid planning.',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.66),
               fontSize: 12,

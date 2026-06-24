@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
@@ -939,6 +940,156 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     );
   }
 
+  Future<void> _openBlueprintLoadoutActions(
+    ArcBlueprint blueprint,
+    ArcBlueprintState state,
+  ) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final accent = _rarityColor(blueprint.rarity);
+        Widget actionTile({
+          required String value,
+          required IconData icon,
+          required String title,
+          required String subtitle,
+        }) {
+          return ListTile(
+            leading: Icon(icon, color: accent),
+            title: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: const TextStyle(color: Colors.white60),
+            ),
+            onTap: () => Navigator.of(sheetContext).pop(value),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(14),
+          child: ElectricChargeBorder(
+            active: true,
+            radius: 24,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: accent.withValues(alpha: 0.38)),
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              blueprint.name.toUpperCase(),
+                              style: AppTheme.tradingHeading(
+                                fontSize: 18,
+                                color: accent,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Close',
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    actionTile(
+                      value: 'loadout',
+                      icon: Icons.inventory_2_rounded,
+                      title: 'Add to Favourite Loadout',
+                      subtitle: state.owned
+                          ? 'Use this owned blueprint in your public build.'
+                          : 'Add as missing and make it a priority target.',
+                    ),
+                    actionTile(
+                      value: 'primary',
+                      icon: Icons.looks_one_rounded,
+                      title: 'Set as Primary',
+                      subtitle:
+                          'Open the loadout builder with this as primary focus.',
+                    ),
+                    actionTile(
+                      value: 'secondary',
+                      icon: Icons.looks_two_rounded,
+                      title: 'Set as Secondary',
+                      subtitle:
+                          'Open the loadout builder with this as secondary focus.',
+                    ),
+                    actionTile(
+                      value: 'track',
+                      icon: Icons.track_changes_rounded,
+                      title: 'Track / Select Blueprint',
+                      subtitle:
+                          'Select it for missing, duplicate or hunt workflows.',
+                    ),
+                    actionTile(
+                      value: 'trade',
+                      icon: Icons.swap_horiz_rounded,
+                      title: 'Find Trade',
+                      subtitle: 'Open Trading to look for swaps or offers.',
+                    ),
+                    actionTile(
+                      value: 'intel',
+                      icon: Icons.radar_rounded,
+                      title: 'View Intel',
+                      subtitle: 'Open Community Intel for drop reports.',
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case 'loadout':
+      case 'primary':
+      case 'secondary':
+        Navigator.of(context).pushNamed(FavouriteLoadoutScreen.routeName);
+        return;
+      case 'track':
+        _enterSelectionMode(blueprint.id);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${blueprint.name} selected for blueprint workflows.',
+            ),
+          ),
+        );
+        return;
+      case 'trade':
+        Navigator.of(context).pushNamed(TraderHubScreen.routeName);
+        return;
+      case 'intel':
+        Navigator.of(context).pushNamed(ArcMarketIntelligenceScreen.routeName);
+        return;
+    }
+  }
+
   Future<void> _openBlueprintPreview(
     ArcBlueprint blueprint,
     ArcBlueprintState state,
@@ -1025,7 +1176,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                           blueprint.id,
                         ),
                         onTap: () {},
-                        onLongPress: () {},
+                        onLongPress: () =>
+                            _openBlueprintLoadoutActions(blueprint, state),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -1308,13 +1460,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                                 await _markMissingAsOwned(blueprint, state);
                               }
                             },
-                            onLongPress: () {
-                              if (_selectionMode) {
-                                _toggleSelection(blueprint.id);
-                              } else {
-                                _enterSelectionMode(blueprint.id);
-                              }
-                            },
+                            onLongPress: () =>
+                                _openBlueprintLoadoutActions(blueprint, state),
                           ),
                         );
                       },
@@ -1405,13 +1552,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             await _markMissingAsOwned(blueprint, state);
                           }
                         },
-                        onLongPress: () {
-                          if (_selectionMode) {
-                            _toggleSelection(blueprint.id);
-                          } else {
-                            _enterSelectionMode(blueprint.id);
-                          }
-                        },
+                        onLongPress: () =>
+                            _openBlueprintLoadoutActions(blueprint, state),
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -1583,13 +1725,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   await _markMissingAsOwned(blueprint, state);
                 }
               },
-              onLongPress: () {
-                if (_selectionMode) {
-                  _toggleSelection(blueprint.id);
-                } else {
-                  _enterSelectionMode(blueprint.id);
-                }
-              },
+              onLongPress: () => _openBlueprintLoadoutActions(blueprint, state),
             );
           },
         );
