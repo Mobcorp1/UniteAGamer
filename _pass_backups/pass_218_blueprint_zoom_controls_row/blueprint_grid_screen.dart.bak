@@ -1328,11 +1328,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     final currentScale = _blueprintGridTransformController.value
         .getMaxScaleOnAxis();
     final nextScale = (currentScale + delta).clamp(1.0, 5.5).toDouble();
-    _blueprintGridTransformController.value = Matrix4.diagonal3Values(
-      nextScale,
-      nextScale,
-      1,
-    );
+    _blueprintGridTransformController.value = Matrix4.identity()
+      ..scale(nextScale);
   }
 
   void _resetBlueprintGridZoom() {
@@ -1378,7 +1375,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       );
     }
 
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         button(
@@ -1386,13 +1383,13 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           tooltip: 'Zoom in',
           onTap: () => _zoomBlueprintGrid(0.45),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(height: 8),
         button(
           icon: Icons.zoom_out_rounded,
           tooltip: 'Zoom out',
           onTap: () => _zoomBlueprintGrid(-0.45),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(height: 8),
         button(
           icon: Icons.center_focus_strong_rounded,
           tooltip: 'Reset grid view',
@@ -1594,11 +1591,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    right: 8,
-                    bottom: 8,
-                    child: _buildGridZoomControls(),
-                  ),
+                  Positioned(top: 8, right: 8, child: _buildGridZoomControls()),
                 ],
               ),
             ),
