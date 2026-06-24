@@ -1596,7 +1596,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   ),
                   Positioned(
                     right: 8,
-                    bottom: -2,
+                    bottom: 8,
                     child: _buildGridZoomControls(),
                   ),
                 ],
