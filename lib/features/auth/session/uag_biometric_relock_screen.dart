@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagBiometricRelockScreen extends StatefulWidget {
@@ -101,100 +100,89 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final email = widget.user.email ?? 'your account';
-
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          const Positioned.fill(child: StaticWatermark()),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardBackground.withValues(alpha: 0.92),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: AppTheme.neonCyan.withValues(alpha: 0.55),
-                      width: 1.3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.neonCyan.withValues(alpha: 0.18),
-                        blurRadius: 28,
-                        spreadRadius: 2,
+          const Positioned.fill(child: _ArcAuthBackdrop()),
+          if (_checking || _unlocking)
+            const Center(
+              child: CircularProgressIndicator(color: AppTheme.neonCyan),
+            )
+          else
+            Positioned(
+              left: AppTheme.spaceL,
+              right: AppTheme.spaceL,
+              bottom: AppTheme.spaceXL,
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_canUseBiometrics)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _unlockWithBiometrics,
+                          icon: const Icon(Icons.fingerprint_rounded),
+                          label: const Text('Unlock with biometrics'),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppTheme.spaceL),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.fingerprint_rounded,
-                          color: AppTheme.neonCyan,
-                          size: 58,
-                          shadows: [
-                            Shadow(
-                              color: AppTheme.neonCyan.withValues(alpha: 0.65),
-                              blurRadius: 18,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Text(
-                          '',
-                          textAlign: TextAlign.center,
-                          style: AppTheme.neonTextStyle(
-                            fontSize: 30,
-                            color: AppTheme.neonCyan,
-                            isBold: true,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceS),
-                        Text(
-                          'Confirm it is you before reopening $email.',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            height: 1.35,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceL),
-                        if (_checking || _unlocking)
-                          const CircularProgressIndicator(
-                            color: AppTheme.neonCyan,
-                          )
-                        else ...[
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: _canUseBiometrics
-                                  ? _unlockWithBiometrics
-                                  : null,
-                              icon: const Icon(Icons.fingerprint_rounded),
-                              label: const Text('Unlock with biometrics'),
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spaceS),
-                          TextButton(
-                            onPressed: _signOutToPasswordLogin,
-                            child: const Text('Use password sign in'),
-                          ),
-                        ],
-                      ],
+                    const SizedBox(height: AppTheme.spaceS),
+                    TextButton(
+                      onPressed: _signOutToPasswordLogin,
+                      child: const Text('Use password sign in'),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _ArcAuthBackdrop extends StatelessWidget {
+  const _ArcAuthBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+        ),
+        Container(color: Colors.black.withValues(alpha: 0.62)),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.82),
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.92),
+              ],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0.0, -0.08),
+              radius: 0.82,
+              colors: [
+                AppTheme.neonCyan.withValues(alpha: 0.10),
+                AppTheme.neonPink.withValues(alpha: 0.07),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

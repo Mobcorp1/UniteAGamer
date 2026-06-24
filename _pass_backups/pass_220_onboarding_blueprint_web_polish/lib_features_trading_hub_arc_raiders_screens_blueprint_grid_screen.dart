@@ -39,9 +39,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   ArcBlueprintFilter _selectedFilter = ArcBlueprintFilter.all;
   bool _selectionMode = false;
   int _commandBarrelIndex = 0;
-  final PageController _commandBarrelPageController = PageController(
-    viewportFraction: 0.96,
-  );
   bool _showOverviewHint = true;
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
@@ -71,7 +68,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _commandBarrelPageController.dispose();
     _blueprintGridTransformController.dispose();
     super.dispose();
   }
@@ -862,103 +858,43 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ),
     ];
 
-    void goToBarrelCard(int index) {
-      final next = index.clamp(0, cards.length - 1).toInt();
-      _commandBarrelPageController.animateToPage(
-        next,
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOutCubic,
-      );
-      setState(() => _commandBarrelIndex = next);
-    }
-
-    Widget barrelArrow(IconData icon, VoidCallback? onTap) {
-      return IconButton.filledTonal(
-        onPressed: onTap,
-        icon: Icon(icon, size: 20),
-        color: AppTheme.neonCyan,
-        style: IconButton.styleFrom(
-          backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
-          side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final desktop = constraints.maxWidth >= 900;
-        final cardHeight = desktop
-            ? (_selectionMode ? 218.0 : 164.0)
-            : (_selectionMode ? 276.0 : 178.0);
-        final maxCardWidth = desktop ? 900.0 : constraints.maxWidth;
-
-        final pageView = ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxCardWidth),
-          child: SizedBox(
-            height: cardHeight,
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: _selectionMode ? 276 : 178,
             child: PageView.builder(
               itemCount: cards.length,
               onPageChanged: (index) =>
                   setState(() => _commandBarrelIndex = index),
-              controller: _commandBarrelPageController,
+              controller: PageController(viewportFraction: 0.96),
               itemBuilder: (context, index) => cards[index],
             ),
           ),
-        );
-
-        return Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(top: 14),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (desktop) ...[
-                    barrelArrow(
-                      Icons.chevron_left_rounded,
-                      _commandBarrelIndex == 0
-                          ? null
-                          : () => goToBarrelCard(_commandBarrelIndex - 1),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                  Flexible(child: pageView),
-                  if (desktop) ...[
-                    const SizedBox(width: 12),
-                    barrelArrow(
-                      Icons.chevron_right_rounded,
-                      _commandBarrelIndex == cards.length - 1
-                          ? null
-                          : () => goToBarrelCard(_commandBarrelIndex + 1),
-                    ),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(cards.length, (index) {
-                  final active = index == _commandBarrelIndex;
-                  return AnimatedContainer(
-                    duration: AppTheme.fastAnimation,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: active ? 22 : 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: active
-                          ? AppTheme.neonPink
-                          : Colors.white.withValues(alpha: 0.24),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  );
-                }),
-              ),
-            ],
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(cards.length, (index) {
+              final active = index == _commandBarrelIndex;
+              return AnimatedContainer(
+                duration: AppTheme.fastAnimation,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: active ? 22 : 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: active
+                      ? AppTheme.neonPink
+                      : Colors.white.withValues(alpha: 0.24),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              );
+            }),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -1516,7 +1452,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             .clamp(0.20, 1.0)
             .toDouble();
         final fittedHeight = naturalHeight * scale;
-        final fittedWidth = naturalWidth * scale;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1580,94 +1515,91 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   ),
                 ),
               ),
-            Center(
-              child: SizedBox(
-                width: fittedWidth.clamp(0.0, constraints.maxWidth),
-                height: fittedHeight,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned.fill(
-                      child: InteractiveViewer(
-                        transformationController:
-                            _blueprintGridTransformController,
-                        panEnabled: true,
-                        scaleEnabled: true,
-                        constrained: true,
-                        minScale: 1.0,
-                        maxScale:
-                            mediaQuery.orientation == Orientation.landscape
-                            ? 5.5
-                            : 4.2,
-                        boundaryMargin: const EdgeInsets.all(384),
-                        clipBehavior: Clip.none,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          alignment: Alignment.topCenter,
-                          child: SizedBox(
-                            width: naturalWidth,
-                            height: naturalHeight,
-                            child: GridView.builder(
-                              itemCount: filtered.length,
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: EdgeInsets.zero,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    crossAxisSpacing: spacing,
-                                    mainAxisSpacing: spacing,
-                                    childAspectRatio: childAspectRatio,
+            SizedBox(
+              width: constraints.maxWidth,
+              height: fittedHeight,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: InteractiveViewer(
+                      transformationController:
+                          _blueprintGridTransformController,
+                      panEnabled: true,
+                      scaleEnabled: true,
+                      constrained: true,
+                      minScale: 1.0,
+                      maxScale: mediaQuery.orientation == Orientation.landscape
+                          ? 5.5
+                          : 4.2,
+                      boundaryMargin: const EdgeInsets.all(384),
+                      clipBehavior: Clip.none,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        alignment: Alignment.topCenter,
+                        child: SizedBox(
+                          width: naturalWidth,
+                          height: naturalHeight,
+                          child: GridView.builder(
+                            itemCount: filtered.length,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.zero,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: spacing,
+                                  mainAxisSpacing: spacing,
+                                  childAspectRatio: childAspectRatio,
+                                ),
+                            itemBuilder: (context, index) {
+                              final blueprint = filtered[index];
+                              final state =
+                                  states[blueprint.id] ??
+                                  ArcBlueprintState.empty(blueprint.id);
+
+                              return GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onDoubleTap: () =>
+                                    _openBlueprintPreview(blueprint, state),
+                                child: BlueprintTile(
+                                  blueprint: blueprint,
+                                  state: state,
+                                  landscape: true,
+                                  rarityColor: _rarityColor(blueprint.rarity),
+                                  isSelectionMode: _selectionMode,
+                                  isSelected: _selectedBlueprintIds.contains(
+                                    blueprint.id,
                                   ),
-                              itemBuilder: (context, index) {
-                                final blueprint = filtered[index];
-                                final state =
-                                    states[blueprint.id] ??
-                                    ArcBlueprintState.empty(blueprint.id);
+                                  onTap: () async {
+                                    if (_selectionMode) {
+                                      _toggleSelection(blueprint.id);
+                                      return;
+                                    }
 
-                                return GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onDoubleTap: () =>
-                                      _openBlueprintPreview(blueprint, state),
-                                  child: BlueprintTile(
-                                    blueprint: blueprint,
-                                    state: state,
-                                    landscape: true,
-                                    rarityColor: _rarityColor(blueprint.rarity),
-                                    isSelectionMode: _selectionMode,
-                                    isSelected: _selectedBlueprintIds.contains(
-                                      blueprint.id,
-                                    ),
-                                    onTap: () async {
-                                      if (_selectionMode) {
-                                        _toggleSelection(blueprint.id);
-                                        return;
-                                      }
-
-                                      await _openBlueprintPreview(
+                                    await _openBlueprintPreview(
+                                      blueprint,
+                                      state,
+                                    );
+                                  },
+                                  onLongPress: () =>
+                                      _openBlueprintLoadoutActions(
                                         blueprint,
                                         state,
-                                      );
-                                    },
-                                    onLongPress: () =>
-                                        _openBlueprintLoadoutActions(
-                                          blueprint,
-                                          state,
-                                        ),
-                                  ),
-                                );
-                              },
-                            ),
+                                      ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
                     ),
-                    Positioned(
-                      right: 8,
-                      bottom: 10,
-                      child: _buildGridZoomControls(),
-                    ),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    right: 8,
+                    bottom: -2,
+                    child: _buildGridZoomControls(),
+                  ),
+                ],
               ),
             ),
           ],

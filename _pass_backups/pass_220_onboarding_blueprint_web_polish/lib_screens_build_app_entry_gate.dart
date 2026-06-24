@@ -5,9 +5,10 @@ import 'package:uag_arc_raiders_hub/features/auth/session/uag_biometric_relock_s
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_initializer.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
+import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/build/home_screen.dart';
+import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class AppEntryGate extends StatefulWidget {
@@ -105,9 +106,13 @@ class _AppEntryGateState extends State<AppEntryGate>
           .get();
       final data = doc.data() ?? <String, dynamic>{};
 
-      // Closed beta v2 onboarding is mandatory because profile, availability,
-      // blueprints, goals and trade intent drive matchmaking and smart trading.
-      return !(data['arcMandatoryOnboardingComplete'] == true);
+      // Signup already captures the basic/trader profile. If the profile exists,
+      // do not send the user through the older duplicate onboarding flow.
+      final hasBasicProfile = data['basicProfile'] is Map;
+      final hasTraderProfile = data['traderProfile'] is Map;
+      if (hasBasicProfile || hasTraderProfile) return false;
+
+      return !(data['onboardingComplete'] == true);
     } on FirebaseException catch (error, stackTrace) {
       debugPrint('AppEntryGate prepare user failed: ${error.code}');
       debugPrintStack(stackTrace: stackTrace);
@@ -201,7 +206,7 @@ class _AppEntryGateState extends State<AppEntryGate>
                     final needsOnboarding = onboardingSnapshot.data ?? true;
                     if (needsOnboarding) {
                       _fanDisclaimerChecked = false;
-                      return const ArcMandatoryOnboardingScreen();
+                      return const OnboardingBasicProfileScreen();
                     }
 
                     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -228,9 +233,9 @@ class _GateLoadingScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      body: const Stack(
-        children: [
-          Positioned.fill(child: _ArcGateBackdrop()),
+      body: Stack(
+        children: const [
+          Positioned.fill(child: StaticWatermark()),
           Center(child: CircularProgressIndicator(color: AppTheme.neonCyan)),
         ],
       ),
@@ -250,7 +255,7 @@ class _GateErrorScaffold extends StatelessWidget {
       backgroundColor: AppTheme.darkBackground,
       body: Stack(
         children: [
-          const Positioned.fill(child: _ArcGateBackdrop()),
+          const Positioned.fill(child: StaticWatermark()),
           Center(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spaceL),
@@ -286,51 +291,6 @@ class _GateErrorScaffold extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ArcGateBackdrop extends StatelessWidget {
-  const _ArcGateBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-        ),
-        Container(color: Colors.black.withValues(alpha: 0.62)),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: 0.82),
-                Colors.transparent,
-                Colors.black.withValues(alpha: 0.92),
-              ],
-            ),
-          ),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0.0, -0.08),
-              radius: 0.82,
-              colors: [
-                AppTheme.neonCyan.withValues(alpha: 0.10),
-                AppTheme.neonPink.withValues(alpha: 0.07),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
