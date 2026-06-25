@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_loadout_cards.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_loadout_intelligence_summary.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class FavouriteLoadoutScreen extends StatefulWidget {
@@ -26,36 +28,368 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   final ArcSavedLoadoutRepository _savedLoadoutRepository =
       ArcSavedLoadoutRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
-  final ArcPlayerPlayStyle _selectedPlayStyle = ArcPlayerPlayStyle.balanced;
-  final String _selectedAugment = 'Survivor';
-  final String _selectedPrimaryWeapon = 'Anvil';
-  final String _selectedSecondaryWeapon = 'Stitcher';
-  final List<String> _selectedPrimaryAttachments = <String>[
-    'Muzzle',
-    'Tech Mod',
-  ];
-  final List<String> _selectedSecondaryAttachments = <String>[
+
+  String _buildName = 'Favourite Raider Build';
+  ArcPlayerPlayStyle _playStyle = ArcPlayerPlayStyle.balanced;
+  String _augment = 'Survivor';
+  String _shield = 'Shield Level 2';
+  String _primaryWeapon = 'Anvil';
+  String _secondaryWeapon = 'Stitcher';
+  final List<String> _primaryAttachments = <String>['Muzzle', 'Tech Mod'];
+  final List<String> _secondaryAttachments = <String>[
     'Muzzle',
     'Underbarrel',
     'Stock',
   ];
-  final List<String> _selectedEquipment = <String>[
-    'Shield Level 2',
+  final List<String> _quickSlots = <String>[
     'Snap Hook',
-  ];
-  final List<String> _selectedConsumables = <String>[
     'Vita Shot',
     'Lure Grenade',
+    'Empty Slot',
+    'Empty Slot',
   ];
 
-  String _normaliseBlueprintName(String name) {
-    return name.trim().toLowerCase();
+  bool _loadedSavedState = false;
+
+  String _normalise(String value) => value.trim().toLowerCase();
+
+  ArcBlueprint? _blueprintForName(String name) {
+    final normalised = _normalise(name);
+    for (final blueprint in ArcBlueprintSeedData.blueprints) {
+      if (_normalise(blueprint.name) == normalised) return blueprint;
+    }
+    return null;
   }
 
-  ArcLoadoutWeaponSpec _weapon(String name) {
+  ArcBlueprintState _stateFor(
+    String itemName,
+    Map<String, ArcBlueprintState> states,
+  ) {
+    final blueprint = _blueprintForName(itemName);
+    if (blueprint == null) return ArcBlueprintState.empty(itemName);
+    return states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+  }
+
+  bool _isOwnedOrNotBlueprint({
+    required String itemName,
+    required bool blueprintBased,
+    required Map<String, ArcBlueprintState> states,
+  }) {
+    if (!blueprintBased) return true;
+    return _stateFor(itemName, states).owned;
+  }
+
+  ArcLoadoutWeaponSpec _weaponSpec(String name) {
     return ArcLoadoutSeedData.weapons.firstWhere(
       (weapon) => weapon.name == name,
       orElse: () => ArcLoadoutSeedData.weapons.first,
+    );
+  }
+
+  ArcLoadoutOption? _optionForName(String name) {
+    final allOptions = <ArcLoadoutOption>[
+      ...ArcLoadoutSeedData.augments,
+      ...ArcLoadoutSeedData.equipment,
+      ...ArcLoadoutSeedData.consumables,
+    ];
+    for (final option in allOptions) {
+      if (_normalise(option.name) == _normalise(name)) return option;
+    }
+    return null;
+  }
+
+  void _applySavedLoadout(ArcSavedLoadout loadout) {
+    setState(() {
+      _buildName = loadout.name;
+      _playStyle = loadout.playStyle;
+      _augment = loadout.augment;
+      _primaryWeapon = loadout.primaryWeapon;
+      _secondaryWeapon = loadout.secondaryWeapon;
+      _primaryAttachments
+        ..clear()
+        ..addAll(loadout.primaryAttachments);
+      _secondaryAttachments
+        ..clear()
+        ..addAll(loadout.secondaryAttachments);
+      _quickSlots
+        ..clear()
+        ..addAll([...loadout.equipment, ...loadout.consumables]);
+      while (_quickSlots.length < 5) {
+        _quickSlots.add('Empty Slot');
+      }
+      if (_quickSlots.length > 5) {
+        _quickSlots.removeRange(5, _quickSlots.length);
+      }
+    });
+  }
+
+  Future<void> _saveLoadout() async {
+    final now = DateTime.now();
+    final equipment = _quickSlots
+        .where((slot) => slot != 'Empty Slot')
+        .take(2)
+        .toList(growable: false);
+    final consumables = _quickSlots
+        .where((slot) => slot != 'Empty Slot')
+        .skip(2)
+        .toList(growable: false);
+
+    final loadout = ArcSavedLoadout(
+      id: 'favourite-loadout',
+      name: _buildName,
+      category: ArcLoadoutCategory.saved,
+      playStyle: _playStyle,
+      augment: _augment,
+      primaryWeapon: _primaryWeapon,
+      primaryAttachments: List<String>.from(_primaryAttachments),
+      secondaryWeapon: _secondaryWeapon,
+      secondaryAttachments: List<String>.from(_secondaryAttachments),
+      equipment: equipment,
+      consumables: consumables,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    try {
+      await _savedLoadoutRepository.saveLoadout(loadout);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Favourite loadout saved.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save loadout: $error')));
+    }
+  }
+
+  Future<void> _pickWeapon({required bool primary}) async {
+    final selected = await _showPicker<ArcLoadoutWeaponSpec>(
+      title: primary ? 'Select Primary Weapon' : 'Select Secondary Weapon',
+      items: ArcLoadoutSeedData.weapons,
+      labelBuilder: (weapon) => weapon.name,
+      subtitleBuilder: (weapon) {
+        if (weapon.blueprintBased) return 'Blueprint weapon • ${weapon.role}';
+        if (weapon.craftable) {
+          final level = weapon.gunsmithLevel == null
+              ? 'Bench craftable'
+              : 'Gunsmith Level ${weapon.gunsmithLevel}';
+          return '$level • ${weapon.role}';
+        }
+        return '${weapon.category} • ${weapon.role}';
+      },
+    );
+
+    if (selected == null) return;
+
+    setState(() {
+      if (primary) {
+        _primaryWeapon = selected.name;
+        _primaryAttachments
+          ..clear()
+          ..addAll(selected.slots.take(3));
+      } else {
+        _secondaryWeapon = selected.name;
+        _secondaryAttachments
+          ..clear()
+          ..addAll(selected.slots.take(3));
+      }
+    });
+  }
+
+  Future<void> _pickAugment() async {
+    final selected = await _showPicker<ArcLoadoutOption>(
+      title: 'Select Augment',
+      items: ArcLoadoutSeedData.augments,
+      labelBuilder: (option) => option.name,
+      subtitleBuilder: (option) => option.description,
+    );
+    if (selected == null) return;
+    setState(() => _augment = selected.name);
+  }
+
+  Future<void> _pickShield() async {
+    final options = ArcLoadoutSeedData.equipment
+        .where((option) => option.name.toLowerCase().contains('shield'))
+        .toList(growable: false);
+    final fallback = options.isEmpty
+        ? const <ArcLoadoutOption>[
+            ArcLoadoutOption(
+              name: 'Shield Level 1',
+              type: ArcLoadoutSlotType.equipment,
+              description: 'Starter shield target.',
+              craftable: true,
+            ),
+            ArcLoadoutOption(
+              name: 'Shield Level 2',
+              type: ArcLoadoutSlotType.equipment,
+              description: 'Balanced shield target.',
+              craftable: true,
+            ),
+            ArcLoadoutOption(
+              name: 'Shield Level 3',
+              type: ArcLoadoutSlotType.equipment,
+              description: 'High protection shield target.',
+              craftable: true,
+            ),
+          ]
+        : options;
+
+    final selected = await _showPicker<ArcLoadoutOption>(
+      title: 'Select Shield',
+      items: fallback,
+      labelBuilder: (option) => option.name,
+      subtitleBuilder: (option) => option.description,
+    );
+    if (selected == null) return;
+    setState(() => _shield = selected.name);
+  }
+
+  Future<void> _pickQuickSlot(int index) async {
+    final options = <ArcLoadoutOption>[
+      ...ArcLoadoutSeedData.equipment,
+      ...ArcLoadoutSeedData.consumables,
+      const ArcLoadoutOption(
+        name: 'Empty Slot',
+        type: ArcLoadoutSlotType.equipment,
+        description: 'Leave this slot empty for now.',
+      ),
+    ];
+    final selected = await _showPicker<ArcLoadoutOption>(
+      title: 'Select Quick Slot ${index + 1}',
+      items: options,
+      labelBuilder: (option) => option.name,
+      subtitleBuilder: (option) => option.description,
+    );
+    if (selected == null) return;
+    setState(() => _quickSlots[index] = selected.name);
+  }
+
+  Future<void> _pickAttachment({
+    required bool primary,
+    required int index,
+  }) async {
+    final weapon = _weaponSpec(primary ? _primaryWeapon : _secondaryWeapon);
+    final slots = weapon.slots.isEmpty
+        ? const <String>['Attachment']
+        : weapon.slots;
+    final currentList = primary ? _primaryAttachments : _secondaryAttachments;
+    final current = index < currentList.length
+        ? currentList[index]
+        : slots.first;
+
+    final selected = await _showPicker<String>(
+      title: 'Select Attachment Slot',
+      items: [...slots, 'Empty Slot'],
+      labelBuilder: (slot) => slot,
+      subtitleBuilder: (slot) => slot == 'Empty Slot'
+          ? 'Clear this attachment slot.'
+          : slot == current
+          ? 'Currently selected.'
+          : 'Attachment category slot.',
+    );
+    if (selected == null) return;
+
+    setState(() {
+      while (currentList.length <= index) {
+        currentList.add('Empty Slot');
+      }
+      currentList[index] = selected;
+    });
+  }
+
+  Future<T?> _showPicker<T>({
+    required String title,
+    required List<T> items,
+    required String Function(T item) labelBuilder,
+    required String Function(T item) subtitleBuilder,
+  }) {
+    return showModalBottomSheet<T>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.all(14),
+          child: ElectricChargeBorder(
+            active: true,
+            radius: 24,
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.82,
+              ),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.32),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title.toUpperCase(),
+                            style: AppTheme.tradingHeading(
+                              fontSize: 20,
+                              color: AppTheme.neonCyan,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) => Divider(
+                        height: 1,
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return ListTile(
+                          title: Text(
+                            labelBuilder(item),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          subtitle: Text(
+                            subtitleBuilder(item),
+                            style: const TextStyle(color: Colors.white60),
+                          ),
+                          trailing: const Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppTheme.neonCyan,
+                          ),
+                          onTap: () => Navigator.of(sheetContext).pop(item),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -66,1710 +400,842 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
-        showAdBanner: false,
+        showAdBanner: true,
         child: SafeArea(
-          child: ArcRaidersPageList(
-            children: [
-              _buildCinematicLoadoutHero(),
-              _buildInGameLoadoutBoard(),
-              const SizedBox(height: 12),
-              _buildPrimaryCommandCentreActions(),
-              const SizedBox(height: 12),
-              _buildRealIntelligenceState(),
-              const SizedBox(height: 12),
-              _buildIntelligencePanel(),
-              const SizedBox(height: 12),
-              _buildLoadoutCommandCards(),
-              const SizedBox(height: 12),
-              _buildSaveCurrentLoadoutButton(),
-              const SizedBox(height: 72),
-            ],
+          child: StreamBuilder<List<ArcSavedLoadout>>(
+            stream: _savedLoadoutRepository.watchSavedLoadouts(),
+            builder: (context, savedSnapshot) {
+              final saved = savedSnapshot.data ?? const <ArcSavedLoadout>[];
+              if (!_loadedSavedState && saved.isNotEmpty) {
+                _loadedSavedState = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _applySavedLoadout(saved.first);
+                });
+              }
+
+              return StreamBuilder<Map<String, ArcBlueprintState>>(
+                stream: _blueprintRepository.watchMyBlueprintStates(),
+                builder: (context, stateSnapshot) {
+                  final blueprintStates =
+                      stateSnapshot.data ?? <String, ArcBlueprintState>{};
+                  return ArcRaidersPageList(
+                    maxWidth: 1180,
+                    bottomPadding: 100,
+                    children: [
+                      _buildHero(blueprintStates),
+                      const SizedBox(height: 10),
+                      _buildLoadoutBoard(blueprintStates),
+                      const SizedBox(height: 10),
+                      _buildIntelligenceStrip(blueprintStates),
+                    ],
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInGameLoadoutBoard() {
-    final utilitySlots = <String>[
-      ..._selectedEquipment,
-      ..._selectedConsumables,
-    ];
-    while (utilitySlots.length < 5) {
-      utilitySlots.add('Empty Slot');
-    }
+  Widget _buildHero(Map<String, ArcBlueprintState> states) {
+    final missing = _missingBlueprintItems(states);
+    return _arcPanel(
+      accent: AppTheme.neonCyan,
+      padding: const EdgeInsets.all(14),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final title = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'FAVOURITE LOADOUT',
+                style: AppTheme.tradingHeading(
+                  fontSize: compact ? 25 : 32,
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _buildName,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  isBold: true,
+                ),
+              ),
+            ],
+          );
+          final actions = Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: compact ? WrapAlignment.start : WrapAlignment.end,
+            children: [
+              _pill('Balanced PvP/PvE', AppTheme.neonPink),
+              _pill('${missing.length} missing', Colors.amberAccent),
+              _smallAction(
+                label: 'Save',
+                icon: Icons.save_rounded,
+                color: AppTheme.neonCyan,
+                onTap: _saveLoadout,
+              ),
+            ],
+          );
 
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [title, const SizedBox(height: 12), actions],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: title),
+              const SizedBox(width: 12),
+              Flexible(child: actions),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoadoutBoard(Map<String, ArcBlueprintState> states) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final desktop = constraints.maxWidth >= 940;
-        final tablet = constraints.maxWidth >= 680;
+        final desktop = constraints.maxWidth >= 900;
+        final tablet = constraints.maxWidth >= 620;
 
         if (desktop) {
-          return _buildLoadoutGridContainer(
-            child: Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _buildWeaponBoardCard(
-                        label: 'PRIMARY WEAPON',
-                        weaponName: _selectedPrimaryWeapon,
-                        attachments: _selectedPrimaryAttachments,
-                        accent: AppTheme.neonCyan,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildShieldAugmentPanel()),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildQuickSlotsPanel(
-                        utilitySlots.take(5).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _buildWeaponBoardCard(
-                        label: 'SECONDARY WEAPON',
-                        weaponName: _selectedSecondaryWeapon,
-                        attachments: _selectedSecondaryAttachments,
-                        accent: AppTheme.neonPink,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildBuildInfoPanel()),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildHuntStatusPanel()),
-                  ],
-                ),
-              ],
-            ),
+          return Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _buildWeaponSlot(true, states)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildShieldAugmentBlock(states)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildQuickSlots(states)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _buildWeaponSlot(false, states)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildMissingBlueprints(states)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildTradeBenchPanel(states)),
+                ],
+              ),
+            ],
           );
         }
 
         if (tablet) {
-          return _buildLoadoutGridContainer(
-            child: Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _buildWeaponBoardCard(
-                        label: 'PRIMARY WEAPON',
-                        weaponName: _selectedPrimaryWeapon,
-                        attachments: _selectedPrimaryAttachments,
-                        accent: AppTheme.neonCyan,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildShieldAugmentPanel()),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _buildWeaponBoardCard(
-                        label: 'SECONDARY WEAPON',
-                        weaponName: _selectedSecondaryWeapon,
-                        attachments: _selectedSecondaryAttachments,
-                        accent: AppTheme.neonPink,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildQuickSlotsPanel(
-                        utilitySlots.take(5).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _buildBuildInfoPanel()),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildHuntStatusPanel()),
-                  ],
-                ),
-              ],
-            ),
-          );
-        }
-
-        return _buildMobileLoadoutCommandCentre(utilitySlots.take(5).toList());
-      },
-    );
-  }
-
-  Widget _buildPrimaryCommandCentreActions() {
-    final chips = <Widget>[
-      _buildLoadoutStatusChip('Missing Blueprint Check', AppTheme.neonCyan),
-      _buildLoadoutStatusChip('Trade Assist Ready', AppTheme.neonPink),
-      _buildLoadoutStatusChip('Bench Watch', Colors.amberAccent),
-      _buildLoadoutStatusChip('Raid Planner Link', Colors.lightGreenAccent),
-    ];
-
-    Widget action({
-      required IconData icon,
-      required String title,
-      required String subtitle,
-      required Color accent,
-      required VoidCallback onTap,
-    }) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0B1421).withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: accent.withValues(alpha: 0.24)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: accent.withValues(alpha: 0.12),
-                  border: Border.all(color: accent.withValues(alpha: 0.32)),
-                ),
-                child: Icon(icon, color: accent, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: accent,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 11,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return _buildLoadoutGridContainer(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final desktop = constraints.maxWidth >= 760;
-          final actions = <Widget>[
-            action(
-              icon: Icons.grid_view_rounded,
-              title: 'Blueprint Intel',
-              subtitle: 'Check owned, missing and duplicate build pieces.',
-              accent: AppTheme.neonCyan,
-              onTap: () => Navigator.of(
-                context,
-              ).pushNamed(BlueprintGridScreen.routeName),
-            ),
-            action(
-              icon: Icons.swap_horiz_rounded,
-              title: 'Trade Opportunities',
-              subtitle: 'Use missing build pieces and dupes to drive offers.',
-              accent: AppTheme.neonPink,
-              onTap: () =>
-                  Navigator.of(context).pushNamed(TraderHubScreen.routeName),
-            ),
-            action(
-              icon: Icons.precision_manufacturing_rounded,
-              title: 'Bench Requirements',
-              subtitle: 'Track craft readiness and upgrade pressure.',
-              accent: Colors.amberAccent,
-              onTap: () => Navigator.of(
-                context,
-              ).pushNamed(ArcMarketIntelligenceScreen.routeName),
-            ),
-            action(
-              icon: Icons.route_rounded,
-              title: 'Raid Plan',
-              subtitle: 'Push missing build pieces into hunt targets.',
-              accent: Colors.lightGreenAccent,
-              onTap: () =>
-                  Navigator.of(context).pushNamed(RaidPlannerScreen.routeName),
-            ),
-          ];
-
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      'BUILD COMMAND CENTRE',
-                      style: AppTheme.tradingHeading(
-                        fontSize: 18,
-                        color: AppTheme.neonCyan,
-                      ),
-                    ),
-                  ),
-                  _buildLoadoutStatusChip('Primary Build', AppTheme.neonPink),
+                  Expanded(child: _buildWeaponSlot(true, states)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildShieldAugmentBlock(states)),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'This single favourite loadout now drives blueprint targets, trade priority, bench readiness and raid planning.',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.66),
-                  fontSize: 12,
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(spacing: 8, runSpacing: 8, children: chips),
-              const SizedBox(height: 12),
-              if (desktop)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: actions[0]),
-                    const SizedBox(width: 10),
-                    Expanded(child: actions[1]),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    actions[0],
-                    const SizedBox(height: 10),
-                    actions[1],
-                  ],
-                ),
               const SizedBox(height: 10),
-              if (desktop)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: actions[2]),
-                    const SizedBox(width: 10),
-                    Expanded(child: actions[3]),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    actions[2],
-                    const SizedBox(height: 10),
-                    actions[3],
-                  ],
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildWeaponSlot(false, states)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildQuickSlots(states)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _buildMissingBlueprints(states),
+              const SizedBox(height: 10),
+              _buildTradeBenchPanel(states),
             ],
           );
-        },
-      ),
-    );
-  }
-
-  Widget _buildMobileLoadoutCommandCentre(List<String> utilitySlots) {
-    return _buildLoadoutGridContainer(
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _buildCompactWeaponBoardCard(
-                  label: 'PRIMARY',
-                  weaponName: _selectedPrimaryWeapon,
-                  attachments: _selectedPrimaryAttachments,
-                  accent: AppTheme.neonCyan,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildCompactWeaponBoardCard(
-                  label: 'SECONDARY',
-                  weaponName: _selectedSecondaryWeapon,
-                  attachments: _selectedSecondaryAttachments,
-                  accent: AppTheme.neonPink,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _buildCompactShieldAugmentPanel()),
-              const SizedBox(width: 10),
-              Expanded(child: _buildCompactQuickSlotsPanel(utilitySlots)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _buildBuildInfoPanel(),
-          const SizedBox(height: 10),
-          _buildHuntStatusPanel(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactWeaponBoardCard({
-    required String label,
-    required String weaponName,
-    required List<String> attachments,
-    required Color accent,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B1421).withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: 0.26)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: accent,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.1,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            height: 68,
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: LinearGradient(
-                colors: [
-                  accent.withValues(alpha: 0.18),
-                  Colors.black.withValues(alpha: 0.22),
-                ],
-              ),
-              border: Border.all(color: accent.withValues(alpha: 0.16)),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Icon(
-                      Icons.gps_fixed_rounded,
-                      color: accent.withValues(alpha: 0.18),
-                      size: 46,
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Text(
-                    weaponName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(
-                      fontSize: 17,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: attachments
-                .map(
-                  (slot) => _buildLoadoutMiniSlot(
-                    label: slot,
-                    icon: Icons.settings_input_component_rounded,
-                    accent: accent,
-                    compact: true,
-                  ),
-                )
-                .toList(growable: false),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactShieldAugmentPanel() {
-    return _buildCommandPanel(
-      title: 'SHIELD',
-      accent: AppTheme.neonCyan,
-      icon: Icons.shield_rounded,
-      child: Column(
-        children: [
-          _buildLoadoutMiniSlot(
-            label: 'Level 2',
-            icon: Icons.shield_rounded,
-            accent: AppTheme.neonCyan,
-            compact: true,
-          ),
-          const SizedBox(height: 8),
-          _buildLoadoutMiniSlot(
-            label: _selectedAugment,
-            icon: Icons.auto_awesome_rounded,
-            accent: AppTheme.neonPink,
-            compact: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactQuickSlotsPanel(List<String> utilitySlots) {
-    return _buildCommandPanel(
-      title: 'QUICK x5',
-      accent: AppTheme.neonPink,
-      icon: Icons.inventory_2_rounded,
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: [
-          for (final slot in utilitySlots)
-            _buildLoadoutMiniSlot(
-              label: slot,
-              icon: _utilityIcon(slot),
-              accent: slot == 'Empty Slot'
-                  ? Colors.white38
-                  : _utilityAccent(slot),
-              compact: true,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadoutGridContainer({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
-            const Color(0xFF0A1320).withValues(alpha: 0.96),
-          ],
-        ),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.26)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.08),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildShieldAugmentPanel() {
-    return _buildCommandPanel(
-      title: 'SHIELD + AUGMENT',
-      accent: AppTheme.neonPink,
-      icon: Icons.health_and_safety_rounded,
-      child: Column(
-        children: [
-          _buildLoadoutMiniSlot(
-            label: 'Shield',
-            value: 'Level 2',
-            icon: Icons.shield_rounded,
-            accent: AppTheme.neonCyan,
-          ),
-          const SizedBox(height: 10),
-          _buildLoadoutMiniSlot(
-            label: 'Augment',
-            value: _selectedAugment,
-            icon: Icons.auto_awesome_rounded,
-            accent: AppTheme.neonPink,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickSlotsPanel(List<String> utilitySlots) {
-    return _buildCommandPanel(
-      title: 'QUICK SLOTS x5',
-      accent: AppTheme.neonCyan,
-      icon: Icons.inventory_2_rounded,
-      child: Column(
-        children: [
-          for (final slot in utilitySlots) ...[
-            _buildLoadoutMiniSlot(
-              label: slot,
-              icon: _utilityIcon(slot),
-              accent: slot == 'Empty Slot'
-                  ? Colors.white38
-                  : _utilityAccent(slot),
-            ),
-            if (slot != utilitySlots.last) const SizedBox(height: 8),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBuildInfoPanel() {
-    return _buildCommandPanel(
-      title: 'BUILD INFO',
-      accent: AppTheme.neonCyan,
-      icon: Icons.query_stats_rounded,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildIntelMetric('Archetype', 'Balanced PvP / PvE'),
-          const SizedBox(height: 8),
-          _buildIntelMetric('Playstyle', _selectedPlayStyle.shortLabel),
-          const SizedBox(height: 8),
-          _buildIntelMetric('Raid role', 'Survive, clear, extract'),
-          const SizedBox(height: 10),
-          Text(
-            _loadoutInference([..._selectedEquipment, ..._selectedConsumables]),
-            style: const TextStyle(
-              color: Colors.white60,
-              fontSize: 11,
-              height: 1.25,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHuntStatusPanel() {
-    return _buildCommandPanel(
-      title: 'HUNT STATUS',
-      accent: AppTheme.neonPink,
-      icon: Icons.radar_rounded,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildIntelMetric('Missing items', 'Blueprint-aware'),
-          const SizedBox(height: 8),
-          _buildIntelMetric('Trade signal', 'Checks duplicates'),
-          const SizedBox(height: 8),
-          _buildIntelMetric('Raid planner', 'Can feed hunt targets'),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildLoadoutStatusChip('Blueprint data', AppTheme.neonCyan),
-              _buildLoadoutStatusChip('Hunt ready', AppTheme.neonPink),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommandPanel({
-    required String title,
-    required Color accent,
-    required IconData icon,
-    required Widget child,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B1421).withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: 0.24)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: accent, size: 17),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: accent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIntelMetric(String label, String value) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white54, fontSize: 11),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeaponBoardCard({
-    required String label,
-    required String weaponName,
-    required List<String> attachments,
-    required Color accent,
-  }) {
-    final slots = attachments.isEmpty
-        ? <String>['No Attachments']
-        : attachments;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B1421).withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: 0.26)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: accent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const Spacer(),
-              _buildLoadoutStatusChip('Tracked', accent),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(
-            height: 86,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: LinearGradient(
-                colors: [
-                  accent.withValues(alpha: 0.18),
-                  Colors.black.withValues(alpha: 0.22),
-                ],
-              ),
-              border: Border.all(color: accent.withValues(alpha: 0.16)),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Icon(
-                    Icons.gps_fixed_rounded,
-                    color: accent.withValues(alpha: 0.20),
-                    size: 70,
-                  ),
-                ),
-                Positioned(
-                  left: 12,
-                  bottom: 10,
-                  right: 12,
-                  child: Text(
-                    weaponName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(
-                      fontSize: 22,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: slots
-                .map(
-                  (slot) => _buildLoadoutMiniSlot(
-                    label: slot,
-                    icon: slot == 'No Attachments'
-                        ? Icons.block_rounded
-                        : Icons.settings_input_component_rounded,
-                    accent: accent,
-                    compact: true,
-                  ),
-                )
-                .toList(growable: false),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _utilityIcon(String value) {
-    final lower = value.toLowerCase();
-    if (lower.contains('grenade') || lower.contains('lure')) {
-      return Icons.blur_circular_rounded;
-    }
-    if (lower.contains('shot') || lower.contains('vita')) {
-      return Icons.healing_rounded;
-    }
-    if (lower.contains('shield')) return Icons.shield_rounded;
-    if (lower.contains('hook')) return Icons.cable_rounded;
-    return Icons.inventory_2_rounded;
-  }
-
-  Color _utilityAccent(String value) {
-    final lower = value.toLowerCase();
-    if (lower.contains('grenade') ||
-        lower.contains('smoke') ||
-        lower.contains('barricade')) {
-      return AppTheme.neonPink;
-    }
-    if (lower.contains('lure') ||
-        lower.contains('wolf') ||
-        lower.contains('seeker')) {
-      return AppTheme.neonCyan;
-    }
-    return AppTheme.neonCyan;
-  }
-
-  String _loadoutInference(List<String> slots) {
-    final joined = slots.join(' ').toLowerCase();
-    if (joined.contains('grenade') ||
-        joined.contains('smoke') ||
-        joined.contains('barricade')) {
-      return 'Profile read: PvP leaning utility selection.';
-    }
-    if (joined.contains('lure') ||
-        joined.contains('wolf') ||
-        joined.contains('seeker')) {
-      return 'Profile read: PvE / ARC clearing utility selection.';
-    }
-    return 'Profile read: balanced utility selection.';
-  }
-
-  Widget _buildLoadoutMiniSlot({
-    required String label,
-    required IconData icon,
-    required Color accent,
-    String? value,
-    bool compact = false,
-  }) {
-    return Container(
-      constraints: BoxConstraints(minHeight: compact ? 42 : 64),
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 9 : 11,
-        vertical: compact ? 7 : 10,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.20),
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: accent.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
-        children: [
-          Icon(icon, color: accent, size: compact ? 15 : 18),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: compact ? 11 : 13,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                if (value != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white60, fontSize: 11),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadoutStatusChip(String label, Color accent) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: 0.22)),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: accent,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCinematicLoadoutHero() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
-            const Color(0xFF101827).withValues(alpha: 0.96),
-            const Color(0xFF07111B).withValues(alpha: 0.98),
-          ],
-        ),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.34)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.10),
-            blurRadius: 26,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 620;
-          final summary = Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildLoadoutStatusChip('Balanced PvP/PvE', AppTheme.neonCyan),
-              _buildLoadoutStatusChip('Trusted Raider', AppTheme.neonPink),
-              _buildLoadoutStatusChip('Blueprint linked', Colors.amberAccent),
-            ],
-          );
-
-          return compact
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLoadoutHeroTitle(),
-                    const SizedBox(height: 12),
-                    summary,
-                  ],
-                )
-              : Row(
-                  children: [
-                    Expanded(child: _buildLoadoutHeroTitle()),
-                    const SizedBox(width: 14),
-                    summary,
-                  ],
-                );
-        },
-      ),
-    );
-  }
-
-  Widget _buildLoadoutHeroTitle() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'FAVOURITE LOADOUT',
-          style: AppTheme.tradingHeading(
-            fontSize: 24,
-            color: AppTheme.neonCyan,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Balanced PvP/PvE • Trusted Raider • Blueprint-linked',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoadoutCommandCards() {
-    final buildCards = <_BuildCommandCardData>[
-      _BuildCommandCardData(
-        title: 'My Favourite Loadout',
-        subtitle: 'Primary personal build',
-        body:
-            'Finish this first. Extra PvP, PvE, balanced and meta cards make more sense once your core kit is set.',
-        icon: Icons.star_rounded,
-        accent: AppTheme.neonCyan,
-        complete: true,
-        onTap: () {},
-      ),
-      _BuildCommandCardData(
-        title: 'Add PvP Build',
-        subtitle: 'Raider pressure setup',
-        body: 'Create after your favourite loadout is ready.',
-        icon: Icons.flash_on_rounded,
-        accent: AppTheme.neonPink,
-        onTap: () {},
-      ),
-      _BuildCommandCardData(
-        title: 'Add PvE Build',
-        subtitle: 'ARC clearing setup',
-        body: 'Focus sustain, ARC damage and extraction safety.',
-        icon: Icons.shield_rounded,
-        accent: Colors.lightGreenAccent,
-        onTap: () {},
-      ),
-      _BuildCommandCardData(
-        title: 'Add Balanced Build',
-        subtitle: 'PvP/PvE hybrid',
-        body: 'Good for mixed raids where raiders and ARC are both likely.',
-        icon: Icons.balance_rounded,
-        accent: Colors.cyanAccent,
-        onTap: () {},
-      ),
-      _BuildCommandCardData(
-        title: 'Add Meta Build',
-        subtitle: 'Community-proven kit',
-        body:
-            'Use later for high-confidence setups and creator/community builds.',
-        icon: Icons.workspace_premium_rounded,
-        accent: Colors.amberAccent,
-        onTap: () {},
-      ),
-    ];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.26)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'BUILD SLOTS',
-            style: AppTheme.tradingHeading(
-              fontSize: 18,
-              color: AppTheme.neonPink,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Start with your favourite loadout. Add specialist cards once the main build is complete.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.68),
-              fontSize: 12,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 172,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: buildCards.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                return SizedBox(
-                  width: 238,
-                  child: _BuildCommandCard(data: buildCards[index]),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ignore: unused_element
-  Widget _buildHero() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.34)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.12),
-            blurRadius: 26,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.neonPink.withValues(alpha: 0.13),
-              border: Border.all(
-                color: AppTheme.neonPink.withValues(alpha: 0.48),
-              ),
-            ),
-            child: const Icon(
-              Icons.inventory_2_rounded,
-              color: AppTheme.neonPink,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'LOADOUT INTELLIGENCE',
-                  style: AppTheme.tradingHeading(
-                    fontSize: 20,
-                    color: AppTheme.neonCyan,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Build PvP, PvE and balanced setups that connect back into Blueprint Intel, bench readiness, trades and raid planning.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.70),
-                    fontSize: 12,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSaveCurrentLoadoutButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _saveCurrentLoadout,
-        icon: const Icon(Icons.save_rounded),
-        label: const Text('Save Current Loadout'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppTheme.neonCyan,
-          side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.46)),
-          padding: const EdgeInsets.symmetric(vertical: 13),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _saveCurrentLoadout() async {
-    final now = DateTime.now();
-    final loadout = ArcSavedLoadout(
-      id: 'loadout_',
-      name: ' Custom Build',
-      category: ArcLoadoutCategory.saved,
-      playStyle: _selectedPlayStyle,
-      augment: _selectedAugment,
-      primaryWeapon: _selectedPrimaryWeapon,
-      primaryAttachments: _selectedPrimaryAttachments,
-      secondaryWeapon: _selectedSecondaryWeapon,
-      secondaryAttachments: _selectedSecondaryAttachments,
-      equipment: _selectedEquipment,
-      consumables: _selectedConsumables,
-      createdAt: now,
-      updatedAt: now,
-    );
-
-    try {
-      await _savedLoadoutRepository.saveLoadout(loadout);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Loadout saved.')));
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not save loadout: ')));
-    }
-  }
-
-  Widget _buildIntelligencePanel() {
-    final primary = _weapon(_selectedPrimaryWeapon);
-    final secondary = _weapon(_selectedSecondaryWeapon);
-    final blueprintItems = <String>[
-      if (primary.blueprintBased) primary.name,
-      if (secondary.blueprintBased) secondary.name,
-      ..._selectedPrimaryAttachments,
-      ..._selectedSecondaryAttachments,
-    ];
-
-    final craftableItems = <ArcLoadoutWeaponSpec>[
-      if (primary.craftable) primary,
-      if (secondary.craftable) secondary,
-    ];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.34)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonPink.withValues(alpha: 0.10),
-            blurRadius: 22,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'BUILD INTELLIGENCE',
-            style: AppTheme.tradingHeading(
-              fontSize: 17,
-              color: AppTheme.neonPink,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'This build now links into Blueprint Intel, Trade Assist, Raid Planner and bench readiness.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.68),
-              fontSize: 12,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _LoadoutIntelRow(
-            icon: Icons.grid_view_rounded,
-            title: 'Blueprint Intel',
-            value: blueprintItems.isEmpty
-                ? 'No blueprint-based picks detected yet'
-                : ' blueprint-linked picks',
-            color: AppTheme.neonCyan,
-            onTap: () =>
-                Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
-          ),
-          _LoadoutIntelRow(
-            icon: Icons.swap_horiz_rounded,
-            title: 'Trade Assist',
-            value:
-                'Surface missing blueprint and duplicate trade opportunities',
-            color: AppTheme.neonPink,
-            onTap: () =>
-                Navigator.of(context).pushNamed(TraderHubScreen.routeName),
-          ),
-          _LoadoutIntelRow(
-            icon: Icons.route_rounded,
-            title: 'Raid Planner',
-            value: 'Add missing build pieces as raid objectives',
-            color: Colors.amberAccent,
-            onTap: () =>
-                Navigator.of(context).pushNamed(RaidPlannerScreen.routeName),
-          ),
-          _LoadoutIntelRow(
-            icon: Icons.radar_rounded,
-            title: 'Community Intel',
-            value: 'Check where build items are being found',
-            color: Colors.lightGreenAccent,
-            onTap: () => Navigator.of(
-              context,
-            ).pushNamed(ArcMarketIntelligenceScreen.routeName),
-          ),
-          if (craftableItems.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              'CRAFTING READINESS',
-              style: AppTheme.tradingHeading(
-                fontSize: 15,
-                color: Colors.amberAccent,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final weapon in craftableItems)
-              _CraftingReadinessCard(weapon: weapon),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRealIntelligenceState() {
-    return StreamBuilder(
-      stream: _blueprintRepository.watchMyBlueprintStates(),
-      builder: (context, snapshot) {
-        final states = snapshot.data ?? const {};
-
-        final ownedNames = <String>{};
-        final duplicateNames = <String>{};
-
-        for (final entry in states.entries) {
-          final state = entry.value;
-          final key = _normaliseBlueprintName(entry.key);
-          if (state.owned) {
-            ownedNames.add(key);
-          }
-          if (state.hasDuplicates) {
-            duplicateNames.add(key);
-          }
         }
 
-        return ArcLoadoutIntelligenceSummary(
-          primaryWeapon: _weapon(_selectedPrimaryWeapon),
-          secondaryWeapon: _weapon(_selectedSecondaryWeapon),
-          primaryAttachments: _selectedPrimaryAttachments,
-          secondaryAttachments: _selectedSecondaryAttachments,
-          equipment: _selectedEquipment,
-          consumables: _selectedConsumables,
-          ownedBlueprintNames: ownedNames,
-          duplicateBlueprintNames: duplicateNames,
-          onOpenBlueprintIntel: () =>
-              Navigator.of(context).pushNamed(BlueprintGridScreen.routeName),
-          onOpenTradeAssist: () =>
-              Navigator.of(context).pushNamed(TraderHubScreen.routeName),
-          onOpenRaidPlanner: () =>
-              Navigator.of(context).pushNamed(RaidPlannerScreen.routeName),
-          onOpenCommunityIntel: () => Navigator.of(
-            context,
-          ).pushNamed(ArcMarketIntelligenceScreen.routeName),
+        return Column(
+          children: [
+            _buildShieldAugmentBlock(states),
+            const SizedBox(height: 10),
+            _buildWeaponSlot(true, states),
+            const SizedBox(height: 10),
+            _buildWeaponSlot(false, states),
+            const SizedBox(height: 10),
+            _buildQuickSlots(states),
+            const SizedBox(height: 10),
+            _buildMissingBlueprints(states),
+            const SizedBox(height: 10),
+            _buildTradeBenchPanel(states),
+          ],
         );
       },
     );
   }
 
-  // ignore: unused_element
-  Widget _buildBuilderFoundation() {
-    final balanced = ArcLoadoutSeedData.starterLoadouts.first;
-    final primary = _weapon(balanced.primaryWeapon);
-    final secondary = _weapon(balanced.secondaryWeapon);
-
-    final cards = [
-      ArcLoadoutSlotCard(
-        title: 'Augment',
-        value: balanced.augment,
-        description:
-            'First card in the builder flow. Augment choice sets the build identity.',
-        icon: Icons.health_and_safety_rounded,
-        accent: AppTheme.neonPink,
-      ),
-      ArcLoadoutSlotCard(
-        title: 'Primary Weapon',
-        value: primary.name,
-        description: primary.role,
-        icon: Icons.flash_on_rounded,
-        accent: AppTheme.neonCyan,
-        blueprintBased: primary.blueprintBased,
-        craftable: primary.craftable,
-        gunsmithLevel: primary.gunsmithLevel,
-      ),
-      ArcLoadoutSlotCard(
-        title: 'Primary Attachments',
-        value: primary.slots.isEmpty
-            ? 'No attachments'
-            : primary.slots.join(', '),
-        description:
-            'Attachment slots will use Blueprint Intel where blueprint-based options are selected.',
-        icon: Icons.tune_rounded,
-        accent: Colors.amberAccent,
-        blueprintBased: true,
-      ),
-      ArcLoadoutSlotCard(
-        title: 'Secondary Weapon',
-        value: secondary.name,
-        description: secondary.role,
-        icon: Icons.bolt_rounded,
-        accent: AppTheme.neonPink,
-        blueprintBased: secondary.blueprintBased,
-        craftable: secondary.craftable,
-        gunsmithLevel: secondary.gunsmithLevel,
-      ),
-      ArcLoadoutSlotCard(
-        title: 'Secondary Attachments',
-        value: secondary.slots.isEmpty
-            ? 'No attachments'
-            : secondary.slots.join(', '),
-        description:
-            'Secondary attachment intelligence will mirror the primary weapon flow.',
-        icon: Icons.settings_suggest_rounded,
-        accent: Colors.lightGreenAccent,
-        blueprintBased: true,
-      ),
-      const ArcLoadoutSlotCard(
-        title: 'Equipment',
-        value: 'Shield Level 2 / Snap Hook',
-        description:
-            'Equipment cards track craftable, owned and missing states.',
-        icon: Icons.shield_rounded,
-        accent: Colors.cyanAccent,
-        craftable: true,
-      ),
-      const ArcLoadoutSlotCard(
-        title: 'Consumables',
-        value: 'Vita Shot / Lure Grenade',
-        description:
-            'Consumables stay lightweight and focused on combat-readiness.',
-        icon: Icons.medical_services_rounded,
-        accent: Colors.lightGreenAccent,
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'BUILDER FLOW',
-          style: AppTheme.tradingHeading(
-            fontSize: 19,
-            color: AppTheme.neonPink,
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 260,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: cards.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, index) => cards[index],
-          ),
-        ),
-      ],
+  Widget _buildWeaponSlot(bool primary, Map<String, ArcBlueprintState> states) {
+    final weapon = _weaponSpec(primary ? _primaryWeapon : _secondaryWeapon);
+    final attachments = primary ? _primaryAttachments : _secondaryAttachments;
+    final accent = primary ? AppTheme.neonCyan : AppTheme.neonPink;
+    final owned = _isOwnedOrNotBlueprint(
+      itemName: weapon.name,
+      blueprintBased: weapon.blueprintBased,
+      states: states,
     );
-  }
-}
 
-class _BuildCommandCardData {
-  const _BuildCommandCardData({
-    required this.title,
-    required this.subtitle,
-    required this.body,
-    required this.icon,
-    required this.accent,
-    required this.onTap,
-    this.complete = false,
-  });
-
-  final String title;
-  final String subtitle;
-  final String body;
-  final IconData icon;
-  final Color accent;
-  final VoidCallback onTap;
-  final bool complete;
-}
-
-class _BuildCommandCard extends StatelessWidget {
-  const _BuildCommandCard({required this.data});
-
-  final _BuildCommandCardData data;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: data.onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: data.accent.withValues(alpha: 0.34)),
-          boxShadow: [
-            BoxShadow(
-              color: data.accent.withValues(alpha: 0.10),
-              blurRadius: 18,
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: data.accent.withValues(alpha: 0.12),
-                    border: Border.all(
-                      color: data.accent.withValues(alpha: 0.34),
-                    ),
-                  ),
-                  child: Icon(data.icon, color: data.accent, size: 21),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: data.complete
-                        ? AppTheme.neonCyan.withValues(alpha: 0.12)
-                        : data.accent.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: data.complete
-                          ? AppTheme.neonCyan.withValues(alpha: 0.32)
-                          : data.accent.withValues(alpha: 0.28),
-                    ),
-                  ),
-                  child: Text(
-                    data.complete ? 'ACTIVE' : '+ ADD',
-                    style: TextStyle(
-                      color: data.complete ? AppTheme.neonCyan : data.accent,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.7,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              data.title.toUpperCase(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: data.accent,
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.7,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              data.subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.78),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              data.body,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.62),
-                fontSize: 11.5,
-                height: 1.25,
-              ),
-            ),
-          ],
-        ),
+    return _arcPanel(
+      accent: accent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionHeader(
+            primary ? 'PRIMARY WEAPON' : 'SECONDARY WEAPON',
+            accent,
+          ),
+          const SizedBox(height: 10),
+          _itemTile(
+            label: weapon.name,
+            subtitle: _weaponSubtitle(weapon),
+            imageAsset: _blueprintForName(weapon.name)?.imageAssetPath,
+            accent: accent,
+            owned: owned,
+            lockedLabel: weapon.blueprintBased && !owned
+                ? 'MISSING BLUEPRINT'
+                : null,
+            onTap: () => _pickWeapon(primary: primary),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(3, (index) {
+              final label = index < attachments.length
+                  ? attachments[index]
+                  : 'Empty Slot';
+              return _attachmentChip(
+                label: label,
+                accent: accent,
+                onTap: () => _pickAttachment(primary: primary, index: index),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
-}
 
-class _LoadoutIntelRow extends StatelessWidget {
-  const _LoadoutIntelRow({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.color,
-    required this.onTap,
-  });
+  Widget _buildShieldAugmentBlock(Map<String, ArcBlueprintState> states) {
+    final augmentOption = _optionForName(_augment);
+    final shieldOption = _optionForName(_shield);
+    final augmentOwned = _isOwnedOrNotBlueprint(
+      itemName: _augment,
+      blueprintBased: augmentOption?.blueprintBased ?? false,
+      states: states,
+    );
+    final shieldOwned = _isOwnedOrNotBlueprint(
+      itemName: _shield,
+      blueprintBased: shieldOption?.blueprintBased ?? false,
+      states: states,
+    );
 
-  final IconData icon;
-  final String title;
-  final String value;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withValues(alpha: 0.28)),
+    return _arcPanel(
+      accent: Colors.lightGreenAccent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionHeader('AUGMENT + SHIELD', Colors.lightGreenAccent),
+          const SizedBox(height: 10),
+          _itemTile(
+            label: _augment,
+            subtitle: augmentOption?.description ?? 'Tap to choose augment.',
+            imageAsset: _blueprintForName(_augment)?.imageAssetPath,
+            accent: Colors.lightGreenAccent,
+            owned: augmentOwned,
+            onTap: _pickAugment,
           ),
-          child: Row(
+          const SizedBox(height: 8),
+          _itemTile(
+            label: _shield,
+            subtitle: shieldOption?.description ?? 'Tap to choose shield.',
+            imageAsset: _blueprintForName(_shield)?.imageAssetPath,
+            accent: Colors.amberAccent,
+            owned: shieldOwned,
+            onTap: _pickShield,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickSlots(Map<String, ArcBlueprintState> states) {
+    return _arcPanel(
+      accent: Colors.amberAccent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionHeader('QUICK SLOTS x5', Colors.amberAccent),
+          const SizedBox(height: 10),
+          ...List.generate(5, (index) {
+            final item = _quickSlots[index];
+            final option = _optionForName(item);
+            final owned = _isOwnedOrNotBlueprint(
+              itemName: item,
+              blueprintBased: option?.blueprintBased ?? false,
+              states: states,
+            );
+            return Padding(
+              padding: EdgeInsets.only(bottom: index == 4 ? 0 : 8),
+              child: _compactItemRow(
+                index: index + 1,
+                label: item,
+                subtitle: option?.description ?? 'Tap to assign item.',
+                accent: Colors.amberAccent,
+                owned: item == 'Empty Slot' ? true : owned,
+                onTap: () => _pickQuickSlot(index),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMissingBlueprints(Map<String, ArcBlueprintState> states) {
+    final missing = _missingBlueprintItems(states);
+    return _arcPanel(
+      accent: AppTheme.neonPink,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionHeader('MISSING BLUEPRINTS', AppTheme.neonPink),
+          const SizedBox(height: 10),
+          if (missing.isEmpty)
+            _statusLine(
+              icon: Icons.check_circle_rounded,
+              label: 'Loadout ready',
+              value: 'No blueprint-gated loadout items are currently missing.',
+              color: Colors.lightGreenAccent,
+            )
+          else
+            ...missing.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _statusLine(
+                  icon: Icons.lock_rounded,
+                  label: item,
+                  value:
+                      'Missing blueprint. Add to Hunt Targets or find trade.',
+                  color: AppTheme.neonPink,
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title.toUpperCase(),
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      value,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        fontSize: 11.5,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
+              _smallAction(
+                label: 'Blueprint Grid',
+                icon: Icons.grid_view_rounded,
+                color: AppTheme.neonCyan,
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(BlueprintGridScreen.routeName),
               ),
-              Icon(Icons.chevron_right_rounded, color: color, size: 22),
+              _smallAction(
+                label: 'Community Intel',
+                icon: Icons.radar_rounded,
+                color: AppTheme.neonPink,
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcMarketIntelligenceScreen.routeName),
+              ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTradeBenchPanel(Map<String, ArcBlueprintState> states) {
+    final primary = _weaponSpec(_primaryWeapon);
+    final secondary = _weaponSpec(_secondaryWeapon);
+    final craftable = [primary, secondary]
+        .where((weapon) => weapon.craftable)
+        .map(
+          (weapon) => weapon.gunsmithLevel == null
+              ? '${weapon.name}: craftable at Gunsmith bench'
+              : '${weapon.name}: Gunsmith Level ${weapon.gunsmithLevel}',
+        )
+        .toList(growable: false);
+
+    return _arcPanel(
+      accent: AppTheme.neonCyan,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionHeader('TRADE + BENCH READINESS', AppTheme.neonCyan),
+          const SizedBox(height: 10),
+          _statusLine(
+            icon: Icons.swap_horiz_rounded,
+            label: 'Trade Assist',
+            value: _missingBlueprintItems(states).isEmpty
+                ? 'No missing blueprint targets from this loadout.'
+                : 'Missing blueprint targets can feed Smart Trade Assist.',
+            color: AppTheme.neonPink,
+          ),
+          const SizedBox(height: 8),
+          _statusLine(
+            icon: Icons.construction_rounded,
+            label: 'Bench',
+            value: craftable.isEmpty
+                ? 'No bench-gated weapons selected.'
+                : craftable.join(' • '),
+            color: Colors.amberAccent,
+          ),
+          const SizedBox(height: 8),
+          _smallAction(
+            label: 'Open Trading',
+            icon: Icons.storefront_rounded,
+            color: AppTheme.neonCyan,
+            onTap: () =>
+                Navigator.of(context).pushNamed(TraderHubScreen.routeName),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIntelligenceStrip(Map<String, ArcBlueprintState> states) {
+    final missing = _missingBlueprintItems(states).length;
+    final craftableCount = [
+      _weaponSpec(_primaryWeapon),
+      _weaponSpec(_secondaryWeapon),
+    ].where((weapon) => weapon.craftable).length;
+
+    return _arcPanel(
+      accent: Colors.white70,
+      padding: const EdgeInsets.all(12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        alignment: WrapAlignment.center,
+        children: [
+          _pill(
+            'Missing: $missing',
+            missing == 0 ? Colors.lightGreenAccent : AppTheme.neonPink,
+          ),
+          _pill('Craftable: $craftableCount', Colors.amberAccent),
+          _pill('Primary: $_primaryWeapon', AppTheme.neonCyan),
+          _pill('Secondary: $_secondaryWeapon', AppTheme.neonPink),
+          _pill('Style: ${_playStyle.shortLabel}', Colors.white70),
+        ],
+      ),
+    );
+  }
+
+  List<String> _missingBlueprintItems(Map<String, ArcBlueprintState> states) {
+    final items = <String>[];
+    void checkWeapon(String name) {
+      final weapon = _weaponSpec(name);
+      if (weapon.blueprintBased &&
+          !_isOwnedOrNotBlueprint(
+            itemName: name,
+            blueprintBased: true,
+            states: states,
+          )) {
+        items.add(name);
+      }
+    }
+
+    void checkOption(String name) {
+      final option = _optionForName(name);
+      if ((option?.blueprintBased ?? false) &&
+          !_isOwnedOrNotBlueprint(
+            itemName: name,
+            blueprintBased: true,
+            states: states,
+          )) {
+        items.add(name);
+      }
+    }
+
+    checkWeapon(_primaryWeapon);
+    checkWeapon(_secondaryWeapon);
+    checkOption(_augment);
+    checkOption(_shield);
+    for (final item in _quickSlots) {
+      if (item != 'Empty Slot') checkOption(item);
+    }
+    return items.toSet().toList(growable: false);
+  }
+
+  String _weaponSubtitle(ArcLoadoutWeaponSpec weapon) {
+    final parts = <String>[weapon.category, weapon.role];
+    if (weapon.blueprintBased) parts.add('Blueprint required');
+    if (weapon.craftable) {
+      parts.add(
+        weapon.gunsmithLevel == null
+            ? 'Bench craftable'
+            : 'Gunsmith L${weapon.gunsmithLevel}',
+      );
+    }
+    return parts.join(' • ');
+  }
+
+  Widget _arcPanel({
+    required Color accent,
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(12),
+  }) {
+    return ElectricChargeBorder(
+      active: true,
+      radius: 22,
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: accent.withValues(alpha: 0.30)),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.10),
+              blurRadius: 22,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _sectionHeader(String label, Color accent) {
+    return Text(
+      label,
+      style: AppTheme.tradingHeading(fontSize: 18, color: accent),
+    );
+  }
+
+  Widget _itemTile({
+    required String label,
+    required String subtitle,
+    required String? imageAsset,
+    required Color accent,
+    required bool owned,
+    required VoidCallback onTap,
+    String? lockedLabel,
+  }) {
+    final image = _itemImage(
+      imageAsset: imageAsset,
+      accent: accent,
+      owned: owned,
+      icon: owned ? Icons.inventory_2_rounded : Icons.lock_rounded,
+    );
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.24),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: accent.withValues(alpha: owned ? 0.36 : 0.16),
+          ),
+        ),
+        child: Row(
+          children: [
+            image,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.tradingHeading(
+                      fontSize: 18,
+                      color: owned ? accent : Colors.white38,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    lockedLabel ?? subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: owned
+                          ? Colors.white60
+                          : AppTheme.neonPink.withValues(alpha: 0.86),
+                      fontSize: 12,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.edit_rounded,
+              color: accent.withValues(alpha: 0.78),
+              size: 18,
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-class _CraftingReadinessCard extends StatelessWidget {
-  const _CraftingReadinessCard({required this.weapon});
+  Widget _compactItemRow({
+    required int index,
+    required String label,
+    required String subtitle,
+    required Color accent,
+    required bool owned,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.20),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: accent.withValues(alpha: owned ? 0.26 : 0.12),
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(
+              '$index',
+              style: AppTheme.tradingHeading(fontSize: 18, color: accent),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: owned ? Colors.white : Colors.white38,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    owned ? subtitle : 'Missing blueprint',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: owned ? Colors.white54 : AppTheme.neonPink,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.edit_rounded,
+              color: accent.withValues(alpha: 0.72),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  final ArcLoadoutWeaponSpec weapon;
+  Widget _attachmentChip({
+    required String label,
+    required Color accent,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: accent.withValues(alpha: 0.28)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add_circle_outline_rounded, color: accent, size: 14),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: AppTheme.buttonTextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    // ignore: unused_local_variable
-    final level = weapon.gunsmithLevel == null
-        ? 'Bench level to verify'
-        : 'Gunsmith Level ';
+  Widget _itemImage({
+    required String? imageAsset,
+    required Color accent,
+    required bool owned,
+    required IconData icon,
+  }) {
+    final child = imageAsset == null
+        ? Icon(icon, color: owned ? accent : Colors.white30, size: 34)
+        : Image.asset(
+            imageAsset,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            errorBuilder: (_, _, _) =>
+                Icon(icon, color: owned ? accent : Colors.white30, size: 34),
+          );
 
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      width: 70,
+      height: 70,
+      padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
-        color: Colors.amberAccent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.30)),
+        color: Colors.black.withValues(alpha: 0.24),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accent.withValues(alpha: owned ? 0.34 : 0.12),
+        ),
+      ),
+      child: ColorFiltered(
+        colorFilter: owned
+            ? const ColorFilter.mode(Colors.transparent, BlendMode.dst)
+            : const ColorFilter.matrix(<double>[
+                0.2126,
+                0.7152,
+                0.0722,
+                0,
+                0,
+                0.2126,
+                0.7152,
+                0.0722,
+                0,
+                0,
+                0.2126,
+                0.7152,
+                0.0722,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0.42,
+                0,
+              ]),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _statusLine({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.build_rounded, color: Colors.amberAccent, size: 22),
-          const SizedBox(width: 10),
+          Icon(icon, color: color, size: 17),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              '  . Track bench resources or try your luck through free loadout / loot until verified.',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.76),
-                fontSize: 11.5,
-                height: 1.30,
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  height: 1.28,
+                ),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: TextStyle(color: color, fontWeight: FontWeight.w900),
+                  ),
+                  TextSpan(text: value),
+                ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _pill(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
+      ),
+      child: Text(
+        label,
+        style: AppTheme.buttonTextStyle(color: color, fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _smallAction({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: color.withValues(alpha: 0.38)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: AppTheme.buttonTextStyle(color: color, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
