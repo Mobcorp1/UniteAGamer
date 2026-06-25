@@ -188,33 +188,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   void _clearSelection() {
     setState(() {
       _selectedFilter = ArcBlueprintFilter.all;
+      _commandBarrelIndex = 0;
       _selectionMode = false;
       _selectedBlueprintIds.clear();
-    });
-    _jumpCommandBarrelToIndex(0);
-  }
-
-  void _jumpCommandBarrelToIndex(int index) {
-    final safeIndex = index % 5;
-    final targetPage = _commandBarrelLoopBasePage + safeIndex;
-    _commandBarrelPage = targetPage;
-    _commandBarrelIndex = safeIndex;
-
-    if (_commandBarrelPageController.hasClients) {
-      _commandBarrelPageController.jumpToPage(targetPage);
-    }
-  }
-
-  void _returnToFullGridView() {
-    if (!mounted) return;
-    setState(() {
-      _selectedFilter = ArcBlueprintFilter.all;
-      _selectionMode = false;
-      _selectedBlueprintIds.clear();
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _jumpCommandBarrelToIndex(0);
     });
   }
 
@@ -309,7 +285,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${blueprint.name} marked as owned.')),
     );
-    _returnToFullGridView();
+    setState(() {
+      _selectedFilter = ArcBlueprintFilter.all;
+      _commandBarrelIndex = 0;
+    });
 
     final wantsReport = await _askYesNo(
       title: 'Add drop report?',
@@ -398,7 +377,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ),
     );
 
-    _returnToFullGridView();
+    setState(() {
+      _selectedFilter = ArcBlueprintFilter.all;
+      _commandBarrelIndex = 0;
+      _selectionMode = false;
+      _selectedBlueprintIds.clear();
+    });
   }
 
   Future<void> _applyBulkDupes(Map<String, ArcBlueprintState> states) async {
@@ -484,7 +468,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('${blueprint.name} cleared.')));
-      _returnToFullGridView();
+      setState(() {
+        _selectedFilter = ArcBlueprintFilter.all;
+        _commandBarrelIndex = 0;
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -518,7 +505,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Blueprint grid reset.')));
       _clearSelection();
-      _returnToFullGridView();
+      setState(() {
+        _selectedFilter = ArcBlueprintFilter.all;
+        _commandBarrelIndex = 0;
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -547,7 +537,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text('${blueprint.name} saved.')));
-            _returnToFullGridView();
+            setState(() {
+              _selectedFilter = ArcBlueprintFilter.all;
+              _commandBarrelIndex = 0;
+            });
           },
           onClear: () => _confirmClearSingleBlueprint(blueprint, initialState),
         );
@@ -555,7 +548,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     );
 
     if (saved == true && mounted) {
-      _returnToFullGridView();
+      setState(() {
+        _selectedFilter = ArcBlueprintFilter.all;
+        _commandBarrelIndex = 0;
+      });
     }
   }
 
@@ -680,7 +676,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           radius: 24,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
+            padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
             decoration: BoxDecoration(
               color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
               borderRadius: BorderRadius.circular(24),
@@ -701,7 +697,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(icon, color: AppTheme.neonCyan, size: 16),
+                    Icon(icon, color: AppTheme.neonCyan, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -709,7 +705,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.tradingHeading(
-                          fontSize: 14,
+                          fontSize: 16,
                           color: AppTheme.neonCyan,
                         ),
                       ),
@@ -731,10 +727,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.white60, fontSize: 11),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 8),
                 ] else
-                  const SizedBox(height: 3),
-                Wrap(spacing: 5, runSpacing: 5, children: children),
+                  const SizedBox(height: 6),
+                Wrap(spacing: 7, runSpacing: 7, children: children),
               ],
             ),
           ),
@@ -747,7 +743,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         icon: Icons.search_rounded,
         title: 'Search',
         subtitle: 'Find a blueprint without leaving the full grid.',
-        children: [SizedBox(width: 235, child: _buildSearchAppBarTitle())],
+        children: [SizedBox(width: 300, child: _buildSearchAppBarTitle())],
       ),
       barrelCard(
         icon: Icons.filter_alt_rounded,
@@ -881,7 +877,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     Widget barrelArrow(IconData icon, VoidCallback? onTap) {
       return IconButton.filledTonal(
         onPressed: onTap,
-        icon: Icon(icon, size: 18),
+        icon: Icon(icon, size: 20),
         color: AppTheme.neonCyan,
         style: IconButton.styleFrom(
           backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
@@ -894,16 +890,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 900;
         final cardHeight = desktop
-            ? (_selectionMode ? 178.0 : 118.0)
-            : (_selectionMode ? 226.0 : 136.0);
+            ? (_selectionMode ? 188.0 : 132.0)
+            : (_selectionMode ? 240.0 : 148.0);
         final maxCardWidth = desktop
             ? switch (_commandBarrelIndex) {
-                0 => 270.0,
-                1 => 210.0,
-                2 => 255.0,
-                3 => 295.0,
-                4 => _selectionMode ? 390.0 : 270.0,
-                _ => 270.0,
+                0 => 390.0,
+                1 => 270.0,
+                2 => 300.0,
+                3 => 350.0,
+                4 => _selectionMode ? 430.0 : 330.0,
+                _ => 350.0,
               }
             : constraints.maxWidth;
 
@@ -1018,10 +1014,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     return AnimatedContainer(
       duration: AppTheme.fastAnimation,
       width: double.infinity,
-      margin: EdgeInsets.symmetric(horizontal: active ? 0 : 5),
+      margin: EdgeInsets.symmetric(horizontal: active ? 0 : 8),
       padding: EdgeInsets.symmetric(
-        horizontal: active ? 9 : 8,
-        vertical: active ? 5 : 4,
+        horizontal: active ? 12 : 10,
+        vertical: active ? 7 : 5,
       ),
       decoration: BoxDecoration(
         color: active
@@ -1049,7 +1045,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         overflow: TextOverflow.ellipsis,
         style: AppTheme.buttonTextStyle(
           color: color,
-          fontSize: active ? 11 : 9,
+          fontSize: active ? 12 : 10,
         ),
       ),
     );
@@ -1060,14 +1056,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   }) {
     Widget arrowButton(IconData icon, VoidCallback onTap) {
       return SizedBox(
-        width: 30,
-        height: 30,
+        width: 34,
+        height: 34,
         child: IconButton.filledTonal(
           tooltip: icon == Icons.keyboard_arrow_up_rounded
               ? 'Previous filter'
               : 'Next filter',
           onPressed: onTap,
-          icon: Icon(icon, size: 18),
+          icon: Icon(icon, size: 20),
           color: AppTheme.neonCyan,
           padding: EdgeInsets.zero,
           style: IconButton.styleFrom(
@@ -1084,8 +1080,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       builder: (context, constraints) {
         final desktop = MediaQuery.of(context).size.width >= 900;
         final barrelWidth = desktop
-            ? 166.0
-            : constraints.maxWidth.clamp(180.0, 240.0);
+            ? 224.0
+            : constraints.maxWidth.clamp(220.0, 300.0);
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -1127,7 +1123,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   ),
                 ),
                 if (desktop) ...[
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1135,7 +1131,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         Icons.keyboard_arrow_up_rounded,
                         () => _rotateFilterBarrel(-1),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 8),
                       arrowButton(
                         Icons.keyboard_arrow_down_rounded,
                         () => _rotateFilterBarrel(1),
@@ -1622,7 +1618,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   ),
                 ],
               ),
-              child: Icon(icon, color: AppTheme.neonCyan, size: 16),
+              child: Icon(icon, color: AppTheme.neonCyan, size: 18),
             ),
           ),
         ),
@@ -1901,14 +1897,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   _confirmResetGrid();
                   return;
                 case 'search':
-                  _jumpCommandBarrelToIndex(0);
+                  setState(() => _commandBarrelIndex = 0);
                   return;
                 case 'filters':
-                  _jumpCommandBarrelToIndex(1);
+                  setState(() => _commandBarrelIndex = 1);
                   return;
                 case 'select':
-                  setState(() => _selectionMode = true);
-                  _jumpCommandBarrelToIndex(4);
+                  setState(() {
+                    _commandBarrelIndex = 4;
+                    _selectionMode = true;
+                  });
                   return;
               }
             },
