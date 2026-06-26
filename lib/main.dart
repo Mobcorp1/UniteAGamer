@@ -47,7 +47,9 @@ Future<void> main() async {
 
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     try {
-      await MobileAds.instance.initialize();
+      if (!kIsWeb) {
+        await MobileAds.instance.initialize();
+      }
     } catch (e, st) {
       debugPrint('MobileAds init failed: $e');
       debugPrintStack(stackTrace: st);
