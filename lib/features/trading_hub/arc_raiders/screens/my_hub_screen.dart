@@ -3,11 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../widgets/arc_ad_banner_card.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -155,7 +155,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       accent: Colors.amberAccent,
       art: _ArcHubArtKind.raid,
       assetName: 'arc_hub_quest_tracker.webp',
-      builder: (_) => const ArcMatchRiderScreen(),
+      builder: (_) => const OperationsCommandScreen(),
     ),
   ];
 
@@ -177,6 +177,8 @@ class _MyHubScreenState extends State<MyHubScreen> {
       'Blueprint Tracker Beta',
       'Blueprint Grid',
       'Nomadic Trader',
+      'Operation Rewards',
+      'Operations',
       'My Hub',
     };
 

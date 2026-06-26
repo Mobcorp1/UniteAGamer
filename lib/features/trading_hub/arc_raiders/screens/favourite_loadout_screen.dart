@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
@@ -108,20 +109,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
-  String _assetSlug(String value) {
-    return value
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        .replaceAll(RegExp(r'^-+|-+$'), '');
-  }
-
   String? _assetForItemName(String name) {
-    final blueprintAsset = _blueprintForName(name)?.imageAssetPath;
-    if (blueprintAsset != null) return blueprintAsset;
-    final slug = _assetSlug(name);
-    if (slug.isEmpty || slug == 'empty-slot') return null;
-    return 'assets/arc_raiders/blueprints/$slug.webp';
+    return ArcBlueprintAssetRegistry.assetForWithBlueprintFallback(
+      itemName: name,
+      blueprintAssetPath: _blueprintForName(name)?.imageAssetPath,
+    );
   }
 
   ArcAttachmentSlotType _slotTypeForLabel(String label) {
@@ -754,7 +746,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _itemTile(
             label: weapon.name,
             subtitle: _weaponSubtitle(weapon),
-            imageAsset: _blueprintForName(weapon.name)?.imageAssetPath,
+            imageAsset: _assetForItemName(weapon.name),
             accent: accent,
             owned: owned,
             lockedLabel: weapon.blueprintBased && !owned
@@ -817,7 +809,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _itemTile(
             label: _augment,
             subtitle: augmentOption?.description ?? 'Tap to choose augment.',
-            imageAsset: _blueprintForName(_augment)?.imageAssetPath,
+            imageAsset: _assetForItemName(_augment),
             accent: Colors.lightGreenAccent,
             owned: augmentOwned,
             onTap: _pickAugment,
@@ -826,7 +818,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _itemTile(
             label: _shield,
             subtitle: shieldOption?.description ?? 'Tap to choose shield.',
-            imageAsset: _blueprintForName(_shield)?.imageAssetPath,
+            imageAsset: _assetForItemName(_shield),
             accent: Colors.amberAccent,
             owned: shieldOwned,
             onTap: _pickShield,
@@ -1303,7 +1295,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         ? Icon(icon, color: owned ? accent : Colors.white30, size: 34)
         : Image.asset(
             imageAsset,
-            fit: BoxFit.contain,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
             filterQuality: FilterQuality.high,
             errorBuilder: (_, _, _) =>
                 Icon(icon, color: owned ? accent : Colors.white30, size: 34),
@@ -1312,7 +1306,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     return Container(
       width: size,
       height: size,
-      padding: const EdgeInsets.all(7),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(16),
