@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -16,6 +17,7 @@ class OperationsCommandScreen extends StatefulWidget {
 class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  final ArcOperationsRepository _repository = ArcOperationsRepository();
 
   @override
   void initState() {
@@ -36,33 +38,42 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Operations',
       ),
-      body: ArcRaidersScreenShell(
-        useSafeArea: true,
-        showAdBanner: true,
-        child: ArcRaidersPageList(
-          maxWidth: 1180,
-          bottomPadding: 120,
-          children: [
-            ArcRaidersPageHeader(
-              title: 'OPERATIONS COMMAND',
-              subtitle:
-                  'Adaptive rewards, beta trophies, community goals and permanent commendations.',
-              icon: Icons.military_tech_rounded,
-              accent: Colors.amberAccent,
+      body: StreamBuilder<ArcOperationsUserState>(
+        stream: _repository.watchUserState(),
+        initialData: ArcOperationsUserState.empty,
+        builder: (context, snapshot) {
+          final userState = snapshot.data ?? ArcOperationsUserState.empty;
+          return ArcRaidersScreenShell(
+            useSafeArea: true,
+            showAdBanner: true,
+            child: ArcRaidersPageList(
+              maxWidth: 1180,
+              bottomPadding: 120,
+              children: [
+                ArcRaidersPageHeader(
+                  title: 'OPERATIONS COMMAND',
+                  subtitle:
+                      'Adaptive rewards, beta trophies, community goals and permanent commendations.',
+                  icon: Icons.military_tech_rounded,
+                  accent: Colors.amberAccent,
+                ),
+                const SizedBox(height: 10),
+                _buildHero(userState),
+                const SizedBox(height: 10),
+                _buildProfileRewardStrip(userState),
+                const SizedBox(height: 10),
+                _buildTabs(),
+                const SizedBox(height: 10),
+                _buildActiveTab(userState),
+              ],
             ),
-            const SizedBox(height: 10),
-            _buildHero(),
-            const SizedBox(height: 10),
-            _buildTabs(),
-            const SizedBox(height: 10),
-            _buildActiveTab(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(ArcOperationsUserState userState) {
     final summary = ArcOperationsSeedData.summary;
     return ArcRaidersSectionCard(
       accent: Colors.amberAccent,
@@ -74,7 +85,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                summary.rankLabel.toUpperCase(),
+                'OPERATION LEVEL ${userState.operationLevel}',
                 style: AppTheme.tradingHeading(
                   fontSize: compact ? 26 : 36,
                   color: Colors.amberAccent,
@@ -82,11 +93,19 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                'Closed Beta Operations are exclusive and will never return after beta.',
+                userState.equippedCosmetics.titleLabel ?? summary.rankLabel,
                 style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: Colors.white70,
                   isBold: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Closed Beta Operations are exclusive and will never return after beta.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white60,
                 ),
               ),
             ],
@@ -97,12 +116,21 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             runSpacing: 8,
             alignment: compact ? WrapAlignment.start : WrapAlignment.end,
             children: [
-              _metric('Intel XP', '${summary.intelXp}', AppTheme.neonCyan),
-              _metric('Ops Live', '${summary.available}', AppTheme.neonPink),
+              _metric('Intel XP', '${userState.intelXp}', AppTheme.neonCyan),
               _metric(
-                'Community Health',
-                '${(summary.communityHealth * 100).round()}%',
+                'Completed',
+                '${userState.completedCount}',
                 Colors.lightGreenAccent,
+              ),
+              _metric(
+                'Trade Slots',
+                '+${userState.extraTradeSlots}',
+                AppTheme.neonPink,
+              ),
+              _metric(
+                'Match Slots',
+                '+${userState.extraMatchmakingSlots}',
+                Colors.lightBlueAccent,
               ),
             ],
           );
@@ -122,6 +150,121 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildProfileRewardStrip(ArcOperationsUserState userState) {
+    final equipped = userState.equippedCosmetics;
+    return ArcRaidersSectionCard(
+      accent: AppTheme.neonCyan,
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 680;
+          final children = [
+            _equippedPreview(
+              label: 'Equipped Badge',
+              value: equipped.hasBadge ? 'Active' : 'None equipped',
+              assetPath: equipped.badgeAssetPath,
+              icon: Icons.military_tech_rounded,
+              accent: Colors.amberAccent,
+            ),
+            _equippedPreview(
+              label: 'Profile Title',
+              value: equipped.titleLabel ?? 'No title equipped',
+              icon: Icons.title_rounded,
+              accent: AppTheme.neonCyan,
+            ),
+            _equippedPreview(
+              label: 'Inventory',
+              value: '${userState.inventory.length} rewards owned',
+              icon: Icons.inventory_2_rounded,
+              accent: AppTheme.neonPink,
+            ),
+          ];
+          if (compact) {
+            return Column(
+              children: [
+                for (final child in children)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: child,
+                  ),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              for (final child in children)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: child,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _equippedPreview({
+    required String label,
+    required String value,
+    String? assetPath,
+    required IconData icon,
+    required Color accent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: accent.withValues(alpha: 0.3)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: assetPath == null
+                ? Icon(icon, color: accent, size: 22)
+                : Image.asset(assetPath, fit: BoxFit.cover),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label.toUpperCase(),
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white54,
+                  ),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                    isBold: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -179,7 +322,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  Widget _buildActiveTab() {
+  Widget _buildActiveTab(ArcOperationsUserState userState) {
     final index = _tabController.index;
     final tasks = switch (index) {
       0 => ArcOperationsSeedData.dailyOperations,
@@ -235,7 +378,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 for (final task in tasks)
                   SizedBox(
                     width: itemWidth,
-                    child: _OperationTaskCard(task: task),
+                    child: _OperationTaskCard(
+                      task: task,
+                      userState: userState,
+                      onTrack: () => _repository.trackProgress(task),
+                      onClaim: () => _repository.claimReward(task),
+                      onEquip: _repository.equipCosmetic,
+                    ),
                   ),
               ],
             );
@@ -247,9 +396,19 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 }
 
 class _OperationTaskCard extends StatelessWidget {
-  const _OperationTaskCard({required this.task});
+  const _OperationTaskCard({
+    required this.task,
+    required this.userState,
+    required this.onTrack,
+    required this.onClaim,
+    required this.onEquip,
+  });
 
   final ArcOperationTask task;
+  final ArcOperationsUserState userState;
+  final Future<void> Function() onTrack;
+  final Future<void> Function() onClaim;
+  final Future<void> Function(ArcRewardInventoryItem item) onEquip;
 
   @override
   Widget build(BuildContext context) {
@@ -261,8 +420,16 @@ class _OperationTaskCard extends StatelessWidget {
       }
     }
 
+    final progress = userState.progressFor(task);
+    final state = userState.stateFor(task);
+    final completion = task.target <= 0
+        ? 0.0
+        : (progress / task.target).clamp(0, 1).toDouble();
+    final ready = state == ArcOperationClaimState.readyToClaim;
+    final complete = state == ArcOperationClaimState.completed;
+
     return ArcRaidersSectionCard(
-      accent: task.accent,
+      accent: complete ? Colors.lightGreenAccent : task.accent,
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,12 +455,18 @@ class _OperationTaskCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTheme.tradingHeading(
                               fontSize: 18,
-                              color: task.accent,
+                              color: complete
+                                  ? Colors.lightGreenAccent
+                                  : task.accent,
                             ),
                           ),
                         ),
                         if (task.betaExclusive)
                           _tag('BETA', Colors.amberAccent),
+                        if (complete) ...[
+                          const SizedBox(width: 4),
+                          _tag('OWNED', Colors.lightGreenAccent),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 5),
@@ -315,17 +488,21 @@ class _OperationTaskCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
-              value: task.completion,
+              value: completion,
               minHeight: 8,
               backgroundColor: Colors.white.withValues(alpha: 0.08),
-              color: task.isComplete ? Colors.lightGreenAccent : task.accent,
+              color: complete
+                  ? Colors.lightGreenAccent
+                  : ready
+                  ? Colors.amberAccent
+                  : task.accent,
             ),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Text(
-                '${task.progress}/${task.target}',
+                '$progress/${task.target}',
                 style: AppTheme.bodyTextStyle(
                   fontSize: 11,
                   color: Colors.white60,
@@ -334,6 +511,10 @@ class _OperationTaskCard extends StatelessWidget {
               const Spacer(),
               if (task.verificationRequired)
                 _tag('VERIFY', Colors.lightGreenAccent),
+              if (ready) ...[
+                const SizedBox(width: 4),
+                _tag('READY', Colors.amberAccent),
+              ],
             ],
           ),
           const SizedBox(height: 10),
@@ -343,19 +524,38 @@ class _OperationTaskCard extends StatelessWidget {
             children: [for (final reward in task.rewards) _rewardChip(reward)],
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: Icon(
-                task.isComplete
-                    ? Icons.redeem_rounded
-                    : Icons.radio_button_checked_rounded,
-                size: 16,
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: complete
+                      ? null
+                      : ready
+                      ? onClaim
+                      : onTrack,
+                  icon: Icon(
+                    ready
+                        ? Icons.redeem_rounded
+                        : complete
+                        ? Icons.check_circle_rounded
+                        : Icons.add_task_rounded,
+                    size: 16,
+                  ),
+                  label: Text(
+                    ready
+                        ? 'CLAIM REWARD'
+                        : complete
+                        ? 'COMPLETED'
+                        : 'TRACK +1',
+                  ),
+                ),
               ),
-              label: Text(task.isComplete ? 'CLAIM REWARD' : 'TRACK OPERATION'),
-            ),
+            ],
           ),
+          if (complete && userState.inventory.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _InventoryPreview(userState: userState, onEquip: onEquip),
+          ],
         ],
       ),
     );
@@ -399,6 +599,41 @@ class _OperationTaskCard extends StatelessWidget {
         reward.label,
         style: AppTheme.bodyTextStyle(fontSize: 10, color: color, isBold: true),
       ),
+    );
+  }
+}
+
+class _InventoryPreview extends StatelessWidget {
+  const _InventoryPreview({required this.userState, required this.onEquip});
+
+  final ArcOperationsUserState userState;
+  final Future<void> Function(ArcRewardInventoryItem item) onEquip;
+
+  @override
+  Widget build(BuildContext context) {
+    final cosmetics = userState.inventory
+        .where(
+          (item) =>
+              item.type == ArcOperationRewardType.badge ||
+              item.type == ArcOperationRewardType.title ||
+              item.type == ArcOperationRewardType.profileFrame,
+        )
+        .take(3)
+        .toList();
+    if (cosmetics.isEmpty) return const SizedBox.shrink();
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final item in cosmetics)
+          ActionChip(
+            onPressed: () => onEquip(item),
+            avatar: item.assetPath == null
+                ? null
+                : CircleAvatar(backgroundImage: AssetImage(item.assetPath!)),
+            label: Text('Equip ${item.label}', overflow: TextOverflow.ellipsis),
+          ),
+      ],
     );
   }
 }
