@@ -31,6 +31,37 @@ enum ArcOperationClaimState { locked, inProgress, readyToClaim, completed }
 
 enum ArcCosmeticType { badge, title, profileFrame }
 
+enum ArcCosmeticRarity {
+  common,
+  uncommon,
+  rare,
+  epic,
+  legendary,
+  founder,
+  closedBeta,
+  community,
+  creator,
+}
+
+extension ArcCosmeticRarityLabel on ArcCosmeticRarity {
+  String get label => switch (this) {
+    ArcCosmeticRarity.common => 'Common',
+    ArcCosmeticRarity.uncommon => 'Uncommon',
+    ArcCosmeticRarity.rare => 'Rare',
+    ArcCosmeticRarity.epic => 'Epic',
+    ArcCosmeticRarity.legendary => 'Legendary',
+    ArcCosmeticRarity.founder => 'Founder',
+    ArcCosmeticRarity.closedBeta => 'Closed Beta',
+    ArcCosmeticRarity.community => 'Community',
+    ArcCosmeticRarity.creator => 'Creator',
+  };
+
+  bool get isExclusive =>
+      this == ArcCosmeticRarity.founder ||
+      this == ArcCosmeticRarity.closedBeta ||
+      this == ArcCosmeticRarity.creator;
+}
+
 class ArcOperationReward {
   const ArcOperationReward({
     required this.id,
@@ -38,6 +69,7 @@ class ArcOperationReward {
     required this.type,
     this.amount = 1,
     this.assetPath,
+    this.rarity = ArcCosmeticRarity.common,
     this.betaExclusive = false,
   });
 
@@ -46,6 +78,7 @@ class ArcOperationReward {
   final ArcOperationRewardType type;
   final int amount;
   final String? assetPath;
+  final ArcCosmeticRarity rarity;
   final bool betaExclusive;
 
   bool get isCosmetic =>
@@ -67,6 +100,7 @@ class ArcOperationReward {
       'type': type.name,
       'amount': amount,
       'assetPath': assetPath,
+      'rarity': rarity.name,
       'betaExclusive': betaExclusive,
     };
   }
@@ -81,6 +115,10 @@ class ArcOperationReward {
       ),
       amount: (map['amount'] as num?)?.toInt() ?? 1,
       assetPath: map['assetPath'] as String?,
+      rarity: ArcCosmeticRarity.values.firstWhere(
+        (value) => value.name == map['rarity'],
+        orElse: () => ArcCosmeticRarity.common,
+      ),
       betaExclusive: map['betaExclusive'] == true,
     );
   }
@@ -198,6 +236,7 @@ class ArcRewardInventoryItem {
     required this.label,
     required this.type,
     this.assetPath,
+    this.rarity = ArcCosmeticRarity.common,
     this.betaExclusive = false,
     this.unlockedAt,
   });
@@ -206,8 +245,22 @@ class ArcRewardInventoryItem {
   final String label;
   final ArcOperationRewardType type;
   final String? assetPath;
+  final ArcCosmeticRarity rarity;
   final bool betaExclusive;
   final DateTime? unlockedAt;
+
+  ArcCosmeticType? get cosmeticType => switch (type) {
+    ArcOperationRewardType.badge => ArcCosmeticType.badge,
+    ArcOperationRewardType.title => ArcCosmeticType.title,
+    ArcOperationRewardType.profileFrame => ArcCosmeticType.profileFrame,
+    _ => null,
+  };
+
+  bool get isBadge => type == ArcOperationRewardType.badge;
+  bool get isTitle => type == ArcOperationRewardType.title;
+  bool get isProfileFrame => type == ArcOperationRewardType.profileFrame;
+  bool get isExclusive => betaExclusive || rarity.isExclusive;
+  String get rarityLabel => rarity.label;
 
   Map<String, dynamic> toMap() {
     return {
@@ -215,6 +268,7 @@ class ArcRewardInventoryItem {
       'label': label,
       'type': type.name,
       'assetPath': assetPath,
+      'rarity': rarity.name,
       'betaExclusive': betaExclusive,
       'unlockedAt': unlockedAt?.toIso8601String(),
     };
@@ -240,6 +294,10 @@ class ArcRewardInventoryItem {
         orElse: () => ArcOperationRewardType.badge,
       ),
       assetPath: map['assetPath'] as String?,
+      rarity: ArcCosmeticRarity.values.firstWhere(
+        (value) => value.name == map['rarity'],
+        orElse: () => ArcCosmeticRarity.common,
+      ),
       betaExclusive: map['betaExclusive'] == true,
       unlockedAt: DateTime.tryParse((map['unlockedAt'] ?? '').toString()),
     );
@@ -276,6 +334,25 @@ class ArcEquippedCosmetics {
       'titleLabel': titleLabel,
       'profileFrameAssetPath': profileFrameAssetPath,
     };
+  }
+
+  ArcEquippedCosmetics copyWith({
+    String? badgeId,
+    String? titleId,
+    String? profileFrameId,
+    String? badgeAssetPath,
+    String? titleLabel,
+    String? profileFrameAssetPath,
+  }) {
+    return ArcEquippedCosmetics(
+      badgeId: badgeId ?? this.badgeId,
+      titleId: titleId ?? this.titleId,
+      profileFrameId: profileFrameId ?? this.profileFrameId,
+      badgeAssetPath: badgeAssetPath ?? this.badgeAssetPath,
+      titleLabel: titleLabel ?? this.titleLabel,
+      profileFrameAssetPath:
+          profileFrameAssetPath ?? this.profileFrameAssetPath,
+    );
   }
 
   factory ArcEquippedCosmetics.fromMap(Map<String, dynamic>? map) {
@@ -327,6 +404,48 @@ class ArcOperationsUserState {
 
   int get completedCount =>
       progressById.values.where((progress) => progress.completed).length;
+
+  List<ArcRewardInventoryItem> get badges => inventory
+      .where((item) => item.type == ArcOperationRewardType.badge)
+      .toList(growable: false);
+
+  List<ArcRewardInventoryItem> get titles => inventory
+      .where((item) => item.type == ArcOperationRewardType.title)
+      .toList(growable: false);
+
+  List<ArcRewardInventoryItem> get profileFrames => inventory
+      .where((item) => item.type == ArcOperationRewardType.profileFrame)
+      .toList(growable: false);
+
+  bool ownsReward(String rewardId) =>
+      inventory.any((item) => item.rewardId == rewardId);
+
+  ArcRewardInventoryItem? equippedBadge() {
+    final id = equippedCosmetics.badgeId;
+    if (id == null) return null;
+    for (final item in badges) {
+      if (item.rewardId == id) return item;
+    }
+    return null;
+  }
+
+  ArcRewardInventoryItem? equippedTitle() {
+    final id = equippedCosmetics.titleId;
+    if (id == null) return null;
+    for (final item in titles) {
+      if (item.rewardId == id) return item;
+    }
+    return null;
+  }
+
+  ArcRewardInventoryItem? equippedProfileFrame() {
+    final id = equippedCosmetics.profileFrameId;
+    if (id == null) return null;
+    for (final item in profileFrames) {
+      if (item.rewardId == id) return item;
+    }
+    return null;
+  }
 
   int progressFor(ArcOperationTask task) =>
       progressById[task.id]?.progress ?? task.progress;
