@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_dynamic_operations_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
@@ -565,32 +566,21 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
   Widget _buildActiveTab(ArcOperationsUserState userState) {
     final index = _tabController.index;
-    final tasks = switch (index) {
-      0 => ArcOperationsSeedData.dailyOperations,
-      1 => ArcOperationsSeedData.weeklyOperations,
-      2 => ArcOperationsSeedData.monthlyOperations,
-      3 => ArcOperationsSeedData.lifetimeOperations,
-      _ => ArcOperationsSeedData.betaOperations,
+    final cadence = switch (index) {
+      0 => ArcOperationCadence.daily,
+      1 => ArcOperationCadence.weekly,
+      2 => ArcOperationCadence.monthly,
+      3 => ArcOperationCadence.lifetime,
+      _ => ArcOperationCadence.beta,
     };
+    final plan = ArcDynamicOperationsEngine.generate(
+      userState: userState,
+      cadence: cadence,
+    );
+    final tasks = plan.tasks;
 
-    final title = switch (index) {
-      0 => 'Daily Adaptive Ops',
-      1 => 'Weekly Operations',
-      2 => 'Monthly Operations',
-      3 => 'Lifetime Commendations',
-      _ => 'Closed Beta Exclusives',
-    };
-
-    final subtitle = switch (index) {
-      0 =>
-        'Generated from player needs, community health and platform growth requirements.',
-      1 =>
-        'Higher value weekly goals that encourage trades, verified intel and squad activity.',
-      2 =>
-        'Longer goals with stronger rewards and community reputation impact.',
-      3 => 'Permanent trophies that never reset after wipes.',
-      _ => 'Unique closed beta rewards that will never be earnable again.',
-    };
+    final title = plan.title;
+    final subtitle = plan.subtitle;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -600,6 +590,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           subtitle: subtitle,
           accent: index == 4 ? Colors.amberAccent : AppTheme.neonCyan,
         ),
+        const SizedBox(height: 10),
+        _buildGenerationStrategyPanel(plan),
         const SizedBox(height: 10),
         LayoutBuilder(
           builder: (context, constraints) {
@@ -632,6 +624,63 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildGenerationStrategyPanel(ArcDynamicOperationPlan plan) {
+    return ArcRaidersSectionCard(
+      accent: plan.accent,
+      padding: const EdgeInsets.all(10),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 640;
+          final chips = Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _tagPill(plan.rotationLabel, plan.accent),
+              _tagPill(plan.rewardLabel, AppTheme.neonPink),
+              _tagPill(plan.priorityLabel, Colors.amberAccent),
+            ],
+          );
+
+          final copy = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ADAPTIVE OPS ENGINE',
+                style: AppTheme.tradingHeading(
+                  fontSize: compact ? 20 : 24,
+                  color: plan.accent,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                plan.strategy,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [copy, const SizedBox(height: 10), chips],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: copy),
+              const SizedBox(width: 12),
+              Flexible(child: chips),
+            ],
+          );
+        },
+      ),
     );
   }
 }
