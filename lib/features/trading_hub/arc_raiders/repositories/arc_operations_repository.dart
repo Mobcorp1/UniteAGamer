@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 
 class ArcOperationsRepository {
@@ -185,5 +186,186 @@ class ArcOperationsRepository {
     }
 
     await _equippedRef(uid).set(update, SetOptions(merge: true));
+  }
+
+  CollectionReference<Map<String, dynamic>> _telemetryRef(String uid) =>
+      _firestore
+          .collection('arc_operation_telemetry')
+          .doc(uid)
+          .collection('events');
+
+  DocumentReference<Map<String, dynamic>> _telemetrySummaryRef(String uid) =>
+      _firestore.collection('arc_operation_telemetry').doc(uid);
+
+  Future<void> recordTelemetry(
+    ArcOperationTelemetryType type, {
+    int amount = 1,
+    String source = 'app',
+    Map<String, dynamic> metadata = const <String, dynamic>{},
+  }) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final safeAmount = amount <= 0 ? 1 : amount;
+    final event = ArcOperationTelemetryEvent(
+      type: type,
+      amount: safeAmount,
+      source: source,
+      metadata: metadata,
+    );
+
+    final batch = _firestore.batch();
+    final now = DateTime.now().toIso8601String();
+    batch.set(_telemetryRef(uid).doc(), event.toMap());
+    batch.set(_telemetrySummaryRef(uid), {
+      _summaryFieldForTelemetry(type): FieldValue.increment(safeAmount),
+      'lastEventName': event.eventName,
+      'lastEventAt': now,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+
+    for (final task in _tasksForTelemetry(type)) {
+      final ref = _progressRef(uid).doc(task.id);
+      final currentSnapshot = await ref.get();
+      final existing = currentSnapshot.data() ?? const <String, dynamic>{};
+      final current = (existing['progress'] as num?)?.toInt() ?? task.progress;
+      final next = (current + safeAmount).clamp(0, task.target).toInt();
+      batch.set(ref, {
+        'operationId': task.id,
+        'progress': next,
+        'target': task.target,
+        'claimed': existing['claimed'] == true,
+        'lastTelemetryType': type.name,
+        'updatedAt': now,
+      }, SetOptions(merge: true));
+    }
+
+    await batch.commit();
+  }
+
+  Future<void> recordTradeCompleted({int amount = 1}) => recordTelemetry(
+    ArcOperationTelemetryType.tradeCompleted,
+    amount: amount,
+    source: 'trade',
+  );
+
+  Future<void> recordListingCreated({int amount = 1}) => recordTelemetry(
+    ArcOperationTelemetryType.listingCreated,
+    amount: amount,
+    source: 'listing',
+  );
+
+  Future<void> recordMatchmakingCompleted({int amount = 1}) => recordTelemetry(
+    ArcOperationTelemetryType.matchmakingCompleted,
+    amount: amount,
+    source: 'matchmaking',
+  );
+
+  Future<void> recordBlueprintReportSubmitted({int amount = 1}) =>
+      recordTelemetry(
+        ArcOperationTelemetryType.blueprintReportSubmitted,
+        amount: amount,
+        source: 'blueprint_intel',
+      );
+
+  Future<void> recordProfileCompleted() => recordTelemetry(
+    ArcOperationTelemetryType.profileCompleted,
+    source: 'profile',
+  );
+
+  Future<void> recordReferralCompleted({int amount = 1}) => recordTelemetry(
+    ArcOperationTelemetryType.referralCompleted,
+    amount: amount,
+    source: 'referral',
+  );
+
+  Future<void> recordPlayerHelped({int amount = 1}) => recordTelemetry(
+    ArcOperationTelemetryType.playerHelped,
+    amount: amount,
+    source: 'guardian',
+  );
+
+  Future<void> recordGuardianSessionCompleted({int amount = 1}) =>
+      recordTelemetry(
+        ArcOperationTelemetryType.guardianSessionCompleted,
+        amount: amount,
+        source: 'guardian',
+      );
+
+  Future<void> recordFavouriteLoadoutSaved() => recordTelemetry(
+    ArcOperationTelemetryType.favouriteLoadoutSaved,
+    source: 'favourite_loadout',
+  );
+
+  Future<void> recordFeedbackSubmitted() => recordTelemetry(
+    ArcOperationTelemetryType.feedbackSubmitted,
+    source: 'closed_beta',
+  );
+
+  Future<void> recordLogin() => recordTelemetry(
+    ArcOperationTelemetryType.loginRecorded,
+    source: 'session',
+  );
+
+  String _summaryFieldForTelemetry(ArcOperationTelemetryType type) {
+    return switch (type) {
+      ArcOperationTelemetryType.tradeCompleted => 'tradesCompleted',
+      ArcOperationTelemetryType.listingCreated => 'listingsCreated',
+      ArcOperationTelemetryType.matchmakingCompleted => 'matchmakingSessions',
+      ArcOperationTelemetryType.blueprintReportSubmitted => 'blueprintReports',
+      ArcOperationTelemetryType.loginRecorded => 'loginEvents',
+      ArcOperationTelemetryType.profileCompleted => 'profileCompletions',
+      ArcOperationTelemetryType.referralCompleted => 'referrals',
+      ArcOperationTelemetryType.playerHelped => 'playersHelped',
+      ArcOperationTelemetryType.guardianSessionCompleted => 'guardianSessions',
+      ArcOperationTelemetryType.communityContribution =>
+        'communityContributions',
+      ArcOperationTelemetryType.favouriteLoadoutSaved =>
+        'favouriteLoadoutsSaved',
+      ArcOperationTelemetryType.feedbackSubmitted => 'feedbackSubmitted',
+    };
+  }
+
+  List<ArcOperationTask> _tasksForTelemetry(ArcOperationTelemetryType type) {
+    final allTasks = <ArcOperationTask>[
+      ...ArcOperationsSeedData.dailyOperations,
+      ...ArcOperationsSeedData.weeklyOperations,
+      ...ArcOperationsSeedData.monthlyOperations,
+      ...ArcOperationsSeedData.lifetimeOperations,
+      ...ArcOperationsSeedData.betaOperations,
+    ];
+
+    bool matches(ArcOperationTask task) {
+      return switch (type) {
+        ArcOperationTelemetryType.tradeCompleted =>
+          task.category == ArcOperationCategory.trading,
+        ArcOperationTelemetryType.listingCreated =>
+          task.category == ArcOperationCategory.trading,
+        ArcOperationTelemetryType.matchmakingCompleted =>
+          task.category == ArcOperationCategory.matchmaking,
+        ArcOperationTelemetryType.blueprintReportSubmitted =>
+          task.category == ArcOperationCategory.intel,
+        ArcOperationTelemetryType.loginRecorded =>
+          task.category == ArcOperationCategory.onboarding ||
+              task.category == ArcOperationCategory.community,
+        ArcOperationTelemetryType.profileCompleted =>
+          task.category == ArcOperationCategory.onboarding,
+        ArcOperationTelemetryType.referralCompleted =>
+          task.category == ArcOperationCategory.referral,
+        ArcOperationTelemetryType.playerHelped =>
+          task.category == ArcOperationCategory.community ||
+              task.category == ArcOperationCategory.guardian,
+        ArcOperationTelemetryType.guardianSessionCompleted =>
+          task.category == ArcOperationCategory.guardian,
+        ArcOperationTelemetryType.communityContribution =>
+          task.category == ArcOperationCategory.community,
+        ArcOperationTelemetryType.favouriteLoadoutSaved =>
+          task.category == ArcOperationCategory.loadout,
+        ArcOperationTelemetryType.feedbackSubmitted =>
+          task.category == ArcOperationCategory.beta,
+      };
+    }
+
+    return allTasks.where(matches).toList(growable: false);
   }
 }

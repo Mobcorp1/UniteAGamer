@@ -361,3 +361,111 @@ class ArcOperationsSummary {
   final int available;
   final double communityHealth;
 }
+
+enum ArcOperationTelemetryType {
+  tradeCompleted,
+  listingCreated,
+  matchmakingCompleted,
+  blueprintReportSubmitted,
+  loginRecorded,
+  profileCompleted,
+  referralCompleted,
+  playerHelped,
+  guardianSessionCompleted,
+  communityContribution,
+  favouriteLoadoutSaved,
+  feedbackSubmitted,
+}
+
+class ArcOperationTelemetryEvent {
+  const ArcOperationTelemetryEvent({
+    required this.type,
+    this.amount = 1,
+    this.source = 'app',
+    this.metadata = const <String, dynamic>{},
+    this.createdAt,
+  });
+
+  final ArcOperationTelemetryType type;
+  final int amount;
+  final String source;
+  final Map<String, dynamic> metadata;
+  final DateTime? createdAt;
+
+  String get eventName => switch (type) {
+    ArcOperationTelemetryType.tradeCompleted => 'trade_completed',
+    ArcOperationTelemetryType.listingCreated => 'listing_created',
+    ArcOperationTelemetryType.matchmakingCompleted => 'match_completed',
+    ArcOperationTelemetryType.blueprintReportSubmitted =>
+      'blueprint_report_submitted',
+    ArcOperationTelemetryType.loginRecorded => 'login_recorded',
+    ArcOperationTelemetryType.profileCompleted => 'profile_completed',
+    ArcOperationTelemetryType.referralCompleted => 'referral_completed',
+    ArcOperationTelemetryType.playerHelped => 'player_helped',
+    ArcOperationTelemetryType.guardianSessionCompleted =>
+      'guardian_session_completed',
+    ArcOperationTelemetryType.communityContribution =>
+      'community_contribution_added',
+    ArcOperationTelemetryType.favouriteLoadoutSaved =>
+      'favourite_loadout_saved',
+    ArcOperationTelemetryType.feedbackSubmitted => 'feedback_submitted',
+  };
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type.name,
+      'eventName': eventName,
+      'amount': amount,
+      'source': source,
+      'metadata': metadata,
+      'createdAt': (createdAt ?? DateTime.now()).toIso8601String(),
+    };
+  }
+}
+
+class ArcOperationTelemetrySummary {
+  const ArcOperationTelemetrySummary({
+    this.tradesCompleted = 0,
+    this.listingsCreated = 0,
+    this.matchmakingSessions = 0,
+    this.blueprintReports = 0,
+    this.playersHelped = 0,
+    this.guardianSessions = 0,
+    this.referrals = 0,
+    this.communityContributions = 0,
+  });
+
+  final int tradesCompleted;
+  final int listingsCreated;
+  final int matchmakingSessions;
+  final int blueprintReports;
+  final int playersHelped;
+  final int guardianSessions;
+  final int referrals;
+  final int communityContributions;
+
+  int get totalActivity =>
+      tradesCompleted +
+      listingsCreated +
+      matchmakingSessions +
+      blueprintReports +
+      playersHelped +
+      guardianSessions +
+      referrals +
+      communityContributions;
+
+  factory ArcOperationTelemetrySummary.fromMap(Map<String, dynamic>? map) {
+    if (map == null) return const ArcOperationTelemetrySummary();
+    int read(String key) => (map[key] as num?)?.toInt() ?? 0;
+    return ArcOperationTelemetrySummary(
+      tradesCompleted: read('tradesCompleted'),
+      listingsCreated: read('listingsCreated'),
+      matchmakingSessions: read('matchmakingSessions'),
+      blueprintReports: read('blueprintReports'),
+      playersHelped: read('playersHelped'),
+      guardianSessions: read('guardianSessions'),
+      referrals: read('referrals'),
+      communityContributions: read('communityContributions'),
+    );
+  }
+}
