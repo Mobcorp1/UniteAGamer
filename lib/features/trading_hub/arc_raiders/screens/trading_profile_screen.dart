@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+import '../models/arc_operations_models.dart';
 import '../models/arc_trader_profile.dart';
+import '../repositories/arc_operations_repository.dart';
 import '../repositories/arc_trader_profile_repository.dart';
 import '../screens/arc_availability_screen.dart';
 import '../screens/arc_away_screen.dart';
@@ -22,6 +24,8 @@ class TradingProfileScreen extends StatefulWidget {
 
 class _TradingProfileScreenState extends State<TradingProfileScreen> {
   final ArcTraderProfileRepository _repository = ArcTraderProfileRepository();
+  final ArcOperationsRepository _operationsRepository =
+      ArcOperationsRepository();
 
   bool _isInitialising = true;
   String? _initError;
@@ -206,9 +210,29 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                 AppTheme.spaceL,
               ),
               children: [
-                _summaryCard(profile),
+                StreamBuilder<ArcOperationsUserState>(
+                  stream: _operationsRepository.watchUserState(),
+                  builder: (context, operationsSnapshot) {
+                    final operationsState =
+                        operationsSnapshot.data ?? ArcOperationsUserState.empty;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _profileCommandHero(profile, operationsState),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _reputationCommandPanel(profile, operationsState),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _rewardShowcasePanel(operationsState),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _communityContributionPanel(operationsState),
+                        const SizedBox(height: AppTheme.spaceM),
+                        _guardianCommunitySystemPanel(profile, operationsState),
+                      ],
+                    );
+                  },
+                ),
                 const SizedBox(height: AppTheme.spaceM),
-                _reputationSnapshot(profile),
+                _summaryCard(profile),
                 const SizedBox(height: AppTheme.spaceM),
                 _archetypeSection(),
                 const SizedBox(height: AppTheme.spaceM),
@@ -290,6 +314,901 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _profileCommandHero(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    final equipped = operationsState.equippedCosmetics;
+    final title = equipped.titleLabel?.trim().isNotEmpty == true
+        ? equipped.titleLabel!.trim()
+        : 'Raider Profile';
+    final badgeAsset = equipped.badgeAssetPath;
+    final hasFrame = equipped.hasFrame;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration:
+          AppTheme.tradingCardDecoration(
+            borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+          ).copyWith(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.neonCyan.withValues(alpha: 0.12),
+                AppTheme.cardBackground.withValues(alpha: 0.94),
+                AppTheme.neonPink.withValues(alpha: 0.08),
+              ],
+            ),
+          ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final avatar = _profileAvatarShowcase(
+            profile: profile,
+            badgeAsset: badgeAsset,
+            hasFrame: hasFrame,
+          );
+          final content = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: AppTheme.tradingHeading(
+                  fontSize: compact ? 22 : 30,
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                profile.uagName.isEmpty ? 'Unnamed Raider' : profile.uagName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              Wrap(
+                spacing: AppTheme.spaceS,
+                runSpacing: AppTheme.spaceS,
+                children: [
+                  _profileChip(
+                    icon: Icons.military_tech_rounded,
+                    label: 'Ops Lv ${operationsState.operationLevel}',
+                    accent: AppTheme.neonCyan,
+                  ),
+                  _profileChip(
+                    icon: Icons.auto_awesome_rounded,
+                    label: '${operationsState.completedCount} trophies',
+                    accent: AppTheme.neonPink,
+                  ),
+                  _profileChip(
+                    icon: Icons.bolt_rounded,
+                    label: '${operationsState.intelXp} Intel XP',
+                    accent: Colors.amberAccent,
+                  ),
+                ],
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                avatar,
+                const SizedBox(height: AppTheme.spaceM),
+                content,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              avatar,
+              const SizedBox(width: AppTheme.spaceL),
+              Expanded(child: content),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _profileAvatarShowcase({
+    required ArcTraderProfile profile,
+    required String? badgeAsset,
+    required bool hasFrame,
+  }) {
+    final accent = hasFrame ? AppTheme.neonPink : AppTheme.neonCyan;
+    return Container(
+      width: 112,
+      height: 112,
+      padding: const EdgeInsets.all(7),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: accent.withValues(alpha: 0.72), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.22),
+            blurRadius: 24,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: CircleAvatar(
+              backgroundColor: AppTheme.cardBackgroundAlt,
+              child: Text(
+                (profile.uagName.isNotEmpty ? profile.uagName[0] : 'U')
+                    .toUpperCase(),
+                style: AppTheme.tradingHeading(
+                  fontSize: 34,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -5,
+            bottom: -5,
+            child: _cosmeticBadgeOrb(badgeAsset),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cosmeticBadgeOrb(String? assetPath) {
+    return Container(
+      width: 42,
+      height: 42,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.darkBackground,
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.72)),
+      ),
+      child: assetPath != null && assetPath.isNotEmpty
+          ? ClipOval(
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const Icon(
+                  Icons.military_tech_rounded,
+                  color: AppTheme.neonCyan,
+                  size: 20,
+                ),
+              ),
+            )
+          : const Icon(
+              Icons.military_tech_rounded,
+              color: AppTheme.neonCyan,
+              size: 20,
+            ),
+    );
+  }
+
+  Widget _reputationCommandPanel(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    final ready = profile.isProfileComplete;
+    final trustedScore = ready ? 82 : 28;
+    final traderScore = (operationsState.completedCount * 8).clamp(12, 96);
+    final guardianScore =
+        operationsState.inventory
+            .where((item) => item.label.toLowerCase().contains('guardian'))
+            .length
+            .clamp(0, 5) *
+        18;
+    final intelScore = (operationsState.intelXp / 10).round().clamp(0, 99);
+
+    return _profilePanel(
+      accent: AppTheme.neonPink,
+      title: 'Reputation Command',
+      icon: Icons.verified_user_rounded,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final narrow = constraints.maxWidth < 620;
+          final items = [
+            _reputationMeter('Trusted Raider', trustedScore, AppTheme.neonCyan),
+            _reputationMeter('Trader Rep', traderScore, AppTheme.neonPink),
+            _reputationMeter(
+              'Guardian Rep',
+              guardianScore,
+              Colors.lightGreenAccent,
+            ),
+            _reputationMeter('Intel Rep', intelScore, Colors.amberAccent),
+          ];
+          if (narrow) {
+            return Column(
+              children: items
+                  .map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                      child: item,
+                    ),
+                  )
+                  .toList(),
+            );
+          }
+          return Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: items
+                .map((item) => SizedBox(width: 250, child: item))
+                .toList(),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _reputationMeter(String label, int value, Color accent) {
+    final clamped = value.clamp(0, 100);
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                '$clamped%',
+                style: TextStyle(color: accent, fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 7,
+              value: clamped / 100,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rewardShowcasePanel(ArcOperationsUserState operationsState) {
+    final equipped = operationsState.equippedCosmetics;
+    final inventory = operationsState.inventory.take(8).toList();
+
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Reward Showcase',
+      icon: Icons.workspace_premium_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              _rewardStatusTile(
+                title: 'Equipped Badge',
+                value: equipped.badgeId ?? 'None equipped',
+                assetPath: equipped.badgeAssetPath,
+                accent: AppTheme.neonCyan,
+              ),
+              _rewardStatusTile(
+                title: 'Equipped Title',
+                value: equipped.titleLabel ?? 'No title equipped',
+                icon: Icons.title_rounded,
+                accent: AppTheme.neonPink,
+              ),
+              _rewardStatusTile(
+                title: 'Profile Frame',
+                value: equipped.profileFrameId ?? 'Default frame',
+                assetPath: equipped.profileFrameAssetPath,
+                icon: Icons.crop_square_rounded,
+                accent: Colors.amberAccent,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Text(
+            'Earned Trophies',
+            style: AppTheme.tradingHeading(fontSize: 16, color: Colors.white),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          if (inventory.isEmpty)
+            const Text(
+              'Claim rewards from Operations Command to populate your public trophy case.',
+              style: TextStyle(color: Colors.white70, height: 1.35),
+            )
+          else
+            Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: inventory
+                  .map(
+                    (item) => _rewardThumb(
+                      label: item.label,
+                      assetPath: item.assetPath,
+                      betaExclusive: item.betaExclusive,
+                    ),
+                  )
+                  .toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rewardStatusTile({
+    required String title,
+    required String value,
+    required Color accent,
+    String? assetPath,
+    IconData icon = Icons.military_tech_rounded,
+  }) {
+    return Container(
+      width: 190,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.74),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 38,
+            height: 38,
+            child: assetPath != null && assetPath.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      assetPath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(icon, color: accent),
+                    ),
+                  )
+                : Icon(icon, color: accent),
+          ),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rewardThumb({
+    required String label,
+    required String? assetPath,
+    required bool betaExclusive,
+  }) {
+    return Container(
+      width: 86,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: (betaExclusive ? AppTheme.neonPink : AppTheme.neonCyan)
+              .withValues(alpha: 0.22),
+        ),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: assetPath != null && assetPath.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      assetPath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.workspace_premium_rounded,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    betaExclusive
+                        ? Icons.auto_awesome_rounded
+                        : Icons.workspace_premium_rounded,
+                    color: betaExclusive
+                        ? AppTheme.neonPink
+                        : AppTheme.neonCyan,
+                  ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _communityContributionPanel(ArcOperationsUserState operationsState) {
+    final cards = <({IconData icon, String label, String value, Color accent})>[
+      (
+        icon: Icons.military_tech_rounded,
+        label: 'Lifetime Trophies',
+        value: operationsState.completedCount.toString(),
+        accent: AppTheme.neonCyan,
+      ),
+      (
+        icon: Icons.handshake_rounded,
+        label: 'Bonus Trade Slots',
+        value: '+${operationsState.extraTradeSlots}',
+        accent: AppTheme.neonPink,
+      ),
+      (
+        icon: Icons.groups_rounded,
+        label: 'Bonus Matchmaking',
+        value: '+${operationsState.extraMatchmakingSlots}',
+        accent: Colors.lightGreenAccent,
+      ),
+      (
+        icon: Icons.bolt_rounded,
+        label: 'Operation Credits',
+        value: operationsState.operationCredits.toString(),
+        accent: Colors.amberAccent,
+      ),
+    ];
+
+    return _profilePanel(
+      accent: Colors.amberAccent,
+      title: 'Community Contribution',
+      icon: Icons.hub_rounded,
+      child: Wrap(
+        spacing: AppTheme.spaceS,
+        runSpacing: AppTheme.spaceS,
+        children: cards
+            .map(
+              (card) => _contributionStat(
+                icon: card.icon,
+                label: card.label,
+                value: card.value,
+                accent: card.accent,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _guardianCommunitySystemPanel(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    final contributionScore = _communityContributionScore(
+      profile,
+      operationsState,
+    );
+    final guardianTier = _reputationTier(contributionScore, [
+      'Recruit',
+      'Guardian I',
+      'Guardian II',
+      'Guardian III',
+      'Guardian V',
+    ]);
+    final traderTier = _reputationTier(
+      operationsState.completedCount * 14 + operationsState.extraTradeSlots * 8,
+      ['New Trader', 'Trusted Trader', 'Trade Veteran', 'Trade Master'],
+    );
+    final intelTier = _reputationTier(operationsState.intelXp, [
+      'Intel Recruit',
+      'Intel Specialist',
+      'Blueprint Sage',
+      'Intel Commander',
+    ]);
+    final generosityTier = _reputationTier(
+      operationsState.operationCredits * 8 +
+          operationsState.extraMatchmakingSlots * 12,
+      [
+        'Helpful Raider',
+        'Helping Hand',
+        'Community Hero',
+        'Saint of the Rust Belt',
+      ],
+    );
+
+    final contributionItems =
+        <({IconData icon, String title, String value, Color accent})>[
+          (
+            icon: Icons.health_and_safety_rounded,
+            title: 'Guardian Standing',
+            value: guardianTier,
+            accent: Colors.lightGreenAccent,
+          ),
+          (
+            icon: Icons.handshake_rounded,
+            title: 'Trading Standing',
+            value: traderTier,
+            accent: AppTheme.neonPink,
+          ),
+          (
+            icon: Icons.radar_rounded,
+            title: 'Intel Standing',
+            value: intelTier,
+            accent: Colors.amberAccent,
+          ),
+          (
+            icon: Icons.volunteer_activism_rounded,
+            title: 'Goodwill Standing',
+            value: generosityTier,
+            accent: AppTheme.neonCyan,
+          ),
+        ];
+
+    return _profilePanel(
+      accent: Colors.lightGreenAccent,
+      title: 'Guardian & Community Reputation',
+      icon: Icons.shield_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Public proof of helping other Raiders, keeping trades healthy, sharing useful intel and building trust across the Hub.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: contributionItems
+                .map(
+                  (item) => _standingTile(
+                    icon: item.icon,
+                    title: item.title,
+                    value: item.value,
+                    accent: item.accent,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 680;
+              final children = [
+                _communityMilestoneColumn(
+                  title: 'Guardian Track',
+                  accent: Colors.lightGreenAccent,
+                  milestones: const [
+                    'Match with new Raiders',
+                    'Help complete trials',
+                    'Guide first blueprint runs',
+                    'Earn positive session ratings',
+                  ],
+                ),
+                _communityMilestoneColumn(
+                  title: 'Goodwill Track',
+                  accent: AppTheme.neonCyan,
+                  milestones: const [
+                    'Complete gift trades',
+                    'Offer basic blueprints free',
+                    'Support squad recovery runs',
+                    'Act as backup during objectives',
+                  ],
+                ),
+              ];
+
+              if (compact) {
+                return Column(
+                  children: children
+                      .map(
+                        (child) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppTheme.spaceS,
+                          ),
+                          child: child,
+                        ),
+                      )
+                      .toList(),
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: children.first),
+                  const SizedBox(width: AppTheme.spaceS),
+                  Expanded(child: children.last),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          _communityScoreBar(contributionScore),
+        ],
+      ),
+    );
+  }
+
+  int _communityContributionScore(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+  ) {
+    var score = 0;
+    if (profile.isProfileComplete) score += 18;
+    if (profile.visibleInSearch) score += 8;
+    if (profile.micOk) score += 6;
+    if (profile.crossPlatformOk) score += 6;
+    score += operationsState.completedCount * 9;
+    score += operationsState.extraTradeSlots * 6;
+    score += operationsState.extraMatchmakingSlots * 8;
+    score += operationsState.operationCredits * 4;
+    score += (operationsState.intelXp / 10).floor();
+    return score.clamp(0, 100);
+  }
+
+  String _reputationTier(int score, List<String> tiers) {
+    if (tiers.isEmpty) return 'Unranked';
+    if (score >= 80 && tiers.length >= 4) return tiers[3];
+    if (score >= 55 && tiers.length >= 3) return tiers[2];
+    if (score >= 25 && tiers.length >= 2) return tiers[1];
+    return tiers.first;
+  }
+
+  Widget _standingTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color accent,
+  }) {
+    return Container(
+      width: 250,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.74),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent.withValues(alpha: 0.12),
+              border: Border.all(color: accent.withValues(alpha: 0.24)),
+            ),
+            child: Icon(icon, color: accent, size: 21),
+          ),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _communityMilestoneColumn({
+    required String title,
+    required Color accent,
+    required List<String> milestones,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTheme.tradingHeading(fontSize: 15, color: accent),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          ...milestones.map(
+            (milestone) => Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.arrow_right_rounded, color: accent, size: 18),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      milestone,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        height: 1.25,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _communityScoreBar(int contributionScore) {
+    final score = contributionScore.clamp(0, 100);
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Colors.lightGreenAccent.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Community Contribution Score',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Text(
+                '$score%',
+                style: const TextStyle(
+                  color: Colors.lightGreenAccent,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: score / 100,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Colors.lightGreenAccent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _contributionStat({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color accent,
+  }) {
+    return Container(
+      width: 156,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: accent, size: 20),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -389,41 +1308,6 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                     : 'Local only',
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _reputationSnapshot(ArcTraderProfile profile) {
-    final ready = profile.isProfileComplete;
-    return _profilePanel(
-      accent: ready ? AppTheme.neonCyan : AppTheme.neonPink,
-      title: 'Reputation Snapshot',
-      icon: Icons.verified_user_rounded,
-      child: Wrap(
-        spacing: AppTheme.spaceS,
-        runSpacing: AppTheme.spaceS,
-        children: [
-          _profileChip(
-            icon: Icons.shield_outlined,
-            label: ready ? 'Trusted setup' : 'Profile incomplete',
-            accent: ready ? AppTheme.neonCyan : AppTheme.neonPink,
-          ),
-          _profileChip(
-            icon: Icons.visibility_outlined,
-            label: profile.visibleInSearch ? 'Visible' : 'Hidden',
-            accent: AppTheme.neonCyan,
-          ),
-          _profileChip(
-            icon: Icons.mic_rounded,
-            label: profile.micOk ? 'Mic ready' : 'No mic',
-            accent: AppTheme.neonPink,
-          ),
-          _profileChip(
-            icon: Icons.public_rounded,
-            label: profile.crossPlatformOk ? 'Crossplay' : 'Platform locked',
-            accent: AppTheme.neonCyan,
           ),
         ],
       ),
