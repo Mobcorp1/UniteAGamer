@@ -384,6 +384,11 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .where((reward) => reward.isCosmetic)
         .take(6)
         .toList();
+    final badgeCount = userState.inventory.where((item) => item.isBadge).length;
+    final titleCount = userState.inventory.where((item) => item.isTitle).length;
+    final frameCount = userState.inventory
+        .where((item) => item.type == ArcOperationRewardType.profileFrame)
+        .length;
 
     return ArcRaidersSectionCard(
       accent: Colors.amberAccent,
@@ -406,7 +411,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Badges, titles and profile frames earned through Operations. Beta rewards are permanent and exclusive.',
+                      'Unlocked cosmetics and honours earned through Operations. Beta rewards are permanent and exclusive.',
                       style: AppTheme.bodyTextStyle(
                         fontSize: 12,
                         color: Colors.white70,
@@ -422,6 +427,14 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             ],
           ),
           const SizedBox(height: 10),
+          _buildVaultSummaryGrid(
+            badgeCount: badgeCount,
+            titleCount: titleCount,
+            frameCount: frameCount,
+          ),
+          const SizedBox(height: 10),
+          _buildRecentUnlockPanel(userState),
+          const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -434,6 +447,184 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVaultSummaryGrid({
+    required int badgeCount,
+    required int titleCount,
+    required int frameCount,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 720;
+        final children = [
+          _vaultSummaryTile(
+            icon: Icons.military_tech_rounded,
+            label: 'Owned Badges',
+            value: '$badgeCount',
+            accent: Colors.amberAccent,
+          ),
+          _vaultSummaryTile(
+            icon: Icons.title_rounded,
+            label: 'Owned Titles',
+            value: '$titleCount',
+            accent: AppTheme.neonCyan,
+          ),
+          _vaultSummaryTile(
+            icon: Icons.crop_square_rounded,
+            label: 'Owned Frames',
+            value: '$frameCount',
+            accent: AppTheme.neonPink,
+          ),
+        ];
+
+        if (compact) {
+          return Column(
+            children: [
+              for (final child in children)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: child,
+                ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            for (final child in children)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: child,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _vaultSummaryTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color accent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: accent.withValues(alpha: 0.3)),
+            ),
+            child: Icon(icon, color: accent, size: 22),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: AppTheme.tradingHeading(fontSize: 22, color: accent),
+                ),
+                Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white60,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentUnlockPanel(ArcOperationsUserState userState) {
+    final recent = userState.inventory.isEmpty
+        ? null
+        : userState.inventory.last;
+    final accent = recent?.betaExclusive == true
+        ? Colors.amberAccent
+        : AppTheme.neonCyan;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.26)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: accent.withValues(alpha: 0.28)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: recent?.assetPath == null
+                ? Icon(Icons.workspace_premium_rounded, color: accent, size: 24)
+                : Image.asset(recent!.assetPath!, fit: BoxFit.cover),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'RECENT UNLOCK',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white54,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  recent?.label ?? 'Complete Operations to unlock cosmetics',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: Colors.white70,
+                    isBold: true,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  recent == null
+                      ? 'Badges, titles and frames will appear here as they are claimed.'
+                      : recent.rarity.label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(fontSize: 10, color: accent),
+                ),
+              ],
+            ),
+          ),
+          if (recent?.betaExclusive == true) _tagPill('BETA ONLY', accent),
         ],
       ),
     );
