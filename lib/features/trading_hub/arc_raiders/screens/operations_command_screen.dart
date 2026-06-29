@@ -435,6 +435,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           const SizedBox(height: 10),
           _buildRecentUnlockPanel(userState),
           const SizedBox(height: 10),
+          _buildBadgeInventoryGrid(userState),
+          const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -557,6 +559,279 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildBadgeInventoryGrid(ArcOperationsUserState userState) {
+    final ownedBadges = userState.inventory
+        .where((item) => item.isBadge)
+        .toList();
+    final previewBadges = ArcOperationsSeedData.rewards.values
+        .where((reward) => reward.type == ArcOperationRewardType.badge)
+        .take(6)
+        .toList();
+    final equippedBadgeId = userState.equippedCosmetics.badgeId;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'BADGE INVENTORY',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 19,
+                        color: Colors.amberAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ownedBadges.isEmpty
+                          ? 'Preview beta, founder and community badges. Claimed badges appear here.'
+                          : 'Earned badges ready for profile display and future equip flows.',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 11,
+                        color: Colors.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _tagPill('${ownedBadges.length} OWNED', Colors.amberAccent),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final columns = width >= 900
+                  ? 6
+                  : width >= 680
+                  ? 4
+                  : width >= 430
+                  ? 3
+                  : 2;
+              final spacing = 8.0;
+              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final cards = ownedBadges.isNotEmpty
+                  ? ownedBadges
+                        .map(
+                          (badge) => _badgeInventoryCard(
+                            label: badge.label,
+                            assetPath: badge.assetPath,
+                            rarity: badge.rarity,
+                            unlocked: true,
+                            equipped: badge.rewardId == equippedBadgeId,
+                            betaExclusive: badge.betaExclusive,
+                          ),
+                        )
+                        .toList()
+                  : previewBadges
+                        .map(
+                          (badge) => _badgeInventoryCard(
+                            label: badge.label,
+                            assetPath: badge.assetPath,
+                            rarity: badge.rarity,
+                            unlocked: false,
+                            equipped: false,
+                            betaExclusive: badge.betaExclusive,
+                          ),
+                        )
+                        .toList();
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  for (final card in cards)
+                    SizedBox(width: itemWidth.clamp(118, 180), child: card),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _badgeInventoryCard({
+    required String label,
+    required String? assetPath,
+    required ArcCosmeticRarity rarity,
+    required bool unlocked,
+    required bool equipped,
+    required bool betaExclusive,
+  }) {
+    final accent = _rarityAccent(rarity);
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: unlocked
+            ? AppTheme.cardBackgroundDeep.withValues(alpha: 0.92)
+            : AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: equipped
+              ? AppTheme.neonCyan.withValues(alpha: 0.75)
+              : accent.withValues(alpha: unlocked ? 0.34 : 0.18),
+        ),
+        boxShadow: equipped
+            ? [
+                BoxShadow(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 1,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: assetPath == null
+                        ? Container(
+                            color: accent.withValues(
+                              alpha: unlocked ? 0.12 : 0.06,
+                            ),
+                            child: Icon(
+                              Icons.military_tech_rounded,
+                              color: unlocked ? accent : Colors.white30,
+                              size: 34,
+                            ),
+                          )
+                        : ColorFiltered(
+                            colorFilter: unlocked
+                                ? const ColorFilter.mode(
+                                    Colors.transparent,
+                                    BlendMode.dst,
+                                  )
+                                : const ColorFilter.matrix(<double>[
+                                    0.2126,
+                                    0.7152,
+                                    0.0722,
+                                    0,
+                                    0,
+                                    0.2126,
+                                    0.7152,
+                                    0.0722,
+                                    0,
+                                    0,
+                                    0.2126,
+                                    0.7152,
+                                    0.0722,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0.5,
+                                    0,
+                                  ]),
+                            child: Image.asset(
+                              assetPath,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              errorBuilder: (_, _, _) => Container(
+                                color: accent.withValues(alpha: 0.08),
+                                child: Icon(
+                                  Icons.military_tech_rounded,
+                                  color: accent,
+                                  size: 34,
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: _tinyVaultChip(
+                    equipped
+                        ? 'EQUIPPED'
+                        : unlocked
+                        ? 'OWNED'
+                        : 'LOCKED',
+                    equipped
+                        ? AppTheme.neonCyan
+                        : unlocked
+                        ? accent
+                        : Colors.white38,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 11,
+              color: unlocked ? Colors.white70 : Colors.white38,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 5,
+            runSpacing: 5,
+            children: [
+              _tinyVaultChip(rarity.label.toUpperCase(), accent),
+              if (betaExclusive) _tinyVaultChip('BETA', Colors.amberAccent),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tinyVaultChip(String label, Color accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        label,
+        style: AppTheme.bodyTextStyle(fontSize: 8, color: accent, isBold: true),
+      ),
+    );
+  }
+
+  Color _rarityAccent(ArcCosmeticRarity rarity) {
+    return switch (rarity) {
+      ArcCosmeticRarity.common => Colors.white60,
+      ArcCosmeticRarity.uncommon => Colors.lightGreenAccent,
+      ArcCosmeticRarity.rare => AppTheme.neonCyan,
+      ArcCosmeticRarity.epic => AppTheme.neonPink,
+      ArcCosmeticRarity.legendary => Colors.orangeAccent,
+      ArcCosmeticRarity.founder => Colors.amberAccent,
+      ArcCosmeticRarity.closedBeta => Colors.amberAccent,
+      ArcCosmeticRarity.community => Colors.lightBlueAccent,
+      ArcCosmeticRarity.creator => Colors.purpleAccent,
+    };
   }
 
   Widget _buildRecentUnlockPanel(ArcOperationsUserState userState) {
