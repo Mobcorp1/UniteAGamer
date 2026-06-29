@@ -659,7 +659,226 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               );
             },
           ),
+          const SizedBox(height: 10),
+          _buildSelectedBadgePreview(userState),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedBadgePreview(ArcOperationsUserState userState) {
+    final ownedBadges = userState.inventory
+        .where((item) => item.isBadge)
+        .toList();
+    final equippedBadgeId = userState.equippedCosmetics.badgeId;
+
+    ArcRewardInventoryItem? selectedOwned;
+    for (final badge in ownedBadges) {
+      if (badge.rewardId == equippedBadgeId) {
+        selectedOwned = badge;
+        break;
+      }
+    }
+
+    selectedOwned ??= ownedBadges.isEmpty ? null : ownedBadges.first;
+
+    if (selectedOwned != null) {
+      return _badgePreviewPanel(
+        label: selectedOwned.label,
+        assetPath: selectedOwned.assetPath,
+        rarity: selectedOwned.rarity,
+        unlocked: true,
+        equipped: selectedOwned.rewardId == equippedBadgeId,
+        betaExclusive: selectedOwned.betaExclusive,
+        source: 'Claimed from Operations reward inventory',
+      );
+    }
+
+    final previewBadges = ArcOperationsSeedData.rewards.values
+        .where((reward) => reward.type == ArcOperationRewardType.badge)
+        .toList();
+    final previewBadge = previewBadges.isEmpty ? null : previewBadges.first;
+
+    if (previewBadge == null) {
+      return _badgePreviewPanel(
+        label: 'No badge rewards seeded',
+        assetPath: null,
+        rarity: ArcCosmeticRarity.common,
+        unlocked: false,
+        equipped: false,
+        betaExclusive: false,
+        source: 'Complete Operations to unlock badge rewards',
+      );
+    }
+
+    return _badgePreviewPanel(
+      label: previewBadge.label,
+      assetPath: previewBadge.assetPath,
+      rarity: previewBadge.rarity,
+      unlocked: false,
+      equipped: false,
+      betaExclusive: previewBadge.betaExclusive,
+      source: 'Preview reward. Claim Operations to unlock and equip.',
+    );
+  }
+
+  Widget _badgePreviewPanel({
+    required String label,
+    required String? assetPath,
+    required ArcCosmeticRarity rarity,
+    required bool unlocked,
+    required bool equipped,
+    required bool betaExclusive,
+    required String source,
+  }) {
+    final accent = _rarityAccent(rarity);
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (equipped ? AppTheme.neonCyan : accent).withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final preview = Container(
+            width: compact ? double.infinity : 148,
+            height: compact ? 168 : 148,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: unlocked ? 0.10 : 0.06),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: accent.withValues(alpha: 0.35)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: assetPath == null
+                ? Icon(
+                    Icons.military_tech_rounded,
+                    color: unlocked ? accent : Colors.white38,
+                    size: 54,
+                  )
+                : ColorFiltered(
+                    colorFilter: unlocked
+                        ? const ColorFilter.mode(
+                            Colors.transparent,
+                            BlendMode.dst,
+                          )
+                        : const ColorFilter.matrix(<double>[
+                            0.2126,
+                            0.7152,
+                            0.0722,
+                            0,
+                            0,
+                            0.2126,
+                            0.7152,
+                            0.0722,
+                            0,
+                            0,
+                            0.2126,
+                            0.7152,
+                            0.0722,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0.55,
+                            0,
+                          ]),
+                    child: Image.asset(
+                      assetPath,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.military_tech_rounded,
+                        color: accent,
+                        size: 54,
+                      ),
+                    ),
+                  ),
+          );
+
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'SELECTED BADGE',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white54,
+                  isBold: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(fontSize: 22, color: accent),
+              ),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                  _tinyVaultChip(
+                    unlocked ? 'UNLOCKED' : 'LOCKED',
+                    unlocked ? Colors.lightGreenAccent : Colors.white38,
+                  ),
+                  if (equipped) _tinyVaultChip('EQUIPPED', AppTheme.neonCyan),
+                  if (betaExclusive)
+                    _tinyVaultChip('BETA ONLY', Colors.amberAccent),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                source,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                unlocked
+                    ? 'This badge is available for profile display and the upcoming equip flow.'
+                    : 'Locked preview. Complete the linked Operation chain to claim this badge permanently.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 11,
+                  color: Colors.white54,
+                ),
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [preview, const SizedBox(height: 10), details],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              preview,
+              const SizedBox(width: 12),
+              Expanded(child: details),
+            ],
+          );
+        },
       ),
     );
   }
