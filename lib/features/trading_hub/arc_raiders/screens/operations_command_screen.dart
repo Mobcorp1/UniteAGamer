@@ -659,6 +659,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               );
             },
           ),
+          const SizedBox(height: 10),
+          _buildSelectedTitlePreview(userState),
         ],
       ),
     );
@@ -762,6 +764,208 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedTitlePreview(ArcOperationsUserState userState) {
+    final ownedTitles = userState.inventory
+        .where((item) => item.isTitle)
+        .toList();
+    final equippedTitleId = userState.equippedCosmetics.titleId;
+
+    ArcRewardInventoryItem? selectedOwned;
+    for (final title in ownedTitles) {
+      if (title.rewardId == equippedTitleId) {
+        selectedOwned = title;
+        break;
+      }
+    }
+
+    selectedOwned ??= ownedTitles.isEmpty ? null : ownedTitles.first;
+
+    if (selectedOwned != null) {
+      return _titlePreviewPanel(
+        label: selectedOwned.label,
+        rarity: selectedOwned.rarity,
+        unlocked: true,
+        equipped: selectedOwned.rewardId == equippedTitleId,
+        betaExclusive: selectedOwned.betaExclusive,
+        source: 'Claimed from Operations reward inventory',
+      );
+    }
+
+    final previewTitles = ArcOperationsSeedData.rewards.values
+        .where((reward) => reward.type == ArcOperationRewardType.title)
+        .toList();
+    final previewTitle = previewTitles.isEmpty ? null : previewTitles.first;
+
+    if (previewTitle == null) {
+      return _titlePreviewPanel(
+        label: 'No title rewards seeded',
+        rarity: ArcCosmeticRarity.common,
+        unlocked: false,
+        equipped: false,
+        betaExclusive: false,
+        source: 'Complete Operations to unlock profile titles.',
+      );
+    }
+
+    return _titlePreviewPanel(
+      label: previewTitle.label,
+      rarity: previewTitle.rarity,
+      unlocked: false,
+      equipped: false,
+      betaExclusive: previewTitle.betaExclusive,
+      source: 'Preview reward. Claim Operations to unlock this title.',
+    );
+  }
+
+  Widget _titlePreviewPanel({
+    required String label,
+    required ArcCosmeticRarity rarity,
+    required bool unlocked,
+    required bool equipped,
+    required bool betaExclusive,
+    required String source,
+  }) {
+    final accent = _rarityAccent(rarity);
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (equipped ? AppTheme.neonCyan : accent).withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final showcase = Container(
+            width: compact ? double.infinity : 190,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: unlocked ? 0.10 : 0.06),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: accent.withValues(alpha: 0.35)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  equipped
+                      ? Icons.workspace_premium_rounded
+                      : Icons.title_rounded,
+                  color: unlocked ? accent : Colors.white38,
+                  size: 34,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  label.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(
+                    fontSize: compact ? 20 : 22,
+                    color: unlocked ? accent : Colors.white38,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _tinyVaultChip(
+                  equipped
+                      ? 'ACTIVE TITLE'
+                      : unlocked
+                      ? 'READY TO EQUIP'
+                      : 'LOCKED PREVIEW',
+                  equipped
+                      ? AppTheme.neonCyan
+                      : unlocked
+                      ? accent
+                      : Colors.white38,
+                ),
+              ],
+            ),
+          );
+
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'SELECTED TITLE',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white54,
+                  isBold: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(fontSize: 22, color: accent),
+              ),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                  _tinyVaultChip(
+                    unlocked ? 'UNLOCKED' : 'LOCKED',
+                    unlocked ? Colors.lightGreenAccent : Colors.white38,
+                  ),
+                  if (equipped) _tinyVaultChip('EQUIPPED', AppTheme.neonCyan),
+                  if (betaExclusive)
+                    _tinyVaultChip('BETA ONLY', Colors.amberAccent),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                source,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                unlocked
+                    ? 'This title is unlocked and ready for the upcoming profile equip flow.'
+                    : 'Locked preview. Complete the linked Operation chain to claim this title permanently.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 11,
+                  color: Colors.white54,
+                ),
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [showcase, const SizedBox(height: 10), details],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              showcase,
+              const SizedBox(width: 12),
+              Expanded(child: details),
+            ],
+          );
+        },
       ),
     );
   }
