@@ -786,6 +786,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
     if (selectedOwned != null) {
       return _titlePreviewPanel(
+        item: selectedOwned,
         label: selectedOwned.label,
         rarity: selectedOwned.rarity,
         unlocked: true,
@@ -802,6 +803,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
     if (previewTitle == null) {
       return _titlePreviewPanel(
+        item: null,
         label: 'No title rewards seeded',
         rarity: ArcCosmeticRarity.common,
         unlocked: false,
@@ -812,6 +814,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     }
 
     return _titlePreviewPanel(
+      item: null,
       label: previewTitle.label,
       rarity: previewTitle.rarity,
       unlocked: false,
@@ -822,6 +825,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   }
 
   Widget _titlePreviewPanel({
+    required ArcRewardInventoryItem? item,
     required String label,
     required ArcCosmeticRarity rarity,
     required bool unlocked,
@@ -940,12 +944,19 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               const SizedBox(height: 8),
               Text(
                 unlocked
-                    ? 'This title is unlocked and ready for the upcoming profile equip flow.'
+                    ? 'This title is unlocked and can be equipped to your profile header.'
                     : 'Locked preview. Complete the linked Operation chain to claim this title permanently.',
                 style: AppTheme.bodyTextStyle(
                   fontSize: 11,
                   color: Colors.white54,
                 ),
+              ),
+              const SizedBox(height: 10),
+              _titleEquipActions(
+                item: item,
+                unlocked: unlocked,
+                equipped: equipped,
+                accent: accent,
               ),
             ],
           );
@@ -1414,6 +1425,133 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         },
         icon: const Icon(Icons.military_tech_rounded, size: 17),
         label: const Text('Equip Badge'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: accent.withValues(alpha: 0.20),
+          foregroundColor: accent,
+          side: BorderSide(color: accent.withValues(alpha: 0.45)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: AppTheme.bodyTextStyle(
+            fontSize: 11,
+            color: accent,
+            isBold: true,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _titleEquipActions({
+    required ArcRewardInventoryItem? item,
+    required bool unlocked,
+    required bool equipped,
+    required Color accent,
+  }) {
+    if (!unlocked || item == null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_rounded, color: Colors.white38, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'LOCKED - CLAIM THIS TITLE FROM OPERATIONS FIRST',
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white54,
+                  isBold: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (equipped) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            decoration: BoxDecoration(
+              color: AppTheme.neonCyan.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.40),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.verified_rounded,
+                  color: AppTheme.neonCyan,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'CURRENTLY EQUIPPED',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: AppTheme.neonCyan,
+                    isBold: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Title remains equipped until another title is selected.',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+            label: const Text('Replace via another title'),
+          ),
+        ],
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          await _repository.equipCosmetic(item);
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${item.label} equipped to your profile.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+            ),
+          );
+        },
+        icon: const Icon(Icons.title_rounded, size: 17),
+        label: const Text('Equip Title'),
         style: ElevatedButton.styleFrom(
           backgroundColor: accent.withValues(alpha: 0.20),
           foregroundColor: accent,
