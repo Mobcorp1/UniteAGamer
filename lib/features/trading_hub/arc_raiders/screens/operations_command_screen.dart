@@ -437,6 +437,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           const SizedBox(height: 10),
           _buildBadgeInventoryGrid(userState),
           const SizedBox(height: 10),
+          _buildTitleInventoryGrid(userState),
+          const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -552,6 +554,209 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                     fontSize: 10,
                     color: Colors.white60,
                   ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleInventoryGrid(ArcOperationsUserState userState) {
+    final ownedTitles = userState.inventory
+        .where((item) => item.isTitle)
+        .toList();
+    final previewTitles = ArcOperationsSeedData.rewards.values
+        .where((reward) => reward.type == ArcOperationRewardType.title)
+        .take(6)
+        .toList();
+    final equippedTitleId = userState.equippedCosmetics.titleId;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'TITLE INVENTORY',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 19,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ownedTitles.isEmpty
+                          ? 'Preview titles earned through Operations, beta rewards and community reputation.'
+                          : 'Earned titles ready for profile display and future equip flows.',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 11,
+                        color: Colors.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _tagPill('${ownedTitles.length} OWNED', AppTheme.neonCyan),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final columns = width >= 900
+                  ? 3
+                  : width >= 620
+                  ? 2
+                  : 1;
+              final spacing = 8.0;
+              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final cards = ownedTitles.isNotEmpty
+                  ? ownedTitles
+                        .map(
+                          (title) => _titleInventoryCard(
+                            label: title.label,
+                            rarity: title.rarity,
+                            unlocked: true,
+                            equipped: title.rewardId == equippedTitleId,
+                            betaExclusive: title.betaExclusive,
+                            source: 'Claimed Operations reward',
+                          ),
+                        )
+                        .toList()
+                  : previewTitles
+                        .map(
+                          (title) => _titleInventoryCard(
+                            label: title.label,
+                            rarity: title.rarity,
+                            unlocked: false,
+                            equipped: false,
+                            betaExclusive: title.betaExclusive,
+                            source: 'Preview title reward',
+                          ),
+                        )
+                        .toList();
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  for (final card in cards)
+                    SizedBox(width: itemWidth.clamp(180, 380), child: card),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _titleInventoryCard({
+    required String label,
+    required ArcCosmeticRarity rarity,
+    required bool unlocked,
+    required bool equipped,
+    required bool betaExclusive,
+    required String source,
+  }) {
+    final accent = _rarityAccent(rarity);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: unlocked
+            ? AppTheme.cardBackgroundDeep.withValues(alpha: 0.92)
+            : AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: equipped
+              ? AppTheme.neonCyan.withValues(alpha: 0.75)
+              : accent.withValues(alpha: unlocked ? 0.34 : 0.18),
+        ),
+        boxShadow: equipped
+            ? [
+                BoxShadow(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: unlocked ? 0.12 : 0.06),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: accent.withValues(alpha: 0.32)),
+            ),
+            child: Icon(
+              equipped ? Icons.workspace_premium_rounded : Icons.title_rounded,
+              color: unlocked ? accent : Colors.white30,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: unlocked ? Colors.white70 : Colors.white38,
+                    isBold: true,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  source,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white38,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Wrap(
+                  spacing: 5,
+                  runSpacing: 5,
+                  children: [
+                    _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                    _tinyVaultChip(
+                      equipped
+                          ? 'EQUIPPED'
+                          : unlocked
+                          ? 'OWNED'
+                          : 'LOCKED',
+                      equipped
+                          ? AppTheme.neonCyan
+                          : unlocked
+                          ? accent
+                          : Colors.white38,
+                    ),
+                    if (betaExclusive)
+                      _tinyVaultChip('BETA', Colors.amberAccent),
+                  ],
                 ),
               ],
             ),
