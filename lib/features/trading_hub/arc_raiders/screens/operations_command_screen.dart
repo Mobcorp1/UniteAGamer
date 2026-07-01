@@ -19,6 +19,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final ArcOperationsRepository _repository = ArcOperationsRepository();
+  String? _selectedProfileFrameRewardId;
 
   @override
   void initState() {
@@ -1027,7 +1028,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                     Text(
                       ownedFrames.isEmpty
                           ? 'Preview profile frames earned through beta Operations and guardian reputation.'
-                          : 'Earned frames ready for profile display and future equip flows.',
+                          : 'Select a frame to preview profile styling before equipping.',
                       style: AppTheme.bodyTextStyle(
                         fontSize: 11,
                         color: Colors.white60,
@@ -1054,24 +1055,33 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                   ? ownedFrames
                         .map(
                           (frame) => _frameInventoryCard(
+                            item: frame,
                             label: frame.label,
                             rarity: frame.rarity,
                             unlocked: true,
+                            selected:
+                                frame.rewardId == _selectedProfileFrameRewardId,
                             equipped: frame.rewardId == equippedFrameId,
                             betaExclusive: frame.betaExclusive,
-                            source: 'Claimed Operations reward',
+                            source: _profileFrameSource(frame),
+                            onSelected: () => setState(() {
+                              _selectedProfileFrameRewardId = frame.rewardId;
+                            }),
                           ),
                         )
                         .toList()
                   : previewFrames
                         .map(
                           (frame) => _frameInventoryCard(
+                            item: null,
                             label: frame.label,
                             rarity: frame.rarity,
                             unlocked: false,
+                            selected: false,
                             equipped: false,
                             betaExclusive: frame.betaExclusive,
                             source: 'Preview frame reward',
+                            onSelected: null,
                           ),
                         )
                         .toList();
@@ -1094,115 +1104,173 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   }
 
   Widget _frameInventoryCard({
+    required ArcRewardInventoryItem? item,
     required String label,
     required ArcCosmeticRarity rarity,
     required bool unlocked,
+    required bool selected,
     required bool equipped,
     required bool betaExclusive,
     required String source,
+    required VoidCallback? onSelected,
   }) {
     final accent = _rarityAccent(rarity);
-    return Container(
-      padding: const EdgeInsets.all(10),
+    final highlighted = selected || equipped;
+    final framePreview = Container(
       decoration: BoxDecoration(
-        color: unlocked
-            ? AppTheme.cardBackgroundDeep.withValues(alpha: 0.92)
-            : AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: equipped
-              ? AppTheme.neonPink.withValues(alpha: 0.75)
-              : accent.withValues(alpha: unlocked ? 0.34 : 0.18),
+          color: unlocked ? accent : Colors.white30,
+          width: highlighted ? 2.2 : 1.2,
         ),
-        boxShadow: equipped
-            ? [
-                BoxShadow(
-                  color: AppTheme.neonPink.withValues(alpha: 0.18),
-                  blurRadius: 18,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 48,
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: unlocked ? 0.10 : 0.05),
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: accent.withValues(alpha: 0.30)),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: unlocked ? accent : Colors.white30,
-                  width: equipped ? 2.2 : 1.2,
-                ),
-              ),
-              child: Icon(
+      clipBehavior: Clip.antiAlias,
+      child: item?.assetPath == null
+          ? Icon(
+              Icons.person_rounded,
+              color: unlocked ? accent : Colors.white30,
+              size: 20,
+            )
+          : Image.asset(
+              item!.assetPath!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Icon(
                 Icons.person_rounded,
                 color: unlocked ? accent : Colors.white30,
                 size: 20,
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: unlocked ? Colors.white70 : Colors.white38,
-                    isBold: true,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  source,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 10,
-                    color: Colors.white38,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Wrap(
-                  spacing: 5,
-                  runSpacing: 5,
-                  children: [
-                    _tinyVaultChip(rarity.label.toUpperCase(), accent),
-                    _tinyVaultChip(
-                      equipped
-                          ? 'EQUIPPED'
-                          : unlocked
-                          ? 'OWNED'
-                          : 'LOCKED',
-                      equipped
-                          ? AppTheme.neonPink
-                          : unlocked
-                          ? accent
-                          : Colors.white38,
+    );
+
+    return MouseRegion(
+      cursor: onSelected == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onSelected,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: unlocked
+                ? AppTheme.cardBackgroundDeep.withValues(alpha: 0.92)
+                : AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: highlighted
+                  ? AppTheme.neonPink.withValues(alpha: 0.75)
+                  : accent.withValues(alpha: unlocked ? 0.34 : 0.18),
+            ),
+            boxShadow: highlighted
+                ? [
+                    BoxShadow(
+                      color: AppTheme.neonPink.withValues(alpha: 0.18),
+                      blurRadius: 18,
+                      spreadRadius: 1,
                     ),
-                    if (betaExclusive)
-                      _tinyVaultChip('BETA', Colors.amberAccent),
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 58,
+                height: 48,
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: unlocked ? 0.10 : 0.05),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: accent.withValues(alpha: 0.30)),
+                ),
+                child: framePreview,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 12,
+                        color: unlocked ? Colors.white70 : Colors.white38,
+                        isBold: true,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      source,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 10,
+                        color: Colors.white38,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 5,
+                      runSpacing: 5,
+                      children: [
+                        _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                        _tinyVaultChip(
+                          equipped
+                              ? 'EQUIPPED'
+                              : selected
+                              ? 'SELECTED'
+                              : unlocked
+                              ? 'OWNED'
+                              : 'LOCKED',
+                          equipped
+                              ? AppTheme.neonPink
+                              : selected
+                              ? AppTheme.neonCyan
+                              : unlocked
+                              ? accent
+                              : Colors.white38,
+                        ),
+                        if (betaExclusive)
+                          _tinyVaultChip('BETA', Colors.amberAccent),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  ArcRewardInventoryItem? _selectedProfileFrame(
+    List<ArcRewardInventoryItem> ownedFrames,
+  ) {
+    final selectedId = _selectedProfileFrameRewardId;
+    if (selectedId == null) return null;
+    for (final frame in ownedFrames) {
+      if (frame.rewardId == selectedId) return frame;
+    }
+    return null;
+  }
+
+  String _profileFrameSource(ArcRewardInventoryItem frame) {
+    if (frame.betaExclusive) return 'Closed Beta Operations reward';
+    if (frame.rarity == ArcCosmeticRarity.community) {
+      return 'Community Operations reward';
+    }
+    return 'Operations reward inventory';
+  }
+
+  String _profileFrameDescription(ArcRewardInventoryItem frame) {
+    if (frame.betaExclusive) {
+      return 'A permanent beta-era profile frame for your ARC identity.';
+    }
+    if (frame.rarity == ArcCosmeticRarity.community) {
+      return 'A profile frame earned through community and guardian activity.';
+    }
+    return 'A profile frame earned through Operations Command progress.';
   }
 
   Widget _buildSelectedProfileFramePreview(ArcOperationsUserState userState) {
@@ -1210,65 +1278,48 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .where((item) => item.isProfileFrame)
         .toList();
     final equippedFrameId = userState.equippedCosmetics.profileFrameId;
+    final selectedOwned = _selectedProfileFrame(ownedFrames);
 
-    ArcRewardInventoryItem? selectedOwned;
-    for (final frame in ownedFrames) {
-      if (frame.rewardId == equippedFrameId) {
-        selectedOwned = frame;
-        break;
-      }
-    }
-
-    selectedOwned ??= ownedFrames.isEmpty ? null : ownedFrames.first;
-
-    if (selectedOwned != null) {
-      return _profileFramePreviewPanel(
-        item: selectedOwned,
-        label: selectedOwned.label,
-        rarity: selectedOwned.rarity,
-        unlocked: true,
-        equipped: selectedOwned.rewardId == equippedFrameId,
-        betaExclusive: selectedOwned.betaExclusive,
-        source: 'Claimed from Operations reward inventory',
-      );
-    }
-
-    final previewFrames = ArcOperationsSeedData.rewards.values
-        .where((reward) => reward.type == ArcOperationRewardType.profileFrame)
-        .toList();
-    final previewFrame = previewFrames.isEmpty ? null : previewFrames.first;
-
-    if (previewFrame == null) {
-      return _profileFramePreviewPanel(
-        item: null,
-        label: 'No frame rewards seeded',
-        rarity: ArcCosmeticRarity.common,
-        unlocked: false,
-        equipped: false,
-        betaExclusive: false,
-        source: 'Complete Operations to unlock profile frames.',
-      );
+    if (selectedOwned == null) {
+      return _profileFramePlaceholderPanel();
     }
 
     return _profileFramePreviewPanel(
-      item: null,
-      label: previewFrame.label,
-      rarity: previewFrame.rarity,
-      unlocked: false,
+      label: selectedOwned.label,
+      assetPath: selectedOwned.assetPath,
+      rarity: selectedOwned.rarity,
+      owned: true,
+      equipped: selectedOwned.rewardId == equippedFrameId,
+      betaExclusive: selectedOwned.betaExclusive,
+      source: _profileFrameSource(selectedOwned),
+      description: _profileFrameDescription(selectedOwned),
+    );
+  }
+
+  Widget _profileFramePlaceholderPanel() {
+    return _profileFramePreviewPanel(
+      label: 'No profile frame selected',
+      assetPath: null,
+      rarity: ArcCosmeticRarity.common,
+      owned: false,
       equipped: false,
-      betaExclusive: previewFrame.betaExclusive,
-      source: 'Preview reward. Claim Operations to unlock this frame.',
+      betaExclusive: false,
+      source: 'Select an owned profile frame from inventory.',
+      description: 'Frame details will appear here once a reward is selected.',
+      showAction: false,
     );
   }
 
   Widget _profileFramePreviewPanel({
-    required ArcRewardInventoryItem? item,
     required String label,
+    required String? assetPath,
     required ArcCosmeticRarity rarity,
-    required bool unlocked,
+    required bool owned,
     required bool equipped,
     required bool betaExclusive,
     required String source,
+    required String description,
+    bool showAction = true,
   }) {
     final accent = _rarityAccent(rarity);
 
@@ -1296,16 +1347,17 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             height: compact ? 156 : 164,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: unlocked ? 0.10 : 0.06),
+              color: accent.withValues(alpha: owned ? 0.10 : 0.06),
               borderRadius: BorderRadius.circular(15),
               border: Border.all(color: accent.withValues(alpha: 0.35)),
             ),
             child: Container(
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: AppTheme.darkBackground.withValues(alpha: 0.36),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: unlocked ? accent : Colors.white38,
+                  color: owned ? accent : Colors.white38,
                   width: equipped ? 2.4 : 1.4,
                 ),
                 boxShadow: equipped
@@ -1318,38 +1370,48 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                       ]
                     : null,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.person_rounded,
-                    color: unlocked ? accent : Colors.white38,
-                    size: 34,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'PROFILE',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
-                      color: unlocked ? accent : Colors.white38,
-                      isBold: true,
+              child: assetPath == null
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.person_rounded,
+                          color: owned ? accent : Colors.white38,
+                          size: 34,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'PROFILE',
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 10,
+                            color: owned ? accent : Colors.white38,
+                            isBold: true,
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                        _tinyVaultChip(
+                          equipped
+                              ? 'ACTIVE FRAME'
+                              : owned
+                              ? 'READY TO EQUIP'
+                              : 'NO SELECTION',
+                          equipped
+                              ? AppTheme.neonPink
+                              : owned
+                              ? accent
+                              : Colors.white38,
+                        ),
+                      ],
+                    )
+                  : Image.asset(
+                      assetPath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.person_rounded,
+                        color: owned ? accent : Colors.white38,
+                        size: 34,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 7),
-                  _tinyVaultChip(
-                    equipped
-                        ? 'ACTIVE FRAME'
-                        : unlocked
-                        ? 'READY TO EQUIP'
-                        : 'LOCKED PREVIEW',
-                    equipped
-                        ? AppTheme.neonPink
-                        : unlocked
-                        ? accent
-                        : Colors.white38,
-                  ),
-                ],
-              ),
             ),
           );
 
@@ -1378,10 +1440,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 children: [
                   _tinyVaultChip(rarity.label.toUpperCase(), accent),
                   _tinyVaultChip(
-                    unlocked ? 'UNLOCKED' : 'LOCKED',
-                    unlocked ? Colors.lightGreenAccent : Colors.white38,
+                    owned ? 'OWNED' : 'NO SELECTION',
+                    owned ? Colors.lightGreenAccent : Colors.white38,
                   ),
-                  if (equipped) _tinyVaultChip('EQUIPPED', AppTheme.neonPink),
+                  _tinyVaultChip(
+                    equipped ? 'EQUIPPED' : 'NOT EQUIPPED',
+                    equipped ? AppTheme.neonPink : Colors.white54,
+                  ),
                   if (betaExclusive)
                     _tinyVaultChip('BETA ONLY', Colors.amberAccent),
                 ],
@@ -1396,21 +1461,16 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                unlocked
-                    ? 'This frame can be equipped around your ARC profile identity.'
-                    : 'Locked preview. Complete the linked Operation chain to claim this frame permanently.',
+                description,
                 style: AppTheme.bodyTextStyle(
                   fontSize: 11,
                   color: Colors.white54,
                 ),
               ),
-              const SizedBox(height: 10),
-              _frameEquipActions(
-                item: item,
-                unlocked: unlocked,
-                equipped: equipped,
-                accent: accent,
-              ),
+              if (showAction) ...[
+                const SizedBox(height: 10),
+                _frameEquipActions(equipped: equipped, accent: accent),
+              ],
             ],
           );
 
@@ -1434,120 +1494,20 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  Widget _frameEquipActions({
-    required ArcRewardInventoryItem? item,
-    required bool unlocked,
-    required bool equipped,
-    required Color accent,
-  }) {
-    if (!unlocked || item == null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.lock_rounded, color: Colors.white38, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'LOCKED - CLAIM THIS FRAME FROM OPERATIONS FIRST',
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 10,
-                  color: Colors.white54,
-                  isBold: true,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (equipped) {
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-            decoration: BoxDecoration(
-              color: AppTheme.neonPink.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.neonPink.withValues(alpha: 0.40),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.verified_rounded,
-                  color: AppTheme.neonPink,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'CURRENTLY EQUIPPED',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 10,
-                    color: AppTheme.neonPink,
-                    isBold: true,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Frame remains equipped until another frame is selected.',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ),
-              );
-            },
-            icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-            label: const Text('Replace via another frame'),
-          ),
-        ],
-      );
-    }
-
+  Widget _frameEquipActions({required bool equipped, required Color accent}) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () async {
-          await _repository.equipCosmetic(item);
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${item.label} equipped to your profile.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-          );
-        },
-        icon: const Icon(Icons.crop_square_rounded, size: 17),
-        label: const Text('Equip Frame'),
+        onPressed: null,
+        icon: Icon(
+          equipped ? Icons.verified_rounded : Icons.crop_square_rounded,
+          size: 17,
+        ),
+        label: Text(equipped ? 'Equipped' : 'Equip'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: accent.withValues(alpha: 0.20),
-          foregroundColor: accent,
-          side: BorderSide(color: accent.withValues(alpha: 0.45)),
+          disabledBackgroundColor: accent.withValues(alpha: 0.12),
+          disabledForegroundColor: accent.withValues(alpha: 0.72),
+          side: BorderSide(color: accent.withValues(alpha: 0.35)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
