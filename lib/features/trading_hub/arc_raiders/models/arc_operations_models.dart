@@ -280,6 +280,7 @@ class ArcRewardInventoryItem {
       label: reward.label,
       type: reward.type,
       assetPath: reward.assetPath,
+      rarity: reward.rarity,
       betaExclusive: reward.betaExclusive,
       unlockedAt: DateTime.now(),
     );

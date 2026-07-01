@@ -182,6 +182,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               accent: AppTheme.neonCyan,
             ),
             _equippedPreview(
+              label: 'Profile Frame',
+              value: equipped.hasFrame ? 'Frame active' : 'No frame equipped',
+              assetPath: equipped.profileFrameAssetPath,
+              icon: Icons.crop_square_rounded,
+              accent: AppTheme.neonPink,
+            ),
+            _equippedPreview(
               label: 'Inventory',
               value: '${userState.inventory.length} rewards owned',
               icon: Icons.inventory_2_rounded,
@@ -438,6 +445,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           _buildBadgeInventoryGrid(userState),
           const SizedBox(height: 10),
           _buildTitleInventoryGrid(userState),
+          const SizedBox(height: 10),
+          _buildProfileFrameInventoryGrid(userState),
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -977,6 +986,577 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildProfileFrameInventoryGrid(ArcOperationsUserState userState) {
+    final ownedFrames = userState.inventory
+        .where((item) => item.isProfileFrame)
+        .toList();
+    final previewFrames = ArcOperationsSeedData.rewards.values
+        .where((reward) => reward.type == ArcOperationRewardType.profileFrame)
+        .take(6)
+        .toList();
+    final equippedFrameId = userState.equippedCosmetics.profileFrameId;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PROFILE FRAME INVENTORY',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 19,
+                        color: AppTheme.neonPink,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ownedFrames.isEmpty
+                          ? 'Preview profile frames earned through beta Operations and guardian reputation.'
+                          : 'Earned frames ready for profile display and future equip flows.',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 11,
+                        color: Colors.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _tagPill('${ownedFrames.length} OWNED', AppTheme.neonPink),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final columns = width >= 900
+                  ? 3
+                  : width >= 620
+                  ? 2
+                  : 1;
+              final spacing = 8.0;
+              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final cards = ownedFrames.isNotEmpty
+                  ? ownedFrames
+                        .map(
+                          (frame) => _frameInventoryCard(
+                            label: frame.label,
+                            rarity: frame.rarity,
+                            unlocked: true,
+                            equipped: frame.rewardId == equippedFrameId,
+                            betaExclusive: frame.betaExclusive,
+                            source: 'Claimed Operations reward',
+                          ),
+                        )
+                        .toList()
+                  : previewFrames
+                        .map(
+                          (frame) => _frameInventoryCard(
+                            label: frame.label,
+                            rarity: frame.rarity,
+                            unlocked: false,
+                            equipped: false,
+                            betaExclusive: frame.betaExclusive,
+                            source: 'Preview frame reward',
+                          ),
+                        )
+                        .toList();
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  for (final card in cards)
+                    SizedBox(width: itemWidth.clamp(180, 380), child: card),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          _buildSelectedProfileFramePreview(userState),
+        ],
+      ),
+    );
+  }
+
+  Widget _frameInventoryCard({
+    required String label,
+    required ArcCosmeticRarity rarity,
+    required bool unlocked,
+    required bool equipped,
+    required bool betaExclusive,
+    required String source,
+  }) {
+    final accent = _rarityAccent(rarity);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: unlocked
+            ? AppTheme.cardBackgroundDeep.withValues(alpha: 0.92)
+            : AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: equipped
+              ? AppTheme.neonPink.withValues(alpha: 0.75)
+              : accent.withValues(alpha: unlocked ? 0.34 : 0.18),
+        ),
+        boxShadow: equipped
+            ? [
+                BoxShadow(
+                  color: AppTheme.neonPink.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 48,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: unlocked ? 0.10 : 0.05),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: accent.withValues(alpha: 0.30)),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: unlocked ? accent : Colors.white30,
+                  width: equipped ? 2.2 : 1.2,
+                ),
+              ),
+              child: Icon(
+                Icons.person_rounded,
+                color: unlocked ? accent : Colors.white30,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: unlocked ? Colors.white70 : Colors.white38,
+                    isBold: true,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  source,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white38,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Wrap(
+                  spacing: 5,
+                  runSpacing: 5,
+                  children: [
+                    _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                    _tinyVaultChip(
+                      equipped
+                          ? 'EQUIPPED'
+                          : unlocked
+                          ? 'OWNED'
+                          : 'LOCKED',
+                      equipped
+                          ? AppTheme.neonPink
+                          : unlocked
+                          ? accent
+                          : Colors.white38,
+                    ),
+                    if (betaExclusive)
+                      _tinyVaultChip('BETA', Colors.amberAccent),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedProfileFramePreview(ArcOperationsUserState userState) {
+    final ownedFrames = userState.inventory
+        .where((item) => item.isProfileFrame)
+        .toList();
+    final equippedFrameId = userState.equippedCosmetics.profileFrameId;
+
+    ArcRewardInventoryItem? selectedOwned;
+    for (final frame in ownedFrames) {
+      if (frame.rewardId == equippedFrameId) {
+        selectedOwned = frame;
+        break;
+      }
+    }
+
+    selectedOwned ??= ownedFrames.isEmpty ? null : ownedFrames.first;
+
+    if (selectedOwned != null) {
+      return _profileFramePreviewPanel(
+        item: selectedOwned,
+        label: selectedOwned.label,
+        rarity: selectedOwned.rarity,
+        unlocked: true,
+        equipped: selectedOwned.rewardId == equippedFrameId,
+        betaExclusive: selectedOwned.betaExclusive,
+        source: 'Claimed from Operations reward inventory',
+      );
+    }
+
+    final previewFrames = ArcOperationsSeedData.rewards.values
+        .where((reward) => reward.type == ArcOperationRewardType.profileFrame)
+        .toList();
+    final previewFrame = previewFrames.isEmpty ? null : previewFrames.first;
+
+    if (previewFrame == null) {
+      return _profileFramePreviewPanel(
+        item: null,
+        label: 'No frame rewards seeded',
+        rarity: ArcCosmeticRarity.common,
+        unlocked: false,
+        equipped: false,
+        betaExclusive: false,
+        source: 'Complete Operations to unlock profile frames.',
+      );
+    }
+
+    return _profileFramePreviewPanel(
+      item: null,
+      label: previewFrame.label,
+      rarity: previewFrame.rarity,
+      unlocked: false,
+      equipped: false,
+      betaExclusive: previewFrame.betaExclusive,
+      source: 'Preview reward. Claim Operations to unlock this frame.',
+    );
+  }
+
+  Widget _profileFramePreviewPanel({
+    required ArcRewardInventoryItem? item,
+    required String label,
+    required ArcCosmeticRarity rarity,
+    required bool unlocked,
+    required bool equipped,
+    required bool betaExclusive,
+    required String source,
+  }) {
+    final accent = _rarityAccent(rarity);
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (equipped ? AppTheme.neonPink : accent).withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final showcase = Container(
+            width: compact ? double.infinity : 190,
+            height: compact ? 156 : 164,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: unlocked ? 0.10 : 0.06),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: accent.withValues(alpha: 0.35)),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground.withValues(alpha: 0.36),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: unlocked ? accent : Colors.white38,
+                  width: equipped ? 2.4 : 1.4,
+                ),
+                boxShadow: equipped
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.neonPink.withValues(alpha: 0.18),
+                          blurRadius: 16,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.person_rounded,
+                    color: unlocked ? accent : Colors.white38,
+                    size: 34,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'PROFILE',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 10,
+                      color: unlocked ? accent : Colors.white38,
+                      isBold: true,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  _tinyVaultChip(
+                    equipped
+                        ? 'ACTIVE FRAME'
+                        : unlocked
+                        ? 'READY TO EQUIP'
+                        : 'LOCKED PREVIEW',
+                    equipped
+                        ? AppTheme.neonPink
+                        : unlocked
+                        ? accent
+                        : Colors.white38,
+                  ),
+                ],
+              ),
+            ),
+          );
+
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'SELECTED FRAME',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white54,
+                  isBold: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(fontSize: 22, color: accent),
+              ),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                  _tinyVaultChip(
+                    unlocked ? 'UNLOCKED' : 'LOCKED',
+                    unlocked ? Colors.lightGreenAccent : Colors.white38,
+                  ),
+                  if (equipped) _tinyVaultChip('EQUIPPED', AppTheme.neonPink),
+                  if (betaExclusive)
+                    _tinyVaultChip('BETA ONLY', Colors.amberAccent),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                source,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                unlocked
+                    ? 'This frame can be equipped around your ARC profile identity.'
+                    : 'Locked preview. Complete the linked Operation chain to claim this frame permanently.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 11,
+                  color: Colors.white54,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _frameEquipActions(
+                item: item,
+                unlocked: unlocked,
+                equipped: equipped,
+                accent: accent,
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [showcase, const SizedBox(height: 10), details],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              showcase,
+              const SizedBox(width: 12),
+              Expanded(child: details),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _frameEquipActions({
+    required ArcRewardInventoryItem? item,
+    required bool unlocked,
+    required bool equipped,
+    required Color accent,
+  }) {
+    if (!unlocked || item == null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_rounded, color: Colors.white38, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'LOCKED - CLAIM THIS FRAME FROM OPERATIONS FIRST',
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white54,
+                  isBold: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (equipped) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            decoration: BoxDecoration(
+              color: AppTheme.neonPink.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.neonPink.withValues(alpha: 0.40),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.verified_rounded,
+                  color: AppTheme.neonPink,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'CURRENTLY EQUIPPED',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: AppTheme.neonPink,
+                    isBold: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Frame remains equipped until another frame is selected.',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+            label: const Text('Replace via another frame'),
+          ),
+        ],
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          await _repository.equipCosmetic(item);
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${item.label} equipped to your profile.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+            ),
+          );
+        },
+        icon: const Icon(Icons.crop_square_rounded, size: 17),
+        label: const Text('Equip Frame'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: accent.withValues(alpha: 0.20),
+          foregroundColor: accent,
+          side: BorderSide(color: accent.withValues(alpha: 0.45)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: AppTheme.bodyTextStyle(
+            fontSize: 11,
+            color: accent,
+            isBold: true,
+          ),
+        ),
       ),
     );
   }
