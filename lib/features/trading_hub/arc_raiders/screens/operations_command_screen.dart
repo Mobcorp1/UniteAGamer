@@ -20,6 +20,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   late final TabController _tabController;
   final ArcOperationsRepository _repository = ArcOperationsRepository();
   String? _selectedProfileFrameRewardId;
+  String? _equippedProfileFrameRewardId;
 
   @override
   void initState() {
@@ -162,6 +163,15 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
   Widget _buildProfileRewardStrip(ArcOperationsUserState userState) {
     final equipped = userState.equippedCosmetics;
+    final equippedFrame = _effectiveEquippedProfileFrame(userState);
+    final hasEquippedFrame =
+        equippedFrame != null ||
+        (equipped.hasFrame && _equippedProfileFrameRewardId == null);
+    final equippedFrameAssetPath =
+        equippedFrame?.assetPath ??
+        (_equippedProfileFrameRewardId == null
+            ? equipped.profileFrameAssetPath
+            : null);
     return ArcRaidersSectionCard(
       accent: AppTheme.neonCyan,
       padding: const EdgeInsets.all(12),
@@ -184,8 +194,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             ),
             _equippedPreview(
               label: 'Profile Frame',
-              value: equipped.hasFrame ? 'Frame active' : 'No frame equipped',
-              assetPath: equipped.profileFrameAssetPath,
+              value: hasEquippedFrame ? 'Frame active' : 'No frame equipped',
+              assetPath: equippedFrameAssetPath,
               icon: Icons.crop_square_rounded,
               accent: AppTheme.neonPink,
             ),
@@ -999,7 +1009,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .where((reward) => reward.type == ArcOperationRewardType.profileFrame)
         .take(6)
         .toList();
-    final equippedFrameId = userState.equippedCosmetics.profileFrameId;
+    final equippedFrameId = _effectiveEquippedProfileFrameId(userState);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -1255,6 +1265,30 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     return null;
   }
 
+  String? _effectiveEquippedProfileFrameId(ArcOperationsUserState userState) {
+    return _equippedProfileFrameRewardId ??
+        userState.equippedCosmetics.profileFrameId;
+  }
+
+  ArcRewardInventoryItem? _effectiveEquippedProfileFrame(
+    ArcOperationsUserState userState,
+  ) {
+    final equippedId = _effectiveEquippedProfileFrameId(userState);
+    if (equippedId == null) return null;
+    for (final frame in userState.profileFrames) {
+      if (frame.rewardId == equippedId) return frame;
+    }
+    return null;
+  }
+
+  void _equipProfileFrame(ArcRewardInventoryItem frame) {
+    if (_equippedProfileFrameRewardId == frame.rewardId) return;
+    setState(() {
+      _equippedProfileFrameRewardId = frame.rewardId;
+      _selectedProfileFrameRewardId = frame.rewardId;
+    });
+  }
+
   String _profileFrameSource(ArcRewardInventoryItem frame) {
     if (frame.betaExclusive) return 'Closed Beta Operations reward';
     if (frame.rarity == ArcCosmeticRarity.community) {
@@ -1277,7 +1311,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     final ownedFrames = userState.inventory
         .where((item) => item.isProfileFrame)
         .toList();
-    final equippedFrameId = userState.equippedCosmetics.profileFrameId;
+    final equippedFrameId = _effectiveEquippedProfileFrameId(userState);
     final selectedOwned = _selectedProfileFrame(ownedFrames);
 
     if (selectedOwned == null) {
@@ -1285,6 +1319,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     }
 
     return _profileFramePreviewPanel(
+      item: selectedOwned,
       label: selectedOwned.label,
       assetPath: selectedOwned.assetPath,
       rarity: selectedOwned.rarity,
@@ -1298,6 +1333,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
   Widget _profileFramePlaceholderPanel() {
     return _profileFramePreviewPanel(
+      item: null,
       label: 'No profile frame selected',
       assetPath: null,
       rarity: ArcCosmeticRarity.common,
@@ -1311,6 +1347,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   }
 
   Widget _profileFramePreviewPanel({
+    required ArcRewardInventoryItem? item,
     required String label,
     required String? assetPath,
     required ArcCosmeticRarity rarity,
@@ -1467,9 +1504,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                   color: Colors.white54,
                 ),
               ),
-              if (showAction) ...[
+              if (showAction && item != null) ...[
                 const SizedBox(height: 10),
-                _frameEquipActions(equipped: equipped, accent: accent),
+                _frameEquipActions(
+                  item: item,
+                  equipped: equipped,
+                  accent: accent,
+                ),
               ],
             ],
           );
@@ -1494,17 +1535,23 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  Widget _frameEquipActions({required bool equipped, required Color accent}) {
+  Widget _frameEquipActions({
+    required ArcRewardInventoryItem item,
+    required bool equipped,
+    required Color accent,
+  }) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: null,
+        onPressed: equipped ? null : () => _equipProfileFrame(item),
         icon: Icon(
           equipped ? Icons.verified_rounded : Icons.crop_square_rounded,
           size: 17,
         ),
         label: Text(equipped ? 'Equipped' : 'Equip'),
         style: ElevatedButton.styleFrom(
+          backgroundColor: accent.withValues(alpha: 0.20),
+          foregroundColor: accent,
           disabledBackgroundColor: accent.withValues(alpha: 0.12),
           disabledForegroundColor: accent.withValues(alpha: 0.72),
           side: BorderSide(color: accent.withValues(alpha: 0.35)),
