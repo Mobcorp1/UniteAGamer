@@ -21,6 +21,7 @@ enum ArcOperationRewardType {
   badge,
   title,
   profileFrame,
+  profileBanner,
   tradeSlot,
   matchmakingSlot,
   premiumTrial,
@@ -29,7 +30,7 @@ enum ArcOperationRewardType {
 
 enum ArcOperationClaimState { locked, inProgress, readyToClaim, completed }
 
-enum ArcCosmeticType { badge, title, profileFrame }
+enum ArcCosmeticType { badge, title, profileFrame, profileBanner }
 
 enum ArcCosmeticRarity {
   common,
@@ -84,12 +85,14 @@ class ArcOperationReward {
   bool get isCosmetic =>
       type == ArcOperationRewardType.badge ||
       type == ArcOperationRewardType.title ||
-      type == ArcOperationRewardType.profileFrame;
+      type == ArcOperationRewardType.profileFrame ||
+      type == ArcOperationRewardType.profileBanner;
 
   ArcCosmeticType? get cosmeticType => switch (type) {
     ArcOperationRewardType.badge => ArcCosmeticType.badge,
     ArcOperationRewardType.title => ArcCosmeticType.title,
     ArcOperationRewardType.profileFrame => ArcCosmeticType.profileFrame,
+    ArcOperationRewardType.profileBanner => ArcCosmeticType.profileBanner,
     _ => null,
   };
 
@@ -253,12 +256,14 @@ class ArcRewardInventoryItem {
     ArcOperationRewardType.badge => ArcCosmeticType.badge,
     ArcOperationRewardType.title => ArcCosmeticType.title,
     ArcOperationRewardType.profileFrame => ArcCosmeticType.profileFrame,
+    ArcOperationRewardType.profileBanner => ArcCosmeticType.profileBanner,
     _ => null,
   };
 
   bool get isBadge => type == ArcOperationRewardType.badge;
   bool get isTitle => type == ArcOperationRewardType.title;
   bool get isProfileFrame => type == ArcOperationRewardType.profileFrame;
+  bool get isProfileBanner => type == ArcOperationRewardType.profileBanner;
   bool get isExclusive => betaExclusive || rarity.isExclusive;
   String get rarityLabel => rarity.label;
 
@@ -310,30 +315,37 @@ class ArcEquippedCosmetics {
     this.badgeId,
     this.titleId,
     this.profileFrameId,
+    this.profileBannerId,
     this.badgeAssetPath,
     this.titleLabel,
     this.profileFrameAssetPath,
+    this.profileBannerAssetPath,
   });
 
   final String? badgeId;
   final String? titleId;
   final String? profileFrameId;
+  final String? profileBannerId;
   final String? badgeAssetPath;
   final String? titleLabel;
   final String? profileFrameAssetPath;
+  final String? profileBannerAssetPath;
 
   bool get hasBadge => badgeId != null && badgeId!.isNotEmpty;
   bool get hasTitle => titleId != null && titleId!.isNotEmpty;
   bool get hasFrame => profileFrameId != null && profileFrameId!.isNotEmpty;
+  bool get hasBanner => profileBannerId != null && profileBannerId!.isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {
       'badgeId': badgeId,
       'titleId': titleId,
       'profileFrameId': profileFrameId,
+      'profileBannerId': profileBannerId,
       'badgeAssetPath': badgeAssetPath,
       'titleLabel': titleLabel,
       'profileFrameAssetPath': profileFrameAssetPath,
+      'profileBannerAssetPath': profileBannerAssetPath,
     };
   }
 
@@ -341,18 +353,23 @@ class ArcEquippedCosmetics {
     String? badgeId,
     String? titleId,
     String? profileFrameId,
+    String? profileBannerId,
     String? badgeAssetPath,
     String? titleLabel,
     String? profileFrameAssetPath,
+    String? profileBannerAssetPath,
   }) {
     return ArcEquippedCosmetics(
       badgeId: badgeId ?? this.badgeId,
       titleId: titleId ?? this.titleId,
       profileFrameId: profileFrameId ?? this.profileFrameId,
+      profileBannerId: profileBannerId ?? this.profileBannerId,
       badgeAssetPath: badgeAssetPath ?? this.badgeAssetPath,
       titleLabel: titleLabel ?? this.titleLabel,
       profileFrameAssetPath:
           profileFrameAssetPath ?? this.profileFrameAssetPath,
+      profileBannerAssetPath:
+          profileBannerAssetPath ?? this.profileBannerAssetPath,
     );
   }
 
@@ -362,9 +379,11 @@ class ArcEquippedCosmetics {
       badgeId: map['badgeId'] as String?,
       titleId: map['titleId'] as String?,
       profileFrameId: map['profileFrameId'] as String?,
+      profileBannerId: map['profileBannerId'] as String?,
       badgeAssetPath: map['badgeAssetPath'] as String?,
       titleLabel: map['titleLabel'] as String?,
       profileFrameAssetPath: map['profileFrameAssetPath'] as String?,
+      profileBannerAssetPath: map['profileBannerAssetPath'] as String?,
     );
   }
 }
@@ -418,6 +437,10 @@ class ArcOperationsUserState {
       .where((item) => item.type == ArcOperationRewardType.profileFrame)
       .toList(growable: false);
 
+  List<ArcRewardInventoryItem> get profileBanners => inventory
+      .where((item) => item.type == ArcOperationRewardType.profileBanner)
+      .toList(growable: false);
+
   bool ownsReward(String rewardId) =>
       inventory.any((item) => item.rewardId == rewardId);
 
@@ -443,6 +466,15 @@ class ArcOperationsUserState {
     final id = equippedCosmetics.profileFrameId;
     if (id == null) return null;
     for (final item in profileFrames) {
+      if (item.rewardId == id) return item;
+    }
+    return null;
+  }
+
+  ArcRewardInventoryItem? equippedProfileBanner() {
+    final id = equippedCosmetics.profileBannerId;
+    if (id == null) return null;
+    for (final item in profileBanners) {
       if (item.rewardId == id) return item;
     }
     return null;

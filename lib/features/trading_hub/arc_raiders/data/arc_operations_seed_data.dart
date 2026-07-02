@@ -41,6 +41,20 @@ class ArcOperationsSeedData {
       rarity: ArcCosmeticRarity.community,
       betaExclusive: true,
     ),
+    'beta_command_banner': ArcOperationReward(
+      id: 'beta_command_banner',
+      label: 'Beta Command Banner',
+      type: ArcOperationRewardType.profileBanner,
+      rarity: ArcCosmeticRarity.closedBeta,
+      betaExclusive: true,
+    ),
+    'guardian_banner': ArcOperationReward(
+      id: 'guardian_banner',
+      label: 'Guardian Banner',
+      type: ArcOperationRewardType.profileBanner,
+      rarity: ArcCosmeticRarity.community,
+      betaExclusive: true,
+    ),
     'trade_pioneer': ArcOperationReward(
       id: 'trade_pioneer',
       label: 'Trade Pioneer Badge',
@@ -217,6 +231,7 @@ class ArcOperationsSeedData {
       rewards: [
         rewards['community_raider']!,
         rewards['guardian_signal_frame']!,
+        rewards['guardian_banner']!,
         rewards['xp_25']!,
       ],
       accent: Colors.lightGreenAccent,
@@ -231,7 +246,11 @@ class ArcOperationsSeedData {
       category: ArcOperationCategory.beta,
       target: 10,
       progress: 0,
-      rewards: [rewards['og_legend']!, rewards['inner_circle']!],
+      rewards: [
+        rewards['og_legend']!,
+        rewards['inner_circle']!,
+        rewards['beta_command_banner']!,
+      ],
       accent: Colors.amberAccent,
       betaExclusive: true,
     ),

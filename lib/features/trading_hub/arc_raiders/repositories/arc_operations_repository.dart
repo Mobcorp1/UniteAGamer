@@ -118,6 +118,7 @@ class ArcOperationsRepository {
           case ArcOperationRewardType.badge:
           case ArcOperationRewardType.title:
           case ArcOperationRewardType.profileFrame:
+          case ArcOperationRewardType.profileBanner:
             final item = ArcRewardInventoryItem.fromReward(reward);
             firstCosmetic ??= item;
             transaction.set(_inventoryRef(uid).doc(reward.id), item.toMap());

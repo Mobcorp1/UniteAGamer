@@ -118,6 +118,7 @@ class ArcDynamicOperationsEngine {
         ArcOperationRewardType.badge => 70,
         ArcOperationRewardType.title => 60,
         ArcOperationRewardType.profileFrame => 60,
+        ArcOperationRewardType.profileBanner => 60,
         ArcOperationRewardType.tradeSlot => 55,
         ArcOperationRewardType.matchmakingSlot => 50,
         ArcOperationRewardType.premiumTrial => 75,

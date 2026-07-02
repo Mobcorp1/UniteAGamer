@@ -21,6 +21,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   final ArcOperationsRepository _repository = ArcOperationsRepository();
   String? _selectedProfileFrameRewardId;
   String? _equippedProfileFrameRewardId;
+  String? _selectedProfileBannerRewardId;
 
   @override
   void initState() {
@@ -407,6 +408,9 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     final frameCount = userState.inventory
         .where((item) => item.type == ArcOperationRewardType.profileFrame)
         .length;
+    final bannerCount = userState.inventory
+        .where((item) => item.type == ArcOperationRewardType.profileBanner)
+        .length;
 
     return ArcRaidersSectionCard(
       accent: Colors.amberAccent,
@@ -449,6 +453,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             badgeCount: badgeCount,
             titleCount: titleCount,
             frameCount: frameCount,
+            bannerCount: bannerCount,
           ),
           const SizedBox(height: 10),
           _buildRecentUnlockPanel(userState),
@@ -458,6 +463,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           _buildTitleInventoryGrid(userState),
           const SizedBox(height: 10),
           _buildProfileFrameInventoryGrid(userState),
+          const SizedBox(height: 10),
+          _buildProfileBannerInventoryGrid(userState),
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -480,6 +487,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     required int badgeCount,
     required int titleCount,
     required int frameCount,
+    required int bannerCount,
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -502,6 +510,12 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             label: 'Owned Frames',
             value: '$frameCount',
             accent: AppTheme.neonPink,
+          ),
+          _vaultSummaryTile(
+            icon: Icons.view_day_rounded,
+            label: 'Owned Banners',
+            value: '$bannerCount',
+            accent: Colors.lightBlueAccent,
           ),
         ];
 
@@ -1566,6 +1580,290 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildProfileBannerInventoryGrid(ArcOperationsUserState userState) {
+    final ownedBanners = userState.inventory
+        .where((item) => item.isProfileBanner)
+        .toList();
+    final previewBanners = ArcOperationsSeedData.rewards.values
+        .where((reward) => reward.type == ArcOperationRewardType.profileBanner)
+        .take(6)
+        .toList();
+    final equippedBannerId = userState.equippedCosmetics.profileBannerId;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.lightBlueAccent.withValues(alpha: 0.22),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PROFILE BANNER INVENTORY',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 19,
+                        color: Colors.lightBlueAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ownedBanners.isEmpty
+                          ? 'Preview profile banners earned through beta Operations and guardian reputation.'
+                          : 'Select a banner to stage it for profile display.',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 11,
+                        color: Colors.white60,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _tagPill('${ownedBanners.length} OWNED', Colors.lightBlueAccent),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final columns = width >= 900
+                  ? 3
+                  : width >= 620
+                  ? 2
+                  : 1;
+              final spacing = 8.0;
+              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final cards = ownedBanners.isNotEmpty
+                  ? ownedBanners
+                        .map(
+                          (banner) => _profileBannerInventoryCard(
+                            item: banner,
+                            label: banner.label,
+                            rarity: banner.rarity,
+                            unlocked: true,
+                            selected:
+                                banner.rewardId ==
+                                _selectedProfileBannerRewardId,
+                            equipped: banner.rewardId == equippedBannerId,
+                            betaExclusive: banner.betaExclusive,
+                            source: _profileBannerSource(banner),
+                            onSelected: () => setState(() {
+                              _selectedProfileBannerRewardId = banner.rewardId;
+                            }),
+                          ),
+                        )
+                        .toList()
+                  : previewBanners
+                        .map(
+                          (banner) => _profileBannerInventoryCard(
+                            item: null,
+                            label: banner.label,
+                            rarity: banner.rarity,
+                            unlocked: false,
+                            selected: false,
+                            equipped: false,
+                            betaExclusive: banner.betaExclusive,
+                            source: 'Preview banner reward',
+                            onSelected: null,
+                          ),
+                        )
+                        .toList();
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  for (final card in cards)
+                    SizedBox(width: itemWidth.clamp(220, 380), child: card),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileBannerInventoryCard({
+    required ArcRewardInventoryItem? item,
+    required String label,
+    required ArcCosmeticRarity rarity,
+    required bool unlocked,
+    required bool selected,
+    required bool equipped,
+    required bool betaExclusive,
+    required String source,
+    required VoidCallback? onSelected,
+  }) {
+    final accent = _rarityAccent(rarity);
+    final highlighted = selected || equipped;
+    final bannerPreview = Container(
+      height: 58,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: unlocked ? accent : Colors.white30,
+          width: highlighted ? 2.2 : 1.2,
+        ),
+        gradient: LinearGradient(
+          colors: [
+            accent.withValues(alpha: unlocked ? 0.32 : 0.10),
+            Colors.lightBlueAccent.withValues(alpha: unlocked ? 0.16 : 0.05),
+            AppTheme.darkBackground.withValues(alpha: 0.58),
+          ],
+        ),
+      ),
+      child: item?.assetPath == null
+          ? Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.10),
+                        ),
+                        bottom: BorderSide(
+                          color: Colors.black.withValues(alpha: 0.18),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 12,
+                  top: 12,
+                  bottom: 12,
+                  child: Icon(
+                    Icons.view_day_rounded,
+                    color: unlocked ? accent : Colors.white30,
+                    size: 24,
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  top: 13,
+                  child: _tinyVaultChip(
+                    unlocked ? 'BANNER' : 'LOCKED',
+                    unlocked ? accent : Colors.white38,
+                  ),
+                ),
+              ],
+            )
+          : Image.asset(
+              item!.assetPath!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Icon(
+                Icons.view_day_rounded,
+                color: unlocked ? accent : Colors.white30,
+                size: 24,
+              ),
+            ),
+    );
+
+    return MouseRegion(
+      cursor: onSelected == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onSelected,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: unlocked
+                ? AppTheme.cardBackgroundDeep.withValues(alpha: 0.92)
+                : AppTheme.cardBackgroundDeep.withValues(alpha: 0.58),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: highlighted
+                  ? Colors.lightBlueAccent.withValues(alpha: 0.75)
+                  : accent.withValues(alpha: unlocked ? 0.34 : 0.18),
+            ),
+            boxShadow: highlighted
+                ? [
+                    BoxShadow(
+                      color: Colors.lightBlueAccent.withValues(alpha: 0.18),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              bannerPreview,
+              const SizedBox(height: 9),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: unlocked ? Colors.white70 : Colors.white38,
+                  isBold: true,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                source,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white38,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 5,
+                runSpacing: 5,
+                children: [
+                  _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                  _tinyVaultChip(
+                    equipped
+                        ? 'EQUIPPED'
+                        : selected
+                        ? 'SELECTED'
+                        : unlocked
+                        ? 'OWNED'
+                        : 'LOCKED',
+                    equipped
+                        ? Colors.lightBlueAccent
+                        : selected
+                        ? AppTheme.neonCyan
+                        : unlocked
+                        ? accent
+                        : Colors.white38,
+                  ),
+                  if (betaExclusive) _tinyVaultChip('BETA', Colors.amberAccent),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _profileBannerSource(ArcRewardInventoryItem banner) {
+    if (banner.betaExclusive) return 'Closed Beta Operations reward';
+    if (banner.rarity == ArcCosmeticRarity.community) {
+      return 'Community Operations reward';
+    }
+    return 'Operations reward inventory';
   }
 
   Widget _buildBadgeInventoryGrid(ArcOperationsUserState userState) {
@@ -2829,6 +3127,7 @@ class _OperationTaskCard extends StatelessWidget {
       ArcOperationRewardType.badge => Colors.amberAccent,
       ArcOperationRewardType.title => AppTheme.neonCyan,
       ArcOperationRewardType.profileFrame => AppTheme.neonPink,
+      ArcOperationRewardType.profileBanner => Colors.lightBlueAccent,
       ArcOperationRewardType.tradeSlot => Colors.lightGreenAccent,
       ArcOperationRewardType.matchmakingSlot => Colors.lightBlueAccent,
       ArcOperationRewardType.premiumTrial => Colors.purpleAccent,
