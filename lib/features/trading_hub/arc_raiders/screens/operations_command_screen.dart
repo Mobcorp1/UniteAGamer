@@ -22,6 +22,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   String? _selectedProfileFrameRewardId;
   String? _equippedProfileFrameRewardId;
   String? _selectedProfileBannerRewardId;
+  String? _equippedProfileBannerRewardId;
 
   @override
   void initState() {
@@ -1590,7 +1591,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .where((reward) => reward.type == ArcOperationRewardType.profileBanner)
         .take(6)
         .toList();
-    final equippedBannerId = userState.equippedCosmetics.profileBannerId;
+    final equippedBannerId = _effectiveEquippedProfileBannerId(userState);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -1892,7 +1893,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   Widget _buildSelectedProfileBannerPreview(ArcOperationsUserState userState) {
     final ownedBanners = userState.profileBanners;
     final selectedOwned = _selectedProfileBanner(ownedBanners);
-    final equippedBannerId = userState.equippedCosmetics.profileBannerId;
+    final equippedBannerId = _effectiveEquippedProfileBannerId(userState);
 
     if (selectedOwned == null) {
       return _profileBannerPlaceholderPanel();
@@ -2100,7 +2101,11 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               ),
               if (showAction && item != null) ...[
                 const SizedBox(height: 10),
-                _bannerEquipActions(equipped: equipped, accent: accent),
+                _bannerEquipActions(
+                  item: item,
+                  equipped: equipped,
+                  accent: accent,
+                ),
               ],
             ],
           );
@@ -2125,11 +2130,28 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  Widget _bannerEquipActions({required bool equipped, required Color accent}) {
+  String? _effectiveEquippedProfileBannerId(ArcOperationsUserState userState) {
+    return _equippedProfileBannerRewardId ??
+        userState.equippedCosmetics.profileBannerId;
+  }
+
+  void _equipProfileBanner(ArcRewardInventoryItem banner) {
+    if (_equippedProfileBannerRewardId == banner.rewardId) return;
+    setState(() {
+      _equippedProfileBannerRewardId = banner.rewardId;
+      _selectedProfileBannerRewardId = banner.rewardId;
+    });
+  }
+
+  Widget _bannerEquipActions({
+    required ArcRewardInventoryItem item,
+    required bool equipped,
+    required Color accent,
+  }) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: equipped ? null : () {},
+        onPressed: equipped ? null : () => _equipProfileBanner(item),
         icon: Icon(
           equipped ? Icons.verified_rounded : Icons.view_day_rounded,
           size: 17,
