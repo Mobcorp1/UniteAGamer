@@ -630,15 +630,29 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     return _equippedBadgeRewardId ?? userState.equippedCosmetics.badgeId;
   }
 
+  ArcRewardInventoryItem? _rewardById(
+    Iterable<ArcRewardInventoryItem> rewards,
+    String? rewardId,
+  ) {
+    if (rewardId == null) return null;
+    for (final reward in rewards) {
+      if (reward.rewardId == rewardId) return reward;
+    }
+    return null;
+  }
+
+  ArcRewardInventoryItem? _equippedOrFirstOwnedReward(
+    List<ArcRewardInventoryItem> rewards,
+    String? equippedId,
+  ) {
+    return _rewardById(rewards, equippedId) ??
+        (rewards.isEmpty ? null : rewards.first);
+  }
+
   ArcRewardInventoryItem? _effectiveEquippedBadge(
     ArcOperationsUserState userState,
   ) {
-    final equippedId = _effectiveEquippedBadgeId(userState);
-    if (equippedId == null) return null;
-    for (final badge in userState.badges) {
-      if (badge.rewardId == equippedId) return badge;
-    }
-    return null;
+    return _rewardById(userState.badges, _effectiveEquippedBadgeId(userState));
   }
 
   String? _effectiveEquippedTitleId(ArcOperationsUserState userState) {
@@ -648,12 +662,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   ArcRewardInventoryItem? _effectiveEquippedTitle(
     ArcOperationsUserState userState,
   ) {
-    final equippedId = _effectiveEquippedTitleId(userState);
-    if (equippedId == null) return null;
-    for (final title in userState.titles) {
-      if (title.rewardId == equippedId) return title;
-    }
-    return null;
+    return _rewardById(userState.titles, _effectiveEquippedTitleId(userState));
   }
 
   Future<void> _equipRewardVaultCosmetic(ArcRewardInventoryItem item) async {
@@ -717,6 +726,39 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         ),
       );
     }
+  }
+
+  Widget _rewardVaultEquipButton({
+    required bool equipped,
+    required Color accent,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    double borderAlpha = 0.45,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: equipped ? null : onPressed,
+        icon: Icon(equipped ? Icons.verified_rounded : icon, size: 17),
+        label: Text(equipped ? 'Equipped' : label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: accent.withValues(alpha: 0.20),
+          foregroundColor: accent,
+          disabledBackgroundColor: accent.withValues(alpha: 0.12),
+          disabledForegroundColor: accent.withValues(alpha: 0.72),
+          side: BorderSide(color: accent.withValues(alpha: borderAlpha)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: AppTheme.bodyTextStyle(
+            fontSize: 11,
+            color: accent,
+            isBold: true,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTitleInventoryGrid(ArcOperationsUserState userState) {
@@ -936,15 +978,10 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .toList();
     final equippedTitleId = _effectiveEquippedTitleId(userState);
 
-    ArcRewardInventoryItem? selectedOwned;
-    for (final title in ownedTitles) {
-      if (title.rewardId == equippedTitleId) {
-        selectedOwned = title;
-        break;
-      }
-    }
-
-    selectedOwned ??= ownedTitles.isEmpty ? null : ownedTitles.first;
+    final selectedOwned = _equippedOrFirstOwnedReward(
+      ownedTitles,
+      equippedTitleId,
+    );
 
     if (selectedOwned != null) {
       return _titlePreviewPanel(
@@ -1405,12 +1442,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   ArcRewardInventoryItem? _selectedProfileFrame(
     List<ArcRewardInventoryItem> ownedFrames,
   ) {
-    final selectedId = _selectedProfileFrameRewardId;
-    if (selectedId == null) return null;
-    for (final frame in ownedFrames) {
-      if (frame.rewardId == selectedId) return frame;
-    }
-    return null;
+    return _rewardById(ownedFrames, _selectedProfileFrameRewardId);
   }
 
   String? _effectiveEquippedProfileFrameId(ArcOperationsUserState userState) {
@@ -1421,12 +1453,10 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   ArcRewardInventoryItem? _effectiveEquippedProfileFrame(
     ArcOperationsUserState userState,
   ) {
-    final equippedId = _effectiveEquippedProfileFrameId(userState);
-    if (equippedId == null) return null;
-    for (final frame in userState.profileFrames) {
-      if (frame.rewardId == equippedId) return frame;
-    }
-    return null;
+    return _rewardById(
+      userState.profileFrames,
+      _effectiveEquippedProfileFrameId(userState),
+    );
   }
 
   void _equipProfileFrame(ArcRewardInventoryItem frame) {
@@ -1685,31 +1715,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     required bool equipped,
     required Color accent,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: equipped ? null : () => _equipProfileFrame(item),
-        icon: Icon(
-          equipped ? Icons.verified_rounded : Icons.crop_square_rounded,
-          size: 17,
-        ),
-        label: Text(equipped ? 'Equipped' : 'Equip'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: accent.withValues(alpha: 0.20),
-          foregroundColor: accent,
-          disabledBackgroundColor: accent.withValues(alpha: 0.12),
-          disabledForegroundColor: accent.withValues(alpha: 0.72),
-          side: BorderSide(color: accent.withValues(alpha: 0.35)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: AppTheme.bodyTextStyle(
-            fontSize: 11,
-            color: accent,
-            isBold: true,
-          ),
-        ),
-      ),
+    return _rewardVaultEquipButton(
+      equipped: equipped,
+      accent: accent,
+      icon: Icons.crop_square_rounded,
+      label: 'Equip',
+      borderAlpha: 0.35,
+      onPressed: () => _equipProfileFrame(item),
     );
   }
 
@@ -2018,12 +2030,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   ArcRewardInventoryItem? _selectedProfileBanner(
     List<ArcRewardInventoryItem> ownedBanners,
   ) {
-    final selectedId = _selectedProfileBannerRewardId;
-    if (selectedId == null) return null;
-    for (final banner in ownedBanners) {
-      if (banner.rewardId == selectedId) return banner;
-    }
-    return null;
+    return _rewardById(ownedBanners, _selectedProfileBannerRewardId);
   }
 
   Widget _buildSelectedProfileBannerPreview(ArcOperationsUserState userState) {
@@ -2281,31 +2288,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     required bool equipped,
     required Color accent,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: equipped ? null : () => _equipProfileBanner(item),
-        icon: Icon(
-          equipped ? Icons.verified_rounded : Icons.view_day_rounded,
-          size: 17,
-        ),
-        label: Text(equipped ? 'Equipped' : 'Equip'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: accent.withValues(alpha: 0.20),
-          foregroundColor: accent,
-          disabledBackgroundColor: accent.withValues(alpha: 0.12),
-          disabledForegroundColor: accent.withValues(alpha: 0.72),
-          side: BorderSide(color: accent.withValues(alpha: 0.35)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: AppTheme.bodyTextStyle(
-            fontSize: 11,
-            color: accent,
-            isBold: true,
-          ),
-        ),
-      ),
+    return _rewardVaultEquipButton(
+      equipped: equipped,
+      accent: accent,
+      icon: Icons.view_day_rounded,
+      label: 'Equip',
+      borderAlpha: 0.35,
+      onPressed: () => _equipProfileBanner(item),
     );
   }
 
@@ -2426,15 +2415,10 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .toList();
     final equippedBadgeId = _effectiveEquippedBadgeId(userState);
 
-    ArcRewardInventoryItem? selectedOwned;
-    for (final badge in ownedBadges) {
-      if (badge.rewardId == equippedBadgeId) {
-        selectedOwned = badge;
-        break;
-      }
-    }
-
-    selectedOwned ??= ownedBadges.isEmpty ? null : ownedBadges.first;
+    final selectedOwned = _equippedOrFirstOwnedReward(
+      ownedBadges,
+      equippedBadgeId,
+    );
 
     if (selectedOwned != null) {
       return _badgePreviewPanel(
@@ -2739,26 +2723,12 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
       );
     }
 
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () => _equipRewardVaultCosmetic(item),
-        icon: const Icon(Icons.military_tech_rounded, size: 17),
-        label: const Text('Equip Badge'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: accent.withValues(alpha: 0.20),
-          foregroundColor: accent,
-          side: BorderSide(color: accent.withValues(alpha: 0.45)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: AppTheme.bodyTextStyle(
-            fontSize: 11,
-            color: accent,
-            isBold: true,
-          ),
-        ),
-      ),
+    return _rewardVaultEquipButton(
+      equipped: false,
+      accent: accent,
+      icon: Icons.military_tech_rounded,
+      label: 'Equip Badge',
+      onPressed: () => _equipRewardVaultCosmetic(item),
     );
   }
 
@@ -2852,26 +2822,12 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
       );
     }
 
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () => _equipRewardVaultCosmetic(item),
-        icon: const Icon(Icons.title_rounded, size: 17),
-        label: const Text('Equip Title'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: accent.withValues(alpha: 0.20),
-          foregroundColor: accent,
-          side: BorderSide(color: accent.withValues(alpha: 0.45)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          textStyle: AppTheme.bodyTextStyle(
-            fontSize: 11,
-            color: accent,
-            isBold: true,
-          ),
-        ),
-      ),
+    return _rewardVaultEquipButton(
+      equipped: false,
+      accent: accent,
+      icon: Icons.title_rounded,
+      label: 'Equip Title',
+      onPressed: () => _equipRewardVaultCosmetic(item),
     );
   }
 
