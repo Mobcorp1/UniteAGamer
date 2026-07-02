@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMyOffersScreen extends StatelessWidget {
@@ -141,6 +142,16 @@ class TradingMyOffersScreen extends StatelessWidget {
     final isSentByMe = uid == offer.senderUid;
     final canAction = offer.status == TradingOfferStatus.pending;
     final messenger = ScaffoldMessenger.of(context);
+    final counterpartyUid = isSentByMe ? offer.receiverUid : offer.senderUid;
+    final counterpartyName = isSentByMe
+        ? 'Listing owner'
+        : (offer.senderName.isEmpty ? 'Offer sender' : offer.senderName);
+    final counterpartySubtitle = isSentByMe
+        ? 'Receiving trader'
+        : [
+            if (offer.senderGamerTag.isNotEmpty) offer.senderGamerTag,
+            if (offer.senderPlatform.isNotEmpty) offer.senderPlatform,
+          ].join(' - ');
 
     final canRenegotiate =
         isSentByMe &&
@@ -184,6 +195,14 @@ class TradingMyOffersScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              TradingCosmeticIdentityStrip(
+                repository: repository,
+                uid: counterpartyUid,
+                displayName: counterpartyName,
+                subtitle: counterpartySubtitle,
+                compact: true,
               ),
               const SizedBox(height: 12),
               Text(

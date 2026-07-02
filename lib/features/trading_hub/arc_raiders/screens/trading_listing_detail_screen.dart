@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingListingDetailScreen extends StatelessWidget {
@@ -117,6 +118,7 @@ class TradingListingDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final repository = TradingRepository();
     final offeredList = listing.allOfferedItems;
     final wantedList = listing.listingType == TradingListingType.openToOffers
         ? const <String>[]
@@ -167,6 +169,18 @@ class TradingListingDetailScreen extends StatelessWidget {
                               _chip(listing.region, AppTheme.neonCyan),
                               _chip(listing.playWindow, AppTheme.neonPink),
                             ],
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          TradingCosmeticIdentityStrip(
+                            repository: repository,
+                            uid: listing.ownerUid,
+                            displayName: listing.traderName,
+                            subtitle: [
+                              if (listing.gamerTag.isNotEmpty) listing.gamerTag,
+                              if (listing.preferredPlatform.isNotEmpty)
+                                listing.preferredPlatform,
+                              listing.reputationSummary,
+                            ].join(' - '),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
                           _section('Offering', offeredList),

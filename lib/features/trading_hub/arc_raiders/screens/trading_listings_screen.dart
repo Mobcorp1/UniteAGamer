@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -214,6 +215,11 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
       if (listing.allowPartialOffers) 'Partial offers on',
       if (listing.seriousOffersOnly) 'Serious only',
     ];
+    final traderSubtitle = [
+      if (listing.gamerTag.isNotEmpty) listing.gamerTag,
+      if (listing.preferredPlatform.isNotEmpty) listing.preferredPlatform,
+      listing.reputationSummary,
+    ].join(' - ');
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -286,14 +292,12 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               const SizedBox(height: AppTheme.spaceM),
               Divider(color: AppTheme.tradingDivider),
               const SizedBox(height: AppTheme.spaceS),
-              Text(
-                '${listing.traderName}'
-                '${listing.gamerTag.isNotEmpty ? ' â€šâ€šÂ¬Ã…Â¡â€šÃ‚Â¬Æ’Ã¢â‚¬Å¡â€šÃ‚Â¢ ${listing.gamerTag}' : ''}'
-                '${listing.preferredPlatform.isNotEmpty ? ' â€šâ€šÂ¬Ã…Â¡â€šÃ‚Â¬Æ’Ã¢â‚¬Å¡â€šÃ‚Â¢ ${listing.preferredPlatform}' : ''}',
-                style: TextStyle(
-                  color: AppTheme.tradingMutedText,
-                  fontWeight: FontWeight.w600,
-                ),
+              TradingCosmeticIdentityStrip(
+                repository: _repository,
+                uid: listing.ownerUid,
+                displayName: listing.traderName,
+                subtitle: traderSubtitle,
+                compact: true,
               ),
             ],
           ),
@@ -355,6 +359,18 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          TradingCosmeticIdentityStrip(
+            repository: _repository,
+            uid: profile.uid,
+            displayName: profile.uagName,
+            subtitle: [
+              if (profile.uagId.isNotEmpty) profile.uagId,
+              if (profile.platform.isNotEmpty) profile.platform,
+              if (profile.region.isNotEmpty) profile.region,
+            ].join(' - '),
+            compact: true,
           ),
           const SizedBox(height: AppTheme.spaceM),
           Wrap(

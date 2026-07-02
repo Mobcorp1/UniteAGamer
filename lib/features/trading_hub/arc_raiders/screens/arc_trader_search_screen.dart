@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/arc_trader_search_result.dart';
 import '../repositories/arc_trader_search_repository.dart';
+import '../repositories/trading_repository.dart';
+import '../widgets/trading_cosmetic_identity_strip.dart';
 
 class ArcTraderSearchScreen extends StatefulWidget {
   const ArcTraderSearchScreen({super.key});
@@ -14,6 +16,7 @@ class ArcTraderSearchScreen extends StatefulWidget {
 
 class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
   final ArcTraderSearchRepository _repository = ArcTraderSearchRepository();
+  final TradingRepository _tradingRepository = TradingRepository();
 
   final TextEditingController _regionController = TextEditingController();
   final TextEditingController _platformController = TextEditingController();
@@ -46,17 +49,26 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
   }
 
   Widget _buildResultCard(ArcTraderSearchResult item) {
+    final subtitle = [
+      if (item.uagId.isNotEmpty) item.uagId,
+      if (item.platform.isNotEmpty) item.platform,
+      if (item.region.isNotEmpty) item.region,
+      'Open listings: ${item.openListingsCount}',
+      'Matching offers: ${item.matchingOfferCount}',
+      item.isAway ? 'Away' : 'Available',
+      if (item.availabilitySummary.isNotEmpty) item.availabilitySummary,
+    ].join(' - ');
+
     return Card(
-      child: ListTile(
-        title: Text(item.uagName.isEmpty ? item.uagId : item.uagName),
-        subtitle: Text(
-          '${item.region} - ${item.platform}\n'
-          'Open listings: ${item.openListingsCount} - Matching offers: ${item.matchingOfferCount}\n'
-          '${item.isAway ? 'Away' : 'Available'} - ${item.availabilitySummary}',
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: TradingCosmeticIdentityStrip(
+          repository: _tradingRepository,
+          uid: item.userId,
+          displayName: item.uagName.isEmpty ? item.uagId : item.uagName,
+          subtitle: subtitle,
+          compact: true,
         ),
-        isThreeLine: true,
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {},
       ),
     );
   }

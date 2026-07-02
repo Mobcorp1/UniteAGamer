@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_cosmetic_identity.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
@@ -18,6 +20,8 @@ class TradingRepository {
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final Map<String, Stream<TradingCosmeticIdentity>> _cosmeticIdentityStreams =
+      <String, Stream<TradingCosmeticIdentity>>{};
 
   String? get currentUid => _auth.currentUser?.uid;
 
@@ -28,6 +32,16 @@ class TradingRepository {
   DocumentReference<Map<String, dynamic>> _tradingProfileDoc(String uid) {
     return _userDoc(uid).collection('trading_activity').doc('profile');
   }
+
+  DocumentReference<Map<String, dynamic>> _equippedCosmeticsDoc(String uid) =>
+      _firestore.collection('arc_equipped_cosmetics').doc(uid);
+
+  CollectionReference<Map<String, dynamic>> _rewardInventoryCollection(
+    String uid,
+  ) => _firestore
+      .collection('arc_rewards_inventory')
+      .doc(uid)
+      .collection('items');
 
   CollectionReference<Map<String, dynamic>> _blueprintStatesCollection(
     String uid,
@@ -60,6 +74,92 @@ class TradingRepository {
       return value.map((key, val) => MapEntry(key.toString(), val));
     }
     return <String, dynamic>{};
+  }
+
+  ArcRewardInventoryItem? _findCosmeticItem({
+    required List<ArcRewardInventoryItem> inventory,
+    required String? rewardId,
+    required ArcOperationRewardType type,
+  }) {
+    if (rewardId == null || rewardId.isEmpty) return null;
+    for (final item in inventory) {
+      if (item.rewardId == rewardId && item.type == type) return item;
+    }
+    return null;
+  }
+
+  Future<TradingCosmeticIdentity> _loadTraderCosmeticIdentity({
+    required String uid,
+    required Map<String, dynamic>? profileData,
+  }) async {
+    final inventorySnapshot = await _rewardInventoryCollection(uid).get();
+    final legacyEquippedSnapshot = await _equippedCosmeticsDoc(uid).get();
+    final equippedData = <String, dynamic>{
+      ...?legacyEquippedSnapshot.data(),
+      ...?profileData,
+    };
+    final equipped = ArcEquippedCosmetics.fromMap(equippedData);
+
+    final inventory = inventorySnapshot.docs
+        .map((doc) => ArcRewardInventoryItem.fromMap(doc.id, doc.data()))
+        .toList(growable: false);
+
+    return TradingCosmeticIdentity(
+      uid: uid,
+      displayName: _firstNonEmptyString([
+        profileData?['displayName'],
+        profileData?['uagName'],
+        profileData?['gamerTag'],
+      ]),
+      gamerTag: _firstNonEmptyString([
+        profileData?['gamerTag'],
+        profileData?['uagId'],
+      ]),
+      preferredPlatform: _firstNonEmptyString([
+        profileData?['preferredPlatform'],
+        profileData?['platform'],
+      ]),
+      equippedCosmetics: equipped,
+      badge: _findCosmeticItem(
+        inventory: inventory,
+        rewardId: equipped.badgeId,
+        type: ArcOperationRewardType.badge,
+      ),
+      title: _findCosmeticItem(
+        inventory: inventory,
+        rewardId: equipped.titleId,
+        type: ArcOperationRewardType.title,
+      ),
+      profileFrame: _findCosmeticItem(
+        inventory: inventory,
+        rewardId: equipped.profileFrameId,
+        type: ArcOperationRewardType.profileFrame,
+      ),
+      profileBanner: _findCosmeticItem(
+        inventory: inventory,
+        rewardId: equipped.profileBannerId,
+        type: ArcOperationRewardType.profileBanner,
+      ),
+    );
+  }
+
+  Stream<TradingCosmeticIdentity> watchTraderCosmeticIdentity(String uid) {
+    final normalizedUid = uid.trim();
+    if (normalizedUid.isEmpty) {
+      return Stream.value(TradingCosmeticIdentity.empty);
+    }
+
+    return _cosmeticIdentityStreams.putIfAbsent(normalizedUid, () {
+      return _tradingProfileDoc(normalizedUid)
+          .snapshots()
+          .asyncMap(
+            (snapshot) => _loadTraderCosmeticIdentity(
+              uid: normalizedUid,
+              profileData: snapshot.data(),
+            ),
+          )
+          .asBroadcastStream();
+    });
   }
 
   String _blueprintNameFromId(String blueprintId) {

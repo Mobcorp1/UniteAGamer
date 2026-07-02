@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMakeOfferScreen extends StatefulWidget {
@@ -515,6 +516,20 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                             Text(
                               listing.title,
                               style: AppTheme.tradingHeading(fontSize: 22),
+                            ),
+                            const SizedBox(height: 10),
+                            TradingCosmeticIdentityStrip(
+                              repository: _repository,
+                              uid: listing.ownerUid,
+                              displayName: listing.traderName,
+                              subtitle: [
+                                if (listing.gamerTag.isNotEmpty)
+                                  listing.gamerTag,
+                                if (listing.preferredPlatform.isNotEmpty)
+                                  listing.preferredPlatform,
+                                listing.reputationSummary,
+                              ].join(' - '),
+                              compact: true,
                             ),
                             const SizedBox(height: 10),
                             Text(

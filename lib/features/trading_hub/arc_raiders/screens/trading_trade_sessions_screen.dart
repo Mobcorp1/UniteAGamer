@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -822,6 +823,54 @@ class _TradingTradeSessionsScreenState
     );
   }
 
+  Widget _sessionIdentityPair(TradingSession session) {
+    final firstSubtitle = [
+      session.traderOneReady ? 'Ready' : 'Not ready',
+      session.traderOneSharedEmbarkId ? 'Embark shared' : 'Embark hidden',
+    ].join(' - ');
+    final secondSubtitle = [
+      session.traderTwoReady ? 'Ready' : 'Not ready',
+      session.traderTwoSharedEmbarkId ? 'Embark shared' : 'Embark hidden',
+    ].join(' - ');
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final first = TradingCosmeticIdentityStrip(
+          repository: _repository,
+          uid: session.traderOneUid,
+          displayName: session.traderOneName,
+          subtitle: firstSubtitle,
+          compact: true,
+        );
+        final second = TradingCosmeticIdentityStrip(
+          repository: _repository,
+          uid: session.traderTwoUid,
+          displayName: session.traderTwoName,
+          subtitle: secondSubtitle,
+          compact: true,
+        );
+
+        if (constraints.maxWidth < 620) {
+          return Column(
+            children: [
+              first,
+              const SizedBox(height: AppTheme.spaceS),
+              second,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: AppTheme.spaceS),
+            Expanded(child: second),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildSessionCard(TradingSession session) {
     final confirmedBooking = session.selectedBooking ?? session.scheduledAt;
     final isReady = _isTraderOne(session)
@@ -852,6 +901,8 @@ class _TradingTradeSessionsScreenState
               '${session.traderOneName} ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬‚Â ${session.traderTwoName}',
               style: AppTheme.tradingHeading(fontSize: 22),
             ),
+            const SizedBox(height: 10),
+            _sessionIdentityPair(session),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
