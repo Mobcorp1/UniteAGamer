@@ -297,6 +297,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               : Icons.gps_fixed_rounded,
         );
       },
+      selectedBuilder: (weapon) =>
+          weapon.name == (primary ? _primaryWeapon : _secondaryWeapon),
+      footerText:
+          'Changing weapon resets its attachment slots so incompatible attachments cannot carry over.',
     );
 
     if (selected == null) return;
@@ -336,6 +340,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         owned: true,
         icon: Icons.health_and_safety_rounded,
       ),
+      selectedBuilder: (option) => option.name == _augment,
     );
     if (selected == null) return;
     setState(() => _augment = selected.name);
@@ -382,6 +387,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         owned: true,
         icon: Icons.shield_rounded,
       ),
+      selectedBuilder: (option) => option.name == _shield,
     );
     if (selected == null) return;
     setState(() => _shield = selected.name);
@@ -416,6 +422,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               : Icons.inventory_2_rounded,
         );
       },
+      selectedBuilder: (option) => option.name == _quickSlots[index],
     );
     if (selected == null) return;
     setState(() => _quickSlots[index] = selected.name);
@@ -431,6 +438,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         ? const <String>['Special']
         : weapon.slots;
     final slotLabel = index < slots.length ? slots[index] : slots.last;
+    final currentAttachment = index < currentList.length
+        ? currentList[index]
+        : 'Empty Slot';
     final options = _attachmentsForSlot(
       weaponName: weapon.name,
       slotLabel: slotLabel,
@@ -468,6 +478,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               : Icons.construction_rounded,
         );
       },
+      selectedBuilder: (attachment) => attachment.name == currentAttachment,
+      footerText: options.isEmpty
+          ? 'No mapped attachments for this weapon slot yet. Keep it empty safely.'
+          : '${options.length} compatible options. Incompatible attachments are hidden automatically.',
     );
     if (selected == null) return;
 
@@ -485,6 +499,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required String Function(T item) labelBuilder,
     required String Function(T item) subtitleBuilder,
     Widget Function(T item)? leadingBuilder,
+    bool Function(T item)? selectedBuilder,
+    String? footerText,
   }) {
     return showModalBottomSheet<T>(
       context: context,
@@ -534,6 +550,33 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                       ],
                     ),
                   ),
+                  if (footerText != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.neonCyan.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                          ),
+                        ),
+                        child: Text(
+                          footerText,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.68),
+                            fontSize: 12,
+                            height: 1.25,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
                   Flexible(
                     child: ListView.separated(
                       shrinkWrap: true,
@@ -544,12 +587,19 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                       ),
                       itemBuilder: (context, index) {
                         final item = items[index];
+                        final selected = selectedBuilder?.call(item) ?? false;
                         return ListTile(
+                          selected: selected,
+                          selectedTileColor: AppTheme.neonCyan.withValues(
+                            alpha: 0.08,
+                          ),
                           leading: leadingBuilder?.call(item),
                           title: Text(
                             labelBuilder(item),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: selected
+                                  ? AppTheme.neonCyan
+                                  : Colors.white,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -557,9 +607,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                             subtitleBuilder(item),
                             style: const TextStyle(color: Colors.white60),
                           ),
-                          trailing: const Icon(
-                            Icons.chevron_right_rounded,
-                            color: AppTheme.neonCyan,
+                          trailing: Icon(
+                            selected
+                                ? Icons.check_circle_rounded
+                                : Icons.chevron_right_rounded,
+                            color: selected
+                                ? Colors.lightGreenAccent
+                                : AppTheme.neonCyan,
                           ),
                           onTap: () => Navigator.of(sheetContext).pop(item),
                         );

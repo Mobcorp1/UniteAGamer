@@ -82,14 +82,31 @@ class ArcLoadoutCompatibilityRegistry {
     required String slotLabel,
   }) {
     final slotType = slotTypeForLabel(slotLabel);
-
-    return ArcLoadoutSeedData.attachments
+    final attachments = ArcLoadoutSeedData.attachments
         .where(
           (attachment) =>
               attachment.slotType == slotType &&
               attachment.supportsWeapon(weaponName),
         )
-        .toList(growable: false);
+        .toList();
+
+    attachments.sort((left, right) {
+      final levelCompare = left.benchLevel.compareTo(right.benchLevel);
+      if (levelCompare != 0) return levelCompare;
+      return left.name.compareTo(right.name);
+    });
+
+    return List<ArcLoadoutAttachmentSpec>.unmodifiable(attachments);
+  }
+
+  static int compatibleAttachmentCount({
+    required String weaponName,
+    required String slotLabel,
+  }) {
+    return compatibleAttachmentsForSlot(
+      weaponName: weaponName,
+      slotLabel: slotLabel,
+    ).length;
   }
 
   static bool isAttachmentCompatible({
