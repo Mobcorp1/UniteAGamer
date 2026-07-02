@@ -338,6 +338,10 @@ class ArcEquippedCosmetics {
 
   Map<String, dynamic> toMap() {
     return {
+      'equippedBadgeId': badgeId,
+      'equippedTitleId': titleId,
+      'equippedProfileFrameId': profileFrameId,
+      'equippedProfileBannerId': profileBannerId,
       'badgeId': badgeId,
       'titleId': titleId,
       'profileFrameId': profileFrameId,
@@ -376,15 +380,34 @@ class ArcEquippedCosmetics {
   factory ArcEquippedCosmetics.fromMap(Map<String, dynamic>? map) {
     if (map == null) return const ArcEquippedCosmetics();
     return ArcEquippedCosmetics(
-      badgeId: map['badgeId'] as String?,
-      titleId: map['titleId'] as String?,
-      profileFrameId: map['profileFrameId'] as String?,
-      profileBannerId: map['profileBannerId'] as String?,
+      badgeId: _stringField(map, 'equippedBadgeId', 'badgeId'),
+      titleId: _stringField(map, 'equippedTitleId', 'titleId'),
+      profileFrameId: _stringField(
+        map,
+        'equippedProfileFrameId',
+        'profileFrameId',
+      ),
+      profileBannerId: _stringField(
+        map,
+        'equippedProfileBannerId',
+        'profileBannerId',
+      ),
       badgeAssetPath: map['badgeAssetPath'] as String?,
       titleLabel: map['titleLabel'] as String?,
       profileFrameAssetPath: map['profileFrameAssetPath'] as String?,
       profileBannerAssetPath: map['profileBannerAssetPath'] as String?,
     );
+  }
+
+  static String? _stringField(
+    Map<String, dynamic> map,
+    String primary,
+    String legacy,
+  ) {
+    final value = map[primary] ?? map[legacy];
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 }
 

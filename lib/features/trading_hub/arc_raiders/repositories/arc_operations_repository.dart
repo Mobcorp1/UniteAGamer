@@ -25,6 +25,12 @@ class ArcOperationsRepository {
           .doc(uid)
           .collection('items');
 
+  DocumentReference<Map<String, dynamic>> _profileRef(String uid) => _firestore
+      .collection('users')
+      .doc(uid)
+      .collection('trading_activity')
+      .doc('profile');
+
   DocumentReference<Map<String, dynamic>> _equippedRef(String uid) =>
       _firestore.collection('arc_equipped_cosmetics').doc(uid);
 
@@ -36,7 +42,12 @@ class ArcOperationsRepository {
       final summary = summarySnapshot.data() ?? const <String, dynamic>{};
       final progressSnapshot = await _progressRef(uid).get();
       final inventorySnapshot = await _inventoryRef(uid).get();
+      final profileSnapshot = await _profileRef(uid).get();
       final equippedSnapshot = await _equippedRef(uid).get();
+      final equippedData = <String, dynamic>{
+        ...?equippedSnapshot.data(),
+        ...?profileSnapshot.data(),
+      };
 
       final progressById = <String, ArcOperationProgress>{};
       for (final doc in progressSnapshot.docs) {
@@ -50,9 +61,7 @@ class ArcOperationsRepository {
       return ArcOperationsUserState(
         progressById: progressById,
         inventory: inventory,
-        equippedCosmetics: ArcEquippedCosmetics.fromMap(
-          equippedSnapshot.data(),
-        ),
+        equippedCosmetics: ArcEquippedCosmetics.fromMap(equippedData),
         intelXp: (summary['intelXp'] as num?)?.toInt() ?? 0,
         operationCredits: (summary['operationCredits'] as num?)?.toInt() ?? 0,
         extraTradeSlots: (summary['extraTradeSlots'] as num?)?.toInt() ?? 0,
@@ -88,7 +97,7 @@ class ArcOperationsRepository {
 
     final progressRef = _progressRef(uid).doc(task.id);
     final summaryRef = _summaryRef(uid);
-    final equippedRef = _equippedRef(uid);
+    final profileRef = _profileRef(uid);
 
     await _firestore.runTransaction((transaction) async {
       final progressSnapshot = await transaction.get(progressRef);
@@ -136,22 +145,9 @@ class ArcOperationsRepository {
       }, SetOptions(merge: true));
 
       if (firstCosmetic != null) {
-        final update = <String, dynamic>{};
-        if (firstCosmetic.type == ArcOperationRewardType.badge) {
-          update['badgeId'] = firstCosmetic.rewardId;
-          update['badgeAssetPath'] = firstCosmetic.assetPath;
-        }
-        if (firstCosmetic.type == ArcOperationRewardType.title) {
-          update['titleId'] = firstCosmetic.rewardId;
-          update['titleLabel'] = firstCosmetic.label;
-        }
-        if (firstCosmetic.type == ArcOperationRewardType.profileFrame) {
-          update['profileFrameId'] = firstCosmetic.rewardId;
-          update['profileFrameAssetPath'] = firstCosmetic.assetPath;
-        }
+        final update = _equippedUpdateFor(firstCosmetic);
         if (update.isNotEmpty) {
-          update['updatedAt'] = DateTime.now().toIso8601String();
-          transaction.set(equippedRef, update, SetOptions(merge: true));
+          transaction.set(profileRef, update, SetOptions(merge: true));
         }
       }
 
@@ -170,23 +166,36 @@ class ArcOperationsRepository {
     final uid = _uid;
     if (uid == null) return;
 
+    final update = _equippedUpdateFor(item);
+    if (update.isEmpty) return;
+
+    await _profileRef(uid).set(update, SetOptions(merge: true));
+  }
+
+  Map<String, dynamic> _equippedUpdateFor(ArcRewardInventoryItem item) {
     final update = <String, dynamic>{
-      'updatedAt': DateTime.now().toIso8601String(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'lastActiveAt': FieldValue.serverTimestamp(),
     };
-    if (item.type == ArcOperationRewardType.badge) {
-      update['badgeId'] = item.rewardId;
-      update['badgeAssetPath'] = item.assetPath;
-    }
-    if (item.type == ArcOperationRewardType.title) {
-      update['titleId'] = item.rewardId;
-      update['titleLabel'] = item.label;
-    }
-    if (item.type == ArcOperationRewardType.profileFrame) {
-      update['profileFrameId'] = item.rewardId;
-      update['profileFrameAssetPath'] = item.assetPath;
+
+    switch (item.type) {
+      case ArcOperationRewardType.badge:
+        update['equippedBadgeId'] = item.rewardId;
+      case ArcOperationRewardType.title:
+        update['equippedTitleId'] = item.rewardId;
+      case ArcOperationRewardType.profileFrame:
+        update['equippedProfileFrameId'] = item.rewardId;
+      case ArcOperationRewardType.profileBanner:
+        update['equippedProfileBannerId'] = item.rewardId;
+      case ArcOperationRewardType.intelXp:
+      case ArcOperationRewardType.tradeSlot:
+      case ArcOperationRewardType.matchmakingSlot:
+      case ArcOperationRewardType.premiumTrial:
+      case ArcOperationRewardType.operationCredit:
+        return const <String, dynamic>{};
     }
 
-    await _equippedRef(uid).set(update, SetOptions(merge: true));
+    return update;
   }
 
   CollectionReference<Map<String, dynamic>> _telemetryRef(String uid) =>

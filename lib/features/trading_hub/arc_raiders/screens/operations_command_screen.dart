@@ -19,6 +19,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final ArcOperationsRepository _repository = ArcOperationsRepository();
+  String? _equippedBadgeRewardId;
+  String? _equippedTitleRewardId;
   String? _selectedProfileFrameRewardId;
   String? _equippedProfileFrameRewardId;
   String? _selectedProfileBannerRewardId;
@@ -165,6 +167,17 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
   Widget _buildProfileRewardStrip(ArcOperationsUserState userState) {
     final equipped = userState.equippedCosmetics;
+    final equippedBadge = _effectiveEquippedBadge(userState);
+    final hasEquippedBadge =
+        equippedBadge != null ||
+        (equipped.hasBadge && _equippedBadgeRewardId == null);
+    final equippedBadgeAssetPath =
+        equippedBadge?.assetPath ??
+        (_equippedBadgeRewardId == null ? equipped.badgeAssetPath : null);
+    final equippedTitle = _effectiveEquippedTitle(userState);
+    final equippedTitleLabel =
+        equippedTitle?.label ??
+        (_equippedTitleRewardId == null ? equipped.titleLabel : null);
     final equippedFrame = _effectiveEquippedProfileFrame(userState);
     final hasEquippedFrame =
         equippedFrame != null ||
@@ -183,14 +196,14 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           final children = [
             _equippedPreview(
               label: 'Equipped Badge',
-              value: equipped.hasBadge ? 'Active' : 'None equipped',
-              assetPath: equipped.badgeAssetPath,
+              value: hasEquippedBadge ? 'Active' : 'None equipped',
+              assetPath: equippedBadgeAssetPath,
               icon: Icons.military_tech_rounded,
               accent: Colors.amberAccent,
             ),
             _equippedPreview(
               label: 'Profile Title',
-              value: equipped.titleLabel ?? 'No title equipped',
+              value: equippedTitleLabel ?? 'No title equipped',
               icon: Icons.title_rounded,
               accent: AppTheme.neonCyan,
             ),
@@ -598,6 +611,99 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
+  String? _effectiveEquippedBadgeId(ArcOperationsUserState userState) {
+    return _equippedBadgeRewardId ?? userState.equippedCosmetics.badgeId;
+  }
+
+  ArcRewardInventoryItem? _effectiveEquippedBadge(
+    ArcOperationsUserState userState,
+  ) {
+    final equippedId = _effectiveEquippedBadgeId(userState);
+    if (equippedId == null) return null;
+    for (final badge in userState.badges) {
+      if (badge.rewardId == equippedId) return badge;
+    }
+    return null;
+  }
+
+  String? _effectiveEquippedTitleId(ArcOperationsUserState userState) {
+    return _equippedTitleRewardId ?? userState.equippedCosmetics.titleId;
+  }
+
+  ArcRewardInventoryItem? _effectiveEquippedTitle(
+    ArcOperationsUserState userState,
+  ) {
+    final equippedId = _effectiveEquippedTitleId(userState);
+    if (equippedId == null) return null;
+    for (final title in userState.titles) {
+      if (title.rewardId == equippedId) return title;
+    }
+    return null;
+  }
+
+  Future<void> _equipRewardVaultCosmetic(ArcRewardInventoryItem item) async {
+    if (item.cosmeticType == null) return;
+
+    final previousBadgeId = _equippedBadgeRewardId;
+    final previousTitleId = _equippedTitleRewardId;
+    final previousFrameId = _equippedProfileFrameRewardId;
+    final previousBannerId = _equippedProfileBannerRewardId;
+    final previousSelectedFrameId = _selectedProfileFrameRewardId;
+    final previousSelectedBannerId = _selectedProfileBannerRewardId;
+
+    setState(() {
+      switch (item.type) {
+        case ArcOperationRewardType.badge:
+          _equippedBadgeRewardId = item.rewardId;
+        case ArcOperationRewardType.title:
+          _equippedTitleRewardId = item.rewardId;
+        case ArcOperationRewardType.profileFrame:
+          _equippedProfileFrameRewardId = item.rewardId;
+          _selectedProfileFrameRewardId = item.rewardId;
+        case ArcOperationRewardType.profileBanner:
+          _equippedProfileBannerRewardId = item.rewardId;
+          _selectedProfileBannerRewardId = item.rewardId;
+        case ArcOperationRewardType.intelXp:
+        case ArcOperationRewardType.tradeSlot:
+        case ArcOperationRewardType.matchmakingSlot:
+        case ArcOperationRewardType.premiumTrial:
+        case ArcOperationRewardType.operationCredit:
+          return;
+      }
+    });
+
+    try {
+      await _repository.equipCosmetic(item);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${item.label} equipped to your profile.',
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _equippedBadgeRewardId = previousBadgeId;
+        _equippedTitleRewardId = previousTitleId;
+        _equippedProfileFrameRewardId = previousFrameId;
+        _equippedProfileBannerRewardId = previousBannerId;
+        _selectedProfileFrameRewardId = previousSelectedFrameId;
+        _selectedProfileBannerRewardId = previousSelectedBannerId;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not save that equipped cosmetic. Please try again.',
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _buildTitleInventoryGrid(ArcOperationsUserState userState) {
     final ownedTitles = userState.inventory
         .where((item) => item.isTitle)
@@ -606,7 +712,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .where((reward) => reward.type == ArcOperationRewardType.title)
         .take(6)
         .toList();
-    final equippedTitleId = userState.equippedCosmetics.titleId;
+    final equippedTitleId = _effectiveEquippedTitleId(userState);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -807,7 +913,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     final ownedTitles = userState.inventory
         .where((item) => item.isTitle)
         .toList();
-    final equippedTitleId = userState.equippedCosmetics.titleId;
+    final equippedTitleId = _effectiveEquippedTitleId(userState);
 
     ArcRewardInventoryItem? selectedOwned;
     for (final title in ownedTitles) {
@@ -1298,10 +1404,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
   void _equipProfileFrame(ArcRewardInventoryItem frame) {
     if (_equippedProfileFrameRewardId == frame.rewardId) return;
-    setState(() {
-      _equippedProfileFrameRewardId = frame.rewardId;
-      _selectedProfileFrameRewardId = frame.rewardId;
-    });
+    _equipRewardVaultCosmetic(frame);
   }
 
   String _profileFrameSource(ArcRewardInventoryItem frame) {
@@ -2137,10 +2240,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
 
   void _equipProfileBanner(ArcRewardInventoryItem banner) {
     if (_equippedProfileBannerRewardId == banner.rewardId) return;
-    setState(() {
-      _equippedProfileBannerRewardId = banner.rewardId;
-      _selectedProfileBannerRewardId = banner.rewardId;
-    });
+    _equipRewardVaultCosmetic(banner);
   }
 
   Widget _bannerEquipActions({
@@ -2184,7 +2284,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         .where((reward) => reward.type == ArcOperationRewardType.badge)
         .take(6)
         .toList();
-    final equippedBadgeId = userState.equippedCosmetics.badgeId;
+    final equippedBadgeId = _effectiveEquippedBadgeId(userState);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -2285,7 +2385,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     final ownedBadges = userState.inventory
         .where((item) => item.isBadge)
         .toList();
-    final equippedBadgeId = userState.equippedCosmetics.badgeId;
+    final equippedBadgeId = _effectiveEquippedBadgeId(userState);
 
     ArcRewardInventoryItem? selectedOwned;
     for (final badge in ownedBadges) {
@@ -2603,21 +2703,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () async {
-          await _repository.equipCosmetic(item);
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${item.label} equipped to your profile.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-          );
-        },
+        onPressed: () => _equipRewardVaultCosmetic(item),
         icon: const Icon(Icons.military_tech_rounded, size: 17),
         label: const Text('Equip Badge'),
         style: ElevatedButton.styleFrom(
@@ -2730,21 +2816,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () async {
-          await _repository.equipCosmetic(item);
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                '${item.label} equipped to your profile.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-          );
-        },
+        onPressed: () => _equipRewardVaultCosmetic(item),
         icon: const Icon(Icons.title_rounded, size: 17),
         label: const Text('Equip Title'),
         style: ElevatedButton.styleFrom(
@@ -3182,7 +3254,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                       userState: userState,
                       onTrack: () => _repository.trackProgress(task),
                       onClaim: () => _repository.claimReward(task),
-                      onEquip: _repository.equipCosmetic,
+                      onEquip: _equipRewardVaultCosmetic,
                     ),
                   ),
               ],
