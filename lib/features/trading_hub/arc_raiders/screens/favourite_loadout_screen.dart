@@ -834,6 +834,55 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               );
             }),
           ),
+          const SizedBox(height: 8),
+          _attachmentSelectionHint(weapon: weapon, accent: accent),
+        ],
+      ),
+    );
+  }
+
+  Widget _attachmentSelectionHint({
+    required ArcLoadoutWeaponSpec weapon,
+    required Color accent,
+  }) {
+    final slotCount = weapon.slots.length.clamp(1, 6).toInt();
+    final mappedOptions = weapon.slots.fold<int>(0, (total, slot) {
+      return total +
+          _attachmentsForSlot(weaponName: weapon.name, slotLabel: slot).length;
+    });
+    final hint = mappedOptions == 0
+        ? 'Tap a slot to clear it or keep planning until attachment data is mapped.'
+        : 'Tap any slot to pick from compatible attachments only.';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.tune_rounded,
+            color: accent.withValues(alpha: 0.76),
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$slotCount slots • $mappedOptions mapped options • $hint',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.58),
+                fontSize: 11,
+                height: 1.2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ],
       ),
     );
