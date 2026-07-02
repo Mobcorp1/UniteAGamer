@@ -917,6 +917,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 index: index + 1,
                 label: item,
                 subtitle: option?.description ?? 'Tap to assign item.',
+                imageAsset: _assetForLoadoutItem(
+                  item,
+                  option == null
+                      ? ArcLoadoutAssetKind.equipment
+                      : _assetKindForOption(option),
+                ),
                 accent: Colors.amberAccent,
                 owned: item == 'Empty Slot' ? true : owned,
                 onTap: () => _pickQuickSlot(index),
@@ -1221,6 +1227,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required int index,
     required String label,
     required String subtitle,
+    required String? imageAsset,
     required Color accent,
     required bool owned,
     required VoidCallback onTap,
@@ -1239,11 +1246,25 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         ),
         child: Row(
           children: [
-            Text(
-              '$index',
-              style: AppTheme.tradingHeading(fontSize: 18, color: accent),
+            _itemImage(
+              imageAsset: imageAsset,
+              accent: accent,
+              owned: owned,
+              icon: label == 'Empty Slot'
+                  ? Icons.remove_circle_outline_rounded
+                  : Icons.inventory_2_rounded,
+              size: 42,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 18,
+              child: Text(
+                '$index',
+                textAlign: TextAlign.center,
+                style: AppTheme.tradingHeading(fontSize: 17, color: accent),
+              ),
+            ),
+            const SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1362,7 +1383,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         ? Icon(icon, color: owned ? accent : Colors.white30, size: 34)
         : Image.asset(
             imageAsset,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             width: double.infinity,
             height: double.infinity,
             filterQuality: FilterQuality.high,
