@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
@@ -38,37 +40,95 @@ class ArcOperationsRepository {
     final uid = _uid;
     if (uid == null) return Stream.value(ArcOperationsUserState.empty);
 
-    return _summaryRef(uid).snapshots().asyncMap((summarySnapshot) async {
-      final summary = summarySnapshot.data() ?? const <String, dynamic>{};
-      final progressSnapshot = await _progressRef(uid).get();
-      final inventorySnapshot = await _inventoryRef(uid).get();
-      final profileSnapshot = await _profileRef(uid).get();
-      final equippedSnapshot = await _equippedRef(uid).get();
-      final equippedData = <String, dynamic>{
-        ...?equippedSnapshot.data(),
-        ...?profileSnapshot.data(),
-      };
+    final controller = StreamController<ArcOperationsUserState>();
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    summarySubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    profileSubscription;
+    var disposed = false;
+    var loadVersion = 0;
+    var latestSummary = const <String, dynamic>{};
+    Map<String, dynamic>? latestProfile;
 
-      final progressById = <String, ArcOperationProgress>{};
-      for (final doc in progressSnapshot.docs) {
-        progressById[doc.id] = ArcOperationProgress.fromMap(doc.id, doc.data());
+    void addError(Object error, StackTrace stackTrace) {
+      if (!disposed && !controller.isClosed) {
+        controller.addError(error, stackTrace);
       }
+    }
 
-      final inventory = inventorySnapshot.docs
-          .map((doc) => ArcRewardInventoryItem.fromMap(doc.id, doc.data()))
-          .toList();
+    Future<void> emitState() async {
+      final version = ++loadVersion;
+      try {
+        final state = await _loadUserState(
+          uid: uid,
+          summary: latestSummary,
+          profileData: latestProfile,
+        );
+        if (!disposed && !controller.isClosed && version == loadVersion) {
+          controller.add(state);
+        }
+      } catch (error, stackTrace) {
+        addError(error, stackTrace);
+      }
+    }
 
-      return ArcOperationsUserState(
-        progressById: progressById,
-        inventory: inventory,
-        equippedCosmetics: ArcEquippedCosmetics.fromMap(equippedData),
-        intelXp: (summary['intelXp'] as num?)?.toInt() ?? 0,
-        operationCredits: (summary['operationCredits'] as num?)?.toInt() ?? 0,
-        extraTradeSlots: (summary['extraTradeSlots'] as num?)?.toInt() ?? 0,
-        extraMatchmakingSlots:
-            (summary['extraMatchmakingSlots'] as num?)?.toInt() ?? 0,
-      );
-    });
+    controller.onListen = () {
+      summarySubscription = _summaryRef(uid).snapshots().listen((
+        summarySnapshot,
+      ) {
+        latestSummary = summarySnapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+
+      profileSubscription = _profileRef(uid).snapshots().listen((
+        profileSnapshot,
+      ) {
+        latestProfile = profileSnapshot.data();
+        unawaited(emitState());
+      }, onError: addError);
+    };
+
+    controller.onCancel = () async {
+      disposed = true;
+      await summarySubscription?.cancel();
+      await profileSubscription?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Future<ArcOperationsUserState> _loadUserState({
+    required String uid,
+    required Map<String, dynamic> summary,
+    required Map<String, dynamic>? profileData,
+  }) async {
+    final progressSnapshot = await _progressRef(uid).get();
+    final inventorySnapshot = await _inventoryRef(uid).get();
+    final equippedSnapshot = await _equippedRef(uid).get();
+    final equippedData = <String, dynamic>{
+      ...?equippedSnapshot.data(),
+      ...?profileData,
+    };
+
+    final progressById = <String, ArcOperationProgress>{};
+    for (final doc in progressSnapshot.docs) {
+      progressById[doc.id] = ArcOperationProgress.fromMap(doc.id, doc.data());
+    }
+
+    final inventory = inventorySnapshot.docs
+        .map((doc) => ArcRewardInventoryItem.fromMap(doc.id, doc.data()))
+        .toList();
+
+    return ArcOperationsUserState(
+      progressById: progressById,
+      inventory: inventory,
+      equippedCosmetics: ArcEquippedCosmetics.fromMap(equippedData),
+      intelXp: (summary['intelXp'] as num?)?.toInt() ?? 0,
+      operationCredits: (summary['operationCredits'] as num?)?.toInt() ?? 0,
+      extraTradeSlots: (summary['extraTradeSlots'] as num?)?.toInt() ?? 0,
+      extraMatchmakingSlots:
+          (summary['extraMatchmakingSlots'] as num?)?.toInt() ?? 0,
+    );
   }
 
   Future<void> trackProgress(ArcOperationTask task, {int amount = 1}) async {

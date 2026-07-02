@@ -323,99 +323,182 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     ArcOperationsUserState operationsState,
   ) {
     final equipped = operationsState.equippedCosmetics;
-    final title = equipped.titleLabel?.trim().isNotEmpty == true
-        ? equipped.titleLabel!.trim()
-        : 'Raider Profile';
-    final badgeAsset = equipped.badgeAssetPath;
-    final hasFrame = equipped.hasFrame;
+    final equippedBadge = operationsState.equippedBadge();
+    final equippedTitle = operationsState.equippedTitle();
+    final equippedFrame = operationsState.equippedProfileFrame();
+    final equippedBanner = operationsState.equippedProfileBanner();
+    final title = _cosmeticLabelOrFallback(
+      item: equippedTitle,
+      persistedLabel: equipped.titleLabel,
+      persistedId: equipped.titleId,
+      fallback: 'Raider Profile',
+    );
+    final badgeAsset = _cosmeticAssetPath(
+      equippedBadge,
+      equipped.badgeAssetPath,
+    );
+    final frameAsset = _cosmeticAssetPath(
+      equippedFrame,
+      equipped.profileFrameAssetPath,
+    );
+    final bannerAsset = _cosmeticAssetPath(
+      equippedBanner,
+      equipped.profileBannerAssetPath,
+    );
+    final hasFrame = equippedFrame != null || equipped.hasFrame;
+    final hasBanner = equippedBanner != null || equipped.hasBanner;
+    final frameAccent = equippedFrame == null
+        ? AppTheme.neonCyan
+        : _rarityAccent(equippedFrame.rarity);
+    final bannerAccent = equippedBanner == null
+        ? AppTheme.neonCyan
+        : _rarityAccent(equippedBanner.rarity);
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      clipBehavior: Clip.antiAlias,
       decoration:
           AppTheme.tradingCardDecoration(
-            borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+            borderColor: bannerAccent.withValues(alpha: 0.28),
           ).copyWith(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.neonCyan.withValues(alpha: 0.12),
+                bannerAccent.withValues(alpha: 0.12),
                 AppTheme.cardBackground.withValues(alpha: 0.94),
                 AppTheme.neonPink.withValues(alpha: 0.08),
               ],
             ),
           ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 620;
-          final avatar = _profileAvatarShowcase(
-            profile: profile,
-            badgeAsset: badgeAsset,
-            hasFrame: hasFrame,
-          );
-          final content = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title.toUpperCase(),
-                style: AppTheme.tradingHeading(
-                  fontSize: compact ? 22 : 30,
-                  color: AppTheme.neonCyan,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                profile.uagName.isEmpty ? 'Unnamed Raider' : profile.uagName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceS),
-              Wrap(
-                spacing: AppTheme.spaceS,
-                runSpacing: AppTheme.spaceS,
-                children: [
-                  _profileChip(
-                    icon: Icons.military_tech_rounded,
-                    label: 'Ops Lv ${operationsState.operationLevel}',
-                    accent: AppTheme.neonCyan,
-                  ),
-                  _profileChip(
-                    icon: Icons.auto_awesome_rounded,
-                    label: '${operationsState.completedCount} trophies',
-                    accent: AppTheme.neonPink,
-                  ),
-                  _profileChip(
-                    icon: Icons.bolt_rounded,
-                    label: '${operationsState.intelXp} Intel XP',
-                    accent: Colors.amberAccent,
-                  ),
-                ],
-              ),
-            ],
-          );
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: _profileBannerBackdrop(
+              assetPath: bannerAsset,
+              accent: bannerAccent,
+              isEquipped: hasBanner,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceM),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 620;
+                final avatar = _profileAvatarShowcase(
+                  profile: profile,
+                  badgeAsset: badgeAsset,
+                  frameAsset: frameAsset,
+                  frameAccent: frameAccent,
+                  hasFrame: hasFrame,
+                );
+                final content = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      style: AppTheme.tradingHeading(
+                        fontSize: compact ? 22 : 30,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      profile.uagName.isEmpty
+                          ? 'Unnamed Raider'
+                          : profile.uagName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                    Wrap(
+                      spacing: AppTheme.spaceS,
+                      runSpacing: AppTheme.spaceS,
+                      children: [
+                        _profileChip(
+                          icon: Icons.military_tech_rounded,
+                          label: 'Ops Lv ${operationsState.operationLevel}',
+                          accent: AppTheme.neonCyan,
+                        ),
+                        _profileChip(
+                          icon: Icons.auto_awesome_rounded,
+                          label: '${operationsState.completedCount} trophies',
+                          accent: AppTheme.neonPink,
+                        ),
+                        _profileChip(
+                          icon: Icons.bolt_rounded,
+                          label: '${operationsState.intelXp} Intel XP',
+                          accent: Colors.amberAccent,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
 
-          if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                avatar,
-                const SizedBox(height: AppTheme.spaceM),
-                content,
-              ],
-            );
-          }
+                if (compact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      avatar,
+                      const SizedBox(height: AppTheme.spaceM),
+                      content,
+                    ],
+                  );
+                }
 
-          return Row(
-            children: [
-              avatar,
-              const SizedBox(width: AppTheme.spaceL),
-              Expanded(child: content),
-            ],
-          );
-        },
+                return Row(
+                  children: [
+                    avatar,
+                    const SizedBox(width: AppTheme.spaceL),
+                    Expanded(child: content),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileBannerBackdrop({
+    required String? assetPath,
+    required Color accent,
+    required bool isEquipped,
+  }) {
+    if (assetPath != null && assetPath.isNotEmpty) {
+      return Opacity(
+        opacity: 0.34,
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          errorBuilder: (_, _, _) =>
+              _profileBannerFallback(accent: accent, isEquipped: isEquipped),
+        ),
+      );
+    }
+
+    return _profileBannerFallback(accent: accent, isEquipped: isEquipped);
+  }
+
+  Widget _profileBannerFallback({
+    required Color accent,
+    required bool isEquipped,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: isEquipped ? 0.18 : 0.08),
+            Colors.transparent,
+            AppTheme.neonPink.withValues(alpha: isEquipped ? 0.12 : 0.06),
+          ],
+        ),
       ),
     );
   }
@@ -423,9 +506,11 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   Widget _profileAvatarShowcase({
     required ArcTraderProfile profile,
     required String? badgeAsset,
+    required String? frameAsset,
+    required Color frameAccent,
     required bool hasFrame,
   }) {
-    final accent = hasFrame ? AppTheme.neonPink : AppTheme.neonCyan;
+    final accent = hasFrame ? frameAccent : AppTheme.neonCyan;
     return Container(
       width: 112,
       height: 112,
@@ -444,15 +529,28 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
+          if (frameAsset != null && frameAsset.isNotEmpty)
+            Positioned.fill(
+              child: ClipOval(
+                child: Image.asset(
+                  frameAsset,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
           Positioned.fill(
-            child: CircleAvatar(
-              backgroundColor: AppTheme.cardBackgroundAlt,
-              child: Text(
-                (profile.uagName.isNotEmpty ? profile.uagName[0] : 'U')
-                    .toUpperCase(),
-                style: AppTheme.tradingHeading(
-                  fontSize: 34,
-                  color: Colors.white,
+            child: Padding(
+              padding: EdgeInsets.all(hasFrame ? 8 : 0),
+              child: CircleAvatar(
+                backgroundColor: AppTheme.cardBackgroundAlt,
+                child: Text(
+                  (profile.uagName.isNotEmpty ? profile.uagName[0] : 'U')
+                      .toUpperCase(),
+                  style: AppTheme.tradingHeading(
+                    fontSize: 34,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -467,34 +565,44 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
-  Widget _cosmeticBadgeOrb(String? assetPath) {
-    return Container(
-      width: 42,
-      height: 42,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppTheme.darkBackground,
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.72)),
-      ),
-      child: assetPath != null && assetPath.isNotEmpty
-          ? ClipOval(
-              child: Image.asset(
-                assetPath,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const Icon(
-                  Icons.military_tech_rounded,
-                  color: AppTheme.neonCyan,
-                  size: 20,
-                ),
-              ),
-            )
-          : const Icon(
-              Icons.military_tech_rounded,
-              color: AppTheme.neonCyan,
-              size: 20,
-            ),
-    );
+  String? _cosmeticAssetPath(
+    ArcRewardInventoryItem? item,
+    String? persistedAssetPath,
+  ) {
+    final itemAsset = item?.assetPath;
+    if (itemAsset != null && itemAsset.isNotEmpty) return itemAsset;
+    if (persistedAssetPath != null && persistedAssetPath.isNotEmpty) {
+      return persistedAssetPath;
+    }
+    return null;
+  }
+
+  String _cosmeticLabelOrFallback({
+    required ArcRewardInventoryItem? item,
+    required String? persistedLabel,
+    required String? persistedId,
+    required String fallback,
+  }) {
+    if (item != null && item.label.isNotEmpty) return item.label;
+    if (persistedLabel != null && persistedLabel.isNotEmpty) {
+      return persistedLabel;
+    }
+    if (persistedId != null && persistedId.isNotEmpty) return persistedId;
+    return fallback;
+  }
+
+  Color _rarityAccent(ArcCosmeticRarity rarity) {
+    return switch (rarity) {
+      ArcCosmeticRarity.common => AppTheme.neonCyan,
+      ArcCosmeticRarity.uncommon => Colors.lightGreenAccent,
+      ArcCosmeticRarity.rare => Colors.lightBlueAccent,
+      ArcCosmeticRarity.epic => AppTheme.neonPink,
+      ArcCosmeticRarity.legendary => Colors.amberAccent,
+      ArcCosmeticRarity.founder => Colors.amberAccent,
+      ArcCosmeticRarity.closedBeta => AppTheme.neonCyan,
+      ArcCosmeticRarity.community => Colors.lightGreenAccent,
+      ArcCosmeticRarity.creator => AppTheme.neonPink,
+    };
   }
 
   Widget _reputationCommandPanel(
@@ -630,6 +738,13 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                 assetPath: equipped.profileFrameAssetPath,
                 icon: Icons.crop_square_rounded,
                 accent: Colors.amberAccent,
+              ),
+              _rewardStatusTile(
+                title: 'Profile Banner',
+                value: equipped.profileBannerId ?? 'Default banner',
+                assetPath: equipped.profileBannerAssetPath,
+                icon: Icons.crop_16_9_rounded,
+                accent: Colors.lightBlueAccent,
               ),
             ],
           ),
