@@ -565,6 +565,45 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
+  Widget _cosmeticBadgeOrb(String? badgeAsset) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.cardBackground.withValues(alpha: 0.92),
+        border: Border.all(
+          color: AppTheme.neonCyan.withValues(alpha: 0.72),
+          width: 1.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.24),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: badgeAsset != null && badgeAsset.isNotEmpty
+            ? Image.asset(
+                badgeAsset,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Icon(
+                  Icons.military_tech_rounded,
+                  color: AppTheme.neonCyan,
+                  size: 18,
+                ),
+              )
+            : Icon(
+                Icons.military_tech_rounded,
+                color: AppTheme.neonCyan,
+                size: 18,
+              ),
+      ),
+    );
+  }
+
   String? _cosmeticAssetPath(
     ArcRewardInventoryItem? item,
     String? persistedAssetPath,
