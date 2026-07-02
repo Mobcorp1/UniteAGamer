@@ -222,15 +222,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             ),
           ];
           if (compact) {
-            return Column(
-              children: [
-                for (final child in children)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: child,
-                  ),
-              ],
-            );
+            return Column(children: _withVerticalSpacing(children, spacing: 8));
           }
           return Row(
             children: [
@@ -305,6 +297,18 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         ],
       ),
     );
+  }
+
+  List<Widget> _withVerticalSpacing(
+    List<Widget> children, {
+    required double spacing,
+  }) {
+    return [
+      for (var index = 0; index < children.length; index++) ...[
+        if (index > 0) SizedBox(height: spacing),
+        children[index],
+      ],
+    ];
   }
 
   Widget _buildCommunityObjectivePanel() {
@@ -534,15 +538,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         ];
 
         if (compact) {
-          return Column(
-            children: [
-              for (final child in children)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: child,
-                ),
-            ],
-          );
+          return Column(children: _withVerticalSpacing(children, spacing: 8));
         }
 
         return Row(
@@ -1249,7 +1245,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               final cards = ownedFrames.isNotEmpty
                   ? ownedFrames
                         .map(
-                          (frame) => _frameInventoryCard(
+                          (frame) => _profileFrameInventoryCard(
                             item: frame,
                             label: frame.label,
                             rarity: frame.rarity,
@@ -1258,7 +1254,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                                 frame.rewardId == _selectedProfileFrameRewardId,
                             equipped: frame.rewardId == equippedFrameId,
                             betaExclusive: frame.betaExclusive,
-                            source: _profileFrameSource(frame),
+                            source: _profileCosmeticSource(frame),
                             onSelected: () => setState(() {
                               _selectedProfileFrameRewardId = frame.rewardId;
                             }),
@@ -1267,7 +1263,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                         .toList()
                   : previewFrames
                         .map(
-                          (frame) => _frameInventoryCard(
+                          (frame) => _profileFrameInventoryCard(
                             item: null,
                             label: frame.label,
                             rarity: frame.rarity,
@@ -1298,7 +1294,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  Widget _frameInventoryCard({
+  Widget _profileFrameInventoryCard({
     required ArcRewardInventoryItem? item,
     required String label,
     required ArcCosmeticRarity rarity,
@@ -1464,22 +1460,27 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     _equipRewardVaultCosmetic(frame);
   }
 
-  String _profileFrameSource(ArcRewardInventoryItem frame) {
-    if (frame.betaExclusive) return 'Closed Beta Operations reward';
-    if (frame.rarity == ArcCosmeticRarity.community) {
+  String _profileCosmeticSource(ArcRewardInventoryItem item) {
+    if (item.betaExclusive) return 'Closed Beta Operations reward';
+    if (item.rarity == ArcCosmeticRarity.community) {
       return 'Community Operations reward';
     }
     return 'Operations reward inventory';
   }
 
-  String _profileFrameDescription(ArcRewardInventoryItem frame) {
-    if (frame.betaExclusive) {
-      return 'A permanent beta-era profile frame for your ARC identity.';
+  String _profileCosmeticDescription(ArcRewardInventoryItem item) {
+    final isBanner = item.isProfileBanner;
+    final cosmeticLabel = isBanner ? 'profile banner' : 'profile frame';
+    if (item.betaExclusive) {
+      return 'A permanent beta-era $cosmeticLabel for your ARC identity.';
     }
-    if (frame.rarity == ArcCosmeticRarity.community) {
+    if (item.rarity == ArcCosmeticRarity.community) {
+      if (isBanner) {
+        return 'A wide profile banner earned through community and guardian activity.';
+      }
       return 'A profile frame earned through community and guardian activity.';
     }
-    return 'A profile frame earned through Operations Command progress.';
+    return 'A $cosmeticLabel earned through Operations Command progress.';
   }
 
   Widget _buildSelectedProfileFramePreview(ArcOperationsUserState userState) {
@@ -1501,8 +1502,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
       owned: true,
       equipped: selectedOwned.rewardId == equippedFrameId,
       betaExclusive: selectedOwned.betaExclusive,
-      source: _profileFrameSource(selectedOwned),
-      description: _profileFrameDescription(selectedOwned),
+      source: _profileCosmeticSource(selectedOwned),
+      description: _profileCosmeticDescription(selectedOwned),
     );
   }
 
@@ -1681,7 +1682,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               ),
               if (showAction && item != null) ...[
                 const SizedBox(height: 10),
-                _frameEquipActions(
+                _profileFrameEquipActions(
                   item: item,
                   equipped: equipped,
                   accent: accent,
@@ -1710,7 +1711,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  Widget _frameEquipActions({
+  Widget _profileFrameEquipActions({
     required ArcRewardInventoryItem item,
     required bool equipped,
     required Color accent,
@@ -1806,7 +1807,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                                 _selectedProfileBannerRewardId,
                             equipped: banner.rewardId == equippedBannerId,
                             betaExclusive: banner.betaExclusive,
-                            source: _profileBannerSource(banner),
+                            source: _profileCosmeticSource(banner),
                             onSelected: () => setState(() {
                               _selectedProfileBannerRewardId = banner.rewardId;
                             }),
@@ -2009,24 +2010,6 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  String _profileBannerSource(ArcRewardInventoryItem banner) {
-    if (banner.betaExclusive) return 'Closed Beta Operations reward';
-    if (banner.rarity == ArcCosmeticRarity.community) {
-      return 'Community Operations reward';
-    }
-    return 'Operations reward inventory';
-  }
-
-  String _profileBannerDescription(ArcRewardInventoryItem banner) {
-    if (banner.betaExclusive) {
-      return 'A permanent beta-era profile banner for your ARC identity.';
-    }
-    if (banner.rarity == ArcCosmeticRarity.community) {
-      return 'A wide profile banner earned through community and guardian activity.';
-    }
-    return 'A profile banner earned through Operations Command progress.';
-  }
-
   ArcRewardInventoryItem? _selectedProfileBanner(
     List<ArcRewardInventoryItem> ownedBanners,
   ) {
@@ -2050,8 +2033,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
       owned: true,
       equipped: selectedOwned.rewardId == equippedBannerId,
       betaExclusive: selectedOwned.betaExclusive,
-      source: _profileBannerSource(selectedOwned),
-      description: _profileBannerDescription(selectedOwned),
+      source: _profileCosmeticSource(selectedOwned),
+      description: _profileCosmeticDescription(selectedOwned),
     );
   }
 
@@ -2244,7 +2227,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               ),
               if (showAction && item != null) ...[
                 const SizedBox(height: 10),
-                _bannerEquipActions(
+                _profileBannerEquipActions(
                   item: item,
                   equipped: equipped,
                   accent: accent,
@@ -2283,7 +2266,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     _equipRewardVaultCosmetic(banner);
   }
 
-  Widget _bannerEquipActions({
+  Widget _profileBannerEquipActions({
     required ArcRewardInventoryItem item,
     required bool equipped,
     required Color accent,
