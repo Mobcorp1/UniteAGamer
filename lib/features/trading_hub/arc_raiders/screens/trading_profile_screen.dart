@@ -396,6 +396,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   children: [
                     Text(
                       title.toUpperCase(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTheme.tradingHeading(
                         fontSize: compact ? 22 : 30,
                         color: AppTheme.neonCyan,
@@ -406,6 +408,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                       profile.uagName.isEmpty
                           ? 'Unnamed Raider'
                           : profile.uagName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -473,7 +477,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         opacity: 0.34,
         child: Image.asset(
           assetPath,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           alignment: Alignment.center,
           errorBuilder: (_, _, _) =>
               _profileBannerFallback(accent: accent, isEquipped: isEquipped),
@@ -534,7 +538,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               child: ClipOval(
                 child: Image.asset(
                   frameAsset,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),
                 ),
               ),

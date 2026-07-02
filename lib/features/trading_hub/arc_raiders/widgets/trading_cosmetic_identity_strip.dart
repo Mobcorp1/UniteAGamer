@@ -43,7 +43,7 @@ class TradingCosmeticIdentityStrip extends StatelessWidget {
         opacity: 0.30,
         child: Image.asset(
           assetPath,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           alignment: Alignment.center,
           errorBuilder: (_, _, _) => _bannerFallback(cosmetics, accent),
         ),
@@ -152,7 +152,7 @@ class TradingCosmeticIdentityStrip extends StatelessWidget {
                     ClipOval(
                       child: Image.asset(
                         frameAsset,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                         errorBuilder: (_, _, _) => const SizedBox.shrink(),
                       ),
                     ),
@@ -221,53 +221,69 @@ class TradingCosmeticIdentityStrip extends StatelessWidget {
             Positioned.fill(child: _bannerBackdrop(cosmetics, bannerAccent)),
           Padding(
             padding: EdgeInsets.all(compact ? 10 : 12),
-            child: Row(
-              children: [
-                _avatar(cosmetics, effectiveName, frameAccent),
-                SizedBox(width: compact ? 10 : 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final narrow = constraints.maxWidth < 260;
+                final details = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      effectiveName,
+                      maxLines: narrow ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(
+                        fontSize: compact ? 16 : 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (titleLabel.isNotEmpty) ...[
+                      const SizedBox(height: 2),
                       Text(
-                        effectiveName,
-                        maxLines: 1,
+                        titleLabel.toUpperCase(),
+                        maxLines: narrow ? 2 : 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTheme.tradingHeading(
-                          fontSize: compact ? 16 : 18,
-                          color: Colors.white,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: compact ? 11 : 12,
+                          color: bannerAccent,
+                          isBold: true,
                         ),
                       ),
-                      if (titleLabel.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          titleLabel.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: compact ? 11 : 12,
-                            color: bannerAccent,
-                            isBold: true,
-                          ),
-                        ),
-                      ],
-                      if (subtitleText.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitleText,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: compact ? 11 : 12,
-                            color: AppTheme.tradingMutedText,
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
-                ),
-              ],
+                    if (subtitleText.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitleText,
+                        maxLines: narrow ? 3 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: compact ? 11 : 12,
+                          color: AppTheme.tradingMutedText,
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+
+                if (narrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _avatar(cosmetics, effectiveName, frameAccent),
+                      const SizedBox(height: 8),
+                      details,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    _avatar(cosmetics, effectiveName, frameAccent),
+                    SizedBox(width: compact ? 10 : 12),
+                    Expanded(child: details),
+                  ],
+                );
+              },
             ),
           ),
         ],

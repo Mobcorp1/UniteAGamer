@@ -560,6 +560,21 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
+  double _vaultCardWidth(
+    double availableWidth,
+    int columns,
+    double spacing, {
+    required double minWidth,
+    required double maxWidth,
+  }) {
+    if (availableWidth <= minWidth) return availableWidth;
+
+    final calculated = (availableWidth - (spacing * (columns - 1))) / columns;
+    final cappedMax = maxWidth > availableWidth ? availableWidth : maxWidth;
+    if (cappedMax <= minWidth) return availableWidth;
+    return calculated.clamp(minWidth, cappedMax).toDouble();
+  }
+
   Widget _vaultSummaryTile({
     required IconData icon,
     required String label,
@@ -763,7 +778,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                   ? 2
                   : 1;
               final spacing = 8.0;
-              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final itemWidth = _vaultCardWidth(
+                width,
+                columns,
+                spacing,
+                minWidth: 180,
+                maxWidth: 380,
+              );
               final cards = ownedTitles.isNotEmpty
                   ? ownedTitles
                         .map(
@@ -795,7 +816,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 runSpacing: spacing,
                 children: [
                   for (final card in cards)
-                    SizedBox(width: itemWidth.clamp(180, 380), child: card),
+                    SizedBox(width: itemWidth, child: card),
                 ],
               );
             },
@@ -1181,7 +1202,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                   ? 2
                   : 1;
               final spacing = 8.0;
-              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final itemWidth = _vaultCardWidth(
+                width,
+                columns,
+                spacing,
+                minWidth: 180,
+                maxWidth: 380,
+              );
               final cards = ownedFrames.isNotEmpty
                   ? ownedFrames
                         .map(
@@ -1222,7 +1249,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 runSpacing: spacing,
                 children: [
                   for (final card in cards)
-                    SizedBox(width: itemWidth.clamp(180, 380), child: card),
+                    SizedBox(width: itemWidth, child: card),
                 ],
               );
             },
@@ -1264,7 +1291,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             )
           : Image.asset(
               item!.assetPath!,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (_, _, _) => Icon(
                 Icons.person_rounded,
                 color: unlocked ? accent : Colors.white30,
@@ -1560,7 +1587,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                     )
                   : Image.asset(
                       assetPath,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       errorBuilder: (_, _, _) => Icon(
                         Icons.person_rounded,
                         color: owned ? accent : Colors.white38,
@@ -1747,7 +1774,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                   ? 2
                   : 1;
               final spacing = 8.0;
-              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final itemWidth = _vaultCardWidth(
+                width,
+                columns,
+                spacing,
+                minWidth: 220,
+                maxWidth: 380,
+              );
               final cards = ownedBanners.isNotEmpty
                   ? ownedBanners
                         .map(
@@ -1789,7 +1822,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 runSpacing: spacing,
                 children: [
                   for (final card in cards)
-                    SizedBox(width: itemWidth.clamp(220, 380), child: card),
+                    SizedBox(width: itemWidth, child: card),
                 ],
               );
             },
@@ -1870,7 +1903,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             )
           : Image.asset(
               item!.assetPath!,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (_, _, _) => Icon(
                 Icons.view_day_rounded,
                 color: unlocked ? accent : Colors.white30,
@@ -2140,7 +2173,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                     )
                   : Image.asset(
                       assetPath,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       errorBuilder: (_, _, _) => Icon(
                         Icons.view_day_rounded,
                         color: owned ? accent : Colors.white38,
@@ -2337,7 +2370,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                   ? 3
                   : 2;
               final spacing = 8.0;
-              final itemWidth = (width - (spacing * (columns - 1))) / columns;
+              final itemWidth = _vaultCardWidth(
+                width,
+                columns,
+                spacing,
+                minWidth: 118,
+                maxWidth: 180,
+              );
               final cards = ownedBadges.isNotEmpty
                   ? ownedBadges
                         .map(
@@ -2369,7 +2408,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 runSpacing: spacing,
                 children: [
                   for (final card in cards)
-                    SizedBox(width: itemWidth.clamp(118, 180), child: card),
+                    SizedBox(width: itemWidth, child: card),
                 ],
               );
             },
