@@ -60,6 +60,7 @@ flutter:
 
   assets:
     - assets/images/arc_raiders/hub/
+    - assets/images/arc_raiders/loadouts/weapons/
     - assets/icon/
     - assets/arc_raiders/banners/
     - assets/arc_raiders/blueprints/
@@ -86,6 +87,5 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
-
 
 

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
@@ -109,11 +109,29 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
-  String? _assetForItemName(String name) {
-    return ArcBlueprintAssetRegistry.assetForWithBlueprintFallback(
+  String? _assetForLoadoutItem(
+    String name,
+    ArcLoadoutAssetKind kind, {
+    String? explicitAssetPath,
+  }) {
+    return ArcLoadoutAssetRegistry.assetFor(
       itemName: name,
+      kind: kind,
+      explicitAssetPath: explicitAssetPath,
       blueprintAssetPath: _blueprintForName(name)?.imageAssetPath,
     );
+  }
+
+  ArcLoadoutAssetKind _weaponAssetKind(bool primary) {
+    return primary
+        ? ArcLoadoutAssetKind.primaryWeapon
+        : ArcLoadoutAssetKind.secondaryWeapon;
+  }
+
+  ArcLoadoutAssetKind _assetKindForOption(ArcLoadoutOption option) {
+    return option.type == ArcLoadoutSlotType.augment
+        ? ArcLoadoutAssetKind.augment
+        : ArcLoadoutAssetKind.equipment;
   }
 
   ArcAttachmentSlotType _slotTypeForLabel(String label) {
@@ -280,7 +298,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           states: states,
         );
         return _itemImage(
-          imageAsset: _assetForItemName(weapon.name),
+          imageAsset: _assetForLoadoutItem(
+            weapon.name,
+            _weaponAssetKind(primary),
+          ),
           accent: owned ? AppTheme.neonCyan : AppTheme.neonPink,
           owned: owned,
           icon: weapon.blueprintBased && !owned
@@ -318,6 +339,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       items: ArcLoadoutSeedData.augments,
       labelBuilder: (option) => option.name,
       subtitleBuilder: (option) => option.description,
+      leadingBuilder: (option) => _itemImage(
+        imageAsset: _assetForLoadoutItem(
+          option.name,
+          ArcLoadoutAssetKind.augment,
+        ),
+        accent: Colors.lightGreenAccent,
+        owned: true,
+        icon: Icons.health_and_safety_rounded,
+      ),
     );
     if (selected == null) return;
     setState(() => _augment = selected.name);
@@ -355,6 +385,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       items: fallback,
       labelBuilder: (option) => option.name,
       subtitleBuilder: (option) => option.description,
+      leadingBuilder: (option) => _itemImage(
+        imageAsset: _assetForLoadoutItem(
+          option.name,
+          ArcLoadoutAssetKind.equipment,
+        ),
+        accent: Colors.amberAccent,
+        owned: true,
+        icon: Icons.shield_rounded,
+      ),
     );
     if (selected == null) return;
     setState(() => _shield = selected.name);
@@ -375,6 +414,20 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       items: options,
       labelBuilder: (option) => option.name,
       subtitleBuilder: (option) => option.description,
+      leadingBuilder: (option) {
+        final empty = option.name == 'Empty Slot';
+        return _itemImage(
+          imageAsset: _assetForLoadoutItem(
+            option.name,
+            _assetKindForOption(option),
+          ),
+          accent: empty ? Colors.white70 : Colors.amberAccent,
+          owned: true,
+          icon: empty
+              ? Icons.remove_circle_outline_rounded
+              : Icons.inventory_2_rounded,
+        );
+      },
     );
     if (selected == null) return;
     setState(() => _quickSlots[index] = selected.name);
@@ -412,10 +465,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         return '${attachment.benchLabel} • ${attachment.effect} • ${attachment.materialSummary}';
       },
       leadingBuilder: (attachment) {
-        final imageAsset =
-            attachment.imageAssetPath ?? _assetForItemName(attachment.name);
         return _itemImage(
-          imageAsset: imageAsset,
+          imageAsset: _assetForLoadoutItem(
+            attachment.name,
+            ArcLoadoutAssetKind.attachment,
+            explicitAssetPath: attachment.imageAssetPath,
+          ),
           accent: attachment.name == 'Empty Slot'
               ? Colors.white70
               : Colors.amberAccent,
@@ -746,7 +801,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _itemTile(
             label: weapon.name,
             subtitle: _weaponSubtitle(weapon),
-            imageAsset: _assetForItemName(weapon.name),
+            imageAsset: _assetForLoadoutItem(
+              weapon.name,
+              _weaponAssetKind(primary),
+            ),
             accent: accent,
             owned: owned,
             lockedLabel: weapon.blueprintBased && !owned
@@ -773,8 +831,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               return _attachmentChip(
                 label: label,
                 slotLabel: slotLabel,
-                imageAsset:
-                    attachment?.imageAssetPath ?? _assetForItemName(label),
+                imageAsset: _assetForLoadoutItem(
+                  label,
+                  ArcLoadoutAssetKind.attachment,
+                  explicitAssetPath: attachment?.imageAssetPath,
+                ),
                 accent: accent,
                 onTap: () => _pickAttachment(primary: primary, index: index),
               );
@@ -809,7 +870,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _itemTile(
             label: _augment,
             subtitle: augmentOption?.description ?? 'Tap to choose augment.',
-            imageAsset: _assetForItemName(_augment),
+            imageAsset: _assetForLoadoutItem(
+              _augment,
+              ArcLoadoutAssetKind.augment,
+            ),
             accent: Colors.lightGreenAccent,
             owned: augmentOwned,
             onTap: _pickAugment,
@@ -818,7 +882,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _itemTile(
             label: _shield,
             subtitle: shieldOption?.description ?? 'Tap to choose shield.',
-            imageAsset: _assetForItemName(_shield),
+            imageAsset: _assetForLoadoutItem(
+              _shield,
+              ArcLoadoutAssetKind.equipment,
+            ),
             accent: Colors.amberAccent,
             owned: shieldOwned,
             onTap: _pickShield,
