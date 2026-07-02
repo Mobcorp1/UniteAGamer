@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -135,57 +136,44 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   }
 
   ArcAttachmentSlotType _slotTypeForLabel(String label) {
-    switch (label.trim().toLowerCase()) {
-      case 'muzzle':
-        return ArcAttachmentSlotType.muzzle;
-      case 'shotgun muzzle':
-      case 'shotgun choke':
-        return ArcAttachmentSlotType.shotgunMuzzle;
-      case 'underbarrel':
-      case 'grip':
-        return ArcAttachmentSlotType.underbarrel;
-      case 'light magazine':
-      case 'light mag':
-        return ArcAttachmentSlotType.lightMagazine;
-      case 'medium magazine':
-      case 'medium mag':
-      case 'magazine':
-        return ArcAttachmentSlotType.mediumMagazine;
-      case 'shotgun magazine':
-      case 'shotgun mag':
-        return ArcAttachmentSlotType.shotgunMagazine;
-      case 'stock':
-        return ArcAttachmentSlotType.stock;
-      case 'barrel':
-        return ArcAttachmentSlotType.barrel;
-      case 'converter':
-        return ArcAttachmentSlotType.converter;
-      default:
-        return ArcAttachmentSlotType.special;
-    }
+    return ArcLoadoutCompatibilityRegistry.slotTypeForLabel(label);
   }
 
   ArcLoadoutAttachmentSpec? _attachmentSpecForName(String name) {
-    final normalised = _normalise(name);
-    if (normalised.isEmpty || normalised == 'empty slot') return null;
-    for (final attachment in ArcLoadoutSeedData.attachments) {
-      if (_normalise(attachment.name) == normalised) return attachment;
-    }
-    return null;
+    return ArcLoadoutCompatibilityRegistry.attachmentSpecForName(name);
   }
 
   List<ArcLoadoutAttachmentSpec> _attachmentsForSlot({
     required String weaponName,
     required String slotLabel,
   }) {
-    final slotType = _slotTypeForLabel(slotLabel);
-    return ArcLoadoutSeedData.attachments
-        .where(
-          (attachment) =>
-              attachment.slotType == slotType &&
-              attachment.supportsWeapon(weaponName),
-        )
-        .toList(growable: false);
+    return ArcLoadoutCompatibilityRegistry.compatibleAttachmentsForSlot(
+      weaponName: weaponName,
+      slotLabel: slotLabel,
+    );
+  }
+
+  String _attachmentCompatibilityStatus({
+    required String weaponName,
+    required String slotLabel,
+    required String attachmentName,
+  }) {
+    if (attachmentName == slotLabel || attachmentName == 'Empty Slot') {
+      final count =
+          ArcLoadoutCompatibilityRegistry.compatibleAttachmentsForSlot(
+            weaponName: weaponName,
+            slotLabel: slotLabel,
+          ).length;
+      return count == 0 ? 'No mapped options yet' : '$count compatible options';
+    }
+
+    final valid = ArcLoadoutCompatibilityRegistry.isAttachmentCompatible(
+      weaponName: weaponName,
+      slotLabel: slotLabel,
+      attachmentName: attachmentName,
+    );
+
+    return valid ? 'Compatible with $weaponName' : 'Review compatibility';
   }
 
   ArcLoadoutOption? _optionForName(String name) {
@@ -837,6 +825,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                   explicitAssetPath: attachment?.imageAssetPath,
                 ),
                 accent: accent,
+                compatibilityLabel: _attachmentCompatibilityStatus(
+                  weaponName: weapon.name,
+                  slotLabel: slotLabel,
+                  attachmentName: label,
+                ),
                 onTap: () => _pickAttachment(primary: primary, index: index),
               );
             }),
@@ -1306,6 +1299,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required String slotLabel,
     required String? imageAsset,
     required Color accent,
+    required String compatibilityLabel,
     required VoidCallback onTap,
   }) {
     final assigned = label != slotLabel && label != 'Empty Slot';
@@ -1354,7 +1348,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     ),
                   ),
                   Text(
-                    assigned ? slotLabel : 'Tap to assign',
+                    assigned ? compatibilityLabel : compatibilityLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
