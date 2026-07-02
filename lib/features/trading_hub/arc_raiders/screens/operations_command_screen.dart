@@ -1690,6 +1690,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               );
             },
           ),
+          const SizedBox(height: 10),
+          _buildSelectedProfileBannerPreview(userState),
         ],
       ),
     );
@@ -1864,6 +1866,292 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
       return 'Community Operations reward';
     }
     return 'Operations reward inventory';
+  }
+
+  String _profileBannerDescription(ArcRewardInventoryItem banner) {
+    if (banner.betaExclusive) {
+      return 'A permanent beta-era profile banner for your ARC identity.';
+    }
+    if (banner.rarity == ArcCosmeticRarity.community) {
+      return 'A wide profile banner earned through community and guardian activity.';
+    }
+    return 'A profile banner earned through Operations Command progress.';
+  }
+
+  ArcRewardInventoryItem? _selectedProfileBanner(
+    List<ArcRewardInventoryItem> ownedBanners,
+  ) {
+    final selectedId = _selectedProfileBannerRewardId;
+    if (selectedId == null) return null;
+    for (final banner in ownedBanners) {
+      if (banner.rewardId == selectedId) return banner;
+    }
+    return null;
+  }
+
+  Widget _buildSelectedProfileBannerPreview(ArcOperationsUserState userState) {
+    final ownedBanners = userState.profileBanners;
+    final selectedOwned = _selectedProfileBanner(ownedBanners);
+    final equippedBannerId = userState.equippedCosmetics.profileBannerId;
+
+    if (selectedOwned == null) {
+      return _profileBannerPlaceholderPanel();
+    }
+
+    return _profileBannerPreviewPanel(
+      item: selectedOwned,
+      label: selectedOwned.label,
+      assetPath: selectedOwned.assetPath,
+      rarity: selectedOwned.rarity,
+      owned: true,
+      equipped: selectedOwned.rewardId == equippedBannerId,
+      betaExclusive: selectedOwned.betaExclusive,
+      source: _profileBannerSource(selectedOwned),
+      description: _profileBannerDescription(selectedOwned),
+    );
+  }
+
+  Widget _profileBannerPlaceholderPanel() {
+    return _profileBannerPreviewPanel(
+      item: null,
+      label: 'No profile banner selected',
+      assetPath: null,
+      rarity: ArcCosmeticRarity.common,
+      owned: false,
+      equipped: false,
+      betaExclusive: false,
+      source: 'Select an owned profile banner from inventory.',
+      description: 'Banner details will appear here once a reward is selected.',
+      showAction: false,
+    );
+  }
+
+  Widget _profileBannerPreviewPanel({
+    required ArcRewardInventoryItem? item,
+    required String label,
+    required String? assetPath,
+    required ArcCosmeticRarity rarity,
+    required bool owned,
+    required bool equipped,
+    required bool betaExclusive,
+    required String source,
+    required String description,
+    bool showAction = true,
+  }) {
+    final accent = _rarityAccent(rarity);
+    final statusAccent = equipped ? Colors.lightBlueAccent : accent;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: statusAccent.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final showcase = Container(
+            width: compact ? double.infinity : 280,
+            height: compact ? 144 : 156,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: owned ? 0.10 : 0.06),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: accent.withValues(alpha: 0.35)),
+            ),
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground.withValues(alpha: 0.36),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  color: owned ? statusAccent : Colors.white38,
+                  width: equipped ? 2.4 : 1.4,
+                ),
+                boxShadow: equipped
+                    ? [
+                        BoxShadow(
+                          color: Colors.lightBlueAccent.withValues(alpha: 0.18),
+                          blurRadius: 16,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: assetPath == null
+                  ? Stack(
+                      children: [
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  accent.withValues(alpha: owned ? 0.30 : 0.10),
+                                  Colors.lightBlueAccent.withValues(
+                                    alpha: owned ? 0.16 : 0.05,
+                                  ),
+                                  AppTheme.darkBackground.withValues(
+                                    alpha: 0.66,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: 16,
+                          top: 0,
+                          bottom: 0,
+                          child: Icon(
+                            Icons.view_day_rounded,
+                            color: owned ? accent : Colors.white38,
+                            size: 36,
+                          ),
+                        ),
+                        Positioned(
+                          right: 16,
+                          bottom: 16,
+                          child: _tinyVaultChip(
+                            equipped
+                                ? 'ACTIVE BANNER'
+                                : owned
+                                ? 'READY TO EQUIP'
+                                : 'NO SELECTION',
+                            equipped
+                                ? Colors.lightBlueAccent
+                                : owned
+                                ? accent
+                                : Colors.white38,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Image.asset(
+                      assetPath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.view_day_rounded,
+                        color: owned ? accent : Colors.white38,
+                        size: 36,
+                      ),
+                    ),
+            ),
+          );
+
+          final details = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'SELECTED BANNER',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white54,
+                  isBold: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label.toUpperCase(),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(fontSize: 22, color: accent),
+              ),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _tinyVaultChip(rarity.label.toUpperCase(), accent),
+                  _tinyVaultChip(
+                    owned ? 'OWNED' : 'NO SELECTION',
+                    owned ? Colors.lightGreenAccent : Colors.white38,
+                  ),
+                  _tinyVaultChip(
+                    equipped ? 'EQUIPPED' : 'NOT EQUIPPED',
+                    equipped ? Colors.lightBlueAccent : Colors.white54,
+                  ),
+                  if (betaExclusive)
+                    _tinyVaultChip('BETA ONLY', Colors.amberAccent),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                source,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 11,
+                  color: Colors.white54,
+                ),
+              ),
+              if (showAction && item != null) ...[
+                const SizedBox(height: 10),
+                _bannerEquipActions(equipped: equipped, accent: accent),
+              ],
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [showcase, const SizedBox(height: 10), details],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              showcase,
+              const SizedBox(width: 12),
+              Expanded(child: details),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _bannerEquipActions({required bool equipped, required Color accent}) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: equipped ? null : () {},
+        icon: Icon(
+          equipped ? Icons.verified_rounded : Icons.view_day_rounded,
+          size: 17,
+        ),
+        label: Text(equipped ? 'Equipped' : 'Equip'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: accent.withValues(alpha: 0.20),
+          foregroundColor: accent,
+          disabledBackgroundColor: accent.withValues(alpha: 0.12),
+          disabledForegroundColor: accent.withValues(alpha: 0.72),
+          side: BorderSide(color: accent.withValues(alpha: 0.35)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: AppTheme.bodyTextStyle(
+            fontSize: 11,
+            color: accent,
+            isBold: true,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildBadgeInventoryGrid(ArcOperationsUserState userState) {
