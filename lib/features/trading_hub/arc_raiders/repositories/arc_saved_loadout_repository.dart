@@ -39,6 +39,29 @@ class ArcSavedLoadoutRepository {
         );
   }
 
+  Stream<ArcSavedLoadout?> watchFavouriteLoadout() {
+    final collection = _collection;
+    if (collection == null) {
+      return Stream<ArcSavedLoadout?>.value(null);
+    }
+
+    return collection.doc('favourite-loadout').snapshots().map((snapshot) {
+      final data = snapshot.data();
+      if (!snapshot.exists || data == null) return null;
+      return ArcSavedLoadout.fromMap(snapshot.id, data);
+    });
+  }
+
+  Future<ArcSavedLoadout?> loadFavouriteLoadout() async {
+    final collection = _collection;
+    if (collection == null) return null;
+
+    final snapshot = await collection.doc('favourite-loadout').get();
+    final data = snapshot.data();
+    if (!snapshot.exists || data == null) return null;
+    return ArcSavedLoadout.fromMap(snapshot.id, data);
+  }
+
   Future<void> saveLoadout(ArcSavedLoadout loadout) async {
     final collection = _collection;
     if (collection == null) {

@@ -584,15 +584,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         useSafeArea: false,
         showAdBanner: true,
         child: SafeArea(
-          child: StreamBuilder<List<ArcSavedLoadout>>(
-            stream: _savedLoadoutRepository.watchSavedLoadouts(),
+          child: StreamBuilder<ArcSavedLoadout?>(
+            stream: _savedLoadoutRepository.watchFavouriteLoadout(),
             builder: (context, savedSnapshot) {
-              final saved = savedSnapshot.data ?? const <ArcSavedLoadout>[];
-              if (!_loadedSavedState && saved.isNotEmpty) {
+              final savedLoadout = savedSnapshot.data;
+              if (!_loadedSavedState && savedLoadout != null) {
                 _loadedSavedState = true;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
-                  _applySavedLoadout(saved.first);
+                  _applySavedLoadout(savedLoadout);
                 });
               }
 
