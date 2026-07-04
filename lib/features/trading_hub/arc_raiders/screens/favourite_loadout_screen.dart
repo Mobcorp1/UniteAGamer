@@ -188,33 +188,78 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     return null;
   }
 
+  List<String> _normalisedAttachmentList({
+    required String weaponName,
+    required List<String> savedAttachments,
+  }) {
+    final weapon = _weaponSpec(weaponName);
+    final slots = weapon.slots.isEmpty
+        ? const <String>['Special']
+        : weapon.slots;
+    final slotCount = slots.length.clamp(1, 6).toInt();
+
+    return List<String>.generate(slotCount, (index) {
+      final slotLabel = index < slots.length ? slots[index] : 'Special';
+      if (index >= savedAttachments.length) return 'Empty Slot';
+
+      final attachmentName = savedAttachments[index];
+      if (attachmentName == 'Empty Slot' || attachmentName.trim().isEmpty) {
+        return 'Empty Slot';
+      }
+
+      return ArcLoadoutCompatibilityRegistry.isAttachmentCompatible(
+            weaponName: weaponName,
+            slotLabel: slotLabel,
+            attachmentName: attachmentName,
+          )
+          ? attachmentName
+          : 'Empty Slot';
+    }, growable: true);
+  }
+
+  void _normaliseQuickSlots() {
+    while (_quickSlots.length < 5) {
+      _quickSlots.add('Empty Slot');
+    }
+    if (_quickSlots.length > 5) {
+      _quickSlots.removeRange(5, _quickSlots.length);
+    }
+  }
+
   void _applySavedLoadout(ArcSavedLoadout loadout) {
     setState(() {
       _buildName = loadout.name;
       _playStyle = loadout.playStyle;
       _augment = loadout.augment;
+      _shield = loadout.shield ?? _shield;
       _primaryWeapon = loadout.primaryWeapon;
       _secondaryWeapon = loadout.secondaryWeapon;
       _primaryAttachments
         ..clear()
-        ..addAll(loadout.primaryAttachments);
+        ..addAll(
+          _normalisedAttachmentList(
+            weaponName: loadout.primaryWeapon,
+            savedAttachments: loadout.primaryAttachments,
+          ),
+        );
       _secondaryAttachments
         ..clear()
-        ..addAll(loadout.secondaryAttachments);
+        ..addAll(
+          _normalisedAttachmentList(
+            weaponName: loadout.secondaryWeapon,
+            savedAttachments: loadout.secondaryAttachments,
+          ),
+        );
       _quickSlots
         ..clear()
         ..addAll([...loadout.equipment, ...loadout.consumables]);
-      while (_quickSlots.length < 5) {
-        _quickSlots.add('Empty Slot');
-      }
-      if (_quickSlots.length > 5) {
-        _quickSlots.removeRange(5, _quickSlots.length);
-      }
+      _normaliseQuickSlots();
     });
   }
 
   Future<void> _saveLoadout() async {
     final now = DateTime.now();
+    _normaliseQuickSlots();
     final equipment = _quickSlots
         .where((slot) => slot != 'Empty Slot')
         .take(2)
@@ -223,6 +268,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         .where((slot) => slot != 'Empty Slot')
         .skip(2)
         .toList(growable: false);
+    final primaryAttachments = _normalisedAttachmentList(
+      weaponName: _primaryWeapon,
+      savedAttachments: _primaryAttachments,
+    );
+    final secondaryAttachments = _normalisedAttachmentList(
+      weaponName: _secondaryWeapon,
+      savedAttachments: _secondaryAttachments,
+    );
 
     final loadout = ArcSavedLoadout(
       id: 'favourite-loadout',
@@ -230,10 +283,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       category: ArcLoadoutCategory.saved,
       playStyle: _playStyle,
       augment: _augment,
+      shield: _shield,
       primaryWeapon: _primaryWeapon,
-      primaryAttachments: List<String>.from(_primaryAttachments),
+      primaryAttachments: primaryAttachments,
       secondaryWeapon: _secondaryWeapon,
-      secondaryAttachments: List<String>.from(_secondaryAttachments),
+      secondaryAttachments: secondaryAttachments,
       equipment: equipment,
       consumables: consumables,
       createdAt: now,

@@ -181,6 +181,7 @@ class ArcSavedLoadoutSeed {
     required this.category,
     required this.description,
     required this.augment,
+    this.shield,
     required this.primaryWeapon,
     required this.secondaryWeapon,
     required this.equipment,
@@ -191,6 +192,7 @@ class ArcSavedLoadoutSeed {
   final ArcLoadoutCategory category;
   final String description;
   final String augment;
+  final String? shield;
   final String primaryWeapon;
   final String secondaryWeapon;
   final List<String> equipment;
@@ -259,6 +261,7 @@ class ArcSavedLoadout {
     required this.category,
     required this.playStyle,
     required this.augment,
+    this.shield,
     required this.primaryWeapon,
     required this.primaryAttachments,
     required this.secondaryWeapon,
@@ -274,6 +277,7 @@ class ArcSavedLoadout {
   final ArcLoadoutCategory category;
   final ArcPlayerPlayStyle playStyle;
   final String augment;
+  final String? shield;
   final String primaryWeapon;
   final List<String> primaryAttachments;
   final String secondaryWeapon;
@@ -289,6 +293,7 @@ class ArcSavedLoadout {
       'category': category.name,
       'playStyle': playStyle.name,
       'augment': augment,
+      'shield': shield,
       'primaryWeapon': primaryWeapon,
       'primaryAttachments': primaryAttachments,
       'secondaryWeapon': secondaryWeapon,
@@ -334,6 +339,7 @@ class ArcSavedLoadout {
       category: parseCategory(data['category']?.toString()),
       playStyle: parsePlayStyle(data['playStyle']?.toString()),
       augment: (data['augment'] ?? 'Survivor').toString(),
+      shield: (data['shield'] ?? 'Shield Level 2').toString(),
       primaryWeapon: (data['primaryWeapon'] ?? 'Anvil').toString(),
       primaryAttachments: parseList(data['primaryAttachments']),
       secondaryWeapon: (data['secondaryWeapon'] ?? 'Stitcher').toString(),
