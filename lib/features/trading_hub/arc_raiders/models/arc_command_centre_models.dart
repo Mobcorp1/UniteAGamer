@@ -1,0 +1,200 @@
+enum ArcCommandStatus { critical, warning, active, ready, neutral, success }
+
+enum ArcCommandActionIntent {
+  route,
+  favouriteLoadout,
+  toolDeck,
+  smartTrade,
+  nomadicTrader,
+  placeholder,
+}
+
+class ArcCommandAction {
+  const ArcCommandAction({
+    required this.label,
+    this.routeName,
+    this.intent = ArcCommandActionIntent.route,
+    this.placeholderMessage,
+  });
+
+  final String label;
+  final String? routeName;
+  final ArcCommandActionIntent intent;
+  final String? placeholderMessage;
+}
+
+class ArcCommandPriority {
+  const ArcCommandPriority({
+    required this.title,
+    required this.explanation,
+    required this.progressLabel,
+    required this.statusTag,
+    required this.detail,
+    required this.status,
+    required this.primaryAction,
+    this.secondaryAction,
+  });
+
+  final String title;
+  final String explanation;
+  final String progressLabel;
+  final String statusTag;
+  final String detail;
+  final ArcCommandStatus status;
+  final ArcCommandAction primaryAction;
+  final ArcCommandAction? secondaryAction;
+}
+
+class ArcCommandSnapshotMetric {
+  const ArcCommandSnapshotMetric({
+    required this.label,
+    required this.value,
+    required this.detail,
+    required this.status,
+  });
+
+  final String label;
+  final String value;
+  final String detail;
+  final ArcCommandStatus status;
+}
+
+class ArcCommandObjective {
+  const ArcCommandObjective({
+    required this.title,
+    required this.reason,
+    required this.statusLabel,
+    required this.progressText,
+    required this.status,
+    required this.action,
+  });
+
+  final String title;
+  final String reason;
+  final String statusLabel;
+  final String progressText;
+  final ArcCommandStatus status;
+  final ArcCommandAction action;
+}
+
+class ArcCommandAlert {
+  const ArcCommandAlert({
+    required this.title,
+    required this.body,
+    required this.statusLabel,
+    required this.status,
+    required this.action,
+  });
+
+  final String title;
+  final String body;
+  final String statusLabel;
+  final ArcCommandStatus status;
+  final ArcCommandAction action;
+}
+
+class ArcCommandRecommendation {
+  const ArcCommandRecommendation({
+    required this.title,
+    required this.body,
+    required this.action,
+  });
+
+  final String title;
+  final String body;
+  final ArcCommandAction action;
+}
+
+class ArcCommandChecklistItem {
+  const ArcCommandChecklistItem({
+    required this.id,
+    required this.label,
+    required this.reason,
+    required this.action,
+    this.doneByDefault = false,
+  });
+
+  final String id;
+  final String label;
+  final String reason;
+  final ArcCommandAction action;
+  final bool doneByDefault;
+}
+
+class ArcCommandResourceStatus {
+  const ArcCommandResourceStatus({
+    required this.name,
+    required this.ownedLabel,
+    required this.requiredLabel,
+    required this.status,
+  });
+
+  final String name;
+  final String ownedLabel;
+  final String requiredLabel;
+  final ArcCommandStatus status;
+}
+
+class ArcCommandTradeSummary {
+  const ArcCommandTradeSummary({
+    required this.lookingFor,
+    required this.offering,
+    required this.actions,
+  });
+
+  final List<String> lookingFor;
+  final List<String> offering;
+  final List<ArcCommandAction> actions;
+}
+
+class ArcCommandSummaryPanel {
+  const ArcCommandSummaryPanel({
+    required this.title,
+    required this.statusLabel,
+    required this.body,
+    required this.details,
+    required this.status,
+    required this.action,
+  });
+
+  final String title;
+  final String statusLabel;
+  final String body;
+  final List<String> details;
+  final ArcCommandStatus status;
+  final ArcCommandAction action;
+}
+
+class ArcCommandCentreState {
+  const ArcCommandCentreState({
+    required this.priority,
+    required this.snapshots,
+    required this.objectives,
+    required this.alerts,
+    required this.recommendations,
+    required this.checklist,
+    required this.resources,
+    required this.tradeSummary,
+    required this.blueprintSummary,
+    required this.questSummary,
+    required this.benchSummary,
+    required this.weeklyTraderSummary,
+    required this.communitySummary,
+    required this.statisticsSummary,
+  });
+
+  final ArcCommandPriority priority;
+  final List<ArcCommandSnapshotMetric> snapshots;
+  final List<ArcCommandObjective> objectives;
+  final List<ArcCommandAlert> alerts;
+  final List<ArcCommandRecommendation> recommendations;
+  final List<ArcCommandChecklistItem> checklist;
+  final List<ArcCommandResourceStatus> resources;
+  final ArcCommandTradeSummary tradeSummary;
+  final ArcCommandSummaryPanel blueprintSummary;
+  final ArcCommandSummaryPanel questSummary;
+  final ArcCommandSummaryPanel benchSummary;
+  final ArcCommandSummaryPanel weeklyTraderSummary;
+  final ArcCommandSummaryPanel communitySummary;
+  final ArcCommandSummaryPanel statisticsSummary;
+}
