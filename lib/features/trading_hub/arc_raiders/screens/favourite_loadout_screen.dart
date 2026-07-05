@@ -217,12 +217,45 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     }, growable: true);
   }
 
+  List<String> _normalisedQuickSlotSegment({
+    required List<String> savedItems,
+    required ArcLoadoutSlotType expectedType,
+    required int length,
+  }) {
+    final normalised = <String>[];
+    for (final item in savedItems) {
+      final value = item.trim();
+      if (value.isEmpty || value == 'Empty Slot') continue;
+      final option = _optionForName(value);
+      if (option == null || option.type != expectedType) continue;
+      normalised.add(value);
+      if (normalised.length == length) break;
+    }
+
+    while (normalised.length < length) {
+      normalised.add('Empty Slot');
+    }
+    return normalised;
+  }
+
   void _normaliseQuickSlots() {
     while (_quickSlots.length < 5) {
       _quickSlots.add('Empty Slot');
     }
     if (_quickSlots.length > 5) {
       _quickSlots.removeRange(5, _quickSlots.length);
+    }
+
+    for (var index = 0; index < _quickSlots.length; index++) {
+      final item = _quickSlots[index];
+      if (item == 'Empty Slot') continue;
+      final option = _optionForName(item);
+      final expectedType = index < 2
+          ? ArcLoadoutSlotType.equipment
+          : ArcLoadoutSlotType.consumables;
+      if (option == null || option.type != expectedType) {
+        _quickSlots[index] = 'Empty Slot';
+      }
     }
   }
 
@@ -252,7 +285,18 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         );
       _quickSlots
         ..clear()
-        ..addAll([...loadout.equipment, ...loadout.consumables]);
+        ..addAll([
+          ..._normalisedQuickSlotSegment(
+            savedItems: loadout.equipment,
+            expectedType: ArcLoadoutSlotType.equipment,
+            length: 2,
+          ),
+          ..._normalisedQuickSlotSegment(
+            savedItems: loadout.consumables,
+            expectedType: ArcLoadoutSlotType.consumables,
+            length: 3,
+          ),
+        ]);
       _normaliseQuickSlots();
     });
   }
@@ -261,12 +305,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final now = DateTime.now();
     _normaliseQuickSlots();
     final equipment = _quickSlots
-        .where((slot) => slot != 'Empty Slot')
         .take(2)
+        .where((slot) => slot != 'Empty Slot')
         .toList(growable: false);
     final consumables = _quickSlots
-        .where((slot) => slot != 'Empty Slot')
         .skip(2)
+        .where((slot) => slot != 'Empty Slot')
         .toList(growable: false);
     final primaryAttachments = _normalisedAttachmentList(
       weaponName: _primaryWeapon,
@@ -448,17 +492,28 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   }
 
   Future<void> _pickQuickSlot(int index) async {
+    final equipmentSlot = index < 2;
+    final expectedType = equipmentSlot
+        ? ArcLoadoutSlotType.equipment
+        : ArcLoadoutSlotType.consumables;
+    final slotNumber = equipmentSlot ? index + 1 : index - 1;
+    final sourceOptions = equipmentSlot
+        ? ArcLoadoutSeedData.equipment.where(
+            (option) => !option.name.toLowerCase().contains('shield'),
+          )
+        : ArcLoadoutSeedData.consumables;
     final options = <ArcLoadoutOption>[
-      ...ArcLoadoutSeedData.equipment,
-      ...ArcLoadoutSeedData.consumables,
-      const ArcLoadoutOption(
+      ...sourceOptions,
+      ArcLoadoutOption(
         name: 'Empty Slot',
-        type: ArcLoadoutSlotType.equipment,
+        type: expectedType,
         description: 'Leave this slot empty for now.',
       ),
     ];
     final selected = await _showPicker<ArcLoadoutOption>(
-      title: 'Select Quick Slot ${index + 1}',
+      title: equipmentSlot
+          ? 'Select Equipment Slot $slotNumber'
+          : 'Select Consumable Slot $slotNumber',
       items: options,
       labelBuilder: (option) => option.name,
       subtitleBuilder: (option) => option.description,
@@ -473,10 +528,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           owned: true,
           icon: empty
               ? Icons.remove_circle_outline_rounded
-              : Icons.inventory_2_rounded,
+              : equipmentSlot
+              ? Icons.inventory_2_rounded
+              : Icons.medical_services_rounded,
         );
       },
       selectedBuilder: (option) => option.name == _quickSlots[index],
+      footerText: equipmentSlot
+          ? 'Equipment slots only show deployable utility items. Shield is managed in the shield card.'
+          : 'Consumable slots only show healing and throwable consumables so saved loadouts stay valid.',
     );
     if (selected == null) return;
     setState(() => _quickSlots[index] = selected.name);
@@ -1051,11 +1111,24 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('QUICK SLOTS x5', Colors.amberAccent),
+          _sectionHeader('EQUIPMENT + QUICK SLOTS', Colors.amberAccent),
+          const SizedBox(height: 6),
+          Text(
+            '2 equipment slots • 3 consumable slots',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.56),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 10),
           ...List.generate(5, (index) {
             final item = _quickSlots[index];
             final option = _optionForName(item);
+            final equipmentSlot = index < 2;
+            final slotLabel = equipmentSlot
+                ? 'Equipment ${index + 1}'
+                : 'Consumable ${index - 1}';
             final owned = _isOwnedOrNotBlueprint(
               itemName: item,
               blueprintBased: option?.blueprintBased ?? false,
@@ -1066,11 +1139,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               child: _compactItemRow(
                 index: index + 1,
                 label: item,
-                subtitle: option?.description ?? 'Tap to assign item.',
+                subtitle: option?.description ?? 'Tap to assign $slotLabel.',
+                slotLabel: slotLabel,
                 imageAsset: _assetForLoadoutItem(
                   item,
                   option == null
-                      ? ArcLoadoutAssetKind.equipment
+                      ? equipmentSlot
+                            ? ArcLoadoutAssetKind.equipment
+                            : ArcLoadoutAssetKind.equipment
                       : _assetKindForOption(option),
                 ),
                 accent: Colors.amberAccent,
@@ -1377,6 +1453,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required int index,
     required String label,
     required String subtitle,
+    required String slotLabel,
     required String? imageAsset,
     required Color accent,
     required bool owned,
@@ -1419,6 +1496,18 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    slotLabel.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: accent.withValues(alpha: 0.72),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     label,
                     maxLines: 1,
