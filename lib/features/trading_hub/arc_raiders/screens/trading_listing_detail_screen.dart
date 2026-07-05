@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
@@ -116,6 +119,55 @@ class TradingListingDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _intelligencePanel(ArcTradeListingScore intelligence) {
+    return Container(
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: intelligence.isActionable
+            ? AppTheme.neonCyan.withValues(alpha: 0.34)
+            : AppTheme.tradingSoftBorder,
+      ),
+      padding: AppTheme.sectionCardPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _chip(intelligence.label, AppTheme.neonPink),
+              _chip('Intel ${intelligence.score}%', AppTheme.neonCyan),
+              _chip(intelligence.recommendation, Colors.amberAccent),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Text(
+            intelligence.reason,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: Colors.white70,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            intelligence.reputationHint,
+            style: TextStyle(color: AppTheme.tradingMutedText, height: 1.3),
+          ),
+          if (intelligence.reasons.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: intelligence.reasons
+                  .map((reason) => _chip(reason, AppTheme.neonCyan))
+                  .toList(growable: false),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final repository = TradingRepository();
@@ -148,134 +200,183 @@ class TradingListingDetailScreen extends StatelessWidget {
                   maxWidth: AppTheme.pageMaxWidth,
                 ),
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                  padding: EdgeInsets.zero,
                   children: [
-                    Container(
-                      decoration: AppTheme.tradingCardDecoration(),
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            listing.title,
-                            style: AppTheme.tradingHeading(fontSize: 26),
-                          ),
-                          const SizedBox(height: AppTheme.spaceM),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
+                    StreamBuilder<Map<String, ArcBlueprintState>>(
+                      stream: repository.watchBlueprintStates(),
+                      builder: (context, stateSnapshot) {
+                        final intelligence = const ArcTradeIntelligenceEngine()
+                            .scoreListing(
+                              listing: listing,
+                              blueprintStates:
+                                  stateSnapshot.data ??
+                                  const <String, ArcBlueprintState>{},
+                              currentUid: repository.currentUid,
+                            );
+
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                          child: Column(
                             children: [
-                              _chip(listing.riskLabel, listing.riskColor()),
-                              _chip(listing.region, AppTheme.neonCyan),
-                              _chip(listing.playWindow, AppTheme.neonPink),
+                              Container(
+                                decoration: AppTheme.tradingCardDecoration(),
+                                padding: const EdgeInsets.all(18),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      listing.title,
+                                      style: AppTheme.tradingHeading(
+                                        fontSize: 26,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppTheme.spaceM),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        _chip(
+                                          listing.riskLabel,
+                                          listing.riskColor(),
+                                        ),
+                                        _chip(
+                                          listing.region,
+                                          AppTheme.neonCyan,
+                                        ),
+                                        _chip(
+                                          listing.playWindow,
+                                          AppTheme.neonPink,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: AppTheme.spaceM),
+                                    TradingCosmeticIdentityStrip(
+                                      repository: repository,
+                                      uid: listing.ownerUid,
+                                      displayName: listing.traderName,
+                                      subtitle: [
+                                        if (listing.gamerTag.isNotEmpty)
+                                          listing.gamerTag,
+                                        if (listing
+                                            .preferredPlatform
+                                            .isNotEmpty)
+                                          listing.preferredPlatform,
+                                        listing.reputationSummary,
+                                      ].join(' - '),
+                                    ),
+                                    const SizedBox(height: AppTheme.spaceM),
+                                    _section('Offering', offeredList),
+                                    if (listing.listingType ==
+                                        TradingListingType.openToOffers)
+                                      _row('Looking for', 'Open to offers')
+                                    else
+                                      _section('Looking for', wantedList),
+                                    _row(
+                                      'Accepts',
+                                      [
+                                        if (listing.acceptsBlueprints)
+                                          'Blueprints',
+                                        if (listing.acceptsSeeds) 'Seeds',
+                                        if (listing.acceptsResources)
+                                          'Resources',
+                                      ].join(' - '),
+                                    ),
+                                    if (structureBits.isNotEmpty)
+                                      _row(
+                                        'Trade structure',
+                                        structureBits.join(' - '),
+                                      ),
+                                    if (listing.notes.isNotEmpty)
+                                      _row('Notes', listing.notes),
+                                    const SizedBox(height: 10),
+                                    Divider(color: AppTheme.tradingDivider),
+                                    const SizedBox(height: 10),
+                                    _row('Trader', listing.traderName),
+                                    _row(
+                                      'Gamertag',
+                                      listing.gamerTag.isEmpty
+                                          ? 'Not set'
+                                          : listing.gamerTag,
+                                    ),
+                                    _row(
+                                      'Preferred Platform',
+                                      listing.preferredPlatform.isEmpty
+                                          ? 'Not set'
+                                          : listing.preferredPlatform,
+                                    ),
+                                    _row(
+                                      'Reputation',
+                                      '${listing.completedTrades} completed - ${listing.noShows} no-shows - ${listing.betrayalFlags} flags',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppTheme.spaceM),
+                              _intelligencePanel(intelligence),
+                              const SizedBox(height: AppTheme.spaceM),
+                              Container(
+                                decoration: AppTheme.tradingCardDecoration(),
+                                padding: AppTheme.sectionCardPadding,
+                                child: Text(
+                                  'Current best practice: agree the exact split in chat first. If the listing is bundle only, treat it as one full trade. If mix-and-match is allowed, confirm exactly which items are swapping before you drop anything.',
+                                  style: TextStyle(
+                                    color: AppTheme.tradingMutedText,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: AppTheme.spaceM),
-                          TradingCosmeticIdentityStrip(
-                            repository: repository,
-                            uid: listing.ownerUid,
-                            displayName: listing.traderName,
-                            subtitle: [
-                              if (listing.gamerTag.isNotEmpty) listing.gamerTag,
-                              if (listing.preferredPlatform.isNotEmpty)
-                                listing.preferredPlatform,
-                              listing.reputationSummary,
-                            ].join(' - '),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => TradingMakeOfferScreen(
+                                      listing: listing,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.neonPink,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                'Make Offer',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: AppTheme.spaceM),
-                          _section('Offering', offeredList),
-                          if (listing.listingType ==
-                              TradingListingType.openToOffers)
-                            _row('Looking for', 'Open to offers')
-                          else
-                            _section('Looking for', wantedList),
-                          _row(
-                            'Accepts',
-                            [
-                              if (listing.acceptsBlueprints) 'Blueprints',
-                              if (listing.acceptsSeeds) 'Seeds',
-                              if (listing.acceptsResources) 'Resources',
-                            ].join(' - '),
-                          ),
-                          if (structureBits.isNotEmpty)
-                            _row('Trade structure', structureBits.join(' - ')),
-                          if (listing.notes.isNotEmpty)
-                            _row('Notes', listing.notes),
-                          const SizedBox(height: 10),
-                          Divider(color: AppTheme.tradingDivider),
-                          const SizedBox(height: 10),
-                          _row('Trader', listing.traderName),
-                          _row(
-                            'Gamertag',
-                            listing.gamerTag.isEmpty
-                                ? 'Not set'
-                                : listing.gamerTag,
-                          ),
-                          _row(
-                            'Preferred Platform',
-                            listing.preferredPlatform.isEmpty
-                                ? 'Not set'
-                                : listing.preferredPlatform,
-                          ),
-                          _row(
-                            'Reputation',
-                            '${listing.completedTrades} completed - ${listing.noShows} no-shows - ${listing.betrayalFlags} flags',
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _requestCollectionView(context),
+                              icon: const Icon(Icons.visibility_outlined),
+                              label: const Text('Request Dupes'),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Container(
-                      decoration: AppTheme.tradingCardDecoration(),
-                      padding: AppTheme.sectionCardPadding,
-                      child: Text(
-                        'Current best practice: agree the exact split in chat first. If the listing is bundle only, treat it as one full trade. If mix-and-match is allowed, confirm exactly which items are swapping before you drop anything.',
-                        style: TextStyle(
-                          color: AppTheme.tradingMutedText,
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      TradingMakeOfferScreen(listing: listing),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.neonPink,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: const Text(
-                              'Make Offer',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _requestCollectionView(context),
-                            icon: const Icon(Icons.visibility_outlined),
-                            label: const Text('Request Dupes'),
-                          ),
-                        ),
-                      ],
-                    ),
+                    const SizedBox(height: 104),
                   ],
                 ),
               ),

@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
@@ -36,6 +37,8 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final ArcTraderProfileRepository _profileRepository =
       ArcTraderProfileRepository();
+  final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
+      const ArcTradeIntelligenceEngine();
   final TextEditingController _searchController = TextEditingController();
 
   bool _showOpenToOffersOnly = false;
@@ -209,7 +212,16 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
     );
   }
 
-  Widget _listingCard(BuildContext context, TradingListing listing) {
+  Widget _listingCard(
+    BuildContext context,
+    TradingListing listing,
+    Map<String, ArcBlueprintState> states,
+  ) {
+    final intelligence = _tradeIntelligenceEngine.scoreListing(
+      listing: listing,
+      blueprintStates: states,
+      currentUid: _repository.currentUid,
+    );
     final subtitleBits = [
       if (listing.tradeAsBundle) 'Bundle only' else 'Mix and match',
       if (listing.allowPartialOffers) 'Partial offers on',
@@ -254,8 +266,25 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                   _metaChip(listing.region),
                   _metaChip(listing.playWindow),
                   _metaChip(_expiryText(listing.expiresAt)),
+                  _pill(intelligence.label, AppTheme.neonPink),
+                  _metaChip('Intel ${intelligence.score}%'),
                 ],
               ),
+              if (intelligence.reason.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spaceS),
+                Text(
+                  intelligence.reason,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: intelligence.isActionable
+                        ? AppTheme.neonCyan
+                        : AppTheme.tradingMutedText,
+                    isBold: intelligence.isActionable,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppTheme.spaceM),
               Text(
                 'Offering',
@@ -540,10 +569,33 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                                   );
                                 }
 
-                                final listings = _applyFilters(
-                                  snapshot.data ?? const [],
-                                  missingBlueprintNames,
-                                );
+                                final listings =
+                                    _applyFilters(
+                                      snapshot.data ?? const [],
+                                      missingBlueprintNames,
+                                    )..sort((a, b) {
+                                      final aScore = _tradeIntelligenceEngine
+                                          .scoreListing(
+                                            listing: a,
+                                            blueprintStates: states,
+                                            currentUid: _repository.currentUid,
+                                          )
+                                          .score;
+                                      final bScore = _tradeIntelligenceEngine
+                                          .scoreListing(
+                                            listing: b,
+                                            blueprintStates: states,
+                                            currentUid: _repository.currentUid,
+                                          )
+                                          .score;
+                                      final scoreCompare = bScore.compareTo(
+                                        aScore,
+                                      );
+                                      if (scoreCompare != 0) {
+                                        return scoreCompare;
+                                      }
+                                      return a.expiresAt.compareTo(b.expiresAt);
+                                    });
 
                                 if (listings.isEmpty) {
                                   return _buildEmptyState(
@@ -553,8 +605,11 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
 
                                 return ListView.builder(
                                   itemCount: listings.length,
-                                  itemBuilder: (context, index) =>
-                                      _listingCard(context, listings[index]),
+                                  itemBuilder: (context, index) => _listingCard(
+                                    context,
+                                    listings[index],
+                                    states,
+                                  ),
                                 );
                               },
                             ),

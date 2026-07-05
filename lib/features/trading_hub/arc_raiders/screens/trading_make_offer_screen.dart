@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
@@ -19,6 +21,8 @@ class TradingMakeOfferScreen extends StatefulWidget {
 class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   final _formKey = GlobalKey<FormState>();
   final TradingRepository _repository = TradingRepository();
+  final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
+      const ArcTradeIntelligenceEngine();
 
   final TextEditingController _blueprintController = TextEditingController();
   final TextEditingController _resourcesController = TextEditingController();
@@ -56,7 +60,13 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           if (categoryCompare != 0) return categoryCompare;
           return a.name.toLowerCase().compareTo(b.name.toLowerCase());
         });
+    _blueprintController.addListener(_onOfferInputChanged);
+    _resourcesController.addListener(_onOfferInputChanged);
     _loadMatchingDupes();
+  }
+
+  void _onOfferInputChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadMatchingDupes() async {
@@ -86,6 +96,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
   @override
   void dispose() {
+    _blueprintController.removeListener(_onOfferInputChanged);
+    _resourcesController.removeListener(_onOfferInputChanged);
     _blueprintController.dispose();
     _resourcesController.dispose();
     _noteController.dispose();
@@ -204,6 +216,80 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
             ),
           )
           .toList(growable: false),
+    );
+  }
+
+  List<String> _manualBlueprintOfferItems() {
+    return _blueprintController.text
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  Widget _offerIntelligenceCard() {
+    final score = _tradeIntelligenceEngine.scoreOfferForListing(
+      listing: widget.listing,
+      offeredBlueprintNames: _manualBlueprintOfferItems(),
+      offeredTradeItemNames: _selectedTradeItems
+          .map((item) => item.name)
+          .toList(growable: false),
+      seedTotal: _seedTotal,
+      includesResources: _includesResources,
+      resourceText: _resourcesController.text,
+    );
+
+    return _sectionCard(
+      title: 'Offer Intelligence',
+      child: _offerScoreContent(score),
+    );
+  }
+
+  Widget _offerScoreContent(ArcOfferValueScore score) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _scorePill(score.label, AppTheme.neonPink),
+            _scorePill('Score ${score.score}%', AppTheme.neonCyan),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spaceM),
+        Text(
+          score.summary,
+          style: AppTheme.bodyTextStyle(
+            fontSize: 13,
+            color: Colors.white70,
+            isBold: true,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        for (final hint in score.hints) ...[
+          Text(
+            '- $hint',
+            style: TextStyle(color: AppTheme.tradingMutedText, height: 1.3),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ],
+    );
+  }
+
+  Widget _scorePill(String label, Color color) {
+    return Container(
+      padding: AppTheme.pillPadding,
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 
@@ -604,6 +690,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                     .toList(growable: false),
                               ),
                       ),
+                      if (!listing.wantsNothing) _offerIntelligenceCard(),
                       _sectionCard(
                         title: 'Your Offer',
                         child: Column(

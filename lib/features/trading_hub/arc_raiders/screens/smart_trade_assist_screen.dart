@@ -3,7 +3,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/fou
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/arc_blueprint_source_of_truth_service.dart';
@@ -23,6 +25,8 @@ class SmartTradeAssistScreen extends StatefulWidget {
 class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   final TradingRepository _repository = TradingRepository();
   final SmartTradeAssistEngine _engine = const SmartTradeAssistEngine();
+  final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
+      const ArcTradeIntelligenceEngine();
   final ArcBlueprintSourceOfTruthService _truthService =
       const ArcBlueprintSourceOfTruthService();
 
@@ -413,6 +417,11 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
               builder: (context, listingSnapshot) {
                 final listings =
                     listingSnapshot.data ?? const <TradingListing>[];
+                final intelligence = _tradeIntelligenceEngine.buildSummary(
+                  blueprintStates: states,
+                  activeListings: listings,
+                  currentUid: _repository.currentUid,
+                );
 
                 return ListView(
                   padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -425,6 +434,8 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
                           ? null
                           : () => _createAllListings(opportunities),
                     ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    _TradeIntelligenceSummaryCard(summary: intelligence),
                     const SizedBox(height: AppTheme.spaceM),
                     if (opportunities.isEmpty)
                       const _EmptyStateCard()
@@ -602,6 +613,113 @@ class _SummaryCard extends StatelessWidget {
           _MetricPill(label: 'Missing fallback', value: missingFallbacks),
           _MetricPill(label: 'Resource bundles', value: resourceFallbacks),
         ],
+      ),
+    );
+  }
+}
+
+class _TradeIntelligenceSummaryCard extends StatelessWidget {
+  const _TradeIntelligenceSummaryCard({required this.summary});
+
+  final ArcTradeIntelligenceSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final topSuggestion = summary.suggestions.isEmpty
+        ? null
+        : summary.suggestions.first;
+    final topDuplicate = summary.duplicateScores.isEmpty
+        ? null
+        : summary.duplicateScores.first;
+    final topWanted = summary.wantedScores.isEmpty
+        ? null
+        : summary.wantedScores.first;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        radius: 16,
+        borderColor: summary.hasSuggestions
+            ? AppTheme.neonCyan.withValues(alpha: 0.34)
+            : AppTheme.tradingSoftBorder,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.radar_rounded, color: AppTheme.neonCyan),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: Text(
+                  'Trade Intelligence',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 20,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+              ),
+              _MetricPill(label: 'Matches', value: summary.suggestions.length),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          if (topSuggestion == null)
+            Text(
+              'No scored live match yet. Add duplicate blueprints and wanted targets to unlock stronger suggestions.',
+              style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
+            )
+          else ...[
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _textPill(topSuggestion.title, AppTheme.neonPink),
+                _textPill(
+                  '${topSuggestion.confidence}% confidence',
+                  AppTheme.neonCyan,
+                ),
+                _textPill('${topSuggestion.priority} priority', Colors.amber),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spaceS),
+            Text(
+              topSuggestion.reason,
+              style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (topDuplicate != null)
+                _textPill(
+                  'Best dupe: ${topDuplicate.label} ${topDuplicate.score}%',
+                  AppTheme.neonPink,
+                ),
+              if (topWanted != null)
+                _textPill(
+                  'Top want: ${topWanted.label} ${topWanted.score}%',
+                  AppTheme.neonCyan,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _textPill(String label, Color color) {
+    return Container(
+      padding: AppTheme.pillPadding,
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
       ),
     );
   }

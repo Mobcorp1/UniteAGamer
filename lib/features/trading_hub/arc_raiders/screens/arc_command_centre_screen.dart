@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
@@ -39,6 +41,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
   final TradingRepository _tradingRepository = TradingRepository();
+  final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
+      const ArcTradeIntelligenceEngine();
   late final Stream<Map<String, ArcBlueprintState>> _blueprintStatesStream =
       _blueprintRepository.watchMyBlueprintStates();
   late final Stream<List<ArcSavedLoadout>> _loadoutsStream = _loadoutRepository
@@ -179,6 +183,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
                             notificationsSnapshot.data ??
                             const <TradingNotification>[];
                         final tradeActivity = _tradeActivityFrom(
+                          blueprintStates: blueprintStates,
                           activeListings: activeListings,
                           myListings: myListings,
                           offers: offers,
@@ -205,12 +210,18 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   }
 
   ArcCommandTradeActivity _tradeActivityFrom({
+    required Map<String, ArcBlueprintState> blueprintStates,
     required List<TradingListing> activeListings,
     required List<TradingListing> myListings,
     required List<TradingOffer> offers,
     required List<TradingSession> sessions,
     required List<TradingNotification> notifications,
   }) {
+    final intelligence = _tradeIntelligenceEngine.buildSummary(
+      blueprintStates: blueprintStates,
+      activeListings: activeListings,
+      currentUid: _tradingRepository.currentUid,
+    );
     final activeMyListings = myListings.where((listing) => listing.isLive);
     final pendingOffers = offers.where(
       (offer) => offer.status == TradingOfferStatus.pending,
@@ -235,7 +246,15 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       activeSessions: activeSessions.length,
       readySessions: readySessions.length,
       unreadNotifications: unreadNotifications.length,
+      intelligenceMatches: intelligence.suggestions.length,
+      bestIntelligenceConfidence: intelligence.bestConfidence,
+      bestIntelligenceLabel: _bestIntelligenceLabel(intelligence),
     );
+  }
+
+  String _bestIntelligenceLabel(ArcTradeIntelligenceSummary intelligence) {
+    if (intelligence.suggestions.isEmpty) return '';
+    return intelligence.suggestions.first.title;
   }
 
   bool _sessionIsActive(TradingSession session) {

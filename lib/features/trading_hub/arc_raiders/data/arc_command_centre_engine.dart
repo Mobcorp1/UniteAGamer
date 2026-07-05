@@ -193,20 +193,35 @@ class ArcCommandCentreEngine {
           '${tradeActivity.readySessions} ${_plural(tradeActivity.readySessions, 'ready session', 'ready sessions')}',
         if (activeSessionBacklog > 0)
           '$activeSessionBacklog ${_plural(activeSessionBacklog, 'active session', 'active sessions')}',
+        if (tradeActivity.intelligenceMatches > 0)
+          '${tradeActivity.intelligenceMatches} smart ${_plural(tradeActivity.intelligenceMatches, 'match', 'matches')}',
       ];
       return ArcCommandPriority(
-        title: 'Review Trade Activity',
-        explanation:
-            'Trading has live activity that may change your next move.',
-        progressLabel: tradeSignals.join(' - '),
-        statusTag: 'Actionable',
-        detail:
-            'Clear offers and session updates before creating more listings.',
+        title: tradeActivity.hasHighValueIntelligence
+            ? 'Review Smart Trade Match'
+            : 'Review Trade Activity',
+        explanation: tradeActivity.hasHighValueIntelligence
+            ? 'Trade Intelligence found ${tradeActivity.bestIntelligenceLabel.toLowerCase()} worth reviewing.'
+            : 'Trading has live activity that may change your next move.',
+        progressLabel: tradeSignals.isEmpty
+            ? 'Trade signal ready'
+            : tradeSignals.join(' - '),
+        statusTag: tradeActivity.hasHighValueIntelligence
+            ? '${tradeActivity.bestIntelligenceConfidence}% match'
+            : 'Actionable',
+        detail: tradeActivity.hasHighValueIntelligence
+            ? 'Open Smart Trade Assist before creating a fresh listing.'
+            : 'Clear offers and session updates before creating more listings.',
         status: ArcCommandStatus.ready,
-        primaryAction: const ArcCommandAction(
-          label: 'Open Trades',
-          routeName: TraderHubScreen.routeName,
-        ),
+        primaryAction: tradeActivity.hasHighValueIntelligence
+            ? const ArcCommandAction(
+                label: 'Smart Trade',
+                intent: ArcCommandActionIntent.smartTrade,
+              )
+            : const ArcCommandAction(
+                label: 'Open Trades',
+                routeName: TraderHubScreen.routeName,
+              ),
         secondaryAction: tradeActivity.unreadNotifications > 0
             ? const ArcCommandAction(
                 label: 'Notifications',
@@ -392,8 +407,9 @@ class ArcCommandCentreEngine {
         value: tradeActivity.hasActionableTrades
             ? '${tradeActivity.actionableCount} signals'
             : 'Quiet',
-        detail:
-            '${tradeActivity.activeMyListings} live listings - ${tradeActivity.pendingOffers} offers',
+        detail: tradeActivity.bestIntelligenceConfidence > 0
+            ? '${tradeActivity.bestIntelligenceConfidence}% ${tradeActivity.bestIntelligenceLabel}'
+            : '${tradeActivity.activeMyListings} live listings - ${tradeActivity.pendingOffers} offers',
         status: tradeActivity.hasActionableTrades
             ? ArcCommandStatus.ready
             : ArcCommandStatus.neutral,
@@ -594,6 +610,21 @@ class ArcCommandCentreEngine {
         ),
       );
     }
+    if (tradeActivity.hasHighValueIntelligence) {
+      alerts.add(
+        ArcCommandAlert(
+          title: 'High-value smart match',
+          body:
+              '${tradeActivity.bestIntelligenceLabel} scored ${tradeActivity.bestIntelligenceConfidence}%.',
+          statusLabel: 'Smart match',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Smart Trade',
+            intent: ArcCommandActionIntent.smartTrade,
+          ),
+        ),
+      );
+    }
     if (!loadoutSummary.ready) {
       alerts.add(
         ArcCommandAlert(
@@ -696,14 +727,21 @@ class ArcCommandCentreEngine {
     if (tradeActivity.hasActionableTrades) {
       recommendations.add(
         ArcCommandRecommendation(
-          title:
-              'Resolve ${tradeActivity.actionableCount} live trade ${_plural(tradeActivity.actionableCount, 'signal', 'signals')} first.',
-          body:
-              'Offers, sessions and notifications can alter what you should farm or list next.',
-          action: const ArcCommandAction(
-            label: 'Trade Centre',
-            routeName: TraderHubScreen.routeName,
-          ),
+          title: tradeActivity.hasHighValueIntelligence
+              ? 'Review the top Smart Trade match before farming.'
+              : 'Resolve ${tradeActivity.actionableCount} live trade ${_plural(tradeActivity.actionableCount, 'signal', 'signals')} first.',
+          body: tradeActivity.hasHighValueIntelligence
+              ? '${tradeActivity.bestIntelligenceLabel} is currently the strongest trade signal.'
+              : 'Offers, sessions and notifications can alter what you should farm or list next.',
+          action: tradeActivity.hasHighValueIntelligence
+              ? const ArcCommandAction(
+                  label: 'Smart Trade',
+                  intent: ArcCommandActionIntent.smartTrade,
+                )
+              : const ArcCommandAction(
+                  label: 'Trade Centre',
+                  routeName: TraderHubScreen.routeName,
+                ),
         ),
       );
     }
@@ -923,6 +961,8 @@ class ArcCommandCentreEngine {
         '${tradeActivity.pendingOffers} pending ${_plural(tradeActivity.pendingOffers, 'offer', 'offers')}',
       if (tradeActivity.activeSessions > 0)
         '${tradeActivity.activeSessions} active trade ${_plural(tradeActivity.activeSessions, 'session', 'sessions')}',
+      if (tradeActivity.bestIntelligenceConfidence > 0)
+        '${tradeActivity.bestIntelligenceConfidence}% ${tradeActivity.bestIntelligenceLabel}',
       if (prioritizedMissing.isNotEmpty) ...prioritizedMissing.take(3),
       if (prioritizedMissing.isEmpty && tradeActivity.pendingOffers == 0)
         'Blueprint needs not tracked',

@@ -158,6 +158,9 @@ class ArcCommandTradeActivity {
     required this.activeSessions,
     required this.readySessions,
     required this.unreadNotifications,
+    this.intelligenceMatches = 0,
+    this.bestIntelligenceConfidence = 0,
+    this.bestIntelligenceLabel = '',
   });
 
   final int communityListings;
@@ -168,6 +171,9 @@ class ArcCommandTradeActivity {
   final int activeSessions;
   final int readySessions;
   final int unreadNotifications;
+  final int intelligenceMatches;
+  final int bestIntelligenceConfidence;
+  final String bestIntelligenceLabel;
 
   static const empty = ArcCommandTradeActivity(
     communityListings: 0,
@@ -178,12 +184,19 @@ class ArcCommandTradeActivity {
     activeSessions: 0,
     readySessions: 0,
     unreadNotifications: 0,
+    intelligenceMatches: 0,
+    bestIntelligenceConfidence: 0,
+    bestIntelligenceLabel: '',
   );
 
   int get actionableCount =>
-      pendingOffers + activeSessions + unreadNotifications;
+      pendingOffers +
+      activeSessions +
+      unreadNotifications +
+      intelligenceMatches;
 
   bool get hasActionableTrades => actionableCount > 0;
+  bool get hasHighValueIntelligence => bestIntelligenceConfidence >= 75;
 }
 
 class ArcCommandSummaryPanel {
