@@ -4,11 +4,19 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_co
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
@@ -28,6 +36,25 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final ArcSavedLoadoutRepository _loadoutRepository =
       ArcSavedLoadoutRepository();
+  final ArcOperationsRepository _operationsRepository =
+      ArcOperationsRepository();
+  final TradingRepository _tradingRepository = TradingRepository();
+  late final Stream<Map<String, ArcBlueprintState>> _blueprintStatesStream =
+      _blueprintRepository.watchMyBlueprintStates();
+  late final Stream<List<ArcSavedLoadout>> _loadoutsStream = _loadoutRepository
+      .watchSavedLoadouts();
+  late final Stream<ArcOperationsUserState> _operationsStateStream =
+      _operationsRepository.watchUserState();
+  late final Stream<List<TradingListing>> _activeListingsStream =
+      _tradingRepository.watchActiveListings();
+  late final Stream<List<TradingListing>> _myListingsStream = _tradingRepository
+      .watchMyListings();
+  late final Stream<List<TradingOffer>> _myOffersStream = _tradingRepository
+      .watchMyOffers();
+  late final Stream<List<TradingSession>> _mySessionsStream = _tradingRepository
+      .watchMySessions();
+  late final Stream<List<TradingNotification>> _notificationsStream =
+      _tradingRepository.watchNotifications();
   final Map<String, bool> _checklistState = <String, bool>{};
 
   void _handleAction(ArcCommandAction action) {
@@ -55,6 +82,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const NomadicTraderScreen()));
+      case ArcCommandActionIntent.operations:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const OperationsCommandScreen()),
+        );
       case ArcCommandActionIntent.placeholder:
         _showPlaceholder(action);
     }
@@ -84,76 +115,193 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       drawer: const AppDrawer(),
       body: ArcRaidersScreenShell(
         showAdBanner: true,
-        child: StreamBuilder<Map<String, ArcBlueprintState>>(
-          stream: _blueprintRepository.watchMyBlueprintStates(),
-          builder: (context, blueprintSnapshot) {
-            final blueprintStates =
-                blueprintSnapshot.data ?? <String, ArcBlueprintState>{};
-            return StreamBuilder<List<ArcSavedLoadout>>(
-              stream: _loadoutRepository.watchSavedLoadouts(),
-              builder: (context, loadoutSnapshot) {
-                final loadouts =
-                    loadoutSnapshot.data ?? const <ArcSavedLoadout>[];
-                final commandState = ArcCommandCentreEngine.build(
-                  blueprintStates: blueprintStates,
-                  savedLoadouts: loadouts,
-                );
+        child: _buildLiveCommandCentre(),
+      ),
+    );
+  }
 
-                return ArcRaidersPageList(
-                  maxWidth: 1220,
-                  bottomPadding: 68,
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                  children: [
-                    ArcRaidersPageHeader(
-                      title: 'ARC COMMAND CENTRE',
-                      subtitle:
-                          'Priority, blockers, trades and daily actions in one scan.',
-                      icon: Icons.dashboard_customize_rounded,
-                      accent: AppTheme.neonCyan,
-                      trailing: ArcCommandActionButton(
-                        action: const ArcCommandAction(
-                          label: 'Tool Deck',
-                          intent: ArcCommandActionIntent.toolDeck,
-                        ),
-                        accent: AppTheme.neonPink,
-                        compact: true,
-                        onPressed: () => _handleAction(
-                          const ArcCommandAction(
-                            label: 'Tool Deck',
-                            intent: ArcCommandActionIntent.toolDeck,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _priorityHero(commandState.priority),
-                    const SizedBox(height: 10),
-                    _snapshotGrid(commandState.snapshots),
-                    const SizedBox(height: 10),
-                    _objectivesAndAlerts(commandState),
-                    const SizedBox(height: 10),
-                    _responsiveGrid(
-                      minTileWidth: 340,
-                      children: [
-                        _tradeSummary(commandState.tradeSummary),
-                        _summaryPanel(commandState.blueprintSummary),
-                        _summaryPanel(commandState.questSummary),
-                        _summaryPanel(commandState.benchSummary),
-                        _resourceSummary(commandState.resources),
-                        _summaryPanel(commandState.weeklyTraderSummary),
-                        _recommendations(commandState.recommendations),
-                        _dailyChecklist(commandState.checklist),
-                        _summaryPanel(commandState.communitySummary),
-                        _summaryPanel(commandState.statisticsSummary),
-                      ],
-                    ),
-                  ],
+  Widget _buildLiveCommandCentre() {
+    return StreamBuilder<Map<String, ArcBlueprintState>>(
+      stream: _blueprintStatesStream,
+      builder: (context, blueprintSnapshot) {
+        final blueprintStates =
+            blueprintSnapshot.data ?? <String, ArcBlueprintState>{};
+        return StreamBuilder<List<ArcSavedLoadout>>(
+          stream: _loadoutsStream,
+          builder: (context, loadoutSnapshot) {
+            final loadouts = loadoutSnapshot.data ?? const <ArcSavedLoadout>[];
+            return StreamBuilder<ArcOperationsUserState>(
+              stream: _operationsStateStream,
+              builder: (context, operationsSnapshot) {
+                final operationsState =
+                    operationsSnapshot.data ?? ArcOperationsUserState.empty;
+                return _buildWithTradeActivity(
+                  blueprintStates: blueprintStates,
+                  loadouts: loadouts,
+                  operationsState: operationsState,
                 );
               },
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildWithTradeActivity({
+    required Map<String, ArcBlueprintState> blueprintStates,
+    required List<ArcSavedLoadout> loadouts,
+    required ArcOperationsUserState operationsState,
+  }) {
+    return StreamBuilder<List<TradingListing>>(
+      stream: _activeListingsStream,
+      builder: (context, activeListingsSnapshot) {
+        final activeListings =
+            activeListingsSnapshot.data ?? const <TradingListing>[];
+        return StreamBuilder<List<TradingListing>>(
+          stream: _myListingsStream,
+          builder: (context, myListingsSnapshot) {
+            final myListings =
+                myListingsSnapshot.data ?? const <TradingListing>[];
+            return StreamBuilder<List<TradingOffer>>(
+              stream: _myOffersStream,
+              builder: (context, offersSnapshot) {
+                final offers = offersSnapshot.data ?? const <TradingOffer>[];
+                return StreamBuilder<List<TradingSession>>(
+                  stream: _mySessionsStream,
+                  builder: (context, sessionsSnapshot) {
+                    final sessions =
+                        sessionsSnapshot.data ?? const <TradingSession>[];
+                    return StreamBuilder<List<TradingNotification>>(
+                      stream: _notificationsStream,
+                      builder: (context, notificationsSnapshot) {
+                        final notifications =
+                            notificationsSnapshot.data ??
+                            const <TradingNotification>[];
+                        final tradeActivity = _tradeActivityFrom(
+                          activeListings: activeListings,
+                          myListings: myListings,
+                          offers: offers,
+                          sessions: sessions,
+                          notifications: notifications,
+                        );
+                        final commandState = ArcCommandCentreEngine.build(
+                          blueprintStates: blueprintStates,
+                          savedLoadouts: loadouts,
+                          operationsState: operationsState,
+                          tradeActivity: tradeActivity,
+                        );
+                        return _commandCentreContent(commandState);
+                      },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  ArcCommandTradeActivity _tradeActivityFrom({
+    required List<TradingListing> activeListings,
+    required List<TradingListing> myListings,
+    required List<TradingOffer> offers,
+    required List<TradingSession> sessions,
+    required List<TradingNotification> notifications,
+  }) {
+    final activeMyListings = myListings.where((listing) => listing.isLive);
+    final pendingOffers = offers.where(
+      (offer) => offer.status == TradingOfferStatus.pending,
+    );
+    final acceptedOffers = offers.where(
+      (offer) => offer.status == TradingOfferStatus.accepted,
+    );
+    final activeSessions = sessions.where(_sessionIsActive);
+    final readySessions = sessions.where(
+      (session) => session.status == TradingSessionStatus.ready,
+    );
+    final unreadNotifications = notifications.where(
+      (notification) => !notification.read,
+    );
+
+    return ArcCommandTradeActivity(
+      communityListings: activeListings.length,
+      myListings: myListings.length,
+      activeMyListings: activeMyListings.length,
+      pendingOffers: pendingOffers.length,
+      acceptedOffers: acceptedOffers.length,
+      activeSessions: activeSessions.length,
+      readySessions: readySessions.length,
+      unreadNotifications: unreadNotifications.length,
+    );
+  }
+
+  bool _sessionIsActive(TradingSession session) {
+    switch (session.status) {
+      case TradingSessionStatus.pending:
+      case TradingSessionStatus.scheduled:
+      case TradingSessionStatus.ready:
+        return true;
+      case TradingSessionStatus.completed:
+      case TradingSessionStatus.noShow:
+      case TradingSessionStatus.betrayal:
+      case TradingSessionStatus.cancelled:
+        return false;
+    }
+  }
+
+  Widget _commandCentreContent(ArcCommandCentreState commandState) {
+    return ArcRaidersPageList(
+      maxWidth: 1220,
+      bottomPadding: 68,
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+      children: [
+        ArcRaidersPageHeader(
+          title: 'ARC COMMAND CENTRE',
+          subtitle: 'Priority, blockers, trades and daily actions in one scan.',
+          icon: Icons.dashboard_customize_rounded,
+          accent: AppTheme.neonCyan,
+          trailing: ArcCommandActionButton(
+            action: const ArcCommandAction(
+              label: 'Tool Deck',
+              intent: ArcCommandActionIntent.toolDeck,
+            ),
+            accent: AppTheme.neonPink,
+            compact: true,
+            onPressed: () => _handleAction(
+              const ArcCommandAction(
+                label: 'Tool Deck',
+                intent: ArcCommandActionIntent.toolDeck,
+              ),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(height: 10),
+        _priorityHero(commandState.priority),
+        const SizedBox(height: 10),
+        _snapshotGrid(commandState.snapshots),
+        const SizedBox(height: 10),
+        _objectivesAndAlerts(commandState),
+        const SizedBox(height: 10),
+        _responsiveGrid(
+          minTileWidth: 340,
+          children: [
+            _tradeSummary(commandState.tradeSummary),
+            _summaryPanel(commandState.blueprintSummary),
+            _summaryPanel(commandState.operationsSummary),
+            _summaryPanel(commandState.questSummary),
+            _summaryPanel(commandState.benchSummary),
+            _resourceSummary(commandState.resources),
+            _summaryPanel(commandState.weeklyTraderSummary),
+            _recommendations(commandState.recommendations),
+            _dailyChecklist(commandState.checklist),
+            _summaryPanel(commandState.communitySummary),
+            _summaryPanel(commandState.statisticsSummary),
+          ],
+        ),
+      ],
     );
   }
 

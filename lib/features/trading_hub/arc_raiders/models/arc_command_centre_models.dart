@@ -6,6 +6,7 @@ enum ArcCommandActionIntent {
   toolDeck,
   smartTrade,
   nomadicTrader,
+  operations,
   placeholder,
 }
 
@@ -147,6 +148,44 @@ class ArcCommandTradeSummary {
   final List<ArcCommandAction> actions;
 }
 
+class ArcCommandTradeActivity {
+  const ArcCommandTradeActivity({
+    required this.communityListings,
+    required this.myListings,
+    required this.activeMyListings,
+    required this.pendingOffers,
+    required this.acceptedOffers,
+    required this.activeSessions,
+    required this.readySessions,
+    required this.unreadNotifications,
+  });
+
+  final int communityListings;
+  final int myListings;
+  final int activeMyListings;
+  final int pendingOffers;
+  final int acceptedOffers;
+  final int activeSessions;
+  final int readySessions;
+  final int unreadNotifications;
+
+  static const empty = ArcCommandTradeActivity(
+    communityListings: 0,
+    myListings: 0,
+    activeMyListings: 0,
+    pendingOffers: 0,
+    acceptedOffers: 0,
+    activeSessions: 0,
+    readySessions: 0,
+    unreadNotifications: 0,
+  );
+
+  int get actionableCount =>
+      pendingOffers + activeSessions + unreadNotifications;
+
+  bool get hasActionableTrades => actionableCount > 0;
+}
+
 class ArcCommandSummaryPanel {
   const ArcCommandSummaryPanel({
     required this.title,
@@ -178,6 +217,7 @@ class ArcCommandCentreState {
     required this.blueprintSummary,
     required this.questSummary,
     required this.benchSummary,
+    required this.operationsSummary,
     required this.weeklyTraderSummary,
     required this.communitySummary,
     required this.statisticsSummary,
@@ -194,6 +234,7 @@ class ArcCommandCentreState {
   final ArcCommandSummaryPanel blueprintSummary;
   final ArcCommandSummaryPanel questSummary;
   final ArcCommandSummaryPanel benchSummary;
+  final ArcCommandSummaryPanel operationsSummary;
   final ArcCommandSummaryPanel weeklyTraderSummary;
   final ArcCommandSummaryPanel communitySummary;
   final ArcCommandSummaryPanel statisticsSummary;
