@@ -883,6 +883,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                   Expanded(child: _buildTradeBenchPanel(states)),
                 ],
               ),
+              const SizedBox(height: 10),
+              _buildBetaReadinessPanel(states),
             ],
           );
         }
@@ -911,6 +913,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               _buildMissingBlueprints(states),
               const SizedBox(height: 10),
               _buildTradeBenchPanel(states),
+              const SizedBox(height: 10),
+              _buildBetaReadinessPanel(states),
             ],
           );
         }
@@ -928,6 +932,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             _buildMissingBlueprints(states),
             const SizedBox(height: 10),
             _buildTradeBenchPanel(states),
+            const SizedBox(height: 10),
+            _buildBetaReadinessPanel(states),
           ],
         );
       },
@@ -1260,6 +1266,99 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             color: AppTheme.neonCyan,
             onTap: () =>
                 Navigator.of(context).pushNamed(TraderHubScreen.routeName),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _emptyAttachmentCount({
+    required String weaponName,
+    required List<String> attachments,
+  }) {
+    final slots = _weaponSpec(weaponName).slots;
+    final slotCount = slots.length.clamp(1, 6).toInt();
+    var empty = 0;
+    for (var index = 0; index < slotCount; index++) {
+      final value = index < attachments.length
+          ? attachments[index]
+          : 'Empty Slot';
+      if (value == 'Empty Slot' || value.trim().isEmpty) {
+        empty++;
+      }
+    }
+    return empty;
+  }
+
+  Widget _buildBetaReadinessPanel(Map<String, ArcBlueprintState> states) {
+    final missingBlueprints = _missingBlueprintItems(states).length;
+    final emptyAttachments =
+        _emptyAttachmentCount(
+          weaponName: _primaryWeapon,
+          attachments: _primaryAttachments,
+        ) +
+        _emptyAttachmentCount(
+          weaponName: _secondaryWeapon,
+          attachments: _secondaryAttachments,
+        );
+    final emptyQuickSlots = _quickSlots
+        .where((slot) => slot == 'Empty Slot' || slot.trim().isEmpty)
+        .length;
+    final complete =
+        missingBlueprints == 0 &&
+        emptyAttachments == 0 &&
+        emptyQuickSlots == 0 &&
+        _augment.trim().isNotEmpty &&
+        _shield.trim().isNotEmpty;
+    final accent = complete ? Colors.lightGreenAccent : Colors.amberAccent;
+
+    return _arcPanel(
+      accent: accent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader('BETA READINESS CHECK', accent),
+          const SizedBox(height: 10),
+          _statusLine(
+            icon: complete ? Icons.verified_rounded : Icons.fact_check_rounded,
+            label: 'Loadout State',
+            value: complete
+                ? 'Complete and ready to save, test, and take into Closed Beta.'
+                : 'Still safe to save, but has open planning slots or missing blueprints.',
+            color: accent,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _pill(
+                missingBlueprints == 0
+                    ? 'Blueprints ready'
+                    : '$missingBlueprints missing blueprints',
+                missingBlueprints == 0
+                    ? Colors.lightGreenAccent
+                    : AppTheme.neonPink,
+              ),
+              _pill(
+                emptyAttachments == 0
+                    ? 'Attachments filled'
+                    : '$emptyAttachments attachment slots open',
+                emptyAttachments == 0
+                    ? Colors.lightGreenAccent
+                    : Colors.amberAccent,
+              ),
+              _pill(
+                emptyQuickSlots == 0
+                    ? 'Quick slots filled'
+                    : '$emptyQuickSlots quick slots open',
+                emptyQuickSlots == 0
+                    ? Colors.lightGreenAccent
+                    : Colors.amberAccent,
+              ),
+              _pill('Augment: $_augment', Colors.lightGreenAccent),
+              _pill('Shield: $_shield', Colors.amberAccent),
+            ],
           ),
         ],
       ),
