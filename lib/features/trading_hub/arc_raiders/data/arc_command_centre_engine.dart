@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_bench_intelligence_models.dart';
@@ -9,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
@@ -29,6 +31,8 @@ class ArcCommandCentreEngine {
     required List<ArcSavedLoadout> savedLoadouts,
     Map<String, ArcScrappyState> scrappyStates =
         const <String, ArcScrappyState>{},
+    ArcNomadicTraderTrackerSnapshot nomadicTraderTracker =
+        ArcNomadicTraderTrackerSnapshot.empty,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
     ArcCommandTradeActivity tradeActivity = ArcCommandTradeActivity.empty,
   }) {
@@ -65,6 +69,15 @@ class ArcCommandCentreEngine {
     final benchIntel = const ArcBenchIntelligenceEngine().build(
       scrappyStates: scrappyStates,
     );
+    final traderIntel = const ArcNomadicTraderIntelligenceEngine().build(
+      tracker: nomadicTraderTracker,
+      questIntel: questIntel,
+      benchIntel: benchIntel,
+      favouriteLoadout: loadout,
+      blueprintStates: blueprintStates,
+      tradeActivity: tradeActivity,
+      duplicateBlueprints: duplicateBlueprints,
+    );
 
     return ArcCommandCentreState(
       priority: _priority(
@@ -81,6 +94,7 @@ class ArcCommandCentreEngine {
         inProgressOperations: inProgressOperations,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
       snapshots: _snapshots(
         blueprintStateKnown: blueprintStateKnown,
@@ -96,6 +110,7 @@ class ArcCommandCentreEngine {
         inProgressOperations: inProgressOperations,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
       objectives: _objectives(
         blueprintStateKnown: blueprintStateKnown,
@@ -111,6 +126,7 @@ class ArcCommandCentreEngine {
         availableOperations: availableOperations,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
       alerts: _alerts(
         blueprintStateKnown: blueprintStateKnown,
@@ -121,6 +137,7 @@ class ArcCommandCentreEngine {
         readyOperations: readyOperations,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
       recommendations: _recommendations(
         blueprintStateKnown: blueprintStateKnown,
@@ -131,6 +148,7 @@ class ArcCommandCentreEngine {
         readyOperations: readyOperations,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
       checklist: _checklist(
         loadoutReady: loadoutSummary.ready,
@@ -138,14 +156,16 @@ class ArcCommandCentreEngine {
         readyOperations: readyOperations,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
-      resources: _resources(),
+      resources: _resources(traderIntel),
       tradeSummary: _tradeSummary(
         prioritizedMissing: prioritizedMissing,
         duplicateBlueprints: duplicateBlueprints,
         tradeActivity: tradeActivity,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
       blueprintSummary: _blueprintSummary(
         blueprintStateKnown: blueprintStateKnown,
@@ -163,7 +183,7 @@ class ArcCommandCentreEngine {
         inProgressOperations: inProgressOperations,
         availableOperations: availableOperations,
       ),
-      weeklyTraderSummary: _weeklyTraderSummary(),
+      weeklyTraderSummary: _weeklyTraderSummary(traderIntel),
       communitySummary: _communitySummary(tradeActivity),
       statisticsSummary: _statisticsSummary(
         blueprintStateKnown: blueprintStateKnown,
@@ -173,6 +193,7 @@ class ArcCommandCentreEngine {
         operationsState: operationsState,
         questIntel: questIntel,
         benchIntel: benchIntel,
+        traderIntel: traderIntel,
       ),
     );
   }
@@ -191,6 +212,7 @@ class ArcCommandCentreEngine {
     required int inProgressOperations,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     if (readyOperations > 0) {
       return ArcCommandPriority(
@@ -239,6 +261,30 @@ class ArcCommandCentreEngine {
       );
     }
 
+    if (traderIntel.canAffordBestPurchase &&
+        (traderIntel.bestPurchase?.priorityScore ?? 0) >= 60) {
+      final purchase = traderIntel.bestPurchase!;
+      return ArcCommandPriority(
+        title: 'Buy ${purchase.purchase.name}',
+        explanation: traderIntel.summary,
+        progressLabel: purchase.priorityLabel,
+        statusTag: traderIntel.statusLabel,
+        detail: purchase.reason,
+        status: ArcCommandStatus.ready,
+        primaryAction: const ArcCommandAction(
+          label: 'Nomadic Trader',
+          intent: ArcCommandActionIntent.nomadicTrader,
+        ),
+        secondaryAction:
+            purchase.missingResources.isNotEmpty || traderIntel.hasTradeableNeed
+            ? const ArcCommandAction(
+                label: 'View Trades',
+                routeName: TraderHubScreen.routeName,
+              )
+            : null,
+      );
+    }
+
     if (benchIntel.hasBlocker && benchIntel.trackingKnown) {
       return ArcCommandPriority(
         title: 'Farm Bench Resources',
@@ -252,6 +298,31 @@ class ArcCommandCentreEngine {
           routeName: ScrappyGridScreen.benchRouteName,
         ),
         secondaryAction: tradeActivity.communityListings > 0
+            ? const ArcCommandAction(
+                label: 'View Trades',
+                routeName: TraderHubScreen.routeName,
+              )
+            : null,
+      );
+    }
+
+    if (traderIntel.hasImportantGap &&
+        (traderIntel.bestPurchase?.priorityScore ?? 0) >= 70) {
+      final purchase = traderIntel.bestPurchase!;
+      return ArcCommandPriority(
+        title: 'Prepare Trader Purchase',
+        explanation: traderIntel.summary,
+        progressLabel: purchase.missingShortText,
+        statusTag: purchase.priorityLabel,
+        detail: traderIntel.hasTradeableNeed
+            ? 'Use Trade Centre before farming: ${traderIntel.tradeNeedLabels.take(2).join(', ')}.'
+            : traderIntel.recommendation,
+        status: traderIntel.status,
+        primaryAction: const ArcCommandAction(
+          label: 'Nomadic Trader',
+          intent: ArcCommandActionIntent.nomadicTrader,
+        ),
+        secondaryAction: traderIntel.hasTradeableNeed
             ? const ArcCommandAction(
                 label: 'View Trades',
                 routeName: TraderHubScreen.routeName,
@@ -429,7 +500,7 @@ class ArcCommandCentreEngine {
       progressLabel: 'Core trackers ready',
       statusTag: 'Maintain',
       detail:
-          'Nomadic trader requirements are ready for the next live-data pass.',
+          'Nomadic Trader tracking can confirm whether today has a purchase worth making.',
       status: ArcCommandStatus.success,
       primaryAction: ArcCommandAction(
         label: 'Open Nomadic Trader',
@@ -452,6 +523,7 @@ class ArcCommandCentreEngine {
     required int inProgressOperations,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     return [
       ArcCommandSnapshotMetric(
@@ -503,6 +575,18 @@ class ArcCommandCentreEngine {
             ? benchIntel.upgradeLabel
             : 'Open bench tracker',
         status: benchIntel.status,
+      ),
+      ArcCommandSnapshotMetric(
+        label: 'Nomadic Trader',
+        value: !traderIntel.trackingKnown
+            ? 'Set up'
+            : traderIntel.canAffordBestPurchase || traderIntel.goalAffordable
+            ? 'Ready'
+            : '${traderIntel.completionPercent}%',
+        detail: traderIntel.trackingKnown
+            ? traderIntel.goalName
+            : 'Open trader tracker',
+        status: traderIntel.status,
       ),
       ArcCommandSnapshotMetric(
         label: 'Blueprints',
@@ -571,6 +655,7 @@ class ArcCommandCentreEngine {
     required int availableOperations,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     final objectives = <ArcCommandObjective>[];
 
@@ -587,6 +672,31 @@ class ArcCommandCentreEngine {
           action: const ArcCommandAction(
             label: 'Open Operations',
             intent: ArcCommandActionIntent.operations,
+          ),
+        ),
+      );
+    }
+
+    if (traderIntel.shouldVisit) {
+      final purchase = traderIntel.bestPurchase;
+      objectives.add(
+        ArcCommandObjective(
+          title: purchase == null
+              ? 'Visit Nomadic Trader'
+              : purchase.canAfford
+              ? 'Buy ${purchase.purchase.name}'
+              : 'Prepare ${purchase.purchase.name}',
+          reason: traderIntel.recommendation,
+          statusLabel: traderIntel.statusLabel,
+          progressText: purchase == null
+              ? traderIntel.progressLabel
+              : purchase.canAfford
+              ? purchase.priorityLabel
+              : purchase.missingShortText,
+          status: traderIntel.status,
+          action: const ArcCommandAction(
+            label: 'Nomadic Trader',
+            intent: ArcCommandActionIntent.nomadicTrader,
           ),
         ),
       );
@@ -716,13 +826,14 @@ class ArcCommandCentreEngine {
       objectives.add(
         ArcCommandObjective(
           title: 'Plan Next Trade',
-          reason: _tradeCanHelpProgress(questIntel, benchIntel)
+          reason: _tradeCanHelpProgress(questIntel, benchIntel, traderIntel)
               ? 'Trades may help with quest or bench blockers before farming.'
               : (missingBlueprints ?? 0) > 0
               ? 'Missing blueprints can be routed through trade before farming.'
               : 'Trade tools are ready when a new target appears.',
           statusLabel: 'Optional',
-          progressText: _tradeCanHelpProgress(questIntel, benchIntel)
+          progressText:
+              _tradeCanHelpProgress(questIntel, benchIntel, traderIntel)
               ? 'Bench or quest needs visible'
               : (missingBlueprints ?? 0) > 0
               ? '${missingBlueprints ?? 0} possible needs'
@@ -748,6 +859,7 @@ class ArcCommandCentreEngine {
     required int readyOperations,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     final alerts = <ArcCommandAlert>[];
     if (readyOperations > 0) {
@@ -815,6 +927,35 @@ class ArcCommandCentreEngine {
           action: const ArcCommandAction(
             label: 'Quest',
             routeName: ScrappyGridScreen.questRouteName,
+          ),
+        ),
+      );
+    }
+    if (traderIntel.canAffordBestPurchase) {
+      final purchase = traderIntel.bestPurchase!;
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Trader purchase ready',
+          body: '${purchase.purchase.name} can be bought or marked purchased.',
+          statusLabel: 'Buy',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Trader',
+            intent: ArcCommandActionIntent.nomadicTrader,
+          ),
+        ),
+      );
+    } else if (traderIntel.hasImportantGap) {
+      final purchase = traderIntel.bestPurchase!;
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Trader resource gap',
+          body: purchase.missingShortText,
+          statusLabel: purchase.priorityLabel,
+          status: traderIntel.status,
+          action: const ArcCommandAction(
+            label: 'Trader',
+            intent: ArcCommandActionIntent.nomadicTrader,
           ),
         ),
       );
@@ -948,6 +1089,7 @@ class ArcCommandCentreEngine {
     required int readyOperations,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     final recommendations = <ArcCommandRecommendation>[];
 
@@ -960,6 +1102,24 @@ class ArcCommandCentreEngine {
           action: ArcCommandAction(
             label: 'Operations',
             intent: ArcCommandActionIntent.operations,
+          ),
+        ),
+      );
+    }
+
+    if (traderIntel.trackingKnown) {
+      final purchase = traderIntel.bestPurchase;
+      recommendations.add(
+        ArcCommandRecommendation(
+          title: traderIntel.canAffordBestPurchase && purchase != null
+              ? 'Buy ${purchase.purchase.name} before spending resources.'
+              : traderIntel.hasImportantGap && purchase != null
+              ? 'Trade or farm for ${purchase.purchase.name}.'
+              : 'Review Nomadic Trader goals before farming.',
+          body: purchase == null ? traderIntel.recommendation : purchase.reason,
+          action: const ArcCommandAction(
+            label: 'Nomadic Trader',
+            intent: ArcCommandActionIntent.nomadicTrader,
           ),
         ),
       );
@@ -995,7 +1155,7 @@ class ArcCommandCentreEngine {
       ),
     );
 
-    if (_tradeCanHelpProgress(questIntel, benchIntel)) {
+    if (_tradeCanHelpProgress(questIntel, benchIntel, traderIntel)) {
       recommendations.add(
         const ArcCommandRecommendation(
           title: 'Check trades for bench or quest blockers.',
@@ -1112,6 +1272,7 @@ class ArcCommandCentreEngine {
     required int readyOperations,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     return [
       ArcCommandChecklistItem(
@@ -1136,11 +1297,14 @@ class ArcCommandCentreEngine {
           intent: ArcCommandActionIntent.placeholder,
         ),
       ),
-      const ArcCommandChecklistItem(
+      ArcCommandChecklistItem(
         id: 'nomadic-trader',
         label: 'Check Nomadic Trader',
-        reason: 'Review trader goals before spending resources.',
-        action: ArcCommandAction(
+        reason: traderIntel.trackingKnown
+            ? traderIntel.recommendation
+            : 'Review trader goals before spending resources.',
+        doneByDefault: traderIntel.trackingKnown && !traderIntel.shouldVisit,
+        action: const ArcCommandAction(
           label: 'Open Trader',
           intent: ArcCommandActionIntent.nomadicTrader,
         ),
@@ -1217,28 +1381,50 @@ class ArcCommandCentreEngine {
     ];
   }
 
-  static List<ArcCommandResourceStatus> _resources() {
+  static List<ArcCommandResourceStatus> _resources(
+    ArcNomadicTraderIntelligence traderIntel,
+  ) {
+    final purchase = traderIntel.bestPurchase;
+    if (purchase != null && purchase.purchase.requirements.isNotEmpty) {
+      return purchase.purchase.requirements
+          .take(4)
+          .map(
+            (requirement) => ArcCommandResourceStatus(
+              name: requirement.name,
+              ownedLabel: '${requirement.ownedQty}',
+              requiredLabel: '${requirement.requiredQty} required',
+              status: requirement.complete
+                  ? ArcCommandStatus.success
+                  : ArcCommandStatus.warning,
+            ),
+          )
+          .toList(growable: false);
+    }
+
+    if (traderIntel.trackingKnown) {
+      return [
+        ArcCommandResourceStatus(
+          name: traderIntel.goalName,
+          ownedLabel: '${traderIntel.currentValue}',
+          requiredLabel: '${traderIntel.targetValue} target',
+          status: traderIntel.goalAffordable
+              ? ArcCommandStatus.ready
+              : ArcCommandStatus.active,
+        ),
+        ArcCommandResourceStatus(
+          name: 'Nomadic Purchases',
+          ownedLabel: '${traderIntel.completedPurchaseCount}',
+          requiredLabel: '${traderIntel.trackedPurchaseCount} tracked',
+          status: traderIntel.trackedPurchaseCount > 0
+              ? ArcCommandStatus.active
+              : ArcCommandStatus.neutral,
+        ),
+      ];
+    }
+
     return const [
       ArcCommandResourceStatus(
-        name: 'Queen Reactor',
-        ownedLabel: 'Not tracked yet',
-        requiredLabel: 'Track resources',
-        status: ArcCommandStatus.neutral,
-      ),
-      ArcCommandResourceStatus(
-        name: 'Matriarch Parts',
-        ownedLabel: 'Not tracked yet',
-        requiredLabel: 'Track resources',
-        status: ArcCommandStatus.neutral,
-      ),
-      ArcCommandResourceStatus(
-        name: 'Titanium',
-        ownedLabel: 'Not tracked yet',
-        requiredLabel: 'Track resources',
-        status: ArcCommandStatus.neutral,
-      ),
-      ArcCommandResourceStatus(
-        name: 'Circuit Boards',
+        name: 'Nomadic Trader',
         ownedLabel: 'Not tracked yet',
         requiredLabel: 'Track resources',
         status: ArcCommandStatus.neutral,
@@ -1252,6 +1438,7 @@ class ArcCommandCentreEngine {
     required ArcCommandTradeActivity tradeActivity,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     final lookingFor = <String>[
       if (tradeActivity.pendingOffers > 0)
@@ -1266,10 +1453,11 @@ class ArcCommandCentreEngine {
             .map((resource) => resource.missingLabel),
       if (questIntel.hasBlocker && questIntel.trackingKnown)
         ...questIntel.missingItems.take(2).map((item) => item.missingLabel),
+      if (traderIntel.hasTradeableNeed) ...traderIntel.tradeNeedLabels.take(2),
       if (prioritizedMissing.isNotEmpty) ...prioritizedMissing.take(3),
       if (prioritizedMissing.isEmpty &&
           tradeActivity.pendingOffers == 0 &&
-          !_tradeCanHelpProgress(questIntel, benchIntel))
+          !_tradeCanHelpProgress(questIntel, benchIntel, traderIntel))
         'Blueprint needs not tracked',
       if (tradeActivity.communityListings > 0)
         '${tradeActivity.communityListings} community listings live',
@@ -1280,6 +1468,10 @@ class ArcCommandCentreEngine {
       duplicateBlueprints > 0
           ? '$duplicateBlueprints duplicate blueprints'
           : 'No duplicate blueprints tracked',
+      if (traderIntel.canAffordBestPurchase)
+        'Trader purchase ready'
+      else if (traderIntel.hasImportantGap)
+        'Trader resources needed',
       if (tradeActivity.unreadNotifications > 0)
         '${tradeActivity.unreadNotifications} unread ${_plural(tradeActivity.unreadNotifications, 'notification', 'notifications')}',
       if (tradeActivity.myListings > 0 && tradeActivity.activeMyListings == 0)
@@ -1439,19 +1631,49 @@ class ArcCommandCentreEngine {
     );
   }
 
-  static ArcCommandSummaryPanel _weeklyTraderSummary() {
-    return const ArcCommandSummaryPanel(
+  static ArcCommandSummaryPanel _weeklyTraderSummary(
+    ArcNomadicTraderIntelligence traderIntel,
+  ) {
+    if (!traderIntel.trackingKnown) {
+      return const ArcCommandSummaryPanel(
+        title: 'Weekly Nomadic Trader',
+        statusLabel: 'Set up',
+        body:
+            'No saved trader goal or purchase requirements are available yet.',
+        details: [
+          'Current stock: Open Nomadic Trader to track',
+          'Required resources: Not tracked yet',
+          'Reset timing: Not available',
+        ],
+        status: ArcCommandStatus.neutral,
+        action: ArcCommandAction(
+          label: 'Open Nomadic Trader',
+          intent: ArcCommandActionIntent.nomadicTrader,
+        ),
+      );
+    }
+
+    final best = traderIntel.bestPurchase;
+    return ArcCommandSummaryPanel(
       title: 'Weekly Nomadic Trader',
-      statusLabel: 'Coming online',
-      body:
-          'Weekly stock and reset timing are ready for live-data integration.',
+      statusLabel: traderIntel.statusLabel,
+      body: traderIntel.summary,
       details: [
-        'Current stock: Placeholder',
-        'Required resources: Not tracked yet',
-        'Reset reminder: Notifications deferred',
+        'Goal: ${traderIntel.goalName}',
+        'Value: ${traderIntel.currentValue}/${traderIntel.targetValue}',
+        '${traderIntel.completedPurchaseCount}/${traderIntel.trackedPurchaseCount} tracked purchases complete',
+        if (best != null) 'Recommended: ${best.purchase.name}',
+        if (best != null) 'Why: ${best.priorityLabel}',
+        if (best != null && best.missingResources.isNotEmpty)
+          'Missing: ${best.missingShortText}'
+        else if (traderIntel.remainingValue > 0)
+          'Missing value: ${traderIntel.remainingValue}',
+        traderIntel.resetLabel == null
+            ? 'Reset timing: Not available'
+            : 'Reset: ${traderIntel.resetLabel}',
       ],
-      status: ArcCommandStatus.neutral,
-      action: ArcCommandAction(
+      status: traderIntel.status,
+      action: const ArcCommandAction(
         label: 'Open Nomadic Trader',
         intent: ArcCommandActionIntent.nomadicTrader,
       ),
@@ -1494,6 +1716,7 @@ class ArcCommandCentreEngine {
     required ArcOperationsUserState operationsState,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcNomadicTraderIntelligence traderIntel,
   }) {
     return ArcCommandSummaryPanel(
       title: 'Statistics',
@@ -1512,6 +1735,9 @@ class ArcCommandCentreEngine {
         benchIntel.trackingKnown
             ? 'Bench focus: ${benchIntel.upgradeLabel} ${benchIntel.completionPercent}%'
             : 'Bench focus: Set up tracker',
+        traderIntel.trackingKnown
+            ? 'Trader focus: ${traderIntel.goalName} ${traderIntel.completionPercent}%'
+            : 'Trader focus: Set up tracker',
         'Reward Vault items: ${operationsState.inventory.length}',
         'Inventory space saved: $duplicateBlueprints duplicate signals',
       ],
@@ -1586,9 +1812,11 @@ class ArcCommandCentreEngine {
   static bool _tradeCanHelpProgress(
     ArcQuestIntelligence questIntel,
     ArcBenchIntelligence benchIntel,
+    ArcNomadicTraderIntelligence traderIntel,
   ) {
     return (questIntel.trackingKnown && questIntel.hasBlocker) ||
-        (benchIntel.trackingKnown && benchIntel.hasBlocker);
+        (benchIntel.trackingKnown && benchIntel.hasBlocker) ||
+        traderIntel.hasTradeableNeed;
   }
 
   static String _plural(int count, String singular, String plural) {

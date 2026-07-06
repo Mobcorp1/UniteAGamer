@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_tr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
@@ -13,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
@@ -43,6 +45,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
   final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
+  final ArcNomadicTraderRepository _nomadicTraderRepository =
+      const ArcNomadicTraderRepository();
   final TradingRepository _tradingRepository = TradingRepository();
   final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
       const ArcTradeIntelligenceEngine();
@@ -64,6 +68,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       .watchMySessions();
   late final Stream<List<TradingNotification>> _notificationsStream =
       _tradingRepository.watchNotifications();
+  late Future<ArcNomadicTraderTrackerSnapshot> _nomadicTraderSnapshotFuture =
+      _nomadicTraderRepository.loadTrackerSnapshot();
   final Map<String, bool> _checklistState = <String, bool>{};
 
   void _handleAction(ArcCommandAction action) {
@@ -88,9 +94,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
           MaterialPageRoute(builder: (_) => const SmartTradeAssistScreen()),
         );
       case ArcCommandActionIntent.nomadicTrader:
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const NomadicTraderScreen()));
+        _openNomadicTrader();
       case ArcCommandActionIntent.operations:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const OperationsCommandScreen()),
@@ -98,6 +102,17 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       case ArcCommandActionIntent.placeholder:
         _showPlaceholder(action);
     }
+  }
+
+  Future<void> _openNomadicTrader() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NomadicTraderScreen()));
+    if (!mounted) return;
+    setState(() {
+      _nomadicTraderSnapshotFuture = _nomadicTraderRepository
+          .loadTrackerSnapshot();
+    });
   }
 
   void _showPlaceholder(ArcCommandAction action) {
@@ -149,11 +164,20 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
                   builder: (context, scrappySnapshot) {
                     final scrappyStates =
                         scrappySnapshot.data ?? <String, ArcScrappyState>{};
-                    return _buildWithTradeActivity(
-                      blueprintStates: blueprintStates,
-                      loadouts: loadouts,
-                      operationsState: operationsState,
-                      scrappyStates: scrappyStates,
+                    return FutureBuilder<ArcNomadicTraderTrackerSnapshot>(
+                      future: _nomadicTraderSnapshotFuture,
+                      builder: (context, traderSnapshot) {
+                        final nomadicTraderTracker =
+                            traderSnapshot.data ??
+                            ArcNomadicTraderTrackerSnapshot.empty;
+                        return _buildWithTradeActivity(
+                          blueprintStates: blueprintStates,
+                          loadouts: loadouts,
+                          operationsState: operationsState,
+                          scrappyStates: scrappyStates,
+                          nomadicTraderTracker: nomadicTraderTracker,
+                        );
+                      },
                     );
                   },
                 );
@@ -170,6 +194,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
     required List<ArcSavedLoadout> loadouts,
     required ArcOperationsUserState operationsState,
     required Map<String, ArcScrappyState> scrappyStates,
+    required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
   }) {
     return StreamBuilder<List<TradingListing>>(
       stream: _activeListingsStream,
@@ -208,6 +233,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
                           blueprintStates: blueprintStates,
                           savedLoadouts: loadouts,
                           scrappyStates: scrappyStates,
+                          nomadicTraderTracker: nomadicTraderTracker,
                           operationsState: operationsState,
                           tradeActivity: tradeActivity,
                         );
@@ -372,6 +398,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       'Operations',
       'Quest',
       'Bench',
+      'Nomadic Trader',
       'Blueprints',
       'Favourite Loadout',
       'Trade Activity',
@@ -811,6 +838,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
         _summaryTile(commandState.benchSummary),
       if (_summaryHasUsefulSignal(commandState.questSummary))
         _summaryTile(commandState.questSummary),
+      if (_summaryHasUsefulSignal(commandState.weeklyTraderSummary))
+        _summaryTile(commandState.weeklyTraderSummary),
     ];
   }
 

@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import '../widgets/foundation/arc_bottom_action_dock.dart';
 import '../widgets/arc_ad_banner_card.dart';
@@ -17,410 +21,22 @@ class NomadicTraderScreen extends StatefulWidget {
   State<NomadicTraderScreen> createState() => _NomadicTraderScreenState();
 }
 
-class _NomadicTraderResource {
-  const _NomadicTraderResource({
-    required this.id,
-    required this.name,
-    required this.value,
-    required this.highTier,
-    required this.icon,
-  });
-
-  final String id;
-  final String name;
-  final int value;
-  final bool highTier;
-  final IconData icon;
-}
-
-class _NomadicGoal {
-  const _NomadicGoal({
-    required this.name,
-    required this.target,
-    required this.icon,
-  });
-
-  final String name;
-  final int target;
-  final IconData icon;
-}
-
-class _NomadicPurchaseRequirement {
-  const _NomadicPurchaseRequirement({
-    required this.id,
-    required this.name,
-    required this.requiredQty,
-    required this.ownedQty,
-    required this.isCustom,
-  });
-
-  final String id;
-  final String name;
-  final int requiredQty;
-  final int ownedQty;
-  final bool isCustom;
-
-  int get remainingQty => math.max(0, requiredQty - ownedQty);
-  double get progress =>
-      requiredQty <= 0 ? 0 : (ownedQty / requiredQty).clamp(0, 1);
-
-  _NomadicPurchaseRequirement copyWith({
-    String? id,
-    String? name,
-    int? requiredQty,
-    int? ownedQty,
-    bool? isCustom,
-  }) {
-    return _NomadicPurchaseRequirement(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      requiredQty: requiredQty ?? this.requiredQty,
-      ownedQty: ownedQty ?? this.ownedQty,
-      isCustom: isCustom ?? this.isCustom,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'requiredQty': requiredQty,
-      'ownedQty': ownedQty,
-      'isCustom': isCustom,
-    };
-  }
-
-  factory _NomadicPurchaseRequirement.fromJson(Map<String, dynamic> json) {
-    return _NomadicPurchaseRequirement(
-      id:
-          (json['id'] as String?) ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
-      name: (json['name'] as String?) ?? 'Custom Resource',
-      requiredQty: (json['requiredQty'] as num?)?.toInt() ?? 1,
-      ownedQty: (json['ownedQty'] as num?)?.toInt() ?? 0,
-      isCustom: (json['isCustom'] as bool?) ?? true,
-    );
-  }
-}
-
-class _NomadicPurchase {
-  const _NomadicPurchase({
-    required this.id,
-    required this.name,
-    required this.requiredQty,
-    required this.ownedQty,
-    required this.isGalleryProject,
-    required this.isCustom,
-    this.requirements = const [],
-  });
-
-  final String id;
-  final String name;
-  final int requiredQty;
-  final int ownedQty;
-  final bool isGalleryProject;
-  final bool isCustom;
-  final List<_NomadicPurchaseRequirement> requirements;
-
-  int get remainingQty => math.max(0, requiredQty - ownedQty);
-  double get progress =>
-      requiredQty <= 0 ? 0 : (ownedQty / requiredQty).clamp(0, 1);
-
-  _NomadicPurchase copyWith({
-    String? id,
-    String? name,
-    int? requiredQty,
-    int? ownedQty,
-    bool? isGalleryProject,
-    bool? isCustom,
-    List<_NomadicPurchaseRequirement>? requirements,
-  }) {
-    return _NomadicPurchase(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      requiredQty: requiredQty ?? this.requiredQty,
-      ownedQty: ownedQty ?? this.ownedQty,
-      isGalleryProject: isGalleryProject ?? this.isGalleryProject,
-      isCustom: isCustom ?? this.isCustom,
-      requirements: requirements ?? this.requirements,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'requiredQty': requiredQty,
-      'ownedQty': ownedQty,
-      'isGalleryProject': isGalleryProject,
-      'isCustom': isCustom,
-      'requirements': requirements
-          .map((requirement) => requirement.toJson())
-          .toList(),
-    };
-  }
-
-  factory _NomadicPurchase.fromJson(Map<String, dynamic> json) {
-    final decodedRequirements = json['requirements'];
-    return _NomadicPurchase(
-      id:
-          (json['id'] as String?) ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
-      name: (json['name'] as String?) ?? 'Custom Resource',
-      requiredQty: (json['requiredQty'] as num?)?.toInt() ?? 1,
-      ownedQty: (json['ownedQty'] as num?)?.toInt() ?? 0,
-      isGalleryProject: (json['isGalleryProject'] as bool?) ?? false,
-      isCustom: (json['isCustom'] as bool?) ?? true,
-      requirements: decodedRequirements is List
-          ? decodedRequirements
-                .whereType<Map>()
-                .map(
-                  (item) => _NomadicPurchaseRequirement.fromJson(
-                    Map<String, dynamic>.from(item),
-                  ),
-                )
-                .toList()
-          : const [],
-    );
-  }
-}
+typedef _NomadicTraderResource = ArcNomadicTraderResourceDefinition;
+typedef _NomadicGoal = ArcNomadicTraderGoalDefinition;
+typedef _NomadicPurchaseRequirement =
+    ArcNomadicTraderPurchaseRequirementSnapshot;
+typedef _NomadicPurchase = ArcNomadicTraderPurchaseSnapshot;
 
 class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
-  static const _prefsPrefix = 'arc_nomadic_trader_';
+  static const _prefsPrefix = ArcNomadicTraderRepository.prefsPrefix;
   static const _heroAsset =
       'assets/arc_raiders/hero_cards/arc_nomadic_trader_hero.webp';
 
-  static const _defaultGoals = <_NomadicGoal>[
-    _NomadicGoal(
-      name: 'Stash Expansion',
-      target: 200000,
-      icon: Icons.inventory_2_outlined,
-    ),
-    _NomadicGoal(
-      name: 'Expedition Vault',
-      target: 200000,
-      icon: Icons.door_back_door_outlined,
-    ),
-    _NomadicGoal(
-      name: 'Backpack Charm',
-      target: 100000,
-      icon: Icons.star_border_rounded,
-    ),
-    _NomadicGoal(
-      name: 'Raider Tokens',
-      target: 150000,
-      icon: Icons.toll_outlined,
-    ),
-    _NomadicGoal(
-      name: 'Cosmetic',
-      target: 100000,
-      icon: Icons.checkroom_outlined,
-    ),
-    _NomadicGoal(
-      name: 'Emote',
-      target: 100000,
-      icon: Icons.emoji_emotions_outlined,
-    ),
-    _NomadicGoal(name: 'Quick Use', target: 100000, icon: Icons.bolt_outlined),
-    _NomadicGoal(
-      name: 'Recyclable',
-      target: 100000,
-      icon: Icons.recycling_rounded,
-    ),
-    _NomadicGoal(
-      name: 'Blueprint',
-      target: 100000,
-      icon: Icons.article_outlined,
-    ),
-    _NomadicGoal(name: 'Weapon', target: 100000, icon: Icons.gps_fixed_rounded),
-  ];
-
-  static const _highTierResources = <_NomadicTraderResource>[
-    _NomadicTraderResource(
-      id: 'queen_reactor',
-      name: 'Queen Reactor',
-      value: 11000,
-      highTier: true,
-      icon: Icons.battery_charging_full_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'matriarch_reactor',
-      name: 'Matriarch Reactor',
-      value: 11000,
-      highTier: true,
-      icon: Icons.battery_charging_full_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'vaporizer_regulator',
-      name: 'Vaporizer Regulator',
-      value: 6000,
-      highTier: true,
-      icon: Icons.settings_input_component_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'turbine_compressor',
-      name: 'Turbine Compressor',
-      value: 5000,
-      highTier: true,
-      icon: Icons.settings_applications_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'assessor_matrix',
-      name: 'Assessor Matrix',
-      value: 5000,
-      highTier: true,
-      icon: Icons.grid_view_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'rocketeer_driver',
-      name: 'Rocketeer Driver',
-      value: 3000,
-      highTier: true,
-      icon: Icons.rocket_launch_outlined,
-    ),
-    _NomadicTraderResource(
-      id: 'bastion_cell',
-      name: 'Bastion Cell',
-      value: 3000,
-      highTier: true,
-      icon: Icons.inventory_2_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'bombardier_cell',
-      name: 'Bombardier Cell',
-      value: 3000,
-      highTier: true,
-      icon: Icons.blur_circular_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'leaper_pulse_unit',
-      name: 'Leaper Pulse Unit',
-      value: 3000,
-      highTier: true,
-      icon: Icons.sensors_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'duplicate_blueprint',
-      name: 'Duplicate Blueprint',
-      value: 5000,
-      highTier: true,
-      icon: Icons.article_outlined,
-    ),
-  ];
-
-  static const _lowTierResources = <_NomadicTraderResource>[
-    _NomadicTraderResource(
-      id: 'shredder_gyro',
-      name: 'Shredder Gyro',
-      value: 2000,
-      highTier: false,
-      icon: Icons.track_changes_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'sentinel_firing_core',
-      name: 'Sentinel Firing Core',
-      value: 2000,
-      highTier: false,
-      icon: Icons.adjust_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'surveyor_vault',
-      name: 'Surveyor Vault',
-      value: 1000,
-      highTier: false,
-      icon: Icons.inventory_2_outlined,
-    ),
-    _NomadicTraderResource(
-      id: 'snitch_scanner',
-      name: 'Snitch Scanner',
-      value: 1000,
-      highTier: false,
-      icon: Icons.radar_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'hornet_driver',
-      name: 'Hornet Driver',
-      value: 1000,
-      highTier: false,
-      icon: Icons.bug_report_outlined,
-    ),
-    _NomadicTraderResource(
-      id: 'firefly_burner',
-      name: 'Firefly Burner',
-      value: 1000,
-      highTier: false,
-      icon: Icons.local_fire_department_outlined,
-    ),
-    _NomadicTraderResource(
-      id: 'damaged_leaper_pulse_unit',
-      name: 'Damaged Leaper Pulse Unit',
-      value: 1000,
-      highTier: false,
-      icon: Icons.sensors_off_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'damaged_rocketeer_driver',
-      name: 'Damaged Rocketeer Driver',
-      value: 1000,
-      highTier: false,
-      icon: Icons.rocket_launch_outlined,
-    ),
-    _NomadicTraderResource(
-      id: 'fireball_burner',
-      name: 'Fireball Burner',
-      value: 640,
-      highTier: false,
-      icon: Icons.local_fire_department_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'damaged_hornet_driver',
-      name: 'Damaged Hornet Driver',
-      value: 640,
-      highTier: false,
-      icon: Icons.bug_report_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'tick_pod',
-      name: 'Tick Pod',
-      value: 640,
-      highTier: false,
-      icon: Icons.trip_origin_rounded,
-    ),
-    _NomadicTraderResource(
-      id: 'duplicate_blueprint',
-      name: 'Duplicate Blueprint',
-      value: 5000,
-      highTier: false,
-      icon: Icons.article_outlined,
-    ),
-  ];
-
-  static const _nomadicPurchaseSuggestions = <String>[
-    'Industrial Magnet',
-    'Number Plate',
-    'Air Freshener',
-    'ARC Thermal Lining',
-    'Train Model',
-    'Vintage Steering Wheel',
-    'Spectrum Analyser',
-    'Silver Tunic',
-    'Teaspoon Set',
-    'Vinyl Wristwatch',
-    'Sextant',
-    'Equatorial Sundial',
-    'Metal Bracket',
-    'ARC Performance Steel',
-    'Teleron',
-    'Elephant Obelisk',
-    'Light Bulb',
-    'ARC Coolant',
-    'Colourful Shoes',
-    'ARC Synthetic Resin',
-    'Queen Reactor',
-    'Matriarch Reactor',
-    'Vaporizer Regulator',
-    'Electrocore',
-  ];
+  static const _defaultGoals = ArcNomadicTraderCatalog.defaultGoals;
+  static const _highTierResources = ArcNomadicTraderCatalog.highTierResources;
+  static const _lowTierResources = ArcNomadicTraderCatalog.lowTierResources;
+  static const _nomadicPurchaseSuggestions =
+      ArcNomadicTraderCatalog.purchaseSuggestions;
   final PageController _cardController = PageController(
     initialPage: 400,
     viewportFraction: 0.78,
@@ -456,6 +72,36 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
   double get _progress =>
       _targetValue <= 0 ? 0 : (_currentValue / _targetValue).clamp(0, 1);
+
+  ArcNomadicTraderTrackerSnapshot get _trackerSnapshot {
+    return ArcNomadicTraderTrackerSnapshot(
+      savedStateKnown: true,
+      goalName: _goalName,
+      highTier: _highTier,
+      targetValue: _targetValue,
+      resources: _resources
+          .map(
+            (resource) => ArcNomadicTraderResourceSnapshot(
+              id: resource.id,
+              name: resource.name,
+              value: resource.value,
+              highTier: resource.highTier,
+              quantity:
+                  int.tryParse(_controllers[resource.id]?.text.trim() ?? '') ??
+                  0,
+            ),
+          )
+          .toList(growable: false),
+      purchases: List<ArcNomadicTraderPurchaseSnapshot>.unmodifiable(
+        _nomadicPurchases,
+      ),
+    );
+  }
+
+  ArcNomadicTraderIntelligence get _traderIntelligence =>
+      const ArcNomadicTraderIntelligenceEngine().build(
+        tracker: _trackerSnapshot,
+      );
 
   @override
   void initState() {
@@ -778,6 +424,217 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
         ],
       ),
     );
+  }
+
+  Widget _intelligencePanel() {
+    final intelligence = _traderIntelligence;
+    final purchase = intelligence.bestPurchase;
+    final accent = purchase == null
+        ? _accent
+        : purchase.canAfford
+        ? AppTheme.neonPink
+        : purchase.nearlyAffords
+        ? Colors.amberAccent
+        : AppTheme.neonCyan;
+
+    return _frostedPanel(
+      border: accent,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionTitle(
+            Icons.auto_awesome_rounded,
+            'Recommended Purchase',
+            intelligence.statusLabel,
+          ),
+          const SizedBox(height: 12),
+          if (purchase == null)
+            _emptyIntelligenceState(intelligence)
+          else
+            _purchaseIntelligenceState(purchase, accent),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyIntelligenceState(ArcNomadicTraderIntelligence intelligence) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          intelligence.recommendation,
+          style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _smartActionButton(
+              icon: Icons.add_rounded,
+              label: 'Track Purchase',
+              color: _accent,
+              onPressed: () => _openNomadicPurchaseSheet(),
+            ),
+            _smartActionButton(
+              icon: Icons.inventory_2_outlined,
+              label: 'Update Inventory',
+              color: AppTheme.neonCyan,
+              onPressed: _openInventorySheet,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _purchaseIntelligenceState(
+    ArcNomadicTraderPurchaseIntelligence intelligence,
+    Color accent,
+  ) {
+    final purchase = intelligence.purchase;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            _itemThumbnail(
+              purchase.name,
+              fallbackIcon: purchase.isGalleryProject
+                  ? Icons.collections_bookmark_outlined
+                  : Icons.shopping_bag_outlined,
+              color: accent,
+              size: 50,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    purchase.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _valueStyle(size: 20),
+                  ),
+                  const SizedBox(height: 5),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      _tagPill(intelligence.priorityLabel, accent),
+                      if (intelligence.canAfford)
+                        _tagPill('Can Afford', AppTheme.neonPink)
+                      else if (intelligence.nearlyAffords)
+                        _tagPill('Nearly', Colors.amberAccent),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _intelLine('Why', intelligence.reason),
+        const SizedBox(height: 8),
+        _intelLine('Progress impact', intelligence.progressImpact),
+        const SizedBox(height: 8),
+        _intelLine(
+          'Can afford',
+          intelligence.canAfford
+              ? 'Yes - buy now or mark one purchased.'
+              : intelligence.missingResources.isEmpty
+              ? 'Track item requirements for precise affordability.'
+              : 'Missing ${intelligence.missingShortText}.',
+        ),
+        if (intelligence.missingResources.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final resource in intelligence.missingResources.take(4))
+                _tagPill(resource, AppTheme.neonCyan),
+            ],
+          ),
+        ],
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _smartActionButton(
+              icon: intelligence.canAfford
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.add_rounded,
+              label: intelligence.canAfford
+                  ? 'Track Purchase'
+                  : intelligence.recommendedAction,
+              color: accent,
+              onPressed: intelligence.canAfford
+                  ? () => _markRecommendedPurchase(purchase)
+                  : () => _openNomadicPurchaseSheet(existing: purchase),
+            ),
+            if (intelligence.missingResources.isNotEmpty)
+              _smartActionButton(
+                icon: Icons.swap_horiz_rounded,
+                label: 'Trade Shortcut',
+                color: AppTheme.neonPink,
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(TraderHubScreen.routeName),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _intelLine(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 112,
+          child: Text(label.toUpperCase(), style: _labelStyle(size: 10)),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _smartActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        side: BorderSide(color: color.withValues(alpha: 0.72)),
+        textStyle: AppTheme.bodyTextStyle(
+          fontSize: 11,
+          color: color,
+          isBold: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _markRecommendedPurchase(
+    ArcNomadicTraderPurchaseSnapshot purchase,
+  ) async {
+    final nextOwned = math.min(purchase.requiredQty, purchase.ownedQty + 1);
+    await _upsertNomadicPurchase(purchase.copyWith(ownedQty: nextOwned));
   }
 
   Widget _metric(String label, String value, Color color) {
@@ -2560,6 +2417,8 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                               child: Column(
                                 children: [
                                   _goalPanel(),
+                                  const SizedBox(height: 12),
+                                  _intelligencePanel(),
                                   const SizedBox(height: 18),
                                   _carousel(),
                                   const SizedBox(height: 12),
