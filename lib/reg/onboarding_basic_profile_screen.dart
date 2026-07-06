@@ -16,11 +16,20 @@ class OnboardingBasicProfileScreen extends StatefulWidget {
       _OnboardingBasicProfileScreenState();
 }
 
+enum _ArcPlayerStartState { fresh, active, postExpedition }
+
+enum _ArcBlueprintSetupChoice { setupNow, skipForNow }
+
 class _OnboardingBasicProfileScreenState
     extends State<OnboardingBasicProfileScreen> {
+  static const bool _developerPreviewEnabled = !bool.fromEnvironment(
+    'dart.vm.product',
+  );
+
   final _formKey = GlobalKey<FormState>();
   final _displayNameController = TextEditingController();
   final _bioController = TextEditingController();
+  final _raiderLevelController = TextEditingController(text: '0');
 
   bool _isSaving = false;
   bool _isLoading = true;
@@ -30,8 +39,11 @@ class _OnboardingBasicProfileScreenState
   String _selectedCountry = 'United Kingdom';
   String _selectedPlatform = 'PC';
   String _selectedTimeZone = 'Europe/London';
+  _ArcPlayerStartState _playerState = _ArcPlayerStartState.fresh;
+  _ArcBlueprintSetupChoice _blueprintChoice =
+      _ArcBlueprintSetupChoice.skipForNow;
 
-  static const int _stepCount = 3;
+  static const int _stepCount = 5;
 
   static const List<String> _countries = [
     'United Kingdom',
@@ -77,6 +89,7 @@ class _OnboardingBasicProfileScreenState
   void dispose() {
     _displayNameController.dispose();
     _bioController.dispose();
+    _raiderLevelController.dispose();
     super.dispose();
   }
 
@@ -98,10 +111,20 @@ class _OnboardingBasicProfileScreenState
     final traderProfile = data['traderProfile'] is Map
         ? data['traderProfile'] as Map<String, dynamic>
         : <String, dynamic>{};
+    final arcOnboarding = data['arcOnboarding'] is Map
+        ? data['arcOnboarding'] as Map<String, dynamic>
+        : <String, dynamic>{};
 
     String pickString(dynamic value, String fallback) {
       if (value == null) return fallback;
       if (value is String && value.trim().isNotEmpty) return value;
+      return fallback;
+    }
+
+    int pickInt(dynamic value, int fallback) {
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value.trim()) ?? fallback;
       return fallback;
     }
 
@@ -124,20 +147,48 @@ class _OnboardingBasicProfileScreenState
       pickString(traderProfile['timeZone'], 'Europe/London'),
     );
 
-    if (_countries.contains(countryValue)) {
-      _selectedCountry = countryValue;
-    }
-    if (_platforms.contains(platformValue)) {
-      _selectedPlatform = platformValue;
-    }
-    if (_timeZones.contains(timeZoneValue)) {
-      _selectedTimeZone = timeZoneValue;
-    }
+    if (_countries.contains(countryValue)) _selectedCountry = countryValue;
+    if (_platforms.contains(platformValue)) _selectedPlatform = platformValue;
+    if (_timeZones.contains(timeZoneValue)) _selectedTimeZone = timeZoneValue;
+
+    final savedLevel = pickInt(
+      arcOnboarding['raiderLevel'] ?? traderProfile['raiderLevel'],
+      0,
+    ).clamp(0, 999);
+    _raiderLevelController.text = savedLevel.toString();
+
+    final savedState = pickString(arcOnboarding['playerState'], 'fresh');
+    _playerState = switch (savedState) {
+      'active' => _ArcPlayerStartState.active,
+      'postExpedition' => _ArcPlayerStartState.postExpedition,
+      _ => _ArcPlayerStartState.fresh,
+    };
+
+    final blueprintSkipped = arcOnboarding['blueprintSetupSkipped'] == true;
+    final blueprintConfigured =
+        arcOnboarding['blueprintTrackerConfigured'] == true;
+    _blueprintChoice = blueprintSkipped && !blueprintConfigured
+        ? _ArcBlueprintSetupChoice.skipForNow
+        : _ArcBlueprintSetupChoice.setupNow;
 
     if (mounted) setState(() => _isLoading = false);
   }
 
-  Future<void> _saveProfile() async {
+  int get _raiderLevel => int.tryParse(_raiderLevelController.text.trim()) ?? 0;
+
+  bool get _isNomadicUnlocked => _raiderLevel >= 25;
+
+  bool get _isFreshOrReset =>
+      _playerState == _ArcPlayerStartState.fresh ||
+      _playerState == _ArcPlayerStartState.postExpedition;
+
+  String get _playerStateId => switch (_playerState) {
+    _ArcPlayerStartState.active => 'active',
+    _ArcPlayerStartState.postExpedition => 'postExpedition',
+    _ => 'fresh',
+  };
+
+  Future<void> _saveOnboarding({required bool complete}) async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       setState(() => _stepIndex = 0);
       return;
@@ -148,12 +199,20 @@ class _OnboardingBasicProfileScreenState
 
     setState(() => _isSaving = true);
 
+    final displayName = _displayNameController.text.trim();
+    final raiderLevel = _isFreshOrReset ? 0 : _raiderLevel.clamp(0, 999);
+    final nomadicUnlocked = raiderLevel >= 25;
+    final blueprintSetupSkipped =
+        _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow;
+    final blueprintTrackerConfigured =
+        _blueprintChoice == _ArcBlueprintSetupChoice.setupNow;
+
     try {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'displayName': _displayNameController.text.trim(),
-        'onboardingComplete': true,
+        'displayName': displayName,
+        'onboardingComplete': complete,
         'basicProfile': {
-          'displayName': _displayNameController.text.trim(),
+          'displayName': displayName,
           'bio': _bioController.text.trim(),
           'country': _selectedCountry,
           'platform': _selectedPlatform,
@@ -161,38 +220,67 @@ class _OnboardingBasicProfileScreenState
           'platforms': [_selectedPlatform],
         },
         'traderProfile': {
-          'uagName': _displayNameController.text.trim(),
+          'uagName': displayName,
           'region': _selectedCountry == 'United Kingdom'
               ? 'UK'
               : _selectedCountry,
           'platform': _selectedPlatform,
           'timeZone': _selectedTimeZone,
+          'raiderLevel': raiderLevel,
         },
-        'modules': {'trader': true},
+        'arcOnboarding': {
+          'version': 2,
+          'playerState': _playerStateId,
+          'raiderLevel': raiderLevel,
+          'nomadicTraderUnlocked': nomadicUnlocked,
+          'nomadicTraderLockedReason': nomadicUnlocked
+              ? null
+              : 'Nomadic Trader unlocks at Raider Level 25. Update your Raider Level in the app when you reach 25 to unlock Nomadic Trader planning.',
+          'blueprintSetupSkipped': blueprintSetupSkipped,
+          'blueprintTrackerConfigured': blueprintTrackerConfigured,
+          'blueprintOwnershipReset': _isFreshOrReset,
+          'questProgressReset': _isFreshOrReset,
+          'benchProgressReset': _isFreshOrReset,
+          'favouriteLoadoutsRetained': true,
+          'completedSteps': {
+            'profile': true,
+            'playerState': true,
+            'blueprintTracker': blueprintTrackerConfigured,
+            'blueprintTrackerSkipped': blueprintSetupSkipped,
+            'nomadicTraderGate': true,
+            'traderCode': _acceptedTraderCode,
+          },
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        'modules': {
+          'trader': true,
+          'blueprintTracker': blueprintTrackerConfigured,
+          'nomadicTrader': nomadicUnlocked,
+        },
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-
-      if (!mounted) return;
-      setState(() => _stepIndex = 1);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  void _next() {
+  Future<void> _next() async {
     if (_stepIndex == 0) {
-      _saveProfile();
+      if (!(_formKey.currentState?.validate() ?? false)) return;
+      setState(() => _stepIndex = 1);
       return;
     }
 
-    if (_stepIndex == 1 && !_acceptedTraderCode) {
+    if (_stepIndex == 3 && !_acceptedTraderCode) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Accept the Trader Code to continue.')),
       );
       return;
     }
 
-    if (_stepIndex == 2) {
+    if (_stepIndex == _stepCount - 1) {
+      await _saveOnboarding(complete: true);
+      if (!mounted) return;
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
@@ -205,6 +293,18 @@ class _OnboardingBasicProfileScreenState
   void _back() {
     if (_stepIndex <= 0 || _isSaving) return;
     setState(() => _stepIndex--);
+  }
+
+  void _applyPreview(_ArcPlayerStartState state, int level) {
+    setState(() {
+      _playerState = state;
+      _raiderLevelController.text = state == _ArcPlayerStartState.active
+          ? level.toString()
+          : '0';
+      _blueprintChoice = state == _ArcPlayerStartState.active
+          ? _ArcBlueprintSetupChoice.setupNow
+          : _ArcBlueprintSetupChoice.skipForNow;
+    });
   }
 
   InputDecoration _input(String label) {
@@ -402,6 +502,21 @@ class _OnboardingBasicProfileScreenState
   }
 
   Widget _leftHeroPanel() {
+    final title = switch (_stepIndex) {
+      0 => 'BUILD YOUR RAIDER PROFILE',
+      1 => 'SET YOUR WIPE STATE',
+      2 => 'CONFIGURE TRACKERS',
+      3 => 'TRUSTED TRADING',
+      _ => 'READY TO LAUNCH',
+    };
+    final subtitle = switch (_stepIndex) {
+      0 => 'Add the essentials first. Advanced setup can wait.',
+      1 => 'Tell the app where your ARC progression currently stands.',
+      2 => 'Skip anything that does not matter yet and return later.',
+      3 => 'Accept the trust rules before entering the trading network.',
+      _ => 'Your ARC command centre is ready.',
+    };
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
@@ -431,11 +546,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 38),
           Text(
-            _stepIndex == 0
-                ? 'BUILD YOUR RAIDER PROFILE'
-                : _stepIndex == 1
-                ? 'TRUSTED TRADING'
-                : 'READY TO LAUNCH',
+            title,
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -446,105 +557,66 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 14),
           Text(
-            _stepIndex == 0
-                ? 'Add the essentials first. Advanced setup can wait.'
-                : _stepIndex == 1
-                ? 'Accept the trust rules before entering the trading network.'
-                : 'Your ARC command centre is ready.',
+            subtitle,
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, height: 1.35),
           ),
+          if (_developerPreviewEnabled) ...[
+            const SizedBox(height: 24),
+            _developerPreviewPanel(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _traderCodeStep() {
-    return _contentShell(
+  Widget _developerPreviewPanel() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.28)),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _screenTitle(
-            'Step 2 of 3 - Trader Code',
-            subtitle:
-                'UAG operates on trust. Accept the basics before entering the hub.',
-          ),
-          const SizedBox(height: 26),
-          _codeLine(
-            Icons.shield_outlined,
-            'Be respectful and fair',
-            'Treat all traders with respect.',
-          ),
-          _codeLine(
-            Icons.gpp_bad_outlined,
-            'No scamming or exploits',
-            'Zero tolerance for cheating.',
-          ),
-          _codeLine(
-            Icons.balance_rounded,
-            'Honour your trades',
-            'Follow through on commitments.',
-          ),
-          _codeLine(
-            Icons.groups_2_outlined,
-            'Help the community grow',
-            'Share intel and support others.',
-          ),
-          const Spacer(),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: _acceptedTraderCode,
-            activeColor: AppTheme.neonCyan,
-            checkColor: Colors.black,
-            onChanged: (value) {
-              setState(() => _acceptedTraderCode = value ?? false);
-            },
-            title: const Text(
-              'I have read and agree to the UAG Trader Code',
-              style: TextStyle(color: Colors.white, fontSize: 14),
+          Text(
+            'DEV ONBOARDING PREVIEW',
+            textAlign: TextAlign.center,
+            style: AppTheme.neonTextStyle(
+              fontSize: 13,
+              color: AppTheme.neonPink,
+              isBold: true,
             ),
-            controlAffinity: ListTileControlAffinity.leading,
           ),
-          _primaryButton('I ACCEPT'),
+          const SizedBox(height: 10),
+          _previewButton(
+            'Fresh / Level 0',
+            () => _applyPreview(_ArcPlayerStartState.fresh, 0),
+          ),
+          _previewButton(
+            'Active / Level 24',
+            () => _applyPreview(_ArcPlayerStartState.active, 24),
+          ),
+          _previewButton(
+            'Active / Level 25',
+            () => _applyPreview(_ArcPlayerStartState.active, 25),
+          ),
+          _previewButton(
+            'After Expedition',
+            () => _applyPreview(_ArcPlayerStartState.postExpedition, 0),
+          ),
         ],
       ),
     );
   }
 
-  Widget _codeLine(IconData icon, String title, String body) {
+  Widget _previewButton(String label, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: AppTheme.neonCyan, size: 25),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 13,
-                    height: 1.25,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.only(top: 6),
+      child: OutlinedButton(onPressed: onTap, child: Text(label)),
     );
   }
 
@@ -556,9 +628,9 @@ class _OnboardingBasicProfileScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _screenTitle(
-              'Step 1 of 3 - Raider Profile',
+              'Step 1 of 5 - Raider Profile',
               subtitle:
-                  'Add only the launch essentials now. Advanced setup moves into Profile Settings after onboarding.',
+                  'Add the essentials. Tracker setup now adapts around your current wipe state.',
             ),
             const SizedBox(height: 22),
             TextFormField(
@@ -604,7 +676,7 @@ class _OnboardingBasicProfileScreenState
             TextFormField(
               controller: _bioController,
               minLines: 2,
-              maxLines: 4,
+              maxLines: 3,
               style: AppTheme.bodyTextStyle(
                 fontSize: 15,
                 color: Colors.white,
@@ -620,7 +692,222 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+  Widget _progressionStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _screenTitle(
+            'Step 2 of 5 - Wipe State',
+            subtitle:
+                'This controls what the Command Centre should prioritise after onboarding.',
+          ),
+          const SizedBox(height: 22),
+          _choiceCard(
+            title: 'Fresh start / no current progress',
+            body:
+                'Use this if you have just started ARC Raiders or have no useful tracker data yet.',
+            icon: Icons.radio_button_checked_rounded,
+            selected: _playerState == _ArcPlayerStartState.fresh,
+            onTap: () => setState(() {
+              _playerState = _ArcPlayerStartState.fresh;
+              _raiderLevelController.text = '0';
+              _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
+            }),
+          ),
+          _choiceCard(
+            title: 'Existing profile / mid-wipe',
+            body:
+                'Use this if you already have levels, blueprints, bench upgrades or quest progress.',
+            icon: Icons.person_search_rounded,
+            selected: _playerState == _ArcPlayerStartState.active,
+            onTap: () =>
+                setState(() => _playerState = _ArcPlayerStartState.active),
+          ),
+          _choiceCard(
+            title: 'After expedition reset',
+            body:
+                'Raider Level, blueprints, quests and benches restart. Favourite Loadouts stay saved.',
+            icon: Icons.restart_alt_rounded,
+            selected: _playerState == _ArcPlayerStartState.postExpedition,
+            onTap: () => setState(() {
+              _playerState = _ArcPlayerStartState.postExpedition;
+              _raiderLevelController.text = '0';
+              _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
+            }),
+          ),
+          const SizedBox(height: 18),
+          TextFormField(
+            controller: _raiderLevelController,
+            enabled: !_isFreshOrReset,
+            keyboardType: TextInputType.number,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              isBold: true,
+            ),
+            decoration: _input(
+              _isFreshOrReset
+                  ? 'Raider Level locked to 0 for this state'
+                  : 'Current Raider Level',
+            ),
+            validator: (value) {
+              final parsed = int.tryParse(value?.trim() ?? '');
+              if (parsed == null) return 'Enter a valid Raider Level';
+              if (parsed < 0) return 'Raider Level cannot be below 0';
+              return null;
+            },
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 14),
+          _statusPanel(
+            title: _isNomadicUnlocked
+                ? 'Nomadic Trader planning unlocked'
+                : 'Nomadic Trader locked',
+            body: _isNomadicUnlocked
+                ? 'Resource planning and Nomadic Trader goals can be enabled for this profile.'
+                : 'Nomadic Trader unlocks at Raider Level 25. Update your Raider Level in the app when you reach 25 to unlock Nomadic Trader planning.',
+            icon: _isNomadicUnlocked
+                ? Icons.lock_open_rounded
+                : Icons.lock_outline_rounded,
+            accent: _isNomadicUnlocked ? AppTheme.neonCyan : Colors.amberAccent,
+          ),
+          const Spacer(),
+          _primaryButton('NEXT'),
+        ],
+      ),
+    );
+  }
+
+  Widget _blueprintStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _screenTitle(
+            'Step 3 of 5 - Blueprint Tracker',
+            subtitle:
+                'Skip this if you have no blueprints or duplicates yet. You can return from the Tool Deck later.',
+          ),
+          const SizedBox(height: 24),
+          if (_isFreshOrReset)
+            _statusPanel(
+              title: 'Blueprint ownership starts empty',
+              body:
+                  'Fresh starts and expedition resets wipe blueprint ownership. Favourite Loadouts remain saved, but blueprint ownership should be rebuilt from the new wipe.',
+              icon: Icons.cleaning_services_rounded,
+              accent: AppTheme.neonPink,
+            ),
+          const SizedBox(height: 14),
+          _choiceCard(
+            title: 'Set up Blueprint Tracker now',
+            body:
+                'Choose this if you already have owned blueprints, missing targets or duplicates to enter.',
+            icon: Icons.grid_view_rounded,
+            selected: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow,
+            onTap: () => setState(
+              () => _blueprintChoice = _ArcBlueprintSetupChoice.setupNow,
+            ),
+          ),
+          _choiceCard(
+            title: 'Skip Blueprint Tracker for now',
+            body:
+                'Best for fresh starts, zero blueprints or no duplicates. The Command Centre will remind you later.',
+            icon: Icons.skip_next_rounded,
+            selected: _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow,
+            onTap: () => setState(
+              () => _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _statusPanel(
+            title: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
+                ? 'Blueprint Tracker will be enabled'
+                : 'Blueprint Tracker setup will stay pending',
+            body: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
+                ? 'The tracker will be available from the Command Centre and Tool Deck.'
+                : 'No grid setup is forced during onboarding. You can complete it when you have blueprint data worth tracking.',
+            icon: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
+                ? Icons.check_circle_outline_rounded
+                : Icons.pending_actions_rounded,
+            accent: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
+                ? AppTheme.neonCyan
+                : Colors.amberAccent,
+          ),
+          const Spacer(),
+          _primaryButton('NEXT'),
+        ],
+      ),
+    );
+  }
+
+  Widget _traderCodeStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _screenTitle(
+            'Step 4 of 5 - Trader Code',
+            subtitle:
+                'UAG operates on trust. Accept the basics before entering the hub.',
+          ),
+          const SizedBox(height: 26),
+          _codeLine(
+            Icons.shield_outlined,
+            'Be respectful and fair',
+            'Treat all traders with respect.',
+          ),
+          _codeLine(
+            Icons.gpp_bad_outlined,
+            'No scamming or exploits',
+            'Zero tolerance for cheating.',
+          ),
+          _codeLine(
+            Icons.balance_rounded,
+            'Honour your trades',
+            'Follow through on commitments.',
+          ),
+          _codeLine(
+            Icons.groups_2_outlined,
+            'Help the community grow',
+            'Share intel and support others.',
+          ),
+          const Spacer(),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _acceptedTraderCode,
+            activeColor: AppTheme.neonCyan,
+            checkColor: Colors.black,
+            onChanged: (value) {
+              setState(() => _acceptedTraderCode = value ?? false);
+            },
+            title: const Text(
+              'I have read and agree to the UAG Trader Code',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          _primaryButton('I ACCEPT'),
+        ],
+      ),
+    );
+  }
+
   Widget _completeStep() {
+    final summary = <String>[
+      _isFreshOrReset
+          ? 'Raider Level: 0 after fresh start/reset'
+          : 'Raider Level: ${_raiderLevel.clamp(0, 999)}',
+      _isNomadicUnlocked
+          ? 'Nomadic Trader: enabled'
+          : 'Nomadic Trader: locked until Level 25',
+      _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
+          ? 'Blueprint Tracker: enabled'
+          : 'Blueprint Tracker: skipped for now',
+      if (_isFreshOrReset) 'Blueprint ownership, quests and benches: reset',
+      'Favourite Loadouts: retained',
+    ];
+
     return _contentShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -628,7 +915,7 @@ class _OnboardingBasicProfileScreenState
           const Spacer(),
           Icon(
             Icons.check_circle_outline_rounded,
-            size: 120,
+            size: 100,
             color: AppTheme.neonCyan,
             shadows: [
               Shadow(
@@ -637,24 +924,207 @@ class _OnboardingBasicProfileScreenState
               ),
             ],
           ),
-          const SizedBox(height: 34),
+          const SizedBox(height: 24),
           Text(
-            'Step 3 of 3 - Ready to Launch',
+            'Step 5 of 5 - Ready to Launch',
             textAlign: TextAlign.center,
             style: AppTheme.neonTextStyle(
-              fontSize: 31,
+              fontSize: 29,
               color: Colors.white,
               isBold: true,
             ),
           ),
           const SizedBox(height: 14),
           const Text(
-            'Welcome to the UAG network.\\nBlueprints, trades, squads and alerts are ready from My Hub.',
+            'Your Command Centre will now prioritise the systems that matter for your current wipe state.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, height: 1.38),
           ),
-          const SizedBox(height: 22),
-          _primaryButton('LAUNCH HUB', icon: Icons.rocket_launch_rounded),
+          const SizedBox(height: 18),
+          ...summary.map(
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.bolt_rounded,
+                    color: AppTheme.neonCyan,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _primaryButton(
+            'LAUNCH COMMAND CENTRE',
+            icon: Icons.rocket_launch_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _choiceCard({
+    required String title,
+    required String body,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppTheme.neonCyan.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.24),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected
+                  ? AppTheme.neonCyan
+                  : Colors.white.withValues(alpha: 0.14),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: selected ? AppTheme.neonCyan : Colors.white60),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: selected ? Colors.white : Colors.white70,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      body,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        height: 1.3,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                selected
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: selected ? AppTheme.neonCyan : Colors.white30,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statusPanel({
+    required String title,
+    required String body,
+    required IconData icon,
+    required Color accent,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.32)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: accent, size: 24),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _codeLine(IconData icon, String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppTheme.neonCyan, size: 25),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 13,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -667,7 +1137,9 @@ class _OnboardingBasicProfileScreenState
         key: ValueKey<int>(_stepIndex),
         child: switch (_stepIndex) {
           0 => _profileStep(),
-          1 => _traderCodeStep(),
+          1 => _progressionStep(),
+          2 => _blueprintStep(),
+          3 => _traderCodeStep(),
           _ => _completeStep(),
         },
       ),
@@ -678,7 +1150,7 @@ class _OnboardingBasicProfileScreenState
     final compact = constraints.maxWidth < 900;
 
     final stepPanel = SizedBox(
-      height: compact ? null : 650,
+      height: compact ? null : 720,
       child: _currentStep(),
     );
 
@@ -687,7 +1159,7 @@ class _OnboardingBasicProfileScreenState
         children: [
           _leftHeroPanel(),
           const SizedBox(height: 18),
-          SizedBox(height: 680, child: stepPanel),
+          SizedBox(height: 760, child: stepPanel),
         ],
       );
     }
@@ -750,7 +1222,7 @@ class _OnboardingBasicProfileScreenState
                           ),
                           const SizedBox(height: 18),
                           SizedBox(
-                            height: constraints.maxWidth < 900 ? null : 650,
+                            height: constraints.maxWidth < 900 ? null : 720,
                             child: _mainLayout(constraints),
                           ),
                         ],
