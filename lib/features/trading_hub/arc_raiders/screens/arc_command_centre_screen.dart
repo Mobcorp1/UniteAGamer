@@ -272,6 +272,30 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   }
 
   Widget _commandCentreContent(ArcCommandCentreState commandState) {
+    final compactSnapshots = _compactSnapshots(commandState.snapshots);
+    final topObjectives = commandState.objectives.take(3).toList();
+    final topAlerts = commandState.alerts.take(3).toList();
+    final topRecommendations = commandState.recommendations.take(3).toList();
+    final moreObjectives = commandState.objectives.skip(3).toList();
+    final moreAlerts = commandState.alerts.skip(3).toList();
+    final moreRecommendations = commandState.recommendations.skip(3).toList();
+    final moreCommandDetail = <Widget>[
+      if (moreObjectives.isNotEmpty) _objectives(moreObjectives),
+      if (moreAlerts.isNotEmpty) _alerts(moreAlerts),
+      if (moreRecommendations.isNotEmpty) _recommendations(moreRecommendations),
+    ];
+    final systemDetailPanels = <Widget>[
+      _summaryPanel(commandState.blueprintSummary),
+      _summaryPanel(commandState.operationsSummary),
+      _summaryPanel(commandState.questSummary),
+      _summaryPanel(commandState.benchSummary),
+      _resourceSummary(commandState.resources),
+      _summaryPanel(commandState.weeklyTraderSummary),
+      _summaryPanel(commandState.communitySummary),
+      _summaryPanel(commandState.statisticsSummary),
+      _dailyChecklist(commandState.checklist),
+    ];
+
     return ArcRaidersPageList(
       maxWidth: 1220,
       bottomPadding: 68,
@@ -282,45 +306,589 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
           subtitle: 'Priority, blockers, trades and daily actions in one scan.',
           icon: Icons.dashboard_customize_rounded,
           accent: AppTheme.neonCyan,
-          trailing: ArcCommandActionButton(
-            action: const ArcCommandAction(
-              label: 'Tool Deck',
-              intent: ArcCommandActionIntent.toolDeck,
-            ),
-            accent: AppTheme.neonPink,
-            compact: true,
-            onPressed: () => _handleAction(
-              const ArcCommandAction(
-                label: 'Tool Deck',
-                intent: ArcCommandActionIntent.toolDeck,
-              ),
-            ),
-          ),
         ),
         const SizedBox(height: 10),
         _priorityHero(commandState.priority),
-        const SizedBox(height: 10),
-        _snapshotGrid(commandState.snapshots),
-        const SizedBox(height: 10),
-        _objectivesAndAlerts(commandState),
-        const SizedBox(height: 10),
-        _responsiveGrid(
-          minTileWidth: 340,
-          children: [
-            _tradeSummary(commandState.tradeSummary),
-            _summaryPanel(commandState.blueprintSummary),
-            _summaryPanel(commandState.operationsSummary),
-            _summaryPanel(commandState.questSummary),
-            _summaryPanel(commandState.benchSummary),
-            _resourceSummary(commandState.resources),
-            _summaryPanel(commandState.weeklyTraderSummary),
-            _recommendations(commandState.recommendations),
-            _dailyChecklist(commandState.checklist),
-            _summaryPanel(commandState.communitySummary),
-            _summaryPanel(commandState.statisticsSummary),
-          ],
+        if (compactSnapshots.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _snapshotGrid(compactSnapshots),
+        ],
+        const SizedBox(height: 8),
+        _compactActionGrid(
+          objectives: topObjectives,
+          recommendations: topRecommendations,
+        ),
+        if (topAlerts.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _compactAlerts(topAlerts),
+        ],
+        const SizedBox(height: 8),
+        _compactTradeSummary(commandState.tradeSummary),
+        const SizedBox(height: 8),
+        _compactSystemSummaries(commandState),
+        const SizedBox(height: 8),
+        _toolDeckPanel(),
+        if (moreCommandDetail.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _detailAccordion(
+            title: 'View More Command Detail',
+            subtitle: 'Full objective, alert and recommendation context.',
+            accent: AppTheme.neonCyan,
+            children: moreCommandDetail,
+          ),
+        ],
+        const SizedBox(height: 8),
+        _detailAccordion(
+          title: 'System Detail Panels',
+          subtitle: 'Expanded summaries and lower-priority status cards.',
+          accent: AppTheme.neonPink,
+          children: systemDetailPanels,
         ),
       ],
+    );
+  }
+
+  List<ArcCommandSnapshotMetric> _compactSnapshots(
+    List<ArcCommandSnapshotMetric> snapshots,
+  ) {
+    const preferred = <String>{
+      'Operations',
+      'Blueprints',
+      'Favourite Loadout',
+      'Trade Activity',
+      'Reward Vault',
+      'Inventory',
+    };
+    final selected = snapshots
+        .where((metric) => preferred.contains(metric.label))
+        .take(4)
+        .toList(growable: false);
+    if (selected.length >= 4) return selected;
+    return snapshots.take(4).toList(growable: false);
+  }
+
+  Widget _compactActionGrid({
+    required List<ArcCommandObjective> objectives,
+    required List<ArcCommandRecommendation> recommendations,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 820;
+        final actions = _nextActions(objectives);
+        final smart = _compactRecommendations(recommendations);
+        if (compact) {
+          return Column(children: [actions, const SizedBox(height: 8), smart]);
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 3, child: actions),
+            const SizedBox(width: 8),
+            Expanded(flex: 2, child: smart),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _nextActions(List<ArcCommandObjective> objectives) {
+    return ArcCommandCentreCard(
+      accent: AppTheme.neonCyan,
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ArcCommandSectionHeader(
+            title: 'Next 3 Actions',
+            subtitle: 'The shortest path from current state to useful action.',
+            accent: AppTheme.neonCyan,
+          ),
+          const SizedBox(height: 8),
+          if (objectives.isEmpty)
+            _quietLine('No active objective needs attention.')
+          else
+            for (final objective in objectives) ...[
+              _compactObjectiveRow(objective),
+              if (objective != objectives.last) const SizedBox(height: 6),
+            ],
+        ],
+      ),
+    );
+  }
+
+  Widget _compactObjectiveRow(ArcCommandObjective objective) {
+    final accent = arcCommandStatusAccent(objective.status);
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: _innerDecoration(accent),
+      child: Row(
+        children: [
+          Icon(_statusIcon(objective.status), color: accent, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        objective.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          isBold: true,
+                        ),
+                      ),
+                    ),
+                    ArcCommandStatusPill(
+                      label: objective.statusLabel,
+                      status: objective.status,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  objective.progressText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 10,
+                    color: Colors.white54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ArcCommandActionButton(
+            action: objective.action,
+            accent: accent,
+            compact: true,
+            onPressed: () => _handleAction(objective.action),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _compactRecommendations(
+    List<ArcCommandRecommendation> recommendations,
+  ) {
+    return ArcCommandCentreCard(
+      accent: Colors.amberAccent,
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ArcCommandSectionHeader(
+            title: 'Smart Picks',
+            subtitle: 'Top recommendations only.',
+            accent: Colors.amberAccent,
+          ),
+          const SizedBox(height: 8),
+          if (recommendations.isEmpty)
+            _quietLine('No recommendation is waiting.')
+          else
+            for (final recommendation in recommendations) ...[
+              _compactRecommendationRow(recommendation),
+              if (recommendation != recommendations.last)
+                const SizedBox(height: 6),
+            ],
+        ],
+      ),
+    );
+  }
+
+  Widget _compactRecommendationRow(ArcCommandRecommendation recommendation) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: _innerDecoration(Colors.amberAccent),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.auto_awesome_rounded,
+            color: Colors.amberAccent,
+            size: 15,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              recommendation.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: Colors.white,
+                isBold: true,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ArcCommandActionButton(
+            action: recommendation.action,
+            accent: Colors.amberAccent,
+            compact: true,
+            onPressed: () => _handleAction(recommendation.action),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _compactAlerts(List<ArcCommandAlert> alerts) {
+    return ArcCommandCentreCard(
+      accent: AppTheme.neonPink,
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ArcCommandSectionHeader(
+            title: 'Alerts / Blockers',
+            subtitle: 'Only the top blockers are shown here.',
+            accent: AppTheme.neonPink,
+          ),
+          const SizedBox(height: 8),
+          for (final alert in alerts) ...[
+            _compactAlertRow(alert),
+            if (alert != alerts.last) const SizedBox(height: 6),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _compactAlertRow(ArcCommandAlert alert) {
+    final accent = arcCommandStatusAccent(alert.status);
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: _innerDecoration(accent),
+      child: Row(
+        children: [
+          Icon(_statusIcon(alert.status), color: accent, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              alert.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: Colors.white,
+                isBold: true,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ArcCommandStatusPill(label: alert.statusLabel, status: alert.status),
+          const SizedBox(width: 8),
+          ArcCommandActionButton(
+            action: alert.action,
+            accent: accent,
+            compact: true,
+            onPressed: () => _handleAction(alert.action),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _compactTradeSummary(ArcCommandTradeSummary summary) {
+    return ArcCommandCentreCard(
+      accent: AppTheme.neonPink,
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ArcCommandSectionHeader(
+            title: 'Trade Opportunity',
+            subtitle: 'Compact read of what to ask for and offer.',
+            accent: AppTheme.neonPink,
+          ),
+          const SizedBox(height: 8),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 760;
+              final looking = _compactTradeLane(
+                'Looking For',
+                summary.lookingFor,
+                AppTheme.neonCyan,
+              );
+              final offering = _compactTradeLane(
+                'Offering',
+                summary.offering,
+                Colors.amberAccent,
+              );
+              if (compact) {
+                return Column(
+                  children: [looking, const SizedBox(height: 6), offering],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: looking),
+                  const SizedBox(width: 8),
+                  Expanded(child: offering),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final action in summary.actions.take(2))
+                ArcCommandActionButton(
+                  action: action,
+                  accent: AppTheme.neonPink,
+                  compact: true,
+                  onPressed: () => _handleAction(action),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _compactTradeLane(String title, List<String> items, Color accent) {
+    final visible = items.take(3).toList(growable: false);
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: _innerDecoration(accent),
+      child: Row(
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: AppTheme.bodyTextStyle(
+              fontSize: 10,
+              color: accent,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                if (visible.isEmpty)
+                  ArcCommandStatusPill(
+                    label: 'No signal',
+                    status: ArcCommandStatus.neutral,
+                  )
+                else
+                  for (final item in visible)
+                    ArcCommandStatusPill(
+                      label: item,
+                      status: ArcCommandStatus.neutral,
+                    ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _compactSystemSummaries(ArcCommandCentreState commandState) {
+    final loadout = _snapshotByLabel(
+      commandState.snapshots,
+      'Favourite Loadout',
+    );
+    return _responsiveGrid(
+      minTileWidth: 230,
+      spacing: 8,
+      children: [
+        _summaryTile(commandState.blueprintSummary),
+        _metricSummaryTile(
+          title: 'Favourite Loadout',
+          statusLabel: loadout?.value ?? 'Unknown',
+          detail: loadout?.detail ?? 'Open loadout',
+          status: loadout?.status ?? ArcCommandStatus.neutral,
+          action: const ArcCommandAction(
+            label: 'Open Loadout',
+            intent: ArcCommandActionIntent.favouriteLoadout,
+          ),
+        ),
+        _summaryTile(commandState.benchSummary),
+        _summaryTile(commandState.questSummary),
+      ],
+    );
+  }
+
+  ArcCommandSnapshotMetric? _snapshotByLabel(
+    List<ArcCommandSnapshotMetric> snapshots,
+    String label,
+  ) {
+    for (final snapshot in snapshots) {
+      if (snapshot.label == label) return snapshot;
+    }
+    return null;
+  }
+
+  Widget _summaryTile(ArcCommandSummaryPanel panel) {
+    final detail = panel.details.isEmpty ? panel.body : panel.details.first;
+    return _metricSummaryTile(
+      title: panel.title,
+      statusLabel: panel.statusLabel,
+      detail: detail,
+      status: panel.status,
+      action: panel.action,
+    );
+  }
+
+  Widget _metricSummaryTile({
+    required String title,
+    required String statusLabel,
+    required String detail,
+    required ArcCommandStatus status,
+    required ArcCommandAction action,
+  }) {
+    final accent = arcCommandStatusAccent(status);
+    return ArcCommandCentreCard(
+      accent: accent,
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(_statusIcon(status), color: accent, size: 16),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    isBold: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          ArcCommandStatusPill(label: statusLabel, status: status),
+          const SizedBox(height: 7),
+          Text(
+            detail,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white54),
+          ),
+          const SizedBox(height: 8),
+          ArcCommandActionButton(
+            action: action,
+            accent: accent,
+            compact: true,
+            onPressed: () => _handleAction(action),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toolDeckPanel() {
+    return _detailAccordion(
+      title: 'Tool Deck',
+      subtitle: 'Legacy hub carousel and full tool launcher.',
+      accent: AppTheme.neonCyan,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: _innerDecoration(AppTheme.neonCyan),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.view_carousel_rounded,
+                color: AppTheme.neonCyan,
+                size: 18,
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'Open the full Tool Deck when you want the old carousel-style launcher.',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ArcCommandActionButton(
+                action: const ArcCommandAction(
+                  label: 'Open Tool Deck',
+                  intent: ArcCommandActionIntent.toolDeck,
+                ),
+                accent: AppTheme.neonCyan,
+                compact: true,
+                onPressed: () => _handleAction(
+                  const ArcCommandAction(
+                    label: 'Open Tool Deck',
+                    intent: ArcCommandActionIntent.toolDeck,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _detailAccordion({
+    required String title,
+    required String subtitle,
+    required Color accent,
+    required List<Widget> children,
+  }) {
+    return ArcCommandCentreCard(
+      accent: accent,
+      padding: EdgeInsets.zero,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          iconColor: accent,
+          collapsedIconColor: Colors.white60,
+          title: Text(
+            title.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.tradingHeading(fontSize: 15, color: accent),
+          ),
+          subtitle: Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(fontSize: 11, color: Colors.white54),
+          ),
+          children: children.isEmpty
+              ? [_quietLine('No additional detail is waiting.')]
+              : [
+                  for (final child in children) ...[
+                    child,
+                    if (child != children.last) const SizedBox(height: 8),
+                  ],
+                ],
+        ),
+      ),
+    );
+  }
+
+  Widget _quietLine(String text) {
+    return Text(
+      text,
+      style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white54),
     );
   }
 
@@ -335,6 +903,17 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
           final content = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                "TODAY'S MISSION",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: Colors.white54,
+                  isBold: true,
+                ),
+              ),
+              const SizedBox(height: 6),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -349,7 +928,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppTheme.tradingHeading(
-                            fontSize: compact ? 24 : 31,
+                            fontSize: compact ? 23 : 29,
                             color: accent,
                           ),
                         ),
@@ -489,29 +1068,6 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _objectivesAndAlerts(ArcCommandCentreState commandState) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 860;
-        final objectives = _objectives(commandState.objectives);
-        final alerts = _alerts(commandState.alerts);
-        if (compact) {
-          return Column(
-            children: [objectives, const SizedBox(height: 10), alerts],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 3, child: objectives),
-            const SizedBox(width: 10),
-            Expanded(flex: 2, child: alerts),
-          ],
-        );
-      },
     );
   }
 
@@ -678,72 +1234,6 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
               compact: true,
               onPressed: () => _handleAction(alert.action),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tradeSummary(ArcCommandTradeSummary summary) {
-    return ArcCommandCentreCard(
-      accent: AppTheme.neonPink,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ArcCommandSectionHeader(
-            title: 'Trade Centre Snapshot',
-            subtitle: 'Looking-for and offering lanes.',
-            accent: AppTheme.neonPink,
-          ),
-          const SizedBox(height: 10),
-          _tradeLane('Looking For', summary.lookingFor, AppTheme.neonCyan),
-          const SizedBox(height: 8),
-          _tradeLane('Offering', summary.offering, Colors.amberAccent),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final action in summary.actions)
-                ArcCommandActionButton(
-                  action: action,
-                  accent: AppTheme.neonPink,
-                  compact: true,
-                  onPressed: () => _handleAction(action),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tradeLane(String title, List<String> items, Color accent) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: _innerDecoration(accent),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: AppTheme.bodyTextStyle(
-              fontSize: 10,
-              color: accent,
-              isBold: true,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final item in items)
-                ArcCommandStatusPill(
-                  label: item,
-                  status: ArcCommandStatus.neutral,
-                ),
-            ],
           ),
         ],
       ),
