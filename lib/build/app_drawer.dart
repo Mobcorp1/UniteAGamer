@@ -2,14 +2,13 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -114,11 +113,15 @@ class _AppDrawerState extends State<AppDrawer>
 
   List<_DrawerItem> _buildItems(bool isLoggedIn, bool adminMode) {
     return <_DrawerItem>[
-      _DrawerItem('Home', Icons.home_outlined, AppEntryGate.routeName),
+      _DrawerItem(
+        'Home',
+        Icons.home_outlined,
+        ArcCommandCentreScreen.routeName,
+      ),
       _DrawerItem(
         'My Hub',
         Icons.dashboard_customize_outlined,
-        MyHubScreen.routeName,
+        ArcCommandCentreScreen.routeName,
       ),
       _DrawerItem(
         'Intel Snapshot',
@@ -128,7 +131,7 @@ class _AppDrawerState extends State<AppDrawer>
       _DrawerItem(
         'Tracking',
         Icons.dashboard_customize_outlined,
-        MyHubScreen.routeName,
+        ArcCommandCentreScreen.routeName,
       ),
       _DrawerItem(
         'Raid Planner',

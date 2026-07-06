@@ -5,9 +5,9 @@ import 'package:uag_arc_raiders_hub/features/auth/session/uag_biometric_relock_s
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_initializer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
-import 'package:uag_arc_raiders_hub/build/home_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class AppEntryGate extends StatefulWidget {
@@ -209,7 +209,7 @@ class _AppEntryGateState extends State<AppEntryGate>
                       _runLegalGateOnce();
                     });
 
-                    return const HomeScreen();
+                    return const ArcCommandCentreScreen();
                   },
                 );
               },
