@@ -1,13 +1,17 @@
 import 'dart:math' as math;
 
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_bench_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
@@ -23,6 +27,8 @@ class ArcCommandCentreEngine {
   static ArcCommandCentreState build({
     required Map<String, ArcBlueprintState> blueprintStates,
     required List<ArcSavedLoadout> savedLoadouts,
+    Map<String, ArcScrappyState> scrappyStates =
+        const <String, ArcScrappyState>{},
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
     ArcCommandTradeActivity tradeActivity = ArcCommandTradeActivity.empty,
   }) {
@@ -53,6 +59,12 @@ class ArcCommandCentreEngine {
       ArcOperationClaimState.inProgress,
     );
     final availableOperations = _operationTasks.length;
+    final questIntel = const ArcQuestIntelligenceEngine().build(
+      scrappyStates: scrappyStates,
+    );
+    final benchIntel = const ArcBenchIntelligenceEngine().build(
+      scrappyStates: scrappyStates,
+    );
 
     return ArcCommandCentreState(
       priority: _priority(
@@ -67,6 +79,8 @@ class ArcCommandCentreEngine {
         tradeActivity: tradeActivity,
         readyOperations: readyOperations,
         inProgressOperations: inProgressOperations,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
       snapshots: _snapshots(
         blueprintStateKnown: blueprintStateKnown,
@@ -80,6 +94,8 @@ class ArcCommandCentreEngine {
         tradeActivity: tradeActivity,
         readyOperations: readyOperations,
         inProgressOperations: inProgressOperations,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
       objectives: _objectives(
         blueprintStateKnown: blueprintStateKnown,
@@ -93,6 +109,8 @@ class ArcCommandCentreEngine {
         readyOperations: readyOperations,
         inProgressOperations: inProgressOperations,
         availableOperations: availableOperations,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
       alerts: _alerts(
         blueprintStateKnown: blueprintStateKnown,
@@ -101,6 +119,8 @@ class ArcCommandCentreEngine {
         loadoutSummary: loadoutSummary,
         tradeActivity: tradeActivity,
         readyOperations: readyOperations,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
       recommendations: _recommendations(
         blueprintStateKnown: blueprintStateKnown,
@@ -109,17 +129,23 @@ class ArcCommandCentreEngine {
         loadoutSummary: loadoutSummary,
         tradeActivity: tradeActivity,
         readyOperations: readyOperations,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
       checklist: _checklist(
         loadoutReady: loadoutSummary.ready,
         tradeActivity: tradeActivity,
         readyOperations: readyOperations,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
       resources: _resources(),
       tradeSummary: _tradeSummary(
         prioritizedMissing: prioritizedMissing,
         duplicateBlueprints: duplicateBlueprints,
         tradeActivity: tradeActivity,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
       blueprintSummary: _blueprintSummary(
         blueprintStateKnown: blueprintStateKnown,
@@ -129,8 +155,8 @@ class ArcCommandCentreEngine {
         duplicateBlueprints: duplicateBlueprints,
         recentBlueprint: recentBlueprint,
       ),
-      questSummary: _questSummary(),
-      benchSummary: _benchSummary(),
+      questSummary: _questSummary(questIntel),
+      benchSummary: _benchSummary(benchIntel),
       operationsSummary: _operationsSummary(
         operationsState: operationsState,
         readyOperations: readyOperations,
@@ -145,6 +171,8 @@ class ArcCommandCentreEngine {
         duplicateBlueprints: duplicateBlueprints,
         tradeActivity: tradeActivity,
         operationsState: operationsState,
+        questIntel: questIntel,
+        benchIntel: benchIntel,
       ),
     );
   }
@@ -161,6 +189,8 @@ class ArcCommandCentreEngine {
     required ArcCommandTradeActivity tradeActivity,
     required int readyOperations,
     required int inProgressOperations,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
     if (readyOperations > 0) {
       return ArcCommandPriority(
@@ -176,6 +206,78 @@ class ArcCommandCentreEngine {
           label: 'Open Operations',
           intent: ArcCommandActionIntent.operations,
         ),
+      );
+    }
+
+    if (benchIntel.readyToUpgrade) {
+      return ArcCommandPriority(
+        title: 'Upgrade ${benchIntel.station}',
+        explanation: benchIntel.summary,
+        progressLabel: benchIntel.progressLabel,
+        statusTag: benchIntel.statusLabel,
+        detail: benchIntel.recommendation,
+        status: ArcCommandStatus.ready,
+        primaryAction: const ArcCommandAction(
+          label: 'Bench Tracker',
+          routeName: ScrappyGridScreen.benchRouteName,
+        ),
+      );
+    }
+
+    if (questIntel.readyToComplete) {
+      return ArcCommandPriority(
+        title: 'Complete ${questIntel.questName}',
+        explanation: questIntel.summary,
+        progressLabel: questIntel.progressLabel,
+        statusTag: questIntel.statusLabel,
+        detail: questIntel.recommendation,
+        status: ArcCommandStatus.ready,
+        primaryAction: const ArcCommandAction(
+          label: 'Quest Tracker',
+          routeName: ScrappyGridScreen.questRouteName,
+        ),
+      );
+    }
+
+    if (benchIntel.hasBlocker && benchIntel.trackingKnown) {
+      return ArcCommandPriority(
+        title: 'Farm Bench Resources',
+        explanation: benchIntel.summary,
+        progressLabel: benchIntel.missingShortText,
+        statusTag: benchIntel.statusLabel,
+        detail: benchIntel.recommendation,
+        status: benchIntel.status,
+        primaryAction: const ArcCommandAction(
+          label: 'Bench Tracker',
+          routeName: ScrappyGridScreen.benchRouteName,
+        ),
+        secondaryAction: tradeActivity.communityListings > 0
+            ? const ArcCommandAction(
+                label: 'View Trades',
+                routeName: TraderHubScreen.routeName,
+              )
+            : null,
+      );
+    }
+
+    if (questIntel.hasBlocker && questIntel.trackingKnown) {
+      return ArcCommandPriority(
+        title: 'Farm Quest Items',
+        explanation: questIntel.summary,
+        progressLabel: questIntel.missingShortText,
+        statusTag: questIntel.statusLabel,
+        detail: questIntel.recommendation,
+        status: questIntel.status,
+        primaryAction: const ArcCommandAction(
+          label: 'Quest Tracker',
+          routeName: ScrappyGridScreen.questRouteName,
+        ),
+        secondaryAction: tradeActivity.communityListings > 0
+            ? const ArcCommandAction(
+                label: 'View Trades',
+                routeName: TraderHubScreen.routeName,
+              )
+            : null,
       );
     }
 
@@ -348,6 +450,8 @@ class ArcCommandCentreEngine {
     required ArcCommandTradeActivity tradeActivity,
     required int readyOperations,
     required int inProgressOperations,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
     return [
       ArcCommandSnapshotMetric(
@@ -376,11 +480,29 @@ class ArcCommandCentreEngine {
             ? ArcCommandStatus.active
             : ArcCommandStatus.neutral,
       ),
-      const ArcCommandSnapshotMetric(
-        label: 'Bench Level',
-        value: 'Track',
-        detail: 'Bench requirements ready',
-        status: ArcCommandStatus.neutral,
+      ArcCommandSnapshotMetric(
+        label: 'Quest',
+        value: questIntel.trackingKnown
+            ? questIntel.readyToComplete
+                  ? 'Ready'
+                  : '${questIntel.completionPercent}%'
+            : 'Set up',
+        detail: questIntel.trackingKnown
+            ? questIntel.questName
+            : 'Open quest tracker',
+        status: questIntel.status,
+      ),
+      ArcCommandSnapshotMetric(
+        label: 'Bench',
+        value: benchIntel.trackingKnown
+            ? benchIntel.readyToUpgrade
+                  ? 'Ready'
+                  : '${benchIntel.completionPercent}%'
+            : 'Set up',
+        detail: benchIntel.trackingKnown
+            ? benchIntel.upgradeLabel
+            : 'Open bench tracker',
+        status: benchIntel.status,
       ),
       ArcCommandSnapshotMetric(
         label: 'Blueprints',
@@ -447,65 +569,96 @@ class ArcCommandCentreEngine {
     required int readyOperations,
     required int inProgressOperations,
     required int availableOperations,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
-    return [
+    final objectives = <ArcCommandObjective>[];
+
+    if (readyOperations > 0) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Claim Operation Rewards',
+          reason:
+              'Reward Vault unlocks are ready to claim from completed Operations.',
+          statusLabel: 'Reward ready',
+          progressText:
+              '${operationsState.completedCount}/$availableOperations completed - ${operationsState.inventory.length} rewards owned',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Open Operations',
+            intent: ArcCommandActionIntent.operations,
+          ),
+        ),
+      );
+    }
+
+    objectives.addAll([
       ArcCommandObjective(
-        title: readyOperations > 0
-            ? 'Claim Operation Rewards'
-            : 'Advance Operations Progress',
-        reason: readyOperations > 0
-            ? 'Reward Vault unlocks are ready to claim from completed Operations.'
-            : 'Operations progress feeds Reward Vault cosmetics and profile identity.',
-        statusLabel: readyOperations > 0
-            ? 'Reward ready'
-            : inProgressOperations > 0
-            ? 'In progress'
-            : 'Available',
-        progressText:
-            '${operationsState.completedCount}/$availableOperations completed - ${operationsState.inventory.length} rewards owned',
-        status: readyOperations > 0
-            ? ArcCommandStatus.ready
-            : inProgressOperations > 0
-            ? ArcCommandStatus.active
-            : ArcCommandStatus.neutral,
+        title: benchIntel.readyToUpgrade
+            ? 'Upgrade ${benchIntel.station}'
+            : 'Progress ${benchIntel.upgradeLabel}',
+        reason: benchIntel.recommendation,
+        statusLabel: benchIntel.statusLabel,
+        progressText: benchIntel.trackingKnown
+            ? benchIntel.progressLabel
+            : benchIntel.summary,
+        status: benchIntel.status,
         action: const ArcCommandAction(
-          label: 'Open Operations',
-          intent: ArcCommandActionIntent.operations,
+          label: 'Bench Tracker',
+          routeName: ScrappyGridScreen.benchRouteName,
         ),
       ),
       ArcCommandObjective(
-        title: 'Complete Favourite Loadout',
-        reason: loadoutSummary.ready
-            ? 'Your saved loadout is ready for review before raid planning.'
-            : loadoutSummary.missingText,
-        statusLabel: loadoutSummary.statusLabel,
-        progressText: loadoutSummary.ready
-            ? loadoutSummary.detail
-            : 'Missing: ${loadoutSummary.missingShortText}',
-        status: loadoutSummary.ready
-            ? ArcCommandStatus.success
-            : ArcCommandStatus.warning,
+        title: questIntel.readyToComplete
+            ? 'Complete ${questIntel.questName}'
+            : 'Progress ${questIntel.questName}',
+        reason: questIntel.recommendation,
+        statusLabel: questIntel.statusLabel,
+        progressText: questIntel.trackingKnown
+            ? questIntel.progressLabel
+            : questIntel.summary,
+        status: questIntel.status,
         action: const ArcCommandAction(
-          label: 'Open Loadout',
-          intent: ArcCommandActionIntent.favouriteLoadout,
+          label: 'Quest Tracker',
+          routeName: ScrappyGridScreen.questRouteName,
         ),
       ),
-      ArcCommandObjective(
-        title: 'Review Trade Centre',
-        reason: tradeActivity.hasActionableTrades
-            ? 'Listings, offers, sessions or notifications need attention.'
-            : 'No live trade action is waiting right now.',
-        statusLabel: tradeActivity.hasActionableTrades ? 'Actionable' : 'Quiet',
-        progressText:
-            '${tradeActivity.activeMyListings} live listings - ${tradeActivity.pendingOffers} pending offers - ${tradeActivity.activeSessions} sessions',
-        status: tradeActivity.hasActionableTrades
-            ? ArcCommandStatus.ready
-            : ArcCommandStatus.neutral,
-        action: const ArcCommandAction(
-          label: 'Open Trades',
-          routeName: TraderHubScreen.routeName,
+    ]);
+
+    if (tradeActivity.hasActionableTrades) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Review Trade Centre',
+          reason: 'Listings, offers, sessions or notifications need attention.',
+          statusLabel: 'Actionable',
+          progressText:
+              '${tradeActivity.activeMyListings} live listings - ${tradeActivity.pendingOffers} pending offers - ${tradeActivity.activeSessions} sessions',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Open Trades',
+            routeName: TraderHubScreen.routeName,
+          ),
         ),
-      ),
+      );
+    }
+
+    if (!loadoutSummary.ready) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Complete Favourite Loadout',
+          reason: loadoutSummary.missingText,
+          statusLabel: loadoutSummary.statusLabel,
+          progressText: 'Missing: ${loadoutSummary.missingShortText}',
+          status: ArcCommandStatus.warning,
+          action: const ArcCommandAction(
+            label: 'Open Loadout',
+            intent: ArcCommandActionIntent.favouriteLoadout,
+          ),
+        ),
+      );
+    }
+
+    objectives.add(
       ArcCommandObjective(
         title: 'Complete Blueprint Collection',
         reason: blueprintStateKnown
@@ -523,37 +676,67 @@ class ArcCommandCentreEngine {
           routeName: BlueprintGridScreen.routeName,
         ),
       ),
-      ArcCommandObjective(
-        title: 'Review Duplicate Blueprints',
-        reason: duplicateBlueprints > 0
-            ? 'Duplicates can become trade leverage.'
-            : 'No duplicate blueprint value is currently tracked.',
-        statusLabel: duplicateBlueprints > 0 ? 'Trade ready' : 'Clear',
-        progressText: '$duplicateBlueprints duplicate tracked',
-        status: duplicateBlueprints > 0
-            ? ArcCommandStatus.ready
-            : ArcCommandStatus.neutral,
-        action: const ArcCommandAction(
-          label: 'Smart Trade',
-          intent: ArcCommandActionIntent.smartTrade,
+    );
+
+    if (duplicateBlueprints > 0) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Review Duplicate Blueprints',
+          reason: 'Duplicates can become trade leverage.',
+          statusLabel: 'Trade ready',
+          progressText: '$duplicateBlueprints duplicate tracked',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Smart Trade',
+            intent: ArcCommandActionIntent.smartTrade,
+          ),
         ),
-      ),
-      ArcCommandObjective(
-        title: 'Plan Next Trade',
-        reason: (missingBlueprints ?? 0) > 0
-            ? 'Missing blueprints can be routed through trade before farming.'
-            : 'Trade tools are ready when a new target appears.',
-        statusLabel: 'Optional',
-        progressText: (missingBlueprints ?? 0) > 0
-            ? '${missingBlueprints ?? 0} possible needs'
-            : 'No tracked blockers',
-        status: ArcCommandStatus.neutral,
-        action: const ArcCommandAction(
-          label: 'View Trades',
-          routeName: TraderHubScreen.routeName,
+      );
+    }
+
+    if (inProgressOperations > 0 && readyOperations == 0) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Advance Operations Progress',
+          reason:
+              'Operations progress feeds Reward Vault cosmetics and profile identity.',
+          statusLabel: 'In progress',
+          progressText:
+              '${operationsState.completedCount}/$availableOperations completed - ${operationsState.inventory.length} rewards owned',
+          status: ArcCommandStatus.active,
+          action: const ArcCommandAction(
+            label: 'Open Operations',
+            intent: ArcCommandActionIntent.operations,
+          ),
         ),
-      ),
-    ];
+      );
+    }
+
+    if (objectives.length < 6) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Plan Next Trade',
+          reason: _tradeCanHelpProgress(questIntel, benchIntel)
+              ? 'Trades may help with quest or bench blockers before farming.'
+              : (missingBlueprints ?? 0) > 0
+              ? 'Missing blueprints can be routed through trade before farming.'
+              : 'Trade tools are ready when a new target appears.',
+          statusLabel: 'Optional',
+          progressText: _tradeCanHelpProgress(questIntel, benchIntel)
+              ? 'Bench or quest needs visible'
+              : (missingBlueprints ?? 0) > 0
+              ? '${missingBlueprints ?? 0} possible needs'
+              : 'No tracked blockers',
+          status: ArcCommandStatus.neutral,
+          action: const ArcCommandAction(
+            label: 'View Trades',
+            routeName: TraderHubScreen.routeName,
+          ),
+        ),
+      );
+    }
+
+    return objectives;
   }
 
   static List<ArcCommandAlert> _alerts({
@@ -563,6 +746,8 @@ class ArcCommandCentreEngine {
     required _ArcLoadoutCommandSummary loadoutSummary,
     required ArcCommandTradeActivity tradeActivity,
     required int readyOperations,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
     final alerts = <ArcCommandAlert>[];
     if (readyOperations > 0) {
@@ -576,6 +761,60 @@ class ArcCommandCentreEngine {
           action: const ArcCommandAction(
             label: 'Operations',
             intent: ArcCommandActionIntent.operations,
+          ),
+        ),
+      );
+    }
+    if (benchIntel.readyToUpgrade) {
+      alerts.add(
+        ArcCommandAlert(
+          title: '${benchIntel.upgradeLabel} ready',
+          body: benchIntel.recommendation,
+          statusLabel: 'Upgrade',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Bench',
+            routeName: ScrappyGridScreen.benchRouteName,
+          ),
+        ),
+      );
+    } else if (benchIntel.hasBlocker && benchIntel.trackingKnown) {
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Bench resource blocker',
+          body: benchIntel.missingShortText,
+          statusLabel: 'Missing',
+          status: benchIntel.status,
+          action: const ArcCommandAction(
+            label: 'Bench',
+            routeName: ScrappyGridScreen.benchRouteName,
+          ),
+        ),
+      );
+    }
+    if (questIntel.readyToComplete) {
+      alerts.add(
+        ArcCommandAlert(
+          title: '${questIntel.questName} ready',
+          body: questIntel.recommendation,
+          statusLabel: 'Complete',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Quest',
+            routeName: ScrappyGridScreen.questRouteName,
+          ),
+        ),
+      );
+    } else if (questIntel.hasBlocker && questIntel.trackingKnown) {
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Quest item blocker',
+          body: questIntel.missingShortText,
+          statusLabel: 'Missing',
+          status: questIntel.status,
+          action: const ArcCommandAction(
+            label: 'Quest',
+            routeName: ScrappyGridScreen.questRouteName,
           ),
         ),
       );
@@ -707,6 +946,8 @@ class ArcCommandCentreEngine {
     required _ArcLoadoutCommandSummary loadoutSummary,
     required ArcCommandTradeActivity tradeActivity,
     required int readyOperations,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
     final recommendations = <ArcCommandRecommendation>[];
 
@@ -719,6 +960,50 @@ class ArcCommandCentreEngine {
           action: ArcCommandAction(
             label: 'Operations',
             intent: ArcCommandActionIntent.operations,
+          ),
+        ),
+      );
+    }
+
+    recommendations.add(
+      ArcCommandRecommendation(
+        title: benchIntel.readyToUpgrade
+            ? 'Upgrade ${benchIntel.station} before spending resources.'
+            : benchIntel.trackingKnown
+            ? 'Use Bench Operations for ${benchIntel.upgradeLabel}.'
+            : 'Set up Bench Operations to unlock resource guidance.',
+        body: benchIntel.recommendation,
+        action: const ArcCommandAction(
+          label: 'Bench Tracker',
+          routeName: ScrappyGridScreen.benchRouteName,
+        ),
+      ),
+    );
+
+    recommendations.add(
+      ArcCommandRecommendation(
+        title: questIntel.readyToComplete
+            ? 'Complete ${questIntel.questName} before farming more.'
+            : questIntel.trackingKnown
+            ? 'Focus ${questIntel.questName} quest requirements.'
+            : 'Set up Mission Operations for quest item guidance.',
+        body: questIntel.recommendation,
+        action: const ArcCommandAction(
+          label: 'Quest Tracker',
+          routeName: ScrappyGridScreen.questRouteName,
+        ),
+      ),
+    );
+
+    if (_tradeCanHelpProgress(questIntel, benchIntel)) {
+      recommendations.add(
+        const ArcCommandRecommendation(
+          title: 'Check trades for bench or quest blockers.',
+          body:
+              'Trade Centre can help clear item gaps before another farming route.',
+          action: ArcCommandAction(
+            label: 'Trade Centre',
+            routeName: TraderHubScreen.routeName,
           ),
         ),
       );
@@ -746,20 +1031,22 @@ class ArcCommandCentreEngine {
       );
     }
 
-    recommendations.add(
-      ArcCommandRecommendation(
-        title: loadoutSummary.ready
-            ? 'Review your Favourite Loadout before raids.'
-            : 'Finish your Favourite Loadout before entering raids.',
-        body: loadoutSummary.ready
-            ? loadoutSummary.detail
-            : loadoutSummary.missingText,
-        action: const ArcCommandAction(
-          label: 'Open Loadout',
-          intent: ArcCommandActionIntent.favouriteLoadout,
+    if (!loadoutSummary.ready || recommendations.length < 4) {
+      recommendations.add(
+        ArcCommandRecommendation(
+          title: loadoutSummary.ready
+              ? 'Review your Favourite Loadout before raids.'
+              : 'Finish your Favourite Loadout before entering raids.',
+          body: loadoutSummary.ready
+              ? loadoutSummary.detail
+              : loadoutSummary.missingText,
+          action: const ArcCommandAction(
+            label: 'Open Loadout',
+            intent: ArcCommandActionIntent.favouriteLoadout,
+          ),
         ),
-      ),
-    );
+      );
+    }
 
     if (duplicateBlueprints > 0) {
       recommendations.add(
@@ -823,6 +1110,8 @@ class ArcCommandCentreEngine {
     required bool loadoutReady,
     required ArcCommandTradeActivity tradeActivity,
     required int readyOperations,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
     return [
       ArcCommandChecklistItem(
@@ -868,20 +1157,26 @@ class ArcCommandCentreEngine {
           routeName: TraderHubScreen.routeName,
         ),
       ),
-      const ArcCommandChecklistItem(
+      ArcCommandChecklistItem(
         id: 'hand-in-quest',
-        label: 'Hand In Quest',
-        reason: 'Quest live data is pending, but the tracker is ready.',
-        action: ArcCommandAction(
+        label: questIntel.readyToComplete ? 'Hand In Quest' : 'Track Quest',
+        reason: questIntel.trackingKnown
+            ? questIntel.recommendation
+            : 'Set up Mission Operations to track quest item progress.',
+        doneByDefault: questIntel.trackingKnown && !questIntel.readyToComplete,
+        action: const ArcCommandAction(
           label: 'Quest Tracker',
           routeName: ScrappyGridScreen.questRouteName,
         ),
       ),
-      const ArcCommandChecklistItem(
+      ArcCommandChecklistItem(
         id: 'upgrade-bench',
-        label: 'Upgrade Bench',
-        reason: 'Check requirements before recycling or trading materials.',
-        action: ArcCommandAction(
+        label: benchIntel.readyToUpgrade ? 'Upgrade Bench' : 'Track Bench',
+        reason: benchIntel.trackingKnown
+            ? benchIntel.recommendation
+            : 'Set up Bench Operations to track upgrade resources.',
+        doneByDefault: benchIntel.trackingKnown && !benchIntel.readyToUpgrade,
+        action: const ArcCommandAction(
           label: 'Bench Tracker',
           routeName: ScrappyGridScreen.benchRouteName,
         ),
@@ -955,6 +1250,8 @@ class ArcCommandCentreEngine {
     required List<String> prioritizedMissing,
     required int duplicateBlueprints,
     required ArcCommandTradeActivity tradeActivity,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
     final lookingFor = <String>[
       if (tradeActivity.pendingOffers > 0)
@@ -963,8 +1260,16 @@ class ArcCommandCentreEngine {
         '${tradeActivity.activeSessions} active trade ${_plural(tradeActivity.activeSessions, 'session', 'sessions')}',
       if (tradeActivity.bestIntelligenceConfidence > 0)
         '${tradeActivity.bestIntelligenceConfidence}% ${tradeActivity.bestIntelligenceLabel}',
+      if (benchIntel.hasBlocker && benchIntel.trackingKnown)
+        ...benchIntel.missingResources
+            .take(2)
+            .map((resource) => resource.missingLabel),
+      if (questIntel.hasBlocker && questIntel.trackingKnown)
+        ...questIntel.missingItems.take(2).map((item) => item.missingLabel),
       if (prioritizedMissing.isNotEmpty) ...prioritizedMissing.take(3),
-      if (prioritizedMissing.isEmpty && tradeActivity.pendingOffers == 0)
+      if (prioritizedMissing.isEmpty &&
+          tradeActivity.pendingOffers == 0 &&
+          !_tradeCanHelpProgress(questIntel, benchIntel))
         'Blueprint needs not tracked',
       if (tradeActivity.communityListings > 0)
         '${tradeActivity.communityListings} community listings live',
@@ -1042,39 +1347,52 @@ class ArcCommandCentreEngine {
     );
   }
 
-  static ArcCommandSummaryPanel _questSummary() {
-    return const ArcCommandSummaryPanel(
+  static ArcCommandSummaryPanel _questSummary(ArcQuestIntelligence questIntel) {
+    return ArcCommandSummaryPanel(
       title: 'Quest Progress',
-      statusLabel: 'Setup available',
-      body: 'Quest item ownership is not live in Command Centre yet.',
+      statusLabel: questIntel.statusLabel,
+      body: questIntel.summary,
       details: [
-        'Active quest: Not tracked yet',
-        'Required items: Open Quest Tracker',
-        'Owned/missing: Coming online',
+        'Active quest: ${questIntel.questLabel}',
+        questIntel.trackingKnown
+            ? 'Progress: ${questIntel.progressLabel}'
+            : 'Progress: Set up Mission Operations',
+        questIntel.trackingKnown
+            ? 'Required: ${questIntel.collectedCount}/${questIntel.requiredCount} items collected'
+            : 'Required: ${questIntel.requiredCount} catalogued items',
+        questIntel.readyToComplete
+            ? 'Ready to complete'
+            : 'Missing: ${questIntel.missingShortText}',
       ],
-      status: ArcCommandStatus.neutral,
-      action: ArcCommandAction(
-        label: 'Open Quest Tracker',
+      status: questIntel.status,
+      action: const ArcCommandAction(
+        label: 'Quest Tracker',
         routeName: ScrappyGridScreen.questRouteName,
       ),
     );
   }
 
-  static ArcCommandSummaryPanel _benchSummary() {
-    final first = ArcBenchUpgradeSeedData.requirements.first;
+  static ArcCommandSummaryPanel _benchSummary(ArcBenchIntelligence benchIntel) {
     return ArcCommandSummaryPanel(
       title: 'Bench Progress',
-      statusLabel: 'Requirements ready',
-      body:
-          'Bench requirements are available; stash ownership wiring is pending.',
+      statusLabel: benchIntel.statusLabel,
+      body: benchIntel.summary,
       details: [
-        'Current level: Not tracked yet',
-        'Next sample: ${first.upgradeLabel}',
-        '${first.quantity}x ${first.itemName}',
+        'Current level: ${benchIntel.currentLevelLabel}',
+        'Next upgrade: ${benchIntel.upgradeLabel}',
+        benchIntel.trackingKnown
+            ? 'Progress: ${benchIntel.progressLabel}'
+            : 'Progress: Set up Bench Operations',
+        benchIntel.trackingKnown
+            ? 'Required: ${benchIntel.collectedCount}/${benchIntel.requiredCount} resources collected'
+            : 'Required: ${benchIntel.requiredCount} catalogued resources',
+        benchIntel.readyToUpgrade
+            ? 'Ready to upgrade'
+            : 'Missing: ${benchIntel.missingShortText}',
       ],
-      status: ArcCommandStatus.neutral,
+      status: benchIntel.status,
       action: const ArcCommandAction(
-        label: 'Open Bench Tracker',
+        label: 'Bench Tracker',
         routeName: ScrappyGridScreen.benchRouteName,
       ),
     );
@@ -1174,6 +1492,8 @@ class ArcCommandCentreEngine {
     required int duplicateBlueprints,
     required ArcCommandTradeActivity tradeActivity,
     required ArcOperationsUserState operationsState,
+    required ArcQuestIntelligence questIntel,
+    required ArcBenchIntelligence benchIntel,
   }) {
     return ArcCommandSummaryPanel(
       title: 'Statistics',
@@ -1186,6 +1506,12 @@ class ArcCommandCentreEngine {
             ? 'Blueprints collected: $ownedBlueprints'
             : 'Blueprints collected: Not tracked yet',
         'Operations completed: ${operationsState.completedCount}',
+        questIntel.trackingKnown
+            ? 'Quest focus: ${questIntel.questName} ${questIntel.completionPercent}%'
+            : 'Quest focus: Set up tracker',
+        benchIntel.trackingKnown
+            ? 'Bench focus: ${benchIntel.upgradeLabel} ${benchIntel.completionPercent}%'
+            : 'Bench focus: Set up tracker',
         'Reward Vault items: ${operationsState.inventory.length}',
         'Inventory space saved: $duplicateBlueprints duplicate signals',
       ],
@@ -1255,6 +1581,14 @@ class ArcCommandCentreEngine {
       equipped.profileFrameId,
       equipped.profileBannerId,
     ].where((id) => id != null && id.trim().isNotEmpty).length;
+  }
+
+  static bool _tradeCanHelpProgress(
+    ArcQuestIntelligence questIntel,
+    ArcBenchIntelligence benchIntel,
+  ) {
+    return (questIntel.trackingKnown && questIntel.hasBlocker) ||
+        (benchIntel.trackingKnown && benchIntel.hasBlocker);
   }
 
   static String _plural(int count, String singular, String plural) {

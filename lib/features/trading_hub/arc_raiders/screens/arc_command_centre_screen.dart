@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
@@ -14,6 +15,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
@@ -40,6 +42,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       ArcSavedLoadoutRepository();
   final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
+  final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   final TradingRepository _tradingRepository = TradingRepository();
   final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
       const ArcTradeIntelligenceEngine();
@@ -49,6 +52,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       .watchSavedLoadouts();
   late final Stream<ArcOperationsUserState> _operationsStateStream =
       _operationsRepository.watchUserState();
+  late final Stream<Map<String, ArcScrappyState>> _scrappyStatesStream =
+      _scrappyRepository.watchMyScrappyStates();
   late final Stream<List<TradingListing>> _activeListingsStream =
       _tradingRepository.watchActiveListings();
   late final Stream<List<TradingListing>> _myListingsStream = _tradingRepository
@@ -139,10 +144,18 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
               builder: (context, operationsSnapshot) {
                 final operationsState =
                     operationsSnapshot.data ?? ArcOperationsUserState.empty;
-                return _buildWithTradeActivity(
-                  blueprintStates: blueprintStates,
-                  loadouts: loadouts,
-                  operationsState: operationsState,
+                return StreamBuilder<Map<String, ArcScrappyState>>(
+                  stream: _scrappyStatesStream,
+                  builder: (context, scrappySnapshot) {
+                    final scrappyStates =
+                        scrappySnapshot.data ?? <String, ArcScrappyState>{};
+                    return _buildWithTradeActivity(
+                      blueprintStates: blueprintStates,
+                      loadouts: loadouts,
+                      operationsState: operationsState,
+                      scrappyStates: scrappyStates,
+                    );
+                  },
                 );
               },
             );
@@ -156,6 +169,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
     required Map<String, ArcBlueprintState> blueprintStates,
     required List<ArcSavedLoadout> loadouts,
     required ArcOperationsUserState operationsState,
+    required Map<String, ArcScrappyState> scrappyStates,
   }) {
     return StreamBuilder<List<TradingListing>>(
       stream: _activeListingsStream,
@@ -193,6 +207,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
                         final commandState = ArcCommandCentreEngine.build(
                           blueprintStates: blueprintStates,
                           savedLoadouts: loadouts,
+                          scrappyStates: scrappyStates,
                           operationsState: operationsState,
                           tradeActivity: tradeActivity,
                         );
@@ -355,6 +370,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   ) {
     const preferred = <String>{
       'Operations',
+      'Quest',
+      'Bench',
       'Blueprints',
       'Favourite Loadout',
       'Trade Activity',
