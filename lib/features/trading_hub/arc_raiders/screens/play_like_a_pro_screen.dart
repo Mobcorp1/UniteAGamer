@@ -520,7 +520,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ ',
+                    ' � ',
                     style: TextStyle(color: color, fontSize: 18),
                   ),
                   Expanded(
@@ -593,7 +593,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               final latestDate = state.history.isEmpty
                   ? null
                   : DateFormat(
-                      'dd MMM ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ HH:mm',
+                      'dd MMM � HH:mm',
                     ).format(state.history.first.createdAt);
 
               return SafeArea(
@@ -1052,7 +1052,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                '${DateFormat('dd MMM').format(entry.createdAt)} ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ ${_goalLabel(entry.goal)}',
+                                                � ${_goalLabel(entry.goal)}',
                                                 style: AppTheme.bodyTextStyle(
                                                   fontSize: 14,
                                                   color: AppTheme.neonCyan,
