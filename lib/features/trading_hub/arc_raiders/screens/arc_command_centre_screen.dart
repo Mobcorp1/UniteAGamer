@@ -332,6 +332,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       _summaryPanel(commandState.questSummary),
       _summaryPanel(commandState.benchSummary),
       _summaryPanel(commandState.resourceSummary),
+      _summaryPanel(commandState.decisionSummary),
       _resourceSummary(commandState.resources),
       _summaryPanel(commandState.weeklyTraderSummary),
       _summaryPanel(commandState.communitySummary),
