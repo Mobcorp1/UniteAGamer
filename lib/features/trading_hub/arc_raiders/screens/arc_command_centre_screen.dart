@@ -331,6 +331,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       _summaryPanel(commandState.operationsSummary),
       _summaryPanel(commandState.questSummary),
       _summaryPanel(commandState.benchSummary),
+      _summaryPanel(commandState.resourceSummary),
       _resourceSummary(commandState.resources),
       _summaryPanel(commandState.weeklyTraderSummary),
       _summaryPanel(commandState.communitySummary),
@@ -396,6 +397,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   ) {
     const preferred = <String>{
       'Operations',
+      'Resources',
       'Quest',
       'Bench',
       'Nomadic Trader',
@@ -834,6 +836,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
       ),
       if (_summaryHasUsefulSignal(commandState.operationsSummary))
         _summaryTile(commandState.operationsSummary),
+      if (_summaryHasUsefulSignal(commandState.resourceSummary))
+        _summaryTile(commandState.resourceSummary),
       if (_summaryHasUsefulSignal(commandState.benchSummary))
         _summaryTile(commandState.benchSummary),
       if (_summaryHasUsefulSignal(commandState.questSummary))

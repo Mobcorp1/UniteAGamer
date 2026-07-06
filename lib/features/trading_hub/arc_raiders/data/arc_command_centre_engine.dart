@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_resource_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_bench_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -13,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
@@ -78,6 +80,15 @@ class ArcCommandCentreEngine {
       tradeActivity: tradeActivity,
       duplicateBlueprints: duplicateBlueprints,
     );
+    final resourceIntel = const ArcResourceIntelligenceEngine().build(
+      scrappyStates: scrappyStates,
+      questIntel: questIntel,
+      benchIntel: benchIntel,
+      traderIntel: traderIntel,
+      favouriteLoadout: loadout,
+      blueprintStates: blueprintStates,
+      tradeActivity: tradeActivity,
+    );
 
     return ArcCommandCentreState(
       priority: _priority(
@@ -95,6 +106,7 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
       snapshots: _snapshots(
         blueprintStateKnown: blueprintStateKnown,
@@ -111,6 +123,7 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
       objectives: _objectives(
         blueprintStateKnown: blueprintStateKnown,
@@ -127,6 +140,7 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
       alerts: _alerts(
         blueprintStateKnown: blueprintStateKnown,
@@ -138,6 +152,7 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
       recommendations: _recommendations(
         blueprintStateKnown: blueprintStateKnown,
@@ -149,6 +164,7 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
       checklist: _checklist(
         loadoutReady: loadoutSummary.ready,
@@ -157,8 +173,9 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
-      resources: _resources(traderIntel),
+      resources: _resources(resourceIntel),
       tradeSummary: _tradeSummary(
         prioritizedMissing: prioritizedMissing,
         duplicateBlueprints: duplicateBlueprints,
@@ -166,6 +183,7 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
       blueprintSummary: _blueprintSummary(
         blueprintStateKnown: blueprintStateKnown,
@@ -184,6 +202,7 @@ class ArcCommandCentreEngine {
         availableOperations: availableOperations,
       ),
       weeklyTraderSummary: _weeklyTraderSummary(traderIntel),
+      resourceSummary: _resourceSummary(resourceIntel),
       communitySummary: _communitySummary(tradeActivity),
       statisticsSummary: _statisticsSummary(
         blueprintStateKnown: blueprintStateKnown,
@@ -194,6 +213,7 @@ class ArcCommandCentreEngine {
         questIntel: questIntel,
         benchIntel: benchIntel,
         traderIntel: traderIntel,
+        resourceIntel: resourceIntel,
       ),
     );
   }
@@ -213,6 +233,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     if (readyOperations > 0) {
       return ArcCommandPriority(
@@ -258,6 +279,28 @@ class ArcCommandCentreEngine {
           label: 'Quest Tracker',
           routeName: ScrappyGridScreen.questRouteName,
         ),
+      );
+    }
+
+    if (resourceIntel.hasCriticalBlocker) {
+      final resource = resourceIntel.topResource!;
+      return ArcCommandPriority(
+        title: 'Farm ${resource.name}',
+        explanation: resourceIntel.summary,
+        progressLabel: resource.missingLabel,
+        statusTag: resource.priorityLabel,
+        detail: resource.recommendation,
+        status: resource.status,
+        primaryAction: const ArcCommandAction(
+          label: 'Resource Tracker',
+          routeName: ScrappyGridScreen.routeName,
+        ),
+        secondaryAction: resourceIntel.tradeTargets.isNotEmpty
+            ? const ArcCommandAction(
+                label: 'View Trades',
+                routeName: TraderHubScreen.routeName,
+              )
+            : null,
       );
     }
 
@@ -524,6 +567,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     return [
       ArcCommandSnapshotMetric(
@@ -575,6 +619,20 @@ class ArcCommandCentreEngine {
             ? benchIntel.upgradeLabel
             : 'Open bench tracker',
         status: benchIntel.status,
+      ),
+      ArcCommandSnapshotMetric(
+        label: 'Resources',
+        value: resourceIntel.trackingKnown
+            ? resourceIntel.totalMissingResources > 0
+                  ? '${resourceIntel.totalMissingResources} missing'
+                  : resourceIntel.totalDuplicateResources > 0
+                  ? '${resourceIntel.totalDuplicateResources} surplus'
+                  : 'Stable'
+            : 'Set up',
+        detail: resourceIntel.trackingKnown
+            ? resourceIntel.topResourceLabel
+            : 'Track inventory',
+        status: resourceIntel.status,
       ),
       ArcCommandSnapshotMetric(
         label: 'Nomadic Trader',
@@ -656,6 +714,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     final objectives = <ArcCommandObjective>[];
 
@@ -672,6 +731,27 @@ class ArcCommandCentreEngine {
           action: const ArcCommandAction(
             label: 'Open Operations',
             intent: ArcCommandActionIntent.operations,
+          ),
+        ),
+      );
+    }
+
+    if (resourceIntel.hasCriticalBlocker ||
+        resourceIntel.farmTargets.isNotEmpty) {
+      final resource =
+          resourceIntel.topResource ?? resourceIntel.farmTargets.first;
+      objectives.add(
+        ArcCommandObjective(
+          title: resource.blocksMultipleSystems
+              ? 'Farm ${resource.name}'
+              : 'Secure ${resource.name}',
+          reason: resource.recommendation,
+          statusLabel: resource.priorityLabel,
+          progressText: resource.missingLabel,
+          status: resource.status,
+          action: const ArcCommandAction(
+            label: 'Resources',
+            routeName: ScrappyGridScreen.routeName,
           ),
         ),
       );
@@ -860,6 +940,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     final alerts = <ArcCommandAlert>[];
     if (readyOperations > 0) {
@@ -956,6 +1037,35 @@ class ArcCommandCentreEngine {
           action: const ArcCommandAction(
             label: 'Trader',
             intent: ArcCommandActionIntent.nomadicTrader,
+          ),
+        ),
+      );
+    }
+    if (resourceIntel.hasCriticalBlocker) {
+      final resource = resourceIntel.topResource!;
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Protected resource blocker',
+          body: resource.recommendation,
+          statusLabel: resource.protectionLabel,
+          status: resource.status,
+          action: const ArcCommandAction(
+            label: 'Resources',
+            routeName: ScrappyGridScreen.routeName,
+          ),
+        ),
+      );
+    } else if (resourceIntel.hasTradeSurplus) {
+      final resource = resourceIntel.safeTradeCandidates.first;
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Safe trade surplus',
+          body: resource.recommendation,
+          statusLabel: 'Surplus',
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Trade Centre',
+            routeName: TraderHubScreen.routeName,
           ),
         ),
       );
@@ -1090,6 +1200,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     final recommendations = <ArcCommandRecommendation>[];
 
@@ -1102,6 +1213,28 @@ class ArcCommandCentreEngine {
           action: ArcCommandAction(
             label: 'Operations',
             intent: ArcCommandActionIntent.operations,
+          ),
+        ),
+      );
+    }
+
+    if (resourceIntel.trackingKnown) {
+      final resource = resourceIntel.topResource;
+      recommendations.add(
+        ArcCommandRecommendation(
+          title: resource == null
+              ? 'Keep resource tracking current.'
+              : resource.safeToTrade
+              ? 'Offer surplus ${resource.name} before farming more.'
+              : resource.neverTrade
+              ? 'Never trade ${resource.name} until blockers clear.'
+              : 'Farm ${resource.name} before trading it away.',
+          body: resource?.recommendation ?? resourceIntel.recommendation,
+          action: ArcCommandAction(
+            label: resourceIntel.hasTradeSurplus ? 'Trade Centre' : 'Resources',
+            routeName: resourceIntel.hasTradeSurplus
+                ? TraderHubScreen.routeName
+                : ScrappyGridScreen.routeName,
           ),
         ),
       );
@@ -1273,6 +1406,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     return [
       ArcCommandChecklistItem(
@@ -1319,6 +1453,21 @@ class ArcCommandCentreEngine {
         action: const ArcCommandAction(
           label: 'View Trades',
           routeName: TraderHubScreen.routeName,
+        ),
+      ),
+      ArcCommandChecklistItem(
+        id: 'protect-resources',
+        label: resourceIntel.hasProtectedResources
+            ? 'Protect Resources'
+            : 'Review Resources',
+        reason: resourceIntel.trackingKnown
+            ? resourceIntel.recommendation
+            : 'Track resources so safe trade and protected items are visible.',
+        doneByDefault:
+            resourceIntel.trackingKnown && !resourceIntel.hasCriticalBlocker,
+        action: const ArcCommandAction(
+          label: 'Resources',
+          routeName: ScrappyGridScreen.routeName,
         ),
       ),
       ArcCommandChecklistItem(
@@ -1382,49 +1531,27 @@ class ArcCommandCentreEngine {
   }
 
   static List<ArcCommandResourceStatus> _resources(
-    ArcNomadicTraderIntelligence traderIntel,
+    ArcResourceIntelligence resourceIntel,
   ) {
-    final purchase = traderIntel.bestPurchase;
-    if (purchase != null && purchase.purchase.requirements.isNotEmpty) {
-      return purchase.purchase.requirements
+    if (resourceIntel.highestPriorityResources.isNotEmpty) {
+      return resourceIntel.highestPriorityResources
           .take(4)
           .map(
-            (requirement) => ArcCommandResourceStatus(
-              name: requirement.name,
-              ownedLabel: '${requirement.ownedQty}',
-              requiredLabel: '${requirement.requiredQty} required',
-              status: requirement.complete
-                  ? ArcCommandStatus.success
-                  : ArcCommandStatus.warning,
+            (resource) => ArcCommandResourceStatus(
+              name: resource.name,
+              ownedLabel: '${resource.ownedCount} owned',
+              requiredLabel: resource.isMissing
+                  ? '${resource.missingCount} missing'
+                  : resource.duplicateLabel,
+              status: resource.status,
             ),
           )
           .toList(growable: false);
     }
 
-    if (traderIntel.trackingKnown) {
-      return [
-        ArcCommandResourceStatus(
-          name: traderIntel.goalName,
-          ownedLabel: '${traderIntel.currentValue}',
-          requiredLabel: '${traderIntel.targetValue} target',
-          status: traderIntel.goalAffordable
-              ? ArcCommandStatus.ready
-              : ArcCommandStatus.active,
-        ),
-        ArcCommandResourceStatus(
-          name: 'Nomadic Purchases',
-          ownedLabel: '${traderIntel.completedPurchaseCount}',
-          requiredLabel: '${traderIntel.trackedPurchaseCount} tracked',
-          status: traderIntel.trackedPurchaseCount > 0
-              ? ArcCommandStatus.active
-              : ArcCommandStatus.neutral,
-        ),
-      ];
-    }
-
     return const [
       ArcCommandResourceStatus(
-        name: 'Nomadic Trader',
+        name: 'Resources',
         ownedLabel: 'Not tracked yet',
         requiredLabel: 'Track resources',
         status: ArcCommandStatus.neutral,
@@ -1439,6 +1566,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     final lookingFor = <String>[
       if (tradeActivity.pendingOffers > 0)
@@ -1454,6 +1582,9 @@ class ArcCommandCentreEngine {
       if (questIntel.hasBlocker && questIntel.trackingKnown)
         ...questIntel.missingItems.take(2).map((item) => item.missingLabel),
       if (traderIntel.hasTradeableNeed) ...traderIntel.tradeNeedLabels.take(2),
+      ...resourceIntel.tradeTargets
+          .take(2)
+          .map((resource) => resource.missingLabel),
       if (prioritizedMissing.isNotEmpty) ...prioritizedMissing.take(3),
       if (prioritizedMissing.isEmpty &&
           tradeActivity.pendingOffers == 0 &&
@@ -1472,6 +1603,9 @@ class ArcCommandCentreEngine {
         'Trader purchase ready'
       else if (traderIntel.hasImportantGap)
         'Trader resources needed',
+      ...resourceIntel.safeTradeCandidates
+          .take(2)
+          .map((resource) => '${resource.duplicateCount} ${resource.name}'),
       if (tradeActivity.unreadNotifications > 0)
         '${tradeActivity.unreadNotifications} unread ${_plural(tradeActivity.unreadNotifications, 'notification', 'notifications')}',
       if (tradeActivity.myListings > 0 && tradeActivity.activeMyListings == 0)
@@ -1680,6 +1814,54 @@ class ArcCommandCentreEngine {
     );
   }
 
+  static ArcCommandSummaryPanel _resourceSummary(
+    ArcResourceIntelligence resourceIntel,
+  ) {
+    if (!resourceIntel.trackingKnown) {
+      return const ArcCommandSummaryPanel(
+        title: 'Resource Intelligence',
+        statusLabel: 'Set up',
+        body: 'Resource ownership is not tracked yet.',
+        details: [
+          'Owned resources: Not tracked yet',
+          'Missing resources: Safe empty state',
+          'Safe trade resources: Not available',
+        ],
+        status: ArcCommandStatus.neutral,
+        action: ArcCommandAction(
+          label: 'Track Resources',
+          routeName: ScrappyGridScreen.routeName,
+        ),
+      );
+    }
+
+    final top = resourceIntel.topResource;
+    return ArcCommandSummaryPanel(
+      title: 'Resource Intelligence',
+      statusLabel: resourceIntel.statusLabel,
+      body: resourceIntel.summary,
+      details: [
+        '${resourceIntel.totalTrackedResources} tracked resources with ownership',
+        '${resourceIntel.totalMissingResources} total missing requirements',
+        '${resourceIntel.totalDuplicateResources} tracked surplus resources',
+        if (top != null)
+          '${top.name}: scarcity ${top.scarcityScore}, usefulness ${top.usefulnessScore}, progression ${top.progressionValue}',
+        if (resourceIntel.neverTradeResources.isNotEmpty)
+          'Never trade: ${resourceIntel.neverTradeResources.take(3).map((resource) => resource.name).join(', ')}',
+        if (resourceIntel.safeTradeCandidates.isNotEmpty)
+          'Safe trade: ${resourceIntel.safeTradeCandidates.take(3).map((resource) => resource.name).join(', ')}',
+        if (resourceIntel.farmTargets.isNotEmpty)
+          'Farm: ${resourceIntel.farmTargets.first.name} - ${resourceIntel.farmTargets.first.farmHint}',
+        'Inventory pressure: ${resourceIntel.inventory.pressureLabel}',
+      ],
+      status: resourceIntel.status,
+      action: const ArcCommandAction(
+        label: 'Resource Tracker',
+        routeName: ScrappyGridScreen.routeName,
+      ),
+    );
+  }
+
   static ArcCommandSummaryPanel _communitySummary(
     ArcCommandTradeActivity tradeActivity,
   ) {
@@ -1717,6 +1899,7 @@ class ArcCommandCentreEngine {
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
+    required ArcResourceIntelligence resourceIntel,
   }) {
     return ArcCommandSummaryPanel(
       title: 'Statistics',
@@ -1738,6 +1921,9 @@ class ArcCommandCentreEngine {
         traderIntel.trackingKnown
             ? 'Trader focus: ${traderIntel.goalName} ${traderIntel.completionPercent}%'
             : 'Trader focus: Set up tracker',
+        resourceIntel.trackingKnown
+            ? 'Resource pressure: ${resourceIntel.inventory.pressureLabel}'
+            : 'Resource pressure: Set up tracker',
         'Reward Vault items: ${operationsState.inventory.length}',
         'Inventory space saved: $duplicateBlueprints duplicate signals',
       ],

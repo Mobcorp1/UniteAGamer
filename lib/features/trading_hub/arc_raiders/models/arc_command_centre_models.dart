@@ -232,6 +232,7 @@ class ArcCommandCentreState {
     required this.benchSummary,
     required this.operationsSummary,
     required this.weeklyTraderSummary,
+    required this.resourceSummary,
     required this.communitySummary,
     required this.statisticsSummary,
   });
@@ -249,6 +250,7 @@ class ArcCommandCentreState {
   final ArcCommandSummaryPanel benchSummary;
   final ArcCommandSummaryPanel operationsSummary;
   final ArcCommandSummaryPanel weeklyTraderSummary;
+  final ArcCommandSummaryPanel resourceSummary;
   final ArcCommandSummaryPanel communitySummary;
   final ArcCommandSummaryPanel statisticsSummary;
 }
