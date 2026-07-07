@@ -35,7 +35,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final showTrade = _hasTradeSignal(commandState.tradeSummary);
 
     return ArcRaidersPageList(
-      maxWidth: 1220,
+      maxWidth: 940,
       bottomPadding: 74,
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
       children: [
@@ -143,7 +143,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        priority.explanation,
+                        _cleanText(priority.explanation),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.bodyTextStyle(
@@ -154,7 +154,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        '${priority.progressLabel}  ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢  Tap to continue',
+                        '${_cleanText(priority.progressLabel)} - Tap to continue',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.bodyTextStyle(
@@ -303,9 +303,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _tapSurface(
       action: tile.action,
       child: Container(
-        height: 88,
-        padding: const EdgeInsets.all(10),
-        decoration: _imageDecoration(tile.image, accent, radius: 19),
+        height: 102,
+        padding: const EdgeInsets.all(9),
+        decoration: _imageDecoration(tile.image, accent, radius: 18),
         child: Stack(
           children: [
             Positioned(
@@ -323,34 +323,34 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               ),
             ),
             Positioned.fill(
-              top: 18,
+              top: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    tile.value,
+                    _cleanText(tile.value),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(fontSize: 20, color: accent),
+                    style: AppTheme.tradingHeading(fontSize: 16, color: accent),
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    tile.title.toUpperCase(),
+                    _cleanText(tile.title).toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
+                      fontSize: 9,
                       color: Colors.white70,
                       isBold: true,
                     ),
                   ),
                   Text(
-                    tile.detail,
+                    _cleanText(tile.detail),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
+                      fontSize: 9,
                       color: Colors.white54,
                     ),
                   ),
@@ -367,30 +367,41 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return ArcCommandCentreCard(
       accent: AppTheme.neonCyan,
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ArcCommandSectionHeader(
-            title: 'Systems',
-            subtitle: 'Swipe the command deck. Tap any card to open it.',
-            accent: AppTheme.neonCyan,
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 174,
-            child: PageView.builder(
-              controller: PageController(viewportFraction: 0.82),
-              padEnds: false,
-              itemCount: tiles.length,
-              itemBuilder: (context, index) => Padding(
-                padding: EdgeInsets.only(
-                  right: index == tiles.length - 1 ? 0 : 10,
-                ),
-                child: _carouselCard(tiles[index]),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 900;
+          final tablet = constraints.maxWidth >= 620 && !wide;
+          final viewportFraction = wide ? 0.46 : (tablet ? 0.64 : 0.82);
+          final deckHeight = wide ? 160.0 : 174.0;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ArcCommandSectionHeader(
+                title: 'Systems',
+                subtitle: 'Swipe the command deck. Tap any card to open it.',
+                accent: AppTheme.neonCyan,
               ),
-            ),
-          ),
-        ],
+              const SizedBox(height: 10),
+              SizedBox(
+                height: deckHeight,
+                child: PageView.builder(
+                  controller: PageController(
+                    viewportFraction: viewportFraction,
+                  ),
+                  padEnds: false,
+                  itemCount: tiles.length,
+                  itemBuilder: (context, index) => Padding(
+                    padding: EdgeInsets.only(
+                      right: index == tiles.length - 1 ? 0 : 10,
+                    ),
+                    child: _carouselCard(tiles[index]),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -411,7 +422,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    tile.title.toUpperCase(),
+                    _cleanText(tile.title).toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.tradingHeading(fontSize: 19, color: accent),
@@ -525,11 +536,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final looking = summary.lookingFor
         .where(_isUsefulSignal)
         .take(2)
-        .join(' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ');
+        .join(' - ');
     final offering = summary.offering
         .where(_isUsefulSignal)
         .take(2)
-        .join(' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ');
+        .join(' - ');
     return _commandRow(
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
@@ -567,7 +578,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    _cleanText(title),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
@@ -579,7 +590,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                   if (detail.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      detail,
+                      _cleanText(detail),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTheme.bodyTextStyle(
@@ -716,24 +727,19 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   }
 
   Widget _dailyChecklist(List<ArcCommandChecklistItem> checklist) {
-    return ArcCommandCentreCard(
+    return _detailAccordion(
+      title: 'Daily Checklist',
+      subtitle: 'Local beta checklist state.',
       accent: AppTheme.neonCyan,
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ArcCommandSectionHeader(
-            title: 'Daily Checklist',
-            subtitle: 'Local beta checklist state.',
-            accent: AppTheme.neonCyan,
-          ),
-          const SizedBox(height: 8),
-          for (final item in checklist) ...[
-            _checklistRow(item),
-            if (item != checklist.last) const SizedBox(height: 6),
-          ],
-        ],
-      ),
+      initiallyExpanded: false,
+      children: checklist.isEmpty
+          ? [_quietLine('No checklist items are waiting.')]
+          : [
+              for (final item in checklist) ...[
+                _checklistRow(item),
+                if (item != checklist.last) const SizedBox(height: 6),
+              ],
+            ],
     );
   }
 
@@ -758,7 +764,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.label,
+                    _cleanText(item.label),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
@@ -768,7 +774,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     ),
                   ),
                   Text(
-                    item.reason,
+                    _cleanText(item.reason),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
@@ -799,6 +805,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          key: PageStorageKey<String>('command-centre-accordion-$title'),
           initiallyExpanded: initiallyExpanded,
           tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
@@ -940,6 +947,22 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         !normalized.contains('coming online');
   }
 
+  String _cleanText(String value) {
+    return value
+        .replaceAll('Ã¢â‚¬Â¢', '-')
+        .replaceAll('â€¢', '-')
+        .replaceAll('Â•', '-')
+        .replaceAll('Â·', '-')
+        .replaceAll('Â', '')
+        .replaceAll('Ã¢', '')
+        .replaceAll('â€“', '-')
+        .replaceAll('â€”', '-')
+        .replaceAll('â€™', "'")
+        .replaceAll('â€œ', '"')
+        .replaceAll('â€', '"')
+        .trim();
+  }
+
   String _imageForAction(ArcCommandAction action) {
     switch (action.intent) {
       case ArcCommandActionIntent.favouriteLoadout:
@@ -955,18 +978,14 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       case ArcCommandActionIntent.route:
       case ArcCommandActionIntent.placeholder:
         final route = action.routeName ?? '';
-        if (route.contains('blueprint')) {
+        if (route.contains('blueprint'))
           return 'assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp';
-        }
-        if (route.contains('bench')) {
+        if (route.contains('bench'))
           return 'assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp';
-        }
-        if (route.contains('quest')) {
+        if (route.contains('quest'))
           return 'assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp';
-        }
-        if (route.contains('resource') || route.contains('scrappy')) {
+        if (route.contains('resource') || route.contains('scrappy'))
           return 'assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp';
-        }
         return 'assets/images/arc_raiders/hub/arc_hub_tracking.webp';
     }
   }
