@@ -154,7 +154,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        '${priority.progressLabel}  Ã¢â‚¬Â¢  Tap to continue',
+                        '${priority.progressLabel}  ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢  Tap to continue',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.bodyTextStyle(
@@ -525,11 +525,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final looking = summary.lookingFor
         .where(_isUsefulSignal)
         .take(2)
-        .join(' Ã¢â‚¬Â¢ ');
+        .join(' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ');
     final offering = summary.offering
         .where(_isUsefulSignal)
         .take(2)
-        .join(' Ã¢â‚¬Â¢ ');
+        .join(' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ');
     return _commandRow(
       icon: Icons.swap_horiz_rounded,
       accent: AppTheme.neonPink,
