@@ -97,6 +97,11 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
           _showPlaceholder(action);
           return;
         }
+        final currentRoute = ModalRoute.of(context)?.settings.name;
+        if (routeName == currentRoute ||
+            routeName == ArcCommandCentreScreen.routeName) {
+          return;
+        }
         Navigator.of(context).pushNamed(routeName);
       case ArcCommandActionIntent.favouriteLoadout:
         Navigator.of(context).push(

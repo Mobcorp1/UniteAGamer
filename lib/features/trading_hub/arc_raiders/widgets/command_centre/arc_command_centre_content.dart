@@ -24,6 +24,8 @@ class ArcCommandCentreContent extends StatefulWidget {
 }
 
 class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
+  final Map<String, bool> _expandedPanels = <String, bool>{};
+
   @override
   Widget build(BuildContext context) {
     final commandState = widget.commandState;
@@ -35,9 +37,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final showTrade = _hasTradeSignal(commandState.tradeSummary);
 
     return ArcRaidersPageList(
-      maxWidth: 940,
+      maxWidth: 780,
       bottomPadding: 74,
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       children: [
         _missionHero(commandState.priority),
         if (liveTiles.isNotEmpty) ...[
@@ -245,7 +247,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       ),
       _tileFromPanel(
         state.operationsSummary,
-        image: 'assets/images/arc_raiders/hub/arc_hub_hunt_targets.webp',
+        image: 'assets/images/arc_raiders/hub/arc_hub_operations_missions.webp',
       ),
       _tileFromPanel(
         state.weeklyTraderSummary,
@@ -371,8 +373,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 900;
           final tablet = constraints.maxWidth >= 620 && !wide;
-          final viewportFraction = wide ? 0.46 : (tablet ? 0.64 : 0.82);
-          final deckHeight = wide ? 160.0 : 174.0;
+          final viewportFraction = wide ? 0.52 : (tablet ? 0.68 : 0.86);
+          final deckHeight = wide ? 150.0 : 166.0;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +435,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             ),
             const Spacer(),
             Text(
-              tile.detail,
+              _cleanText(tile.detail),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
@@ -475,8 +477,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ArcCommandSectionHeader(
-            title: 'Next Moves',
-            subtitle: 'Compact command feed. Tap a row to open the right tool.',
+            title: 'Next Move',
+            subtitle: 'Tap a row to open the right tool.',
             accent: AppTheme.neonCyan,
           ),
           const SizedBox(height: 8),
@@ -566,48 +568,63 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   }) {
     return _tapSurface(
       action: action,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-        decoration: _innerDecoration(accent),
-        child: Row(
-          children: [
-            Icon(icon, color: accent, size: 18),
-            const SizedBox(width: 9),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _cleanText(title),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      isBold: true,
-                    ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 360;
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: _innerDecoration(accent),
+            child: Row(
+              children: [
+                Icon(icon, color: accent, size: 18),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _cleanText(title),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          isBold: true,
+                        ),
+                      ),
+                      if (detail.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          _cleanText(detail),
+                          maxLines: compact ? 2 : 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 10,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  if (detail.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      _cleanText(detail),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 10,
-                        color: Colors.white54,
+                ),
+                const SizedBox(width: 8),
+                if (!compact)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 88),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: ArcCommandStatusPill(
+                        label: _cleanText(trailing),
+                        status: status,
                       ),
                     ),
-                  ],
-                ],
-              ),
+                  ),
+                const SizedBox(width: 3),
+                Icon(Icons.chevron_right_rounded, color: accent, size: 20),
+              ],
             ),
-            const SizedBox(width: 8),
-            ArcCommandStatusPill(label: trailing, status: status),
-            const SizedBox(width: 3),
-            Icon(Icons.chevron_right_rounded, color: accent, size: 20),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -615,8 +632,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _smartPicks(List<ArcCommandRecommendation> recommendations) {
     return _detailAccordion(
       title: 'Smart Picks',
-      subtitle: 'Optional recommendations only when you want more direction.',
+      subtitle: 'Extra direction when you want it.',
       accent: Colors.amberAccent,
+      initiallyExpanded: false,
       children: [
         for (final recommendation in recommendations) ...[
           _commandRow(
@@ -704,7 +722,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              resource.name,
+              _cleanText(resource.name),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
@@ -799,39 +817,87 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     required List<Widget> children,
     bool initiallyExpanded = true,
   }) {
+    final expanded = _expandedPanels.putIfAbsent(
+      title,
+      () => initiallyExpanded,
+    );
+    final visibleChildren = children.isEmpty
+        ? <Widget>[_quietLine('No additional detail is waiting.')]
+        : children;
+
     return ArcCommandCentreCard(
       accent: accent,
       padding: EdgeInsets.zero,
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          key: PageStorageKey<String>('command-centre-accordion-$title'),
-          initiallyExpanded: initiallyExpanded,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-          iconColor: accent,
-          collapsedIconColor: Colors.white60,
-          title: Text(
-            title.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.tradingHeading(fontSize: 15, color: accent),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () {
+              setState(() => _expandedPanels[title] = !expanded);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _cleanText(title).toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: accent,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _cleanText(subtitle),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 10,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: accent,
+                    size: 24,
+                  ),
+                ],
+              ),
+            ),
           ),
-          subtitle: Text(
-            subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white54),
-          ),
-          children: children.isEmpty
-              ? [_quietLine('No additional detail is waiting.')]
-              : [
-                  for (final child in children) ...[
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+              child: Column(
+                children: [
+                  for (final child in visibleChildren) ...[
                     child,
-                    if (child != children.last) const SizedBox(height: 8),
+                    if (child != visibleChildren.last)
+                      const SizedBox(height: 8),
                   ],
                 ],
-        ),
+              ),
+            ),
+            crossFadeState: expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 180),
+            sizeCurve: Curves.easeOutCubic,
+          ),
+        ],
       ),
     );
   }
@@ -893,7 +959,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     String label,
   ) {
     for (final snapshot in snapshots) {
-      if (snapshot.label == label) return snapshot;
+      if (snapshot.label == label) {
+        return snapshot;
+      }
     }
     return null;
   }
@@ -922,9 +990,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
 
   String _summaryDetail(ArcCommandSummaryPanel panel) {
     for (final detail in panel.details) {
-      if (_isUsefulSummaryDetail(detail)) return detail;
+      if (_isUsefulSummaryDetail(detail)) {
+        return detail;
+      }
     }
-    if (panel.body.isNotEmpty) return panel.body;
+    if (panel.body.isNotEmpty) {
+      return panel.body;
+    }
     return panel.details.isEmpty ? 'Tap to open' : panel.details.first;
   }
 
@@ -972,20 +1044,24 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       case ArcCommandActionIntent.nomadicTrader:
         return 'assets/images/arc_raiders/hub/arc_nomadic_trader_hero.webp';
       case ArcCommandActionIntent.operations:
-        return 'assets/images/arc_raiders/hub/arc_hub_hunt_targets.webp';
+        return 'assets/images/arc_raiders/hub/arc_hub_operations_missions.webp';
       case ArcCommandActionIntent.toolDeck:
         return 'assets/images/arc_raiders/hub/arc_raiders_hub_banner.webp';
       case ArcCommandActionIntent.route:
       case ArcCommandActionIntent.placeholder:
         final route = action.routeName ?? '';
-        if (route.contains('blueprint'))
+        if (route.contains('blueprint')) {
           return 'assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp';
-        if (route.contains('bench'))
+        }
+        if (route.contains('bench')) {
           return 'assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp';
-        if (route.contains('quest'))
+        }
+        if (route.contains('quest')) {
           return 'assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp';
-        if (route.contains('resource') || route.contains('scrappy'))
+        }
+        if (route.contains('resource') || route.contains('scrappy')) {
           return 'assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp';
+        }
         return 'assets/images/arc_raiders/hub/arc_hub_tracking.webp';
     }
   }
