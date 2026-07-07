@@ -38,7 +38,8 @@ class ArcCommandCentreScreen extends StatefulWidget {
   State<ArcCommandCentreScreen> createState() => _ArcCommandCentreScreenState();
 }
 
-class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
+class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
+    with AutomaticKeepAliveClientMixin<ArcCommandCentreScreen> {
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final ArcSavedLoadoutRepository _loadoutRepository =
       ArcSavedLoadoutRepository();
@@ -71,9 +72,28 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
   late Future<ArcNomadicTraderTrackerSnapshot> _nomadicTraderSnapshotFuture =
       _nomadicTraderRepository.loadTrackerSnapshot();
   final Map<String, bool> _checklistState = <String, bool>{};
+  Map<String, ArcBlueprintState> _cachedBlueprintStates =
+      <String, ArcBlueprintState>{};
+  List<ArcSavedLoadout> _cachedLoadouts = const <ArcSavedLoadout>[];
+  ArcOperationsUserState _cachedOperationsState = ArcOperationsUserState.empty;
+  Map<String, ArcScrappyState> _cachedScrappyStates =
+      <String, ArcScrappyState>{};
+  ArcNomadicTraderTrackerSnapshot _cachedNomadicTraderTracker =
+      ArcNomadicTraderTrackerSnapshot.empty;
+  List<TradingListing> _cachedActiveListings = const <TradingListing>[];
+  List<TradingListing> _cachedMyListings = const <TradingListing>[];
+  List<TradingOffer> _cachedOffers = const <TradingOffer>[];
+  List<TradingSession> _cachedSessions = const <TradingSession>[];
+  List<TradingNotification> _cachedNotifications =
+      const <TradingNotification>[];
+  static ArcCommandCentreState? _lastCommandState;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: const UagAppBar(
@@ -153,28 +173,39 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
     return StreamBuilder<Map<String, ArcBlueprintState>>(
       stream: _blueprintStatesStream,
       builder: (context, blueprintSnapshot) {
-        final blueprintStates =
-            blueprintSnapshot.data ?? <String, ArcBlueprintState>{};
+        if (blueprintSnapshot.hasData) {
+          _cachedBlueprintStates = blueprintSnapshot.data!;
+        }
+        final blueprintStates = _cachedBlueprintStates;
         return StreamBuilder<List<ArcSavedLoadout>>(
           stream: _loadoutsStream,
           builder: (context, loadoutSnapshot) {
-            final loadouts = loadoutSnapshot.data ?? const <ArcSavedLoadout>[];
+            if (loadoutSnapshot.hasData) {
+              _cachedLoadouts = loadoutSnapshot.data!;
+            }
+            final loadouts = _cachedLoadouts;
             return StreamBuilder<ArcOperationsUserState>(
               stream: _operationsStateStream,
               builder: (context, operationsSnapshot) {
-                final operationsState =
-                    operationsSnapshot.data ?? ArcOperationsUserState.empty;
+                if (operationsSnapshot.hasData) {
+                  _cachedOperationsState = operationsSnapshot.data!;
+                }
+                final operationsState = _cachedOperationsState;
                 return StreamBuilder<Map<String, ArcScrappyState>>(
                   stream: _scrappyStatesStream,
                   builder: (context, scrappySnapshot) {
-                    final scrappyStates =
-                        scrappySnapshot.data ?? <String, ArcScrappyState>{};
+                    if (scrappySnapshot.hasData) {
+                      _cachedScrappyStates = scrappySnapshot.data!;
+                    }
+                    final scrappyStates = _cachedScrappyStates;
                     return FutureBuilder<ArcNomadicTraderTrackerSnapshot>(
                       future: _nomadicTraderSnapshotFuture,
                       builder: (context, traderSnapshot) {
+                        if (traderSnapshot.hasData) {
+                          _cachedNomadicTraderTracker = traderSnapshot.data!;
+                        }
                         final nomadicTraderTracker =
-                            traderSnapshot.data ??
-                            ArcNomadicTraderTrackerSnapshot.empty;
+                            _cachedNomadicTraderTracker;
                         return _buildWithTradeActivity(
                           blueprintStates: blueprintStates,
                           loadouts: loadouts,
@@ -204,28 +235,38 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
     return StreamBuilder<List<TradingListing>>(
       stream: _activeListingsStream,
       builder: (context, activeListingsSnapshot) {
-        final activeListings =
-            activeListingsSnapshot.data ?? const <TradingListing>[];
+        if (activeListingsSnapshot.hasData) {
+          _cachedActiveListings = activeListingsSnapshot.data!;
+        }
+        final activeListings = _cachedActiveListings;
         return StreamBuilder<List<TradingListing>>(
           stream: _myListingsStream,
           builder: (context, myListingsSnapshot) {
-            final myListings =
-                myListingsSnapshot.data ?? const <TradingListing>[];
+            if (myListingsSnapshot.hasData) {
+              _cachedMyListings = myListingsSnapshot.data!;
+            }
+            final myListings = _cachedMyListings;
             return StreamBuilder<List<TradingOffer>>(
               stream: _myOffersStream,
               builder: (context, offersSnapshot) {
-                final offers = offersSnapshot.data ?? const <TradingOffer>[];
+                if (offersSnapshot.hasData) {
+                  _cachedOffers = offersSnapshot.data!;
+                }
+                final offers = _cachedOffers;
                 return StreamBuilder<List<TradingSession>>(
                   stream: _mySessionsStream,
                   builder: (context, sessionsSnapshot) {
-                    final sessions =
-                        sessionsSnapshot.data ?? const <TradingSession>[];
+                    if (sessionsSnapshot.hasData) {
+                      _cachedSessions = sessionsSnapshot.data!;
+                    }
+                    final sessions = _cachedSessions;
                     return StreamBuilder<List<TradingNotification>>(
                       stream: _notificationsStream,
                       builder: (context, notificationsSnapshot) {
-                        final notifications =
-                            notificationsSnapshot.data ??
-                            const <TradingNotification>[];
+                        if (notificationsSnapshot.hasData) {
+                          _cachedNotifications = notificationsSnapshot.data!;
+                        }
+                        final notifications = _cachedNotifications;
                         final tradeActivity = _tradeActivityFrom(
                           blueprintStates: blueprintStates,
                           activeListings: activeListings,
@@ -242,8 +283,9 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen> {
                           operationsState: operationsState,
                           tradeActivity: tradeActivity,
                         );
+                        _lastCommandState = commandState;
                         return ArcCommandCentreContent(
-                          commandState: commandState,
+                          commandState: _lastCommandState ?? commandState,
                           checklistState: _checklistState,
                           onAction: _handleAction,
                           onChecklistChanged: _handleChecklistChanged,

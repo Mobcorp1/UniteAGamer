@@ -25,23 +25,32 @@ class ArcCommandCentreContent extends StatefulWidget {
 
 class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   final Map<String, bool> _expandedPanels = <String, bool>{};
+  late final PageController _systemsController = PageController(
+    viewportFraction: 0.86,
+  );
+  int _systemsIndex = 0;
+
+  @override
+  void dispose() {
+    _systemsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final commandState = widget.commandState;
     final liveTiles = _liveTiles(commandState).take(4).toList(growable: false);
     final carouselTiles = _systemCarouselTiles(commandState);
-    final actions = _dedupeObjectives(commandState.objectives).take(3).toList();
-    final alerts = _dedupeAlerts(commandState.alerts).take(2).toList();
-    final recommendations = commandState.recommendations.take(3).toList();
-    final showTrade = _hasTradeSignal(commandState.tradeSummary);
+    final commandMoves = _commandMoves(commandState).take(6).toList();
 
     return ArcRaidersPageList(
-      maxWidth: 780,
+      maxWidth: 900,
       bottomPadding: 74,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       children: [
         _missionHero(commandState.priority),
+        const SizedBox(height: 8),
+        _dailyChecklist(commandState.checklist),
         if (liveTiles.isNotEmpty) ...[
           const SizedBox(height: 8),
           _liveTileGrid(liveTiles),
@@ -49,31 +58,22 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         const SizedBox(height: 8),
         _systemCarousel(carouselTiles),
         const SizedBox(height: 8),
-        _actionConsole(
-          actions,
-          alerts,
-          showTrade ? commandState.tradeSummary : null,
-        ),
-        if (recommendations.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _smartPicks(recommendations),
-        ],
+        _actionConsole(commandMoves),
         const SizedBox(height: 8),
         _detailAccordion(
           title: 'System Detail',
-          subtitle: 'Full summaries, checklist and lower-priority intel.',
+          subtitle:
+              'Lower-priority summaries only. Keep this closed unless you need depth.',
           accent: AppTheme.neonCyan,
           initiallyExpanded: false,
           children: [
-            _summaryPanel(commandState.blueprintSummary),
-            _summaryPanel(commandState.operationsSummary),
-            _summaryPanel(commandState.questSummary),
-            _summaryPanel(commandState.benchSummary),
-            _summaryPanel(commandState.resourceSummary),
-            _summaryPanel(commandState.weeklyTraderSummary),
-            _summaryPanel(commandState.decisionSummary),
-            _resourceSummary(commandState.resources),
-            _dailyChecklist(commandState.checklist),
+            _systemDetailGrid([
+              _summaryPanel(commandState.operationsSummary),
+              _summaryPanel(commandState.questSummary),
+              _summaryPanel(commandState.weeklyTraderSummary),
+              _summaryPanel(commandState.decisionSummary),
+              _resourceSummary(commandState.resources),
+            ]),
           ],
         ),
       ],
@@ -156,7 +156,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        '${_cleanText(priority.progressLabel)} - Tap to continue',
+                        _cleanText(priority.progressLabel),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.bodyTextStyle(
@@ -284,7 +284,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _liveTileGrid(List<_CommandTileData> tiles) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 760 ? 4 : 2;
+        final columns = constraints.maxWidth >= 720 ? 4 : 2;
         const spacing = 8.0;
         final width =
             (constraints.maxWidth - (spacing * (columns - 1))) / columns;
@@ -305,7 +305,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _tapSurface(
       action: tile.action,
       child: Container(
-        height: 102,
+        height: 88,
         padding: const EdgeInsets.all(9),
         decoration: _imageDecoration(tile.image, accent, radius: 18),
         child: Stack(
@@ -334,7 +334,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     _cleanText(tile.value),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(fontSize: 16, color: accent),
+                    style: AppTheme.tradingHeading(fontSize: 13, color: accent),
                   ),
                   const SizedBox(height: 1),
                   Text(
@@ -348,7 +348,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     ),
                   ),
                   Text(
-                    _cleanText(tile.detail),
+                    _shortActionText(tile.detail),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
@@ -366,33 +366,49 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   }
 
   Widget _systemCarousel(List<_CommandTileData> tiles) {
+    if (tiles.isEmpty) return const SizedBox.shrink();
+
     return ArcCommandCentreCard(
       accent: AppTheme.neonCyan,
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 900;
-          final tablet = constraints.maxWidth >= 620 && !wide;
-          final viewportFraction = wide ? 0.52 : (tablet ? 0.68 : 0.86);
-          final deckHeight = wide ? 150.0 : 166.0;
-
+          final desktop = constraints.maxWidth >= 760;
+          final deckHeight = desktop ? 164.0 : 150.0;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ArcCommandSectionHeader(
-                title: 'Systems',
-                subtitle: 'Swipe the command deck. Tap any card to open it.',
-                accent: AppTheme.neonCyan,
+              Row(
+                children: [
+                  const Expanded(
+                    child: ArcCommandSectionHeader(
+                      title: 'Systems',
+                      subtitle: 'Command deck. Use arrows or swipe.',
+                      accent: AppTheme.neonCyan,
+                    ),
+                  ),
+                  _carouselArrow(
+                    icon: Icons.chevron_left_rounded,
+                    enabled: _systemsIndex > 0,
+                    onTap: () => _moveSystemsCarousel(-1, tiles.length),
+                  ),
+                  const SizedBox(width: 6),
+                  _carouselArrow(
+                    icon: Icons.chevron_right_rounded,
+                    enabled: _systemsIndex < tiles.length - 1,
+                    onTap: () => _moveSystemsCarousel(1, tiles.length),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               SizedBox(
                 height: deckHeight,
                 child: PageView.builder(
-                  controller: PageController(
-                    viewportFraction: viewportFraction,
-                  ),
+                  controller: _systemsController,
                   padEnds: false,
                   itemCount: tiles.length,
+                  onPageChanged: (index) =>
+                      setState(() => _systemsIndex = index),
                   itemBuilder: (context, index) => Padding(
                     padding: EdgeInsets.only(
                       right: index == tiles.length - 1 ? 0 : 10,
@@ -401,10 +417,72 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                   ),
                 ),
               ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < tiles.length; i++)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: i == _systemsIndex ? 18 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        color:
+                            (i == _systemsIndex
+                                    ? AppTheme.neonCyan
+                                    : Colors.white24)
+                                .withValues(
+                                  alpha: i == _systemsIndex ? 0.9 : 0.5,
+                                ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _carouselArrow({
+    required IconData icon,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withValues(alpha: 0.30),
+          border: Border.all(
+            color: (enabled ? AppTheme.neonCyan : Colors.white24).withValues(
+              alpha: enabled ? 0.55 : 0.22,
+            ),
+          ),
+        ),
+        child: Icon(
+          icon,
+          color: enabled ? AppTheme.neonCyan : Colors.white24,
+          size: 24,
+        ),
+      ),
+    );
+  }
+
+  void _moveSystemsCarousel(int delta, int length) {
+    if (length <= 0) return;
+    final next = (_systemsIndex + delta).clamp(0, length - 1);
+    _systemsController.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
     );
   }
 
@@ -435,7 +513,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             ),
             const Spacer(),
             Text(
-              _cleanText(tile.detail),
+              _shortActionText(tile.detail),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
@@ -465,11 +543,101 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _actionConsole(
-    List<ArcCommandObjective> objectives,
-    List<ArcCommandAlert> alerts,
-    ArcCommandTradeSummary? tradeSummary,
-  ) {
+  List<_CommandMoveData> _commandMoves(ArcCommandCentreState state) {
+    final moves = <_CommandMoveData>[];
+    final seen = <String>{};
+
+    void add({
+      required String title,
+      required String detail,
+      required String label,
+      required ArcCommandStatus status,
+      required ArcCommandAction action,
+      required IconData icon,
+      required Color accent,
+      required String image,
+    }) {
+      final key = '${title.toLowerCase()}|${action.intent}|${action.routeName}';
+      if (!seen.add(key)) return;
+      moves.add(
+        _CommandMoveData(
+          title: title,
+          detail: detail,
+          label: label,
+          status: status,
+          action: action,
+          icon: icon,
+          accent: accent,
+          image: image,
+        ),
+      );
+    }
+
+    for (final objective in state.objectives) {
+      final detail = objective.progressText.isNotEmpty
+          ? objective.progressText
+          : objective.reason;
+      add(
+        title: objective.title,
+        detail: detail,
+        label: objective.statusLabel,
+        status: objective.status,
+        action: objective.action,
+        icon: _statusIcon(objective.status),
+        accent: arcCommandStatusAccent(objective.status),
+        image: _imageForAction(objective.action),
+      );
+    }
+
+    for (final alert in state.alerts) {
+      add(
+        title: alert.title,
+        detail: alert.body,
+        label: alert.statusLabel,
+        status: alert.status,
+        action: alert.action,
+        icon: _statusIcon(alert.status),
+        accent: arcCommandStatusAccent(alert.status),
+        image: _imageForAction(alert.action),
+      );
+    }
+
+    if (_hasTradeSignal(state.tradeSummary)) {
+      final action = state.tradeSummary.actions.isNotEmpty
+          ? state.tradeSummary.actions.first
+          : const ArcCommandAction(
+              label: 'Open Trades',
+              intent: ArcCommandActionIntent.smartTrade,
+            );
+      add(
+        title: 'Trade Opportunity',
+        detail: _tradeSignalDetail(state.tradeSummary),
+        label: 'Trade',
+        status: ArcCommandStatus.ready,
+        action: action,
+        icon: Icons.swap_horiz_rounded,
+        accent: AppTheme.neonPink,
+        image: _imageForAction(action),
+      );
+    }
+
+    for (final recommendation in state.recommendations) {
+      add(
+        title: recommendation.title,
+        detail: recommendation.body,
+        label: 'Pick',
+        status: ArcCommandStatus.warning,
+        action: recommendation.action,
+        icon: Icons.auto_awesome_rounded,
+        accent: Colors.amberAccent,
+        image: _imageForAction(recommendation.action),
+      );
+    }
+
+    return moves;
+  }
+
+  Widget _actionConsole(List<_CommandMoveData> moves) {
     return ArcCommandCentreCard(
       accent: AppTheme.neonCyan,
       padding: const EdgeInsets.all(10),
@@ -478,177 +646,117 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         children: [
           const ArcCommandSectionHeader(
             title: 'Next Move',
-            subtitle: 'Tap a row to open the right tool.',
+            subtitle: 'Compact action grid. Tap a tile to open the right tool.',
             accent: AppTheme.neonCyan,
           ),
           const SizedBox(height: 8),
-          if (objectives.isEmpty && alerts.isEmpty && tradeSummary == null)
+          if (moves.isEmpty)
             _quietLine('No active command needs attention.')
-          else ...[
-            for (final objective in objectives) ...[
-              _objectiveRow(objective),
-              const SizedBox(height: 6),
-            ],
-            for (final alert in alerts) ...[
-              _alertRow(alert),
-              const SizedBox(height: 6),
-            ],
-            if (tradeSummary != null) _tradeStrip(tradeSummary),
-          ],
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 760 ? 3 : 2;
+                const spacing = 8.0;
+                final width =
+                    (constraints.maxWidth - (spacing * (columns - 1))) /
+                    columns;
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: [
+                    for (final move in moves)
+                      SizedBox(width: width, child: _moveTile(move)),
+                  ],
+                );
+              },
+            ),
         ],
       ),
     );
   }
 
-  Widget _objectiveRow(ArcCommandObjective objective) {
-    final accent = arcCommandStatusAccent(objective.status);
-    return _commandRow(
-      icon: _statusIcon(objective.status),
-      accent: accent,
-      title: objective.title,
-      detail: objective.progressText.isNotEmpty
-          ? objective.progressText
-          : objective.reason,
-      trailing: objective.statusLabel,
-      status: objective.status,
-      action: objective.action,
-    );
-  }
-
-  Widget _alertRow(ArcCommandAlert alert) {
-    final accent = arcCommandStatusAccent(alert.status);
-    return _commandRow(
-      icon: _statusIcon(alert.status),
-      accent: accent,
-      title: alert.title,
-      detail: alert.body,
-      trailing: alert.statusLabel,
-      status: alert.status,
-      action: alert.action,
-    );
-  }
-
-  Widget _tradeStrip(ArcCommandTradeSummary summary) {
-    final action = summary.actions.isNotEmpty
-        ? summary.actions.first
-        : const ArcCommandAction(
-            label: 'Open Trades',
-            intent: ArcCommandActionIntent.smartTrade,
-          );
-    final looking = summary.lookingFor
-        .where(_isUsefulSignal)
-        .take(2)
-        .join(' - ');
-    final offering = summary.offering
-        .where(_isUsefulSignal)
-        .take(2)
-        .join(' - ');
-    return _commandRow(
-      icon: Icons.swap_horiz_rounded,
-      accent: AppTheme.neonPink,
-      title: 'Trade Opportunity',
-      detail: [
-        if (looking.isNotEmpty) 'Need: $looking',
-        if (offering.isNotEmpty) 'Offer: $offering',
-      ].join('   '),
-      trailing: 'Trade',
-      status: ArcCommandStatus.ready,
-      action: action,
-    );
-  }
-
-  Widget _commandRow({
-    required IconData icon,
-    required Color accent,
-    required String title,
-    required String detail,
-    required String trailing,
-    required ArcCommandStatus status,
-    required ArcCommandAction action,
-  }) {
+  Widget _moveTile(_CommandMoveData move) {
     return _tapSurface(
-      action: action,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 360;
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: _innerDecoration(accent),
-            child: Row(
+      action: move.action,
+      child: Container(
+        height: 92,
+        padding: const EdgeInsets.all(9),
+        decoration: _imageDecoration(move.image, move.accent, radius: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Icon(icon, color: accent, size: 18),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _cleanText(title),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          isBold: true,
-                        ),
-                      ),
-                      if (detail.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          _cleanText(detail),
-                          maxLines: compact ? 2 : 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 10,
-                            color: Colors.white54,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (!compact)
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 88),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: ArcCommandStatusPill(
-                        label: _cleanText(trailing),
-                        status: status,
-                      ),
+                Icon(move.icon, color: move.accent, size: 15),
+                const Spacer(),
+                Flexible(
+                  child: Text(
+                    _cleanText(move.label).toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 8,
+                      color: move.accent,
+                      isBold: true,
                     ),
                   ),
-                const SizedBox(width: 3),
-                Icon(Icons.chevron_right_rounded, color: accent, size: 20),
+                ),
               ],
             ),
-          );
-        },
+            const Spacer(),
+            Text(
+              _cleanText(move.title),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 11,
+                color: Colors.white,
+                isBold: true,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _shortActionText(move.detail),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 9,
+                color: Colors.white54,
+              ).copyWith(height: 1.12),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _smartPicks(List<ArcCommandRecommendation> recommendations) {
-    return _detailAccordion(
-      title: 'Smart Picks',
-      subtitle: 'Extra direction when you want it.',
-      accent: Colors.amberAccent,
-      initiallyExpanded: false,
-      children: [
-        for (final recommendation in recommendations) ...[
-          _commandRow(
-            icon: Icons.auto_awesome_rounded,
-            accent: Colors.amberAccent,
-            title: recommendation.title,
-            detail: recommendation.body,
-            trailing: 'Pick',
-            status: ArcCommandStatus.warning,
-            action: recommendation.action,
-          ),
-          if (recommendation != recommendations.last) const SizedBox(height: 6),
-        ],
-      ],
+  String _tradeSignalDetail(ArcCommandTradeSummary summary) {
+    final looking = summary.lookingFor.where(_isUsefulSignal).take(1).join('');
+    final offering = summary.offering.where(_isUsefulSignal).take(1).join('');
+    if (looking.isNotEmpty && offering.isNotEmpty) {
+      return 'Need: $looking - Offer: $offering';
+    }
+    if (looking.isNotEmpty) return 'Need: $looking';
+    if (offering.isNotEmpty) return 'Offer: $offering';
+    return 'Review trade signals';
+  }
+
+  Widget _systemDetailGrid(List<Widget> children) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 720 ? 2 : 1;
+        const spacing = 8.0;
+        final width =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final child in children) SizedBox(width: width, child: child),
+          ],
+        );
+      },
     );
   }
 
@@ -664,7 +772,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           children: [
             ArcCommandSectionHeader(
               title: panel.title,
-              subtitle: panel.body,
+              subtitle: _shortActionText(panel.body),
               accent: accent,
               trailing: ArcCommandStatusPill(
                 label: panel.statusLabel,
@@ -745,67 +853,99 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   }
 
   Widget _dailyChecklist(List<ArcCommandChecklistItem> checklist) {
+    final items = checklist.take(9).toList(growable: false);
     return _detailAccordion(
-      title: 'Daily Checklist',
-      subtitle: 'Local beta checklist state.',
+      title: 'Daily Mission Board',
+      subtitle: 'Short daily checks. Tap a tile to open the right tool.',
       accent: AppTheme.neonCyan,
       initiallyExpanded: false,
-      children: checklist.isEmpty
+      children: items.isEmpty
           ? [_quietLine('No checklist items are waiting.')]
           : [
-              for (final item in checklist) ...[
-                _checklistRow(item),
-                if (item != checklist.last) const SizedBox(height: 6),
-              ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.maxWidth >= 760
+                      ? 3
+                      : (constraints.maxWidth >= 520 ? 3 : 2);
+                  const spacing = 8.0;
+                  final width =
+                      (constraints.maxWidth - (spacing * (columns - 1))) /
+                      columns;
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: [
+                      for (final item in items)
+                        SizedBox(width: width, child: _checklistTile(item)),
+                    ],
+                  );
+                },
+              ),
             ],
     );
   }
 
-  Widget _checklistRow(ArcCommandChecklistItem item) {
+  Widget _checklistTile(ArcCommandChecklistItem item) {
     final checked = widget.checklistState[item.id] ?? item.doneByDefault;
     final accent = checked ? Colors.lightGreenAccent : AppTheme.neonCyan;
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: _innerDecoration(accent),
-      child: Row(
-        children: [
-          Checkbox(
-            value: checked,
-            activeColor: Colors.lightGreenAccent,
-            onChanged: (value) =>
-                widget.onChecklistChanged(item.id, value ?? false),
-          ),
-          Expanded(
-            child: _tapSurface(
-              action: item.action,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _cleanText(item.label),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 11,
-                      color: checked ? Colors.lightGreenAccent : Colors.white,
-                      isBold: true,
-                    ),
+    return _tapSurface(
+      action: item.action,
+      child: Container(
+        height: 86,
+        padding: const EdgeInsets.all(8),
+        decoration: _imageDecoration(
+          _imageForAction(item.action),
+          accent,
+          radius: 16,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                InkWell(
+                  borderRadius: BorderRadius.circular(999),
+                  onTap: () => widget.onChecklistChanged(item.id, !checked),
+                  child: Icon(
+                    checked
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: accent,
+                    size: 18,
                   ),
-                  Text(
-                    _cleanText(item.reason),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
+                ),
+                const Spacer(),
+                ArcCommandStatusPill(
+                  label: checked ? 'Done' : 'Daily',
+                  status: checked
+                      ? ArcCommandStatus.success
+                      : ArcCommandStatus.active,
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              _cleanText(item.label),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 11,
+                color: checked ? Colors.lightGreenAccent : Colors.white,
+                isBold: true,
               ),
             ),
-          ),
-          Icon(Icons.chevron_right_rounded, color: accent, size: 18),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              _shortActionText(item.reason),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 9,
+                color: Colors.white60,
+              ).copyWith(height: 1.08),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -966,28 +1106,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return null;
   }
 
-  List<ArcCommandObjective> _dedupeObjectives(List<ArcCommandObjective> input) {
-    final seen = <String>{};
-    return [
-      for (final objective in input)
-        if (seen.add(
-          '${objective.title}|${objective.action.intent}|${objective.action.routeName}',
-        ))
-          objective,
-    ];
-  }
-
-  List<ArcCommandAlert> _dedupeAlerts(List<ArcCommandAlert> input) {
-    final seen = <String>{};
-    return [
-      for (final alert in input)
-        if (seen.add(
-          '${alert.title}|${alert.action.intent}|${alert.action.routeName}',
-        ))
-          alert,
-    ];
-  }
-
   String _summaryDetail(ArcCommandSummaryPanel panel) {
     for (final detail in panel.details) {
       if (_isUsefulSummaryDetail(detail)) {
@@ -1019,19 +1137,39 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         !normalized.contains('coming online');
   }
 
+  String _shortActionText(String value) {
+    final cleaned = _cleanText(value);
+    final lower = cleaned.toLowerCase();
+    if (lower.contains('farm antiseptic')) {
+      return 'Farm antiseptic via Medical POIs before trading it away.';
+    }
+    if (lower.contains('ranked from')) {
+      return cleaned.split(' ranked from').first.trim();
+    }
+    if (cleaned.length <= 92) return cleaned;
+    final firstSentence = cleaned.split(RegExp(r'[.!?]')).first.trim();
+    if (firstSentence.length >= 24 && firstSentence.length <= 92) {
+      return firstSentence;
+    }
+    return '${cleaned.substring(0, 89).trim()}...';
+  }
+
   String _cleanText(String value) {
     return value
-        .replaceAll('Ã¢â‚¬Â¢', '-')
-        .replaceAll('â€¢', '-')
-        .replaceAll('Â•', '-')
-        .replaceAll('Â·', '-')
-        .replaceAll('Â', '')
-        .replaceAll('Ã¢', '')
-        .replaceAll('â€“', '-')
-        .replaceAll('â€”', '-')
-        .replaceAll('â€™', "'")
-        .replaceAll('â€œ', '"')
-        .replaceAll('â€', '"')
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          '-',
+        )
+        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢', '-')
+        .replaceAll('ÃƒÆ’Ã¢â‚¬Å¡ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢', '-')
+        .replaceAll('ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·', '-')
+        .replaceAll('ÃƒÆ’Ã¢â‚¬Å¡', '')
+        .replaceAll('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢', '')
+        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ', '-')
+        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â', '-')
+        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢', "'")
+        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“', '"')
+        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â', '"')
         .trim();
   }
 
@@ -1132,6 +1270,28 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         return Icons.check_circle_rounded;
     }
   }
+}
+
+class _CommandMoveData {
+  const _CommandMoveData({
+    required this.title,
+    required this.detail,
+    required this.label,
+    required this.status,
+    required this.action,
+    required this.icon,
+    required this.accent,
+    required this.image,
+  });
+
+  final String title;
+  final String detail;
+  final String label;
+  final ArcCommandStatus status;
+  final ArcCommandAction action;
+  final IconData icon;
+  final Color accent;
+  final String image;
 }
 
 class _CommandTileData {
