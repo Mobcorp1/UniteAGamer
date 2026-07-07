@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisation_models.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class AdminMonetisationDashboard extends StatelessWidget {
@@ -138,6 +141,8 @@ class AdminMonetisationDashboard extends StatelessWidget {
         const SizedBox(height: AppTheme.spaceL),
         const UagImpactPotsPanel(showAdminDetail: true),
         const SizedBox(height: AppTheme.spaceL),
+        const _OnboardingSimulatorCard(),
+        const SizedBox(height: AppTheme.spaceL),
         _PaymentMethodCard(),
       ],
     );
@@ -167,6 +172,343 @@ class AdminMonetisationDashboard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+enum _SimulatorProfileState { fresh, active, postExpedition }
+
+enum _SimulatorBlueprintState { setupNow, skipForNow }
+
+class _OnboardingSimulatorCard extends StatefulWidget {
+  const _OnboardingSimulatorCard();
+
+  @override
+  State<_OnboardingSimulatorCard> createState() =>
+      _OnboardingSimulatorCardState();
+}
+
+class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
+  _SimulatorProfileState _profileState = _SimulatorProfileState.fresh;
+  _SimulatorBlueprintState _blueprintState =
+      _SimulatorBlueprintState.skipForNow;
+  bool _reachedLevel25 = false;
+  bool _isWriting = false;
+
+  bool get _isFreshOrReset =>
+      _profileState == _SimulatorProfileState.fresh ||
+      _profileState == _SimulatorProfileState.postExpedition;
+
+  String get _profileStateId => switch (_profileState) {
+    _SimulatorProfileState.active => 'active',
+    _SimulatorProfileState.postExpedition => 'postExpedition',
+    _ => 'fresh',
+  };
+
+  String get _blueprintStateId => switch (_blueprintState) {
+    _SimulatorBlueprintState.setupNow => 'setupNow',
+    _ => 'skipForNow',
+  };
+
+  void _setProfileState(_SimulatorProfileState state) {
+    setState(() {
+      _profileState = state;
+      if (_isFreshOrReset) {
+        _reachedLevel25 = false;
+        _blueprintState = _SimulatorBlueprintState.skipForNow;
+      }
+    });
+  }
+
+  Map<String, Object?> _simulatorArgs({int step = 0}) {
+    final reachedLevel25 = !_isFreshOrReset && _reachedLevel25;
+    return {
+      'source': 'adminOnboardingSimulator',
+      'playerState': _profileStateId,
+      'reachedRaiderLevel25': reachedLevel25,
+      'blueprintSetup': _blueprintStateId,
+      'step': step,
+    };
+  }
+
+  Future<void> _writeSimulation({bool resetProgress = false}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No signed-in admin user found.')),
+      );
+      return;
+    }
+
+    setState(() => _isWriting = true);
+    final reachedLevel25 = !_isFreshOrReset && _reachedLevel25;
+    final blueprintConfigured =
+        _blueprintState == _SimulatorBlueprintState.setupNow;
+    final blueprintSkipped = !blueprintConfigured;
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        if (resetProgress) 'onboardingComplete': false,
+        'traderProfile': {'raiderLevel': reachedLevel25 ? 25 : 0},
+        'arcOnboarding': {
+          'version': 3,
+          'playerState': _profileStateId,
+          'raiderLevel': reachedLevel25 ? 25 : 0,
+          'nomadicTraderUnlocked': reachedLevel25,
+          'nomadicTraderLockedReason': reachedLevel25
+              ? null
+              : 'Nomadic Trader unlocks at Raider Level 25. Update your Raider Level in the app when you reach 25 to unlock Nomadic Trader planning.',
+          'blueprintSetupSkipped': blueprintSkipped,
+          'blueprintTrackerConfigured': blueprintConfigured,
+          'blueprintOwnershipReset': _isFreshOrReset,
+          'questProgressReset': _isFreshOrReset,
+          'benchProgressReset': _isFreshOrReset,
+          'favouriteLoadoutsRetained': true,
+          'simulatedByAdmin': true,
+          'simulatorUpdatedAt': FieldValue.serverTimestamp(),
+        },
+        'modules': {
+          'blueprintTracker': blueprintConfigured,
+          'nomadicTrader': reachedLevel25,
+        },
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            resetProgress
+                ? 'Onboarding simulation applied and progress reset.'
+                : 'Onboarding simulation applied.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isWriting = false);
+    }
+  }
+
+  Future<void> _launchOnboarding({
+    int step = 0,
+    bool resetProgress = false,
+  }) async {
+    await _writeSimulation(resetProgress: resetProgress);
+    if (!mounted) return;
+    Navigator.of(context).pushNamed(
+      OnboardingBasicProfileScreen.routeName,
+      arguments: _simulatorArgs(step: step),
+    );
+  }
+
+  void _openCommandCentre() {
+    Navigator.of(context).pushNamed(ArcCommandCentreScreen.routeName);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reachedLevel25 = !_isFreshOrReset && _reachedLevel25;
+    return Container(
+      width: double.infinity,
+      padding: AppTheme.sectionCardPadding,
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonPink.withValues(alpha: 0.28),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.science_rounded, color: AppTheme.neonPink),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Onboarding Simulator',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 22,
+                    color: AppTheme.neonPink,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            'Admin-only onboarding preview. Applies simulated state to your admin account and opens the real onboarding flow without creating or deleting test accounts.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 14,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          _sectionLabel('Profile State'),
+          _segmentedWrap([
+            _simButton(
+              'New Player',
+              _profileState == _SimulatorProfileState.fresh,
+              () => _setProfileState(_SimulatorProfileState.fresh),
+            ),
+            _simButton(
+              'Existing Player',
+              _profileState == _SimulatorProfileState.active,
+              () => _setProfileState(_SimulatorProfileState.active),
+            ),
+            _simButton(
+              'After Expedition Reset',
+              _profileState == _SimulatorProfileState.postExpedition,
+              () => _setProfileState(_SimulatorProfileState.postExpedition),
+            ),
+          ]),
+          const SizedBox(height: AppTheme.spaceM),
+          _sectionLabel('Reached Raider Level 25?'),
+          _segmentedWrap([
+            _simButton(
+              'No',
+              !reachedLevel25,
+              _isFreshOrReset
+                  ? null
+                  : () => setState(() => _reachedLevel25 = false),
+            ),
+            _simButton(
+              'Yes',
+              reachedLevel25,
+              _isFreshOrReset
+                  ? null
+                  : () => setState(() => _reachedLevel25 = true),
+            ),
+          ]),
+          if (_isFreshOrReset) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Fresh starts and expedition resets force this to No because Raider Level returns to 0.',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: Colors.amberAccent,
+                isBold: true,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spaceM),
+          _sectionLabel('Blueprint Tracker'),
+          _segmentedWrap([
+            _simButton(
+              'Set Up Now',
+              _blueprintState == _SimulatorBlueprintState.setupNow,
+              _isFreshOrReset
+                  ? null
+                  : () => setState(
+                      () => _blueprintState = _SimulatorBlueprintState.setupNow,
+                    ),
+            ),
+            _simButton(
+              'Skip For Now',
+              _blueprintState == _SimulatorBlueprintState.skipForNow,
+              () => setState(
+                () => _blueprintState = _SimulatorBlueprintState.skipForNow,
+              ),
+            ),
+          ]),
+          if (_isFreshOrReset) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Blueprint ownership, quests and benches reset. Favourite Loadouts are retained.',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: AppTheme.tradingMutedText,
+                isBold: true,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spaceL),
+          Wrap(
+            spacing: AppTheme.spaceM,
+            runSpacing: AppTheme.spaceM,
+            children: [
+              _actionButton(
+                label: 'Apply Simulation',
+                icon: Icons.save_alt_rounded,
+                onPressed: _isWriting ? null : () => _writeSimulation(),
+              ),
+              _actionButton(
+                label: 'Reset + Launch',
+                icon: Icons.restart_alt_rounded,
+                onPressed: _isWriting
+                    ? null
+                    : () => _launchOnboarding(step: 0, resetProgress: true),
+              ),
+              _actionButton(
+                label: 'Jump To Wipe State',
+                icon: Icons.flag_rounded,
+                onPressed: _isWriting ? null : () => _launchOnboarding(step: 1),
+              ),
+              _actionButton(
+                label: 'Jump To Blueprint',
+                icon: Icons.grid_view_rounded,
+                onPressed: _isWriting ? null : () => _launchOnboarding(step: 2),
+              ),
+              _actionButton(
+                label: 'Command Centre',
+                icon: Icons.dashboard_customize_rounded,
+                onPressed: _isWriting ? null : _openCommandCentre,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        label.toUpperCase(),
+        style: AppTheme.bodyTextStyle(
+          fontSize: 12,
+          color: AppTheme.neonCyan,
+          isBold: true,
+        ).copyWith(letterSpacing: 1.1),
+      ),
+    );
+  }
+
+  Widget _segmentedWrap(List<Widget> children) {
+    return Wrap(spacing: 10, runSpacing: 10, children: children);
+  }
+
+  Widget _simButton(String label, bool selected, VoidCallback? onTap) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: selected ? Colors.black : Colors.white,
+        backgroundColor: selected
+            ? AppTheme.neonCyan.withValues(alpha: 0.92)
+            : Colors.black.withValues(alpha: 0.24),
+        side: BorderSide(
+          color: selected
+              ? AppTheme.neonCyan
+              : Colors.white.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Text(label),
+    );
+  }
+
+  Widget _actionButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: _isWriting
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(icon),
+      label: Text(_isWriting ? 'WRITING...' : label),
     );
   }
 }

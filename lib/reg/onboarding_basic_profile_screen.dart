@@ -35,6 +35,8 @@ class _OnboardingBasicProfileScreenState
   bool _isLoading = true;
   bool _acceptedTraderCode = false;
   int _stepIndex = 0;
+  bool _hasAppliedRouteArguments = false;
+  bool _reachedRaiderLevel25 = false;
 
   String _selectedCountry = 'United Kingdom';
   String _selectedPlatform = 'PC';
@@ -83,6 +85,17 @@ class _OnboardingBasicProfileScreenState
   void initState() {
     super.initState();
     _prefillFromFirestore();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasAppliedRouteArguments) return;
+    _hasAppliedRouteArguments = true;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map) {
+      _applySimulatorArguments(args);
+    }
   }
 
   @override
@@ -156,6 +169,8 @@ class _OnboardingBasicProfileScreenState
       0,
     ).clamp(0, 999);
     _raiderLevelController.text = savedLevel.toString();
+    _reachedRaiderLevel25 =
+        savedLevel >= 25 || arcOnboarding['nomadicTraderUnlocked'] == true;
 
     final savedState = pickString(arcOnboarding['playerState'], 'fresh');
     _playerState = switch (savedState) {
@@ -174,9 +189,7 @@ class _OnboardingBasicProfileScreenState
     if (mounted) setState(() => _isLoading = false);
   }
 
-  int get _raiderLevel => int.tryParse(_raiderLevelController.text.trim()) ?? 0;
-
-  bool get _isNomadicUnlocked => _raiderLevel >= 25;
+  bool get _isNomadicUnlocked => !_isFreshOrReset && _reachedRaiderLevel25;
 
   bool get _isFreshOrReset =>
       _playerState == _ArcPlayerStartState.fresh ||
@@ -200,8 +213,8 @@ class _OnboardingBasicProfileScreenState
     setState(() => _isSaving = true);
 
     final displayName = _displayNameController.text.trim();
-    final raiderLevel = _isFreshOrReset ? 0 : _raiderLevel.clamp(0, 999);
-    final nomadicUnlocked = raiderLevel >= 25;
+    final nomadicUnlocked = _isNomadicUnlocked;
+    final raiderLevel = nomadicUnlocked ? 25 : 0;
     final blueprintSetupSkipped =
         _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow;
     final blueprintTrackerConfigured =
@@ -295,15 +308,43 @@ class _OnboardingBasicProfileScreenState
     setState(() => _stepIndex--);
   }
 
-  void _applyPreview(_ArcPlayerStartState state, int level) {
+  void _applyPreview(_ArcPlayerStartState state, bool reachedLevel25) {
     setState(() {
       _playerState = state;
-      _raiderLevelController.text = state == _ArcPlayerStartState.active
-          ? level.toString()
-          : '0';
+      _reachedRaiderLevel25 = state == _ArcPlayerStartState.active
+          ? reachedLevel25
+          : false;
+      _raiderLevelController.text = _reachedRaiderLevel25 ? '25' : '0';
       _blueprintChoice = state == _ArcPlayerStartState.active
           ? _ArcBlueprintSetupChoice.setupNow
           : _ArcBlueprintSetupChoice.skipForNow;
+    });
+  }
+
+  void _applySimulatorArguments(Map args) {
+    final stateValue = args['playerState']?.toString();
+    final blueprintValue = args['blueprintSetup']?.toString();
+    final reachedLevel25 = args['reachedRaiderLevel25'] == true;
+    setState(() {
+      _playerState = switch (stateValue) {
+        'active' => _ArcPlayerStartState.active,
+        'postExpedition' => _ArcPlayerStartState.postExpedition,
+        _ => _ArcPlayerStartState.fresh,
+      };
+      _reachedRaiderLevel25 = _playerState == _ArcPlayerStartState.active
+          ? reachedLevel25
+          : false;
+      _raiderLevelController.text = _reachedRaiderLevel25 ? '25' : '0';
+      _blueprintChoice = blueprintValue == 'setupNow'
+          ? _ArcBlueprintSetupChoice.setupNow
+          : _ArcBlueprintSetupChoice.skipForNow;
+      if (_isFreshOrReset) {
+        _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
+      }
+      final step = args['step'];
+      if (step is int) {
+        _stepIndex = step.clamp(0, _stepCount - 1);
+      }
     });
   }
 
@@ -593,20 +634,20 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 10),
           _previewButton(
-            'Fresh / Level 0',
-            () => _applyPreview(_ArcPlayerStartState.fresh, 0),
+            'Fresh / Level 25: No',
+            () => _applyPreview(_ArcPlayerStartState.fresh, false),
           ),
           _previewButton(
-            'Active / Level 24',
-            () => _applyPreview(_ArcPlayerStartState.active, 24),
+            'Active / Level 25: No',
+            () => _applyPreview(_ArcPlayerStartState.active, false),
           ),
           _previewButton(
-            'Active / Level 25',
-            () => _applyPreview(_ArcPlayerStartState.active, 25),
+            'Active / Level 25: Yes',
+            () => _applyPreview(_ArcPlayerStartState.active, true),
           ),
           _previewButton(
-            'After Expedition',
-            () => _applyPreview(_ArcPlayerStartState.postExpedition, 0),
+            'After Expedition / Level 25: No',
+            () => _applyPreview(_ArcPlayerStartState.postExpedition, false),
           ),
         ],
       ),
@@ -712,6 +753,7 @@ class _OnboardingBasicProfileScreenState
             onTap: () => setState(() {
               _playerState = _ArcPlayerStartState.fresh;
               _raiderLevelController.text = '0';
+              _reachedRaiderLevel25 = false;
               _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
             }),
           ),
@@ -733,31 +775,36 @@ class _OnboardingBasicProfileScreenState
             onTap: () => setState(() {
               _playerState = _ArcPlayerStartState.postExpedition;
               _raiderLevelController.text = '0';
+              _reachedRaiderLevel25 = false;
               _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
             }),
           ),
           const SizedBox(height: 18),
-          TextFormField(
-            controller: _raiderLevelController,
-            enabled: !_isFreshOrReset,
-            keyboardType: TextInputType.number,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              isBold: true,
-            ),
-            decoration: _input(
-              _isFreshOrReset
-                  ? 'Raider Level locked to 0 for this state'
-                  : 'Current Raider Level',
-            ),
-            validator: (value) {
-              final parsed = int.tryParse(value?.trim() ?? '');
-              if (parsed == null) return 'Enter a valid Raider Level';
-              if (parsed < 0) return 'Raider Level cannot be below 0';
-              return null;
-            },
-            onChanged: (_) => setState(() {}),
+          _choiceCard(
+            title: 'Reached Raider Level 25? No',
+            body:
+                'Nomadic Trader planning stays locked. Update this when you reach Level 25 in-game.',
+            icon: Icons.lock_outline_rounded,
+            selected: !_isNomadicUnlocked,
+            onTap: _isFreshOrReset
+                ? null
+                : () => setState(() {
+                    _reachedRaiderLevel25 = false;
+                    _raiderLevelController.text = '0';
+                  }),
+          ),
+          _choiceCard(
+            title: 'Reached Raider Level 25? Yes',
+            body:
+                'Enable Nomadic Trader, resource, stash upgrade and Safe Pocket planning.',
+            icon: Icons.lock_open_rounded,
+            selected: _isNomadicUnlocked,
+            onTap: _isFreshOrReset
+                ? null
+                : () => setState(() {
+                    _reachedRaiderLevel25 = true;
+                    _raiderLevelController.text = '25';
+                  }),
           ),
           const SizedBox(height: 14),
           _statusPanel(
@@ -896,8 +943,8 @@ class _OnboardingBasicProfileScreenState
   Widget _completeStep() {
     final summary = <String>[
       _isFreshOrReset
-          ? 'Raider Level: 0 after fresh start/reset'
-          : 'Raider Level: ${_raiderLevel.clamp(0, 999)}',
+          ? 'Raider Level 25 reached: No after fresh start/reset'
+          : 'Raider Level 25 reached: ${_isNomadicUnlocked ? 'Yes' : 'No'}',
       _isNomadicUnlocked
           ? 'Nomadic Trader: enabled'
           : 'Nomadic Trader: locked until Level 25',
@@ -980,7 +1027,7 @@ class _OnboardingBasicProfileScreenState
     required String body,
     required IconData icon,
     required bool selected,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
