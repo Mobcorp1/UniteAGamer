@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_biometric_relock_screen.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
@@ -42,6 +43,18 @@ class _AppEntryGateState extends State<AppEntryGate>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // On web, Chrome fires hidden/inactive/resumed whenever the user switches
+    // browser tabs, clicks another tab, or the page idles. Treating those events
+    // like a native app background caused the app-entry gate to recreate the
+    // Command Centre and look like a page reload. Native mobile/desktop still
+    // keeps the relock behaviour.
+    if (kIsWeb) {
+      if (state == AppLifecycleState.detached) {
+        UagSessionGateController.markAppBackgrounded();
+      }
+      return;
+    }
+
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached ||

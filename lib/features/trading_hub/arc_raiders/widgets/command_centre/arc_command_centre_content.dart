@@ -26,7 +26,7 @@ class ArcCommandCentreContent extends StatefulWidget {
 class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   final Map<String, bool> _expandedPanels = <String, bool>{};
   late final PageController _systemsController = PageController(
-    viewportFraction: 0.86,
+    viewportFraction: 0.42,
   );
   int _systemsIndex = 0;
 
@@ -44,9 +44,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final commandMoves = _commandMoves(commandState).take(6).toList();
 
     return ArcRaidersPageList(
-      maxWidth: 900,
+      maxWidth: 780,
       bottomPadding: 74,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
       children: [
         _missionHero(commandState.priority),
         const SizedBox(height: 8),
@@ -62,8 +62,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         const SizedBox(height: 8),
         _detailAccordion(
           title: 'System Detail',
-          subtitle:
-              'Lower-priority summaries only. Keep this closed unless you need depth.',
+          subtitle: 'Compact lower-priority system checks.',
           accent: AppTheme.neonCyan,
           initiallyExpanded: false,
           children: [
@@ -149,7 +148,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.bodyTextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           color: Colors.white70,
                           isBold: true,
                         ).copyWith(height: 1.22),
@@ -374,7 +373,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final desktop = constraints.maxWidth >= 760;
-          final deckHeight = desktop ? 164.0 : 150.0;
+          final deckHeight = desktop ? 118.0 : 128.0;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -491,8 +490,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _tapSurface(
       action: tile.action,
       child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: _imageDecoration(tile.image, accent, radius: 21),
+        padding: const EdgeInsets.all(9),
+        decoration: _imageDecoration(tile.image, accent, radius: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -505,7 +504,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     _cleanText(tile.title).toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(fontSize: 19, color: accent),
+                    style: AppTheme.tradingHeading(fontSize: 13, color: accent),
                   ),
                 ),
                 ArcCommandStatusPill(label: tile.value, status: tile.status),
@@ -517,25 +516,19 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
-                fontSize: 12,
+                fontSize: 10,
                 color: Colors.white70,
                 isBold: true,
               ).copyWith(height: 1.22),
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  'TAP TO OPEN',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 10,
-                    color: accent,
-                    isBold: true,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.arrow_forward_rounded, color: accent, size: 14),
-              ],
+            const SizedBox(height: 4),
+            Text(
+              'TAP',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 8,
+                color: accent,
+                isBold: true,
+              ),
             ),
           ],
         ),
@@ -640,7 +633,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _actionConsole(List<_CommandMoveData> moves) {
     return ArcCommandCentreCard(
       accent: AppTheme.neonCyan,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -745,7 +738,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _systemDetailGrid(List<Widget> children) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 720 ? 2 : 1;
+        final columns = constraints.maxWidth >= 720
+            ? 3
+            : (constraints.maxWidth >= 520 ? 2 : 1);
         const spacing = 8.0;
         final width =
             (constraints.maxWidth - (spacing * (columns - 1))) / columns;
@@ -766,13 +761,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       action: panel.action,
       child: ArcCommandCentreCard(
         accent: accent,
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ArcCommandSectionHeader(
               title: panel.title,
-              subtitle: _shortActionText(panel.body),
+              subtitle: _panelSubtitle(panel),
               accent: accent,
               trailing: ArcCommandStatusPill(
                 label: panel.statusLabel,
@@ -781,7 +776,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             ),
             const SizedBox(height: 8),
             ArcCommandDetailList(
-              details: panel.details.take(3).toList(growable: false),
+              details: _shortDetails(panel).take(2).toList(growable: false),
             ),
             Text(
               'Tap to open',
@@ -800,13 +795,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _resourceSummary(List<ArcCommandResourceStatus> resources) {
     return ArcCommandCentreCard(
       accent: Colors.lightGreenAccent,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ArcCommandSectionHeader(
             title: 'Resource Summary',
-            subtitle: 'Key resource readiness without fake stash counts.',
+            subtitle: 'Resource readiness.',
             accent: Colors.lightGreenAccent,
           ),
           const SizedBox(height: 8),
@@ -856,7 +851,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final items = checklist.take(9).toList(growable: false);
     return _detailAccordion(
       title: 'Daily Mission Board',
-      subtitle: 'Short daily checks. Tap a tile to open the right tool.',
+      subtitle: 'Fast daily checks. Tap a tile.',
       accent: AppTheme.neonCyan,
       initiallyExpanded: false,
       children: items.isEmpty
@@ -891,8 +886,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _tapSurface(
       action: item.action,
       child: Container(
-        height: 86,
-        padding: const EdgeInsets.all(8),
+        height: 64,
+        padding: const EdgeInsets.all(7),
         decoration: _imageDecoration(
           _imageForAction(item.action),
           accent,
@@ -911,7 +906,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                         ? Icons.check_circle_rounded
                         : Icons.radio_button_unchecked_rounded,
                     color: accent,
-                    size: 18,
+                    size: 15,
                   ),
                 ),
                 const Spacer(),
@@ -929,7 +924,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
-                fontSize: 11,
+                fontSize: 9,
                 color: checked ? Colors.lightGreenAccent : Colors.white,
                 isBold: true,
               ),
@@ -937,10 +932,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             const SizedBox(height: 2),
             Text(
               _shortActionText(item.reason),
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
-                fontSize: 9,
+                fontSize: 8,
                 color: Colors.white60,
               ).copyWith(height: 1.08),
             ),
@@ -1056,6 +1051,26 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
+  String _panelSubtitle(ArcCommandSummaryPanel panel) {
+    final title = _cleanText(panel.title).toLowerCase();
+    if (title.contains('decision')) return 'Primary command signal.';
+    if (title.contains('operation')) return 'Operations and vault status.';
+    if (title.contains('quest')) return 'Quest tracker state.';
+    if (title.contains('nomadic')) return 'Trader reset and stock state.';
+    return _shortActionText(panel.body);
+  }
+
+  List<String> _shortDetails(ArcCommandSummaryPanel panel) {
+    final title = _cleanText(panel.title).toLowerCase();
+    if (title.contains('decision')) {
+      return panel.details
+          .where((detail) => !detail.toLowerCase().contains('ranked from'))
+          .map(_shortActionText)
+          .toList(growable: false);
+    }
+    return panel.details.map(_shortActionText).toList(growable: false);
+  }
+
   Widget _quietLine(String text) {
     return Text(
       text,
@@ -1157,19 +1172,40 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   String _cleanText(String value) {
     return value
         .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          '-',
+        )
+        .replaceAll(
           'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           '-',
         )
-        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢', '-')
-        .replaceAll('ÃƒÆ’Ã¢â‚¬Å¡ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢', '-')
-        .replaceAll('ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·', '-')
-        .replaceAll('ÃƒÆ’Ã¢â‚¬Å¡', '')
-        .replaceAll('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢', '')
-        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ', '-')
-        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â', '-')
-        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢', "'")
-        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“', '"')
-        .replaceAll('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â', '"')
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢',
+          '-',
+        )
+        .replaceAll('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·', '-')
+        .replaceAll('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡', '')
+        .replaceAll('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢', '')
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“',
+          '-',
+        )
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â',
+          '-',
+        )
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢',
+          "'",
+        )
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ',
+          '"',
+        )
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+          '"',
+        )
         .trim();
   }
 

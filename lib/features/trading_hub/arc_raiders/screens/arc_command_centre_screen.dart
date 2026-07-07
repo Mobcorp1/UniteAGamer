@@ -104,7 +104,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       drawer: const AppDrawer(),
       body: ArcRaidersScreenShell(
         showAdBanner: true,
-        child: _buildLiveCommandCentre(),
+        child: KeyedSubtree(
+          key: const PageStorageKey('arc-command-centre-shell'),
+          child: _buildLiveCommandCentre(),
+        ),
       ),
     );
   }
