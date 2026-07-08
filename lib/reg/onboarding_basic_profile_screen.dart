@@ -22,14 +22,11 @@ enum _ArcBlueprintSetupChoice { setupNow, skipForNow }
 
 class _OnboardingBasicProfileScreenState
     extends State<OnboardingBasicProfileScreen> {
-  static const bool _developerPreviewEnabled = !bool.fromEnvironment(
-    'dart.vm.product',
-  );
-
   final _formKey = GlobalKey<FormState>();
   final _displayNameController = TextEditingController();
   final _bioController = TextEditingController();
   final _raiderLevelController = TextEditingController(text: '0');
+  final _embarkIdController = TextEditingController();
 
   bool _isSaving = false;
   bool _isLoading = true;
@@ -40,6 +37,10 @@ class _OnboardingBasicProfileScreenState
   bool _hasAppliedRouteArguments = false;
   bool _reachedRaiderLevel25 = false;
 
+  String _selectedPlayStyle = 'Balanced';
+  String _selectedSquadIntent = 'Flexible';
+  String _selectedSocialEnergy = 'Depends on the day';
+
   String _selectedCountry = 'United Kingdom';
   String _selectedPlatform = 'PC';
   String _selectedTimeZone = 'Europe/London';
@@ -47,7 +48,7 @@ class _OnboardingBasicProfileScreenState
   _ArcBlueprintSetupChoice _blueprintChoice =
       _ArcBlueprintSetupChoice.skipForNow;
 
-  static const int _stepCount = 5;
+  static const int _stepCount = 6;
 
   static const List<String> _countries = [
     'United Kingdom',
@@ -68,6 +69,34 @@ class _OnboardingBasicProfileScreenState
   ];
 
   static const List<String> _platforms = ['PC', 'PlayStation', 'Xbox', 'Steam'];
+
+  static const List<String> _playStyles = [
+    'Balanced',
+    'Quest focused',
+    'Blueprint grinder',
+    'Squad support',
+    'PvP hunter',
+    'Loot runner',
+    'Casual explorer',
+  ];
+
+  static const List<String> _squadIntents = [
+    'Flexible',
+    'Squad up',
+    'Quest team',
+    'Blueprint runs',
+    'Trade focused',
+    'Solo for now',
+  ];
+
+  static const List<String> _socialEnergyOptions = [
+    'Depends on the day',
+    'Chatty and outgoing',
+    'Quiet but cooperative',
+    'High energy',
+    'Low energy today',
+    'Prefer pings over voice',
+  ];
 
   static const List<String> _timeZones = [
     'Europe/London',
@@ -107,6 +136,7 @@ class _OnboardingBasicProfileScreenState
     _displayNameController.dispose();
     _bioController.dispose();
     _raiderLevelController.dispose();
+    _embarkIdController.dispose();
     super.dispose();
   }
 
@@ -156,6 +186,10 @@ class _OnboardingBasicProfileScreenState
       pickString(data['displayName'], ''),
     );
     _bioController.text = pickString(basicProfile['bio'], '');
+    _embarkIdController.text = pickString(
+      basicProfile['embarkId'],
+      pickString(traderProfile['embarkId'], ''),
+    );
 
     final countryValue = pickString(
       basicProfile['country'],
@@ -173,6 +207,26 @@ class _OnboardingBasicProfileScreenState
     if (_countries.contains(countryValue)) _selectedCountry = countryValue;
     if (_platforms.contains(platformValue)) _selectedPlatform = platformValue;
     if (_timeZones.contains(timeZoneValue)) _selectedTimeZone = timeZoneValue;
+
+    final playStyleValue = pickString(
+      basicProfile['playStyle'],
+      pickString(traderProfile['playStyle'], 'Balanced'),
+    );
+    final squadIntentValue = pickString(
+      basicProfile['squadIntent'],
+      pickString(traderProfile['squadIntent'], 'Flexible'),
+    );
+    final socialEnergyValue = pickString(
+      basicProfile['socialEnergy'],
+      pickString(traderProfile['socialEnergy'], 'Depends on the day'),
+    );
+    if (_playStyles.contains(playStyleValue)) _selectedPlayStyle = playStyleValue;
+    if (_squadIntents.contains(squadIntentValue)) {
+      _selectedSquadIntent = squadIntentValue;
+    }
+    if (_socialEnergyOptions.contains(socialEnergyValue)) {
+      _selectedSocialEnergy = socialEnergyValue;
+    }
 
     final savedLevel = pickInt(
       arcOnboarding['raiderLevel'] ?? traderProfile['raiderLevel'],
@@ -240,10 +294,14 @@ class _OnboardingBasicProfileScreenState
             'basicProfile': {
               'displayName': displayName,
               'bio': _bioController.text.trim(),
+              'embarkId': _embarkIdController.text.trim(),
               'country': _selectedCountry,
               'platform': _selectedPlatform,
               'timeZone': _selectedTimeZone,
               'platforms': [_selectedPlatform],
+              'playStyle': _selectedPlayStyle,
+              'squadIntent': _selectedSquadIntent,
+              'socialEnergy': _selectedSocialEnergy,
             },
             'traderProfile': {
               'uagName': displayName,
@@ -252,6 +310,10 @@ class _OnboardingBasicProfileScreenState
                   : _selectedCountry,
               'platform': _selectedPlatform,
               'timeZone': _selectedTimeZone,
+              'embarkId': _embarkIdController.text.trim(),
+              'playStyle': _selectedPlayStyle,
+              'squadIntent': _selectedSquadIntent,
+              'socialEnergy': _selectedSocialEnergy,
               'raiderLevel': raiderLevel,
             },
             'arcOnboarding': {
@@ -259,6 +321,10 @@ class _OnboardingBasicProfileScreenState
               'playerState': _playerStateId,
               'raiderLevel': raiderLevel,
               'nomadicTraderUnlocked': nomadicUnlocked,
+              'embarkId': _embarkIdController.text.trim(),
+              'playStyle': _selectedPlayStyle,
+              'squadIntent': _selectedSquadIntent,
+              'socialEnergy': _selectedSocialEnergy,
               'nomadicTraderLockedReason': nomadicUnlocked
                   ? null
                   : 'Nomadic Trader unlocks at Raider Level 25. Update your Raider Level in the app when you reach 25 to unlock Nomadic Trader planning.',
@@ -270,6 +336,7 @@ class _OnboardingBasicProfileScreenState
               'favouriteLoadoutsRetained': true,
               'completedSteps': {
                 'profile': true,
+                'playerType': true,
                 'playerState': true,
                 'blueprintTracker': blueprintTrackerConfigured,
                 'blueprintTrackerSkipped': blueprintSetupSkipped,
@@ -583,16 +650,18 @@ class _OnboardingBasicProfileScreenState
   Widget _leftHeroPanel() {
     final title = switch (_stepIndex) {
       0 => 'BUILD YOUR RAIDER PROFILE',
-      1 => 'SET YOUR WIPE STATE',
-      2 => 'CONFIGURE TRACKERS',
-      3 => 'TRUSTED TRADING',
+      1 => 'SET YOUR PLAYER TYPE',
+      2 => 'SET YOUR WIPE STATE',
+      3 => 'CONFIGURE TRACKERS',
+      4 => 'TRUSTED TRADING',
       _ => 'READY TO LAUNCH',
     };
     final subtitle = switch (_stepIndex) {
       0 => 'Add the essentials first. Advanced setup can wait.',
-      1 => 'Tell the app where your ARC progression currently stands.',
-      2 => 'Skip anything that does not matter yet and return later.',
-      3 => 'Accept the trust rules before entering the trading network.',
+      1 => 'Set how you want to play and squad up.',
+      2 => 'Tell the app where your ARC progression currently stands.',
+      3 => 'Skip anything that does not matter yet and return later.',
+      4 => 'Accept the trust rules before entering the trading network.',
       _ => 'Your ARC command centre is ready.',
     };
 
@@ -640,109 +709,36 @@ class _OnboardingBasicProfileScreenState
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white70, height: 1.35),
           ),
-          if (_developerPreviewEnabled) ...[
-            SizedBox(height: MediaQuery.sizeOf(context).width < 700 ? 14 : 24),
-            _developerPreviewPanel(),
-          ],
         ],
       ),
     );
   }
 
-  Widget _developerPreviewPanel() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.28)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'DEV ONBOARDING PREVIEW',
-            textAlign: TextAlign.center,
-            style: AppTheme.neonTextStyle(
-              fontSize: 13,
-              color: AppTheme.neonPink,
-              isBold: true,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _previewButton(
-            'Fresh / Level 25: No',
-            () => _applyPreview(_ArcPlayerStartState.fresh, false),
-          ),
-          _previewButton(
-            'Active / Level 25: No',
-            () => _applyPreview(_ArcPlayerStartState.active, false),
-          ),
-          _previewButton(
-            'Active / Level 25: Yes',
-            () => _applyPreview(_ArcPlayerStartState.active, true),
-          ),
-          _previewButton(
-            'After Expedition / Level 25: No',
-            () => _applyPreview(_ArcPlayerStartState.postExpedition, false),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _previewButton(String label, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: OutlinedButton(onPressed: onTap, child: Text(label)),
-    );
-  }
 
-  Widget _cardBarrel({required List<Widget> cards, double height = 178}) {
-    final compact = MediaQuery.sizeOf(context).width < 700;
-    if (!compact) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final twoColumns = constraints.maxWidth >= 560 && cards.length > 1;
-          if (!twoColumns) return Column(children: cards);
-          return Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: cards
-                .map(
-                  (card) => SizedBox(
-                    width: (constraints.maxWidth - 12) / 2,
-                    child: card,
-                  ),
-                )
-                .toList(),
-          );
-        },
-      );
-    }
+
+  Widget _cardBarrel({
+    required List<Widget> cards,
+    double height = 206,
+  }) {
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 700;
+    final fraction = compact ? 0.88 : 0.46;
+    final resolvedHeight = compact ? height : height + 12;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: height,
+          height: resolvedHeight,
           child: PageView.builder(
-            controller: PageController(viewportFraction: 0.88),
+            controller: PageController(viewportFraction: fraction),
             padEnds: false,
             itemCount: cards.length,
             itemBuilder: (context, index) {
-              final activeOffset = index == 0 ? 0.0 : 10.0;
               return Padding(
-                padding: EdgeInsets.only(
-                  right: 12,
-                  top: activeOffset,
-                  bottom: 8,
-                ),
-                child: Transform.scale(
-                  scale: index == 0 ? 1.0 : 0.97,
-                  alignment: Alignment.centerLeft,
-                  child: cards[index],
-                ),
+                padding: const EdgeInsets.only(right: 12, bottom: 8),
+                child: cards[index],
               );
             },
           ),
@@ -751,7 +747,9 @@ class _OnboardingBasicProfileScreenState
           Padding(
             padding: const EdgeInsets.only(left: 2, top: 2),
             child: Text(
-              'Swipe cards to review every option',
+              compact
+                  ? 'Swipe cards to review every option'
+                  : 'Scroll cards sideways to review every option',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.48),
                 fontSize: 11,
@@ -763,6 +761,7 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+
   Widget _profileStep() {
     return _contentShell(
       child: Form(
@@ -771,7 +770,7 @@ class _OnboardingBasicProfileScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _screenTitle(
-              'Step 1 of 5 - Raider Profile',
+              'Step 1 of 6 - Raider Profile',
               subtitle:
                   'Add the essentials. Tracker setup now adapts around your current wipe state.',
             ),
@@ -787,6 +786,16 @@ class _OnboardingBasicProfileScreenState
               validator: (value) => value == null || value.trim().isEmpty
                   ? 'Enter your display name'
                   : null,
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _embarkIdController,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                isBold: true,
+              ),
+              decoration: _input('Embark ID'),
             ),
             const SizedBox(height: 14),
             _buildDropdown(
@@ -835,19 +844,109 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+  Widget _playerTypeStep() {
+    return _contentShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _screenTitle(
+            'Step 2 of 6 - Player Type',
+            subtitle:
+                'Tell the hub what kind of raider you are so matchmaking, missions and recommendations start from the right place.',
+          ),
+          const SizedBox(height: 22),
+          _cardBarrel(
+            height: 204,
+            cards: _playStyles
+                .map(
+                  (style) => _choiceCard(
+                    title: style,
+                    body: _playStyleDescription(style),
+                    icon: Icons.person_pin_circle_rounded,
+                    selected: _selectedPlayStyle == style,
+                    onTap: () => setState(() => _selectedPlayStyle = style),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          _cardBarrel(
+            height: 188,
+            cards: _squadIntents
+                .map(
+                  (intent) => _choiceCard(
+                    title: intent,
+                    body: _squadIntentDescription(intent),
+                    icon: Icons.groups_rounded,
+                    selected: _selectedSquadIntent == intent,
+                    onTap: () => setState(() => _selectedSquadIntent = intent),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          _cardBarrel(
+            height: 188,
+            cards: _socialEnergyOptions
+                .map(
+                  (energy) => _choiceCard(
+                    title: energy,
+                    body: _socialEnergyDescription(energy),
+                    icon: Icons.mood_rounded,
+                    selected: _selectedSocialEnergy == energy,
+                    onTap: () => setState(() => _selectedSocialEnergy = energy),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 16),
+          _primaryButton('NEXT'),
+        ],
+      ),
+    );
+  }
+
+  String _playStyleDescription(String style) => switch (style) {
+    'Quest focused' => 'Prioritise quests, unlocks and guided progression.',
+    'Blueprint grinder' => 'Prioritise blueprint collection, duplicates and trade value.',
+    'Squad support' => 'Prioritise team utility, survival and helping the squad.',
+    'PvP hunter' => 'Prioritise combat readiness, ambushes and confident raids.',
+    'Loot runner' => 'Prioritise stash building, materials and safe extraction routes.',
+    'Casual explorer' => 'Prioritise low-pressure play, discovery and flexible goals.',
+    _ => 'Blend quests, blueprints, loot, trading and squad play.',
+  };
+
+  String _squadIntentDescription(String intent) => switch (intent) {
+    'Squad up' => 'You actively want teammates and voice-ready sessions.',
+    'Quest team' => 'Match with players chasing similar quests.',
+    'Blueprint runs' => 'Match with players farming blueprints or duplicates.',
+    'Trade focused' => 'Prioritise trade-ready players and inventory value.',
+    'Solo for now' => 'Keep matchmaking light and avoid forced squad prompts.',
+    _ => 'Keep recommendations flexible depending on your session.',
+  };
+
+  String _socialEnergyDescription(String energy) => switch (energy) {
+    'Chatty and outgoing' => 'Good day for voice, squad calls and social runs.',
+    'Quiet but cooperative' => 'Team-friendly without needing constant chat.',
+    'High energy' => 'Good day for faster, more intense raids.',
+    'Low energy today' => 'Prefer calmer routes, clear plans and less pressure.',
+    'Prefer pings over voice' => 'Matchmaking should favour low-voice communication.',
+    _ => 'Let your session mood change without locking your whole profile.',
+  };
+
   Widget _progressionStep() {
     return _contentShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Step 2 of 5 - Wipe State',
+            'Step 3 of 6 - Wipe State',
             subtitle:
                 'This controls what the Command Centre should prioritise after onboarding.',
           ),
           const SizedBox(height: 22),
           _cardBarrel(
-            height: 176,
+            height: 214,
             cards: [
               _choiceCard(
                 title: 'Fresh start / no current progress',
@@ -888,7 +987,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 12),
           _cardBarrel(
-            height: 166,
+            height: 206,
             cards: [
               _choiceCard(
                 title: 'Reached Raider Level 25? No',
@@ -944,7 +1043,7 @@ class _OnboardingBasicProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Step 3 of 5 - Blueprint Tracker',
+            'Step 4 of 6 - Blueprint Tracker',
             subtitle:
                 'Skip this if you have no blueprints or duplicates yet. You can return from the Tool Deck later.',
           ),
@@ -959,7 +1058,7 @@ class _OnboardingBasicProfileScreenState
             ),
           const SizedBox(height: 14),
           _cardBarrel(
-            height: 178,
+            height: 210,
             cards: [
               _choiceCard(
                 title: 'Set up Blueprint Tracker now',
@@ -976,8 +1075,7 @@ class _OnboardingBasicProfileScreenState
                 body:
                     'Best for fresh starts, zero blueprints or no duplicates. The Command Centre will remind you later.',
                 icon: Icons.skip_next_rounded,
-                selected:
-                    _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow,
+                selected: _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow,
                 onTap: () => setState(
                   () => _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow,
                 ),
@@ -1012,13 +1110,21 @@ class _OnboardingBasicProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Step 4 of 5 - Trader Code',
+            'Step 5 of 6 - Trader Code',
             subtitle:
                 'UAG operates on trust. Accept the basics before entering the hub.',
           ),
           const SizedBox(height: 22),
+          _statusPanel(
+            title: 'Privacy, fair use and beta policy',
+            body:
+                'Your profile setup is used to personalise Command Centre, matchmaking and trading recommendations. UAG does not need your password or private Embark account access.',
+            icon: Icons.policy_rounded,
+            accent: AppTheme.neonCyan,
+          ),
+          const SizedBox(height: 16),
           _cardBarrel(
-            height: 164,
+            height: 184,
             cards: [
               _codeCard(
                 Icons.shield_outlined,
@@ -1052,7 +1158,7 @@ class _OnboardingBasicProfileScreenState
               setState(() => _acceptedTraderCode = value ?? false);
             },
             title: const Text(
-              'I have read and agree to the UAG Trader Code',
+              'I agree to the UAG Trader Code, Terms of Service and Privacy Policy',
               style: TextStyle(color: Colors.white, fontSize: 14),
             ),
             controlAffinity: ListTileControlAffinity.leading,
@@ -1096,7 +1202,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 24),
           Text(
-            'Step 5 of 5 - Ready to Launch',
+            'Step 6 of 6 - Ready to Launch',
             textAlign: TextAlign.center,
             style: AppTheme.neonTextStyle(
               fontSize: 29,
@@ -1112,8 +1218,12 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 18),
           _cardBarrel(
-            height: 142,
-            cards: summary.map((line) => _summaryCard(line)).toList(),
+            height: 150,
+            cards: summary
+                .map(
+                  (line) => _summaryCard(line),
+                )
+                .toList(),
           ),
           const SizedBox(height: 18),
           _primaryButton(
@@ -1132,15 +1242,13 @@ class _OnboardingBasicProfileScreenState
     required bool selected,
     required VoidCallback? onTap,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
             color: selected
                 ? AppTheme.neonCyan.withValues(alpha: 0.12)
                 : Colors.black.withValues(alpha: 0.24),
@@ -1152,7 +1260,7 @@ class _OnboardingBasicProfileScreenState
               width: selected ? 1.5 : 1,
             ),
           ),
-          child: Row(
+        child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, color: selected ? AppTheme.neonCyan : Colors.white60),
@@ -1321,9 +1429,10 @@ class _OnboardingBasicProfileScreenState
         key: ValueKey<int>(_stepIndex),
         child: switch (_stepIndex) {
           0 => _profileStep(),
-          1 => _progressionStep(),
-          2 => _blueprintStep(),
-          3 => _traderCodeStep(),
+          1 => _playerTypeStep(),
+          2 => _progressionStep(),
+          3 => _blueprintStep(),
+          4 => _traderCodeStep(),
           _ => _completeStep(),
         },
       ),
@@ -1340,7 +1449,11 @@ class _OnboardingBasicProfileScreenState
 
     if (compact) {
       return Column(
-        children: [_leftHeroPanel(), const SizedBox(height: 18), stepPanel],
+        children: [
+          _leftHeroPanel(),
+          const SizedBox(height: 18),
+          stepPanel,
+        ],
       );
     }
 
