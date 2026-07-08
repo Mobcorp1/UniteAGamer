@@ -598,7 +598,7 @@ class _OnboardingBasicProfileScreenState
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 700 ? 18 : 28),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.36),
         borderRadius: BorderRadius.circular(26),
@@ -623,7 +623,7 @@ class _OnboardingBasicProfileScreenState
               isBold: true,
             ).copyWith(letterSpacing: 4),
           ),
-          const SizedBox(height: 38),
+          SizedBox(height: MediaQuery.sizeOf(context).width < 700 ? 20 : 38),
           Text(
             title,
             textAlign: TextAlign.center,
@@ -641,7 +641,7 @@ class _OnboardingBasicProfileScreenState
             style: const TextStyle(color: Colors.white70, height: 1.35),
           ),
           if (_developerPreviewEnabled) ...[
-            const SizedBox(height: 24),
+            SizedBox(height: MediaQuery.sizeOf(context).width < 700 ? 14 : 24),
             _developerPreviewPanel(),
           ],
         ],
@@ -702,26 +702,64 @@ class _OnboardingBasicProfileScreenState
   Widget _cardBarrel({required List<Widget> cards, double height = 178}) {
     final compact = MediaQuery.sizeOf(context).width < 700;
     if (!compact) {
-      return Column(children: cards);
-    }
-    return SizedBox(
-      height: height,
-      child: PageView.builder(
-        controller: PageController(viewportFraction: 0.88),
-        padEnds: false,
-        itemCount: cards.length,
-        itemBuilder: (context, index) {
-          final activeOffset = index == 0 ? 0.0 : 10.0;
-          return Padding(
-            padding: EdgeInsets.only(right: 12, top: activeOffset, bottom: 8),
-            child: Transform.scale(
-              scale: index == 0 ? 1.0 : 0.97,
-              alignment: Alignment.centerLeft,
-              child: cards[index],
-            ),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final twoColumns = constraints.maxWidth >= 560 && cards.length > 1;
+          if (!twoColumns) return Column(children: cards);
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: cards
+                .map(
+                  (card) => SizedBox(
+                    width: (constraints.maxWidth - 12) / 2,
+                    child: card,
+                  ),
+                )
+                .toList(),
           );
         },
-      ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: height,
+          child: PageView.builder(
+            controller: PageController(viewportFraction: 0.88),
+            padEnds: false,
+            itemCount: cards.length,
+            itemBuilder: (context, index) {
+              final activeOffset = index == 0 ? 0.0 : 10.0;
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: 12,
+                  top: activeOffset,
+                  bottom: 8,
+                ),
+                child: Transform.scale(
+                  scale: index == 0 ? 1.0 : 0.97,
+                  alignment: Alignment.centerLeft,
+                  child: cards[index],
+                ),
+              );
+            },
+          ),
+        ),
+        if (cards.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(left: 2, top: 2),
+            child: Text(
+              'Swipe cards to review every option',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.48),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -978,28 +1016,33 @@ class _OnboardingBasicProfileScreenState
             subtitle:
                 'UAG operates on trust. Accept the basics before entering the hub.',
           ),
-          const SizedBox(height: 26),
-          _codeLine(
-            Icons.shield_outlined,
-            'Be respectful and fair',
-            'Treat all traders with respect.',
+          const SizedBox(height: 22),
+          _cardBarrel(
+            height: 164,
+            cards: [
+              _codeCard(
+                Icons.shield_outlined,
+                'Be respectful and fair',
+                'Treat all traders with respect.',
+              ),
+              _codeCard(
+                Icons.gpp_bad_outlined,
+                'No scamming or exploits',
+                'Zero tolerance for cheating.',
+              ),
+              _codeCard(
+                Icons.balance_rounded,
+                'Honour your trades',
+                'Follow through on commitments.',
+              ),
+              _codeCard(
+                Icons.groups_2_outlined,
+                'Help the community grow',
+                'Share intel and support others.',
+              ),
+            ],
           ),
-          _codeLine(
-            Icons.gpp_bad_outlined,
-            'No scamming or exploits',
-            'Zero tolerance for cheating.',
-          ),
-          _codeLine(
-            Icons.balance_rounded,
-            'Honour your trades',
-            'Follow through on commitments.',
-          ),
-          _codeLine(
-            Icons.groups_2_outlined,
-            'Help the community grow',
-            'Share intel and support others.',
-          ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             value: _acceptedTraderCode,
@@ -1068,31 +1111,11 @@ class _OnboardingBasicProfileScreenState
             style: TextStyle(color: Colors.white70, height: 1.38),
           ),
           const SizedBox(height: 18),
-          ...summary.map(
-            (line) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.bolt_rounded,
-                    color: AppTheme.neonCyan,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      line,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          _cardBarrel(
+            height: 142,
+            cards: summary.map((line) => _summaryCard(line)).toList(),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           _primaryButton(
             _adminPreviewMode ? 'CLOSE PREVIEW' : 'LAUNCH COMMAND CENTRE',
             icon: Icons.rocket_launch_rounded,
@@ -1220,9 +1243,15 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
-  Widget _codeLine(IconData icon, String title, String body) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+  Widget _codeCard(IconData icon, String title, String body) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.24),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1257,6 +1286,34 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+  Widget _summaryCard(String line) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.neonCyan.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.bolt_rounded, color: AppTheme.neonCyan, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              line,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+                height: 1.25,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _currentStep() {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 220),
@@ -1283,11 +1340,7 @@ class _OnboardingBasicProfileScreenState
 
     if (compact) {
       return Column(
-        children: [
-          _leftHeroPanel(),
-          const SizedBox(height: 18),
-          SizedBox(height: 760, child: stepPanel),
-        ],
+        children: [_leftHeroPanel(), const SizedBox(height: 18), stepPanel],
       );
     }
 
@@ -1324,7 +1377,7 @@ class _OnboardingBasicProfileScreenState
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(constraints.maxWidth < 700 ? 14 : 24),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1260),
