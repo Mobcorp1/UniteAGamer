@@ -34,6 +34,8 @@ class _OnboardingBasicProfileScreenState
   bool _isSaving = false;
   bool _isLoading = true;
   bool _acceptedTraderCode = false;
+  bool _adminPreviewMode = false;
+  late final PageController _stepController;
   int _stepIndex = 0;
   bool _hasAppliedRouteArguments = false;
   bool _reachedRaiderLevel25 = false;
@@ -84,6 +86,7 @@ class _OnboardingBasicProfileScreenState
   @override
   void initState() {
     super.initState();
+    _stepController = PageController(viewportFraction: 0.92);
     _prefillFromFirestore();
   }
 
@@ -100,6 +103,7 @@ class _OnboardingBasicProfileScreenState
 
   @override
   void dispose() {
+    _stepController.dispose();
     _displayNameController.dispose();
     _bioController.dispose();
     _raiderLevelController.dispose();
@@ -287,10 +291,21 @@ class _OnboardingBasicProfileScreenState
     }
   }
 
+  Future<void> _goToStep(int step) async {
+    final nextStep = step.clamp(0, _stepCount - 1);
+    setState(() => _stepIndex = nextStep);
+    if (!_stepController.hasClients) return;
+    await _stepController.animateToPage(
+      nextStep,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   Future<void> _next() async {
     if (_stepIndex == 0) {
       if (!(_formKey.currentState?.validate() ?? false)) return;
-      setState(() => _stepIndex = 1);
+      await _goToStep(1);
       return;
     }
 
@@ -302,6 +317,10 @@ class _OnboardingBasicProfileScreenState
     }
 
     if (_stepIndex == _stepCount - 1) {
+      if (_adminPreviewMode) {
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
       await _saveOnboarding(complete: true);
       if (!mounted) return;
       Navigator.of(
@@ -310,12 +329,12 @@ class _OnboardingBasicProfileScreenState
       return;
     }
 
-    setState(() => _stepIndex = (_stepIndex + 1).clamp(0, _stepCount - 1));
+    await _goToStep(_stepIndex + 1);
   }
 
-  void _back() {
+  Future<void> _back() async {
     if (_stepIndex <= 0 || _isSaving) return;
-    setState(() => _stepIndex--);
+    await _goToStep(_stepIndex - 1);
   }
 
   void _applyPreview(_ArcPlayerStartState state, bool reachedLevel25) {
@@ -332,6 +351,10 @@ class _OnboardingBasicProfileScreenState
   }
 
   void _applySimulatorArguments(Map args) {
+    _adminPreviewMode = args['adminPreview'] == true;
+    if (_adminPreviewMode && _displayNameController.text.trim().isEmpty) {
+      _displayNameController.text = 'Closed Beta Preview';
+    }
     final stateValue = args['playerState']?.toString();
     final blueprintValue = args['blueprintSetup']?.toString();
     final reachedLevel25 = args['reachedRaiderLevel25'] == true;
@@ -354,6 +377,11 @@ class _OnboardingBasicProfileScreenState
       final step = args['step'];
       if (step is int) {
         _stepIndex = step.clamp(0, _stepCount - 1);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_stepController.hasClients) {
+            _stepController.jumpToPage(_stepIndex);
+          }
+        });
       }
     });
   }
@@ -531,7 +559,7 @@ class _OnboardingBasicProfileScreenState
   Widget _contentShell({required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 700 ? 18 : 28),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.48),
         borderRadius: BorderRadius.circular(24),
@@ -548,7 +576,7 @@ class _OnboardingBasicProfileScreenState
           ),
         ],
       ),
-      child: child,
+      child: SingleChildScrollView(child: child),
     );
   }
 
@@ -671,6 +699,32 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+  Widget _cardBarrel({required List<Widget> cards, double height = 178}) {
+    final compact = MediaQuery.sizeOf(context).width < 700;
+    if (!compact) {
+      return Column(children: cards);
+    }
+    return SizedBox(
+      height: height,
+      child: PageView.builder(
+        controller: PageController(viewportFraction: 0.88),
+        padEnds: false,
+        itemCount: cards.length,
+        itemBuilder: (context, index) {
+          final activeOffset = index == 0 ? 0.0 : 10.0;
+          return Padding(
+            padding: EdgeInsets.only(right: 12, top: activeOffset, bottom: 8),
+            child: Transform.scale(
+              scale: index == 0 ? 1.0 : 0.97,
+              alignment: Alignment.centerLeft,
+              child: cards[index],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _profileStep() {
     return _contentShell(
       child: Form(
@@ -754,67 +808,77 @@ class _OnboardingBasicProfileScreenState
                 'This controls what the Command Centre should prioritise after onboarding.',
           ),
           const SizedBox(height: 22),
-          _choiceCard(
-            title: 'Fresh start / no current progress',
-            body:
-                'Use this if you have just started ARC Raiders or have no useful tracker data yet.',
-            icon: Icons.radio_button_checked_rounded,
-            selected: _playerState == _ArcPlayerStartState.fresh,
-            onTap: () => setState(() {
-              _playerState = _ArcPlayerStartState.fresh;
-              _raiderLevelController.text = '0';
-              _reachedRaiderLevel25 = false;
-              _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
-            }),
+          _cardBarrel(
+            height: 176,
+            cards: [
+              _choiceCard(
+                title: 'Fresh start / no current progress',
+                body:
+                    'Use this if you have just started ARC Raiders or have no useful tracker data yet.',
+                icon: Icons.radio_button_checked_rounded,
+                selected: _playerState == _ArcPlayerStartState.fresh,
+                onTap: () => setState(() {
+                  _playerState = _ArcPlayerStartState.fresh;
+                  _raiderLevelController.text = '0';
+                  _reachedRaiderLevel25 = false;
+                  _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
+                }),
+              ),
+              _choiceCard(
+                title: 'Existing profile / mid-wipe',
+                body:
+                    'Use this if you already have levels, blueprints, bench upgrades or quest progress.',
+                icon: Icons.person_search_rounded,
+                selected: _playerState == _ArcPlayerStartState.active,
+                onTap: () =>
+                    setState(() => _playerState = _ArcPlayerStartState.active),
+              ),
+              _choiceCard(
+                title: 'After expedition reset',
+                body:
+                    'Raider Level, blueprints, quests and benches restart. Favourite Loadouts stay saved.',
+                icon: Icons.restart_alt_rounded,
+                selected: _playerState == _ArcPlayerStartState.postExpedition,
+                onTap: () => setState(() {
+                  _playerState = _ArcPlayerStartState.postExpedition;
+                  _raiderLevelController.text = '0';
+                  _reachedRaiderLevel25 = false;
+                  _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
+                }),
+              ),
+            ],
           ),
-          _choiceCard(
-            title: 'Existing profile / mid-wipe',
-            body:
-                'Use this if you already have levels, blueprints, bench upgrades or quest progress.',
-            icon: Icons.person_search_rounded,
-            selected: _playerState == _ArcPlayerStartState.active,
-            onTap: () =>
-                setState(() => _playerState = _ArcPlayerStartState.active),
-          ),
-          _choiceCard(
-            title: 'After expedition reset',
-            body:
-                'Raider Level, blueprints, quests and benches restart. Favourite Loadouts stay saved.',
-            icon: Icons.restart_alt_rounded,
-            selected: _playerState == _ArcPlayerStartState.postExpedition,
-            onTap: () => setState(() {
-              _playerState = _ArcPlayerStartState.postExpedition;
-              _raiderLevelController.text = '0';
-              _reachedRaiderLevel25 = false;
-              _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow;
-            }),
-          ),
-          const SizedBox(height: 18),
-          _choiceCard(
-            title: 'Reached Raider Level 25? No',
-            body:
-                'Nomadic Trader planning stays locked. Update this when you reach Level 25 in-game.',
-            icon: Icons.lock_outline_rounded,
-            selected: !_isNomadicUnlocked,
-            onTap: _isFreshOrReset
-                ? null
-                : () => setState(() {
-                    _reachedRaiderLevel25 = false;
-                    _raiderLevelController.text = '0';
-                  }),
-          ),
-          _choiceCard(
-            title: 'Reached Raider Level 25? Yes',
-            body:
-                'Enable Nomadic Trader, resource, stash upgrade and Safe Pocket planning.',
-            icon: Icons.lock_open_rounded,
-            selected: _isNomadicUnlocked,
-            onTap: _isFreshOrReset
-                ? null
-                : () => setState(() {
-                    _reachedRaiderLevel25 = true;
-                    _raiderLevelController.text = '25';
-                  }),
+          const SizedBox(height: 12),
+          _cardBarrel(
+            height: 166,
+            cards: [
+              _choiceCard(
+                title: 'Reached Raider Level 25? No',
+                body:
+                    'Nomadic Trader planning stays locked. Update this when you reach Level 25 in-game.',
+                icon: Icons.lock_outline_rounded,
+                selected: !_isNomadicUnlocked,
+                onTap: _isFreshOrReset
+                    ? null
+                    : () => setState(() {
+                        _reachedRaiderLevel25 = false;
+                        _raiderLevelController.text = '0';
+                      }),
+              ),
+              _choiceCard(
+                title: 'Reached Raider Level 25? Yes',
+                body:
+                    'Enable Nomadic Trader, resource, stash upgrade and Safe Pocket planning.',
+                icon: Icons.lock_open_rounded,
+                selected: _isNomadicUnlocked,
+                onTap: _isFreshOrReset
+                    ? null
+                    : () => setState(() {
+                        _reachedRaiderLevel25 = true;
+                        _raiderLevelController.text = '25';
+                      }),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
           _statusPanel(
@@ -829,7 +893,7 @@ class _OnboardingBasicProfileScreenState
                 : Icons.lock_outline_rounded,
             accent: _isNomadicUnlocked ? AppTheme.neonCyan : Colors.amberAccent,
           ),
-          const Spacer(),
+          const SizedBox(height: 16),
           _primaryButton('NEXT'),
         ],
       ),
@@ -856,25 +920,31 @@ class _OnboardingBasicProfileScreenState
               accent: AppTheme.neonPink,
             ),
           const SizedBox(height: 14),
-          _choiceCard(
-            title: 'Set up Blueprint Tracker now',
-            body:
-                'Choose this if you already have owned blueprints, missing targets or duplicates to enter.',
-            icon: Icons.grid_view_rounded,
-            selected: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow,
-            onTap: () => setState(
-              () => _blueprintChoice = _ArcBlueprintSetupChoice.setupNow,
-            ),
-          ),
-          _choiceCard(
-            title: 'Skip Blueprint Tracker for now',
-            body:
-                'Best for fresh starts, zero blueprints or no duplicates. The Command Centre will remind you later.',
-            icon: Icons.skip_next_rounded,
-            selected: _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow,
-            onTap: () => setState(
-              () => _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow,
-            ),
+          _cardBarrel(
+            height: 178,
+            cards: [
+              _choiceCard(
+                title: 'Set up Blueprint Tracker now',
+                body:
+                    'Choose this if you already have owned blueprints, missing targets or duplicates to enter.',
+                icon: Icons.grid_view_rounded,
+                selected: _blueprintChoice == _ArcBlueprintSetupChoice.setupNow,
+                onTap: () => setState(
+                  () => _blueprintChoice = _ArcBlueprintSetupChoice.setupNow,
+                ),
+              ),
+              _choiceCard(
+                title: 'Skip Blueprint Tracker for now',
+                body:
+                    'Best for fresh starts, zero blueprints or no duplicates. The Command Centre will remind you later.',
+                icon: Icons.skip_next_rounded,
+                selected:
+                    _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow,
+                onTap: () => setState(
+                  () => _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           _statusPanel(
@@ -891,7 +961,7 @@ class _OnboardingBasicProfileScreenState
                 ? AppTheme.neonCyan
                 : Colors.amberAccent,
           ),
-          const Spacer(),
+          const SizedBox(height: 16),
           _primaryButton('NEXT'),
         ],
       ),
@@ -929,7 +999,7 @@ class _OnboardingBasicProfileScreenState
             'Help the community grow',
             'Share intel and support others.',
           ),
-          const Spacer(),
+          const SizedBox(height: 18),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             value: _acceptedTraderCode,
@@ -969,7 +1039,7 @@ class _OnboardingBasicProfileScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Spacer(),
+          const SizedBox(height: 8),
           Icon(
             Icons.check_circle_outline_rounded,
             size: 100,
@@ -1024,7 +1094,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 20),
           _primaryButton(
-            'LAUNCH COMMAND CENTRE',
+            _adminPreviewMode ? 'CLOSE PREVIEW' : 'LAUNCH COMMAND CENTRE',
             icon: Icons.rocket_launch_rounded,
           ),
         ],
@@ -1265,7 +1335,7 @@ class _OnboardingBasicProfileScreenState
                               if (_stepIndex > 0 && _stepIndex < _stepCount - 1)
                                 IconButton(
                                   tooltip: 'Back',
-                                  onPressed: _back,
+                                  onPressed: () => _back(),
                                   icon: const Icon(
                                     Icons.arrow_back_rounded,
                                     color: Colors.white70,
