@@ -85,7 +85,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       action: priority.primaryAction,
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: _cardDecoration(accent, radius: 22),
+        decoration: _imageDecoration(
+          _imageForPriority(priority),
+          accent,
+          radius: 22,
+        ),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 620;
@@ -203,7 +207,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             label: 'Open Trades',
             intent: ArcCommandActionIntent.smartTrade,
           ),
-          image: 'assets/images/arc_raiders/hub/arc_hub_trading.webp',
+          image: _operationAsset('review_trade_activity_card.webp'),
           forceTitle: 'Trade',
         )
       else
@@ -219,7 +223,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             label: 'Open Loadout',
             intent: ArcCommandActionIntent.favouriteLoadout,
           ),
-          image: 'assets/images/arc_raiders/hub/arc_hub_loadout.webp',
+          image: _operationAsset('finish_favourite_loadout_card.webp'),
           forceTitle: 'Loadout',
         ),
     ];
@@ -230,27 +234,27 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return [
       _tileFromPanel(
         state.blueprintSummary,
-        image: 'assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp',
+        image: _operationAsset('complete_blueprint_collection_card.webp'),
       ),
       _tileFromPanel(
         state.benchSummary,
-        image: 'assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp',
+        image: _operationAsset('upgrade_gunsmith_card.webp'),
       ),
       _tileFromPanel(
         state.resourceSummary,
-        image: 'assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
+        image: _operationAsset('missing_resources_card.webp'),
       ),
       _tileFromPanel(
         state.questSummary,
-        image: 'assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp',
+        image: _operationAsset('track_quests_card.webp'),
       ),
       _tileFromPanel(
         state.operationsSummary,
-        image: 'assets/images/arc_raiders/hub/arc_hub_operations_missions.webp',
+        image: _operationAsset('claim_operations_card.webp'),
       ),
       _tileFromPanel(
         state.weeklyTraderSummary,
-        image: 'assets/images/arc_raiders/hub/arc_nomadic_trader_hero.webp',
+        image: _operationAsset('check_nomadic_trader_card.webp'),
       ),
       _tileFromMetric(
         loadout ??
@@ -264,7 +268,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           label: 'Open Loadout',
           intent: ArcCommandActionIntent.favouriteLoadout,
         ),
-        image: 'assets/images/arc_raiders/hub/arc_hub_raid_planner.webp',
+        image: _operationAsset('finish_favourite_loadout_card.webp'),
       ),
       _CommandTileData(
         title: 'Tool Deck',
@@ -275,7 +279,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           label: 'Open Tool Deck',
           intent: ArcCommandActionIntent.toolDeck,
         ),
-        image: 'assets/images/arc_raiders/hub/arc_raiders_hub_banner.webp',
+        image: _operationAsset('arc_tool_deck_background.webp'),
       ),
     ];
   }
@@ -578,7 +582,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         action: objective.action,
         icon: _statusIcon(objective.status),
         accent: arcCommandStatusAccent(objective.status),
-        image: _imageForAction(objective.action),
+        image: _imageForCommandTitle(
+          objective.title,
+          fallback: _imageForAction(objective.action),
+        ),
       );
     }
 
@@ -591,7 +598,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         action: alert.action,
         icon: _statusIcon(alert.status),
         accent: arcCommandStatusAccent(alert.status),
-        image: _imageForAction(alert.action),
+        image: _imageForCommandTitle(
+          alert.title,
+          fallback: _imageForAction(alert.action),
+        ),
       );
     }
 
@@ -610,7 +620,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         action: action,
         icon: Icons.swap_horiz_rounded,
         accent: AppTheme.neonPink,
-        image: _imageForAction(action),
+        image: _imageForCommandTitle(
+          'Trade Opportunity',
+          fallback: _imageForAction(action),
+        ),
       );
     }
 
@@ -623,7 +636,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         action: recommendation.action,
         icon: Icons.auto_awesome_rounded,
         accent: Colors.amberAccent,
-        image: _imageForAction(recommendation.action),
+        image: _imageForCommandTitle(
+          recommendation.title,
+          fallback: _imageForAction(recommendation.action),
+        ),
       );
     }
 
@@ -916,7 +932,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         height: 56,
         padding: const EdgeInsets.all(6),
         decoration: _imageDecoration(
-          _imageForAction(item.action),
+          _imageForChecklistItem(item),
           accent,
           radius: 14,
         ),
@@ -1208,71 +1224,156 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   String _cleanText(String value) {
     return value
         .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          '-',
+        )
+        .replaceAll(
           'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢',
-          '-',
-        )
-        .replaceAll('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·', '-')
-        .replaceAll('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡', '')
-        .replaceAll('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢', '')
-        .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡',
+          '',
+        )
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          '',
+        )
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+          '-',
+        )
+        .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           "'",
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“',
           '"',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
           '"',
         )
         .trim();
   }
 
+  String _operationAsset(String fileName) =>
+      'assets/arc_raiders/operations/$fileName';
+
+  String _imageForPriority(ArcCommandPriority priority) {
+    return _imageForCommandTitle(
+      priority.title,
+      fallback: _operationAsset('arc_command_centre_background.webp'),
+    );
+  }
+
+  String _imageForChecklistItem(ArcCommandChecklistItem item) {
+    return _imageForCommandTitle(
+      item.label,
+      fallback: _imageForAction(item.action),
+    );
+  }
+
+  String _imageForCommandTitle(String title, {required String fallback}) {
+    final key = title.toLowerCase();
+    if (key.contains('upgrade gunsmith') || key.contains('upgrade bench')) {
+      return _operationAsset('upgrade_gunsmith_card.webp');
+    }
+    if (key.contains('missing resources') ||
+        key.contains('secure antiseptic')) {
+      return _operationAsset('missing_resources_card.webp');
+    }
+    if (key.contains('protect resources')) {
+      return _operationAsset('protect_resources_card.webp');
+    }
+    if (key.contains('complete blueprint')) {
+      return _operationAsset('complete_blueprint_collection_card.webp');
+    }
+    if (key.contains('blueprint')) {
+      return _operationAsset('complete_blueprint_collection_card.webp');
+    }
+    if (key.contains('review trade') ||
+        key.contains('trade activity') ||
+        key.contains('trade opportunity')) {
+      return _operationAsset('review_trade_activity_card.webp');
+    }
+    if (key.contains('clearer skies') || key.contains('progress clearer')) {
+      return _operationAsset('progress_clearer_skies_card.webp');
+    }
+    if (key.contains('track quests') || key.contains('quest progress')) {
+      return _operationAsset('track_quests_card.webp');
+    }
+    if (key.contains('finish favourite loadout')) {
+      return _operationAsset('finish_favourite_loadout_card.webp');
+    }
+    if (key.contains('review favourite loadout')) {
+      return _operationAsset('review_favourite_loadout_card.webp');
+    }
+    if (key.contains('favourite loadout') || key.contains('loadout')) {
+      return _operationAsset('finish_favourite_loadout_card.webp');
+    }
+    if (key.contains('clear inventory')) {
+      return _operationAsset('clear_inventory_card.webp');
+    }
+    if (key.contains('weekly raid')) {
+      return _operationAsset('weekly_raid_card.webp');
+    }
+    if (key.contains('nomadic trader')) {
+      return _operationAsset('check_nomadic_trader_card.webp');
+    }
+    if (key.contains('claim operations')) {
+      return _operationAsset('claim_operations_card.webp');
+    }
+    if (key.contains('operations') || key.contains('reward vault')) {
+      return _operationAsset('claim_operations_card.webp');
+    }
+    if (key.contains('search')) {
+      return _operationAsset('search_app_card.webp');
+    }
+    return fallback;
+  }
+
   String _imageForAction(ArcCommandAction action) {
     switch (action.intent) {
       case ArcCommandActionIntent.favouriteLoadout:
-        return 'assets/images/arc_raiders/hub/arc_hub_raid_planner.webp';
+        return _operationAsset('finish_favourite_loadout_card.webp');
       case ArcCommandActionIntent.smartTrade:
-        return 'assets/images/arc_raiders/hub/arc_hub_trading.webp';
+        return _operationAsset('review_trade_activity_card.webp');
       case ArcCommandActionIntent.nomadicTrader:
-        return 'assets/images/arc_raiders/hub/arc_nomadic_trader_hero.webp';
+        return _operationAsset('check_nomadic_trader_card.webp');
       case ArcCommandActionIntent.operations:
-        return 'assets/images/arc_raiders/hub/arc_hub_operations_missions.webp';
+        return _operationAsset('claim_operations_card.webp');
       case ArcCommandActionIntent.toolDeck:
-        return 'assets/images/arc_raiders/hub/arc_raiders_hub_banner.webp';
+        return _operationAsset('arc_tool_deck_background.webp');
       case ArcCommandActionIntent.route:
       case ArcCommandActionIntent.placeholder:
         final route = action.routeName ?? '';
         if (route.contains('blueprint')) {
-          return 'assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp';
+          return _operationAsset('complete_blueprint_collection_card.webp');
         }
         if (route.contains('bench')) {
-          return 'assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp';
+          return _operationAsset('upgrade_gunsmith_card.webp');
         }
         if (route.contains('quest')) {
-          return 'assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp';
+          return _operationAsset('track_quests_card.webp');
         }
         if (route.contains('resource') || route.contains('scrappy')) {
-          return 'assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp';
+          return _operationAsset('missing_resources_card.webp');
         }
-        return 'assets/images/arc_raiders/hub/arc_hub_tracking.webp';
+        return _operationAsset('arc_command_centre_background.webp');
     }
   }
 
