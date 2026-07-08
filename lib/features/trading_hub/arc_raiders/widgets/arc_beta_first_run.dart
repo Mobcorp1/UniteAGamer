@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -53,7 +54,8 @@ class ArcBetaFirstRun {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
-        .set(data, SetOptions(merge: true));
+        .set(data, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 12));
   }
 
   static Future<void> resetOnboarding() async {
@@ -470,7 +472,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      await action();
+      await action().timeout(const Duration(seconds: 14));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -493,19 +495,61 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
     }
   }
 
+  Future<void> _launchOnboardingPreview() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await ArcBetaFirstRun.resetOnboarding().timeout(
+        const Duration(seconds: 14),
+      );
+      if (!mounted) return;
+      setState(() => _busy = false);
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(
+            name: OnboardingBasicProfileScreen.routeName,
+            arguments: {
+              'adminPreview': true,
+              'step': 0,
+              'playerState': 'fresh',
+              'blueprintSetup': 'skipForNow',
+              'reachedRaiderLevel25': false,
+            },
+          ),
+          builder: (_) => const OnboardingBasicProfileScreen(),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Onboarding preview failed: $error'),
+          backgroundColor: AppTheme.tradingDanger.withValues(alpha: 0.96),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final actions = <_ArcBetaDevAction>[
       _ArcBetaDevAction(
+        label: 'Open onboarding preview',
+        icon: Icons.play_circle_outline_rounded,
+        onTap: _launchOnboardingPreview,
+      ),
+      _ArcBetaDevAction(
         label: 'Reset onboarding',
         icon: Icons.restart_alt_rounded,
         onTap: () => _run(
-          'Onboarding reset. Relaunch or return to onboarding to test.',
+          'Onboarding reset. Preview is ready to launch again.',
           ArcBetaFirstRun.resetOnboarding,
         ),
       ),
       _ArcBetaDevAction(
-        label: 'Complete onboarding',
+        label: 'Mark onboarding done',
         icon: Icons.check_circle_outline_rounded,
         onTap: () => _run(
           'Onboarding marked complete.',
@@ -598,7 +642,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Reset onboarding, replay tutorials and test first-run flows without reinstalling.',
+            'Open onboarding preview, reset beta state and test first-run flows without reinstalling.',
             style: AppTheme.bodyTextStyle(
               fontSize: widget.compact ? 10 : 12,
               color: Colors.white.withValues(alpha: 0.72),

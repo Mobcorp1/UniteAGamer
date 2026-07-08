@@ -511,7 +511,15 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                     style: AppTheme.tradingHeading(fontSize: 12, color: accent),
                   ),
                 ),
-                ArcCommandStatusPill(label: tile.value, status: tile.status),
+                Flexible(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: ArcCommandStatusPill(
+                      label: tile.value,
+                      status: tile.status,
+                    ),
+                  ),
+                ),
               ],
             ),
             const Spacer(),
@@ -553,6 +561,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       required IconData icon,
       required Color accent,
       required String image,
+      int? progressPercent,
     }) {
       final key = '${title.toLowerCase()}|${action.intent}|${action.routeName}';
       if (!seen.add(key)) return;
@@ -566,6 +575,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           icon: icon,
           accent: accent,
           image: image,
+          progressPercent:
+              progressPercent ??
+              _progressForMove(status: status, label: label, detail: detail),
         ),
       );
     }
@@ -688,7 +700,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _tapSurface(
       action: move.action,
       child: Container(
-        height: 92,
+        height: 108,
         padding: const EdgeInsets.all(9),
         decoration: _imageDecoration(move.image, move.accent, radius: 16),
         child: Column(
@@ -696,9 +708,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           children: [
             Row(
               children: [
-                Icon(move.icon, color: move.accent, size: 15),
-                const Spacer(),
-                Flexible(
+                _moveProgressIndicator(move),
+                const SizedBox(width: 7),
+                Expanded(
                   child: Text(
                     _cleanText(move.label).toUpperCase(),
                     maxLines: 1,
@@ -738,6 +750,59 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         ),
       ),
     );
+  }
+
+  Widget _moveProgressIndicator(_CommandMoveData move) {
+    final progress = (move.progressPercent.clamp(0, 100)) / 100;
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CircularProgressIndicator(
+            value: progress,
+            strokeWidth: 3,
+            backgroundColor: Colors.black.withValues(alpha: 0.36),
+            color: move.accent,
+          ),
+          Text(
+            '${move.progressPercent.clamp(0, 100)}',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 7,
+              color: Colors.white.withValues(alpha: 0.90),
+              isBold: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _progressForMove({
+    required ArcCommandStatus status,
+    required String label,
+    required String detail,
+  }) {
+    final text = '$label $detail'.toLowerCase();
+    final percentMatch = RegExp(r'(\d{1,3})\s*%').firstMatch(text);
+    if (percentMatch != null) {
+      return (int.tryParse(percentMatch.group(1) ?? '') ?? 0).clamp(0, 100);
+    }
+    final fractionMatch = RegExp(r'(\d+)\s*/\s*(\d+)').firstMatch(text);
+    if (fractionMatch != null) {
+      final current = int.tryParse(fractionMatch.group(1) ?? '') ?? 0;
+      final target = int.tryParse(fractionMatch.group(2) ?? '') ?? 0;
+      if (target > 0) return ((current / target) * 100).round().clamp(0, 100);
+    }
+    return switch (status) {
+      ArcCommandStatus.success => 100,
+      ArcCommandStatus.ready => 86,
+      ArcCommandStatus.active => 62,
+      ArcCommandStatus.warning => 38,
+      ArcCommandStatus.critical => 18,
+      ArcCommandStatus.neutral => 24,
+    };
   }
 
   String _tradeSignalDetail(ArcCommandTradeSummary summary) {
@@ -848,10 +913,15 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             accent: Colors.lightGreenAccent,
           ),
           const SizedBox(height: 8),
-          for (final resource in resources.take(4)) ...[
-            _resourceRow(resource),
-            if (resource != resources.take(4).last) const SizedBox(height: 6),
-          ],
+          if (resources.isEmpty)
+            _quietLine(
+              'No resource signal yet. Keep tracking inventory and this panel will surface shortages.',
+            )
+          else
+            for (final resource in resources.take(4)) ...[
+              _resourceRow(resource),
+              if (resource != resources.take(4).last) const SizedBox(height: 6),
+            ],
         ],
       ),
     );
@@ -904,7 +974,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                 builder: (context, constraints) {
                   final columns = constraints.maxWidth >= 760
                       ? 3
-                      : (constraints.maxWidth >= 520 ? 3 : 2);
+                      : (constraints.maxWidth >= 430 ? 2 : 1);
                   const spacing = 8.0;
                   final width =
                       (constraints.maxWidth - (spacing * (columns - 1))) /
@@ -929,8 +999,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _tapSurface(
       action: item.action,
       child: Container(
-        height: 56,
-        padding: const EdgeInsets.all(6),
+        height: 68,
+        padding: const EdgeInsets.all(7),
         decoration: _imageDecoration(
           _imageForChecklistItem(item),
           accent,
@@ -1455,6 +1525,7 @@ class _CommandMoveData {
     required this.icon,
     required this.accent,
     required this.image,
+    required this.progressPercent,
   });
 
   final String title;
@@ -1465,6 +1536,7 @@ class _CommandMoveData {
   final IconData icon;
   final Color accent;
   final String image;
+  final int progressPercent;
 }
 
 class _CommandTileData {

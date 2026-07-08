@@ -113,11 +113,17 @@ class _OnboardingBasicProfileScreenState
       return;
     }
 
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    final data = doc.data() ?? {};
+    late final Map<String, dynamic> data;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 12));
+      data = doc.data() ?? {};
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
     final basicProfile = data['basicProfile'] is Map
         ? data['basicProfile'] as Map<String, dynamic>
         : <String, dynamic>{};
@@ -221,57 +227,61 @@ class _OnboardingBasicProfileScreenState
         _blueprintChoice == _ArcBlueprintSetupChoice.setupNow;
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'displayName': displayName,
-        'onboardingComplete': complete,
-        'basicProfile': {
-          'displayName': displayName,
-          'bio': _bioController.text.trim(),
-          'country': _selectedCountry,
-          'platform': _selectedPlatform,
-          'timeZone': _selectedTimeZone,
-          'platforms': [_selectedPlatform],
-        },
-        'traderProfile': {
-          'uagName': displayName,
-          'region': _selectedCountry == 'United Kingdom'
-              ? 'UK'
-              : _selectedCountry,
-          'platform': _selectedPlatform,
-          'timeZone': _selectedTimeZone,
-          'raiderLevel': raiderLevel,
-        },
-        'arcOnboarding': {
-          'version': 2,
-          'playerState': _playerStateId,
-          'raiderLevel': raiderLevel,
-          'nomadicTraderUnlocked': nomadicUnlocked,
-          'nomadicTraderLockedReason': nomadicUnlocked
-              ? null
-              : 'Nomadic Trader unlocks at Raider Level 25. Update your Raider Level in the app when you reach 25 to unlock Nomadic Trader planning.',
-          'blueprintSetupSkipped': blueprintSetupSkipped,
-          'blueprintTrackerConfigured': blueprintTrackerConfigured,
-          'blueprintOwnershipReset': _isFreshOrReset,
-          'questProgressReset': _isFreshOrReset,
-          'benchProgressReset': _isFreshOrReset,
-          'favouriteLoadoutsRetained': true,
-          'completedSteps': {
-            'profile': true,
-            'playerState': true,
-            'blueprintTracker': blueprintTrackerConfigured,
-            'blueprintTrackerSkipped': blueprintSetupSkipped,
-            'nomadicTraderGate': true,
-            'traderCode': _acceptedTraderCode,
-          },
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        'modules': {
-          'trader': true,
-          'blueprintTracker': blueprintTrackerConfigured,
-          'nomadicTrader': nomadicUnlocked,
-        },
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({
+            'displayName': displayName,
+            'onboardingComplete': complete,
+            'basicProfile': {
+              'displayName': displayName,
+              'bio': _bioController.text.trim(),
+              'country': _selectedCountry,
+              'platform': _selectedPlatform,
+              'timeZone': _selectedTimeZone,
+              'platforms': [_selectedPlatform],
+            },
+            'traderProfile': {
+              'uagName': displayName,
+              'region': _selectedCountry == 'United Kingdom'
+                  ? 'UK'
+                  : _selectedCountry,
+              'platform': _selectedPlatform,
+              'timeZone': _selectedTimeZone,
+              'raiderLevel': raiderLevel,
+            },
+            'arcOnboarding': {
+              'version': 2,
+              'playerState': _playerStateId,
+              'raiderLevel': raiderLevel,
+              'nomadicTraderUnlocked': nomadicUnlocked,
+              'nomadicTraderLockedReason': nomadicUnlocked
+                  ? null
+                  : 'Nomadic Trader unlocks at Raider Level 25. Update your Raider Level in the app when you reach 25 to unlock Nomadic Trader planning.',
+              'blueprintSetupSkipped': blueprintSetupSkipped,
+              'blueprintTrackerConfigured': blueprintTrackerConfigured,
+              'blueprintOwnershipReset': _isFreshOrReset,
+              'questProgressReset': _isFreshOrReset,
+              'benchProgressReset': _isFreshOrReset,
+              'favouriteLoadoutsRetained': true,
+              'completedSteps': {
+                'profile': true,
+                'playerState': true,
+                'blueprintTracker': blueprintTrackerConfigured,
+                'blueprintTrackerSkipped': blueprintSetupSkipped,
+                'nomadicTraderGate': true,
+                'traderCode': _acceptedTraderCode,
+              },
+              'updatedAt': FieldValue.serverTimestamp(),
+            },
+            'modules': {
+              'trader': true,
+              'blueprintTracker': blueprintTrackerConfigured,
+              'nomadicTrader': nomadicUnlocked,
+            },
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 12));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
