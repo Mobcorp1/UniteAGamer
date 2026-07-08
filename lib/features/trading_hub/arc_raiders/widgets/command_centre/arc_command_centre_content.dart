@@ -50,6 +50,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       children: [
         _missionHero(commandState.priority),
         const SizedBox(height: 8),
+        _actionConsole(commandMoves),
+        const SizedBox(height: 8),
         _dailyChecklist(commandState.checklist),
         if (liveTiles.isNotEmpty) ...[
           const SizedBox(height: 8),
@@ -57,8 +59,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         ],
         const SizedBox(height: 8),
         _systemCarousel(carouselTiles),
-        const SizedBox(height: 8),
-        _actionConsole(commandMoves),
         const SizedBox(height: 8),
         _detailAccordion(
           title: 'System Detail',
