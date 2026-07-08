@@ -28,6 +28,8 @@ class _AppEntryGateState extends State<AppEntryGate>
   Future<bool>? _biometricRelockFuture;
   String? _sessionUid;
   String? _biometricUid;
+  Future<bool>? _prepareUserFuture;
+  String? _prepareUserUid;
 
   @override
   void initState() {
@@ -105,8 +107,18 @@ class _AppEntryGateState extends State<AppEntryGate>
     _biometricRelockFuture = null;
     _sessionUid = null;
     _biometricUid = null;
+    _prepareUserFuture = null;
+    _prepareUserUid = null;
     await UagSessionGateController.clearSession();
     await FirebaseAuth.instance.signOut();
+  }
+
+  Future<bool> _prepareUserFor(String uid) {
+    if (_prepareUserUid != uid || _prepareUserFuture == null) {
+      _prepareUserUid = uid;
+      _prepareUserFuture = _prepareUser(uid);
+    }
+    return _prepareUserFuture!;
   }
 
   Future<bool> _prepareUser(String uid) async {
@@ -197,7 +209,7 @@ class _AppEntryGateState extends State<AppEntryGate>
                 }
 
                 return FutureBuilder<bool>(
-                  future: _prepareUser(user.uid),
+                  future: _prepareUserFor(user.uid),
                   builder: (context, onboardingSnapshot) {
                     if (onboardingSnapshot.connectionState ==
                         ConnectionState.waiting) {
