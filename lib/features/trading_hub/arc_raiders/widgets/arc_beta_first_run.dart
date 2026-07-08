@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -21,6 +23,37 @@ class ArcBetaFirstRun {
   static Future<void> setFlag(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
+    if (key == ArcBetaFirstRunKeys.hasCompletedOnboarding) {
+      await _mergeCurrentUser({
+        'onboardingComplete': value,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } else if (key == ArcBetaFirstRunKeys.hasSeenBlueprintTutorial) {
+      await _mergeCurrentUser({
+        'arcTutorials': {
+          'blueprintTutorialSeen': value,
+          'adminToolUpdatedAt': FieldValue.serverTimestamp(),
+        },
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } else if (key == ArcBetaFirstRunKeys.hasSeenTradingTutorial) {
+      await _mergeCurrentUser({
+        'arcTutorials': {
+          'tradingTutorialSeen': value,
+          'adminToolUpdatedAt': FieldValue.serverTimestamp(),
+        },
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  static Future<void> _mergeCurrentUser(Map<String, Object?> data) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .set(data, SetOptions(merge: true));
   }
 
   static Future<void> resetOnboarding() async {
@@ -28,18 +61,44 @@ class ArcBetaFirstRun {
     await prefs.setBool(ArcBetaFirstRunKeys.hasCompletedOnboarding, false);
     await prefs.setBool(ArcBetaFirstRunKeys.forceOnboarding, true);
     await prefs.setBool(ArcBetaFirstRunKeys.hasCompletedProfileSetup, false);
+    await _mergeCurrentUser({
+      'onboardingComplete': false,
+      'arcOnboarding': {
+        'adminForcedOnboarding': true,
+        'adminToolUpdatedAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   static Future<void> markOnboardingComplete() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(ArcBetaFirstRunKeys.hasCompletedOnboarding, true);
     await prefs.setBool(ArcBetaFirstRunKeys.forceOnboarding, false);
+    await prefs.setBool(ArcBetaFirstRunKeys.hasCompletedProfileSetup, true);
+    await _mergeCurrentUser({
+      'onboardingComplete': true,
+      'arcOnboarding': {
+        'completedFromAdminTools': true,
+        'completedAt': FieldValue.serverTimestamp(),
+        'adminToolUpdatedAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   static Future<void> resetTutorials() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(ArcBetaFirstRunKeys.hasSeenBlueprintTutorial, false);
     await prefs.setBool(ArcBetaFirstRunKeys.hasSeenTradingTutorial, false);
+    await _mergeCurrentUser({
+      'arcTutorials': {
+        'blueprintTutorialSeen': false,
+        'tradingTutorialSeen': false,
+        'adminToolUpdatedAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   static Future<void> resetAllBetaProgress() async {
@@ -49,6 +108,20 @@ class ArcBetaFirstRun {
     await prefs.setBool(ArcBetaFirstRunKeys.hasCompletedProfileSetup, false);
     await prefs.setBool(ArcBetaFirstRunKeys.hasSeenBlueprintTutorial, false);
     await prefs.setBool(ArcBetaFirstRunKeys.hasSeenTradingTutorial, false);
+    await _mergeCurrentUser({
+      'onboardingComplete': false,
+      'arcOnboarding': {
+        'adminForcedOnboarding': true,
+        'adminBetaProgressReset': true,
+        'adminToolUpdatedAt': FieldValue.serverTimestamp(),
+      },
+      'arcTutorials': {
+        'blueprintTutorialSeen': false,
+        'tradingTutorialSeen': false,
+        'adminToolUpdatedAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   static Future<void> showOnce({
@@ -396,16 +469,28 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
   Future<void> _run(String message, Future<void> Function() action) async {
     if (_busy) return;
     setState(() => _busy = true);
-    await action();
-    if (!mounted) return;
-    setState(() => _busy = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppTheme.darkBackground.withValues(alpha: 0.96),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    try {
+      await action();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppTheme.darkBackground.withValues(alpha: 0.96),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Closed beta tool failed: $error'),
+          backgroundColor: AppTheme.tradingDanger.withValues(alpha: 0.96),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override

@@ -394,7 +394,7 @@ class ArcQuestRequirementSeedData {
       itemName: 'Espresso Machine Parts',
       quantity: 1,
       sourceHint:
-          'Quest collection item. Best intel: cafÃ©/commercial kitchen objective areas; check counters, shelves and marked quest route rooms.',
+          'Quest collection item. Best intel: cafe/commercial kitchen objective areas; check counters, shelves and marked quest route rooms.',
     ),
     ArcQuestRequirement(
       questName: 'Espresso',

@@ -366,4 +366,4 @@ class _Pill extends StatelessWidget {
   }
 }
 
-String _money(int pence) => 'Ã‚£${(pence / 100).toStringAsFixed(2)}';
+String _money(int pence) => '£${(pence / 100).toStringAsFixed(2)}';
