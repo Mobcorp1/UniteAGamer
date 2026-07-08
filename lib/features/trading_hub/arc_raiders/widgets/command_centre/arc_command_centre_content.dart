@@ -819,10 +819,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _systemDetailGrid(List<Widget> children) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 620 ? 2 : 1;
+        final safeMaxWidth =
+            constraints.maxWidth.isFinite && constraints.maxWidth > 0
+            ? constraints.maxWidth
+            : 320.0;
+        final columns = safeMaxWidth >= 620 ? 2 : 1;
         const spacing = 8.0;
-        final width =
-            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+        final width = (safeMaxWidth - (spacing * (columns - 1))) / columns;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
@@ -884,7 +887,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               ArcCommandDetailList(
                 details: _shortDetails(panel).take(2).toList(growable: false),
               ),
-              const Spacer(),
+              const SizedBox(height: 6),
               Text(
                 'TAP TO OPEN',
                 style: AppTheme.bodyTextStyle(

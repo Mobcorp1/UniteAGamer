@@ -220,7 +220,8 @@ class _OnboardingBasicProfileScreenState
       basicProfile['socialEnergy'],
       pickString(traderProfile['socialEnergy'], 'Depends on the day'),
     );
-    if (_playStyles.contains(playStyleValue)) _selectedPlayStyle = playStyleValue;
+    if (_playStyles.contains(playStyleValue))
+      _selectedPlayStyle = playStyleValue;
     if (_squadIntents.contains(squadIntentValue)) {
       _selectedSquadIntent = squadIntentValue;
     }
@@ -402,19 +403,6 @@ class _OnboardingBasicProfileScreenState
   Future<void> _back() async {
     if (_stepIndex <= 0 || _isSaving) return;
     await _goToStep(_stepIndex - 1);
-  }
-
-  void _applyPreview(_ArcPlayerStartState state, bool reachedLevel25) {
-    setState(() {
-      _playerState = state;
-      _reachedRaiderLevel25 = state == _ArcPlayerStartState.active
-          ? reachedLevel25
-          : false;
-      _raiderLevelController.text = _reachedRaiderLevel25 ? '25' : '0';
-      _blueprintChoice = state == _ArcPlayerStartState.active
-          ? _ArcBlueprintSetupChoice.setupNow
-          : _ArcBlueprintSetupChoice.skipForNow;
-    });
   }
 
   void _applySimulatorArguments(Map args) {
@@ -714,13 +702,7 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
-
-
-
-  Widget _cardBarrel({
-    required List<Widget> cards,
-    double height = 206,
-  }) {
+  Widget _cardBarrel({required List<Widget> cards, double height = 206}) {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 700;
     final fraction = compact ? 0.88 : 0.46;
@@ -760,7 +742,6 @@ class _OnboardingBasicProfileScreenState
       ],
     );
   }
-
 
   Widget _profileStep() {
     return _contentShell(
@@ -908,11 +889,16 @@ class _OnboardingBasicProfileScreenState
 
   String _playStyleDescription(String style) => switch (style) {
     'Quest focused' => 'Prioritise quests, unlocks and guided progression.',
-    'Blueprint grinder' => 'Prioritise blueprint collection, duplicates and trade value.',
-    'Squad support' => 'Prioritise team utility, survival and helping the squad.',
-    'PvP hunter' => 'Prioritise combat readiness, ambushes and confident raids.',
-    'Loot runner' => 'Prioritise stash building, materials and safe extraction routes.',
-    'Casual explorer' => 'Prioritise low-pressure play, discovery and flexible goals.',
+    'Blueprint grinder' =>
+      'Prioritise blueprint collection, duplicates and trade value.',
+    'Squad support' =>
+      'Prioritise team utility, survival and helping the squad.',
+    'PvP hunter' =>
+      'Prioritise combat readiness, ambushes and confident raids.',
+    'Loot runner' =>
+      'Prioritise stash building, materials and safe extraction routes.',
+    'Casual explorer' =>
+      'Prioritise low-pressure play, discovery and flexible goals.',
     _ => 'Blend quests, blueprints, loot, trading and squad play.',
   };
 
@@ -929,8 +915,10 @@ class _OnboardingBasicProfileScreenState
     'Chatty and outgoing' => 'Good day for voice, squad calls and social runs.',
     'Quiet but cooperative' => 'Team-friendly without needing constant chat.',
     'High energy' => 'Good day for faster, more intense raids.',
-    'Low energy today' => 'Prefer calmer routes, clear plans and less pressure.',
-    'Prefer pings over voice' => 'Matchmaking should favour low-voice communication.',
+    'Low energy today' =>
+      'Prefer calmer routes, clear plans and less pressure.',
+    'Prefer pings over voice' =>
+      'Matchmaking should favour low-voice communication.',
     _ => 'Let your session mood change without locking your whole profile.',
   };
 
@@ -1075,7 +1063,8 @@ class _OnboardingBasicProfileScreenState
                 body:
                     'Best for fresh starts, zero blueprints or no duplicates. The Command Centre will remind you later.',
                 icon: Icons.skip_next_rounded,
-                selected: _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow,
+                selected:
+                    _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow,
                 onTap: () => setState(
                   () => _blueprintChoice = _ArcBlueprintSetupChoice.skipForNow,
                 ),
@@ -1219,11 +1208,7 @@ class _OnboardingBasicProfileScreenState
           const SizedBox(height: 18),
           _cardBarrel(
             height: 150,
-            cards: summary
-                .map(
-                  (line) => _summaryCard(line),
-                )
-                .toList(),
+            cards: summary.map((line) => _summaryCard(line)).toList(),
           ),
           const SizedBox(height: 18),
           _primaryButton(
@@ -1249,55 +1234,54 @@ class _OnboardingBasicProfileScreenState
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
+          color: selected
+              ? AppTheme.neonCyan.withValues(alpha: 0.12)
+              : Colors.black.withValues(alpha: 0.24),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
             color: selected
-                ? AppTheme.neonCyan.withValues(alpha: 0.12)
-                : Colors.black.withValues(alpha: 0.24),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected
-                  ? AppTheme.neonCyan
-                  : Colors.white.withValues(alpha: 0.14),
-              width: selected ? 1.5 : 1,
-            ),
+                ? AppTheme.neonCyan
+                : Colors.white.withValues(alpha: 0.14),
+            width: selected ? 1.5 : 1,
           ),
+        ),
         child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: selected ? AppTheme.neonCyan : Colors.white60),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: selected ? Colors.white : Colors.white70,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 15,
-                      ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: selected ? AppTheme.neonCyan : Colors.white60),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: selected ? Colors.white : Colors.white70,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      body,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        height: 1.3,
-                        fontSize: 13,
-                      ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    body,
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      height: 1.3,
+                      fontSize: 13,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Icon(
-                selected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color: selected ? AppTheme.neonCyan : Colors.white30,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 10),
+            Icon(
+              selected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: selected ? AppTheme.neonCyan : Colors.white30,
+            ),
+          ],
         ),
       ),
     );
@@ -1449,11 +1433,7 @@ class _OnboardingBasicProfileScreenState
 
     if (compact) {
       return Column(
-        children: [
-          _leftHeroPanel(),
-          const SizedBox(height: 18),
-          stepPanel,
-        ],
+        children: [_leftHeroPanel(), const SizedBox(height: 18), stepPanel],
       );
     }
 
