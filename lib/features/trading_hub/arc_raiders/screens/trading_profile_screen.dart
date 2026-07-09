@@ -234,7 +234,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                 const SizedBox(height: AppTheme.spaceM),
                 _summaryCard(profile),
                 const SizedBox(height: AppTheme.spaceM),
-                _archetypeSection(),
+                _archetypeSection(profile),
                 const SizedBox(height: AppTheme.spaceM),
                 _badgeGallery(),
                 const SizedBox(height: AppTheme.spaceM),
@@ -254,6 +254,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                           : profile.embarkId,
                     ),
                     _detailRow('Timezone', profile.timezone),
+                    _detailRow('Communication', profile.communicationStyle),
+                    _detailRow('Squad Intent', profile.squadIntent),
+                    _detailRow('Energy', profile.socialEnergy),
                     _detailRow(
                       'Subscription Status',
                       profile.subscriptionStatus,
@@ -1472,70 +1475,125 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
-  Widget _archetypeSection() {
-    const archetypes = <({IconData icon, String label, String copy})>[
-      (
-        icon: Icons.health_and_safety_rounded,
-        label: 'Guardian',
-        copy: 'Protects squad',
-      ),
-      (
-        icon: Icons.medical_services_rounded,
-        label: 'Medic',
-        copy: 'Revive focused',
-      ),
-      (
-        icon: Icons.backpack_rounded,
-        label: 'Loot Goblin',
-        copy: 'Resource hunter',
-      ),
-      (icon: Icons.handshake_rounded, label: 'Trader', copy: 'Swap ready'),
-      (icon: Icons.explore_rounded, label: 'Scout', copy: 'Route finder'),
-      (
-        icon: Icons.center_focus_strong_rounded,
-        label: 'Sniper',
-        copy: 'Long range',
-      ),
-      (icon: Icons.shield_rounded, label: 'Tank', copy: 'Front line'),
-      (
-        icon: Icons.track_changes_rounded,
-        label: 'Hunter',
-        copy: 'Target focused',
-      ),
-      (
-        icon: Icons.assignment_turned_in_rounded,
-        label: 'Quester',
-        copy: 'Objective first',
-      ),
-      (
-        icon: Icons.local_fire_department_rounded,
-        label: 'PvP Specialist',
-        copy: 'Fight ready',
-      ),
-      (
-        icon: Icons.bug_report_rounded,
-        label: 'ARC Exterminator',
-        copy: 'PvE cleaner',
-      ),
-      (icon: Icons.flag_rounded, label: 'Leader', copy: 'Shot caller'),
-    ];
+  Widget _archetypeSection(ArcTraderProfile profile) {
+    final archetypes = profile.archetypes.isEmpty
+        ? const ['Balanced Raider']
+        : profile.archetypes;
+    final playStyles = profile.playStyles.isEmpty
+        ? const ['PvE defensive']
+        : profile.playStyles;
 
     return _profilePanel(
       accent: AppTheme.neonPink,
-      title: 'Player Archetypes',
+      title: 'Archetypes & Match Fit',
       icon: Icons.groups_rounded,
-      child: Wrap(
-        spacing: AppTheme.spaceS,
-        runSpacing: AppTheme.spaceS,
-        children: archetypes
-            .map(
-              (item) => _archetypeBadge(
-                icon: item.icon,
-                label: item.label,
-                copy: item.copy,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'These tags are used for squad matching, profile discovery and future Command Centre recommendations.',
+            style: TextStyle(color: Colors.white70, height: 1.35),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          _tagGroup(
+            title: 'Player archetypes',
+            icon: Icons.workspace_premium_rounded,
+            values: archetypes,
+            accent: AppTheme.neonPink,
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          _tagGroup(
+            title: 'Play style',
+            icon: Icons.track_changes_rounded,
+            values: playStyles,
+            accent: AppTheme.neonCyan,
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              _matchFitChip(
+                icon: Icons.record_voice_over_rounded,
+                label: profile.communicationStyle,
+                accent: Colors.lightGreenAccent,
               ),
-            )
-            .toList(growable: false),
+              _matchFitChip(
+                icon: Icons.groups_rounded,
+                label: profile.squadIntent,
+                accent: AppTheme.neonCyan,
+              ),
+              _matchFitChip(
+                icon: Icons.mood_rounded,
+                label: profile.socialEnergy,
+                accent: Colors.amberAccent,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tagGroup({
+    required String title,
+    required IconData icon,
+    required List<String> values,
+    required Color accent,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            color: accent,
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        Wrap(
+          spacing: AppTheme.spaceS,
+          runSpacing: AppTheme.spaceS,
+          children: values
+              .map(
+                (value) =>
+                    _matchFitChip(icon: icon, label: value, accent: accent),
+              )
+              .toList(growable: false),
+        ),
+      ],
+    );
+  }
+
+  Widget _matchFitChip({
+    required IconData icon,
+    required String label,
+    required Color accent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: accent, size: 15),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }

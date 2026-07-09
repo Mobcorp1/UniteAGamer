@@ -14,6 +14,11 @@ class ArcTraderProfile {
   final bool crossRegionOk;
   final bool crossPlatformOk;
   final bool isProfileComplete;
+  final List<String> archetypes;
+  final List<String> playStyles;
+  final String communicationStyle;
+  final String squadIntent;
+  final String socialEnergy;
   final String referralCode;
   final String referredByCode;
   final bool affiliateEnabled;
@@ -37,6 +42,11 @@ class ArcTraderProfile {
     required this.crossRegionOk,
     required this.crossPlatformOk,
     required this.isProfileComplete,
+    this.archetypes = const [],
+    this.playStyles = const [],
+    this.communicationStyle = 'Flexible',
+    this.squadIntent = 'Flexible',
+    this.socialEnergy = 'Depends on the day',
     required this.referralCode,
     required this.referredByCode,
     required this.affiliateEnabled,
@@ -62,6 +72,11 @@ class ArcTraderProfile {
       crossRegionOk: false,
       crossPlatformOk: true,
       isProfileComplete: false,
+      archetypes: const ['Balanced Raider'],
+      playStyles: const ['PvE defensive'],
+      communicationStyle: 'Flexible',
+      squadIntent: 'Flexible',
+      socialEnergy: 'Depends on the day',
       referralCode: '',
       referredByCode: '',
       affiliateEnabled: false,
@@ -74,6 +89,22 @@ class ArcTraderProfile {
     if (value == null) return fallback;
     if (value is String) return value;
     return value.toString();
+  }
+
+  static List<String> _stringList(
+    dynamic value, [
+    List<String> fallback = const [],
+  ]) {
+    if (value == null) return fallback;
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList(growable: false);
+    }
+    if (value is String && value.trim().isNotEmpty) return [value.trim()];
+    return fallback;
   }
 
   static bool _bool(dynamic value, [bool fallback = false]) {
@@ -114,6 +145,12 @@ class ArcTraderProfile {
       'crossPlatformOk': crossPlatformOk,
       'crossplayEnabled': crossPlatformOk,
       'isProfileComplete': isProfileComplete,
+      'archetypes': archetypes,
+      'playStyles': playStyles,
+      'communicationStyle': communicationStyle,
+      'squadIntent': squadIntent,
+      'socialEnergy': socialEnergy,
+      'playStyle': playStyles.isNotEmpty ? playStyles.first : '',
       'referralCode': referralCode,
       'referredByCode': referredByCode,
       'affiliateEnabled': affiliateEnabled,
@@ -128,6 +165,11 @@ class ArcTraderProfile {
   }
 
   factory ArcTraderProfile.fromMap(Map<String, dynamic> map) {
+    final archetypes = _stringList(map['archetypes']);
+    final playStyles = _stringList(
+      map['playStyles'],
+      _stringList(map['playStyle']),
+    );
     return ArcTraderProfile(
       uid: _string(map['uid']),
       uagId: _string(map['uagId']),
@@ -144,6 +186,11 @@ class ArcTraderProfile {
           ? _bool(map['crossplayEnabled'], true)
           : _bool(map['crossPlatformOk'], true),
       isProfileComplete: _bool(map['isProfileComplete']),
+      archetypes: archetypes.isEmpty ? const ['Balanced Raider'] : archetypes,
+      playStyles: playStyles.isEmpty ? const ['PvE defensive'] : playStyles,
+      communicationStyle: _string(map['communicationStyle'], 'Flexible'),
+      squadIntent: _string(map['squadIntent'], 'Flexible'),
+      socialEnergy: _string(map['socialEnergy'], 'Depends on the day'),
       referralCode: _string(map['referralCode']),
       referredByCode: _string(map['referredByCode']),
       affiliateEnabled: _bool(map['affiliateEnabled']),
@@ -169,6 +216,11 @@ class ArcTraderProfile {
     bool? crossRegionOk,
     bool? crossPlatformOk,
     bool? isProfileComplete,
+    List<String>? archetypes,
+    List<String>? playStyles,
+    String? communicationStyle,
+    String? squadIntent,
+    String? socialEnergy,
     String? referralCode,
     String? referredByCode,
     bool? affiliateEnabled,
@@ -192,6 +244,11 @@ class ArcTraderProfile {
       crossRegionOk: crossRegionOk ?? this.crossRegionOk,
       crossPlatformOk: crossPlatformOk ?? this.crossPlatformOk,
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
+      archetypes: archetypes ?? this.archetypes,
+      playStyles: playStyles ?? this.playStyles,
+      communicationStyle: communicationStyle ?? this.communicationStyle,
+      squadIntent: squadIntent ?? this.squadIntent,
+      socialEnergy: socialEnergy ?? this.socialEnergy,
       referralCode: referralCode ?? this.referralCode,
       referredByCode: referredByCode ?? this.referredByCode,
       affiliateEnabled: affiliateEnabled ?? this.affiliateEnabled,

@@ -33,6 +33,11 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   DateTime? _createdAt;
+  final Set<String> _archetypes = {'Balanced Raider'};
+  final Set<String> _playStyles = {'PvE defensive'};
+  String _communicationStyle = 'Flexible';
+  String _squadIntent = 'Flexible';
+  String _socialEnergy = 'Depends on the day';
   String _serverPreference = 'Automatic';
   String _payoutMethod = 'Bank Transfer';
   String _subscriptionStatus = 'inactive';
@@ -60,6 +65,52 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     'premium',
     'active',
     'cancelled',
+  ];
+
+  static const List<String> _archetypeOptions = <String>[
+    'Balanced Raider',
+    'Quest-driven Raider',
+    'Blueprint Grinder',
+    'Helper / Support Player',
+    'Trader / Resource Runner',
+    'PvP Hunter',
+    'Casual Squad Player',
+  ];
+
+  static const List<String> _playStyleOptions = <String>[
+    'PvE defensive',
+    'PvE aggressive',
+    'PvP focused',
+    'Quest-focused',
+    'Blueprint farming',
+    'Resource running',
+    'Squad support',
+  ];
+
+  static const List<String> _communicationOptions = <String>[
+    'Flexible',
+    'Mic preferred',
+    'Ping only',
+    'Quiet / low-comms',
+    'Chatty / social',
+  ];
+
+  static const List<String> _squadIntentOptions = <String>[
+    'Flexible',
+    'Squad up',
+    'Quest team',
+    'Blueprint runs',
+    'Trade focused',
+    'Solo for now',
+  ];
+
+  static const List<String> _socialEnergyOptions = <String>[
+    'Depends on the day',
+    'Chatty and outgoing',
+    'Quiet but cooperative',
+    'High energy',
+    'Low energy today',
+    'Prefer pings over voice',
   ];
 
   @override
@@ -100,6 +151,30 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         ? 'Not Set'
         : profile.payoutMethod;
     _subscriptionStatus = profile.subscriptionStatus;
+    _archetypes
+      ..clear()
+      ..addAll(
+        profile.archetypes.isEmpty
+            ? const ['Balanced Raider']
+            : profile.archetypes,
+      );
+    _playStyles
+      ..clear()
+      ..addAll(
+        profile.playStyles.isEmpty
+            ? const ['PvE defensive']
+            : profile.playStyles,
+      );
+    _communicationStyle =
+        _communicationOptions.contains(profile.communicationStyle)
+        ? profile.communicationStyle
+        : 'Flexible';
+    _squadIntent = _squadIntentOptions.contains(profile.squadIntent)
+        ? profile.squadIntent
+        : 'Flexible';
+    _socialEnergy = _socialEnergyOptions.contains(profile.socialEnergy)
+        ? profile.socialEnergy
+        : 'Depends on the day';
     _createdAt = profile.createdAt;
 
     if (mounted) setState(() => _isLoading = false);
@@ -124,6 +199,11 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
           micOk: _micOk,
           crossRegionOk: _crossRegionOk,
           crossPlatformOk: _crossplayEnabled,
+          archetypes: _archetypes.toList(growable: false),
+          playStyles: _playStyles.toList(growable: false),
+          communicationStyle: _communicationStyle,
+          squadIntent: _squadIntent,
+          socialEnergy: _socialEnergy,
           affiliateEnabled: _affiliateEnabled,
           payoutMethod: _payoutMethod == 'Not Set' ? '' : _payoutMethod,
           subscriptionStatus: _subscriptionStatus,
@@ -246,6 +326,62 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _multiSelectChips({
+    required List<String> items,
+    required Set<String> selected,
+  }) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items.map((item) {
+        final active = selected.contains(item);
+        return FilterChip(
+          selected: active,
+          label: Text(item),
+          selectedColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+          checkmarkColor: AppTheme.neonCyan,
+          side: BorderSide(
+            color: (active ? AppTheme.neonCyan : Colors.white24).withValues(
+              alpha: 0.62,
+            ),
+          ),
+          onSelected: (_) => setState(() {
+            if (active) {
+              if (selected.length > 1) selected.remove(item);
+            } else {
+              selected.add(item);
+            }
+          }),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _singleSelectChips({
+    required List<String> items,
+    required String selected,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items.map((item) {
+        final active = selected == item;
+        return ChoiceChip(
+          selected: active,
+          label: Text(item),
+          selectedColor: AppTheme.neonPink.withValues(alpha: 0.18),
+          side: BorderSide(
+            color: (active ? AppTheme.neonPink : Colors.white24).withValues(
+              alpha: 0.62,
+            ),
+          ),
+          onSelected: (_) => onChanged(item),
+        );
+      }).toList(),
     );
   }
 
@@ -405,6 +541,87 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         _timezoneController,
                         'Timezone',
                         validator: (v) => _required(v, 'Timezone'),
+                      ),
+                    ],
+                  ),
+                  sectionCard(
+                    title: 'Archetypes & Match Fit',
+                    icon: Icons.hub_rounded,
+                    children: [
+                      const Text(
+                        'Select everything that applies. These tags drive matchmaking, squad recommendations and public profile fit.',
+                        style: TextStyle(color: Colors.white70, height: 1.35),
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Text(
+                        'Player archetypes',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _multiSelectChips(
+                        items: _archetypeOptions,
+                        selected: _archetypes,
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Text(
+                        'Play style',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _multiSelectChips(
+                        items: _playStyleOptions,
+                        selected: _playStyles,
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Text(
+                        'Communication style',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _singleSelectChips(
+                        items: _communicationOptions,
+                        selected: _communicationStyle,
+                        onChanged: (value) =>
+                            setState(() => _communicationStyle = value),
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Text(
+                        'Squad intent',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _singleSelectChips(
+                        items: _squadIntentOptions,
+                        selected: _squadIntent,
+                        onChanged: (value) =>
+                            setState(() => _squadIntent = value),
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Text(
+                        'Current energy',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _singleSelectChips(
+                        items: _socialEnergyOptions,
+                        selected: _socialEnergy,
+                        onChanged: (value) =>
+                            setState(() => _socialEnergy = value),
                       ),
                     ],
                   ),
