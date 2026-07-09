@@ -652,50 +652,104 @@ class _OnboardingBasicProfileScreenState
       4 => 'Accept the trust rules before entering the trading network.',
       _ => 'Your ARC command centre is ready.',
     };
+    final compact = MediaQuery.sizeOf(context).width < 700;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 700 ? 18 : 28),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.36),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 16 : 22,
+        vertical: compact ? 14 : 18,
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.44),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.34),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
+          ),
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.08),
+            blurRadius: 22,
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _logoMark(size: 112),
-          const SizedBox(height: 22),
-          Text(
-            'UAG',
-            textAlign: TextAlign.center,
-            style: AppTheme.heroTextStyle(fontSize: 58, color: Colors.white),
-          ),
-          Text(
-            'TRADERS HUB',
-            textAlign: TextAlign.center,
-            style: AppTheme.neonTextStyle(
-              fontSize: 16,
-              color: AppTheme.neonCyan,
-              isBold: true,
-            ).copyWith(letterSpacing: 4),
-          ),
-          SizedBox(height: MediaQuery.sizeOf(context).width < 700 ? 20 : 38),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 21,
-              height: 1.25,
-              fontWeight: FontWeight.w900,
+          _logoMark(size: compact ? 52 : 62),
+          SizedBox(width: compact ? 12 : 18),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 6,
+                  children: [
+                    Text(
+                      'UAG TRADERS HUB',
+                      style: AppTheme.neonTextStyle(
+                        fontSize: compact ? 12 : 14,
+                        color: AppTheme.neonCyan,
+                        isBold: true,
+                      ).copyWith(letterSpacing: 2.4),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.neonPink.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppTheme.neonPink.withValues(alpha: 0.36),
+                        ),
+                      ),
+                      child: Text(
+                        'STEP ${_stepIndex + 1} OF $_stepCount',
+                        style: const TextStyle(
+                          color: AppTheme.neonPink,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  title,
+                  maxLines: compact ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: compact ? 18 : 22,
+                    height: 1.12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  maxLines: compact ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontSize: compact ? 13 : 14,
+                    height: 1.25,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70, height: 1.35),
           ),
         ],
       ),
@@ -1424,25 +1478,12 @@ class _OnboardingBasicProfileScreenState
   }
 
   Widget _mainLayout(BoxConstraints constraints) {
-    final compact = constraints.maxWidth < 900;
-
-    final stepPanel = SizedBox(
-      height: compact ? null : 720,
-      child: _currentStep(),
-    );
-
-    if (compact) {
-      return Column(
-        children: [_leftHeroPanel(), const SizedBox(height: 18), stepPanel],
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(flex: 9, child: _leftHeroPanel()),
-        const SizedBox(width: 24),
-        Expanded(flex: 13, child: stepPanel),
+        _leftHeroPanel(),
+        SizedBox(height: constraints.maxWidth < 700 ? 14 : 18),
+        _currentStep(),
       ],
     );
   }
@@ -1494,10 +1535,7 @@ class _OnboardingBasicProfileScreenState
                             ],
                           ),
                           const SizedBox(height: 18),
-                          SizedBox(
-                            height: constraints.maxWidth < 900 ? null : 720,
-                            child: _mainLayout(constraints),
-                          ),
+                          _mainLayout(constraints),
                         ],
                       ),
                     ),
