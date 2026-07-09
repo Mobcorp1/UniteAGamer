@@ -31,6 +31,8 @@ class _OnboardingBasicProfileScreenState
   bool _isSaving = false;
   bool _isLoading = true;
   bool _acceptedTraderCode = false;
+  bool _acceptedTermsOfService = false;
+  bool _acceptedDataSecurity = false;
   bool _adminPreviewMode = false;
   late final PageController _stepController;
   int _stepIndex = 0;
@@ -343,6 +345,8 @@ class _OnboardingBasicProfileScreenState
                 'blueprintTrackerSkipped': blueprintSetupSkipped,
                 'nomadicTraderGate': true,
                 'traderCode': _acceptedTraderCode,
+                'termsOfService': _acceptedTermsOfService,
+                'dataSecurity': _acceptedDataSecurity,
               },
               'updatedAt': FieldValue.serverTimestamp(),
             },
@@ -377,9 +381,16 @@ class _OnboardingBasicProfileScreenState
       return;
     }
 
-    if (_stepIndex == 3 && !_acceptedTraderCode) {
+    if (_stepIndex == 4 &&
+        (!_acceptedTraderCode ||
+            !_acceptedTermsOfService ||
+            !_acceptedDataSecurity)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Accept the Trader Code to continue.')),
+        const SnackBar(
+          content: Text(
+            'Review and accept every command protocol to continue.',
+          ),
+        ),
       );
       return;
     }
@@ -565,24 +576,6 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
-  Widget _primaryButton(String label, {IconData? icon}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton.icon(
-        onPressed: _isSaving ? null : _next,
-        icon: _isSaving
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(icon ?? Icons.arrow_forward_rounded),
-        label: Text(_isSaving ? 'SAVING...' : label),
-      ),
-    );
-  }
-
   Widget _screenTitle(String title, {String? subtitle}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,130 +630,148 @@ class _OnboardingBasicProfileScreenState
 
   Widget _leftHeroPanel() {
     final title = switch (_stepIndex) {
-      0 => 'BUILD YOUR RAIDER PROFILE',
-      1 => 'SET YOUR PLAYER TYPE',
-      2 => 'SET YOUR WIPE STATE',
-      3 => 'CONFIGURE TRACKERS',
-      4 => 'TRUSTED TRADING',
-      _ => 'READY TO LAUNCH',
+      0 => 'IDENTITY CHECK',
+      1 => 'PLAYER TYPE',
+      2 => 'WIPE STATE',
+      3 => 'TRACKER SETUP',
+      4 => 'COMMAND PROTOCOLS',
+      _ => 'READY TO DEPLOY',
     };
     final subtitle = switch (_stepIndex) {
-      0 => 'Add the essentials first. Advanced setup can wait.',
-      1 => 'Set how you want to play and squad up.',
-      2 => 'Tell the app where your ARC progression currently stands.',
-      3 => 'Skip anything that does not matter yet and return later.',
-      4 => 'Accept the trust rules before entering the trading network.',
-      _ => 'Your ARC command centre is ready.',
+      0 =>
+        'Set the core details the hub needs before it builds your command profile.',
+      1 =>
+        'Choose how you play so squads, trading and missions can fit around you.',
+      2 => 'Tell the Command Centre where your wipe progress currently stands.',
+      3 =>
+        'Choose whether blueprint tracking should start now or wait until later.',
+      4 =>
+        'Review the trust, terms and data rules before entering the network.',
+      _ =>
+        'Your first command profile is ready. Finish onboarding to enter UAG.',
     };
     final compact = MediaQuery.sizeOf(context).width < 700;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 16 : 22,
-        vertical: compact ? 14 : 18,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.44),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.34),
-            blurRadius: 26,
-            offset: const Offset(0, 14),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 820),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 14 : 20,
+            vertical: compact ? 12 : 16,
           ),
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.08),
-            blurRadius: 22,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.50),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.42),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.34),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+              BoxShadow(
+                color: AppTheme.neonCyan.withValues(alpha: 0.18),
+                blurRadius: 30,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _logoMark(size: compact ? 52 : 62),
-          SizedBox(width: compact ? 12 : 18),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 10,
-                  runSpacing: 6,
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.center,
+            spacing: compact ? 12 : 16,
+            runSpacing: 10,
+            children: [
+              _logoMark(size: compact ? 42 : 52),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: compact ? 300 : 560),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: compact
+                      ? CrossAxisAlignment.center
+                      : CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'UAG TRADERS HUB',
-                      style: AppTheme.neonTextStyle(
-                        fontSize: compact ? 12 : 14,
-                        color: AppTheme.neonCyan,
-                        isBold: true,
-                      ).copyWith(letterSpacing: 2.4),
+                    Wrap(
+                      alignment: compact
+                          ? WrapAlignment.center
+                          : WrapAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 10,
+                      runSpacing: 6,
+                      children: [
+                        Text(
+                          'UAG DEPLOYMENT BRIEFING',
+                          style: AppTheme.neonTextStyle(
+                            fontSize: compact ? 11 : 13,
+                            color: AppTheme.neonCyan,
+                            isBold: true,
+                          ).copyWith(letterSpacing: 2.1),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.neonPink.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: AppTheme.neonPink.withValues(alpha: 0.42),
+                            ),
+                          ),
+                          child: Text(
+                            '${_stepIndex + 1} / $_stepCount',
+                            style: const TextStyle(
+                              color: AppTheme.neonPink,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                    const SizedBox(height: 6),
+                    Text(
+                      title,
+                      textAlign: compact ? TextAlign.center : TextAlign.start,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: compact ? 18 : 22,
+                        height: 1.08,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.7,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.neonPink.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: AppTheme.neonPink.withValues(alpha: 0.36),
-                        ),
-                      ),
-                      child: Text(
-                        'STEP ${_stepIndex + 1} OF $_stepCount',
-                        style: const TextStyle(
-                          color: AppTheme.neonPink,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.1,
-                        ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      subtitle,
+                      textAlign: compact ? TextAlign.center : TextAlign.start,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: compact ? 12.5 : 13.5,
+                        height: 1.26,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 7),
-                Text(
-                  title,
-                  maxLines: compact ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: compact ? 18 : 22,
-                    height: 1.12,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  maxLines: compact ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.72),
-                    fontSize: compact ? 13 : 14,
-                    height: 1.25,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _cardBarrel({required List<Widget> cards, double height = 206}) {
+  Widget _cardBarrel({required List<Widget> cards, double height = 168}) {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 700;
-    final fraction = compact ? 0.88 : 0.46;
-    final resolvedHeight = compact ? height : height + 12;
+    final fraction = compact ? 0.78 : 0.31;
+    final resolvedHeight = compact ? height + 8 : height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -773,7 +784,7 @@ class _OnboardingBasicProfileScreenState
             itemCount: cards.length,
             itemBuilder: (context, index) {
               return Padding(
-                padding: const EdgeInsets.only(right: 12, bottom: 8),
+                padding: const EdgeInsets.only(right: 10, bottom: 6),
                 child: cards[index],
               );
             },
@@ -784,8 +795,8 @@ class _OnboardingBasicProfileScreenState
             padding: const EdgeInsets.only(left: 2, top: 2),
             child: Text(
               compact
-                  ? 'Swipe cards to review every option'
-                  : 'Scroll cards sideways to review every option',
+                  ? 'Swipe to review options'
+                  : 'Scroll sideways to review options',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.48),
                 fontSize: 11,
@@ -797,82 +808,268 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+  bool get _identityNameComplete =>
+      _displayNameController.text.trim().isNotEmpty;
+  bool get _identityEmbarkComplete =>
+      _embarkIdController.text.trim().isNotEmpty;
+
+  Widget _missionInputCard({
+    required String title,
+    required String subtitle,
+    required Widget child,
+    required bool active,
+    required bool complete,
+  }) {
+    final accent = complete ? AppTheme.neonCyan : AppTheme.neonPink;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: active || complete
+              ? accent.withValues(alpha: active ? 0.92 : 0.50)
+              : Colors.white.withValues(alpha: 0.12),
+          width: active ? 1.7 : 1,
+        ),
+        boxShadow: active
+            ? [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.30),
+                  blurRadius: 28,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                complete ? Icons.check_circle_rounded : Icons.bolt_rounded,
+                color: active || complete ? accent : Colors.white30,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.58),
+              fontSize: 11.5,
+              height: 1.2,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _identityGrid(List<Widget> children) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 760 ? 2 : 1;
+        final spacing = constraints.maxWidth < 700 ? 12.0 : 14.0;
+        final itemWidth = columns == 2
+            ? (constraints.maxWidth - spacing) / 2
+            : constraints.maxWidth;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: children
+              .map((child) => SizedBox(width: itemWidth, child: child))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _actionFooter() {
+    final canGoBack = _stepIndex > 0 && !_isSaving;
+    final isLast = _stepIndex == _stepCount - 1;
+    final label = _isSaving
+        ? 'SAVING...'
+        : isLast
+        ? (_adminPreviewMode ? 'CLOSE PREVIEW' : 'LAUNCH COMMAND CENTRE')
+        : _stepIndex == 4
+        ? 'ACCEPT AND CONTINUE'
+        : 'CONTINUE';
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 10),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 118,
+                height: 46,
+                child: OutlinedButton.icon(
+                  onPressed: canGoBack ? () => _back() : null,
+                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                  label: const Text('BACK'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '${_stepIndex + 1} / $_stepCount',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.58),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 190,
+                height: 46,
+                child: ElevatedButton.icon(
+                  onPressed: _isSaving ? null : _next,
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 17,
+                          height: 17,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          isLast
+                              ? Icons.rocket_launch_rounded
+                              : Icons.arrow_forward_rounded,
+                          size: 18,
+                        ),
+                  label: Text(label),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _profileStep() {
+    final nameComplete = _identityNameComplete;
+    final embarkComplete = _identityEmbarkComplete;
     return _contentShell(
       child: Form(
         key: _formKey,
+        onChanged: () => setState(() {}),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _screenTitle(
-              'Step 1 of 6 - Raider Profile',
+              'Identity',
               subtitle:
-                  'Add the essentials. Tracker setup now adapts around your current wipe state.',
+                  'Start with the basics. Keep this compact so you can get into the Command Centre quickly.',
             ),
-            const SizedBox(height: 22),
-            TextFormField(
-              controller: _displayNameController,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                isBold: true,
+            const SizedBox(height: 18),
+            _identityGrid([
+              _missionInputCard(
+                title: 'Display name',
+                subtitle: 'Shown across squads, trades and profiles.',
+                active: !nameComplete,
+                complete: nameComplete,
+                child: TextFormField(
+                  controller: _displayNameController,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 15,
+                    color: Colors.white,
+                    isBold: true,
+                  ),
+                  decoration: _input('Display Name'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Enter your display name'
+                      : null,
+                ),
               ),
-              decoration: _input('Display Name'),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Enter your display name'
-                  : null,
-            ),
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: _embarkIdController,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                isBold: true,
+              _missionInputCard(
+                title: 'Embark ID',
+                subtitle: 'Used to help players find you outside the app.',
+                active: nameComplete && !embarkComplete,
+                complete: embarkComplete,
+                child: TextFormField(
+                  controller: _embarkIdController,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 15,
+                    color: Colors.white,
+                    isBold: true,
+                  ),
+                  decoration: _input('Embark ID'),
+                ),
               ),
-              decoration: _input('Embark ID'),
-            ),
-            const SizedBox(height: 14),
-            _buildDropdown(
-              label: 'Country',
-              value: _selectedCountry,
-              items: _countries,
-              onChanged: (v) {
-                if (v != null) setState(() => _selectedCountry = v);
-              },
-            ),
-            const SizedBox(height: 14),
-            _buildDropdown(
-              label: 'Preferred Platform',
-              value: _selectedPlatform,
-              items: _platforms,
-              onChanged: (v) {
-                if (v != null) setState(() => _selectedPlatform = v);
-              },
-            ),
-            const SizedBox(height: 14),
-            _buildDropdown(
-              label: 'Time Zone',
-              value: _selectedTimeZone,
-              items: _timeZones,
-              onChanged: (v) {
-                if (v != null) setState(() => _selectedTimeZone = v);
-              },
-            ),
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: _bioController,
-              minLines: 2,
-              maxLines: 3,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 15,
-                color: Colors.white,
-                isBold: true,
+              _missionInputCard(
+                title: 'Platform',
+                subtitle: 'Where you usually raid from.',
+                active: nameComplete && embarkComplete,
+                complete: true,
+                child: _buildDropdown(
+                  label: 'Preferred Platform',
+                  value: _selectedPlatform,
+                  items: _platforms,
+                  onChanged: (v) {
+                    if (v != null) setState(() => _selectedPlatform = v);
+                  },
+                ),
               ),
-              decoration: _input('Short Bio (optional)'),
+              _missionInputCard(
+                title: 'Region',
+                subtitle: 'Used for squad fit and better timing later.',
+                active: false,
+                complete: true,
+                child: _buildDropdown(
+                  label: 'Country',
+                  value: _selectedCountry,
+                  items: _countries,
+                  onChanged: (v) {
+                    if (v != null) setState(() => _selectedCountry = v);
+                  },
+                ),
+              ),
+            ]),
+            const SizedBox(height: 14),
+            _missionInputCard(
+              title: 'Optional bio',
+              subtitle:
+                  'A short line for your profile. This can be finished later.',
+              active: false,
+              complete: _bioController.text.trim().isNotEmpty,
+              child: TextFormField(
+                controller: _bioController,
+                minLines: 2,
+                maxLines: 3,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                  isBold: true,
+                ),
+                decoration: _input('Short Bio (optional)'),
+              ),
             ),
-            const SizedBox(height: 22),
-            _primaryButton('NEXT'),
           ],
         ),
       ),
@@ -885,13 +1082,15 @@ class _OnboardingBasicProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Step 2 of 6 - Player Type',
+            'Player Type',
             subtitle:
-                'Tell the hub what kind of raider you are so matchmaking, missions and recommendations start from the right place.',
+                'Choose the identity, squad goal and current energy that best fit this session.',
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 16),
+          Text('ARCHETYPE', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
           _cardBarrel(
-            height: 204,
+            height: 154,
             cards: _playStyles
                 .map(
                   (style) => _choiceCard(
@@ -904,9 +1103,11 @@ class _OnboardingBasicProfileScreenState
                 )
                 .toList(),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
+          Text('TODAY\'S GOAL', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
           _cardBarrel(
-            height: 188,
+            height: 154,
             cards: _squadIntents
                 .map(
                   (intent) => _choiceCard(
@@ -919,9 +1120,11 @@ class _OnboardingBasicProfileScreenState
                 )
                 .toList(),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
+          Text('SOCIAL ENERGY', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
           _cardBarrel(
-            height: 188,
+            height: 154,
             cards: _socialEnergyOptions
                 .map(
                   (energy) => _choiceCard(
@@ -934,10 +1137,17 @@ class _OnboardingBasicProfileScreenState
                 )
                 .toList(),
           ),
-          const SizedBox(height: 16),
-          _primaryButton('NEXT'),
         ],
       ),
+    );
+  }
+
+  TextStyle _sectionLabelStyle() {
+    return TextStyle(
+      color: AppTheme.neonCyan.withValues(alpha: 0.88),
+      fontSize: 12,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 1.4,
     );
   }
 
@@ -1072,8 +1282,6 @@ class _OnboardingBasicProfileScreenState
                 : Icons.lock_outline_rounded,
             accent: _isNomadicUnlocked ? AppTheme.neonCyan : Colors.amberAccent,
           ),
-          const SizedBox(height: 16),
-          _primaryButton('NEXT'),
         ],
       ),
     );
@@ -1140,8 +1348,6 @@ class _OnboardingBasicProfileScreenState
                 ? AppTheme.neonCyan
                 : Colors.amberAccent,
           ),
-          const SizedBox(height: 16),
-          _primaryButton('NEXT'),
         ],
       ),
     );
@@ -1153,61 +1359,137 @@ class _OnboardingBasicProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Step 5 of 6 - Trader Code',
+            'Command Protocols',
             subtitle:
-                'UAG operates on trust. Accept the basics before entering the hub.',
+                'Review the trust, terms and data basics. All three must be acknowledged before deployment.',
           ),
-          const SizedBox(height: 22),
-          _statusPanel(
-            title: 'Privacy, fair use and beta policy',
-            body:
-                'Your profile setup is used to personalise Command Centre, matchmaking and trading recommendations. UAG does not need your password or private Embark account access.',
-            icon: Icons.policy_rounded,
-            accent: AppTheme.neonCyan,
-          ),
-          const SizedBox(height: 16),
-          _cardBarrel(
-            height: 184,
-            cards: [
-              _codeCard(
-                Icons.shield_outlined,
-                'Be respectful and fair',
-                'Treat all traders with respect.',
-              ),
-              _codeCard(
-                Icons.gpp_bad_outlined,
-                'No scamming or exploits',
-                'Zero tolerance for cheating.',
-              ),
-              _codeCard(
-                Icons.balance_rounded,
-                'Honour your trades',
-                'Follow through on commitments.',
-              ),
-              _codeCard(
-                Icons.groups_2_outlined,
-                'Help the community grow',
-                'Share intel and support others.',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: _acceptedTraderCode,
-            activeColor: AppTheme.neonCyan,
-            checkColor: Colors.black,
-            onChanged: (value) {
-              setState(() => _acceptedTraderCode = value ?? false);
-            },
-            title: const Text(
-              'I agree to the UAG Trader Code, Terms of Service and Privacy Policy',
-              style: TextStyle(color: Colors.white, fontSize: 14),
+          const SizedBox(height: 18),
+          _identityGrid([
+            _policyCard(
+              icon: Icons.shield_outlined,
+              title: 'Trader Code of Conduct',
+              body:
+                  'Respect other players, honour agreed trades and keep the community fair.',
+              value: _acceptedTraderCode,
+              onChanged: (value) => setState(() => _acceptedTraderCode = value),
             ),
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
-          _primaryButton('I ACCEPT'),
+            _policyCard(
+              icon: Icons.description_outlined,
+              title: 'Terms of Service',
+              body:
+                  'Use the hub responsibly. Do not abuse beta tools, exploits or trading systems.',
+              value: _acceptedTermsOfService,
+              onChanged: (value) =>
+                  setState(() => _acceptedTermsOfService = value),
+            ),
+            _policyCard(
+              icon: Icons.lock_person_outlined,
+              title: 'Data & Security',
+              body:
+                  'UAG only needs profile and preference data for matching, recommendations and trading.',
+              value: _acceptedDataSecurity,
+              onChanged: (value) =>
+                  setState(() => _acceptedDataSecurity = value),
+            ),
+            _statusPanel(
+              title: 'No private account access',
+              body:
+                  'Never share passwords or private Embark login details. Embark ID is only used so players can find you.',
+              icon: Icons.gpp_good_outlined,
+              accent: AppTheme.neonCyan,
+            ),
+          ]),
         ],
+      ),
+    );
+  }
+
+  Widget _policyCard({
+    required IconData icon,
+    required String title,
+    required String body,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: value
+              ? AppTheme.neonCyan.withValues(alpha: 0.11)
+              : Colors.black.withValues(alpha: 0.26),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: value
+                ? AppTheme.neonCyan
+                : Colors.white.withValues(alpha: 0.14),
+            width: value ? 1.5 : 1,
+          ),
+          boxShadow: value
+              ? [
+                  BoxShadow(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                    blurRadius: 24,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: value ? AppTheme.neonCyan : Colors.white60),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    body,
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      height: 1.25,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Row(
+                    children: [
+                      Icon(
+                        value
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        color: value ? AppTheme.neonCyan : Colors.white30,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        value ? 'ACKNOWLEDGED' : 'TAP TO ACKNOWLEDGE',
+                        style: TextStyle(
+                          color: value ? AppTheme.neonCyan : Colors.white38,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.9,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1264,11 +1546,6 @@ class _OnboardingBasicProfileScreenState
             height: 150,
             cards: summary.map((line) => _summaryCard(line)).toList(),
           ),
-          const SizedBox(height: 18),
-          _primaryButton(
-            _adminPreviewMode ? 'CLOSE PREVIEW' : 'LAUNCH COMMAND CENTRE',
-            icon: Icons.rocket_launch_rounded,
-          ),
         ],
       ),
     );
@@ -1286,11 +1563,11 @@ class _OnboardingBasicProfileScreenState
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
           color: selected
               ? AppTheme.neonCyan.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.24),
+              : Colors.black.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
@@ -1298,42 +1575,60 @@ class _OnboardingBasicProfileScreenState
                 : Colors.white.withValues(alpha: 0.14),
             width: selected ? 1.5 : 1,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.18),
+                    blurRadius: 22,
+                  ),
+                ]
+              : null,
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: selected ? AppTheme.neonCyan : Colors.white60),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: selected ? AppTheme.neonCyan : Colors.white60,
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
                     title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: selected ? Colors.white : Colors.white70,
                       fontWeight: FontWeight.w900,
-                      fontSize: 15,
+                      fontSize: 13.5,
+                      height: 1.08,
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    body,
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      height: 1.3,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: selected ? AppTheme.neonCyan : Colors.white30,
+                  size: 20,
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Icon(
-              selected
-                  ? Icons.check_circle_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: selected ? AppTheme.neonCyan : Colors.white30,
+            const SizedBox(height: 8),
+            Expanded(
+              child: Text(
+                body,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  height: 1.22,
+                  fontSize: 12.2,
+                ),
+              ),
             ),
           ],
         ),
@@ -1379,49 +1674,6 @@ class _OnboardingBasicProfileScreenState
                     color: Colors.white70,
                     fontSize: 13,
                     height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _codeCard(IconData icon, String title, String body) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: AppTheme.neonCyan, size: 25),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 13,
-                    height: 1.25,
                   ),
                 ),
               ],
@@ -1484,6 +1736,7 @@ class _OnboardingBasicProfileScreenState
         _leftHeroPanel(),
         SizedBox(height: constraints.maxWidth < 700 ? 14 : 18),
         _currentStep(),
+        _actionFooter(),
       ],
     );
   }
@@ -1514,7 +1767,7 @@ class _OnboardingBasicProfileScreenState
                   padding: EdgeInsets.all(constraints.maxWidth < 700 ? 14 : 24),
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1260),
+                      constraints: const BoxConstraints(maxWidth: 960),
                       child: Column(
                         children: [
                           Row(
