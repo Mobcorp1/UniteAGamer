@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -36,9 +37,7 @@ class _OnboardingBasicProfileScreenState
   bool _hasAppliedRouteArguments = false;
   bool _reachedRaiderLevel25 = false;
 
-  final Set<String> _selectedArchetypes = {'Balanced Raider'};
-  final Set<String> _selectedPlayStyles = {'PvE defensive'};
-  String _selectedCommunicationStyle = 'Flexible';
+  String _selectedPlayStyle = 'Balanced';
   String _selectedSquadIntent = 'Flexible';
   String _selectedSocialEnergy = 'Depends on the day';
 
@@ -71,32 +70,14 @@ class _OnboardingBasicProfileScreenState
 
   static const List<String> _platforms = ['PC', 'PlayStation', 'Xbox', 'Steam'];
 
-  static const List<String> _archetypes = [
-    'Balanced Raider',
-    'Quest-driven Raider',
-    'Blueprint Grinder',
-    'Helper / Support Player',
-    'Trader / Resource Runner',
-    'PvP Hunter',
-    'Casual Squad Player',
-  ];
-
   static const List<String> _playStyles = [
-    'PvE defensive',
-    'PvE aggressive',
-    'PvP focused',
-    'Quest-focused',
-    'Blueprint farming',
-    'Resource running',
+    'Balanced',
+    'Quest focused',
+    'Blueprint grinder',
     'Squad support',
-  ];
-
-  static const List<String> _communicationStyles = [
-    'Flexible',
-    'Mic preferred',
-    'Ping only',
-    'Quiet / low-comms',
-    'Chatty / social',
+    'PvP hunter',
+    'Loot runner',
+    'Casual explorer',
   ];
 
   static const List<String> _squadIntents = [
@@ -200,20 +181,6 @@ class _OnboardingBasicProfileScreenState
       return fallback;
     }
 
-    Set<String> pickSet(
-      dynamic value,
-      List<String> allowed,
-      Set<String> fallback,
-    ) {
-      final values = value is Iterable
-          ? value.map((item) => item.toString().trim())
-          : value is String && value.trim().isNotEmpty
-          ? <String>[value.trim()]
-          : const Iterable<String>.empty();
-      final filtered = values.where(allowed.contains).toSet();
-      return filtered.isEmpty ? fallback : filtered;
-    }
-
     _displayNameController.text = pickString(
       basicProfile['displayName'],
       pickString(data['displayName'], ''),
@@ -241,30 +208,9 @@ class _OnboardingBasicProfileScreenState
     if (_platforms.contains(platformValue)) _selectedPlatform = platformValue;
     if (_timeZones.contains(timeZoneValue)) _selectedTimeZone = timeZoneValue;
 
-    _selectedArchetypes
-      ..clear()
-      ..addAll(
-        pickSet(
-          basicProfile['archetypes'] ?? traderProfile['archetypes'],
-          _archetypes,
-          {'Balanced Raider'},
-        ),
-      );
-    _selectedPlayStyles
-      ..clear()
-      ..addAll(
-        pickSet(
-          basicProfile['playStyles'] ??
-              traderProfile['playStyles'] ??
-              basicProfile['playStyle'] ??
-              traderProfile['playStyle'],
-          _playStyles,
-          {'PvE defensive'},
-        ),
-      );
-    final communicationValue = pickString(
-      basicProfile['communicationStyle'],
-      pickString(traderProfile['communicationStyle'], 'Flexible'),
+    final playStyleValue = pickString(
+      basicProfile['playStyle'],
+      pickString(traderProfile['playStyle'], 'Balanced'),
     );
     final squadIntentValue = pickString(
       basicProfile['squadIntent'],
@@ -274,9 +220,8 @@ class _OnboardingBasicProfileScreenState
       basicProfile['socialEnergy'],
       pickString(traderProfile['socialEnergy'], 'Depends on the day'),
     );
-    if (_communicationStyles.contains(communicationValue)) {
-      _selectedCommunicationStyle = communicationValue;
-    }
+    if (_playStyles.contains(playStyleValue))
+      _selectedPlayStyle = playStyleValue;
     if (_squadIntents.contains(squadIntentValue)) {
       _selectedSquadIntent = squadIntentValue;
     }
@@ -333,8 +278,6 @@ class _OnboardingBasicProfileScreenState
     setState(() => _isSaving = true);
 
     final displayName = _displayNameController.text.trim();
-    final archetypes = _selectedArchetypes.toList(growable: false);
-    final playStyles = _selectedPlayStyles.toList(growable: false);
     final nomadicUnlocked = _isNomadicUnlocked;
     final raiderLevel = nomadicUnlocked ? 25 : 0;
     final blueprintSetupSkipped =
@@ -357,10 +300,7 @@ class _OnboardingBasicProfileScreenState
               'platform': _selectedPlatform,
               'timeZone': _selectedTimeZone,
               'platforms': [_selectedPlatform],
-              'archetypes': archetypes,
-              'playStyles': playStyles,
-              'playStyle': playStyles.isNotEmpty ? playStyles.first : '',
-              'communicationStyle': _selectedCommunicationStyle,
+              'playStyle': _selectedPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
             },
@@ -372,10 +312,7 @@ class _OnboardingBasicProfileScreenState
               'platform': _selectedPlatform,
               'timeZone': _selectedTimeZone,
               'embarkId': _embarkIdController.text.trim(),
-              'archetypes': archetypes,
-              'playStyles': playStyles,
-              'playStyle': playStyles.isNotEmpty ? playStyles.first : '',
-              'communicationStyle': _selectedCommunicationStyle,
+              'playStyle': _selectedPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
               'raiderLevel': raiderLevel,
@@ -386,10 +323,7 @@ class _OnboardingBasicProfileScreenState
               'raiderLevel': raiderLevel,
               'nomadicTraderUnlocked': nomadicUnlocked,
               'embarkId': _embarkIdController.text.trim(),
-              'archetypes': archetypes,
-              'playStyles': playStyles,
-              'playStyle': playStyles.isNotEmpty ? playStyles.first : '',
-              'communicationStyle': _selectedCommunicationStyle,
+              'playStyle': _selectedPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
               'nomadicTraderLockedReason': nomadicUnlocked
@@ -457,10 +391,9 @@ class _OnboardingBasicProfileScreenState
       }
       await _saveOnboarding(complete: true);
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        '/trading-hub/arc-raiders/profile',
-        (_) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
       return;
     }
 
@@ -898,53 +831,54 @@ class _OnboardingBasicProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _screenTitle(
-            'Step 2 of 6 - Player Identity',
+            'Step 2 of 6 - Player Type',
             subtitle:
-                'Pick every archetype, communication style and play style that fits. These carry straight into Profile & Reputation.',
+                'Tell the hub what kind of raider you are so matchmaking, missions and recommendations start from the right place.',
           ),
-          const SizedBox(height: 18),
-          _miniSectionLabel('Player archetypes'),
-          const SizedBox(height: 10),
-          _multiSelectWrap(
-            items: _archetypes,
-            selected: _selectedArchetypes,
-            icon: Icons.workspace_premium_rounded,
+          const SizedBox(height: 22),
+          _cardBarrel(
+            height: 204,
+            cards: _playStyles
+                .map(
+                  (style) => _choiceCard(
+                    title: style,
+                    body: _playStyleDescription(style),
+                    icon: Icons.person_pin_circle_rounded,
+                    selected: _selectedPlayStyle == style,
+                    onTap: () => setState(() => _selectedPlayStyle = style),
+                  ),
+                )
+                .toList(),
           ),
-          const SizedBox(height: 18),
-          _miniSectionLabel('Play style'),
-          const SizedBox(height: 10),
-          _multiSelectWrap(
-            items: _playStyles,
-            selected: _selectedPlayStyles,
-            icon: Icons.track_changes_rounded,
+          const SizedBox(height: 14),
+          _cardBarrel(
+            height: 188,
+            cards: _squadIntents
+                .map(
+                  (intent) => _choiceCard(
+                    title: intent,
+                    body: _squadIntentDescription(intent),
+                    icon: Icons.groups_rounded,
+                    selected: _selectedSquadIntent == intent,
+                    onTap: () => setState(() => _selectedSquadIntent = intent),
+                  ),
+                )
+                .toList(),
           ),
-          const SizedBox(height: 18),
-          _miniSectionLabel('Communication style'),
-          const SizedBox(height: 10),
-          _singleSelectWrap(
-            items: _communicationStyles,
-            selected: _selectedCommunicationStyle,
-            icon: Icons.record_voice_over_rounded,
-            onChanged: (value) =>
-                setState(() => _selectedCommunicationStyle = value),
-          ),
-          const SizedBox(height: 18),
-          _miniSectionLabel('Squad intent'),
-          const SizedBox(height: 10),
-          _singleSelectWrap(
-            items: _squadIntents,
-            selected: _selectedSquadIntent,
-            icon: Icons.groups_rounded,
-            onChanged: (value) => setState(() => _selectedSquadIntent = value),
-          ),
-          const SizedBox(height: 18),
-          _miniSectionLabel('Today\'s energy'),
-          const SizedBox(height: 10),
-          _singleSelectWrap(
-            items: _socialEnergyOptions,
-            selected: _selectedSocialEnergy,
-            icon: Icons.mood_rounded,
-            onChanged: (value) => setState(() => _selectedSocialEnergy = value),
+          const SizedBox(height: 14),
+          _cardBarrel(
+            height: 188,
+            cards: _socialEnergyOptions
+                .map(
+                  (energy) => _choiceCard(
+                    title: energy,
+                    body: _socialEnergyDescription(energy),
+                    icon: Icons.mood_rounded,
+                    selected: _selectedSocialEnergy == energy,
+                    onTap: () => setState(() => _selectedSocialEnergy = energy),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: 16),
           _primaryButton('NEXT'),
@@ -953,116 +887,19 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
-  Widget _miniSectionLabel(String label) {
-    return Text(
-      label.toUpperCase(),
-      style: AppTheme.bodyTextStyle(
-        fontSize: 12,
-        color: AppTheme.neonCyan,
-        isBold: true,
-      ),
-    );
-  }
-
-  Widget _multiSelectWrap({
-    required List<String> items,
-    required Set<String> selected,
-    required IconData icon,
-  }) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: items.map((item) {
-        final active = selected.contains(item);
-        return _selectionPill(
-          label: item,
-          icon: icon,
-          selected: active,
-          onTap: () => setState(() {
-            if (active) {
-              if (selected.length > 1) selected.remove(item);
-            } else {
-              selected.add(item);
-            }
-          }),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _singleSelectWrap({
-    required List<String> items,
-    required String selected,
-    required IconData icon,
-    required ValueChanged<String> onChanged,
-  }) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: items.map((item) {
-        return _selectionPill(
-          label: item,
-          icon: icon,
-          selected: selected == item,
-          onTap: () => onChanged(item),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _selectionPill({
-    required String label,
-    required IconData icon,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    final accent = selected ? AppTheme.neonCyan : Colors.white38;
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppTheme.neonCyan.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.24),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: accent.withValues(alpha: selected ? 0.6 : 0.28),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: accent, size: 16),
-            const SizedBox(width: 7),
-            Text(
-              label,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: Colors.white,
-                isBold: selected,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   String _playStyleDescription(String style) => switch (style) {
-    'Quest-focused' => 'Prioritise quests, unlocks and guided progression.',
-    'Blueprint farming' =>
+    'Quest focused' => 'Prioritise quests, unlocks and guided progression.',
+    'Blueprint grinder' =>
       'Prioritise blueprint collection, duplicates and trade value.',
     'Squad support' =>
       'Prioritise team utility, survival and helping the squad.',
-    'PvP focused' =>
+    'PvP hunter' =>
       'Prioritise combat readiness, ambushes and confident raids.',
-    'Resource running' =>
+    'Loot runner' =>
       'Prioritise stash building, materials and safe extraction routes.',
-    'PvE aggressive' =>
-      'Mostly PvE, but ready to push back hard when threatened.',
-    _ => 'Calmer PvE routes, survival, quests and controlled fights.',
+    'Casual explorer' =>
+      'Prioritise low-pressure play, discovery and flexible goals.',
+    _ => 'Blend quests, blueprints, loot, trading and squad play.',
   };
 
   String _squadIntentDescription(String intent) => switch (intent) {
