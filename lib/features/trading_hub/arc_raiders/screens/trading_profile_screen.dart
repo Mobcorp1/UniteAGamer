@@ -202,120 +202,466 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               );
             }
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.spaceM,
-                AppTheme.spaceS,
-                AppTheme.spaceM,
-                AppTheme.spaceL,
-              ),
-              children: [
-                StreamBuilder<ArcOperationsUserState>(
-                  stream: _operationsRepository.watchUserState(),
-                  builder: (context, operationsSnapshot) {
-                    final operationsState =
-                        operationsSnapshot.data ?? ArcOperationsUserState.empty;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+            return StreamBuilder<ArcOperationsUserState>(
+              stream: _operationsRepository.watchUserState(),
+              builder: (context, operationsSnapshot) {
+                final operationsState =
+                    operationsSnapshot.data ?? ArcOperationsUserState.empty;
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final contentWidth = constraints.maxWidth > 1440
+                        ? 1360.0
+                        : constraints.maxWidth;
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.spaceM,
+                        AppTheme.spaceS,
+                        AppTheme.spaceM,
+                        AppTheme.spaceL,
+                      ),
                       children: [
-                        _profileCommandHero(profile, operationsState),
-                        const SizedBox(height: AppTheme.spaceM),
-                        _reputationCommandPanel(profile, operationsState),
-                        const SizedBox(height: AppTheme.spaceM),
-                        _rewardShowcasePanel(operationsState),
-                        const SizedBox(height: AppTheme.spaceM),
-                        _communityContributionPanel(operationsState),
-                        const SizedBox(height: AppTheme.spaceM),
-                        _guardianCommunitySystemPanel(profile, operationsState),
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(
+                            width: contentWidth,
+                            child: _profileDashboard(
+                              profile,
+                              operationsState,
+                              constraints.maxWidth,
+                            ),
+                          ),
+                        ),
                       ],
                     );
                   },
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                _summaryCard(profile),
-                const SizedBox(height: AppTheme.spaceM),
-                _archetypeSection(),
-                const SizedBox(height: AppTheme.spaceM),
-                _badgeGallery(),
-                const SizedBox(height: AppTheme.spaceM),
-                _loadoutPreview(),
-                const SizedBox(height: AppTheme.spaceM),
-                _detailCard(
-                  title: 'Public Profile Details',
-                  children: [
-                    _detailRow('UAG ID', profile.uagId),
-                    _detailRow('UAG Name', profile.uagName),
-                    _detailRow('Region', profile.region),
-                    _detailRow('Preferred Platform', profile.platform),
-                    _detailRow(
-                      'Embark ID',
-                      profile.embarkId.isEmpty
-                          ? 'Hidden until trade confirmed'
-                          : profile.embarkId,
-                    ),
-                    _detailRow('Timezone', profile.timezone),
-                    _detailRow(
-                      'Subscription Status',
-                      profile.subscriptionStatus,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                _actionTile(
-                  icon: Icons.edit_outlined,
-                  title: 'Edit Trader Profile',
-                  subtitle:
-                      'Update your UAG identity, platform, region and visibility.',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ArcProfileEditScreen(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                _actionTile(
-                  icon: Icons.schedule_outlined,
-                  title: 'Availability',
-                  subtitle:
-                      'Set a weekly, rotation or flexible trade schedule.',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ArcAvailabilityScreen(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                _actionTile(
-                  icon: Icons.beach_access_outlined,
-                  title: 'Away Mode',
-                  subtitle:
-                      'Hide yourself from search while on holiday or away.',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ArcAwayScreen()),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppTheme.spaceM,
-                    AppTheme.spaceS,
-                    AppTheme.spaceM,
-                    AppTheme.spaceL,
-                  ),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: AppTheme.neonPink.withValues(alpha: 0.16),
-                  ),
-                  child: const Text(
-                    'Embark ID stays private until a trade is confirmed. Public profile surfaces reputation, archetypes, badges and favourite loadout only.',
-                    style: TextStyle(color: Colors.white70, height: 1.4),
-                  ),
-                ),
-              ],
+                );
+              },
             );
           },
         ),
       ),
     );
+  }
+
+  Widget _profileDashboard(
+    ArcTraderProfile profile,
+    ArcOperationsUserState operationsState,
+    double viewportWidth,
+  ) {
+    final isWide = viewportWidth >= 1040;
+    final gap = isWide ? AppTheme.spaceM : AppTheme.spaceS;
+
+    final identityColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _profileCommandHero(profile, operationsState),
+        SizedBox(height: gap),
+        _identityProgressPanel(profile),
+        SizedBox(height: gap),
+        _raiderIdentityPanel(profile),
+        SizedBox(height: gap),
+        _sessionProfilePanel(profile),
+        SizedBox(height: gap),
+        _publicDetailsPanel(profile),
+        SizedBox(height: gap),
+        _profileActionsPanel(),
+      ],
+    );
+
+    final reputationColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _reputationCommandPanel(profile, operationsState),
+        SizedBox(height: gap),
+        _rewardShowcasePanel(operationsState),
+        SizedBox(height: gap),
+        _badgeGallery(),
+        SizedBox(height: gap),
+        _communityContributionPanel(operationsState),
+        SizedBox(height: gap),
+        _guardianCommunitySystemPanel(profile, operationsState),
+        SizedBox(height: gap),
+        _loadoutPreview(),
+      ],
+    );
+
+    if (!isWide) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          identityColumn,
+          SizedBox(height: gap),
+          reputationColumn,
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 11, child: identityColumn),
+        SizedBox(width: gap),
+        Expanded(flex: 9, child: reputationColumn),
+      ],
+    );
+  }
+
+  Widget _identityProgressPanel(ArcTraderProfile profile) {
+    final sections = <({String label, bool complete})>[
+      (label: 'Identity', complete: profile.hasCoreDetails),
+      (label: 'Archetypes', complete: profile.archetypes.isNotEmpty),
+      (label: 'Playstyle', complete: profile.playStyles.isNotEmpty),
+      (
+        label: 'Communication',
+        complete: profile.communicationStyle.trim().isNotEmpty,
+      ),
+      (
+        label: 'Session intent',
+        complete: profile.squadIntent.trim().isNotEmpty,
+      ),
+      (label: 'Availability', complete: profile.timezone.trim().isNotEmpty),
+    ];
+    final completed = sections.where((section) => section.complete).length;
+    final progress = completed / sections.length;
+
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Raider Identity',
+      icon: Icons.radar_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 58,
+                height: 58,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 6,
+                      backgroundColor: Colors.white10,
+                      color: AppTheme.neonCyan,
+                    ),
+                    Text(
+                      '${(progress * 100).round()}%',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppTheme.spaceM),
+              Expanded(
+                child: Text(
+                  completed == sections.length
+                      ? 'Your identity is match-ready.'
+                      : '${sections.length - completed} profile areas still need attention.',
+                  style: const TextStyle(color: Colors.white70, height: 1.35),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: sections
+                .map(
+                  (section) => _profileChip(
+                    icon: section.complete
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    label: section.label,
+                    accent: section.complete
+                        ? AppTheme.neonCyan
+                        : Colors.white54,
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _raiderIdentityPanel(ArcTraderProfile profile) {
+    return _profilePanel(
+      accent: AppTheme.neonPink,
+      title: 'Playstyle & Archetypes',
+      icon: Icons.groups_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _identityLabel('Archetypes'),
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: profile.archetypes
+                .map(
+                  (value) => _archetypeBadge(
+                    icon: _archetypeIcon(value),
+                    label: value,
+                    copy: _archetypeCopy(value),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          _identityLabel('Playstyle'),
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: profile.playStyles
+                .map(
+                  (value) => _profileChip(
+                    icon: _playStyleIcon(value),
+                    label: value,
+                    accent: AppTheme.neonCyan,
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sessionProfilePanel(ArcTraderProfile profile) {
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Match Readiness',
+      icon: Icons.hub_rounded,
+      child: Column(
+        children: [
+          _sessionStatusTile(
+            icon: Icons.record_voice_over_rounded,
+            title: 'Communication',
+            value: profile.communicationStyle,
+            copy: _communicationCopy(profile.communicationStyle),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          _sessionStatusTile(
+            icon: Icons.flag_rounded,
+            title: "Today's goal",
+            value: profile.squadIntent,
+            copy: _squadIntentCopy(profile.squadIntent),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          _sessionStatusTile(
+            icon: Icons.bolt_rounded,
+            title: 'Social energy',
+            value: profile.socialEnergy,
+            copy: _socialEnergyCopy(profile.socialEnergy),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sessionStatusTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String copy,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppTheme.neonCyan, size: 20),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  copy,
+                  style: const TextStyle(color: Colors.white60, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _publicDetailsPanel(ArcTraderProfile profile) {
+    return _detailCard(
+      title: 'Public Profile Details',
+      children: [
+        _detailRow('UAG ID', profile.uagId),
+        _detailRow('UAG Name', profile.uagName),
+        _detailRow('Region', profile.region),
+        _detailRow('Preferred Platform', profile.platform),
+        _detailRow(
+          'Embark ID',
+          profile.embarkId.isEmpty
+              ? 'Private until trade confirmed'
+              : profile.embarkId,
+        ),
+        _detailRow('Timezone', profile.timezone),
+        _detailRow(
+          'Visibility',
+          profile.visibleInSearch ? 'Public' : 'Private',
+        ),
+      ],
+    );
+  }
+
+  Widget _profileActionsPanel() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _actionTile(
+          icon: Icons.edit_outlined,
+          title: 'Edit Raider Identity',
+          subtitle: 'Update identity, playstyle, communication and visibility.',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ArcProfileEditScreen()),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        _actionTile(
+          icon: Icons.schedule_outlined,
+          title: 'Availability',
+          subtitle: 'Set weekly, rotation or flexible squad availability.',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ArcAvailabilityScreen()),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spaceS),
+        _actionTile(
+          icon: Icons.beach_access_outlined,
+          title: 'Away Mode',
+          subtitle: 'Temporarily hide from squad and trade discovery.',
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ArcAwayScreen())),
+        ),
+      ],
+    );
+  }
+
+  Widget _identityLabel(String value) {
+    return Text(
+      value.toUpperCase(),
+      style: const TextStyle(
+        color: Colors.white54,
+        fontSize: 10,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 1,
+      ),
+    );
+  }
+
+  IconData _archetypeIcon(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('quest')) return Icons.assignment_turned_in_rounded;
+    if (normalized.contains('blueprint') || normalized.contains('collector')) {
+      return Icons.grid_view_rounded;
+    }
+    if (normalized.contains('trade')) return Icons.handshake_rounded;
+    if (normalized.contains('help') || normalized.contains('mentor')) {
+      return Icons.volunteer_activism_rounded;
+    }
+    if (normalized.contains('leader')) return Icons.flag_rounded;
+    if (normalized.contains('pvp')) return Icons.local_fire_department_rounded;
+    if (normalized.contains('support')) return Icons.health_and_safety_rounded;
+    return Icons.explore_rounded;
+  }
+
+  IconData _playStyleIcon(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('pvp')) return Icons.gps_fixed_rounded;
+    if (normalized.contains('aggressive')) return Icons.bolt_rounded;
+    if (normalized.contains('defensive')) return Icons.shield_rounded;
+    return Icons.route_rounded;
+  }
+
+  String _archetypeCopy(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('quest')) return 'Objectives first';
+    if (normalized.contains('blueprint')) return 'Blueprint focused';
+    if (normalized.contains('trade')) return 'Trade ready';
+    if (normalized.contains('help') || normalized.contains('mentor')) {
+      return 'Supports others';
+    }
+    if (normalized.contains('leader')) return 'Squad direction';
+    if (normalized.contains('pvp')) return 'Combat focused';
+    return 'Raider identity';
+  }
+
+  String _communicationCopy(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('ping'))
+      return 'Prefers concise ping-based coordination.';
+    if (normalized.contains('quiet'))
+      return 'Low-comms, focused squad experience.';
+    if (normalized.contains('voice') || normalized.contains('mic')) {
+      return 'Comfortable coordinating over voice.';
+    }
+    if (normalized.contains('chat')) return 'Social and conversation friendly.';
+    return 'Adapts communication to the squad.';
+  }
+
+  String _squadIntentCopy(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('solo')) return 'Open to running independently.';
+    if (normalized.contains('help')) return 'Looking to support other raiders.';
+    if (normalized.contains('quest')) return 'Prioritising quest progression.';
+    if (normalized.contains('blueprint'))
+      return 'Farming blueprint opportunities.';
+    if (normalized.contains('squad')) return 'Actively looking for squadmates.';
+    return 'Flexible about the next operation.';
+  }
+
+  String _socialEnergyCopy(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('quiet'))
+      return 'Prefers a calm, low-pressure session.';
+    if (normalized.contains('chat') || normalized.contains('social')) {
+      return 'Ready for an outgoing squad session.';
+    }
+    if (normalized.contains('lead'))
+      return 'Comfortable taking squad direction.';
+    if (normalized.contains('grind') || normalized.contains('focus')) {
+      return 'Focused on efficient progression.';
+    }
+    return 'Energy can adapt to the squad.';
   }
 
   Widget _profileCommandHero(
@@ -1371,175 +1717,6 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
-  Widget _summaryCard(ArcTraderProfile profile) {
-    final statusColor = profile.isProfileComplete
-        ? AppTheme.neonCyan
-        : AppTheme.neonPink;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spaceM,
-        AppTheme.spaceS,
-        AppTheme.spaceM,
-        AppTheme.spaceL,
-      ),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: statusColor.withValues(alpha: 0.24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: statusColor.withValues(alpha: 0.16),
-                child: Icon(Icons.person_outline, color: statusColor),
-              ),
-              const SizedBox(width: AppTheme.spaceM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.uagName.isEmpty
-                          ? 'No UAG Name yet'
-                          : profile.uagName,
-                      style: AppTheme.tradingHeading(
-                        fontSize: 24,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      profile.uagId.isEmpty
-                          ? 'Set up your profile to appear in searches later.'
-                          : profile.uagId,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppTheme.spaceM),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: AppTheme.tradingPillDecoration(color: statusColor),
-                child: Text(
-                  profile.isProfileComplete ? 'Ready' : 'Incomplete',
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          Wrap(
-            spacing: AppTheme.spaceS,
-            runSpacing: AppTheme.spaceS,
-            children: [
-              _miniTag(
-                icon: Icons.public_outlined,
-                text: profile.region.isEmpty
-                    ? 'Region not set'
-                    : profile.region,
-              ),
-              _miniTag(
-                icon: Icons.sports_esports_outlined,
-                text: profile.platform.isEmpty
-                    ? 'Platform not set'
-                    : profile.platform,
-              ),
-              _miniTag(
-                icon: Icons.mic_outlined,
-                text: profile.micOk ? 'Mic okay' : 'Mic off',
-              ),
-              _miniTag(
-                icon: Icons.travel_explore_outlined,
-                text: profile.crossRegionOk
-                    ? 'Cross-region okay'
-                    : 'Local only',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _archetypeSection() {
-    const archetypes = <({IconData icon, String label, String copy})>[
-      (
-        icon: Icons.health_and_safety_rounded,
-        label: 'Guardian',
-        copy: 'Protects squad',
-      ),
-      (
-        icon: Icons.medical_services_rounded,
-        label: 'Medic',
-        copy: 'Revive focused',
-      ),
-      (
-        icon: Icons.backpack_rounded,
-        label: 'Loot Goblin',
-        copy: 'Resource hunter',
-      ),
-      (icon: Icons.handshake_rounded, label: 'Trader', copy: 'Swap ready'),
-      (icon: Icons.explore_rounded, label: 'Scout', copy: 'Route finder'),
-      (
-        icon: Icons.center_focus_strong_rounded,
-        label: 'Sniper',
-        copy: 'Long range',
-      ),
-      (icon: Icons.shield_rounded, label: 'Tank', copy: 'Front line'),
-      (
-        icon: Icons.track_changes_rounded,
-        label: 'Hunter',
-        copy: 'Target focused',
-      ),
-      (
-        icon: Icons.assignment_turned_in_rounded,
-        label: 'Quester',
-        copy: 'Objective first',
-      ),
-      (
-        icon: Icons.local_fire_department_rounded,
-        label: 'PvP Specialist',
-        copy: 'Fight ready',
-      ),
-      (
-        icon: Icons.bug_report_rounded,
-        label: 'ARC Exterminator',
-        copy: 'PvE cleaner',
-      ),
-      (icon: Icons.flag_rounded, label: 'Leader', copy: 'Shot caller'),
-    ];
-
-    return _profilePanel(
-      accent: AppTheme.neonPink,
-      title: 'Player Archetypes',
-      icon: Icons.groups_rounded,
-      child: Wrap(
-        spacing: AppTheme.spaceS,
-        runSpacing: AppTheme.spaceS,
-        children: archetypes
-            .map(
-              (item) => _archetypeBadge(
-                icon: item.icon,
-                label: item.label,
-                copy: item.copy,
-              ),
-            )
-            .toList(growable: false),
-      ),
-    );
-  }
-
   Widget _badgeGallery() {
     const badges = <({IconData icon, String label})>[
       (icon: Icons.military_tech_rounded, label: 'Beta Access'),
@@ -1889,32 +2066,6 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             const Icon(Icons.chevron_right, color: Colors.white54),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _miniTag({required IconData icon, required String text}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.white70),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
