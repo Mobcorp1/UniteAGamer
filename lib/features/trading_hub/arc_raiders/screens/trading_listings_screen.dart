@@ -5,13 +5,16 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trader_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trade_network_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -35,6 +38,7 @@ class TradingListingsScreen extends StatefulWidget {
 class _TradingListingsScreenState extends State<TradingListingsScreen> {
   final TradingRepository _repository = TradingRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
+  final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   final ArcTraderProfileRepository _profileRepository =
       ArcTraderProfileRepository();
   final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
@@ -83,6 +87,24 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
         .where((blueprint) => !ownedBlueprintIds.contains(blueprint.id))
         .map((blueprint) => blueprint.name.toLowerCase())
         .toSet();
+  }
+
+  Stream<Map<String, ArcScrappyState>> _watchScrappyStates() {
+    try {
+      return _scrappyRepository.watchMyScrappyStates();
+    } catch (_) {
+      return Stream.value(const <String, ArcScrappyState>{});
+    }
+  }
+
+  Map<String, int> _trackedQuantitiesFromScrappy(
+    Map<String, ArcScrappyState> states,
+  ) {
+    return <String, int>{
+      for (final entry in states.entries)
+        if (entry.key.trim().isNotEmpty && entry.value.collectedCount > 0)
+          entry.key.trim(): entry.value.collectedCount,
+    };
   }
 
   List<TradingListing> _applyFilters(
@@ -529,92 +551,145 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                         states,
                       );
 
-                      return Column(
-                        children: [
-                          if (widget.embedProfileSummary)
-                            StreamBuilder<ArcTraderProfile>(
-                              stream: _profileRepository.watchProfile(),
-                              builder: (context, profileSnapshot) {
-                                final profile =
-                                    profileSnapshot.data ??
-                                    ArcTraderProfile.empty(
-                                      _profileRepository.currentUid ?? '',
-                                    );
+                      return StreamBuilder<Map<String, ArcScrappyState>>(
+                        stream: _watchScrappyStates(),
+                        builder: (context, scrappySnapshot) {
+                          final trackedQuantities =
+                              _trackedQuantitiesFromScrappy(
+                                scrappySnapshot.data ??
+                                    const <String, ArcScrappyState>{},
+                              );
 
-                                return _profileSummaryCard(context, profile);
-                              },
-                            ),
-                          TextField(
-                            controller: _searchController,
-                            onChanged: (_) => setState(() {}),
-                            style: const TextStyle(color: Colors.white),
-                            decoration: AppTheme.tradingInputDecoration(
-                              label:
-                                  'Search blueprints, keys, weapons, mods, traders',
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spaceM),
-                          _buildFilterPanel(missingBlueprintNames.length),
-                          const SizedBox(height: AppTheme.spaceM),
-                          Expanded(
-                            child: StreamBuilder<List<TradingListing>>(
-                              stream: _repository.watchActiveListings(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(
-                                      color: AppTheme.neonCyan,
-                                    ),
-                                  );
-                                }
-
-                                final listings =
-                                    _applyFilters(
-                                      snapshot.data ?? const [],
-                                      missingBlueprintNames,
-                                    )..sort((a, b) {
-                                      final aScore = _tradeIntelligenceEngine
-                                          .scoreListing(
-                                            listing: a,
-                                            blueprintStates: states,
-                                            currentUid: _repository.currentUid,
-                                          )
-                                          .score;
-                                      final bScore = _tradeIntelligenceEngine
-                                          .scoreListing(
-                                            listing: b,
-                                            blueprintStates: states,
-                                            currentUid: _repository.currentUid,
-                                          )
-                                          .score;
-                                      final scoreCompare = bScore.compareTo(
-                                        aScore,
-                                      );
-                                      if (scoreCompare != 0) {
-                                        return scoreCompare;
-                                      }
-                                      return a.expiresAt.compareTo(b.expiresAt);
-                                    });
-
-                                if (listings.isEmpty) {
-                                  return _buildEmptyState(
-                                    missingBlueprintNames.isNotEmpty,
-                                  );
-                                }
-
-                                return ListView.builder(
-                                  itemCount: listings.length,
-                                  itemBuilder: (context, index) => _listingCard(
-                                    context,
-                                    listings[index],
-                                    states,
+                          return StreamBuilder<List<TradingListing>>(
+                            stream: _repository.watchActiveListings(),
+                            builder: (context, listingsSnapshot) {
+                              if (listingsSnapshot.connectionState ==
+                                      ConnectionState.waiting &&
+                                  listingsSnapshot.data == null) {
+                                return const Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppTheme.neonCyan,
                                   ),
                                 );
-                              },
-                            ),
-                          ),
-                        ],
+                              }
+
+                              final activeListings =
+                                  listingsSnapshot.data ??
+                                  const <TradingListing>[];
+                              final listings =
+                                  _applyFilters(
+                                    activeListings,
+                                    missingBlueprintNames,
+                                  )..sort((a, b) {
+                                    final aScore = _tradeIntelligenceEngine
+                                        .scoreListing(
+                                          listing: a,
+                                          blueprintStates: states,
+                                          currentUid: _repository.currentUid,
+                                        )
+                                        .score;
+                                    final bScore = _tradeIntelligenceEngine
+                                        .scoreListing(
+                                          listing: b,
+                                          blueprintStates: states,
+                                          currentUid: _repository.currentUid,
+                                        )
+                                        .score;
+                                    final scoreCompare = bScore.compareTo(
+                                      aScore,
+                                    );
+                                    if (scoreCompare != 0) {
+                                      return scoreCompare;
+                                    }
+                                    return a.expiresAt.compareTo(b.expiresAt);
+                                  });
+
+                              return Column(
+                                children: [
+                                  if (widget.embedProfileSummary)
+                                    StreamBuilder<ArcTraderProfile>(
+                                      stream: _profileRepository.watchProfile(),
+                                      builder: (context, profileSnapshot) {
+                                        final profile =
+                                            profileSnapshot.data ??
+                                            ArcTraderProfile.empty(
+                                              _profileRepository.currentUid ??
+                                                  '',
+                                            );
+
+                                        return _profileSummaryCard(
+                                          context,
+                                          profile,
+                                        );
+                                      },
+                                    ),
+                                  TextField(
+                                    controller: _searchController,
+                                    onChanged: (_) => setState(() {}),
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: AppTheme.tradingInputDecoration(
+                                      label:
+                                          'Search blueprints, keys, weapons, mods, traders',
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  _buildFilterPanel(
+                                    missingBlueprintNames.length,
+                                  ),
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  Expanded(
+                                    child: listings.isEmpty
+                                        ? ListView(
+                                            children: [
+                                              ArcTradeNetworkPanel(
+                                                repository: _repository,
+                                                blueprintStates: states,
+                                                activeListings: activeListings,
+                                                trackedItemQuantities:
+                                                    trackedQuantities,
+                                              ),
+                                              const SizedBox(
+                                                height: AppTheme.spaceM,
+                                              ),
+                                              _buildEmptyState(
+                                                missingBlueprintNames
+                                                    .isNotEmpty,
+                                              ),
+                                            ],
+                                          )
+                                        : ListView.builder(
+                                            itemCount: listings.length + 1,
+                                            itemBuilder: (context, index) {
+                                              if (index == 0) {
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        bottom: AppTheme.spaceM,
+                                                      ),
+                                                  child: ArcTradeNetworkPanel(
+                                                    repository: _repository,
+                                                    blueprintStates: states,
+                                                    activeListings:
+                                                        activeListings,
+                                                    trackedItemQuantities:
+                                                        trackedQuantities,
+                                                  ),
+                                                );
+                                              }
+
+                                              return _listingCard(
+                                                context,
+                                                listings[index - 1],
+                                                states,
+                                              );
+                                            },
+                                          ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                       );
                     },
                   ),

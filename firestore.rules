@@ -92,6 +92,14 @@ service cloud.firestore {
         request.resource.data.targetUid != '';
     }
 
+    function isTradePreparationOwner() {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function isIncomingTradePreparationOwner() {
+      return isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
     function isSessionPlannerParticipant() {
       return isSignedIn() &&
         (
@@ -212,6 +220,16 @@ service cloud.firestore {
         request.resource.data.targetUid == resource.data.targetUid &&
         request.resource.data.actorUid == resource.data.actorUid;
       allow delete: if isNotificationTarget() || isAdminOrDev();
+    }
+
+    match /arc_trade_preparations/{preparationId} {
+      allow read: if isTradePreparationOwner() || isAdminOrDev();
+      allow create: if isIncomingTradePreparationOwner() &&
+        request.resource.data.id == preparationId;
+      allow update: if (isTradePreparationOwner() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.userId == resource.data.userId;
+      allow delete: if isTradePreparationOwner() || isAdminOrDev();
     }
 
     match /arc_match_rider_profiles/{profileUid} {

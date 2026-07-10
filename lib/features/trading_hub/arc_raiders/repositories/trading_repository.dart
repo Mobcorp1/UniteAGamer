@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_network_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_cosmetic_identity.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
@@ -58,6 +59,9 @@ class TradingRepository {
 
   CollectionReference<Map<String, dynamic>> get _notificationsCollection =>
       _firestore.collection('trading_notifications');
+
+  CollectionReference<Map<String, dynamic>> get _tradePreparationsCollection =>
+      _firestore.collection('arc_trade_preparations');
 
   String _firstNonEmptyString(List<dynamic> values, {String fallback = ''}) {
     for (final value in values) {
@@ -651,6 +655,70 @@ class TradingRepository {
 
   Future<void> deleteNotification(String notificationId) async {
     await _notificationsCollection.doc(notificationId).delete();
+  }
+
+  Stream<List<ArcTradePreparation>> watchTradePreparations() {
+    final uid = currentUid;
+    if (uid == null) {
+      return Stream.value(const <ArcTradePreparation>[]);
+    }
+
+    return _tradePreparationsCollection
+        .where('userId', isEqualTo: uid)
+        .orderBy('updatedAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ArcTradePreparation.fromMap(doc.data()))
+              .toList(growable: false),
+        );
+  }
+
+  Future<void> saveTradePreparation(ArcTradePreparation preparation) async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw Exception('You must be signed in to watch a trade.');
+    }
+    if (preparation.userId != uid) {
+      throw Exception('You can only watch trades for your own account.');
+    }
+
+    await _tradePreparationsCollection
+        .doc(preparation.id)
+        .set(preparation.toMap(), SetOptions(merge: true));
+  }
+
+  Future<void> updateTradePreparationReadiness(
+    ArcTradePreparation preparation,
+  ) async {
+    final uid = currentUid;
+    if (uid == null || preparation.userId != uid) return;
+
+    await _tradePreparationsCollection.doc(preparation.id).set({
+      'ownedItems': preparation.ownedItems
+          .map((item) => item.toMap())
+          .toList(growable: false),
+      'remainingItems': preparation.remainingItems
+          .map((item) => item.toMap())
+          .toList(growable: false),
+      'status': preparation.status.name,
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateTradePreparationStatus({
+    required String preparationId,
+    required ArcTradePreparationStatus status,
+  }) async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw Exception('You must be signed in to update a trade watch.');
+    }
+
+    await _tradePreparationsCollection.doc(preparationId).update({
+      'status': status.name,
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
+    });
   }
 
   Future<TradingSession?> getSessionForOffer(String offerId) async {
