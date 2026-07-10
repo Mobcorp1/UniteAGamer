@@ -1,7 +1,12 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -769,44 +774,7 @@ class _OnboardingBasicProfileScreenState
   }
 
   Widget _cardBarrel({required List<Widget> cards, double height = 168}) {
-    final width = MediaQuery.sizeOf(context).width;
-    final compact = width < 700;
-    final fraction = compact ? 0.78 : 0.31;
-    final resolvedHeight = compact ? height + 8 : height;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: resolvedHeight,
-          child: PageView.builder(
-            controller: PageController(viewportFraction: fraction),
-            padEnds: false,
-            itemCount: cards.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 10, bottom: 6),
-                child: cards[index],
-              );
-            },
-          ),
-        ),
-        if (cards.length > 1)
-          Padding(
-            padding: const EdgeInsets.only(left: 2, top: 2),
-            child: Text(
-              compact
-                  ? 'Swipe to review options'
-                  : 'Scroll sideways to review options',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.48),
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-      ],
-    );
+    return _OnboardingCardCarousel(cards: cards, height: height);
   }
 
   bool get _identityNameComplete =>
@@ -1354,6 +1322,12 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+  Future<void> _openLegalDocument(Widget screen) async {
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute<void>(builder: (_) => screen));
+  }
+
   Widget _traderCodeStep() {
     return _contentShell(
       child: Column(
@@ -1372,6 +1346,8 @@ class _OnboardingBasicProfileScreenState
               body:
                   'Respect other players, honour agreed trades and keep the community fair.',
               value: _acceptedTraderCode,
+              onView: () =>
+                  _openLegalDocument(const TraderCodeOfConductScreen()),
               onChanged: (value) => setState(() => _acceptedTraderCode = value),
             ),
             _policyCard(
@@ -1380,6 +1356,7 @@ class _OnboardingBasicProfileScreenState
               body:
                   'Use the hub responsibly. Do not abuse beta tools, exploits or trading systems.',
               value: _acceptedTermsOfService,
+              onView: () => _openLegalDocument(const TermsOfUseScreen()),
               onChanged: (value) =>
                   setState(() => _acceptedTermsOfService = value),
             ),
@@ -1389,6 +1366,7 @@ class _OnboardingBasicProfileScreenState
               body:
                   'UAG only needs profile and preference data for matching, recommendations and trading.',
               value: _acceptedDataSecurity,
+              onView: () => _openLegalDocument(const PrivacyPolicyScreen()),
               onChanged: (value) =>
                   setState(() => _acceptedDataSecurity = value),
             ),
@@ -1410,87 +1388,107 @@ class _OnboardingBasicProfileScreenState
     required String title,
     required String body,
     required bool value,
+    required VoidCallback onView,
     required ValueChanged<bool> onChanged,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: value
+            ? AppTheme.neonCyan.withValues(alpha: 0.11)
+            : Colors.black.withValues(alpha: 0.26),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
           color: value
-              ? AppTheme.neonCyan.withValues(alpha: 0.11)
-              : Colors.black.withValues(alpha: 0.26),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: value
-                ? AppTheme.neonCyan
-                : Colors.white.withValues(alpha: 0.14),
-            width: value ? 1.5 : 1,
-          ),
-          boxShadow: value
-              ? [
-                  BoxShadow(
-                    color: AppTheme.neonCyan.withValues(alpha: 0.20),
-                    blurRadius: 24,
-                  ),
-                ]
-              : null,
+              ? AppTheme.neonCyan
+              : Colors.white.withValues(alpha: 0.14),
+          width: value ? 1.5 : 1,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: value ? AppTheme.neonCyan : Colors.white60),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    body,
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      height: 1.25,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                  const SizedBox(height: 9),
-                  Row(
-                    children: [
-                      Icon(
-                        value
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        color: value ? AppTheme.neonCyan : Colors.white30,
-                        size: 18,
+        boxShadow: value
+            ? [
+                BoxShadow(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                  blurRadius: 24,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: value ? AppTheme.neonCyan : Colors.white60),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
                       ),
-                      const SizedBox(width: 7),
-                      Text(
-                        value ? 'ACKNOWLEDGED' : 'TAP TO ACKNOWLEDGE',
-                        style: TextStyle(
-                          color: value ? AppTheme.neonCyan : Colors.white38,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.9,
-                        ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      body,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.66),
+                        height: 1.34,
+                        fontSize: 12,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onView,
+                icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                label: const Text('Read document'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.neonCyan,
+                  side: BorderSide(
+                    color: AppTheme.neonCyan.withValues(alpha: 0.55),
+                  ),
+                ),
+              ),
+              FilterChip(
+                selected: value,
+                onSelected: onChanged,
+                avatar: Icon(
+                  value ? Icons.check_rounded : Icons.circle_outlined,
+                  size: 17,
+                  color: value ? Colors.black : Colors.white54,
+                ),
+                label: Text(value ? 'Acknowledged' : 'I acknowledge'),
+                selectedColor: AppTheme.neonCyan,
+                backgroundColor: Colors.white.withValues(alpha: 0.06),
+                labelStyle: TextStyle(
+                  color: value ? Colors.black : Colors.white70,
+                  fontWeight: FontWeight.w900,
+                ),
+                side: BorderSide(
+                  color: value
+                      ? AppTheme.neonCyan
+                      : Colors.white.withValues(alpha: 0.18),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1802,4 +1800,223 @@ class _OnboardingBasicProfileScreenState
       ),
     );
   }
+}
+
+class _OnboardingCardCarousel extends StatefulWidget {
+  const _OnboardingCardCarousel({required this.cards, required this.height});
+
+  final List<Widget> cards;
+  final double height;
+
+  @override
+  State<_OnboardingCardCarousel> createState() =>
+      _OnboardingCardCarouselState();
+}
+
+class _OnboardingCardCarouselState extends State<_OnboardingCardCarousel> {
+  PageController? _controller;
+  int _activeIndex = 0;
+  double? _viewportFraction;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final width = MediaQuery.sizeOf(context).width;
+    final nextFraction = width < 700 ? 0.82 : (width < 1100 ? 0.48 : 0.34);
+    if (_controller == null || _viewportFraction != nextFraction) {
+      final initialPage = _activeIndex.clamp(0, widget.cards.length - 1);
+      _controller?.dispose();
+      _viewportFraction = nextFraction;
+      _controller = PageController(
+        viewportFraction: nextFraction,
+        initialPage: initialPage,
+      );
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _OnboardingCardCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_activeIndex >= widget.cards.length) {
+      _activeIndex = widget.cards.isEmpty ? 0 : widget.cards.length - 1;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _goTo(int index) async {
+    if (widget.cards.isEmpty || _controller == null) return;
+    final target = index.clamp(0, widget.cards.length - 1);
+    await _controller!.animateToPage(
+      target,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.cards.isEmpty) return const SizedBox.shrink();
+
+    final compact = MediaQuery.sizeOf(context).width < 700;
+    final resolvedHeight = compact ? widget.height + 12 : widget.height;
+    final canGoBack = _activeIndex > 0;
+    final canGoForward = _activeIndex < widget.cards.length - 1;
+
+    return Column(
+      children: [
+        SizedBox(
+          height: resolvedHeight,
+          child: Row(
+            children: [
+              _CarouselArrow(
+                icon: Icons.chevron_left_rounded,
+                tooltip: 'Previous card',
+                enabled: canGoBack,
+                onPressed: () => _goTo(_activeIndex - 1),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: ScrollConfiguration(
+                  behavior: const _OnboardingCarouselScrollBehavior(),
+                  child: PageView.builder(
+                    controller: _controller,
+                    padEnds: true,
+                    physics: const PageScrollPhysics(),
+                    itemCount: widget.cards.length,
+                    onPageChanged: (index) {
+                      setState(() => _activeIndex = index);
+                    },
+                    itemBuilder: (context, index) {
+                      final selected = index == _activeIndex;
+                      return AnimatedScale(
+                        duration: const Duration(milliseconds: 180),
+                        scale: selected ? 1 : 0.96,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 180),
+                          opacity: selected ? 1 : 0.68,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 6,
+                            ),
+                            child: widget.cards[index],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              _CarouselArrow(
+                icon: Icons.chevron_right_rounded,
+                tooltip: 'Next card',
+                enabled: canGoForward,
+                onPressed: () => _goTo(_activeIndex + 1),
+              ),
+            ],
+          ),
+        ),
+        if (widget.cards.length > 1) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(widget.cards.length, (index) {
+              final selected = index == _activeIndex;
+              return GestureDetector(
+                onTap: () => _goTo(index),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: selected ? 22 : 7,
+                  height: 7,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppTheme.neonCyan
+                        : Colors.white.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: AppTheme.neonCyan.withValues(alpha: 0.38),
+                              blurRadius: 10,
+                            ),
+                          ]
+                        : null,
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            compact
+                ? 'Swipe or use the arrows to review every card'
+                : 'Drag, scroll or use the arrows to review every card',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.48),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CarouselArrow extends StatelessWidget {
+  const _CarouselArrow({
+    required this.icon,
+    required this.tooltip,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: enabled ? onPressed : null,
+      style: IconButton.styleFrom(
+        backgroundColor: enabled
+            ? AppTheme.neonCyan.withValues(alpha: 0.12)
+            : Colors.white.withValues(alpha: 0.04),
+        side: BorderSide(
+          color: enabled
+              ? AppTheme.neonCyan.withValues(alpha: 0.52)
+              : Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
+      icon: Icon(
+        icon,
+        color: enabled ? AppTheme.neonCyan : Colors.white24,
+        size: 30,
+      ),
+    );
+  }
+}
+
+class _OnboardingCarouselScrollBehavior extends MaterialScrollBehavior {
+  const _OnboardingCarouselScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => const {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.unknown,
+  };
 }
