@@ -140,9 +140,12 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   }
 
   Future<void> _openFeature(_ArcHubFeature feature) async {
-    if (await FeatureAccess.isAdminOrDev()) {
-      if (!context.mounted) return;
-      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+    final navigator = Navigator.of(context);
+    final isAdminOrDev = await FeatureAccess.isAdminOrDev();
+    if (!mounted) return;
+
+    if (isAdminOrDev) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
@@ -155,7 +158,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     };
 
     if (betaOpenTitles.contains(feature.title)) {
-      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
@@ -165,11 +168,11 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     if (!mounted) return;
 
     if (hasAccess) {
-      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
-    Navigator.of(context).push(
+    navigator.push(
       MaterialPageRoute(
         builder: (_) => FeatureLockedScreen(title: feature.title),
       ),
@@ -976,9 +979,12 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
   }
 
   Future<void> _openFeature(_ArcHubFeature feature) async {
-    if (await FeatureAccess.isAdminOrDev()) {
-      if (!context.mounted) return;
-      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+    final navigator = Navigator.of(context);
+    final isAdminOrDev = await FeatureAccess.isAdminOrDev();
+    if (!mounted) return;
+
+    if (isAdminOrDev) {
+      navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
@@ -991,7 +997,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     };
 
     if (betaOpenTitles.contains(feature.title)) {
-      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
@@ -1001,11 +1007,11 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     if (!mounted) return;
 
     if (hasAccess) {
-      Navigator.of(context).push(MaterialPageRoute(builder: feature.builder));
+      navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
-    Navigator.of(context).push(
+    navigator.push(
       MaterialPageRoute(
         builder: (_) => FeatureLockedScreen(title: feature.title),
       ),

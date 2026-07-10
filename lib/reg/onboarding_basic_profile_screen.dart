@@ -222,8 +222,9 @@ class _OnboardingBasicProfileScreenState
       basicProfile['socialEnergy'],
       pickString(traderProfile['socialEnergy'], 'Depends on the day'),
     );
-    if (_playStyles.contains(playStyleValue))
+    if (_playStyles.contains(playStyleValue)) {
       _selectedPlayStyle = playStyleValue;
+    }
     if (_squadIntents.contains(squadIntentValue)) {
       _selectedSquadIntent = squadIntentValue;
     }

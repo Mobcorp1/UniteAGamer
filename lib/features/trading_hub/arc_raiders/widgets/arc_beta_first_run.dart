@@ -254,10 +254,13 @@ class ArcProfileCompletionSummary {
     ];
 
     final completed = tasks.where((task) => task.complete).length;
-    final totalWeight = tasks.fold<int>(0, (sum, task) => sum + task.weight);
+    final totalWeight = tasks.fold<int>(
+      0,
+      (total, task) => total + task.weight,
+    );
     final completeWeight = tasks
         .where((task) => task.complete)
-        .fold<int>(0, (sum, task) => sum + task.weight);
+        .fold<int>(0, (total, task) => total + task.weight);
     final percent = totalWeight == 0
         ? 0
         : ((completeWeight / totalWeight) * 100).round();
