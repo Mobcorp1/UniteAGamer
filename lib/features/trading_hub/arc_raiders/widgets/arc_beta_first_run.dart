@@ -498,25 +498,27 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
     }
   }
 
-  Future<void> _launchOnboardingPreview() async {
+  Future<void> _launchOnboardingPreview({
+    String playerState = 'fresh',
+    bool reachedRaiderLevel25 = false,
+    String blueprintSetup = 'skipForNow',
+    int step = 0,
+  }) async {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      await ArcBetaFirstRun.resetOnboarding().timeout(
-        const Duration(seconds: 14),
-      );
       if (!mounted) return;
       setState(() => _busy = false);
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          settings: const RouteSettings(
+          settings: RouteSettings(
             name: OnboardingBasicProfileScreen.routeName,
             arguments: {
               'adminPreview': true,
-              'step': 0,
-              'playerState': 'fresh',
-              'blueprintSetup': 'skipForNow',
-              'reachedRaiderLevel25': false,
+              'step': step,
+              'playerState': playerState,
+              'blueprintSetup': blueprintSetup,
+              'reachedRaiderLevel25': reachedRaiderLevel25,
             },
           ),
           builder: (_) => const OnboardingBasicProfileScreen(),
@@ -531,7 +533,8 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      setState(() => _busy = false);
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -539,54 +542,51 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
   Widget build(BuildContext context) {
     final actions = <_ArcBetaDevAction>[
       _ArcBetaDevAction(
-        label: 'Open onboarding preview',
-        icon: Icons.play_circle_outline_rounded,
-        onTap: _launchOnboardingPreview,
+        label: 'Preview fresh player',
+        icon: Icons.person_add_alt_1_rounded,
+        onTap: () => _launchOnboardingPreview(),
       ),
       _ArcBetaDevAction(
-        label: 'Reset onboarding',
+        label: 'Preview active under 25',
+        icon: Icons.speed_rounded,
+        onTap: () => _launchOnboardingPreview(
+          playerState: 'active',
+          reachedRaiderLevel25: false,
+        ),
+      ),
+      _ArcBetaDevAction(
+        label: 'Preview active 25+',
+        icon: Icons.workspace_premium_rounded,
+        onTap: () => _launchOnboardingPreview(
+          playerState: 'active',
+          reachedRaiderLevel25: true,
+          blueprintSetup: 'setupNow',
+        ),
+      ),
+      _ArcBetaDevAction(
+        label: 'Preview post-expedition',
         icon: Icons.restart_alt_rounded,
+        onTap: () => _launchOnboardingPreview(playerState: 'postExpedition'),
+      ),
+      _ArcBetaDevAction(
+        label: 'Preview legal step',
+        icon: Icons.policy_rounded,
+        onTap: () => _launchOnboardingPreview(step: 4),
+      ),
+      _ArcBetaDevAction(
+        label: 'Reset onboarding state',
+        icon: Icons.restore_rounded,
         onTap: () => _run(
-          'Onboarding reset. Preview is ready to launch again.',
+          'Onboarding reset. The next real app entry will show first-run onboarding.',
           ArcBetaFirstRun.resetOnboarding,
         ),
       ),
       _ArcBetaDevAction(
-        label: 'Mark onboarding done',
+        label: 'Mark onboarding complete',
         icon: Icons.check_circle_outline_rounded,
         onTap: () => _run(
           'Onboarding marked complete.',
           ArcBetaFirstRun.markOnboardingComplete,
-        ),
-      ),
-      _ArcBetaDevAction(
-        label: 'Replay Blueprint guide',
-        icon: Icons.grid_view_rounded,
-        onTap: () => _run(
-          'Blueprint tutorial will replay on next Blueprint Tracker visit.',
-          () => ArcBetaFirstRun.setFlag(
-            ArcBetaFirstRunKeys.hasSeenBlueprintTutorial,
-            false,
-          ),
-        ),
-      ),
-      _ArcBetaDevAction(
-        label: 'Replay Trading guide',
-        icon: Icons.swap_horiz_rounded,
-        onTap: () => _run(
-          'Trading tutorial will replay on next Trading visit.',
-          () => ArcBetaFirstRun.setFlag(
-            ArcBetaFirstRunKeys.hasSeenTradingTutorial,
-            false,
-          ),
-        ),
-      ),
-      _ArcBetaDevAction(
-        label: 'Replay all tutorials',
-        icon: Icons.replay_circle_filled_rounded,
-        onTap: () => _run(
-          'All tutorials reset for closed beta testing.',
-          ArcBetaFirstRun.resetTutorials,
         ),
       ),
       _ArcBetaDevAction(

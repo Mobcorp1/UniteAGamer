@@ -3,6 +3,7 @@ import 'dart:ui' show PointerDeviceKind;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
@@ -259,6 +260,13 @@ class _OnboardingBasicProfileScreenState
         ? _ArcBlueprintSetupChoice.skipForNow
         : _ArcBlueprintSetupChoice.setupNow;
 
+    final completedSteps = arcOnboarding['completedSteps'] is Map
+        ? arcOnboarding['completedSteps'] as Map
+        : const <String, dynamic>{};
+    _acceptedTraderCode = completedSteps['traderCode'] == true;
+    _acceptedTermsOfService = completedSteps['termsOfService'] == true;
+    _acceptedDataSecurity = completedSteps['dataSecurity'] == true;
+
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -274,14 +282,21 @@ class _OnboardingBasicProfileScreenState
     _ => 'fresh',
   };
 
-  Future<void> _saveOnboarding({required bool complete}) async {
+  Future<bool> _saveOnboarding({required bool complete}) async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       setState(() => _stepIndex = 0);
-      return;
+      return false;
     }
 
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in again to finish onboarding.')),
+        );
+      }
+      return false;
+    }
 
     setState(() => _isSaving = true);
 
@@ -364,6 +379,34 @@ class _OnboardingBasicProfileScreenState
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true))
           .timeout(const Duration(seconds: 12));
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('displayName', displayName);
+      await prefs.setString(
+        'region',
+        _selectedCountry == 'United Kingdom' ? 'UK' : _selectedCountry,
+      );
+      await prefs.setStringList('platforms', <String>[_selectedPlatform]);
+      await prefs.setStringList('playstyles', <String>[_selectedPlayStyle]);
+      await prefs.setString('playStyle', _selectedPlayStyle);
+      await prefs.setString('communicationStyle', _selectedSocialEnergy);
+      await prefs.setString('squadIntent', _selectedSquadIntent);
+      await prefs.setString('socialEnergy', _selectedSocialEnergy);
+      await prefs.setString('embarkId', _embarkIdController.text.trim());
+      await prefs.setBool('hasCompletedOnboarding', complete);
+      await prefs.setBool('hasCompletedProfileSetup', complete);
+      await prefs.setBool('forceOnboarding', !complete);
+      return true;
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not save onboarding: $error'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return false;
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -406,8 +449,8 @@ class _OnboardingBasicProfileScreenState
         if (mounted) Navigator.of(context).pop();
         return;
       }
-      await _saveOnboarding(complete: true);
-      if (!mounted) return;
+      final saved = await _saveOnboarding(complete: true);
+      if (!saved || !mounted) return;
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
