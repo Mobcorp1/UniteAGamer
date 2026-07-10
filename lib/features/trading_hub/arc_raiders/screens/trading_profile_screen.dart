@@ -85,6 +85,14 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     await _init();
   }
 
+  Future<void> _openProfileEditor() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ArcProfileEditScreen()));
+    if (!mounted) return;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isInitialising) {
@@ -328,6 +336,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       accent: AppTheme.neonCyan,
       title: 'Raider Identity',
       icon: Icons.radar_rounded,
+      onEdit: _openProfileEditor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -395,40 +404,55 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       accent: AppTheme.neonPink,
       title: 'Playstyle & Archetypes',
       icon: Icons.groups_rounded,
+      onEdit: _openProfileEditor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _identityLabel('Archetypes'),
           const SizedBox(height: AppTheme.spaceS),
-          Wrap(
-            spacing: AppTheme.spaceS,
-            runSpacing: AppTheme.spaceS,
-            children: profile.archetypes
-                .map(
-                  (value) => _archetypeBadge(
-                    icon: _archetypeIcon(value),
-                    label: value,
-                    copy: _archetypeCopy(value),
-                  ),
-                )
-                .toList(growable: false),
-          ),
+          if (profile.archetypes.isEmpty)
+            _profileEmptyState(
+              icon: Icons.person_search_rounded,
+              title: 'No archetypes selected',
+              copy: 'Add the roles that best describe how you play.',
+            )
+          else
+            Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: profile.archetypes
+                  .map(
+                    (value) => _archetypeBadge(
+                      icon: _archetypeIcon(value),
+                      label: value,
+                      copy: _archetypeCopy(value),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
           const SizedBox(height: AppTheme.spaceM),
           _identityLabel('Playstyle'),
           const SizedBox(height: AppTheme.spaceS),
-          Wrap(
-            spacing: AppTheme.spaceS,
-            runSpacing: AppTheme.spaceS,
-            children: profile.playStyles
-                .map(
-                  (value) => _profileChip(
-                    icon: _playStyleIcon(value),
-                    label: value,
-                    accent: AppTheme.neonCyan,
-                  ),
-                )
-                .toList(growable: false),
-          ),
+          if (profile.playStyles.isEmpty)
+            _profileEmptyState(
+              icon: Icons.route_rounded,
+              title: 'No playstyle selected',
+              copy: 'Choose one or more playstyles to improve squad matching.',
+            )
+          else
+            Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: profile.playStyles
+                  .map(
+                    (value) => _profileChip(
+                      icon: _playStyleIcon(value),
+                      label: value,
+                      accent: AppTheme.neonCyan,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
         ],
       ),
     );
@@ -439,6 +463,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       accent: AppTheme.neonCyan,
       title: 'Match Readiness',
       icon: Icons.hub_rounded,
+      onEdit: _openProfileEditor,
       child: Column(
         children: [
           _sessionStatusTile(
@@ -536,7 +561,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         _detailRow('Timezone', profile.timezone),
         _detailRow(
           'Visibility',
-          profile.visibleInSearch ? 'Public' : 'Private',
+          profile.visibleInSearch
+              ? 'Visible in player and trader discovery'
+              : 'Hidden from player and trader discovery',
         ),
       ],
     );
@@ -550,9 +577,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
           icon: Icons.edit_outlined,
           title: 'Edit Raider Identity',
           subtitle: 'Update identity, playstyle, communication and visibility.',
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ArcProfileEditScreen()),
-          ),
+          onTap: _openProfileEditor,
         ),
         const SizedBox(height: AppTheme.spaceS),
         _actionTile(
@@ -627,12 +652,10 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
   String _communicationCopy(String value) {
     final normalized = value.toLowerCase();
-    if (normalized.contains('ping')) {
+    if (normalized.contains('ping'))
       return 'Prefers concise ping-based coordination.';
-    }
-    if (normalized.contains('quiet')) {
+    if (normalized.contains('quiet'))
       return 'Low-comms, focused squad experience.';
-    }
     if (normalized.contains('voice') || normalized.contains('mic')) {
       return 'Comfortable coordinating over voice.';
     }
@@ -645,24 +668,21 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     if (normalized.contains('solo')) return 'Open to running independently.';
     if (normalized.contains('help')) return 'Looking to support other raiders.';
     if (normalized.contains('quest')) return 'Prioritising quest progression.';
-    if (normalized.contains('blueprint')) {
+    if (normalized.contains('blueprint'))
       return 'Farming blueprint opportunities.';
-    }
     if (normalized.contains('squad')) return 'Actively looking for squadmates.';
     return 'Flexible about the next operation.';
   }
 
   String _socialEnergyCopy(String value) {
     final normalized = value.toLowerCase();
-    if (normalized.contains('quiet')) {
+    if (normalized.contains('quiet'))
       return 'Prefers a calm, low-pressure session.';
-    }
     if (normalized.contains('chat') || normalized.contains('social')) {
       return 'Ready for an outgoing squad session.';
     }
-    if (normalized.contains('lead')) {
+    if (normalized.contains('lead'))
       return 'Comfortable taking squad direction.';
-    }
     if (normalized.contains('grind') || normalized.contains('focus')) {
       return 'Focused on efficient progression.';
     }
@@ -1786,6 +1806,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     required String title,
     required IconData icon,
     required Widget child,
+    VoidCallback? onEdit,
   }) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -1799,17 +1820,73 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             children: [
               Icon(icon, color: accent, size: 18),
               const SizedBox(width: AppTheme.spaceS),
-              Text(
-                title,
-                style: AppTheme.tradingHeading(
-                  fontSize: 18,
-                  color: Colors.white,
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
                 ),
               ),
+              if (onEdit != null)
+                IconButton(
+                  tooltip: 'Edit',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onEdit,
+                  icon: Icon(Icons.edit_outlined, color: accent, size: 18),
+                ),
             ],
           ),
           const SizedBox(height: AppTheme.spaceM),
           child,
+        ],
+      ),
+    );
+  }
+
+  Widget _profileEmptyState({
+    required IconData icon,
+    required String title,
+    required String copy,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceS),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.white54, size: 20),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  copy,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(onPressed: _openProfileEditor, child: const Text('Add')),
         ],
       ),
     );
