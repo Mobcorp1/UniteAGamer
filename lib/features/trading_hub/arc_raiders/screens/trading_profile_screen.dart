@@ -652,10 +652,12 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
   String _communicationCopy(String value) {
     final normalized = value.toLowerCase();
-    if (normalized.contains('ping'))
+    if (normalized.contains('ping')) {
       return 'Prefers concise ping-based coordination.';
-    if (normalized.contains('quiet'))
+    }
+    if (normalized.contains('quiet')) {
       return 'Low-comms, focused squad experience.';
+    }
     if (normalized.contains('voice') || normalized.contains('mic')) {
       return 'Comfortable coordinating over voice.';
     }
@@ -668,21 +670,24 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     if (normalized.contains('solo')) return 'Open to running independently.';
     if (normalized.contains('help')) return 'Looking to support other raiders.';
     if (normalized.contains('quest')) return 'Prioritising quest progression.';
-    if (normalized.contains('blueprint'))
+    if (normalized.contains('blueprint')) {
       return 'Farming blueprint opportunities.';
+    }
     if (normalized.contains('squad')) return 'Actively looking for squadmates.';
     return 'Flexible about the next operation.';
   }
 
   String _socialEnergyCopy(String value) {
     final normalized = value.toLowerCase();
-    if (normalized.contains('quiet'))
+    if (normalized.contains('quiet')) {
       return 'Prefers a calm, low-pressure session.';
+    }
     if (normalized.contains('chat') || normalized.contains('social')) {
       return 'Ready for an outgoing squad session.';
     }
-    if (normalized.contains('lead'))
+    if (normalized.contains('lead')) {
       return 'Comfortable taking squad direction.';
+    }
     if (normalized.contains('grind') || normalized.contains('focus')) {
       return 'Focused on efficient progression.';
     }
