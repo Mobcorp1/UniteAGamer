@@ -1,5 +1,3 @@
-import 'dart:ui' show PointerDeviceKind;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_pl
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_adaptive_card_deck.dart';
 
 Map<String, dynamic> buildOnboardingLegalAcceptedMap({
   required bool traderCodeAccepted,
@@ -887,7 +886,7 @@ class _OnboardingBasicProfileScreenState
   }
 
   Widget _cardBarrel({required List<Widget> cards, double height = 168}) {
-    return _OnboardingCardCarousel(cards: cards, height: height);
+    return UagAdaptiveCardDeck(cards: cards, height: height);
   }
 
   bool get _identityNameComplete =>
@@ -1914,223 +1913,4 @@ class _OnboardingBasicProfileScreenState
       ),
     );
   }
-}
-
-class _OnboardingCardCarousel extends StatefulWidget {
-  const _OnboardingCardCarousel({required this.cards, required this.height});
-
-  final List<Widget> cards;
-  final double height;
-
-  @override
-  State<_OnboardingCardCarousel> createState() =>
-      _OnboardingCardCarouselState();
-}
-
-class _OnboardingCardCarouselState extends State<_OnboardingCardCarousel> {
-  PageController? _controller;
-  int _activeIndex = 0;
-  double? _viewportFraction;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final width = MediaQuery.sizeOf(context).width;
-    final nextFraction = width < 700 ? 0.82 : (width < 1100 ? 0.48 : 0.34);
-    if (_controller == null || _viewportFraction != nextFraction) {
-      final initialPage = _activeIndex.clamp(0, widget.cards.length - 1);
-      _controller?.dispose();
-      _viewportFraction = nextFraction;
-      _controller = PageController(
-        viewportFraction: nextFraction,
-        initialPage: initialPage,
-      );
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant _OnboardingCardCarousel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_activeIndex >= widget.cards.length) {
-      _activeIndex = widget.cards.isEmpty ? 0 : widget.cards.length - 1;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  Future<void> _goTo(int index) async {
-    if (widget.cards.isEmpty || _controller == null) return;
-    final target = index.clamp(0, widget.cards.length - 1);
-    await _controller!.animateToPage(
-      target,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.cards.isEmpty) return const SizedBox.shrink();
-
-    final compact = MediaQuery.sizeOf(context).width < 700;
-    final resolvedHeight = compact ? widget.height + 12 : widget.height;
-    final canGoBack = _activeIndex > 0;
-    final canGoForward = _activeIndex < widget.cards.length - 1;
-
-    return Column(
-      children: [
-        SizedBox(
-          height: resolvedHeight,
-          child: Row(
-            children: [
-              _CarouselArrow(
-                icon: Icons.chevron_left_rounded,
-                tooltip: 'Previous card',
-                enabled: canGoBack,
-                onPressed: () => _goTo(_activeIndex - 1),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: ScrollConfiguration(
-                  behavior: const _OnboardingCarouselScrollBehavior(),
-                  child: PageView.builder(
-                    controller: _controller,
-                    padEnds: true,
-                    physics: const PageScrollPhysics(),
-                    itemCount: widget.cards.length,
-                    onPageChanged: (index) {
-                      setState(() => _activeIndex = index);
-                    },
-                    itemBuilder: (context, index) {
-                      final selected = index == _activeIndex;
-                      return AnimatedScale(
-                        duration: const Duration(milliseconds: 180),
-                        scale: selected ? 1 : 0.96,
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 180),
-                          opacity: selected ? 1 : 0.68,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 6,
-                            ),
-                            child: widget.cards[index],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              _CarouselArrow(
-                icon: Icons.chevron_right_rounded,
-                tooltip: 'Next card',
-                enabled: canGoForward,
-                onPressed: () => _goTo(_activeIndex + 1),
-              ),
-            ],
-          ),
-        ),
-        if (widget.cards.length > 1) ...[
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(widget.cards.length, (index) {
-              final selected = index == _activeIndex;
-              return GestureDetector(
-                onTap: () => _goTo(index),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  width: selected ? 22 : 7,
-                  height: 7,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppTheme.neonCyan
-                        : Colors.white.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(999),
-                    boxShadow: selected
-                        ? [
-                            BoxShadow(
-                              color: AppTheme.neonCyan.withValues(alpha: 0.38),
-                              blurRadius: 10,
-                            ),
-                          ]
-                        : null,
-                  ),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            compact
-                ? 'Swipe or use the arrows to review every card'
-                : 'Drag, scroll or use the arrows to review every card',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.48),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _CarouselArrow extends StatelessWidget {
-  const _CarouselArrow({
-    required this.icon,
-    required this.tooltip,
-    required this.enabled,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: enabled ? onPressed : null,
-      style: IconButton.styleFrom(
-        backgroundColor: enabled
-            ? AppTheme.neonCyan.withValues(alpha: 0.12)
-            : Colors.white.withValues(alpha: 0.04),
-        side: BorderSide(
-          color: enabled
-              ? AppTheme.neonCyan.withValues(alpha: 0.52)
-              : Colors.white.withValues(alpha: 0.08),
-        ),
-      ),
-      icon: Icon(
-        icon,
-        color: enabled ? AppTheme.neonCyan : Colors.white24,
-        size: 30,
-      ),
-    );
-  }
-}
-
-class _OnboardingCarouselScrollBehavior extends MaterialScrollBehavior {
-  const _OnboardingCarouselScrollBehavior();
-
-  @override
-  Set<PointerDeviceKind> get dragDevices => const {
-    PointerDeviceKind.touch,
-    PointerDeviceKind.mouse,
-    PointerDeviceKind.trackpad,
-    PointerDeviceKind.stylus,
-    PointerDeviceKind.unknown,
-  };
 }

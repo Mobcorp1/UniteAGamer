@@ -19,6 +19,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
@@ -102,6 +103,20 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         showLogout: true,
       ),
       drawer: const AppDrawer(),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'closed-beta-feedback',
+        tooltip: 'Send closed-beta feedback',
+        onPressed: () {
+          Navigator.of(context).pushNamed(
+            ArcBetaFeedbackScreen.routeName,
+            arguments: const ArcBetaFeedbackScreenArgs(
+              sourceRoute: ArcCommandCentreScreen.routeName,
+            ),
+          );
+        },
+        icon: const Icon(Icons.bug_report_rounded),
+        label: const Text('Beta feedback'),
+      ),
       body: ArcRaidersScreenShell(
         showAdBanner: true,
         child: KeyedSubtree(
