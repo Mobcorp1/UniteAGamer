@@ -12,6 +12,36 @@ import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+Map<String, dynamic> buildOnboardingLegalAcceptedMap({
+  required bool traderCodeAccepted,
+  required bool termsOfServiceAccepted,
+  required bool dataSecurityAccepted,
+}) {
+  final accepted = <String, dynamic>{
+    'traderCodeAccepted': traderCodeAccepted,
+    'termsOfServiceAccepted': termsOfServiceAccepted,
+    'dataSecurityAccepted': dataSecurityAccepted,
+  };
+
+  if (traderCodeAccepted) {
+    accepted
+      ..['traderCodeVersion'] = 1
+      ..['traderCodeAcceptedAt'] = FieldValue.serverTimestamp();
+  }
+  if (termsOfServiceAccepted) {
+    accepted
+      ..['termsOfServiceVersion'] = 1
+      ..['termsOfServiceAcceptedAt'] = FieldValue.serverTimestamp();
+  }
+  if (dataSecurityAccepted) {
+    accepted
+      ..['dataSecurityVersion'] = 1
+      ..['dataSecurityAcceptedAt'] = FieldValue.serverTimestamp();
+  }
+
+  return accepted;
+}
+
 class OnboardingBasicProfileScreen extends StatefulWidget {
   static const routeName = '/onboarding-basic-profile';
 
@@ -263,9 +293,18 @@ class _OnboardingBasicProfileScreenState
     final completedSteps = arcOnboarding['completedSteps'] is Map
         ? arcOnboarding['completedSteps'] as Map
         : const <String, dynamic>{};
-    _acceptedTraderCode = completedSteps['traderCode'] == true;
-    _acceptedTermsOfService = completedSteps['termsOfService'] == true;
-    _acceptedDataSecurity = completedSteps['dataSecurity'] == true;
+    final legalAccepted = arcOnboarding['legalAccepted'] is Map
+        ? arcOnboarding['legalAccepted'] as Map
+        : const <String, dynamic>{};
+    _acceptedTraderCode =
+        legalAccepted['traderCodeAccepted'] == true ||
+        completedSteps['traderCode'] == true;
+    _acceptedTermsOfService =
+        legalAccepted['termsOfServiceAccepted'] == true ||
+        completedSteps['termsOfService'] == true;
+    _acceptedDataSecurity =
+        legalAccepted['dataSecurityAccepted'] == true ||
+        completedSteps['dataSecurity'] == true;
 
     if (mounted) setState(() => _isLoading = false);
   }
@@ -358,6 +397,11 @@ class _OnboardingBasicProfileScreenState
               'questProgressReset': _isFreshOrReset,
               'benchProgressReset': _isFreshOrReset,
               'favouriteLoadoutsRetained': true,
+              'legalAccepted': buildOnboardingLegalAcceptedMap(
+                traderCodeAccepted: _acceptedTraderCode,
+                termsOfServiceAccepted: _acceptedTermsOfService,
+                dataSecurityAccepted: _acceptedDataSecurity,
+              ),
               'completedSteps': {
                 'profile': true,
                 'playerType': true,
