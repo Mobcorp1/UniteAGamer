@@ -16,8 +16,10 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/raid_planner_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/models/raid_planner_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/repositories/raid_planner_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -1160,12 +1162,16 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               ArcDockAction(
                 label: 'Assist',
                 icon: Icons.auto_awesome_rounded,
-                onTap: () {},
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcCommandCentreScreen.routeName),
               ),
               ArcDockAction(
                 label: 'Status',
                 icon: Icons.sensors_rounded,
-                onTap: () {},
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(RaidPlannerHuntTargetsScreen.routeName),
               ),
             ],
           ),

@@ -19,6 +19,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
@@ -203,8 +204,7 @@ class ArcCommandCentreEngine {
         reason: 'Confirm this week has one focused raid goal.',
         action: ArcCommandAction(
           label: 'Raid Planner',
-          placeholderMessage: 'Raid planner hook is ready for phase 2 wiring.',
-          intent: ArcCommandActionIntent.placeholder,
+          routeName: RaidPlannerScreen.routeName,
         ),
       ),
       ArcCommandChecklistItem(

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../data/arc_match_compatibility_engine.dart';
+import '../data/arc_player_archetype_catalog.dart';
 import '../models/arc_match_rider_invite.dart';
 import '../models/arc_match_rider_profile.dart';
 
@@ -23,6 +25,8 @@ class ArcMatchRiderRepository {
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final ArcMatchCompatibilityEngine _compatibilityEngine =
+      const ArcMatchCompatibilityEngine();
 
   String? get currentUid => _auth.currentUser?.uid;
 
@@ -66,6 +70,17 @@ class ArcMatchRiderRepository {
     final fallbackCrossplay = userData['crossplayEnabled'] is bool
         ? userData['crossplayEnabled'] as bool
         : userData['crossPlatformOk'] != false;
+    final fallbackArchetypes = ArcPlayerArchetypeCatalog.normalizeLabels(
+      _readStringList(userData['archetypes']),
+    );
+    final fallbackPlaystyles = _readStringList(
+      userData['playStyles'],
+      _readStringList(userData['playStyle']),
+    );
+    final fallbackComms = _communicationToMatchComms(
+      (userData['communicationStyle'] as String? ?? '').trim(),
+    );
+    final fallbackSquad = (userData['squadIntent'] as String? ?? '').trim();
 
     return ArcMatchRiderProfile.empty(uid).copyWith(
       displayName: fallbackName,
@@ -76,6 +91,12 @@ class ArcMatchRiderRepository {
           ? 'Automatic'
           : fallbackServerPreference,
       crossplayEnabled: fallbackCrossplay,
+      archetypes: fallbackArchetypes,
+      playstyles: fallbackPlaystyles,
+      comms: fallbackComms,
+      squadPreferences: fallbackSquad.isEmpty
+          ? const <String>[]
+          : <String>[fallbackSquad],
     );
   }
 
@@ -100,10 +121,16 @@ class ArcMatchRiderRepository {
       for (final doc in snapshot.docs) {
         if (doc.id == uid) continue;
         final profile = ArcMatchRiderProfile.fromMap(doc.data(), doc.id);
-        final score = _score(currentProfile, profile);
-        final reasons = _buildReasons(currentProfile, profile);
+        final result = _compatibilityEngine.score(
+          me: currentProfile,
+          other: profile,
+        );
         matches.add(
-          ArcMatchCandidate(profile: profile, score: score, reasons: reasons),
+          ArcMatchCandidate(
+            profile: profile,
+            score: result.score,
+            reasons: result.reasons,
+          ),
         );
       }
 
@@ -249,70 +276,34 @@ class ArcMatchRiderRepository {
     });
   }
 
-  int _score(ArcMatchRiderProfile me, ArcMatchRiderProfile other) {
-    var score = 0;
-    score += _sharedCount(me.playstyles, other.playstyles) * 24;
-    score += _sharedCount(me.goals, other.goals) * 18;
-    score += _sharedCount(me.squadPreferences, other.squadPreferences) * 16;
-    score += _sharedCount(me.comms, other.comms) * 12;
-    score += _sharedCount(me.preferredMaps, other.preferredMaps) * 10;
-    score += _sharedCount(me.preferredModes, other.preferredModes) * 10;
-    if (me.platform.isNotEmpty && me.platform == other.platform) score += 14;
-    if (me.crossplayEnabled && other.crossplayEnabled) score += 6;
-    if (me.region.isNotEmpty && me.region == other.region) score += 10;
-    if (me.serverPreference.isNotEmpty &&
-        other.serverPreference.isNotEmpty &&
-        (me.serverPreference == 'Automatic' ||
-            other.serverPreference == 'Automatic' ||
-            me.serverPreference == other.serverPreference)) {
-      score += 12;
-    }
-    if (other.lookingNow) score += 8;
-    return score;
-  }
-
-  List<String> _buildReasons(
-    ArcMatchRiderProfile me,
-    ArcMatchRiderProfile other,
-  ) {
-    final reasons = <String>[];
-    void addShared(String label, List<String> mine, List<String> theirs) {
-      final overlap = mine
-          .where((item) => theirs.contains(item))
+  List<String> _readStringList(
+    dynamic value, [
+    List<String> fallback = const <String>[],
+  ]) {
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
           .toList(growable: false);
-      if (overlap.isNotEmpty) {
-        reasons.add('$label: ${overlap.take(2).join(', ')}');
-      }
     }
-
-    addShared('Shared goals', me.goals, other.goals);
-    addShared('Shared playstyle', me.playstyles, other.playstyles);
-    addShared('Shared squad vibe', me.squadPreferences, other.squadPreferences);
-    addShared('Shared comms', me.comms, other.comms);
-    addShared('Shared maps', me.preferredMaps, other.preferredMaps);
-    if (me.platform.isNotEmpty && me.platform == other.platform) {
-      reasons.add('Same platform');
+    if (value is String && value.trim().isNotEmpty) {
+      return <String>[value.trim()];
     }
-    if (me.crossplayEnabled && other.crossplayEnabled) {
-      reasons.add('Crossplay compatible');
-    }
-    if (me.region.isNotEmpty && me.region == other.region) {
-      reasons.add('Same region');
-    }
-    if (me.serverPreference.isNotEmpty &&
-        other.serverPreference.isNotEmpty &&
-        (me.serverPreference == 'Automatic' ||
-            other.serverPreference == 'Automatic' ||
-            me.serverPreference == other.serverPreference)) {
-      reasons.add('Server compatible');
-    }
-    if (other.lookingNow) reasons.add('Looking now');
-    return reasons.take(4).toList(growable: false);
+    return fallback;
   }
 
-  int _sharedCount(List<String> a, List<String> b) {
-    if (a.isEmpty || b.isEmpty) return 0;
-    return a.where((item) => b.contains(item)).length;
+  List<String> _communicationToMatchComms(String value) {
+    final normalized = value.toLowerCase();
+    if (normalized.contains('mic') || normalized.contains('voice')) {
+      return const <String>['Voice'];
+    }
+    if (normalized.contains('ping')) return const <String>['Pings'];
+    if (normalized.contains('quiet') || normalized.contains('low')) {
+      return const <String>['Quiet'];
+    }
+    if (normalized.contains('chat')) return const <String>['Text/chat'];
+    if (normalized.contains('flex')) return const <String>['Flexible'];
+    return const <String>[];
   }
 
   String _statusMessage(String status) {

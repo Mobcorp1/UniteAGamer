@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -75,7 +76,9 @@ class _OnboardingBasicProfileScreenState
   bool _hasAppliedRouteArguments = false;
   bool _reachedRaiderLevel25 = false;
 
-  String _selectedPlayStyle = 'Balanced';
+  final Set<String> _selectedArchetypes = {
+    ArcPlayerArchetypeCatalog.defaultLabel,
+  };
   String _selectedSquadIntent = 'Flexible';
   String _selectedSocialEnergy = 'Depends on the day';
 
@@ -108,15 +111,7 @@ class _OnboardingBasicProfileScreenState
 
   static const List<String> _platforms = ['PC', 'PlayStation', 'Xbox', 'Steam'];
 
-  static const List<String> _playStyles = [
-    'Balanced',
-    'Quest focused',
-    'Blueprint grinder',
-    'Squad support',
-    'PvP hunter',
-    'Loot runner',
-    'Casual explorer',
-  ];
+  static final List<String> _playStyles = ArcPlayerArchetypeCatalog.labels;
 
   static const List<String> _squadIntents = [
     'Flexible',
@@ -212,6 +207,19 @@ class _OnboardingBasicProfileScreenState
       return fallback;
     }
 
+    List<String> pickStringList(dynamic value) {
+      if (value is Iterable) {
+        return value
+            .map((item) => item.toString().trim())
+            .where((item) => item.isNotEmpty)
+            .toList(growable: false);
+      }
+      if (value is String && value.trim().isNotEmpty) {
+        return <String>[value.trim()];
+      }
+      return const <String>[];
+    }
+
     int pickInt(dynamic value, int fallback) {
       if (value is int) return value;
       if (value is num) return value.toInt();
@@ -258,9 +266,15 @@ class _OnboardingBasicProfileScreenState
       basicProfile['socialEnergy'],
       pickString(traderProfile['socialEnergy'], 'Depends on the day'),
     );
-    if (_playStyles.contains(playStyleValue)) {
-      _selectedPlayStyle = playStyleValue;
-    }
+    final savedArchetypes = ArcPlayerArchetypeCatalog.normalizeLabels(<dynamic>[
+      ...pickStringList(basicProfile['archetypes']),
+      ...pickStringList(traderProfile['archetypes']),
+      ...pickStringList(arcOnboarding['archetypes']),
+      playStyleValue,
+    ], includeDefaultWhenEmpty: true);
+    _selectedArchetypes
+      ..clear()
+      ..addAll(savedArchetypes);
     if (_squadIntents.contains(squadIntentValue)) {
       _selectedSquadIntent = squadIntentValue;
     }
@@ -346,6 +360,11 @@ class _OnboardingBasicProfileScreenState
         _blueprintChoice == _ArcBlueprintSetupChoice.skipForNow;
     final blueprintTrackerConfigured =
         _blueprintChoice == _ArcBlueprintSetupChoice.setupNow;
+    final selectedArchetypes = ArcPlayerArchetypeCatalog.normalizeLabels(
+      _selectedArchetypes,
+      includeDefaultWhenEmpty: true,
+    );
+    final primaryPlayStyle = selectedArchetypes.first;
 
     try {
       await FirebaseFirestore.instance
@@ -362,7 +381,9 @@ class _OnboardingBasicProfileScreenState
               'platform': _selectedPlatform,
               'timeZone': _selectedTimeZone,
               'platforms': [_selectedPlatform],
-              'playStyle': _selectedPlayStyle,
+              'archetypes': selectedArchetypes,
+              'playStyles': selectedArchetypes,
+              'playStyle': primaryPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
             },
@@ -374,7 +395,9 @@ class _OnboardingBasicProfileScreenState
               'platform': _selectedPlatform,
               'timeZone': _selectedTimeZone,
               'embarkId': _embarkIdController.text.trim(),
-              'playStyle': _selectedPlayStyle,
+              'archetypes': selectedArchetypes,
+              'playStyles': selectedArchetypes,
+              'playStyle': primaryPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
               'raiderLevel': raiderLevel,
@@ -385,7 +408,9 @@ class _OnboardingBasicProfileScreenState
               'raiderLevel': raiderLevel,
               'nomadicTraderUnlocked': nomadicUnlocked,
               'embarkId': _embarkIdController.text.trim(),
-              'playStyle': _selectedPlayStyle,
+              'archetypes': selectedArchetypes,
+              'playStyles': selectedArchetypes,
+              'playStyle': primaryPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
               'nomadicTraderLockedReason': nomadicUnlocked
@@ -431,8 +456,9 @@ class _OnboardingBasicProfileScreenState
         _selectedCountry == 'United Kingdom' ? 'UK' : _selectedCountry,
       );
       await prefs.setStringList('platforms', <String>[_selectedPlatform]);
-      await prefs.setStringList('playstyles', <String>[_selectedPlayStyle]);
-      await prefs.setString('playStyle', _selectedPlayStyle);
+      await prefs.setStringList('archetypes', selectedArchetypes);
+      await prefs.setStringList('playstyles', selectedArchetypes);
+      await prefs.setString('playStyle', primaryPlayStyle);
       await prefs.setString('communicationStyle', _selectedSocialEnergy);
       await prefs.setString('squadIntent', _selectedSquadIntent);
       await prefs.setString('socialEnergy', _selectedSocialEnergy);
@@ -1152,9 +1178,9 @@ class _OnboardingBasicProfileScreenState
                   (style) => _choiceCard(
                     title: style,
                     body: _playStyleDescription(style),
-                    icon: Icons.person_pin_circle_rounded,
-                    selected: _selectedPlayStyle == style,
-                    onTap: () => setState(() => _selectedPlayStyle = style),
+                    icon: ArcPlayerArchetypeCatalog.iconFor(style),
+                    selected: _selectedArchetypes.contains(style),
+                    onTap: () => _toggleArchetype(style),
                   ),
                 )
                 .toList(),
@@ -1207,19 +1233,20 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
+  void _toggleArchetype(String style) {
+    setState(() {
+      if (_selectedArchetypes.contains(style)) {
+        if (_selectedArchetypes.length > 1) {
+          _selectedArchetypes.remove(style);
+        }
+      } else {
+        _selectedArchetypes.add(style);
+      }
+    });
+  }
+
   String _playStyleDescription(String style) => switch (style) {
-    'Quest focused' => 'Prioritise quests, unlocks and guided progression.',
-    'Blueprint grinder' =>
-      'Prioritise blueprint collection, duplicates and trade value.',
-    'Squad support' =>
-      'Prioritise team utility, survival and helping the squad.',
-    'PvP hunter' =>
-      'Prioritise combat readiness, ambushes and confident raids.',
-    'Loot runner' =>
-      'Prioritise stash building, materials and safe extraction routes.',
-    'Casual explorer' =>
-      'Prioritise low-pressure play, discovery and flexible goals.',
-    _ => 'Blend quests, blueprints, loot, trading and squad play.',
+    _ => ArcPlayerArchetypeCatalog.descriptionFor(style),
   };
 
   String _squadIntentDescription(String intent) => switch (intent) {

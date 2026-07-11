@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/arc_blueprint_source_of_truth_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/automation/smart_trade_assist_engine.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
@@ -374,12 +376,15 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
               ArcDockAction(
                 label: 'Assist',
                 icon: Icons.auto_awesome_rounded,
-                onTap: () {},
+                onTap: () =>
+                    Navigator.of(context).pushNamed(TraderHubScreen.routeName),
               ),
               ArcDockAction(
                 label: 'Status',
                 icon: Icons.sensors_rounded,
-                onTap: () {},
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcCommandCentreScreen.routeName),
               ),
             ],
           ),

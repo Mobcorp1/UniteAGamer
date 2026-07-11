@@ -90,6 +90,158 @@ class _TradingTradeSessionsScreenState
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _openSessionReadinessPanel(TradingSession session) async {
+    final confirmedBooking = session.selectedBooking ?? session.scheduledAt;
+    final isReady = _isTraderOne(session)
+        ? session.traderOneReady
+        : session.traderTwoReady;
+    final myEmbarkShared = _isTraderOne(session)
+        ? session.traderOneSharedEmbarkId
+        : session.traderTwoSharedEmbarkId;
+    final bothEmbarkIdsShared =
+        session.traderOneSharedEmbarkId && session.traderTwoSharedEmbarkId;
+    final myEmbarkId = _isTraderOne(session)
+        ? session.traderOneEmbarkId
+        : session.traderTwoEmbarkId;
+    final otherEmbarkId = _isTraderOne(session)
+        ? session.traderTwoEmbarkId
+        : session.traderOneEmbarkId;
+    final firstDropLabel = session.dropOrderAssigned
+        ? (session.firstDropUid == session.traderOneUid
+              ? session.traderOneName
+              : session.traderTwoName)
+        : 'Not assigned yet';
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          margin: const EdgeInsets.all(AppTheme.spaceM),
+          padding: AppTheme.sectionCardPadding,
+          decoration: AppTheme.tradingCardDecoration(
+            backgroundColor: AppTheme.tradingCardBackground,
+            borderColor: AppTheme.neonPink.withValues(alpha: 0.35),
+            radius: 22,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Session readiness',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 22,
+                    color: AppTheme.neonPink,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${session.traderOneName} / ${session.traderTwoName}',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                _sessionReadinessRow(
+                  'Confirmed slot',
+                  _formatDateTime(confirmedBooking),
+                  confirmedBooking != null,
+                ),
+                _sessionReadinessRow(
+                  'My Embark ID',
+                  myEmbarkId.trim().isEmpty
+                      ? 'Not shared yet'
+                      : myEmbarkId.trim(),
+                  myEmbarkShared,
+                ),
+                _sessionReadinessRow(
+                  '${_otherTraderName(session)} Embark ID',
+                  otherEmbarkId.trim().isEmpty
+                      ? 'Waiting for trader'
+                      : otherEmbarkId.trim(),
+                  bothEmbarkIdsShared,
+                ),
+                _sessionReadinessRow(
+                  'First drop',
+                  firstDropLabel,
+                  session.dropOrderAssigned,
+                ),
+                _sessionReadinessRow(
+                  'Ready check',
+                  session.bothReady
+                      ? 'Both traders ready'
+                      : isReady
+                      ? 'Waiting for trader'
+                      : 'Mark yourself ready',
+                  session.bothReady,
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _actionButton(
+                      label: 'Share invite',
+                      icon: Icons.ios_share_rounded,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _shareInvite(session);
+                      },
+                    ),
+                    _actionButton(
+                      label: session.hasBookingOptions
+                          ? 'Update proposals'
+                          : 'Propose times',
+                      icon: Icons.calendar_month_rounded,
+                      highlighted: confirmedBooking == null,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _openBookingComposer(session);
+                      },
+                    ),
+                    _actionButton(
+                      label: myEmbarkShared
+                          ? 'Update Embark ID'
+                          : 'Share Embark ID',
+                      icon: Icons.badge_outlined,
+                      highlighted: !myEmbarkShared,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _shareEmbarkId(session);
+                      },
+                    ),
+                    _actionButton(
+                      label: isReady ? 'Unready' : 'I am ready',
+                      icon: isReady
+                          ? Icons.remove_circle_outline_rounded
+                          : Icons.check_circle_outline_rounded,
+                      highlighted: confirmedBooking != null && !isReady,
+                      onPressed: () {
+                        Navigator.of(sheetContext).pop();
+                        _runAction(
+                          () => _repository.setMyReadyState(session, !isReady),
+                          successMessage: isReady
+                              ? 'Ready status removed.'
+                              : 'Ready status updated.',
+                          errorPrefix: 'Could not update readiness: ',
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _runAction(
     Future<void> Function() action, {
     required String successMessage,
@@ -639,6 +791,46 @@ class _TradingTradeSessionsScreenState
     );
   }
 
+  Widget _sessionReadinessRow(String label, String value, bool complete) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            complete ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: complete
+                ? AppTheme.tradingSuccess
+                : AppTheme.tradingFaintText,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: AppTheme.tradingMutedText,
+                ),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 14,
+                      color: AppTheme.neonCyan,
+                      isBold: true,
+                    ),
+                  ),
+                  TextSpan(text: value),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _actionButton({
     required String label,
     required IconData icon,
@@ -984,7 +1176,7 @@ class _TradingTradeSessionsScreenState
                           label: 'Open session',
                           icon: Icons.open_in_new_rounded,
                           highlighted: true,
-                          onPressed: () {},
+                          onPressed: () => _openSessionReadinessPanel(session),
                         ),
                         _actionButton(
                           label: 'Request rearrangement',

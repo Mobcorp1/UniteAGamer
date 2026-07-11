@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 
 class ArcMatchRiderProfile {
   const ArcMatchRiderProfile({
@@ -9,6 +10,7 @@ class ArcMatchRiderProfile {
     required this.platform,
     required this.serverPreference,
     required this.crossplayEnabled,
+    required this.archetypes,
     required this.playstyles,
     required this.preferredMaps,
     required this.preferredModes,
@@ -28,6 +30,7 @@ class ArcMatchRiderProfile {
   final String platform;
   final String serverPreference;
   final bool crossplayEnabled;
+  final List<String> archetypes;
   final List<String> playstyles;
   final List<String> preferredMaps;
   final List<String> preferredModes;
@@ -51,6 +54,7 @@ class ArcMatchRiderProfile {
     String? platform,
     String? serverPreference,
     bool? crossplayEnabled,
+    List<String>? archetypes,
     List<String>? playstyles,
     List<String>? preferredMaps,
     List<String>? preferredModes,
@@ -70,6 +74,7 @@ class ArcMatchRiderProfile {
       platform: platform ?? this.platform,
       serverPreference: serverPreference ?? this.serverPreference,
       crossplayEnabled: crossplayEnabled ?? this.crossplayEnabled,
+      archetypes: archetypes ?? this.archetypes,
       playstyles: playstyles ?? this.playstyles,
       preferredMaps: preferredMaps ?? this.preferredMaps,
       preferredModes: preferredModes ?? this.preferredModes,
@@ -92,6 +97,7 @@ class ArcMatchRiderProfile {
       'platform': platform,
       'serverPreference': serverPreference,
       'crossplayEnabled': crossplayEnabled,
+      'archetypes': ArcPlayerArchetypeCatalog.normalizeLabels(archetypes),
       'playstyles': playstyles,
       'preferredMaps': preferredMaps,
       'preferredModes': preferredModes,
@@ -114,6 +120,7 @@ class ArcMatchRiderProfile {
       platform: '',
       serverPreference: 'Automatic',
       crossplayEnabled: true,
+      archetypes: const [],
       playstyles: const [],
       preferredMaps: const [],
       preferredModes: const [],
@@ -158,6 +165,9 @@ class ArcMatchRiderProfile {
       serverPreference: (map['serverPreference'] as String? ?? 'Automatic')
           .trim(),
       crossplayEnabled: map['crossplayEnabled'] != false,
+      archetypes: ArcPlayerArchetypeCatalog.normalizeLabels(
+        readList('archetypes'),
+      ),
       playstyles: readList('playstyles'),
       preferredMaps: readList('preferredMaps'),
       preferredModes: readList('preferredModes'),

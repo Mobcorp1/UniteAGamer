@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
@@ -16,11 +17,17 @@ class ArcMatchRiderScreen extends StatefulWidget {
 }
 
 class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
+  static final List<String> _archetypeOptions =
+      ArcPlayerArchetypeCatalog.labels;
+
   static const List<String> _playstyleOptions = [
-    'PvE',
-    'PvP',
-    'PvE + PvP Aggressive',
-    'PvE + PvP Defensive',
+    'PvE defensive',
+    'PvE aggressive',
+    'PvP focused',
+    'Quest-focused',
+    'Blueprint farming',
+    'Resource running',
+    'Squad support',
   ];
 
   static const List<String> _mapOptions = [
@@ -50,12 +57,15 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     'General looting',
     'Trials',
     'Quests',
+    'Rat hunting',
   ];
 
   static const List<String> _commsOptions = [
-    'Mic',
-    'Ping',
-    'Chat while gaming',
+    'Voice',
+    'Text/chat',
+    'Pings',
+    'Quiet',
+    'Flexible',
   ];
 
   static const List<String> _squadOptions = [
@@ -330,6 +340,8 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 profile.visibleInSearch ? 'Visible in search' : 'Hidden',
                 profile.visibleInSearch ? AppTheme.neonPink : Colors.white54,
               ),
+              if (profile.archetypes.isNotEmpty)
+                _buildStatusPill(profile.archetypes.first, Colors.white70),
               if (profile.platform.isNotEmpty)
                 _buildStatusPill(profile.platform, Colors.white70),
               if (profile.region.isNotEmpty)
@@ -372,6 +384,12 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: AppTheme.spaceM),
+          _buildSection(
+            'Archetypes',
+            _archetypeOptions,
+            profile.archetypes,
+            (values) => _setProfile(profile.copyWith(archetypes: values)),
+          ),
           _buildSection(
             'Playstyle',
             _playstyleOptions,
@@ -610,6 +628,17 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
               ],
             ),
             const SizedBox(height: AppTheme.spaceM),
+            if (profile.archetypes.isNotEmpty) ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: profile.archetypes
+                    .take(4)
+                    .map((item) => _buildStatusPill(item, AppTheme.neonCyan))
+                    .toList(growable: false),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+            ],
             Wrap(
               spacing: 8,
               runSpacing: 8,

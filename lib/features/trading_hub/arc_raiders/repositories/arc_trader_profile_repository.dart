@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../data/arc_player_archetype_catalog.dart';
 import '../models/arc_availability.dart';
 import '../models/arc_away_status.dart';
 import '../models/arc_trader_profile.dart';
@@ -64,6 +65,21 @@ class ArcTraderProfileRepository {
       for (final item in value) {
         if (item is String && item.trim().isNotEmpty) return item.trim();
       }
+    }
+    return fallback;
+  }
+
+  List<String> _stringList(dynamic value, [List<String> fallback = const []]) {
+    if (value == null) return fallback;
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList(growable: false);
+    }
+    if (value is String && value.trim().isNotEmpty) {
+      return <String>[value.trim()];
     }
     return fallback;
   }
@@ -367,6 +383,27 @@ class ArcTraderProfileRepository {
     );
 
     final uagId = _string(profileData['uagId'], gamerTag);
+    final archetypes = ArcPlayerArchetypeCatalog.normalizeLabels(<dynamic>[
+      ..._stringList(profileData['archetypes']),
+      ..._stringList(traderProfile['archetypes']),
+      ..._stringList(basicProfile['archetypes']),
+      _string(profileData['playStyle']),
+      _string(traderProfile['playStyle']),
+      _string(basicProfile['playStyle']),
+    ], includeDefaultWhenEmpty: true);
+    final playStyles = _stringList(
+      profileData['playStyles'],
+      _stringList(
+        profileData['playStyle'],
+        _stringList(
+          traderProfile['playStyles'],
+          _stringList(
+            traderProfile['playStyle'],
+            _stringList(basicProfile['playStyle']),
+          ),
+        ),
+      ),
+    );
 
     final createdAt = (profileData['createdAt'] as Timestamp?)?.toDate();
     final updatedAt = (profileData['updatedAt'] as Timestamp?)?.toDate();
@@ -376,7 +413,10 @@ class ArcTraderProfileRepository {
       uid: uid,
       uagId: uagId,
       uagName: uagName,
-      embarkId: _string(profileData['embarkId']),
+      embarkId: _string(
+        profileData['embarkId'],
+        _string(traderProfile['embarkId'], _string(basicProfile['embarkId'])),
+      ),
       region: region,
       serverPreference: serverPreference,
       platform: platform,
@@ -391,6 +431,20 @@ class ArcTraderProfileRepository {
             uagName.isNotEmpty &&
             region.isNotEmpty &&
             platform.isNotEmpty,
+      ),
+      archetypes: archetypes,
+      playStyles: playStyles.isEmpty ? const ['PvE defensive'] : playStyles,
+      communicationStyle: _string(
+        profileData['communicationStyle'],
+        _string(traderProfile['communicationStyle'], 'Flexible'),
+      ),
+      squadIntent: _string(
+        profileData['squadIntent'],
+        _string(traderProfile['squadIntent'], 'Flexible'),
+      ),
+      socialEnergy: _string(
+        profileData['socialEnergy'],
+        _string(traderProfile['socialEnergy'], 'Depends on the day'),
       ),
       referralCode: _string(profileData['referralCode']),
       referredByCode: _string(
@@ -438,6 +492,25 @@ class ArcTraderProfileRepository {
       'crossPlatformOk': profile.crossPlatformOk,
       'crossplayEnabled': profile.crossPlatformOk,
       'isProfileComplete': isComplete,
+      'archetypes': ArcPlayerArchetypeCatalog.normalizeLabels(
+        profile.archetypes,
+        includeDefaultWhenEmpty: true,
+      ),
+      'playStyles': profile.playStyles,
+      'playStyle': profile.playStyles.isNotEmpty
+          ? profile.playStyles.first
+          : profile.archetypes.isNotEmpty
+          ? profile.archetypes.first
+          : ArcPlayerArchetypeCatalog.defaultLabel,
+      'communicationStyle': profile.communicationStyle.trim().isEmpty
+          ? 'Flexible'
+          : profile.communicationStyle.trim(),
+      'squadIntent': profile.squadIntent.trim().isEmpty
+          ? 'Flexible'
+          : profile.squadIntent.trim(),
+      'socialEnergy': profile.socialEnergy.trim().isEmpty
+          ? 'Depends on the day'
+          : profile.socialEnergy.trim(),
       'referralCode': profile.referralCode.trim(),
       'referredByCode': profile.referredByCode.trim(),
       'affiliateEnabled': profile.affiliateEnabled,
@@ -448,14 +521,6 @@ class ArcTraderProfileRepository {
           : profile.uagName.trim(),
       'gamerTag': profile.uagId.trim(),
       'preferredPlatform': profile.platform.trim(),
-      'completedTrades': 0,
-      'noShows': 0,
-      'betrayalFlags': 0,
-      'cancelledTrades': 0,
-      'successfulTradeStreak': 0,
-      'totalOffersSent': 0,
-      'totalOffersReceived': 0,
-      'foundingTrader': false,
       'updatedAt': serverNow,
       'lastActiveAt': serverNow,
       'createdAt': profile.createdAt == null

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+import '../data/arc_player_archetype_catalog.dart';
 import '../models/arc_operations_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_operations_repository.dart';
@@ -614,6 +615,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   }
 
   IconData _archetypeIcon(String value) {
+    final catalogIcon = ArcPlayerArchetypeCatalog.iconFor(value);
+    if (catalogIcon != Icons.person_pin_circle_rounded) return catalogIcon;
+
     final normalized = value.toLowerCase();
     if (normalized.contains('quest')) return Icons.assignment_turned_in_rounded;
     if (normalized.contains('blueprint') || normalized.contains('collector')) {
@@ -638,6 +642,9 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   }
 
   String _archetypeCopy(String value) {
+    final catalogCopy = ArcPlayerArchetypeCatalog.descriptionFor(value);
+    if (catalogCopy != 'Custom raider identity') return catalogCopy;
+
     final normalized = value.toLowerCase();
     if (normalized.contains('quest')) return 'Objectives first';
     if (normalized.contains('blueprint')) return 'Blueprint focused';

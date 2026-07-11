@@ -10,7 +10,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -464,12 +466,16 @@ class _RaidPlannerHuntTargetsScreenState
               ArcDockAction(
                 label: 'Assist',
                 icon: Icons.auto_awesome_rounded,
-                onTap: () {},
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcCommandCentreScreen.routeName),
               ),
               ArcDockAction(
                 label: 'Status',
                 icon: Icons.sensors_rounded,
-                onTap: () {},
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(RaidPlannerScreen.routeName),
               ),
             ],
           ),

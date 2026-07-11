@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
 import 'package:uag_arc_raiders_hub/build/home_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
@@ -21,6 +22,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_activity_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart';
@@ -33,6 +35,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/trading_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/admin_console_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
@@ -97,6 +100,12 @@ class UAGTradersHubApp extends StatelessWidget {
       case HomeScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const AppEntryGate(),
+          settings: settings,
+        );
+
+      case OnboardingBasicProfileScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const OnboardingBasicProfileScreen(),
           settings: settings,
         );
 
@@ -196,6 +205,26 @@ class UAGTradersHubApp extends StatelessWidget {
       case RaidPlannerScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const RaidPlannerScreen(),
+          settings: settings,
+        );
+
+      case RaidPlannerHuntTargetsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.raidPlanner,
+            title: 'Raid Planner',
+            child: RaidPlannerHuntTargetsScreen(),
+          ),
+          settings: settings,
+        );
+
+      case SmartTradeAssistScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.smartTradeAssist,
+            title: 'Smart Trade Assist',
+            child: SmartTradeAssistScreen(),
+          ),
           settings: settings,
         );
 

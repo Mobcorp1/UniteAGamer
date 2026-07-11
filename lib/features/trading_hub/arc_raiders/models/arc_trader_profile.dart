@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 
 class ArcTraderProfile {
   final String uid;
@@ -72,7 +73,7 @@ class ArcTraderProfile {
       crossRegionOk: false,
       crossPlatformOk: true,
       isProfileComplete: false,
-      archetypes: const ['Balanced Raider'],
+      archetypes: const [ArcPlayerArchetypeCatalog.defaultLabel],
       playStyles: const ['PvE defensive'],
       communicationStyle: 'Flexible',
       squadIntent: 'Flexible',
@@ -145,7 +146,10 @@ class ArcTraderProfile {
       'crossPlatformOk': crossPlatformOk,
       'crossplayEnabled': crossPlatformOk,
       'isProfileComplete': isProfileComplete,
-      'archetypes': archetypes,
+      'archetypes': ArcPlayerArchetypeCatalog.normalizeLabels(
+        archetypes,
+        includeDefaultWhenEmpty: true,
+      ),
       'playStyles': playStyles,
       'communicationStyle': communicationStyle,
       'squadIntent': squadIntent,
@@ -165,7 +169,10 @@ class ArcTraderProfile {
   }
 
   factory ArcTraderProfile.fromMap(Map<String, dynamic> map) {
-    final archetypes = _stringList(map['archetypes']);
+    final archetypes = ArcPlayerArchetypeCatalog.normalizeLabels(
+      _stringList(map['archetypes'], _stringList(map['playStyle'])),
+      includeDefaultWhenEmpty: true,
+    );
     final playStyles = _stringList(
       map['playStyles'],
       _stringList(map['playStyle']),
@@ -186,7 +193,7 @@ class ArcTraderProfile {
           ? _bool(map['crossplayEnabled'], true)
           : _bool(map['crossPlatformOk'], true),
       isProfileComplete: _bool(map['isProfileComplete']),
-      archetypes: archetypes.isEmpty ? const ['Balanced Raider'] : archetypes,
+      archetypes: archetypes,
       playStyles: playStyles.isEmpty ? const ['PvE defensive'] : playStyles,
       communicationStyle: _string(map['communicationStyle'], 'Flexible'),
       squadIntent: _string(map['squadIntent'], 'Flexible'),

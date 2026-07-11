@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+import '../data/arc_player_archetype_catalog.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
 
@@ -67,15 +68,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     'cancelled',
   ];
 
-  static const List<String> _archetypeOptions = <String>[
-    'Balanced Raider',
-    'Quest-driven Raider',
-    'Blueprint Grinder',
-    'Helper / Support Player',
-    'Trader / Resource Runner',
-    'PvP Hunter',
-    'Casual Squad Player',
-  ];
+  static final List<String> _archetypeOptions =
+      ArcPlayerArchetypeCatalog.labels;
 
   static const List<String> _playStyleOptions = <String>[
     'PvE defensive',
