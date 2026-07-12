@@ -519,10 +519,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    ' � ',
-                    style: TextStyle(color: color, fontSize: 18),
-                  ),
+                  Text(' â€¢ ', style: TextStyle(color: color, fontSize: 18)),
                   Expanded(
                     child: Text(
                       bullet,
@@ -593,7 +590,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               final latestDate = state.history.isEmpty
                   ? null
                   : DateFormat(
-                      'dd MMM � HH:mm',
+                      'dd MMM â€¢ HH:mm',
                     ).format(state.history.first.createdAt);
 
               return SafeArea(
@@ -1052,7 +1049,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                � ${_goalLabel(entry.goal)}',
+                                                '• ${_goalLabel(entry.goal)}',
                                                 style: AppTheme.bodyTextStyle(
                                                   fontSize: 14,
                                                   color: AppTheme.neonCyan,
@@ -1061,7 +1058,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                'Perf ${entry.performance}/5 ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ Enjoyment ${entry.enjoyment}/5 ‚‚¬Å¡‚Â¬ƒâ€š‚Â¢ Tilt Control ${entry.tiltControl}/5',
+                                                'Perf ${entry.performance}/5 Ã¢â‚¬Å¡Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Enjoyment ${entry.enjoyment}/5 Ã¢â‚¬Å¡Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Tilt Control ${entry.tiltControl}/5',
                                                 style: const TextStyle(
                                                   color: Colors.white60,
                                                 ),
