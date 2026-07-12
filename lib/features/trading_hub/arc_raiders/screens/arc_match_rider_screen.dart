@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
@@ -47,18 +48,8 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     'Objective-focused raids',
   ];
 
-  static const List<String> _goalOptions = [
-    'PvP',
-    'PvE',
-    'Blueprint farming',
-    'Trading',
-    'Event hunting',
-    'Resource farming',
-    'General looting',
-    'Trials',
-    'Quests',
-    'Rat hunting',
-  ];
+  static const List<String> _goalOptions =
+      ArcPlayerSessionCatalog.sessionIntents;
 
   static const List<String> _commsOptions = [
     'Voice',
@@ -413,6 +404,18 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             _goalOptions,
             profile.goals,
             (values) => _setProfile(profile.copyWith(goals: values)),
+          ),
+          _buildSingleChoiceSection(
+            'This session',
+            ArcPlayerSessionCatalog.sessionIntents,
+            profile.sessionIntent,
+            (value) => _setProfile(profile.copyWith(sessionIntent: value)),
+          ),
+          _buildSingleChoiceSection(
+            'Current priority',
+            ArcPlayerSessionCatalog.priorities,
+            profile.currentPriority,
+            (value) => _setProfile(profile.copyWith(currentPriority: value)),
           ),
           _buildSection(
             'Comms',
@@ -844,6 +847,43 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSingleChoiceSection(
+    String title,
+    List<String> options,
+    String selected,
+    ValueChanged<String> onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTheme.tradingHeading(
+              fontSize: 15,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: options
+                .map(
+                  (option) => ChoiceChip(
+                    selected: selected == option,
+                    label: Text(option),
+                    onSelected: (_) => onChanged(option),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
       ),
     );
   }

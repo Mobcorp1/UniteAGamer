@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -80,6 +81,8 @@ class _OnboardingBasicProfileScreenState
   };
   String _selectedSquadIntent = 'Flexible';
   String _selectedSocialEnergy = 'Depends on the day';
+  String _selectedSessionIntent = ArcPlayerSessionCatalog.defaultIntent;
+  String _selectedCurrentPriority = ArcPlayerSessionCatalog.defaultPriority;
 
   String _selectedCountry = 'United Kingdom';
   String _selectedPlatform = 'PC';
@@ -118,6 +121,7 @@ class _OnboardingBasicProfileScreenState
     'Quest team',
     'Blueprint runs',
     'Trade focused',
+    'Trials',
     'Solo for now',
   ];
 
@@ -280,6 +284,18 @@ class _OnboardingBasicProfileScreenState
     if (_socialEnergyOptions.contains(socialEnergyValue)) {
       _selectedSocialEnergy = socialEnergyValue;
     }
+    _selectedSessionIntent = ArcPlayerSessionCatalog.normalizeIntent(
+      pickString(
+        basicProfile['sessionIntent'],
+        pickString(traderProfile['sessionIntent'], _selectedSquadIntent),
+      ),
+    );
+    _selectedCurrentPriority = ArcPlayerSessionCatalog.normalizePriority(
+      pickString(
+        basicProfile['currentPriority'],
+        pickString(traderProfile['currentPriority'], ''),
+      ),
+    );
 
     final savedLevel = pickInt(
       arcOnboarding['raiderLevel'] ?? traderProfile['raiderLevel'],
@@ -385,6 +401,8 @@ class _OnboardingBasicProfileScreenState
               'playStyle': primaryPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
+              'sessionIntent': _selectedSessionIntent,
+              'currentPriority': _selectedCurrentPriority,
             },
             'traderProfile': {
               'uagName': displayName,
@@ -399,6 +417,8 @@ class _OnboardingBasicProfileScreenState
               'playStyle': primaryPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
+              'sessionIntent': _selectedSessionIntent,
+              'currentPriority': _selectedCurrentPriority,
               'raiderLevel': raiderLevel,
             },
             'arcOnboarding': {
@@ -412,6 +432,8 @@ class _OnboardingBasicProfileScreenState
               'playStyle': primaryPlayStyle,
               'squadIntent': _selectedSquadIntent,
               'socialEnergy': _selectedSocialEnergy,
+              'sessionIntent': _selectedSessionIntent,
+              'currentPriority': _selectedCurrentPriority,
               'nomadicTraderLockedReason': nomadicUnlocked
                   ? null
                   : 'Nomadic Trader unlocks at Raider Level 25. Update your Raider Level in the app when you reach 25 to unlock Nomadic Trader planning.',
@@ -461,6 +483,8 @@ class _OnboardingBasicProfileScreenState
       await prefs.setString('communicationStyle', _selectedSocialEnergy);
       await prefs.setString('squadIntent', _selectedSquadIntent);
       await prefs.setString('socialEnergy', _selectedSocialEnergy);
+      await prefs.setString('sessionIntent', _selectedSessionIntent);
+      await prefs.setString('currentPriority', _selectedCurrentPriority);
       await prefs.setString('embarkId', _embarkIdController.text.trim());
       await prefs.setBool('hasCompletedOnboarding', complete);
       await prefs.setBool('hasCompletedProfileSetup', complete);
@@ -1202,6 +1226,42 @@ class _OnboardingBasicProfileScreenState
                 .toList(),
           ),
           const SizedBox(height: 12),
+          Text('THIS SESSION', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
+          _cardBarrel(
+            height: 154,
+            cards: ArcPlayerSessionCatalog.sessionIntents
+                .map(
+                  (intent) => _choiceCard(
+                    title: intent,
+                    body: ArcPlayerSessionCatalog.intentDescription(intent),
+                    icon: ArcPlayerSessionCatalog.iconFor(intent),
+                    selected: _selectedSessionIntent == intent,
+                    onTap: () =>
+                        setState(() => _selectedSessionIntent = intent),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 12),
+          Text('CURRENT PRIORITY', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
+          _cardBarrel(
+            height: 154,
+            cards: ArcPlayerSessionCatalog.priorities
+                .map(
+                  (priority) => _choiceCard(
+                    title: priority,
+                    body: ArcPlayerSessionCatalog.priorityDescription(priority),
+                    icon: ArcPlayerSessionCatalog.iconFor(priority),
+                    selected: _selectedCurrentPriority == priority,
+                    onTap: () =>
+                        setState(() => _selectedCurrentPriority = priority),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 12),
           Text('SOCIAL ENERGY', style: _sectionLabelStyle()),
           const SizedBox(height: 8),
           _cardBarrel(
@@ -1253,6 +1313,7 @@ class _OnboardingBasicProfileScreenState
     'Quest team' => 'Match with players chasing similar quests.',
     'Blueprint runs' => 'Match with players farming blueprints or duplicates.',
     'Trade focused' => 'Prioritise trade-ready players and inventory value.',
+    'Trials' => 'Find players who want to focus on Trials progress.',
     'Solo for now' => 'Keep matchmaking light and avoid forced squad prompts.',
     _ => 'Keep recommendations flexible depending on your session.',
   };

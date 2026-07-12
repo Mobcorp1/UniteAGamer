@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
+import '../data/arc_player_session_catalog.dart';
 import '../models/arc_availability.dart';
 import '../models/arc_away_status.dart';
 import '../models/arc_trader_profile.dart';
@@ -446,6 +447,21 @@ class ArcTraderProfileRepository {
         profileData['socialEnergy'],
         _string(traderProfile['socialEnergy'], 'Depends on the day'),
       ),
+      sessionIntent: ArcPlayerSessionCatalog.normalizeIntent(
+        _string(
+          profileData['sessionIntent'],
+          _string(
+            traderProfile['sessionIntent'],
+            profileData['squadIntent']?.toString() ?? '',
+          ),
+        ),
+      ),
+      currentPriority: ArcPlayerSessionCatalog.normalizePriority(
+        _string(
+          profileData['currentPriority'],
+          _string(traderProfile['currentPriority']),
+        ),
+      ),
       referralCode: _string(profileData['referralCode']),
       referredByCode: _string(
         profileData['referredByCode'],
@@ -511,6 +527,12 @@ class ArcTraderProfileRepository {
       'socialEnergy': profile.socialEnergy.trim().isEmpty
           ? 'Depends on the day'
           : profile.socialEnergy.trim(),
+      'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(
+        profile.sessionIntent,
+      ),
+      'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
+        profile.currentPriority,
+      ),
       'referralCode': profile.referralCode.trim(),
       'referredByCode': profile.referredByCode.trim(),
       'affiliateEnabled': profile.affiliateEnabled,

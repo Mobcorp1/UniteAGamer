@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
+import '../data/arc_player_session_catalog.dart';
 import '../models/arc_operations_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_operations_repository.dart';
@@ -479,6 +480,24 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             title: "Today's goal",
             value: profile.squadIntent,
             copy: _squadIntentCopy(profile.squadIntent),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          _sessionStatusTile(
+            icon: ArcPlayerSessionCatalog.iconFor(profile.sessionIntent),
+            title: 'This session',
+            value: profile.sessionIntent,
+            copy: ArcPlayerSessionCatalog.intentDescription(
+              profile.sessionIntent,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          _sessionStatusTile(
+            icon: ArcPlayerSessionCatalog.iconFor(profile.currentPriority),
+            title: 'Current priority',
+            value: profile.currentPriority,
+            copy: ArcPlayerSessionCatalog.priorityDescription(
+              profile.currentPriority,
+            ),
           ),
           const SizedBox(height: AppTheme.spaceS),
           _sessionStatusTile(

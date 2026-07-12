@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 
 class ArcTraderProfile {
   final String uid;
@@ -20,6 +21,8 @@ class ArcTraderProfile {
   final String communicationStyle;
   final String squadIntent;
   final String socialEnergy;
+  final String sessionIntent;
+  final String currentPriority;
   final String referralCode;
   final String referredByCode;
   final bool affiliateEnabled;
@@ -48,6 +51,8 @@ class ArcTraderProfile {
     this.communicationStyle = 'Flexible',
     this.squadIntent = 'Flexible',
     this.socialEnergy = 'Depends on the day',
+    this.sessionIntent = ArcPlayerSessionCatalog.defaultIntent,
+    this.currentPriority = ArcPlayerSessionCatalog.defaultPriority,
     required this.referralCode,
     required this.referredByCode,
     required this.affiliateEnabled,
@@ -78,6 +83,8 @@ class ArcTraderProfile {
       communicationStyle: 'Flexible',
       squadIntent: 'Flexible',
       socialEnergy: 'Depends on the day',
+      sessionIntent: ArcPlayerSessionCatalog.defaultIntent,
+      currentPriority: ArcPlayerSessionCatalog.defaultPriority,
       referralCode: '',
       referredByCode: '',
       affiliateEnabled: false,
@@ -154,6 +161,10 @@ class ArcTraderProfile {
       'communicationStyle': communicationStyle,
       'squadIntent': squadIntent,
       'socialEnergy': socialEnergy,
+      'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(sessionIntent),
+      'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
+        currentPriority,
+      ),
       'playStyle': playStyles.isNotEmpty ? playStyles.first : '',
       'referralCode': referralCode,
       'referredByCode': referredByCode,
@@ -198,6 +209,12 @@ class ArcTraderProfile {
       communicationStyle: _string(map['communicationStyle'], 'Flexible'),
       squadIntent: _string(map['squadIntent'], 'Flexible'),
       socialEnergy: _string(map['socialEnergy'], 'Depends on the day'),
+      sessionIntent: ArcPlayerSessionCatalog.normalizeIntent(
+        _string(map['sessionIntent'], _string(map['squadIntent'])),
+      ),
+      currentPriority: ArcPlayerSessionCatalog.normalizePriority(
+        _string(map['currentPriority']),
+      ),
       referralCode: _string(map['referralCode']),
       referredByCode: _string(map['referredByCode']),
       affiliateEnabled: _bool(map['affiliateEnabled']),
@@ -228,6 +245,8 @@ class ArcTraderProfile {
     String? communicationStyle,
     String? squadIntent,
     String? socialEnergy,
+    String? sessionIntent,
+    String? currentPriority,
     String? referralCode,
     String? referredByCode,
     bool? affiliateEnabled,
@@ -256,6 +275,8 @@ class ArcTraderProfile {
       communicationStyle: communicationStyle ?? this.communicationStyle,
       squadIntent: squadIntent ?? this.squadIntent,
       socialEnergy: socialEnergy ?? this.socialEnergy,
+      sessionIntent: sessionIntent ?? this.sessionIntent,
+      currentPriority: currentPriority ?? this.currentPriority,
       referralCode: referralCode ?? this.referralCode,
       referredByCode: referredByCode ?? this.referredByCode,
       affiliateEnabled: affiliateEnabled ?? this.affiliateEnabled,

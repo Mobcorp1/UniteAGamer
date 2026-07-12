@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 
 class ArcMatchRiderProfile {
   const ArcMatchRiderProfile({
@@ -15,6 +16,8 @@ class ArcMatchRiderProfile {
     required this.preferredMaps,
     required this.preferredModes,
     required this.goals,
+    this.sessionIntent = ArcPlayerSessionCatalog.defaultIntent,
+    this.currentPriority = ArcPlayerSessionCatalog.defaultPriority,
     required this.comms,
     required this.squadPreferences,
     required this.lookingNow,
@@ -35,6 +38,8 @@ class ArcMatchRiderProfile {
   final List<String> preferredMaps;
   final List<String> preferredModes;
   final List<String> goals;
+  final String sessionIntent;
+  final String currentPriority;
   final List<String> comms;
   final List<String> squadPreferences;
   final bool lookingNow;
@@ -59,6 +64,8 @@ class ArcMatchRiderProfile {
     List<String>? preferredMaps,
     List<String>? preferredModes,
     List<String>? goals,
+    String? sessionIntent,
+    String? currentPriority,
     List<String>? comms,
     List<String>? squadPreferences,
     bool? lookingNow,
@@ -79,6 +86,8 @@ class ArcMatchRiderProfile {
       preferredMaps: preferredMaps ?? this.preferredMaps,
       preferredModes: preferredModes ?? this.preferredModes,
       goals: goals ?? this.goals,
+      sessionIntent: sessionIntent ?? this.sessionIntent,
+      currentPriority: currentPriority ?? this.currentPriority,
       comms: comms ?? this.comms,
       squadPreferences: squadPreferences ?? this.squadPreferences,
       lookingNow: lookingNow ?? this.lookingNow,
@@ -102,6 +111,10 @@ class ArcMatchRiderProfile {
       'preferredMaps': preferredMaps,
       'preferredModes': preferredModes,
       'goals': goals,
+      'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(sessionIntent),
+      'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
+        currentPriority,
+      ),
       'comms': comms,
       'squadPreferences': squadPreferences,
       'lookingNow': lookingNow,
@@ -125,6 +138,8 @@ class ArcMatchRiderProfile {
       preferredMaps: const [],
       preferredModes: const [],
       goals: const [],
+      sessionIntent: ArcPlayerSessionCatalog.defaultIntent,
+      currentPriority: ArcPlayerSessionCatalog.defaultPriority,
       comms: const [],
       squadPreferences: const [],
       lookingNow: true,
@@ -172,6 +187,12 @@ class ArcMatchRiderProfile {
       preferredMaps: readList('preferredMaps'),
       preferredModes: readList('preferredModes'),
       goals: readList('goals'),
+      sessionIntent: ArcPlayerSessionCatalog.normalizeIntent(
+        map['sessionIntent'] as String?,
+      ),
+      currentPriority: ArcPlayerSessionCatalog.normalizePriority(
+        map['currentPriority'] as String?,
+      ),
       comms: readList('comms'),
       squadPreferences: readList('squadPreferences'),
       lookingNow: map['lookingNow'] == true,

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../data/arc_match_compatibility_engine.dart';
 import '../data/arc_player_archetype_catalog.dart';
+import '../data/arc_player_session_catalog.dart';
 import '../models/arc_match_rider_invite.dart';
 import '../models/arc_match_rider_profile.dart';
 
@@ -81,6 +82,12 @@ class ArcMatchRiderRepository {
       (userData['communicationStyle'] as String? ?? '').trim(),
     );
     final fallbackSquad = (userData['squadIntent'] as String? ?? '').trim();
+    final fallbackSessionIntent = ArcPlayerSessionCatalog.normalizeIntent(
+      userData['sessionIntent'] as String? ?? fallbackSquad,
+    );
+    final fallbackCurrentPriority = ArcPlayerSessionCatalog.normalizePriority(
+      userData['currentPriority'] as String?,
+    );
 
     return ArcMatchRiderProfile.empty(uid).copyWith(
       displayName: fallbackName,
@@ -97,6 +104,8 @@ class ArcMatchRiderRepository {
       squadPreferences: fallbackSquad.isEmpty
           ? const <String>[]
           : <String>[fallbackSquad],
+      sessionIntent: fallbackSessionIntent,
+      currentPriority: fallbackCurrentPriority,
     );
   }
 

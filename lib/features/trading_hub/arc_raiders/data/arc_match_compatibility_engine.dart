@@ -22,6 +22,14 @@ class ArcMatchCompatibilityEngine {
     score += _sharedCount(me.archetypes, other.archetypes) * 26;
     score += _sharedCount(me.playstyles, other.playstyles) * 20;
     score += _sharedCount(me.goals, other.goals) * 18;
+    if (me.sessionIntent == other.sessionIntent &&
+        me.sessionIntent != 'Flexible') {
+      score += 20;
+    }
+    if (me.currentPriority == other.currentPriority &&
+        me.currentPriority != 'Balanced progression') {
+      score += 16;
+    }
     score += _sharedCount(me.squadPreferences, other.squadPreferences) * 16;
     score += _sharedCount(me.comms, other.comms) * 12;
     score += _sharedCount(me.preferredMaps, other.preferredMaps) * 10;
@@ -62,6 +70,14 @@ class ArcMatchCompatibilityEngine {
 
     addShared('Shared archetypes', me.archetypes, other.archetypes);
     addShared('Shared goals', me.goals, other.goals);
+    if (me.sessionIntent == other.sessionIntent &&
+        me.sessionIntent != 'Flexible') {
+      reasons.add('Same session intent: ${me.sessionIntent}');
+    }
+    if (me.currentPriority == other.currentPriority &&
+        me.currentPriority != 'Balanced progression') {
+      reasons.add('Same priority: ${me.currentPriority}');
+    }
     addShared('Shared playstyle', me.playstyles, other.playstyles);
     addShared('Shared squad vibe', me.squadPreferences, other.squadPreferences);
     addShared('Shared comms', me.comms, other.comms);

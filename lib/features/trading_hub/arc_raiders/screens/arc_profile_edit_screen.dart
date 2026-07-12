@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
+import '../data/arc_player_session_catalog.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
 
@@ -39,6 +40,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   String _communicationStyle = 'Flexible';
   String _squadIntent = 'Flexible';
   String _socialEnergy = 'Depends on the day';
+  String _sessionIntent = ArcPlayerSessionCatalog.defaultIntent;
+  String _currentPriority = ArcPlayerSessionCatalog.defaultPriority;
   String _serverPreference = 'Automatic';
   String _payoutMethod = 'Bank Transfer';
   String _subscriptionStatus = 'inactive';
@@ -95,6 +98,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     'Quest team',
     'Blueprint runs',
     'Trade focused',
+    'Trials',
     'Solo for now',
   ];
 
@@ -169,6 +173,12 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     _socialEnergy = _socialEnergyOptions.contains(profile.socialEnergy)
         ? profile.socialEnergy
         : 'Depends on the day';
+    _sessionIntent = ArcPlayerSessionCatalog.normalizeIntent(
+      profile.sessionIntent,
+    );
+    _currentPriority = ArcPlayerSessionCatalog.normalizePriority(
+      profile.currentPriority,
+    );
     _createdAt = profile.createdAt;
 
     if (mounted) setState(() => _isLoading = false);
@@ -198,6 +208,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
           communicationStyle: _communicationStyle,
           squadIntent: _squadIntent,
           socialEnergy: _socialEnergy,
+          sessionIntent: _sessionIntent,
+          currentPriority: _currentPriority,
           affiliateEnabled: _affiliateEnabled,
           payoutMethod: _payoutMethod == 'Not Set' ? '' : _payoutMethod,
           subscriptionStatus: _subscriptionStatus,
@@ -601,6 +613,36 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         selected: _squadIntent,
                         onChanged: (value) =>
                             setState(() => _squadIntent = value),
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Text(
+                        'What are you doing this session?',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _singleSelectChips(
+                        items: ArcPlayerSessionCatalog.sessionIntents,
+                        selected: _sessionIntent,
+                        onChanged: (value) =>
+                            setState(() => _sessionIntent = value),
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Text(
+                        'Current priority',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 15,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _singleSelectChips(
+                        items: ArcPlayerSessionCatalog.priorities,
+                        selected: _currentPriority,
+                        onChanged: (value) =>
+                            setState(() => _currentPriority = value),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       Text(
