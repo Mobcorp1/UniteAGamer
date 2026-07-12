@@ -287,6 +287,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                   _pill(listing.riskLabel, listing.riskColor()),
                   _metaChip(listing.region),
                   _metaChip(listing.playWindow),
+                  _metaChip(listing.listingModeLabel),
                   _metaChip(_expiryText(listing.expiresAt)),
                   _pill(intelligence.label, AppTheme.neonPink),
                   _metaChip('Intel ${intelligence.score}%'),

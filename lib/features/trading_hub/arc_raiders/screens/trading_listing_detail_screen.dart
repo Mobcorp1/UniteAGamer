@@ -31,6 +31,34 @@ class TradingListingDetailScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _toggleFavouriteSeller(
+    BuildContext context,
+    TradingRepository repository, {
+    required bool currentlyFavourite,
+  }) async {
+    try {
+      await repository.setFavouriteRider(
+        riderUid: listing.ownerUid,
+        favourite: !currentlyFavourite,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            currentlyFavourite
+                ? '${listing.traderName} removed from Favourite Riders.'
+                : '${listing.traderName} added to Favourite Riders.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not update favourite: $e')));
+    }
+  }
+
   Widget _chip(String label, Color color) {
     return Container(
       padding: AppTheme.pillPadding,
@@ -247,6 +275,10 @@ class TradingListingDetailScreen extends StatelessWidget {
                                           listing.playWindow,
                                           AppTheme.neonPink,
                                         ),
+                                        _chip(
+                                          listing.listingModeLabel,
+                                          AppTheme.warningAmber,
+                                        ),
                                       ],
                                     ),
                                     const SizedBox(height: AppTheme.spaceM),
@@ -263,6 +295,39 @@ class TradingListingDetailScreen extends StatelessWidget {
                                           listing.preferredPlatform,
                                         listing.reputationSummary,
                                       ].join(' - '),
+                                    ),
+                                    StreamBuilder<Set<String>>(
+                                      stream: repository
+                                          .watchFavouriteRiderIds(),
+                                      builder: (context, favouriteSnapshot) {
+                                        final favouriteIds =
+                                            favouriteSnapshot.data ??
+                                            const <String>{};
+                                        final isFavourite = favouriteIds
+                                            .contains(listing.ownerUid);
+                                        return Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: OutlinedButton.icon(
+                                            onPressed: () =>
+                                                _toggleFavouriteSeller(
+                                                  context,
+                                                  repository,
+                                                  currentlyFavourite:
+                                                      isFavourite,
+                                                ),
+                                            icon: Icon(
+                                              isFavourite
+                                                  ? Icons.star_rounded
+                                                  : Icons.star_border_rounded,
+                                            ),
+                                            label: Text(
+                                              isFavourite
+                                                  ? 'Favourite Rider'
+                                                  : 'Add Favourite Rider',
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                     const SizedBox(height: AppTheme.spaceM),
                                     _section('Offering', offeredList),
@@ -286,6 +351,14 @@ class TradingListingDetailScreen extends StatelessWidget {
                                         'Trade structure',
                                         structureBits.join(' - '),
                                       ),
+                                    _row(
+                                      'Listing mode',
+                                      listing.listingModeLabel,
+                                    ),
+                                    _row(
+                                      'Active offer cap',
+                                      '${listing.maxActiveOffers}',
+                                    ),
                                     if (listing.notes.isNotEmpty)
                                       _row('Notes', listing.notes),
                                     const SizedBox(height: 10),

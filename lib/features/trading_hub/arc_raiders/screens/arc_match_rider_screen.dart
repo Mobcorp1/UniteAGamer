@@ -534,7 +534,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
-            'Sorted by shared intent, squad fit, comms, and whether the other raider is looking right now.',
+            'Sorted by private profile compatibility. Match cards only show the protected summary.',
             style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -568,13 +568,25 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 );
               }
 
-              return Column(
-                children: [
-                  for (final candidate in matches.take(10)) ...[
-                    _buildMatchCard(candidate),
-                    const SizedBox(height: 18),
-                  ],
-                ],
+              return StreamBuilder<Set<String>>(
+                stream: _repository.watchFavouriteRiderIds(),
+                builder: (context, favouriteSnapshot) {
+                  final favouriteIds =
+                      favouriteSnapshot.data ?? const <String>{};
+                  return Column(
+                    children: [
+                      for (final candidate in matches.take(10)) ...[
+                        _buildMatchCard(
+                          candidate,
+                          isFavourite: favouriteIds.contains(
+                            candidate.profile.uid,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                      ],
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -583,10 +595,13 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     );
   }
 
-  Widget _buildMatchCard(ArcMatchCandidate candidate) {
+  Widget _buildMatchCard(
+    ArcMatchCandidate candidate, {
+    required bool isFavourite,
+  }) {
     final profile = candidate.profile;
     return ElectricChargeBorder(
-      active: profile.lookingNow,
+      active: false,
       radius: 18,
       child: Container(
         decoration: AppTheme.tradingCardDecoration(radius: 18),
@@ -608,57 +623,48 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                           isBold: true,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        [
-                          if (profile.platform.isNotEmpty) profile.platform,
-                          if (profile.region.isNotEmpty) profile.region,
-                          'Server: ${profile.serverPreference}',
-                          profile.crossplayEnabled
-                              ? 'Crossplay'
-                              : 'No crossplay',
-                          if (profile.lookingNow) 'Looking now',
-                        ].join(' - '),
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
-                      ),
                     ],
                   ),
                 ),
-                _buildStatusPill('${candidate.score} match', AppTheme.neonPink),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    _buildStatusPill(
+                      candidate.percentageLabel,
+                      AppTheme.neonPink,
+                    ),
+                    IconButton(
+                      tooltip: isFavourite
+                          ? 'Remove Favourite Rider'
+                          : 'Add Favourite Rider',
+                      onPressed: () => _toggleFavourite(
+                        candidate.profile,
+                        currentlyFavourite: isFavourite,
+                      ),
+                      icon: Icon(
+                        isFavourite
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: isFavourite
+                            ? AppTheme.warningAmber
+                            : Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: AppTheme.spaceM),
-            if (profile.archetypes.isNotEmpty) ...[
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: profile.archetypes
-                    .take(4)
-                    .map((item) => _buildStatusPill(item, AppTheme.neonCyan))
-                    .toList(growable: false),
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-            ],
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: candidate.reasons
-                  .map((reason) => _buildStatusPill(reason, Colors.white70))
-                  .toList(growable: false),
+              children: [
+                _buildStatusPill(candidate.publicMatchLabel, AppTheme.neonCyan),
+                _buildStatusPill(candidate.publicExplanation, Colors.white70),
+              ],
             ),
-            if (profile.notes.isNotEmpty) ...[
-              const SizedBox(height: AppTheme.spaceM),
-              Text(
-                profile.notes,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
             const SizedBox(height: AppTheme.spaceM),
             Align(
               alignment: Alignment.centerRight,
@@ -968,5 +974,32 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   void _setProfile(ArcMatchRiderProfile value) {
     setState(() => _profile = value);
+  }
+
+  Future<void> _toggleFavourite(
+    ArcMatchRiderProfile profile, {
+    required bool currentlyFavourite,
+  }) async {
+    try {
+      await _repository.setFavouriteRider(
+        riderUid: profile.uid,
+        favourite: !currentlyFavourite,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            currentlyFavourite
+                ? '${profile.title} removed from Favourite Riders.'
+                : '${profile.title} added to Favourite Riders.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not update favourite: $e')));
+    }
   }
 }

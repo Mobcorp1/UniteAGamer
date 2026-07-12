@@ -232,6 +232,54 @@ service cloud.firestore {
       allow delete: if isTradePreparationOwner() || isAdminOrDev();
     }
 
+    match /arc_favourite_riders/{favouriteId} {
+      allow read: if ownsExistingDocByOwnerUid() || isAdminOrDev();
+      allow create: if ownsIncomingDocByOwnerUid() &&
+        request.resource.data.id == favouriteId;
+      allow update: if (ownsExistingDocByOwnerUid() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if ownsExistingDocByOwnerUid() || isAdminOrDev();
+    }
+
+    match /arc_blueprint_watches/{watchId} {
+      allow read: if ownsExistingDocByOwnerUid() || isAdminOrDev();
+      allow create: if ownsIncomingDocByOwnerUid() &&
+        request.resource.data.id == watchId;
+      allow update: if (ownsExistingDocByOwnerUid() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if ownsExistingDocByOwnerUid() || isAdminOrDev();
+    }
+
+    match /arc_trade_offer_preferences/{ownerUid} {
+      allow read: if isOwner(ownerUid) || isAdminOrDev();
+      allow create, update: if (isOwner(ownerUid) &&
+        request.resource.data.ownerUid == ownerUid) || isAdminOrDev();
+      allow delete: if isOwner(ownerUid) || isAdminOrDev();
+    }
+
+    match /arc_trade_listing_queue/{queueId} {
+      allow read: if ownsExistingDocByOwnerUid() || isAdminOrDev();
+      allow create: if ownsIncomingDocByOwnerUid() &&
+        request.resource.data.id == queueId;
+      allow update: if (ownsExistingDocByOwnerUid() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if ownsExistingDocByOwnerUid() || isAdminOrDev();
+    }
+
+    match /arc_notification_queue/{notificationId} {
+      allow read: if isNotificationTarget() || isAdminOrDev();
+      allow create: if isIncomingNotificationActor() &&
+        request.resource.data.id == notificationId;
+      allow update: if (isNotificationTarget() || isAdminOrDev()) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.targetUid == resource.data.targetUid &&
+        request.resource.data.actorUid == resource.data.actorUid;
+      allow delete: if isNotificationTarget() || isAdminOrDev();
+    }
+
     match /arc_match_rider_profiles/{profileUid} {
       allow read: if isSignedIn();
       allow create, update: if (isOwner(profileUid) && request.resource.data.uid == request.auth.uid) || isAdminOrDev();

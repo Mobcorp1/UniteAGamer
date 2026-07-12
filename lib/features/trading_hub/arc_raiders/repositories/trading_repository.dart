@@ -4,8 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_watch.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_favourite_rider.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_network_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_cosmetic_identity.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
@@ -62,6 +66,18 @@ class TradingRepository {
 
   CollectionReference<Map<String, dynamic>> get _tradePreparationsCollection =>
       _firestore.collection('arc_trade_preparations');
+
+  CollectionReference<Map<String, dynamic>> get _favouriteRidersCollection =>
+      _firestore.collection('arc_favourite_riders');
+
+  CollectionReference<Map<String, dynamic>> get _blueprintWatchesCollection =>
+      _firestore.collection('arc_blueprint_watches');
+
+  CollectionReference<Map<String, dynamic>> get _tradePreferencesCollection =>
+      _firestore.collection('arc_trade_offer_preferences');
+
+  CollectionReference<Map<String, dynamic>> get _listingQueueCollection =>
+      _firestore.collection('arc_trade_listing_queue');
 
   String _firstNonEmptyString(List<dynamic> values, {String fallback = ''}) {
     for (final value in values) {
@@ -354,6 +370,20 @@ class TradingRepository {
     }
   }
 
+  Future<void> _ensureListingOfferCapacity(TradingListing listing) async {
+    final maxOffers = listing.maxActiveOffers.clamp(1, 25).toInt();
+    final pending = await _offersCollection
+        .where('listingId', isEqualTo: listing.id)
+        .where('status', isEqualTo: TradingOfferStatus.pending.name)
+        .limit(maxOffers)
+        .get();
+    if (pending.docs.length >= maxOffers) {
+      throw Exception(
+        'This trader is already reviewing the maximum active offers for this listing.',
+      );
+    }
+  }
+
   Future<void> _ensureNoSessionAlreadyExistsForOffer(String offerId) async {
     final existing = await _sessionsCollection
         .where('offerId', isEqualTo: offerId)
@@ -529,6 +559,138 @@ class TradingRepository {
       if (!snapshot.exists) return TradingProfile.empty(uid);
       return TradingProfile.fromMap(snapshot.data() ?? <String, dynamic>{});
     });
+  }
+
+  Stream<Set<String>> watchFavouriteRiderIds() {
+    final uid = currentUid;
+    if (uid == null) return Stream.value(<String>{});
+    return _favouriteRidersCollection
+        .where('ownerUid', isEqualTo: uid)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ArcFavouriteRider.fromMap(doc.data()).riderUid)
+              .where((riderUid) => riderUid.trim().isNotEmpty)
+              .toSet(),
+        );
+  }
+
+  Future<void> setFavouriteRider({
+    required String riderUid,
+    required bool favourite,
+    String privateNote = '',
+    List<String> tags = const <String>[],
+  }) async {
+    final uid = currentUid;
+    final normalizedRiderUid = riderUid.trim();
+    if (uid == null ||
+        normalizedRiderUid.isEmpty ||
+        uid == normalizedRiderUid) {
+      return;
+    }
+
+    final docId = ArcFavouriteRider.idFor(uid, normalizedRiderUid);
+    final ref = _favouriteRidersCollection.doc(docId);
+    if (!favourite) {
+      await ref.delete();
+      return;
+    }
+
+    final now = DateTime.now();
+    final existing = await ref.get();
+    final previous = existing.exists
+        ? ArcFavouriteRider.fromMap(existing.data() ?? const {})
+        : null;
+    final model = ArcFavouriteRider(
+      id: docId,
+      ownerUid: uid,
+      riderUid: normalizedRiderUid,
+      privateNote: privateNote.trim().isEmpty
+          ? previous?.privateNote ?? ''
+          : privateNote.trim(),
+      tags: tags.isEmpty ? previous?.tags ?? const <String>[] : tags,
+      completedTrades: previous?.completedTrades ?? 0,
+      squadSessions: previous?.squadSessions ?? 0,
+      previousBlueprintOffer: previous?.previousBlueprintOffer ?? false,
+      createdAt: previous?.createdAt ?? now,
+      updatedAt: now,
+    );
+    await ref.set(model.toMap(), SetOptions(merge: true));
+  }
+
+  Stream<ArcTradePreferences> watchTradePreferences() {
+    final uid = currentUid;
+    if (uid == null) return Stream.value(ArcTradePreferences.empty(''));
+    return _tradePreferencesCollection.doc(uid).snapshots().map((snapshot) {
+      if (!snapshot.exists) return ArcTradePreferences.empty(uid);
+      return ArcTradePreferences.fromMap(snapshot.data() ?? const {});
+    });
+  }
+
+  Future<void> saveTradePreferences(ArcTradePreferences preferences) async {
+    final uid = currentUid;
+    if (uid == null) return;
+    final now = DateTime.now();
+    await _tradePreferencesCollection.doc(uid).set({
+      ...preferences.toMap(),
+      'ownerUid': uid,
+      'createdAt': preferences.createdAt == null
+          ? Timestamp.fromDate(now)
+          : Timestamp.fromDate(preferences.createdAt!),
+      'updatedAt': Timestamp.fromDate(now),
+    }, SetOptions(merge: true));
+  }
+
+  Stream<List<ArcBlueprintWatch>> watchBlueprintWatches() {
+    final uid = currentUid;
+    if (uid == null) return Stream.value(const <ArcBlueprintWatch>[]);
+    return _blueprintWatchesCollection
+        .where('ownerUid', isEqualTo: uid)
+        .where('active', isEqualTo: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ArcBlueprintWatch.fromMap(doc.data()))
+              .toList(growable: false),
+        );
+  }
+
+  Future<void> saveBlueprintWatch(ArcBlueprintWatch watch) async {
+    final uid = currentUid;
+    if (uid == null) return;
+    final ref = watch.id.trim().isEmpty
+        ? _blueprintWatchesCollection.doc()
+        : _blueprintWatchesCollection.doc(watch.id);
+    final now = DateTime.now();
+    await ref.set({
+      ...watch.toMap(),
+      'id': ref.id,
+      'ownerUid': uid,
+      'createdAt': watch.createdAt == null
+          ? Timestamp.fromDate(now)
+          : Timestamp.fromDate(watch.createdAt!),
+      'updatedAt': Timestamp.fromDate(now),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> enqueueDuplicateRelease(
+    ArcTradeListingQueueItem queueItem,
+  ) async {
+    final uid = currentUid;
+    if (uid == null) return;
+    final ref = queueItem.id.trim().isEmpty
+        ? _listingQueueCollection.doc()
+        : _listingQueueCollection.doc(queueItem.id);
+    final now = DateTime.now();
+    await ref.set({
+      ...queueItem.toMap(),
+      'id': ref.id,
+      'ownerUid': uid,
+      'createdAt': queueItem.createdAt == null
+          ? Timestamp.fromDate(now)
+          : Timestamp.fromDate(queueItem.createdAt!),
+      'updatedAt': Timestamp.fromDate(now),
+    }, SetOptions(merge: true));
   }
 
   Future<TradingProfile> getTradingProfile() async {
@@ -777,6 +939,15 @@ class TradingRepository {
     bool wantsNothing = false,
     bool tradeAsBundle = true,
     bool allowPartialOffers = false,
+    TradingListingMode listingMode = TradingListingMode.availableNow,
+    String scheduledWindow = '',
+    String sellerTimezone = '',
+    ArcDuplicateReleasePolicy duplicateReleasePolicy =
+        ArcDuplicateReleasePolicy.askBeforeRelisting,
+    bool favouriteRidersFirst = false,
+    bool fixedReturn = false,
+    bool bestSuitableOffer = false,
+    int maxActiveOffers = 5,
   }) async {
     final uid = currentUid;
     if (uid == null) return;
@@ -851,6 +1022,18 @@ class TradingRepository {
       seriousOffersOnly: seriousOffersOnly,
       tradeAsBundle: tradeAsBundle,
       allowPartialOffers: allowPartialOffers,
+      listingMode: wantsNothing ? TradingListingMode.gift : listingMode,
+      scheduledWindow: scheduledWindow.trim(),
+      sellerTimezone: sellerTimezone.trim(),
+      duplicateReleasePolicy: duplicateReleasePolicy,
+      favouriteRidersFirst:
+          favouriteRidersFirst ||
+          listingMode == TradingListingMode.favouriteRidersFirst,
+      fixedReturn: fixedReturn || listingMode == TradingListingMode.fixedReturn,
+      bestSuitableOffer:
+          bestSuitableOffer ||
+          listingMode == TradingListingMode.bestSuitableOffer,
+      maxActiveOffers: maxActiveOffers.clamp(1, 25).toInt(),
       expiresAt: now.add(expiryDuration),
       notes: notes.trim(),
       active: true,
@@ -965,6 +1148,7 @@ class TradingRepository {
       isGiveawayClaim: isGiveawayClaim,
     );
     await _ensureNoDuplicatePendingOffer(senderUid: uid, listingId: listing.id);
+    await _ensureListingOfferCapacity(listing);
 
     await ensureTradingProfileExists();
     final profile = await getTradingProfile();
@@ -996,6 +1180,7 @@ class TradingRepository {
       status: TradingOfferStatus.pending,
       createdAt: now,
       updatedAt: now,
+      expiresAt: now.add(const Duration(hours: 72)),
     );
 
     await offerRef.set(offer.toMap());
@@ -1024,6 +1209,9 @@ class TradingRepository {
     }
     if (offer.status != TradingOfferStatus.pending) {
       throw Exception('Only pending offers can be accepted.');
+    }
+    if (offer.isExpiredAt(DateTime.now())) {
+      throw Exception('This offer has expired.');
     }
 
     final listingSnap = await _listingsCollection.doc(offer.listingId).get();
@@ -1184,6 +1372,43 @@ class TradingRepository {
       listingId: offer.listingId,
       offerId: offer.id,
     );
+  }
+
+  Future<void> declineAllPendingOffersForListing(String listingId) async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw Exception('You must be signed in to decline offers.');
+    }
+
+    final pendingOffers = await _offersCollection
+        .where('listingId', isEqualTo: listingId)
+        .where('receiverUid', isEqualTo: uid)
+        .where('status', isEqualTo: TradingOfferStatus.pending.name)
+        .get();
+
+    if (pendingOffers.docs.isEmpty) return;
+
+    final now = DateTime.now();
+    final batch = _firestore.batch();
+    for (final doc in pendingOffers.docs) {
+      batch.update(doc.reference, {
+        'status': TradingOfferStatus.declined.name,
+        'updatedAt': Timestamp.fromDate(now),
+      });
+    }
+    await batch.commit();
+
+    for (final doc in pendingOffers.docs) {
+      final offer = TradingOffer.fromMap(doc.data());
+      await _safeNotify(
+        targetUid: offer.senderUid,
+        type: TradingNotificationType.offerDeclined,
+        title: 'Offer declined',
+        body: 'The listing owner declined pending offers for this listing.',
+        listingId: offer.listingId,
+        offerId: offer.id,
+      );
+    }
   }
 
   Future<void> cancelOffer(TradingOffer offer) async {

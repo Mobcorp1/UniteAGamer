@@ -121,6 +121,7 @@ class TradingListingCard extends StatelessWidget {
                   _chip(listing.riskLabel, listing.riskColor()),
                   _metaChip(listing.region),
                   _metaChip(listing.playWindow),
+                  _metaChip(listing.listingModeLabel),
                   _metaChip(listing.expiryLabel()),
                   _metaChip(listing.listingTypeLabel),
                   if (listing.seriousOffersOnly) _metaChip('Serious only'),

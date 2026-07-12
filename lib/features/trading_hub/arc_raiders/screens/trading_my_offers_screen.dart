@@ -140,7 +140,8 @@ class TradingMyOffersScreen extends StatelessWidget {
   ) {
     final uid = repository.currentUid;
     final isSentByMe = uid == offer.senderUid;
-    final canAction = offer.status == TradingOfferStatus.pending;
+    final effectiveStatus = offer.effectiveStatus;
+    final canAction = effectiveStatus == TradingOfferStatus.pending;
     final messenger = ScaffoldMessenger.of(context);
     final counterpartyUid = isSentByMe ? offer.receiverUid : offer.senderUid;
     final counterpartyName = isSentByMe
@@ -155,9 +156,9 @@ class TradingMyOffersScreen extends StatelessWidget {
 
     final canRenegotiate =
         isSentByMe &&
-        (offer.status == TradingOfferStatus.declined ||
-            offer.status == TradingOfferStatus.cancelled ||
-            offer.status == TradingOfferStatus.expired);
+        (effectiveStatus == TradingOfferStatus.declined ||
+            effectiveStatus == TradingOfferStatus.cancelled ||
+            effectiveStatus == TradingOfferStatus.expired);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -183,12 +184,12 @@ class TradingMyOffersScreen extends StatelessWidget {
                   Container(
                     padding: AppTheme.pillPadding,
                     decoration: AppTheme.tradingPillDecoration(
-                      color: _statusColor(offer.status),
+                      color: _statusColor(effectiveStatus),
                     ),
                     child: Text(
                       offer.statusLabel,
                       style: TextStyle(
-                        color: _statusColor(offer.status),
+                        color: _statusColor(effectiveStatus),
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -346,6 +347,45 @@ class TradingMyOffersScreen extends StatelessWidget {
                     ],
                   ],
                 ),
+                if (!isSentByMe) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final confirmed = await _confirmAction(
+                          context: context,
+                          title: 'Decline all pending offers?',
+                          message:
+                              'This will decline every pending offer currently attached to this listing.',
+                          confirmText: 'Decline All',
+                          confirmColor: Colors.redAccent,
+                        );
+                        if (!confirmed) return;
+                        try {
+                          await repository.declineAllPendingOffersForListing(
+                            offer.listingId,
+                          );
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Pending offers declined.'),
+                            ),
+                          );
+                        } catch (error) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Could not decline all offers: $error',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.playlist_remove_rounded),
+                      label: const Text('Decline All Pending Offers'),
+                    ),
+                  ),
+                ],
               ],
               if (canRenegotiate) ...[
                 const SizedBox(height: 14),

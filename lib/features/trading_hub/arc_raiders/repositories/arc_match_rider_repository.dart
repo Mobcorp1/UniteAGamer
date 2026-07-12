@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../data/arc_match_compatibility_engine.dart';
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
+import '../models/arc_favourite_rider.dart';
+import '../models/arc_match_objective_signals.dart';
 import '../models/arc_match_rider_invite.dart';
 import '../models/arc_match_rider_profile.dart';
 
@@ -17,6 +19,11 @@ class ArcMatchCandidate {
   final ArcMatchRiderProfile profile;
   final int score;
   final List<String> reasons;
+
+  String get percentageLabel => '$score% Match';
+  String get publicMatchLabel => ArcMatchCompatibilityEngine.matchLabel(score);
+  String get publicExplanation =>
+      ArcMatchCompatibilityEngine.protectedExplanation;
 }
 
 class ArcMatchRiderRepository {
@@ -37,6 +44,8 @@ class ArcMatchRiderRepository {
       _firestore.collection('arc_match_rider_invites');
   CollectionReference<Map<String, dynamic>> get _notifications =>
       _firestore.collection('trading_notifications');
+  CollectionReference<Map<String, dynamic>> get _favouriteRiders =>
+      _firestore.collection('arc_favourite_riders');
 
   DocumentReference<Map<String, dynamic>> _userProfileDoc(String uid) =>
       _firestore
@@ -88,6 +97,9 @@ class ArcMatchRiderRepository {
     final fallbackCurrentPriority = ArcPlayerSessionCatalog.normalizePriority(
       userData['currentPriority'] as String?,
     );
+    final fallbackTradePreferences = _readStringList(
+      userData['tradePreferences'],
+    );
 
     return ArcMatchRiderProfile.empty(uid).copyWith(
       displayName: fallbackName,
@@ -106,6 +118,26 @@ class ArcMatchRiderRepository {
           : <String>[fallbackSquad],
       sessionIntent: fallbackSessionIntent,
       currentPriority: fallbackCurrentPriority,
+      blueprintTargets: _readStringList(userData['blueprintTargets']),
+      helperBlueprintIds: _readStringList(userData['helperBlueprintIds']),
+      questFocusIds: _readStringList(userData['questFocusIds']),
+      questChainIds: _readStringList(userData['questChainIds']),
+      trialFocusIds: _readStringList(userData['trialFocusIds']),
+      benchGoalIds: _readStringList(userData['benchGoalIds']),
+      favouriteLoadoutNeedIds: _readStringList(
+        userData['favouriteLoadoutNeedIds'],
+      ),
+      raidPlannerTargetIds: _readStringList(userData['raidPlannerTargetIds']),
+      tradePreferences: fallbackTradePreferences,
+      availabilityDayKeys: _readStringList(userData['availabilityDayKeys']),
+      timezone: (userData['timezone'] as String? ?? '').trim(),
+      giftFriendly: userData['giftFriendly'] == true,
+      tradeOnly: userData['tradeOnly'] == true,
+      helperMentor: userData['helperMentor'] == true,
+      reputationScore: _readInt(userData['reputationScore']),
+      completedTrades: _readInt(userData['completedTrades']),
+      noShows: _readInt(userData['noShows']),
+      betrayalFlags: _readInt(userData['betrayalFlags']),
     );
   }
 
@@ -127,12 +159,15 @@ class ArcMatchRiderRepository {
       snapshot,
     ) {
       final matches = <ArcMatchCandidate>[];
+      final currentSignals = _objectiveSignalsFromProfile(currentProfile);
       for (final doc in snapshot.docs) {
         if (doc.id == uid) continue;
         final profile = ArcMatchRiderProfile.fromMap(doc.data(), doc.id);
         final result = _compatibilityEngine.score(
           me: currentProfile,
           other: profile,
+          meSignals: currentSignals,
+          otherSignals: _objectiveSignalsFromProfile(profile),
         );
         matches.add(
           ArcMatchCandidate(
@@ -155,6 +190,67 @@ class ArcMatchRiderRepository {
       });
       return matches;
     });
+  }
+
+  Stream<Set<String>> watchFavouriteRiderIds() {
+    final uid = currentUid;
+    if (uid == null) return Stream.value(<String>{});
+    return _favouriteRiders
+        .where('ownerUid', isEqualTo: uid)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ArcFavouriteRider.fromMap(doc.data()).riderUid)
+              .where((riderUid) => riderUid.trim().isNotEmpty)
+              .toSet(),
+        );
+  }
+
+  Future<void> setFavouriteRider({
+    required String riderUid,
+    required bool favourite,
+    String privateNote = '',
+    List<String> tags = const <String>[],
+    ArcFavouriteNotificationPreference notificationPreference =
+        ArcFavouriteNotificationPreference.duringAvailabilityOnly,
+  }) async {
+    final uid = currentUid;
+    final normalizedRiderUid = riderUid.trim();
+    if (uid == null ||
+        normalizedRiderUid.isEmpty ||
+        uid == normalizedRiderUid) {
+      return;
+    }
+
+    final docId = ArcFavouriteRider.idFor(uid, normalizedRiderUid);
+    final ref = _favouriteRiders.doc(docId);
+    if (!favourite) {
+      await ref.delete();
+      return;
+    }
+
+    final now = DateTime.now();
+    final existing = await ref.get();
+    final previous = existing.exists
+        ? ArcFavouriteRider.fromMap(existing.data() ?? const {})
+        : null;
+    final model = ArcFavouriteRider(
+      id: docId,
+      ownerUid: uid,
+      riderUid: normalizedRiderUid,
+      privateNote: privateNote.trim().isEmpty
+          ? previous?.privateNote ?? ''
+          : privateNote.trim(),
+      tags: tags.isEmpty ? previous?.tags ?? const <String>[] : tags,
+      notificationPreference: notificationPreference,
+      completedTrades: previous?.completedTrades ?? 0,
+      squadSessions: previous?.squadSessions ?? 0,
+      previousBlueprintOffer: previous?.previousBlueprintOffer ?? false,
+      createdAt: previous?.createdAt ?? now,
+      updatedAt: now,
+    );
+
+    await ref.set(model.toMap(), SetOptions(merge: true));
   }
 
   Stream<List<ArcMatchRiderInvite>> watchIncomingInvites() {
@@ -313,6 +409,40 @@ class ArcMatchRiderRepository {
     if (normalized.contains('chat')) return const <String>['Text/chat'];
     if (normalized.contains('flex')) return const <String>['Flexible'];
     return const <String>[];
+  }
+
+  int _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  ArcMatchObjectiveSignals _objectiveSignalsFromProfile(
+    ArcMatchRiderProfile profile,
+  ) {
+    return ArcMatchObjectiveSignals(
+      ownedBlueprintIds: profile.helperBlueprintIds,
+      availableBlueprintIds: const <String>[],
+      neededBlueprintIds: profile.blueprintTargets,
+      blueprintHuntIds: profile.raidPlannerTargetIds,
+      questIds: profile.questFocusIds,
+      questChains: profile.questChainIds,
+      trialIds: profile.trialFocusIds,
+      benchGoalIds: profile.benchGoalIds,
+      favouriteLoadoutNeedIds: profile.favouriteLoadoutNeedIds,
+      raidPlannerTargetIds: profile.raidPlannerTargetIds,
+      tradePreferences: profile.tradePreferences,
+      availabilityDayKeys: profile.availabilityDayKeys,
+      timezone: profile.timezone,
+      giftFriendly: profile.giftFriendly,
+      tradeOnly: profile.tradeOnly,
+      helperMentor: profile.helperMentor,
+      lookingNow: profile.lookingNow,
+      reputationScore: profile.reputationScore,
+      completedTrades: profile.completedTrades,
+      noShows: profile.noShows,
+      betrayalFlags: profile.betrayalFlags,
+    );
   }
 
   String _statusMessage(String status) {

@@ -24,6 +24,7 @@ class TradingOffer {
   final TradingOfferStatus status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? expiresAt;
 
   const TradingOffer({
     required this.id,
@@ -47,6 +48,7 @@ class TradingOffer {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.expiresAt,
   });
 
   static String _readString(dynamic value, [String fallback = '']) {
@@ -106,7 +108,7 @@ class TradingOffer {
   }
 
   String get statusLabel {
-    switch (status) {
+    switch (effectiveStatus) {
       case TradingOfferStatus.pending:
         return 'Pending';
       case TradingOfferStatus.accepted:
@@ -118,6 +120,16 @@ class TradingOffer {
       case TradingOfferStatus.expired:
         return 'Expired';
     }
+  }
+
+  TradingOfferStatus get effectiveStatus =>
+      isExpiredAt(DateTime.now()) ? TradingOfferStatus.expired : status;
+
+  bool isExpiredAt(DateTime now) {
+    final expiry = expiresAt;
+    return status == TradingOfferStatus.pending &&
+        expiry != null &&
+        expiry.isBefore(now);
   }
 
   Map<String, dynamic> toMap() {
@@ -143,6 +155,7 @@ class TradingOffer {
       'status': status.name,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
+      'expiresAt': expiresAt == null ? null : Timestamp.fromDate(expiresAt!),
     };
   }
 
@@ -172,6 +185,7 @@ class TradingOffer {
       ),
       createdAt: _readDate(map['createdAt']),
       updatedAt: _readDate(map['updatedAt']),
+      expiresAt: _readDate(map['expiresAt']),
     );
   }
 }

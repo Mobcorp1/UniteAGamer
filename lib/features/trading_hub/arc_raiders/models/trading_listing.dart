@@ -1,9 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 
 enum TradingRiskLevel { low, medium, high }
 
 enum TradingListingType { specificWant, openToOffers }
+
+enum TradingListingMode {
+  availableNow,
+  laterToday,
+  collectOffers,
+  nextLogin,
+  scheduledWindow,
+  gift,
+  favouriteRidersFirst,
+  fixedReturn,
+  bestSuitableOffer,
+}
 
 class TradingListing {
   final String id;
@@ -40,6 +53,14 @@ class TradingListing {
   final bool seriousOffersOnly;
   final bool tradeAsBundle;
   final bool allowPartialOffers;
+  final TradingListingMode listingMode;
+  final String scheduledWindow;
+  final String sellerTimezone;
+  final ArcDuplicateReleasePolicy duplicateReleasePolicy;
+  final bool favouriteRidersFirst;
+  final bool fixedReturn;
+  final bool bestSuitableOffer;
+  final int maxActiveOffers;
   final DateTime expiresAt;
   final String notes;
   final bool active;
@@ -81,6 +102,14 @@ class TradingListing {
     required this.seriousOffersOnly,
     required this.tradeAsBundle,
     required this.allowPartialOffers,
+    this.listingMode = TradingListingMode.availableNow,
+    this.scheduledWindow = '',
+    this.sellerTimezone = '',
+    this.duplicateReleasePolicy = ArcDuplicateReleasePolicy.askBeforeRelisting,
+    this.favouriteRidersFirst = false,
+    this.fixedReturn = false,
+    this.bestSuitableOffer = false,
+    this.maxActiveOffers = 5,
     required this.expiresAt,
     required this.notes,
     required this.active,
@@ -125,6 +154,14 @@ class TradingListing {
       seriousOffersOnly: false,
       tradeAsBundle: true,
       allowPartialOffers: false,
+      listingMode: TradingListingMode.availableNow,
+      scheduledWindow: '',
+      sellerTimezone: '',
+      duplicateReleasePolicy: ArcDuplicateReleasePolicy.askBeforeRelisting,
+      favouriteRidersFirst: false,
+      fixedReturn: false,
+      bestSuitableOffer: false,
+      maxActiveOffers: 5,
       expiresAt: now.add(const Duration(days: 3)),
       notes: '',
       active: true,
@@ -181,6 +218,48 @@ class TradingListing {
         return 'Specific Want';
       case TradingListingType.openToOffers:
         return 'Open to Offers';
+    }
+  }
+
+  String get listingModeLabel {
+    switch (listingMode) {
+      case TradingListingMode.availableNow:
+        return 'Available now';
+      case TradingListingMode.laterToday:
+        return 'Later today';
+      case TradingListingMode.collectOffers:
+        return 'Collect offers';
+      case TradingListingMode.nextLogin:
+        return 'Next login';
+      case TradingListingMode.scheduledWindow:
+        return scheduledWindow.trim().isEmpty
+            ? 'Scheduled window'
+            : 'Scheduled: ${scheduledWindow.trim()}';
+      case TradingListingMode.gift:
+        return 'Gift';
+      case TradingListingMode.favouriteRidersFirst:
+        return 'Favourite Riders first';
+      case TradingListingMode.fixedReturn:
+        return 'Fixed return';
+      case TradingListingMode.bestSuitableOffer:
+        return 'Best suitable offer';
+    }
+  }
+
+  String get duplicateReleasePolicyLabel {
+    switch (duplicateReleasePolicy) {
+      case ArcDuplicateReleasePolicy.immediatelyAfterCompletion:
+        return 'Relist after completion';
+      case ArcDuplicateReleasePolicy.afterThirtyMinutes:
+        return 'Relist after 30 minutes';
+      case ArcDuplicateReleasePolicy.afterTwoHours:
+        return 'Relist after 2 hours';
+      case ArcDuplicateReleasePolicy.nextLogin:
+        return 'Relist next login';
+      case ArcDuplicateReleasePolicy.askBeforeRelisting:
+        return 'Ask before relisting';
+      case ArcDuplicateReleasePolicy.neverAutomaticallyRelist:
+        return 'Never auto relist';
     }
   }
 
@@ -345,6 +424,14 @@ class TradingListing {
       'seriousOffersOnly': seriousOffersOnly,
       'tradeAsBundle': tradeAsBundle,
       'allowPartialOffers': allowPartialOffers,
+      'listingMode': listingMode.name,
+      'scheduledWindow': scheduledWindow,
+      'sellerTimezone': sellerTimezone,
+      'duplicateReleasePolicy': duplicateReleasePolicy.name,
+      'favouriteRidersFirst': favouriteRidersFirst,
+      'fixedReturn': fixedReturn,
+      'bestSuitableOffer': bestSuitableOffer,
+      'maxActiveOffers': maxActiveOffers,
       'expiresAt': Timestamp.fromDate(expiresAt),
       'notes': notes,
       'active': active,
@@ -401,6 +488,22 @@ class TradingListing {
       seriousOffersOnly: _readBool(map['seriousOffersOnly']),
       tradeAsBundle: _readBool(map['tradeAsBundle'], true),
       allowPartialOffers: _readBool(map['allowPartialOffers']),
+      listingMode: TradingListingMode.values.firstWhere(
+        (value) => value.name == _readString(map['listingMode']),
+        orElse: () => _readBool(map['wantsNothing'])
+            ? TradingListingMode.gift
+            : TradingListingMode.availableNow,
+      ),
+      scheduledWindow: _readString(map['scheduledWindow']),
+      sellerTimezone: _readString(map['sellerTimezone']),
+      duplicateReleasePolicy: ArcDuplicateReleasePolicy.values.firstWhere(
+        (value) => value.name == _readString(map['duplicateReleasePolicy']),
+        orElse: () => ArcDuplicateReleasePolicy.askBeforeRelisting,
+      ),
+      favouriteRidersFirst: _readBool(map['favouriteRidersFirst']),
+      fixedReturn: _readBool(map['fixedReturn']),
+      bestSuitableOffer: _readBool(map['bestSuitableOffer']),
+      maxActiveOffers: _readInt(map['maxActiveOffers'], 5).clamp(1, 25).toInt(),
       expiresAt: _readDate(map['expiresAt']) ?? DateTime.now(),
       notes: _readString(map['notes']),
       active: _readBool(map['active'], true),

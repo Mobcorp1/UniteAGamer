@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
@@ -25,6 +26,28 @@ class TradingCreateListingScreen extends StatefulWidget {
 
 class _TradingCreateListingScreenState
     extends State<TradingCreateListingScreen> {
+  static const Map<String, TradingListingMode> _listingModeOptions = {
+    'Available now': TradingListingMode.availableNow,
+    'Later today': TradingListingMode.laterToday,
+    'Collect offers': TradingListingMode.collectOffers,
+    'Next login': TradingListingMode.nextLogin,
+    'Scheduled window': TradingListingMode.scheduledWindow,
+    'Gift': TradingListingMode.gift,
+    'Favourite Riders first': TradingListingMode.favouriteRidersFirst,
+    'Fixed return': TradingListingMode.fixedReturn,
+    'Best suitable offer': TradingListingMode.bestSuitableOffer,
+  };
+
+  static const Map<String, ArcDuplicateReleasePolicy> _releasePolicyOptions = {
+    'Relist after completion':
+        ArcDuplicateReleasePolicy.immediatelyAfterCompletion,
+    'Relist after 30 minutes': ArcDuplicateReleasePolicy.afterThirtyMinutes,
+    'Relist after 2 hours': ArcDuplicateReleasePolicy.afterTwoHours,
+    'Relist next login': ArcDuplicateReleasePolicy.nextLogin,
+    'Ask before relisting': ArcDuplicateReleasePolicy.askBeforeRelisting,
+    'Never auto relist': ArcDuplicateReleasePolicy.neverAutomaticallyRelist,
+  };
+
   final TradingRepository _repository = TradingRepository();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final TextEditingController _notesController = TextEditingController();
@@ -44,6 +67,10 @@ class _TradingCreateListingScreenState
 
   String _selectedPlayWindow = 'Evenings';
   String _selectedExpiry = '72 Hours';
+  String _selectedListingMode = 'Available now';
+  String _selectedScheduledWindow = 'This evening';
+  String _selectedReleasePolicy = 'Ask before relisting';
+  String _selectedMaxActiveOffers = '5';
 
   int _smallBundles = 0;
   int _mediumBundles = 0;
@@ -148,7 +175,7 @@ class _TradingCreateListingScreenState
     required String label,
     required String value,
     required List<String> options,
-    required ValueChanged<String?> onChanged,
+    required ValueChanged<String?>? onChanged,
   }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
@@ -809,6 +836,17 @@ class _TradingCreateListingScreenState
         wantsNothing: _wantsNothing,
         tradeAsBundle: _tradeAsBundle,
         allowPartialOffers: _allowPartialOffers,
+        listingMode:
+            _listingModeOptions[_wantsNothing ? 'Gift' : _selectedListingMode]!,
+        scheduledWindow: _selectedListingMode == 'Scheduled window'
+            ? _selectedScheduledWindow
+            : '',
+        sellerTimezone: 'Europe/London',
+        duplicateReleasePolicy: _releasePolicyOptions[_selectedReleasePolicy]!,
+        favouriteRidersFirst: _selectedListingMode == 'Favourite Riders first',
+        fixedReturn: _selectedListingMode == 'Fixed return',
+        bestSuitableOffer: _selectedListingMode == 'Best suitable offer',
+        maxActiveOffers: int.tryParse(_selectedMaxActiveOffers) ?? 5,
       );
 
       if (!mounted) return;
@@ -1300,6 +1338,62 @@ class _TradingCreateListingScreenState
                                   ),
                                   const SizedBox(height: AppTheme.spaceM),
                                   _buildDropdown(
+                                    label: 'Listing Mode',
+                                    value: _wantsNothing
+                                        ? 'Gift'
+                                        : _selectedListingMode,
+                                    options: _listingModeOptions.keys.toList(
+                                      growable: false,
+                                    ),
+                                    onChanged: _wantsNothing
+                                        ? null
+                                        : (value) => setState(
+                                            () => _selectedListingMode =
+                                                value ?? 'Available now',
+                                          ),
+                                  ),
+                                  if (_selectedListingMode ==
+                                      'Scheduled window') ...[
+                                    const SizedBox(height: AppTheme.spaceM),
+                                    _buildDropdown(
+                                      label: 'Scheduled Window',
+                                      value: _selectedScheduledWindow,
+                                      options: const [
+                                        'This evening',
+                                        'Tomorrow',
+                                        'Weekend',
+                                        'Next reset window',
+                                      ],
+                                      onChanged: (value) => setState(
+                                        () => _selectedScheduledWindow =
+                                            value ?? 'This evening',
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  _buildDropdown(
+                                    label: 'Maximum Active Offers',
+                                    value: _selectedMaxActiveOffers,
+                                    options: const ['1', '3', '5', '10'],
+                                    onChanged: (value) => setState(
+                                      () => _selectedMaxActiveOffers =
+                                          value ?? '5',
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  _buildDropdown(
+                                    label: 'Duplicate Queue Release',
+                                    value: _selectedReleasePolicy,
+                                    options: _releasePolicyOptions.keys.toList(
+                                      growable: false,
+                                    ),
+                                    onChanged: (value) => setState(
+                                      () => _selectedReleasePolicy =
+                                          value ?? 'Ask before relisting',
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  _buildDropdown(
                                     label: 'Listing Expiry',
                                     value: _selectedExpiry,
                                     options: const [
@@ -1342,6 +1436,21 @@ class _TradingCreateListingScreenState
                                   Text(
                                     'Format: ${_tradeAsBundle ? 'Bundle preferred' : 'Mix and match'}'
                                     '${_allowPartialOffers ? ' - Partial/custom offers enabled' : ''}',
+                                    style: TextStyle(
+                                      color: AppTheme.tradingMutedText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Mode: ${_wantsNothing ? 'Gift' : _selectedListingMode}'
+                                    '${_selectedListingMode == 'Scheduled window' ? ' - $_selectedScheduledWindow' : ''}',
+                                    style: TextStyle(
+                                      color: AppTheme.tradingMutedText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Offers: max $_selectedMaxActiveOffers active - $_selectedReleasePolicy',
                                     style: TextStyle(
                                       color: AppTheme.tradingMutedText,
                                     ),

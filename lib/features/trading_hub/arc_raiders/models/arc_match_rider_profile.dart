@@ -18,6 +18,24 @@ class ArcMatchRiderProfile {
     required this.goals,
     this.sessionIntent = ArcPlayerSessionCatalog.defaultIntent,
     this.currentPriority = ArcPlayerSessionCatalog.defaultPriority,
+    this.blueprintTargets = const <String>[],
+    this.helperBlueprintIds = const <String>[],
+    this.questFocusIds = const <String>[],
+    this.questChainIds = const <String>[],
+    this.trialFocusIds = const <String>[],
+    this.benchGoalIds = const <String>[],
+    this.favouriteLoadoutNeedIds = const <String>[],
+    this.raidPlannerTargetIds = const <String>[],
+    this.tradePreferences = const <String>[],
+    this.availabilityDayKeys = const <String>[],
+    this.timezone = '',
+    this.giftFriendly = false,
+    this.tradeOnly = false,
+    this.helperMentor = false,
+    this.reputationScore = 0,
+    this.completedTrades = 0,
+    this.noShows = 0,
+    this.betrayalFlags = 0,
     required this.comms,
     required this.squadPreferences,
     required this.lookingNow,
@@ -40,6 +58,24 @@ class ArcMatchRiderProfile {
   final List<String> goals;
   final String sessionIntent;
   final String currentPriority;
+  final List<String> blueprintTargets;
+  final List<String> helperBlueprintIds;
+  final List<String> questFocusIds;
+  final List<String> questChainIds;
+  final List<String> trialFocusIds;
+  final List<String> benchGoalIds;
+  final List<String> favouriteLoadoutNeedIds;
+  final List<String> raidPlannerTargetIds;
+  final List<String> tradePreferences;
+  final List<String> availabilityDayKeys;
+  final String timezone;
+  final bool giftFriendly;
+  final bool tradeOnly;
+  final bool helperMentor;
+  final int reputationScore;
+  final int completedTrades;
+  final int noShows;
+  final int betrayalFlags;
   final List<String> comms;
   final List<String> squadPreferences;
   final bool lookingNow;
@@ -66,6 +102,24 @@ class ArcMatchRiderProfile {
     List<String>? goals,
     String? sessionIntent,
     String? currentPriority,
+    List<String>? blueprintTargets,
+    List<String>? helperBlueprintIds,
+    List<String>? questFocusIds,
+    List<String>? questChainIds,
+    List<String>? trialFocusIds,
+    List<String>? benchGoalIds,
+    List<String>? favouriteLoadoutNeedIds,
+    List<String>? raidPlannerTargetIds,
+    List<String>? tradePreferences,
+    List<String>? availabilityDayKeys,
+    String? timezone,
+    bool? giftFriendly,
+    bool? tradeOnly,
+    bool? helperMentor,
+    int? reputationScore,
+    int? completedTrades,
+    int? noShows,
+    int? betrayalFlags,
     List<String>? comms,
     List<String>? squadPreferences,
     bool? lookingNow,
@@ -88,6 +142,25 @@ class ArcMatchRiderProfile {
       goals: goals ?? this.goals,
       sessionIntent: sessionIntent ?? this.sessionIntent,
       currentPriority: currentPriority ?? this.currentPriority,
+      blueprintTargets: blueprintTargets ?? this.blueprintTargets,
+      helperBlueprintIds: helperBlueprintIds ?? this.helperBlueprintIds,
+      questFocusIds: questFocusIds ?? this.questFocusIds,
+      questChainIds: questChainIds ?? this.questChainIds,
+      trialFocusIds: trialFocusIds ?? this.trialFocusIds,
+      benchGoalIds: benchGoalIds ?? this.benchGoalIds,
+      favouriteLoadoutNeedIds:
+          favouriteLoadoutNeedIds ?? this.favouriteLoadoutNeedIds,
+      raidPlannerTargetIds: raidPlannerTargetIds ?? this.raidPlannerTargetIds,
+      tradePreferences: tradePreferences ?? this.tradePreferences,
+      availabilityDayKeys: availabilityDayKeys ?? this.availabilityDayKeys,
+      timezone: timezone ?? this.timezone,
+      giftFriendly: giftFriendly ?? this.giftFriendly,
+      tradeOnly: tradeOnly ?? this.tradeOnly,
+      helperMentor: helperMentor ?? this.helperMentor,
+      reputationScore: reputationScore ?? this.reputationScore,
+      completedTrades: completedTrades ?? this.completedTrades,
+      noShows: noShows ?? this.noShows,
+      betrayalFlags: betrayalFlags ?? this.betrayalFlags,
       comms: comms ?? this.comms,
       squadPreferences: squadPreferences ?? this.squadPreferences,
       lookingNow: lookingNow ?? this.lookingNow,
@@ -115,6 +188,24 @@ class ArcMatchRiderProfile {
       'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
         currentPriority,
       ),
+      'blueprintTargets': blueprintTargets,
+      'helperBlueprintIds': helperBlueprintIds,
+      'questFocusIds': questFocusIds,
+      'questChainIds': questChainIds,
+      'trialFocusIds': trialFocusIds,
+      'benchGoalIds': benchGoalIds,
+      'favouriteLoadoutNeedIds': favouriteLoadoutNeedIds,
+      'raidPlannerTargetIds': raidPlannerTargetIds,
+      'tradePreferences': tradePreferences,
+      'availabilityDayKeys': availabilityDayKeys,
+      'timezone': timezone,
+      'giftFriendly': giftFriendly,
+      'tradeOnly': tradeOnly,
+      'helperMentor': helperMentor,
+      'reputationScore': reputationScore,
+      'completedTrades': completedTrades,
+      'noShows': noShows,
+      'betrayalFlags': betrayalFlags,
       'comms': comms,
       'squadPreferences': squadPreferences,
       'lookingNow': lookingNow,
@@ -140,6 +231,24 @@ class ArcMatchRiderProfile {
       goals: const [],
       sessionIntent: ArcPlayerSessionCatalog.defaultIntent,
       currentPriority: ArcPlayerSessionCatalog.defaultPriority,
+      blueprintTargets: const [],
+      helperBlueprintIds: const [],
+      questFocusIds: const [],
+      questChainIds: const [],
+      trialFocusIds: const [],
+      benchGoalIds: const [],
+      favouriteLoadoutNeedIds: const [],
+      raidPlannerTargetIds: const [],
+      tradePreferences: const [],
+      availabilityDayKeys: const [],
+      timezone: '',
+      giftFriendly: false,
+      tradeOnly: false,
+      helperMentor: false,
+      reputationScore: 0,
+      completedTrades: 0,
+      noShows: 0,
+      betrayalFlags: 0,
       comms: const [],
       squadPreferences: const [],
       lookingNow: true,
@@ -169,6 +278,13 @@ class ArcMatchRiderProfile {
       return const [];
     }
 
+    int readInt(String key) {
+      final value = map[key];
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+
     return ArcMatchRiderProfile(
       uid: (map['uid'] as String?)?.trim().isNotEmpty == true
           ? (map['uid'] as String).trim()
@@ -193,6 +309,24 @@ class ArcMatchRiderProfile {
       currentPriority: ArcPlayerSessionCatalog.normalizePriority(
         map['currentPriority'] as String?,
       ),
+      blueprintTargets: readList('blueprintTargets'),
+      helperBlueprintIds: readList('helperBlueprintIds'),
+      questFocusIds: readList('questFocusIds'),
+      questChainIds: readList('questChainIds'),
+      trialFocusIds: readList('trialFocusIds'),
+      benchGoalIds: readList('benchGoalIds'),
+      favouriteLoadoutNeedIds: readList('favouriteLoadoutNeedIds'),
+      raidPlannerTargetIds: readList('raidPlannerTargetIds'),
+      tradePreferences: readList('tradePreferences'),
+      availabilityDayKeys: readList('availabilityDayKeys'),
+      timezone: (map['timezone'] as String? ?? '').trim(),
+      giftFriendly: map['giftFriendly'] == true,
+      tradeOnly: map['tradeOnly'] == true,
+      helperMentor: map['helperMentor'] == true,
+      reputationScore: readInt('reputationScore'),
+      completedTrades: readInt('completedTrades'),
+      noShows: readInt('noShows'),
+      betrayalFlags: readInt('betrayalFlags'),
       comms: readList('comms'),
       squadPreferences: readList('squadPreferences'),
       lookingNow: map['lookingNow'] == true,
