@@ -1,3 +1,5 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
+
 class ArcLoadoutWeaponDefinition {
   const ArcLoadoutWeaponDefinition({
     required this.id,
@@ -16,37 +18,22 @@ class ArcLoadoutWeaponDefinition {
   final int requiredWorkshopLevel;
 }
 
-const arcLoadoutWeapons = [
-  ArcLoadoutWeaponDefinition(
-    id: 'stitcher',
-    name: 'Stitcher',
-    imagePath: 'assets/images/arc_raiders/loadouts/weapons/stitcher.webp',
-    attachmentSlots: ['Muzzle', 'Magazine', 'Grip', 'Stock'],
-    isBlueprintWeapon: false,
-    requiredWorkshopLevel: 1,
+String _weaponId(String value) => value
+    .toLowerCase()
+    .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+    .replaceAll(RegExp(r'^_|_$'), '');
+
+/// Legacy view retained for callers that still import this file.
+/// All slot data now delegates to [ArcLoadoutSeedData.weapons].
+final List<ArcLoadoutWeaponDefinition> arcLoadoutWeapons = List.unmodifiable(
+  ArcLoadoutSeedData.weapons.map(
+    (weapon) => ArcLoadoutWeaponDefinition(
+      id: _weaponId(weapon.name),
+      name: weapon.name,
+      imagePath: 'assets/arc_raiders/items/${_weaponId(weapon.name)}.webp',
+      attachmentSlots: List.unmodifiable(weapon.slots),
+      isBlueprintWeapon: weapon.blueprintBased,
+      requiredWorkshopLevel: weapon.gunsmithLevel ?? 0,
+    ),
   ),
-  ArcLoadoutWeaponDefinition(
-    id: 'ferro',
-    name: 'Ferro',
-    imagePath: 'assets/images/arc_raiders/loadouts/weapons/ferro.webp',
-    attachmentSlots: ['Muzzle', 'Magazine', 'Stock'],
-    isBlueprintWeapon: false,
-    requiredWorkshopLevel: 1,
-  ),
-  ArcLoadoutWeaponDefinition(
-    id: 'harpin',
-    name: 'Hairpin',
-    imagePath: 'assets/images/arc_raiders/loadouts/weapons/harpin.webp',
-    attachmentSlots: ['Magazine', 'Grip', 'Stock'],
-    isBlueprintWeapon: false,
-    requiredWorkshopLevel: 1,
-  ),
-  ArcLoadoutWeaponDefinition(
-    id: 'kettle',
-    name: 'Kettle',
-    imagePath: 'assets/images/arc_raiders/loadouts/weapons/kettle.webp',
-    attachmentSlots: ['Muzzle', 'Magazine'],
-    isBlueprintWeapon: false,
-    requiredWorkshopLevel: 1,
-  ),
-];
+);

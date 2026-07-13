@@ -193,10 +193,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required List<String> savedAttachments,
   }) {
     final weapon = _weaponSpec(weaponName);
-    final slots = weapon.slots.isEmpty
-        ? const <String>['Special']
-        : weapon.slots;
-    final slotCount = slots.length.clamp(1, 6).toInt();
+    final slots = weapon.slots;
+    final slotCount = slots.length.clamp(0, 6).toInt();
 
     return List<String>.generate(slotCount, (index) {
       final slotLabel = index < slots.length ? slots[index] : 'Special';
@@ -405,7 +403,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
     setState(() {
       final nextAttachments = List<String>.filled(
-        selected.slots.length.clamp(1, 6).toInt(),
+        selected.slots.length.clamp(0, 6).toInt(),
         'Empty Slot',
         growable: true,
       );
@@ -548,10 +546,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   }) async {
     final weapon = _weaponSpec(primary ? _primaryWeapon : _secondaryWeapon);
     final currentList = primary ? _primaryAttachments : _secondaryAttachments;
-    final slots = weapon.slots.isEmpty
-        ? const <String>['Special']
-        : weapon.slots;
-    final slotLabel = index < slots.length ? slots[index] : slots.last;
+    final slots = weapon.slots;
+    if (slots.isEmpty || index < 0 || index >= slots.length) return;
+    final slotLabel = slots[index];
     final currentAttachment = index < currentList.length
         ? currentList[index]
         : 'Empty Slot';
@@ -978,7 +975,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: List.generate(weapon.slots.length.clamp(1, 6).toInt(), (
+            children: List.generate(weapon.slots.length.clamp(0, 6).toInt(), (
               index,
             ) {
               final slotLabel = index < weapon.slots.length
@@ -1019,12 +1016,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required ArcLoadoutWeaponSpec weapon,
     required Color accent,
   }) {
-    final slotCount = weapon.slots.length.clamp(1, 6).toInt();
+    final slotCount = weapon.slots.length.clamp(0, 6).toInt();
     final mappedOptions = weapon.slots.fold<int>(0, (total, slot) {
       return total +
           _attachmentsForSlot(weaponName: weapon.name, slotLabel: slot).length;
     });
-    final hint = mappedOptions == 0
+    final hint = slotCount == 0
+        ? '${weapon.name} has no attachment slots.'
+        : mappedOptions == 0
         ? 'Tap a slot to clear it or keep planning until attachment data is mapped.'
         : 'Tap any slot to pick from compatible attachments only.';
 
@@ -1277,7 +1276,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required List<String> attachments,
   }) {
     final slots = _weaponSpec(weaponName).slots;
-    final slotCount = slots.length.clamp(1, 6).toInt();
+    final slotCount = slots.length.clamp(0, 6).toInt();
     var empty = 0;
     for (var index = 0; index < slotCount; index++) {
       final value = index < attachments.length

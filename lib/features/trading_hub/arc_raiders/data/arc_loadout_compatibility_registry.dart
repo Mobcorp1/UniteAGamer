@@ -6,8 +6,15 @@ class ArcLoadoutCompatibilityRegistry {
 
   static String normalise(String value) => value.trim().toLowerCase();
 
+  static String normaliseSlotLabel(String value) {
+    final normalised = normalise(value);
+    return normalised.endsWith(' mod')
+        ? normalised.substring(0, normalised.length - 4)
+        : normalised;
+  }
+
   static ArcAttachmentSlotType slotTypeForLabel(String label) {
-    switch (normalise(label)) {
+    switch (normaliseSlotLabel(label)) {
       case 'muzzle':
         return ArcAttachmentSlotType.muzzle;
       case 'shotgun muzzle':
@@ -63,7 +70,6 @@ class ArcLoadoutCompatibilityRegistry {
 
   static List<String> slotsForWeapon(String weaponName) {
     final weapon = weaponSpecForName(weaponName);
-    if (weapon.slots.isEmpty) return const <String>['Special'];
     return List<String>.unmodifiable(weapon.slots);
   }
 
