@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
@@ -28,13 +30,13 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.initialTabIndex.clamp(0, 1);
+    _selectedIndex = widget.initialTabIndex.clamp(0, 3);
   }
 
   @override
   void didUpdateWidget(covariant TradingActivityScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final nextIndex = widget.initialTabIndex.clamp(0, 1);
+    final nextIndex = widget.initialTabIndex.clamp(0, 3);
     if (nextIndex != _selectedIndex) {
       setState(() => _selectedIndex = nextIndex);
     }
@@ -88,6 +90,8 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
     final views = <Widget>[
       const TradingMyListingsScreen(showAppBar: false),
       const TradingMyOffersScreen(showAppBar: false),
+      const TradingBlueprintWatchesScreen(showAppBar: false),
+      const TradingListingQueuesScreen(showAppBar: false),
     ];
 
     final content = Stack(
@@ -124,6 +128,18 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
                           icon: Icons.local_offer_outlined,
                           selected: _selectedIndex == 1,
                           onTap: () => setState(() => _selectedIndex = 1),
+                        ),
+                        _toggleButton(
+                          label: 'Blueprint Watches',
+                          icon: Icons.add_alert_outlined,
+                          selected: _selectedIndex == 2,
+                          onTap: () => setState(() => _selectedIndex = 2),
+                        ),
+                        _toggleButton(
+                          label: 'Listing Queues',
+                          icon: Icons.dynamic_feed_outlined,
+                          selected: _selectedIndex == 3,
+                          onTap: () => setState(() => _selectedIndex = 3),
                         ),
                       ],
                     ),

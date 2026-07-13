@@ -63,6 +63,25 @@ class TradingMyListingsScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppTheme.spaceS),
+            if (listing.isQueueLinked) ...[
+              Container(
+                padding: AppTheme.pillPadding,
+                decoration: AppTheme.tradingPillDecoration(
+                  color: AppTheme.warningAmber,
+                ),
+                child: Text(
+                  listing.queueReleaseNumber <= 0
+                      ? 'Queue source listing'
+                      : 'Queue release ${listing.queueReleaseNumber + 1}',
+                  style: const TextStyle(
+                    color: AppTheme.warningAmber,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+            ],
             Text(
               'Offering: ${listing.offeredSummary}',
               style: const TextStyle(color: Colors.white),

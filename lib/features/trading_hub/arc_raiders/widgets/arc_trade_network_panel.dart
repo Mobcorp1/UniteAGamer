@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_intel_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -160,6 +162,35 @@ class _ArcTradeNetworkPanelState extends State<ArcTradeNetworkPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _Header(summary: summary),
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const TradingBlueprintWatchesScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_alert_outlined),
+                label: const Text('Blueprint Watches'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const TradingListingQueuesScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.dynamic_feed_outlined),
+                label: const Text('Listing Queues'),
+              ),
+            ],
+          ),
           const SizedBox(height: AppTheme.spaceM),
           if (!summary.hasActionableOpportunities)
             _EmptyNetworkState(summary: summary)
@@ -541,7 +572,7 @@ class _OpportunityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
       padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -621,6 +652,12 @@ class _OpportunityCard extends StatelessWidget {
         ],
       ),
     );
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onPrimaryAction,
+      child: card,
+    );
   }
 
   Widget _pill(String label, Color color) {
@@ -660,7 +697,7 @@ class _WatchCard extends StatelessWidget {
         ? Colors.lightGreenAccent
         : AppTheme.neonCyan;
 
-    return Container(
+    final card = Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
       padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -707,6 +744,12 @@ class _WatchCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onOpenListing,
+      child: card,
     );
   }
 }

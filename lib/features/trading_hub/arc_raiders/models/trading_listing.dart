@@ -61,6 +61,9 @@ class TradingListing {
   final bool fixedReturn;
   final bool bestSuitableOffer;
   final int maxActiveOffers;
+  final String queueId;
+  final String queueSourceListingId;
+  final int queueReleaseNumber;
   final DateTime expiresAt;
   final String notes;
   final bool active;
@@ -110,6 +113,9 @@ class TradingListing {
     this.fixedReturn = false,
     this.bestSuitableOffer = false,
     this.maxActiveOffers = 5,
+    this.queueId = '',
+    this.queueSourceListingId = '',
+    this.queueReleaseNumber = 0,
     required this.expiresAt,
     required this.notes,
     required this.active,
@@ -162,6 +168,9 @@ class TradingListing {
       fixedReturn: false,
       bestSuitableOffer: false,
       maxActiveOffers: 5,
+      queueId: '',
+      queueSourceListingId: '',
+      queueReleaseNumber: 0,
       expiresAt: now.add(const Duration(days: 3)),
       notes: '',
       active: true,
@@ -292,6 +301,7 @@ class TradingListing {
   bool get isLive => active && expiresAt.isAfter(DateTime.now());
 
   bool get hasSeedOffer => seedTotalOffered > 0;
+  bool get isQueueLinked => queueId.trim().isNotEmpty;
 
   String expiryLabel() {
     if (!active) return 'Closed';
@@ -432,6 +442,9 @@ class TradingListing {
       'fixedReturn': fixedReturn,
       'bestSuitableOffer': bestSuitableOffer,
       'maxActiveOffers': maxActiveOffers,
+      'queueId': queueId,
+      'queueSourceListingId': queueSourceListingId,
+      'queueReleaseNumber': queueReleaseNumber,
       'expiresAt': Timestamp.fromDate(expiresAt),
       'notes': notes,
       'active': active,
@@ -504,11 +517,125 @@ class TradingListing {
       fixedReturn: _readBool(map['fixedReturn']),
       bestSuitableOffer: _readBool(map['bestSuitableOffer']),
       maxActiveOffers: _readInt(map['maxActiveOffers'], 5).clamp(1, 25).toInt(),
+      queueId: _readString(map['queueId']),
+      queueSourceListingId: _readString(map['queueSourceListingId']),
+      queueReleaseNumber: _readInt(map['queueReleaseNumber']),
       expiresAt: _readDate(map['expiresAt']) ?? DateTime.now(),
       notes: _readString(map['notes']),
       active: _readBool(map['active'], true),
       createdAt: _readDate(map['createdAt']),
       updatedAt: _readDate(map['updatedAt']),
+    );
+  }
+
+  TradingListing copyWith({
+    String? id,
+    String? ownerUid,
+    String? traderName,
+    String? gamerTag,
+    String? preferredPlatform,
+    String? title,
+    String? offeredItem,
+    String? wantedText,
+    List<String>? offeredBlueprintNames,
+    List<String>? wantedBlueprintNames,
+    List<String>? offeredAssetNames,
+    List<String>? wantedAssetNames,
+    List<String>? offeredTradeItemIds,
+    List<String>? wantedTradeItemIds,
+    List<String>? offeredTradeItemNames,
+    List<String>? wantedTradeItemNames,
+    bool? wantsNothing,
+    TradingListingType? listingType,
+    TradingRiskLevel? riskLevel,
+    int? completedTrades,
+    int? noShows,
+    int? betrayalFlags,
+    String? region,
+    String? playWindow,
+    int? smallBundles,
+    int? mediumBundles,
+    int? largeBundles,
+    int? seedTotalOffered,
+    bool? acceptsBlueprints,
+    bool? acceptsSeeds,
+    bool? acceptsResources,
+    bool? seriousOffersOnly,
+    bool? tradeAsBundle,
+    bool? allowPartialOffers,
+    TradingListingMode? listingMode,
+    String? scheduledWindow,
+    String? sellerTimezone,
+    ArcDuplicateReleasePolicy? duplicateReleasePolicy,
+    bool? favouriteRidersFirst,
+    bool? fixedReturn,
+    bool? bestSuitableOffer,
+    int? maxActiveOffers,
+    String? queueId,
+    String? queueSourceListingId,
+    int? queueReleaseNumber,
+    DateTime? expiresAt,
+    String? notes,
+    bool? active,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return TradingListing(
+      id: id ?? this.id,
+      ownerUid: ownerUid ?? this.ownerUid,
+      traderName: traderName ?? this.traderName,
+      gamerTag: gamerTag ?? this.gamerTag,
+      preferredPlatform: preferredPlatform ?? this.preferredPlatform,
+      title: title ?? this.title,
+      offeredItem: offeredItem ?? this.offeredItem,
+      wantedText: wantedText ?? this.wantedText,
+      offeredBlueprintNames:
+          offeredBlueprintNames ?? this.offeredBlueprintNames,
+      wantedBlueprintNames: wantedBlueprintNames ?? this.wantedBlueprintNames,
+      offeredAssetNames: offeredAssetNames ?? this.offeredAssetNames,
+      wantedAssetNames: wantedAssetNames ?? this.wantedAssetNames,
+      offeredTradeItemIds: offeredTradeItemIds ?? this.offeredTradeItemIds,
+      wantedTradeItemIds: wantedTradeItemIds ?? this.wantedTradeItemIds,
+      offeredTradeItemNames:
+          offeredTradeItemNames ?? this.offeredTradeItemNames,
+      wantedTradeItemNames: wantedTradeItemNames ?? this.wantedTradeItemNames,
+      wantsNothing: wantsNothing ?? this.wantsNothing,
+      listingType: listingType ?? this.listingType,
+      riskLevel: riskLevel ?? this.riskLevel,
+      completedTrades: completedTrades ?? this.completedTrades,
+      noShows: noShows ?? this.noShows,
+      betrayalFlags: betrayalFlags ?? this.betrayalFlags,
+      region: region ?? this.region,
+      playWindow: playWindow ?? this.playWindow,
+      smallBundles: smallBundles ?? this.smallBundles,
+      mediumBundles: mediumBundles ?? this.mediumBundles,
+      largeBundles: largeBundles ?? this.largeBundles,
+      seedTotalOffered: seedTotalOffered ?? this.seedTotalOffered,
+      acceptsBlueprints: acceptsBlueprints ?? this.acceptsBlueprints,
+      acceptsSeeds: acceptsSeeds ?? this.acceptsSeeds,
+      acceptsResources: acceptsResources ?? this.acceptsResources,
+      seriousOffersOnly: seriousOffersOnly ?? this.seriousOffersOnly,
+      tradeAsBundle: tradeAsBundle ?? this.tradeAsBundle,
+      allowPartialOffers: allowPartialOffers ?? this.allowPartialOffers,
+      listingMode: listingMode ?? this.listingMode,
+      scheduledWindow: scheduledWindow ?? this.scheduledWindow,
+      sellerTimezone: sellerTimezone ?? this.sellerTimezone,
+      duplicateReleasePolicy:
+          duplicateReleasePolicy ?? this.duplicateReleasePolicy,
+      favouriteRidersFirst: favouriteRidersFirst ?? this.favouriteRidersFirst,
+      fixedReturn: fixedReturn ?? this.fixedReturn,
+      bestSuitableOffer: bestSuitableOffer ?? this.bestSuitableOffer,
+      maxActiveOffers: (maxActiveOffers ?? this.maxActiveOffers)
+          .clamp(1, 25)
+          .toInt(),
+      queueId: queueId ?? this.queueId,
+      queueSourceListingId: queueSourceListingId ?? this.queueSourceListingId,
+      queueReleaseNumber: queueReleaseNumber ?? this.queueReleaseNumber,
+      expiresAt: expiresAt ?? this.expiresAt,
+      notes: notes ?? this.notes,
+      active: active ?? this.active,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

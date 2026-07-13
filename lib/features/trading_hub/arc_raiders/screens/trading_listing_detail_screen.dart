@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
@@ -56,6 +57,37 @@ class TradingListingDetailScreen extends StatelessWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Could not update favourite: $e')));
+    }
+  }
+
+  Future<void> _watchFirstOfferedBlueprint(
+    BuildContext context,
+    TradingRepository repository,
+  ) async {
+    if (listing.offeredBlueprintNames.isEmpty) return;
+    final blueprintName = listing.offeredBlueprintNames.first;
+    final match = ArcBlueprintSeedData.blueprints.where(
+      (blueprint) =>
+          blueprint.name.toLowerCase() == blueprintName.toLowerCase() ||
+          blueprint.id.toLowerCase() == blueprintName.toLowerCase(),
+    );
+    final blueprint = match.isEmpty ? null : match.first;
+    try {
+      await repository.createOrReactivateBlueprintWatch(
+        blueprintId: blueprint?.id ?? blueprintName,
+        blueprintDisplayName: blueprint?.name ?? blueprintName,
+        linkedListingId: listing.id,
+        preferredAcquisitionMethods: const <String>['Trade listings'],
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$blueprintName watch is active.')),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not watch blueprint: $error')),
+      );
     }
   }
 
@@ -329,6 +361,23 @@ class TradingListingDetailScreen extends StatelessWidget {
                                         );
                                       },
                                     ),
+                                    if (listing
+                                        .offeredBlueprintNames
+                                        .isNotEmpty)
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: OutlinedButton.icon(
+                                          onPressed: () =>
+                                              _watchFirstOfferedBlueprint(
+                                                context,
+                                                repository,
+                                              ),
+                                          icon: const Icon(
+                                            Icons.add_alert_outlined,
+                                          ),
+                                          label: const Text('WATCH BLUEPRINT'),
+                                        ),
+                                      ),
                                     const SizedBox(height: AppTheme.spaceM),
                                     _section('Offering', offeredList),
                                     if (listing.listingType ==
@@ -355,6 +404,13 @@ class TradingListingDetailScreen extends StatelessWidget {
                                       'Listing mode',
                                       listing.listingModeLabel,
                                     ),
+                                    if (listing.isQueueLinked)
+                                      _row(
+                                        'Queue',
+                                        listing.queueReleaseNumber <= 0
+                                            ? 'Source listing'
+                                            : 'Released copy ${listing.queueReleaseNumber + 1}',
+                                      ),
                                     _row(
                                       'Active offer cap',
                                       '${listing.maxActiveOffers}',

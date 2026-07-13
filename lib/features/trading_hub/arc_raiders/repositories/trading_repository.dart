@@ -190,6 +190,26 @@ class TradingRepository {
     return match.first.name;
   }
 
+  String _blueprintIdFromName(String blueprintName) {
+    final normalized = _normalizeBlueprintText(blueprintName);
+    final match = ArcBlueprintSeedData.blueprints.where(
+      (blueprint) =>
+          _normalizeBlueprintText(blueprint.name) == normalized ||
+          _normalizeBlueprintText(blueprint.id) == normalized,
+    );
+    if (match.isEmpty) return normalized;
+    return match.first.id;
+  }
+
+  String _normalizeBlueprintText(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+  }
+
   TradingSessionStatus _deriveSessionStatus(TradingSession session) {
     if (session.traderOneMarkedBetrayal || session.traderTwoMarkedBetrayal) {
       return TradingSessionStatus.betrayal;
@@ -411,10 +431,17 @@ class TradingRepository {
     String listingId = '',
     String offerId = '',
     String sessionId = '',
+    String watchId = '',
+    String queueId = '',
+    String preparationId = '',
+    String opportunityId = '',
     DateTime? now,
+    bool allowSelfNotification = false,
   }) {
     final actorUid = currentUid;
-    if (actorUid == null || targetUid.isEmpty || targetUid == actorUid) {
+    if (actorUid == null ||
+        targetUid.isEmpty ||
+        (!allowSelfNotification && targetUid == actorUid)) {
       return null;
     }
 
@@ -430,6 +457,10 @@ class TradingRepository {
       listingId: listingId,
       offerId: offerId,
       sessionId: sessionId,
+      watchId: watchId,
+      queueId: queueId,
+      preparationId: preparationId,
+      opportunityId: opportunityId,
       read: false,
       createdAt: createdAt,
       updatedAt: createdAt,
@@ -446,6 +477,11 @@ class TradingRepository {
     String listingId = '',
     String offerId = '',
     String sessionId = '',
+    String watchId = '',
+    String queueId = '',
+    String preparationId = '',
+    String opportunityId = '',
+    bool allowSelfNotification = false,
   }) async {
     final payload = _buildNotificationPayload(
       targetUid: targetUid,
@@ -455,6 +491,11 @@ class TradingRepository {
       listingId: listingId,
       offerId: offerId,
       sessionId: sessionId,
+      watchId: watchId,
+      queueId: queueId,
+      preparationId: preparationId,
+      opportunityId: opportunityId,
+      allowSelfNotification: allowSelfNotification,
     );
     if (payload == null) return;
 
@@ -646,13 +687,23 @@ class TradingRepository {
     if (uid == null) return Stream.value(const <ArcBlueprintWatch>[]);
     return _blueprintWatchesCollection
         .where('ownerUid', isEqualTo: uid)
-        .where('active', isEqualTo: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .map((snapshot) {
+          final watches = snapshot.docs
               .map((doc) => ArcBlueprintWatch.fromMap(doc.data()))
-              .toList(growable: false),
-        );
+              .toList(growable: false);
+          return watches..sort((a, b) {
+            final aDate =
+                a.updatedAt ??
+                a.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            final bDate =
+                b.updatedAt ??
+                b.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            return bDate.compareTo(aDate);
+          });
+        });
   }
 
   Future<void> saveBlueprintWatch(ArcBlueprintWatch watch) async {
@@ -670,6 +721,120 @@ class TradingRepository {
           ? Timestamp.fromDate(now)
           : Timestamp.fromDate(watch.createdAt!),
       'updatedAt': Timestamp.fromDate(now),
+    }, SetOptions(merge: true));
+  }
+
+  Future<ArcBlueprintWatch> createOrReactivateBlueprintWatch({
+    required String blueprintId,
+    required String blueprintDisplayName,
+    ArcBlueprintWatchType type = ArcBlueprintWatchType.blueprint,
+    String objectiveId = '',
+    String linkedListingId = '',
+    String linkedOpportunityId = '',
+    List<String> preferredAcquisitionMethods = const <String>[],
+    int minimumMatchScore = 60,
+    bool favouriteRidersOnly = false,
+    bool notificationsEnabled = true,
+    ArcBlueprintWatchNotificationPreference notificationPreference =
+        ArcBlueprintWatchNotificationPreference.duringAvailabilityOnly,
+  }) async {
+    final uid = currentUid;
+    if (uid == null || blueprintId.trim().isEmpty) {
+      throw Exception('You must be signed in to watch a blueprint.');
+    }
+
+    final normalizedBlueprintId = blueprintId.trim();
+    final watchId = ArcBlueprintWatch.idFor(
+      ownerUid: uid,
+      blueprintId: normalizedBlueprintId,
+      type: type,
+      objectiveId: objectiveId,
+    );
+    final ref = _blueprintWatchesCollection.doc(watchId);
+    final now = DateTime.now();
+    final existing = await ref.get();
+    final previous = existing.exists
+        ? ArcBlueprintWatch.fromMap(existing.data() ?? const {})
+        : null;
+
+    final watch =
+        (previous ??
+                ArcBlueprintWatch(
+                  id: watchId,
+                  ownerUid: uid,
+                  type: type,
+                  blueprintId: normalizedBlueprintId,
+                  createdAt: now,
+                ))
+            .copyWith(
+              id: watchId,
+              ownerUid: uid,
+              type: type,
+              blueprintId: normalizedBlueprintId,
+              blueprintDisplayName: blueprintDisplayName.trim().isEmpty
+                  ? _blueprintNameFromId(normalizedBlueprintId)
+                  : blueprintDisplayName.trim(),
+              objectiveId: objectiveId.trim(),
+              preferredAcquisitionMethods: preferredAcquisitionMethods,
+              minimumMatchScore: minimumMatchScore,
+              favouriteRidersOnly: favouriteRidersOnly,
+              notificationsEnabled: notificationsEnabled,
+              notificationPreference: notificationsEnabled
+                  ? notificationPreference
+                  : ArcBlueprintWatchNotificationPreference.muted,
+              active: true,
+              linkedListingId: linkedListingId.trim(),
+              linkedOpportunityId: linkedOpportunityId.trim(),
+              lastMatchedAt:
+                  linkedListingId.trim().isEmpty &&
+                      linkedOpportunityId.trim().isEmpty
+                  ? previous?.lastMatchedAt
+                  : now,
+              createdAt: previous?.createdAt ?? now,
+              updatedAt: now,
+            );
+
+    await ref.set(watch.toMap(), SetOptions(merge: true));
+    return watch;
+  }
+
+  Future<void> pauseBlueprintWatch(String watchId) async {
+    await _updateBlueprintWatchState(watchId: watchId, active: false);
+  }
+
+  Future<void> resumeBlueprintWatch(String watchId) async {
+    await _updateBlueprintWatchState(watchId: watchId, active: true);
+  }
+
+  Future<void> removeBlueprintWatch(String watchId) async {
+    final uid = currentUid;
+    if (uid == null || watchId.trim().isEmpty) return;
+    final ref = _blueprintWatchesCollection.doc(watchId.trim());
+    final snapshot = await ref.get();
+    if (!snapshot.exists) return;
+    final watch = ArcBlueprintWatch.fromMap(snapshot.data() ?? const {});
+    if (watch.ownerUid != uid) {
+      throw Exception('You can only remove your own blueprint watches.');
+    }
+    await ref.delete();
+  }
+
+  Future<void> _updateBlueprintWatchState({
+    required String watchId,
+    required bool active,
+  }) async {
+    final uid = currentUid;
+    if (uid == null || watchId.trim().isEmpty) return;
+    final ref = _blueprintWatchesCollection.doc(watchId.trim());
+    final snapshot = await ref.get();
+    if (!snapshot.exists) return;
+    final watch = ArcBlueprintWatch.fromMap(snapshot.data() ?? const {});
+    if (watch.ownerUid != uid) {
+      throw Exception('You can only update your own blueprint watches.');
+    }
+    await ref.set({
+      'active': active,
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
     }, SetOptions(merge: true));
   }
 
@@ -691,6 +856,248 @@ class TradingRepository {
           : Timestamp.fromDate(queueItem.createdAt!),
       'updatedAt': Timestamp.fromDate(now),
     }, SetOptions(merge: true));
+  }
+
+  Stream<List<ArcTradeListingQueueItem>> watchListingQueues() {
+    final uid = currentUid;
+    if (uid == null) {
+      return Stream.value(const <ArcTradeListingQueueItem>[]);
+    }
+
+    return _listingQueueCollection
+        .where('ownerUid', isEqualTo: uid)
+        .snapshots()
+        .map((snapshot) {
+          final queues = snapshot.docs
+              .map((doc) => ArcTradeListingQueueItem.fromMap(doc.data()))
+              .toList(growable: false);
+          return queues..sort((a, b) {
+            final aDate =
+                a.updatedAt ??
+                a.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            final bDate =
+                b.updatedAt ??
+                b.createdAt ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            return bDate.compareTo(aDate);
+          });
+        });
+  }
+
+  Future<void> pauseListingQueue(String queueId) async {
+    await _updateListingQueueStatus(
+      queueId: queueId,
+      status: ArcTradeListingQueueStatus.paused,
+      clearBlockedReason: true,
+    );
+  }
+
+  Future<void> resumeListingQueue(String queueId) async {
+    await _updateListingQueueStatus(
+      queueId: queueId,
+      status: ArcTradeListingQueueStatus.active,
+      clearBlockedReason: true,
+    );
+  }
+
+  Future<void> cancelListingQueue(String queueId) async {
+    await _updateListingQueueStatus(
+      queueId: queueId,
+      status: ArcTradeListingQueueStatus.cancelled,
+      clearBlockedReason: true,
+      cancelledAt: DateTime.now(),
+    );
+  }
+
+  Future<void> _updateListingQueueStatus({
+    required String queueId,
+    required ArcTradeListingQueueStatus status,
+    bool clearBlockedReason = false,
+    DateTime? cancelledAt,
+  }) async {
+    final uid = currentUid;
+    if (uid == null || queueId.trim().isEmpty) return;
+    final ref = _listingQueueCollection.doc(queueId.trim());
+    final snapshot = await ref.get();
+    if (!snapshot.exists) return;
+    final queue = ArcTradeListingQueueItem.fromMap(snapshot.data() ?? const {});
+    if (queue.ownerUid != uid) {
+      throw Exception('You can only update your own listing queues.');
+    }
+
+    await ref.set({
+      'status': status.name,
+      if (clearBlockedReason) 'blockedReason': '',
+      if (cancelledAt != null) 'cancelledAt': Timestamp.fromDate(cancelledAt),
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
+    }, SetOptions(merge: true));
+  }
+
+  Future<TradingListing?> releaseNextQueuedListing(String queueId) async {
+    final uid = currentUid;
+    if (uid == null || queueId.trim().isEmpty) {
+      throw Exception('You must be signed in to release a queued listing.');
+    }
+
+    final queueRef = _listingQueueCollection.doc(queueId.trim());
+    final newListingRef = _listingsCollection.doc();
+    late TradingListing? releasedListing;
+    String? blockedReason;
+
+    await _firestore.runTransaction((transaction) async {
+      final queueSnapshot = await transaction.get(queueRef);
+      if (!queueSnapshot.exists) {
+        throw Exception('This listing queue no longer exists.');
+      }
+      final queue = ArcTradeListingQueueItem.fromMap(
+        queueSnapshot.data() ?? <String, dynamic>{},
+      );
+      if (queue.ownerUid != uid) {
+        throw Exception('You can only release your own listing queues.');
+      }
+      if (queue.isPaused) {
+        blockedReason = 'Queue is paused.';
+        transaction.set(queueRef, {
+          'blockedReason': blockedReason,
+          'updatedAt': Timestamp.fromDate(DateTime.now()),
+        }, SetOptions(merge: true));
+        releasedListing = null;
+        return;
+      }
+      if (queue.isTerminal || !queue.hasRemaining) {
+        blockedReason = 'No queued duplicate remains.';
+        transaction.set(queueRef, {
+          'status': ArcTradeListingQueueStatus.completed.name,
+          'blockedReason': blockedReason,
+          'updatedAt': Timestamp.fromDate(DateTime.now()),
+        }, SetOptions(merge: true));
+        releasedListing = null;
+        return;
+      }
+
+      final activeListingId = queue.activeListingId.trim().isEmpty
+          ? queue.sourceListingId
+          : queue.activeListingId.trim();
+      if (activeListingId.isNotEmpty) {
+        final activeSnapshot = await transaction.get(
+          _listingsCollection.doc(activeListingId),
+        );
+        if (activeSnapshot.exists) {
+          final activeListing = TradingListing.fromMap(
+            activeSnapshot.data() ?? <String, dynamic>{},
+          );
+          if (activeListing.active &&
+              activeListing.expiresAt.isAfter(DateTime.now())) {
+            blockedReason = 'A queue-linked listing is still active.';
+            transaction.set(queueRef, {
+              'blockedReason': blockedReason,
+              'updatedAt': Timestamp.fromDate(DateTime.now()),
+            }, SetOptions(merge: true));
+            releasedListing = null;
+            return;
+          }
+        }
+      }
+
+      final stateSnapshot = await transaction.get(
+        _blueprintStatesCollection(uid).doc(queue.blueprintId),
+      );
+      final state = stateSnapshot.exists
+          ? ArcBlueprintState.fromMap(
+              stateSnapshot.data() ?? <String, dynamic>{},
+            )
+          : ArcBlueprintState.empty(queue.blueprintId);
+      if (state.dupesOwned < queue.releasedQuantity + 1) {
+        blockedReason = 'Duplicate ownership no longer supports this queue.';
+        transaction.set(queueRef, {
+          'status': ArcTradeListingQueueStatus.blocked.name,
+          'blockedReason': blockedReason,
+          'updatedAt': Timestamp.fromDate(DateTime.now()),
+        }, SetOptions(merge: true));
+        releasedListing = null;
+        return;
+      }
+
+      final sourceSnapshot = await transaction.get(
+        _listingsCollection.doc(queue.sourceListingId),
+      );
+      if (!sourceSnapshot.exists) {
+        blockedReason = 'Source listing is missing.';
+        transaction.set(queueRef, {
+          'status': ArcTradeListingQueueStatus.blocked.name,
+          'blockedReason': blockedReason,
+          'updatedAt': Timestamp.fromDate(DateTime.now()),
+        }, SetOptions(merge: true));
+        releasedListing = null;
+        return;
+      }
+
+      final now = DateTime.now();
+      final source = TradingListing.fromMap(
+        sourceSnapshot.data() ?? <String, dynamic>{},
+      );
+      final sourceCreatedAt = source.createdAt ?? now;
+      final sourceDuration = source.expiresAt.isAfter(sourceCreatedAt)
+          ? source.expiresAt.difference(sourceCreatedAt)
+          : const Duration(hours: 72);
+      final releaseNumber = queue.releasedQuantity + 1;
+      final next = source.copyWith(
+        id: newListingRef.id,
+        title: '${source.title} #${releaseNumber + 1}',
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+        expiresAt: now.add(sourceDuration),
+        queueId: queue.id,
+        queueSourceListingId: queue.sourceListingId,
+        queueReleaseNumber: releaseNumber,
+      );
+      final remainingAfterRelease = queue.remainingQuantity - 1;
+      final nextStatus = remainingAfterRelease <= 0
+          ? ArcTradeListingQueueStatus.completed
+          : ArcTradeListingQueueStatus.active;
+      final nextQueue = queue.copyWith(
+        status: nextStatus,
+        activeListingId: next.id,
+        lastReleasedListingId: next.id,
+        releasedQuantity: releaseNumber,
+        lastReleasedAt: now,
+        completedAt: nextStatus == ArcTradeListingQueueStatus.completed
+            ? now
+            : queue.completedAt,
+        updatedAt: now,
+        clearBlockedReason: true,
+        clearReleaseAt: true,
+      );
+
+      transaction.set(newListingRef, next.toMap());
+      transaction.set(queueRef, nextQueue.toMap(), SetOptions(merge: true));
+      releasedListing = next;
+    });
+
+    if (releasedListing != null) {
+      await _safeNotify(
+        targetUid: uid,
+        type: TradingNotificationType.queuedListingReleased,
+        title: 'Queued listing released',
+        body: '${releasedListing!.offeredSummary} is live from your queue.',
+        listingId: releasedListing!.id,
+        queueId: queueId.trim(),
+        allowSelfNotification: true,
+      );
+    } else if (blockedReason != null && blockedReason!.isNotEmpty) {
+      await _safeNotify(
+        targetUid: uid,
+        type: TradingNotificationType.queuedListingBlocked,
+        title: 'Listing queue needs attention',
+        body: blockedReason!,
+        queueId: queueId.trim(),
+        allowSelfNotification: true,
+      );
+    }
+
+    return releasedListing;
   }
 
   Future<TradingProfile> getTradingProfile() async {
@@ -850,6 +1257,28 @@ class TradingRepository {
         .set(preparation.toMap(), SetOptions(merge: true));
   }
 
+  Future<int> _activeListingCountForBlueprint({
+    required String ownerUid,
+    required String blueprintId,
+  }) async {
+    final normalizedBlueprintId = _normalizeBlueprintText(blueprintId);
+    if (ownerUid.trim().isEmpty || normalizedBlueprintId.isEmpty) return 0;
+
+    final snapshot = await _listingsCollection
+        .where('ownerUid', isEqualTo: ownerUid)
+        .get();
+    final now = DateTime.now();
+    return snapshot.docs
+        .map((doc) => TradingListing.fromMap(doc.data()))
+        .where((listing) => listing.active && listing.expiresAt.isAfter(now))
+        .where(
+          (listing) => listing.offeredBlueprintNames.any(
+            (name) => _blueprintIdFromName(name) == normalizedBlueprintId,
+          ),
+        )
+        .length;
+  }
+
   Future<void> updateTradePreparationReadiness(
     ArcTradePreparation preparation,
   ) async {
@@ -914,7 +1343,7 @@ class TradingRepository {
         '- mark ready in the app\n';
   }
 
-  Future<void> createListing({
+  Future<TradingListing> createListing({
     required String offeredItem,
     required String wantedText,
     required TradingListingType listingType,
@@ -948,9 +1377,13 @@ class TradingRepository {
     bool fixedReturn = false,
     bool bestSuitableOffer = false,
     int maxActiveOffers = 5,
+    bool duplicateQueueEnabled = false,
+    String duplicateQueueBlueprintId = '',
+    String duplicateQueueBlueprintName = '',
+    int duplicateQueueQuantity = 0,
   }) async {
     final uid = currentUid;
-    if (uid == null) return;
+    if (uid == null) return TradingListing.empty();
 
     _ensureListingInputSafe(
       offeredItem: offeredItem,
@@ -973,6 +1406,27 @@ class TradingRepository {
 
     final listingRef = _listingsCollection.doc();
     final now = DateTime.now();
+    final normalizedQueueBlueprintId = duplicateQueueBlueprintId.trim().isEmpty
+        ? offeredBlueprintNames.isEmpty
+              ? ''
+              : _blueprintIdFromName(offeredBlueprintNames.first)
+        : duplicateQueueBlueprintId.trim();
+    final normalizedQueueBlueprintName =
+        duplicateQueueBlueprintName.trim().isEmpty
+        ? normalizedQueueBlueprintId.isEmpty
+              ? ''
+              : _blueprintNameFromId(normalizedQueueBlueprintId)
+        : duplicateQueueBlueprintName.trim();
+    final safeQueueQuantity = duplicateQueueEnabled
+        ? duplicateQueueQuantity.clamp(0, 99).toInt()
+        : 0;
+    final queueId =
+        safeQueueQuantity > 0 && normalizedQueueBlueprintId.isNotEmpty
+        ? ArcTradeListingQueueItem.idFor(
+            ownerUid: uid,
+            sourceListingId: listingRef.id,
+          )
+        : '';
 
     final seedTotal =
         (smallBundles * 10) + (mediumBundles * 50) + (largeBundles * 100);
@@ -1034,6 +1488,9 @@ class TradingRepository {
           bestSuitableOffer ||
           listingMode == TradingListingMode.bestSuitableOffer,
       maxActiveOffers: maxActiveOffers.clamp(1, 25).toInt(),
+      queueId: queueId,
+      queueSourceListingId: queueId.isEmpty ? '' : listingRef.id,
+      queueReleaseNumber: 0,
       expiresAt: now.add(expiryDuration),
       notes: notes.trim(),
       active: true,
@@ -1041,7 +1498,47 @@ class TradingRepository {
       updatedAt: now,
     );
 
-    await listingRef.set(listing.toMap());
+    if (safeQueueQuantity <= 0) {
+      await listingRef.set(listing.toMap());
+      return listing;
+    }
+
+    final blueprintStateSnapshot = await _blueprintStatesCollection(
+      uid,
+    ).doc(normalizedQueueBlueprintId).get();
+    final blueprintState = blueprintStateSnapshot.exists
+        ? ArcBlueprintState.fromMap(
+            blueprintStateSnapshot.data() ?? <String, dynamic>{},
+          )
+        : ArcBlueprintState.empty(normalizedQueueBlueprintId);
+    final activeSameBlueprintCount = await _activeListingCountForBlueprint(
+      ownerUid: uid,
+      blueprintId: normalizedQueueBlueprintId,
+    );
+    final maxFutureQueue =
+        blueprintState.dupesOwned - activeSameBlueprintCount - 1;
+    if (maxFutureQueue < safeQueueQuantity) {
+      throw Exception(
+        'Queued release quantity exceeds duplicate availability for $normalizedQueueBlueprintName.',
+      );
+    }
+
+    final queue = ArcTradeListingQueueItem.createForListing(
+      id: queueId,
+      ownerUid: uid,
+      blueprintId: normalizedQueueBlueprintId,
+      blueprintName: normalizedQueueBlueprintName,
+      sourceListingId: listingRef.id,
+      releasePolicy: duplicateReleasePolicy,
+      queuedQuantity: safeQueueQuantity,
+      now: now,
+    );
+
+    final batch = _firestore.batch();
+    batch.set(listingRef, listing.toMap());
+    batch.set(_listingQueueCollection.doc(queue.id), queue.toMap());
+    await batch.commit();
+    return listing;
   }
 
   Stream<List<TradingListing>> watchActiveListings() {

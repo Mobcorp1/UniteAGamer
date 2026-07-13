@@ -3,11 +3,13 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_watch.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
@@ -70,6 +72,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       .watchMySessions();
   late final Stream<List<TradingNotification>> _notificationsStream =
       _tradingRepository.watchNotifications();
+  late final Stream<List<ArcBlueprintWatch>> _blueprintWatchesStream =
+      _tradingRepository.watchBlueprintWatches();
+  late final Stream<List<ArcTradeListingQueueItem>> _listingQueuesStream =
+      _tradingRepository.watchListingQueues();
   late Future<ArcNomadicTraderTrackerSnapshot> _nomadicTraderSnapshotFuture =
       _nomadicTraderRepository.loadTrackerSnapshot();
   final Map<String, bool> _checklistState = <String, bool>{};
@@ -87,6 +93,9 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   List<TradingSession> _cachedSessions = const <TradingSession>[];
   List<TradingNotification> _cachedNotifications =
       const <TradingNotification>[];
+  List<ArcBlueprintWatch> _cachedBlueprintWatches = const <ArcBlueprintWatch>[];
+  List<ArcTradeListingQueueItem> _cachedListingQueues =
+      const <ArcTradeListingQueueItem>[];
   static ArcCommandCentreState? _lastCommandState;
 
   @override
@@ -285,28 +294,53 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                           _cachedNotifications = notificationsSnapshot.data!;
                         }
                         final notifications = _cachedNotifications;
-                        final tradeActivity = _tradeActivityFrom(
-                          blueprintStates: blueprintStates,
-                          activeListings: activeListings,
-                          myListings: myListings,
-                          offers: offers,
-                          sessions: sessions,
-                          notifications: notifications,
-                        );
-                        final commandState = ArcCommandCentreEngine.build(
-                          blueprintStates: blueprintStates,
-                          savedLoadouts: loadouts,
-                          scrappyStates: scrappyStates,
-                          nomadicTraderTracker: nomadicTraderTracker,
-                          operationsState: operationsState,
-                          tradeActivity: tradeActivity,
-                        );
-                        _lastCommandState = commandState;
-                        return ArcCommandCentreContent(
-                          commandState: _lastCommandState ?? commandState,
-                          checklistState: _checklistState,
-                          onAction: _handleAction,
-                          onChecklistChanged: _handleChecklistChanged,
+                        return StreamBuilder<List<ArcBlueprintWatch>>(
+                          stream: _blueprintWatchesStream,
+                          builder: (context, watchesSnapshot) {
+                            if (watchesSnapshot.hasData) {
+                              _cachedBlueprintWatches = watchesSnapshot.data!;
+                            }
+                            final watches = _cachedBlueprintWatches;
+                            return StreamBuilder<
+                              List<ArcTradeListingQueueItem>
+                            >(
+                              stream: _listingQueuesStream,
+                              builder: (context, queuesSnapshot) {
+                                if (queuesSnapshot.hasData) {
+                                  _cachedListingQueues = queuesSnapshot.data!;
+                                }
+                                final queues = _cachedListingQueues;
+                                final tradeActivity = _tradeActivityFrom(
+                                  blueprintStates: blueprintStates,
+                                  activeListings: activeListings,
+                                  myListings: myListings,
+                                  offers: offers,
+                                  sessions: sessions,
+                                  notifications: notifications,
+                                  watches: watches,
+                                  queues: queues,
+                                );
+                                final commandState =
+                                    ArcCommandCentreEngine.build(
+                                      blueprintStates: blueprintStates,
+                                      savedLoadouts: loadouts,
+                                      scrappyStates: scrappyStates,
+                                      nomadicTraderTracker:
+                                          nomadicTraderTracker,
+                                      operationsState: operationsState,
+                                      tradeActivity: tradeActivity,
+                                    );
+                                _lastCommandState = commandState;
+                                return ArcCommandCentreContent(
+                                  commandState:
+                                      _lastCommandState ?? commandState,
+                                  checklistState: _checklistState,
+                                  onAction: _handleAction,
+                                  onChecklistChanged: _handleChecklistChanged,
+                                );
+                              },
+                            );
+                          },
                         );
                       },
                     );
@@ -327,6 +361,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required List<TradingOffer> offers,
     required List<TradingSession> sessions,
     required List<TradingNotification> notifications,
+    required List<ArcBlueprintWatch> watches,
+    required List<ArcTradeListingQueueItem> queues,
   }) {
     final intelligence = _tradeIntelligenceEngine.buildSummary(
       blueprintStates: blueprintStates,
@@ -347,6 +383,18 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     final unreadNotifications = notifications.where(
       (notification) => !notification.read,
     );
+    final activeWatches = watches.where((watch) => watch.active);
+    final matchedWatches = activeWatches.where(
+      (watch) => _watchHasLiveMatch(watch, activeListings),
+    );
+    final activeQueues = queues.where((queue) => !queue.isTerminal);
+    final releasableQueues = activeQueues.where(
+      (queue) => _queueCanRelease(queue, myListings, blueprintStates),
+    );
+    final blockedQueues = activeQueues.where(
+      (queue) =>
+          queue.isBlocked || _queueIsOwnershipBlocked(queue, blueprintStates),
+    );
 
     return ArcCommandTradeActivity(
       communityListings: activeListings.length,
@@ -360,6 +408,11 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       intelligenceMatches: intelligence.suggestions.length,
       bestIntelligenceConfidence: intelligence.bestConfidence,
       bestIntelligenceLabel: _bestIntelligenceLabel(intelligence),
+      activeBlueprintWatches: activeWatches.length,
+      matchedBlueprintWatches: matchedWatches.length,
+      activeListingQueues: activeQueues.length,
+      releasableListingQueues: releasableQueues.length,
+      blockedListingQueues: blockedQueues.length,
     );
   }
 
@@ -384,5 +437,68 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       case TradingSessionStatus.cancelled:
         return false;
     }
+  }
+
+  bool _watchHasLiveMatch(
+    ArcBlueprintWatch watch,
+    List<TradingListing> activeListings,
+  ) {
+    final watchId = _normalizeBlueprintText(watch.blueprintId);
+    final watchName = _normalizeBlueprintText(watch.displayName);
+    return activeListings.any(
+      (listing) =>
+          listing.isLive &&
+          listing.offeredBlueprintNames.any((name) {
+            final normalized = _normalizeBlueprintText(name);
+            return normalized == watchId || normalized == watchName;
+          }),
+    );
+  }
+
+  bool _queueCanRelease(
+    ArcTradeListingQueueItem queue,
+    List<TradingListing> myListings,
+    Map<String, ArcBlueprintState> blueprintStates,
+  ) {
+    if (!queue.canManuallyRelease) return false;
+    final activeListing = _activeListingForQueue(queue, myListings);
+    if (activeListing != null &&
+        activeListing.active &&
+        activeListing.expiresAt.isAfter(DateTime.now())) {
+      return false;
+    }
+    return !_queueIsOwnershipBlocked(queue, blueprintStates);
+  }
+
+  bool _queueIsOwnershipBlocked(
+    ArcTradeListingQueueItem queue,
+    Map<String, ArcBlueprintState> blueprintStates,
+  ) {
+    final state =
+        blueprintStates[queue.blueprintId] ??
+        ArcBlueprintState.empty(queue.blueprintId);
+    return queue.hasRemaining && state.dupesOwned < queue.releasedQuantity + 1;
+  }
+
+  TradingListing? _activeListingForQueue(
+    ArcTradeListingQueueItem queue,
+    List<TradingListing> myListings,
+  ) {
+    final activeId = queue.activeListingId.trim().isEmpty
+        ? queue.sourceListingId
+        : queue.activeListingId.trim();
+    for (final listing in myListings) {
+      if (listing.id == activeId) return listing;
+    }
+    return null;
+  }
+
+  String _normalizeBlueprintText(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
   }
 }

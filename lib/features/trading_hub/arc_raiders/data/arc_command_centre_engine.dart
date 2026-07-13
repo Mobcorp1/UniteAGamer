@@ -24,7 +24,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 
@@ -222,7 +224,13 @@ class ArcCommandCentreEngine {
       ArcCommandChecklistItem(
         id: 'review-trades',
         label: 'Review Trades',
-        reason: tradeActivity.hasActionableTrades
+        reason: tradeActivity.releasableListingQueues > 0
+            ? '${tradeActivity.releasableListingQueues} listing queue can release.'
+            : tradeActivity.blockedListingQueues > 0
+            ? '${tradeActivity.blockedListingQueues} listing queue needs attention.'
+            : tradeActivity.matchedBlueprintWatches > 0
+            ? '${tradeActivity.matchedBlueprintWatches} blueprint watch match found.'
+            : tradeActivity.hasActionableTrades
             ? 'Check listings, offers and duplicate value.'
             : 'No actionable trade signal is waiting.',
         doneByDefault: !tradeActivity.hasActionableTrades,
@@ -328,6 +336,8 @@ class ArcCommandCentreEngine {
         '${tradeActivity.activeSessions} active trade ${_plural(tradeActivity.activeSessions, 'session', 'sessions')}',
       if (tradeActivity.bestIntelligenceConfidence > 0)
         '${tradeActivity.bestIntelligenceConfidence}% ${tradeActivity.bestIntelligenceLabel}',
+      if (tradeActivity.matchedBlueprintWatches > 0)
+        '${tradeActivity.matchedBlueprintWatches} blueprint watch ${_plural(tradeActivity.matchedBlueprintWatches, 'match', 'matches')}',
       ...tradeAssistedNeeds,
       if (benchIntel.hasBlocker && benchIntel.trackingKnown)
         ...benchIntel.missingResources
@@ -350,6 +360,12 @@ class ArcCommandCentreEngine {
     final offering = <String>[
       if (tradeActivity.activeMyListings > 0)
         '${tradeActivity.activeMyListings} active ${_plural(tradeActivity.activeMyListings, 'listing', 'listings')}',
+      if (tradeActivity.releasableListingQueues > 0)
+        '${tradeActivity.releasableListingQueues} queue ${_plural(tradeActivity.releasableListingQueues, 'release', 'releases')} ready',
+      if (tradeActivity.blockedListingQueues > 0)
+        '${tradeActivity.blockedListingQueues} blocked ${_plural(tradeActivity.blockedListingQueues, 'queue', 'queues')}',
+      if (tradeActivity.activeBlueprintWatches > 0)
+        '${tradeActivity.activeBlueprintWatches} active blueprint ${_plural(tradeActivity.activeBlueprintWatches, 'watch', 'watches')}',
       duplicateBlueprints > 0
           ? '$duplicateBlueprints duplicate blueprints'
           : 'No duplicate blueprints tracked',
@@ -380,6 +396,14 @@ class ArcCommandCentreEngine {
         ArcCommandAction(
           label: 'My Listings',
           routeName: TradingMyListingsScreen.routeName,
+        ),
+        ArcCommandAction(
+          label: 'Watches',
+          routeName: TradingBlueprintWatchesScreen.routeName,
+        ),
+        ArcCommandAction(
+          label: 'Queues',
+          routeName: TradingListingQueuesScreen.routeName,
         ),
         ArcCommandAction(
           label: 'Auto Match',
@@ -665,6 +689,8 @@ class ArcCommandCentreEngine {
         '${tradeActivity.myListings} total personal listings',
         '${tradeActivity.acceptedOffers} accepted offers',
         '${tradeActivity.activeSessions} active trading sessions',
+        '${tradeActivity.activeBlueprintWatches} active blueprint watches',
+        '${tradeActivity.activeListingQueues} active listing queues',
       ],
       status: hasTradeData ? ArcCommandStatus.active : ArcCommandStatus.neutral,
       action: const ArcCommandAction(

@@ -26,7 +26,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_activity_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
@@ -277,6 +279,26 @@ class UAGTradersHubApp extends StatelessWidget {
             flag: FeatureAccessFlag.traderHub,
             title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 2, initialActivityTab: 1),
+          ),
+          settings: settings,
+        );
+
+      case TradingBlueprintWatchesScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.traderHub,
+            title: 'Trader Hub',
+            child: TraderHubScreen(initialIndex: 2, initialActivityTab: 2),
+          ),
+          settings: settings,
+        );
+
+      case TradingListingQueuesScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.traderHub,
+            title: 'Trader Hub',
+            child: TraderHubScreen(initialIndex: 2, initialActivityTab: 3),
           ),
           settings: settings,
         );

@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
 
 void main() {
@@ -189,6 +190,38 @@ void main() {
   });
 
   group('structured offers and private inventory protection', () {
+    test(
+      'blueprint watch IDs prevent duplicate records per owner objective',
+      () {
+        final id = ArcBlueprintWatch.idFor(
+          ownerUid: 'owner',
+          blueprintId: 'wolfpack',
+        );
+        final duplicateAttempt = ArcBlueprintWatch.idFor(
+          ownerUid: 'owner',
+          blueprintId: 'Wolfpack',
+        );
+        final otherOwner = ArcBlueprintWatch.idFor(
+          ownerUid: 'other',
+          blueprintId: 'wolfpack',
+        );
+
+        final watch = ArcBlueprintWatch(
+          id: id,
+          ownerUid: 'owner',
+          type: ArcBlueprintWatchType.blueprint,
+          blueprintId: 'wolfpack',
+          blueprintDisplayName: 'Wolfpack',
+        );
+
+        expect(duplicateAttempt, id);
+        expect(otherOwner, isNot(id));
+        expect(watch.copyWith(active: false).isPaused, isTrue);
+        expect(watch.copyWith(active: true).active, isTrue);
+        expect(watch.copyWith(linkedListingId: 'listing-1').hasMatch, isTrue);
+      },
+    );
+
     test('calculates duplicate queue release timing', () {
       const queueItem = ArcTradeListingQueueItem(
         id: 'queue-1',
@@ -208,6 +241,64 @@ void main() {
             .shouldReleaseAt(DateTime(2026, 1, 1, 12, 31)),
         isTrue,
       );
+    });
+
+    test('duplicate queue state keeps private stock off public listings', () {
+      final queue = ArcTradeListingQueueItem.createForListing(
+        id: ArcTradeListingQueueItem.idFor(
+          ownerUid: 'owner',
+          sourceListingId: 'listing-1',
+        ),
+        ownerUid: 'owner',
+        blueprintId: 'wolfpack',
+        blueprintName: 'Wolfpack',
+        sourceListingId: 'listing-1',
+        releasePolicy: ArcDuplicateReleasePolicy.askBeforeRelisting,
+        queuedQuantity: 3,
+        now: DateTime(2026, 1),
+      );
+
+      expect(queue.remainingQuantity, 3);
+      expect(queue.publicQuantity, 1);
+      expect(queue.canManuallyRelease, isTrue);
+      expect(queue.copyWith(releasedQuantity: 3).canManuallyRelease, isFalse);
+
+      final listing = _listing().copyWith(
+        queueId: queue.id,
+        queueSourceListingId: queue.sourceListingId,
+        queueReleaseNumber: 1,
+      );
+      final map = listing.toMap();
+
+      expect(map['queueId'], queue.id);
+      expect(map['queueReleaseNumber'], 1);
+      expect(map.containsKey('remainingQuantity'), isFalse);
+      expect(map.containsKey('totalQueued'), isFalse);
+    });
+
+    test('trade objective notifications expose safe target metadata', () {
+      final notification = TradingNotification(
+        id: 'notification-1',
+        targetUid: 'owner',
+        actorUid: 'owner',
+        title: 'Watch match',
+        body: 'Wolfpack has a match.',
+        type: TradingNotificationType.blueprintWatchMatch,
+        listingId: 'listing-1',
+        offerId: '',
+        sessionId: '',
+        watchId: 'watch-1',
+        queueId: '',
+        read: false,
+        createdAt: DateTime(2026, 1),
+        updatedAt: DateTime(2026, 1),
+      );
+      final restored = TradingNotification.fromMap(notification.toMap());
+
+      expect(restored.typeLabel, 'Watch Match');
+      expect(restored.hasListingTarget, isTrue);
+      expect(restored.hasWatchTarget, isTrue);
+      expect(restored.hasQueueTarget, isFalse);
     });
 
     test('structured offer expiry is deterministic', () {

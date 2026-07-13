@@ -11,7 +11,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 
 class ArcDecisionEngine {
@@ -423,19 +425,47 @@ class ArcDecisionEngine {
       add(
         _signal(
           id: 'trade-activity',
-          title: tradeActivity.hasHighValueIntelligence
+          title: tradeActivity.releasableListingQueues > 0
+              ? 'Release Queued Listing'
+              : tradeActivity.blockedListingQueues > 0
+              ? 'Fix Listing Queue'
+              : tradeActivity.hasWatchMatches
+              ? 'Review Blueprint Watch Match'
+              : tradeActivity.hasHighValueIntelligence
               ? 'Review Smart Trade Match'
               : 'Review Trade Activity',
-          summary: tradeActivity.hasHighValueIntelligence
+          summary: tradeActivity.releasableListingQueues > 0
+              ? '${tradeActivity.releasableListingQueues} listing queue can release its next public copy.'
+              : tradeActivity.blockedListingQueues > 0
+              ? '${tradeActivity.blockedListingQueues} listing queue needs attention before it can release.'
+              : tradeActivity.hasWatchMatches
+              ? '${tradeActivity.matchedBlueprintWatches} blueprint watch has a live matching listing.'
+              : tradeActivity.hasHighValueIntelligence
               ? 'Trade Intelligence found ${tradeActivity.bestIntelligenceLabel.toLowerCase()} worth reviewing.'
               : 'Trading has live activity that may change your next move.',
-          detail: tradeActivity.hasHighValueIntelligence
+          detail: tradeActivity.releasableListingQueues > 0
+              ? 'Open Listing Queues and release the next duplicate only when the current queue-linked listing is closed.'
+              : tradeActivity.blockedListingQueues > 0
+              ? 'Open Listing Queues to review duplicate availability or pause/cancel the queue.'
+              : tradeActivity.hasWatchMatches
+              ? 'Open Blueprint Watches to inspect the matched listing before creating another trade.'
+              : tradeActivity.hasHighValueIntelligence
               ? 'Open Smart Trade Assist before creating a fresh listing.'
               : 'Clear offers and session updates before creating more listings.',
           category: ArcDecisionCategory.trade,
           status: ArcCommandStatus.ready,
           progressLabel: _tradeProgressLabel(tradeActivity),
-          action: tradeActivity.hasHighValueIntelligence
+          action: tradeActivity.hasQueueAction
+              ? const ArcDecisionAction(
+                  label: 'Listing Queues',
+                  routeName: TradingListingQueuesScreen.routeName,
+                )
+              : tradeActivity.hasWatchMatches
+              ? const ArcDecisionAction(
+                  label: 'Blueprint Watches',
+                  routeName: TradingBlueprintWatchesScreen.routeName,
+                )
+              : tradeActivity.hasHighValueIntelligence
               ? const ArcDecisionAction(
                   label: 'Smart Trade',
                   intent: ArcCommandActionIntent.smartTrade,
@@ -455,10 +485,16 @@ class ArcDecisionEngine {
           score: _score(
             readiness: 78,
             tradeAvailability: math.max(
-              55,
+              tradeActivity.hasQueueAction || tradeActivity.hasWatchMatches
+                  ? 82
+                  : 55,
               tradeActivity.bestIntelligenceConfidence,
             ),
-            progressionUnlockValue: tradeActivity.hasHighValueIntelligence
+            progressionUnlockValue: tradeActivity.hasQueueAction
+                ? 78
+                : tradeActivity.hasWatchMatches
+                ? 74
+                : tradeActivity.hasHighValueIntelligence
                 ? 72
                 : 44,
             setupCompleteness: 86,
@@ -1111,6 +1147,12 @@ class ArcDecisionEngine {
         '$activeSessionBacklog ${_plural(activeSessionBacklog, 'active session', 'active sessions')}',
       if (tradeActivity.intelligenceMatches > 0)
         '${tradeActivity.intelligenceMatches} smart ${_plural(tradeActivity.intelligenceMatches, 'match', 'matches')}',
+      if (tradeActivity.matchedBlueprintWatches > 0)
+        '${tradeActivity.matchedBlueprintWatches} watch ${_plural(tradeActivity.matchedBlueprintWatches, 'match', 'matches')}',
+      if (tradeActivity.releasableListingQueues > 0)
+        '${tradeActivity.releasableListingQueues} queue ${_plural(tradeActivity.releasableListingQueues, 'release', 'releases')}',
+      if (tradeActivity.blockedListingQueues > 0)
+        '${tradeActivity.blockedListingQueues} blocked ${_plural(tradeActivity.blockedListingQueues, 'queue', 'queues')}',
     ];
     return signals.isEmpty ? 'Trade signal ready' : signals.join(' - ');
   }

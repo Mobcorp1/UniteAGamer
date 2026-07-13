@@ -64,12 +64,14 @@ class _TradingCreateListingScreenState
   bool _seriousOffersOnly = false;
   bool _tradeAsBundle = true;
   bool _allowPartialOffers = false;
+  bool _duplicateQueueEnabled = false;
 
   String _selectedPlayWindow = 'Evenings';
   String _selectedExpiry = '72 Hours';
   String _selectedListingMode = 'Available now';
   String _selectedScheduledWindow = 'This evening';
   String _selectedReleasePolicy = 'Ask before relisting';
+  String _selectedQueueQuantity = '1';
   String _selectedMaxActiveOffers = '5';
 
   int _smallBundles = 0;
@@ -136,6 +138,27 @@ class _TradingCreateListingScreenState
 
   bool get _hasAnyWantedSelection =>
       _selectedWantedBlueprints.isNotEmpty || _selectedWantedAssets.isNotEmpty;
+
+  int get _maxFutureQueueQuantity {
+    if (_selectedOfferingBlueprints.length != 1) return 0;
+    final blueprint = _selectedOfferingBlueprints.first;
+    final state =
+        _states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+    return (state.dupesOwned - 1).clamp(0, 99).toInt();
+  }
+
+  int get _selectedQueueQuantityValue {
+    if (!_duplicateQueueEnabled) return 0;
+    final max = _maxFutureQueueQuantity;
+    if (max <= 0) return 0;
+    return (int.tryParse(_selectedQueueQuantity) ?? 1).clamp(1, max).toInt();
+  }
+
+  List<String> get _queueQuantityOptions {
+    final max = _maxFutureQueueQuantity;
+    if (max <= 0) return const <String>['1'];
+    return List<String>.generate(max, (index) => '${index + 1}');
+  }
 
   Widget _sectionCard({
     required String title,
@@ -847,6 +870,14 @@ class _TradingCreateListingScreenState
         fixedReturn: _selectedListingMode == 'Fixed return',
         bestSuitableOffer: _selectedListingMode == 'Best suitable offer',
         maxActiveOffers: int.tryParse(_selectedMaxActiveOffers) ?? 5,
+        duplicateQueueEnabled: _duplicateQueueEnabled,
+        duplicateQueueBlueprintId: _selectedOfferingBlueprints.length == 1
+            ? _selectedOfferingBlueprints.first.id
+            : '',
+        duplicateQueueBlueprintName: _selectedOfferingBlueprints.length == 1
+            ? _selectedOfferingBlueprints.first.name
+            : '',
+        duplicateQueueQuantity: _selectedQueueQuantityValue,
       );
 
       if (!mounted) return;
@@ -982,6 +1013,16 @@ class _TradingCreateListingScreenState
                                               _selectedOfferingBlueprints
                                                 ..clear()
                                                 ..addAll(picked);
+                                              if (_maxFutureQueueQuantity <=
+                                                  0) {
+                                                _duplicateQueueEnabled = false;
+                                                _selectedQueueQuantity = '1';
+                                              } else if (!_queueQuantityOptions
+                                                  .contains(
+                                                    _selectedQueueQuantity,
+                                                  )) {
+                                                _selectedQueueQuantity = '1';
+                                              }
                                             });
                                           },
                                   ),
@@ -1393,6 +1434,54 @@ class _TradingCreateListingScreenState
                                     ),
                                   ),
                                   const SizedBox(height: AppTheme.spaceM),
+                                  SwitchListTile(
+                                    value:
+                                        _duplicateQueueEnabled &&
+                                        _maxFutureQueueQuantity > 0,
+                                    onChanged: _maxFutureQueueQuantity <= 0
+                                        ? null
+                                        : (value) => setState(() {
+                                            _duplicateQueueEnabled = value;
+                                            if (!_queueQuantityOptions.contains(
+                                              _selectedQueueQuantity,
+                                            )) {
+                                              _selectedQueueQuantity = '1';
+                                            }
+                                          }),
+                                    activeThumbColor: AppTheme.neonPink,
+                                    contentPadding: EdgeInsets.zero,
+                                    title: const Text(
+                                      'Queue future duplicate releases',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    subtitle: Text(
+                                      _maxFutureQueueQuantity <= 0
+                                          ? 'Select one duplicate blueprint with at least two duplicate copies to queue future releases.'
+                                          : 'Keep one copy public now and hold up to $_maxFutureQueueQuantity future duplicate ${_maxFutureQueueQuantity == 1 ? 'copy' : 'copies'} private.',
+                                      style: const TextStyle(
+                                        color: Colors.white60,
+                                      ),
+                                    ),
+                                  ),
+                                  if (_duplicateQueueEnabled &&
+                                      _maxFutureQueueQuantity > 0) ...[
+                                    const SizedBox(height: AppTheme.spaceM),
+                                    _buildDropdown(
+                                      label: 'Future queued copies',
+                                      value:
+                                          _queueQuantityOptions.contains(
+                                            _selectedQueueQuantity,
+                                          )
+                                          ? _selectedQueueQuantity
+                                          : '1',
+                                      options: _queueQuantityOptions,
+                                      onChanged: (value) => setState(
+                                        () => _selectedQueueQuantity =
+                                            value ?? '1',
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: AppTheme.spaceM),
                                   _buildDropdown(
                                     label: 'Listing Expiry',
                                     value: _selectedExpiry,
@@ -1455,6 +1544,16 @@ class _TradingCreateListingScreenState
                                       color: AppTheme.tradingMutedText,
                                     ),
                                   ),
+                                  if (_duplicateQueueEnabled &&
+                                      _selectedQueueQuantityValue > 0) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Queue: $_selectedQueueQuantityValue future duplicate ${_selectedQueueQuantityValue == 1 ? 'copy' : 'copies'} private',
+                                      style: TextStyle(
+                                        color: AppTheme.neonCyan,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),

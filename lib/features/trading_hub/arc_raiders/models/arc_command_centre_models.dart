@@ -161,6 +161,11 @@ class ArcCommandTradeActivity {
     this.intelligenceMatches = 0,
     this.bestIntelligenceConfidence = 0,
     this.bestIntelligenceLabel = '',
+    this.activeBlueprintWatches = 0,
+    this.matchedBlueprintWatches = 0,
+    this.activeListingQueues = 0,
+    this.releasableListingQueues = 0,
+    this.blockedListingQueues = 0,
   });
 
   final int communityListings;
@@ -174,6 +179,11 @@ class ArcCommandTradeActivity {
   final int intelligenceMatches;
   final int bestIntelligenceConfidence;
   final String bestIntelligenceLabel;
+  final int activeBlueprintWatches;
+  final int matchedBlueprintWatches;
+  final int activeListingQueues;
+  final int releasableListingQueues;
+  final int blockedListingQueues;
 
   static const empty = ArcCommandTradeActivity(
     communityListings: 0,
@@ -187,16 +197,27 @@ class ArcCommandTradeActivity {
     intelligenceMatches: 0,
     bestIntelligenceConfidence: 0,
     bestIntelligenceLabel: '',
+    activeBlueprintWatches: 0,
+    matchedBlueprintWatches: 0,
+    activeListingQueues: 0,
+    releasableListingQueues: 0,
+    blockedListingQueues: 0,
   );
 
   int get actionableCount =>
       pendingOffers +
       activeSessions +
       unreadNotifications +
-      intelligenceMatches;
+      intelligenceMatches +
+      matchedBlueprintWatches +
+      releasableListingQueues +
+      blockedListingQueues;
 
   bool get hasActionableTrades => actionableCount > 0;
   bool get hasHighValueIntelligence => bestIntelligenceConfidence >= 75;
+  bool get hasWatchMatches => matchedBlueprintWatches > 0;
+  bool get hasQueueAction =>
+      releasableListingQueues > 0 || blockedListingQueues > 0;
 }
 
 class ArcCommandSummaryPanel {

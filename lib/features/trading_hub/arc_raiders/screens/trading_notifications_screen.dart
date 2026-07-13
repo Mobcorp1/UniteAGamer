@@ -3,6 +3,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
@@ -37,7 +40,20 @@ class TradingNotificationsScreen extends StatelessWidget {
       case TradingNotificationType.collectionRequest:
         return AppTheme.neonPink;
       case TradingNotificationType.feedbackReply:
+      case TradingNotificationType.blueprintWatchMatch:
+      case TradingNotificationType.favouriteRiderListing:
+      case TradingNotificationType.favouriteRiderAcquisitionSignal:
+      case TradingNotificationType.tradeReadyPreparation:
+      case TradingNotificationType.tradeObjectiveOpportunity:
+      case TradingNotificationType.availabilityOverlap:
+      case TradingNotificationType.scheduledTradeReminder:
         return AppTheme.neonCyan;
+      case TradingNotificationType.tradeOfferNeedsResponse:
+        return AppTheme.neonPink;
+      case TradingNotificationType.queuedListingReleased:
+        return AppTheme.tradingSuccess;
+      case TradingNotificationType.queuedListingBlocked:
+        return AppTheme.tradingDanger;
     }
   }
 
@@ -60,6 +76,7 @@ class TradingNotificationsScreen extends StatelessWidget {
 
     switch (notification.type) {
       case TradingNotificationType.offerReceived:
+      case TradingNotificationType.tradeOfferNeedsResponse:
       case TradingNotificationType.offerAccepted:
       case TradingNotificationType.offerDeclined:
       case TradingNotificationType.offerCancelled:
@@ -70,6 +87,46 @@ class TradingNotificationsScreen extends StatelessWidget {
       case TradingNotificationType.duplicateMatch:
       case TradingNotificationType.mutualMatch:
       case TradingNotificationType.collectionRequest:
+      case TradingNotificationType.favouriteRiderListing:
+      case TradingNotificationType.favouriteRiderAcquisitionSignal:
+      case TradingNotificationType.tradeObjectiveOpportunity:
+        if (notification.hasListingTarget) {
+          final listing = await repository.getListingById(
+            notification.listingId,
+          );
+          if (!context.mounted) return;
+          if (listing != null && listing.isLive) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => TradingListingDetailScreen(listing: listing),
+              ),
+            );
+            return;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('That listing is no longer available.'),
+            ),
+          );
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const TradingListingsScreen()),
+        );
+        return;
+      case TradingNotificationType.blueprintWatchMatch:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TradingBlueprintWatchesScreen(),
+          ),
+        );
+        return;
+      case TradingNotificationType.queuedListingReleased:
+      case TradingNotificationType.queuedListingBlocked:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const TradingListingQueuesScreen()),
+        );
+        return;
+      case TradingNotificationType.tradeReadyPreparation:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const TradingListingsScreen()),
         );
@@ -78,6 +135,8 @@ class TradingNotificationsScreen extends StatelessWidget {
       case TradingNotificationType.sessionUpdated:
       case TradingNotificationType.sessionReady:
       case TradingNotificationType.sessionOutcome:
+      case TradingNotificationType.availabilityOverlap:
+      case TradingNotificationType.scheduledTradeReminder:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const TradingTradeSessionsScreen()),
         );
