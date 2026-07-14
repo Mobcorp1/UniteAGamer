@@ -268,6 +268,7 @@ class ArcSavedLoadout {
     required this.secondaryAttachments,
     required this.equipment,
     required this.consumables,
+    this.quickUse = const <String>[],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -284,6 +285,7 @@ class ArcSavedLoadout {
   final List<String> secondaryAttachments;
   final List<String> equipment;
   final List<String> consumables;
+  final List<String> quickUse;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -300,6 +302,7 @@ class ArcSavedLoadout {
       'secondaryAttachments': secondaryAttachments,
       'equipment': equipment,
       'consumables': consumables,
+      'quickUse': quickUse,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -346,6 +349,7 @@ class ArcSavedLoadout {
       secondaryAttachments: parseList(data['secondaryAttachments']),
       equipment: parseList(data['equipment']),
       consumables: parseList(data['consumables']),
+      quickUse: parseList(data['quickUse']),
       createdAt: parseDate(data['createdAt']),
       updatedAt: parseDate(data['updatedAt']),
     );
