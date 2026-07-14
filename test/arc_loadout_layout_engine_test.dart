@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 
 void main() {
@@ -108,6 +109,28 @@ void main() {
 
       expect(attachments, isEmpty);
     });
+
+    test(
+      'attachment compatibility never points at unsupported weapon slots',
+      () {
+        final failures = <String>[];
+
+        for (final attachment in ArcLoadoutSeedData.attachments) {
+          for (final weaponName in attachment.compatibleWeapons) {
+            final supported =
+                ArcLoadoutCompatibilityRegistry.weaponSupportsSlot(
+                  weaponName: weaponName,
+                  slotLabel: attachment.slotType.label,
+                );
+            if (!supported) {
+              failures.add('${attachment.name} -> $weaponName');
+            }
+          }
+        }
+
+        expect(failures, isEmpty);
+      },
+    );
   });
 
   group('quick use migration', () {
