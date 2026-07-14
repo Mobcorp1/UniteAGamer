@@ -538,6 +538,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       slotLabel: slotLabel,
     );
     final empty = ArcLoadoutAttachmentSpec(
+      id: 'empty-${slotLabel.toLowerCase().replaceAll(' ', '-')}',
       name: 'Empty Slot',
       slotType: _slotTypeForLabel(slotLabel),
       benchLevel: 0,
@@ -552,7 +553,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       labelBuilder: (attachment) => attachment.name,
       subtitleBuilder: (attachment) {
         if (attachment.name == 'Empty Slot') return attachment.effect;
-        return '${attachment.benchLabel} • ${attachment.effect} • ${attachment.materialSummary}';
+        return '${attachment.benchLabel} / ${attachment.effectSummary} / ${attachment.materialSummary}';
       },
       leadingBuilder: (attachment) {
         return _itemImage(

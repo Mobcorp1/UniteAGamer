@@ -1,3 +1,5 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart';
+
 enum ArcLoadoutAssetKind {
   primaryWeapon,
   secondaryWeapon,
@@ -101,6 +103,13 @@ class ArcLoadoutAssetRegistry {
 
     final blueprint = _cleanPath(blueprintAssetPath);
     if (blueprint != null) return blueprint;
+
+    if (kind == ArcLoadoutAssetKind.attachment) {
+      final databaseAsset = _cleanPath(
+        ArcWeaponAttachmentDatabase.attachmentForName(itemName)?.imageAssetPath,
+      );
+      if (databaseAsset != null) return databaseAsset;
+    }
 
     return _assetMapFor(kind)[key] ?? fallbackAssetPath;
   }

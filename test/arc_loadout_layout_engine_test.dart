@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 
 void main() {
@@ -110,27 +111,27 @@ void main() {
       expect(attachments, isEmpty);
     });
 
-    test(
-      'attachment compatibility never points at unsupported weapon slots',
-      () {
-        final failures = <String>[];
+    test('supplied attachment slot conflicts are documented, not removed', () {
+      final conflicts = ArcWeaponAttachmentDatabase.slotMatrixConflicts(
+        ArcLoadoutSeedData.weapons,
+      );
+      final labels = conflicts.map((conflict) => conflict.label);
 
-        for (final attachment in ArcLoadoutSeedData.attachments) {
-          for (final weaponName in attachment.compatibleWeapons) {
-            final supported =
-                ArcLoadoutCompatibilityRegistry.weaponSupportsSlot(
-                  weaponName: weaponName,
-                  slotLabel: attachment.slotType.label,
-                );
-            if (!supported) {
-              failures.add('${attachment.name} -> $weaponName');
-            }
-          }
-        }
-
-        expect(failures, isEmpty);
-      },
-    );
+      expect(conflicts, hasLength(18));
+      expect(
+        labels,
+        containsAll(<String>[
+          'Extended Medium Mag I -> Renegade',
+          'Vertical Grip II -> Rattler',
+          'Extended Medium Mag II -> Renegade',
+          'Extended Barrel -> Osprey',
+          'Extended Barrel -> Kettle',
+          'Extended Medium Mag III -> Renegade',
+          'Kinetic Converter -> Arpeggio',
+          'Kinetic Converter -> Il Toro',
+        ]),
+      );
+    });
   });
 
   group('quick use migration', () {

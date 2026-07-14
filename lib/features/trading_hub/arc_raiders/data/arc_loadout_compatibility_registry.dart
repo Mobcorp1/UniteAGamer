@@ -1,4 +1,5 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_weapon_attachment_database.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 
 class ArcLoadoutCompatibilityRegistry {
@@ -51,11 +52,7 @@ class ArcLoadoutCompatibilityRegistry {
     final normalised = normalise(name);
     if (normalised.isEmpty || normalised == 'empty slot') return null;
 
-    for (final attachment in ArcLoadoutSeedData.attachments) {
-      if (normalise(attachment.name) == normalised) return attachment;
-    }
-
-    return null;
+    return ArcWeaponAttachmentDatabase.attachmentForName(normalised);
   }
 
   static ArcLoadoutWeaponSpec weaponSpecForName(String weaponName) {
@@ -88,7 +85,7 @@ class ArcLoadoutCompatibilityRegistry {
     required String slotLabel,
   }) {
     final slotType = slotTypeForLabel(slotLabel);
-    final attachments = ArcLoadoutSeedData.attachments
+    final attachments = ArcWeaponAttachmentDatabase.attachments
         .where(
           (attachment) =>
               attachment.slotType == slotType &&

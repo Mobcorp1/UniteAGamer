@@ -143,24 +143,66 @@ extension ArcAttachmentSlotTypeLabel on ArcAttachmentSlotType {
   }
 }
 
+class ArcCraftingRequirement {
+  const ArcCraftingRequirement({
+    required this.itemName,
+    required this.quantity,
+  });
+
+  final String itemName;
+  final int quantity;
+
+  String get label => '${quantity}x $itemName';
+}
+
+class ArcAttachmentEffect {
+  const ArcAttachmentEffect({
+    required this.description,
+    required this.stat,
+    required this.value,
+    required this.unit,
+    this.isPenalty = false,
+  });
+
+  final String description;
+  final String stat;
+  final num value;
+  final String unit;
+  final bool isPenalty;
+}
+
 class ArcLoadoutAttachmentSpec {
   const ArcLoadoutAttachmentSpec({
+    required this.id,
     required this.name,
     required this.slotType,
     required this.benchLevel,
-    required this.materials,
-    required this.effect,
     required this.compatibleWeapons,
+    this.craftable = true,
+    this.findOnly = false,
+    this.craftingRequirements = const <ArcCraftingRequirement>[],
+    this.effects = const <ArcAttachmentEffect>[],
+    this.materials = const <String>[],
+    this.effect = '',
+    this.blueprintItemId,
     this.imageAssetPath,
+    this.notes,
   });
 
+  final String id;
   final String name;
   final ArcAttachmentSlotType slotType;
   final int benchLevel;
+  final List<String> compatibleWeapons;
+  final bool craftable;
+  final bool findOnly;
+  final List<ArcCraftingRequirement> craftingRequirements;
+  final List<ArcAttachmentEffect> effects;
   final List<String> materials;
   final String effect;
-  final List<String> compatibleWeapons;
+  final String? blueprintItemId;
   final String? imageAssetPath;
+  final String? notes;
 
   bool supportsWeapon(String weaponName) {
     final normalised = weaponName.trim().toLowerCase();
@@ -169,10 +211,20 @@ class ArcLoadoutAttachmentSpec {
     );
   }
 
-  String get benchLabel =>
-      benchLevel <= 0 ? 'Special' : 'Bench Level $benchLevel';
+  String get benchLabel {
+    if (findOnly) return 'Find Only';
+    return benchLevel <= 0 ? 'Special' : 'Bench Level $benchLevel';
+  }
+
   String get materialSummary =>
-      materials.isEmpty ? 'Materials TBA' : materials.join(' • ');
+      materials.isEmpty ? 'No bench recipe' : materials.join(' / ');
+
+  String get effectSummary {
+    if (effects.isNotEmpty) {
+      return effects.map((entry) => entry.description).join(' / ');
+    }
+    return effect;
+  }
 }
 
 class ArcSavedLoadoutSeed {
