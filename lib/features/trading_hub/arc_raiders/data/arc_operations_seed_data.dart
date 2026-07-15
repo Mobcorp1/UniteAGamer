@@ -203,6 +203,45 @@ class ArcOperationsSeedData {
       betaExclusive: true,
     ),
     _task(
+      id: 'beta_first_quest_complete',
+      title: 'Mission Chain Online',
+      description:
+          'Complete one tracked quest chain step from Mission Operations.',
+      cadence: ArcOperationCadence.beta,
+      category: ArcOperationCategory.quest,
+      target: 1,
+      progress: 0,
+      rewards: [rewards['xp_10']!],
+      accent: Colors.amberAccent,
+      betaExclusive: true,
+    ),
+    _task(
+      id: 'beta_first_scrappy_upgrade',
+      title: 'Scrappy Upgraded',
+      description:
+          'Confirm one dedicated Scrappy upgrade from the Scrappy Intel tracker.',
+      cadence: ArcOperationCadence.beta,
+      category: ArcOperationCategory.progression,
+      target: 1,
+      progress: 0,
+      rewards: [rewards['xp_10']!],
+      accent: AppTheme.neonPink,
+      betaExclusive: true,
+    ),
+    _task(
+      id: 'beta_first_bench_upgrade',
+      title: 'Bench Upgrade Secured',
+      description:
+          'Confirm one independent bench station upgrade from Bench Operations.',
+      cadence: ArcOperationCadence.beta,
+      category: ArcOperationCategory.progression,
+      target: 1,
+      progress: 0,
+      rewards: [rewards['xp_10']!],
+      accent: AppTheme.neonCyan,
+      betaExclusive: true,
+    ),
+    _task(
       id: 'beta_feedback',
       title: 'Field Tester',
       description:

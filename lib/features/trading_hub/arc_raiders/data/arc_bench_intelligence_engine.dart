@@ -11,12 +11,18 @@ class ArcBenchIntelligenceEngine {
 
   ArcBenchIntelligence build({
     required Map<String, ArcScrappyState> scrappyStates,
+    Map<String, int> currentLevelsByStation = const <String, int>{},
   }) {
-    final groups = _upgradeGroups();
+    final allGroups = _upgradeGroups();
+    final groups = allGroups
+        .where(
+          (group) => group.level > (currentLevelsByStation[group.station] ?? 0),
+        )
+        .toList(growable: false);
     final trackingKnown = scrappyStates.keys.any(
       (id) => id.startsWith('bench-'),
     );
-    if (groups.isEmpty) {
+    if (allGroups.isEmpty) {
       return const ArcBenchIntelligence(
         trackingKnown: false,
         station: 'Bench',
@@ -37,6 +43,29 @@ class ArcBenchIntelligenceEngine {
         hasBlocker: false,
         missingResources: [],
         currentLevelLabel: 'Bench level not tracked',
+      );
+    }
+    if (groups.isEmpty) {
+      return ArcBenchIntelligence(
+        trackingKnown: trackingKnown,
+        station: 'Bench',
+        upgradeLabel: 'Bench Upgrades Complete',
+        statusLabel: 'Complete',
+        summary: '${allGroups.length} bench upgrades are complete this season.',
+        recommendation:
+            'Bench progression is clear. Keep collecting resources for future station levels.',
+        actionLabel: 'Bench Tracker',
+        status: ArcCommandStatus.success,
+        completionPercent: 100,
+        completedResources: allGroups.length,
+        totalResources: allGroups.length,
+        requiredCount: allGroups.length,
+        collectedCount: allGroups.length,
+        missingCount: 0,
+        readyToUpgrade: false,
+        hasBlocker: false,
+        missingResources: const [],
+        currentLevelLabel: 'All tracked benches upgraded',
       );
     }
 
@@ -94,7 +123,11 @@ class ArcBenchIntelligenceEngine {
         readyToUpgrade: true,
         hasBlocker: false,
         missingResources: const [],
-        currentLevelLabel: _currentLevelLabel(progresses, target.group.station),
+        currentLevelLabel: _currentLevelLabel(
+          progresses,
+          target.group.station,
+          currentLevelsByStation,
+        ),
       );
     }
 
@@ -122,7 +155,11 @@ class ArcBenchIntelligenceEngine {
       readyToUpgrade: false,
       hasBlocker: target.missingCount > 0,
       missingResources: target.missingResources,
-      currentLevelLabel: _currentLevelLabel(progresses, target.group.station),
+      currentLevelLabel: _currentLevelLabel(
+        progresses,
+        target.group.station,
+        currentLevelsByStation,
+      ),
     );
   }
 
@@ -219,7 +256,13 @@ class ArcBenchIntelligenceEngine {
     return incomplete.first;
   }
 
-  String _currentLevelLabel(List<_BenchProgress> progresses, String station) {
+  String _currentLevelLabel(
+    List<_BenchProgress> progresses,
+    String station,
+    Map<String, int> currentLevelsByStation,
+  ) {
+    final durableLevel = currentLevelsByStation[station] ?? 0;
+    if (durableLevel > 0) return '$station Lv.$durableLevel complete';
     final completedLevels = progresses
         .where(
           (progress) => progress.group.station == station && progress.ready,

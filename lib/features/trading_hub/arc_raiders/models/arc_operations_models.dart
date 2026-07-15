@@ -10,6 +10,8 @@ enum ArcOperationCategory {
   intel,
   matchmaking,
   loadout,
+  quest,
+  progression,
   community,
   guardian,
   referral,
@@ -611,6 +613,9 @@ enum ArcOperationTelemetryType {
   feedbackSubmitted,
   availabilitySaved,
   intelConfirmed,
+  questCompleted,
+  scrappyUpgradeCompleted,
+  benchUpgradeCompleted,
 }
 
 class ArcOperationTelemetryEvent {
@@ -647,6 +652,11 @@ class ArcOperationTelemetryEvent {
     ArcOperationTelemetryType.feedbackSubmitted => 'feedback_submitted',
     ArcOperationTelemetryType.availabilitySaved => 'availability_saved',
     ArcOperationTelemetryType.intelConfirmed => 'intel_confirmed',
+    ArcOperationTelemetryType.questCompleted => 'quest_completed',
+    ArcOperationTelemetryType.scrappyUpgradeCompleted =>
+      'scrappy_upgrade_completed',
+    ArcOperationTelemetryType.benchUpgradeCompleted =>
+      'bench_upgrade_completed',
   };
 
   Map<String, dynamic> toMap() {

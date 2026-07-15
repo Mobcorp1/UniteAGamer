@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
@@ -19,6 +20,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_nomadic_trader_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
@@ -52,6 +54,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       ArcTraderProfileRepository();
   final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
+  final ArcProgressionRepository _progressionRepository =
+      ArcProgressionRepository();
   final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
   final ArcNomadicTraderRepository _nomadicTraderRepository =
       const ArcNomadicTraderRepository();
@@ -66,6 +70,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       _operationsRepository.watchUserState();
   late final Stream<Map<String, ArcScrappyState>> _scrappyStatesStream =
       _scrappyRepository.watchMyScrappyStates();
+  late final Stream<ArcProgressionRecords> _progressionRecordsStream =
+      _progressionRepository.watchProgressionRecords();
   late final Stream<List<TradingListing>> _activeListingsStream =
       _tradingRepository.watchActiveListings();
   late final Stream<List<TradingListing>> _myListingsStream = _tradingRepository
@@ -91,6 +97,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   ArcOperationsUserState _cachedOperationsState = ArcOperationsUserState.empty;
   Map<String, ArcScrappyState> _cachedScrappyStates =
       <String, ArcScrappyState>{};
+  ArcProgressionRecords _cachedProgressionRecords = ArcProgressionRecords.empty;
   ArcNomadicTraderTrackerSnapshot _cachedNomadicTraderTracker =
       ArcNomadicTraderTrackerSnapshot.empty;
   List<TradingListing> _cachedActiveListings = const <TradingListing>[];
@@ -240,22 +247,36 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                           _cachedScrappyStates = scrappySnapshot.data!;
                         }
                         final scrappyStates = _cachedScrappyStates;
-                        return FutureBuilder<ArcNomadicTraderTrackerSnapshot>(
-                          future: _nomadicTraderSnapshotFuture,
-                          builder: (context, traderSnapshot) {
-                            if (traderSnapshot.hasData) {
-                              _cachedNomadicTraderTracker =
-                                  traderSnapshot.data!;
+                        return StreamBuilder<ArcProgressionRecords>(
+                          stream: _progressionRecordsStream,
+                          builder: (context, progressionSnapshot) {
+                            if (progressionSnapshot.hasData) {
+                              _cachedProgressionRecords =
+                                  progressionSnapshot.data!;
                             }
-                            final nomadicTraderTracker =
-                                _cachedNomadicTraderTracker;
-                            return _buildWithTradeActivity(
-                              blueprintStates: blueprintStates,
-                              loadouts: loadouts,
-                              operationsState: operationsState,
-                              scrappyStates: scrappyStates,
-                              nomadicTraderTracker: nomadicTraderTracker,
-                              profileCompletion: profileCompletion,
+                            final progressionRecords =
+                                _cachedProgressionRecords;
+                            return FutureBuilder<
+                              ArcNomadicTraderTrackerSnapshot
+                            >(
+                              future: _nomadicTraderSnapshotFuture,
+                              builder: (context, traderSnapshot) {
+                                if (traderSnapshot.hasData) {
+                                  _cachedNomadicTraderTracker =
+                                      traderSnapshot.data!;
+                                }
+                                final nomadicTraderTracker =
+                                    _cachedNomadicTraderTracker;
+                                return _buildWithTradeActivity(
+                                  blueprintStates: blueprintStates,
+                                  loadouts: loadouts,
+                                  operationsState: operationsState,
+                                  scrappyStates: scrappyStates,
+                                  progressionRecords: progressionRecords,
+                                  nomadicTraderTracker: nomadicTraderTracker,
+                                  profileCompletion: profileCompletion,
+                                );
+                              },
                             );
                           },
                         );
@@ -276,6 +297,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required List<ArcSavedLoadout> loadouts,
     required ArcOperationsUserState operationsState,
     required Map<String, ArcScrappyState> scrappyStates,
+    required ArcProgressionRecords progressionRecords,
     required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
     required ArcProfileCompletionResult profileCompletion,
   }) {
@@ -350,6 +372,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                                       operationsState: operationsState,
                                       tradeActivity: tradeActivity,
                                       profileCompletion: profileCompletion,
+                                      progressionRecords: progressionRecords,
                                     );
                                 _lastCommandState = commandState;
                                 return ArcCommandCentreContent(

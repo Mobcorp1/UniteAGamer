@@ -137,6 +137,18 @@ service cloud.firestore {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
 
+      match /arc_quest_progress/{docId} {
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+      }
+
+      match /arc_scrappy_progress/{docId} {
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+      }
+
+      match /arc_bench_progress/{docId} {
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+      }
+
       match /arc_season_state/{docId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }

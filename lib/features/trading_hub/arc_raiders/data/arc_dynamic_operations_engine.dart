@@ -105,6 +105,8 @@ class ArcDynamicOperationsEngine {
       ArcOperationCategory.matchmaking =>
         userState.extraMatchmakingSlots <= 1 ? 150 : 70,
       ArcOperationCategory.loadout => 130,
+      ArcOperationCategory.quest => 145,
+      ArcOperationCategory.progression => 140,
       ArcOperationCategory.community => userState.inventory.isEmpty ? 120 : 90,
       ArcOperationCategory.guardian => 115,
       ArcOperationCategory.referral => now.day.isOdd ? 160 : 80,

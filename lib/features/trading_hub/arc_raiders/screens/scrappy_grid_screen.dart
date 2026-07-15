@@ -4,11 +4,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_tracker_card_metrics.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_filter.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_scrappy_item_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/missing_scrappy_dialog.dart';
@@ -45,6 +47,9 @@ class ScrappyGridScreen extends StatefulWidget {
 
 class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   final ArcScrappyRepository _repository = ArcScrappyRepository();
+  final ArcProgressionRepository _progressionRepository =
+      ArcProgressionRepository();
+  final ArcProgressionEngine _progressionEngine = const ArcProgressionEngine();
   final Set<String> _expandedSections = <String>{};
 
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.all;
@@ -563,6 +568,58 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
+  Map<String, ArcScrappyState> _statesWithSectionComplete(
+    List<ArcScrappyItem> items,
+    Map<String, ArcScrappyState> states,
+  ) {
+    final updated = Map<String, ArcScrappyState>.from(states);
+    for (final item in items) {
+      final current = updated[item.id] ?? ArcScrappyState.empty(item.id);
+      if (current.collectedCount < item.neededCount) {
+        updated[item.id] = current.copyWith(
+          collectedCount: item.neededCount,
+          updatedAt: DateTime.now(),
+        );
+      }
+    }
+    return updated;
+  }
+
+  Future<void> _recordSectionProgression({
+    required List<ArcScrappyItem> items,
+    required Map<String, ArcScrappyState> completedStates,
+  }) async {
+    switch (_mode) {
+      case ArcScrappyTrackerMode.quest:
+        final questId = _progressionEngine.questIdForItems(items);
+        if (questId.isEmpty) return;
+        await _progressionRepository.confirmQuestCompleted(
+          questId: questId,
+          scrappyStates: completedStates,
+        );
+        return;
+      case ArcScrappyTrackerMode.scrappy:
+        final level = _progressionEngine.scrappyLevelForItems(items);
+        if (level <= 0) return;
+        await _progressionRepository.confirmScrappyUpgrade(
+          level: level,
+          scrappyStates: completedStates,
+        );
+        return;
+      case ArcScrappyTrackerMode.bench:
+        if (items.isEmpty) return;
+        final station = items.first.category;
+        final level = _progressionEngine.benchLevelForItems(items);
+        if (station.trim().isEmpty || level <= 0) return;
+        await _progressionRepository.confirmBenchUpgrade(
+          station: station,
+          level: level,
+          scrappyStates: completedStates,
+        );
+        return;
+    }
+  }
+
   Future<void> _confirmMarkSectionComplete({
     required String title,
     required List<ArcScrappyItem> items,
@@ -613,7 +670,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
     if (confirmed != true) return;
     try {
+      final completedStates = _statesWithSectionComplete(items, states);
       await _markSectionComplete(items, states);
+      await _recordSectionProgression(
+        items: items,
+        completedStates: completedStates,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,

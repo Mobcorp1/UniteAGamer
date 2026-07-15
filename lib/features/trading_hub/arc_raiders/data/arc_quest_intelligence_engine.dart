@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
@@ -11,12 +12,20 @@ class ArcQuestIntelligenceEngine {
 
   ArcQuestIntelligence build({
     required Map<String, ArcScrappyState> scrappyStates,
+    Set<String> completedQuestIds = const <String>{},
   }) {
-    final groups = _questGroups();
+    final allGroups = _questGroups();
+    final groups = allGroups
+        .where(
+          (group) => !completedQuestIds.contains(
+            ArcProgressionEngine.questIdFor(group.trader, group.questName),
+          ),
+        )
+        .toList(growable: false);
     final trackingKnown = scrappyStates.keys.any(
       (id) => id.startsWith('quest-'),
     );
-    if (groups.isEmpty) {
+    if (allGroups.isEmpty) {
       return const ArcQuestIntelligence(
         trackingKnown: false,
         questLabel: 'Quest Tracker',
@@ -36,6 +45,29 @@ class ArcQuestIntelligenceEngine {
         readyToComplete: false,
         hasBlocker: false,
         missingItems: [],
+      );
+    }
+    if (groups.isEmpty) {
+      return ArcQuestIntelligence(
+        trackingKnown: trackingKnown,
+        questLabel: 'Quest Chain',
+        trader: 'Mission Operations',
+        questName: 'Quest Chain Complete',
+        statusLabel: 'Complete',
+        summary: '${allGroups.length} quest steps are complete this season.',
+        recommendation:
+            'Quest chain progress is clear. Keep tracking new quest items as fresh steps arrive.',
+        actionLabel: 'Quest Tracker',
+        status: ArcCommandStatus.success,
+        completionPercent: 100,
+        completedItems: allGroups.length,
+        totalItems: allGroups.length,
+        requiredCount: allGroups.length,
+        collectedCount: allGroups.length,
+        missingCount: 0,
+        readyToComplete: false,
+        hasBlocker: false,
+        missingItems: const [],
       );
     }
 

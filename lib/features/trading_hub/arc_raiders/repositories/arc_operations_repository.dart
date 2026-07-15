@@ -620,6 +620,32 @@ class ArcOperationsRepository {
             : 'confirmation:$confirmationId',
       );
 
+  Future<void> recordQuestCompleted({required String questId}) =>
+      recordTelemetry(
+        ArcOperationTelemetryType.questCompleted,
+        source: 'quest_progression',
+        metadata: {'questId': questId},
+        idempotencyKey: 'quest:$questId',
+      );
+
+  Future<void> recordScrappyUpgradeCompleted({required int level}) =>
+      recordTelemetry(
+        ArcOperationTelemetryType.scrappyUpgradeCompleted,
+        source: 'scrappy_progression',
+        metadata: {'level': level},
+        idempotencyKey: 'scrappy-level:$level',
+      );
+
+  Future<void> recordBenchUpgradeCompleted({
+    required String benchId,
+    required int level,
+  }) => recordTelemetry(
+    ArcOperationTelemetryType.benchUpgradeCompleted,
+    source: 'bench_progression',
+    metadata: {'benchId': benchId, 'level': level},
+    idempotencyKey: '$benchId-level:$level',
+  );
+
   Future<void> recordLogin() => recordTelemetry(
     ArcOperationTelemetryType.loginRecorded,
     source: 'session',
@@ -645,6 +671,9 @@ class ArcOperationsRepository {
       ArcOperationTelemetryType.feedbackSubmitted => 'feedbackSubmitted',
       ArcOperationTelemetryType.availabilitySaved => 'availabilitySaved',
       ArcOperationTelemetryType.intelConfirmed => 'intelConfirmed',
+      ArcOperationTelemetryType.questCompleted => 'questsCompleted',
+      ArcOperationTelemetryType.scrappyUpgradeCompleted => 'scrappyUpgrades',
+      ArcOperationTelemetryType.benchUpgradeCompleted => 'benchUpgrades',
     };
   }
 
@@ -703,6 +732,15 @@ class ArcOperationsRepository {
       ArcOperationTelemetryType.favouriteLoadoutSaved => const <String>{
         'beta_loadout_saved',
         'weekly_loadout_progress',
+      },
+      ArcOperationTelemetryType.questCompleted => const <String>{
+        'beta_first_quest_complete',
+      },
+      ArcOperationTelemetryType.scrappyUpgradeCompleted => const <String>{
+        'beta_first_scrappy_upgrade',
+      },
+      ArcOperationTelemetryType.benchUpgradeCompleted => const <String>{
+        'beta_first_bench_upgrade',
       },
       ArcOperationTelemetryType.feedbackSubmitted => const <String>{
         'beta_feedback',

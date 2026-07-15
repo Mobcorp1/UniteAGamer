@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_co
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_decision_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_resource_intelligence_engine.dart';
@@ -17,6 +18,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
@@ -45,6 +47,7 @@ class ArcCommandCentreEngine {
     ArcCommandTradeActivity tradeActivity = ArcCommandTradeActivity.empty,
     ArcProfileCompletionResult profileCompletion =
         ArcProfileCompletionResult.completeResult,
+    ArcProgressionRecords progressionRecords = ArcProgressionRecords.empty,
   }) {
     final totalBlueprints = ArcBlueprintSeedData.blueprints.length;
     final blueprintStateKnown = blueprintStates.isNotEmpty;
@@ -73,11 +76,20 @@ class ArcCommandCentreEngine {
       ArcOperationClaimState.inProgress,
     );
     final availableOperations = _operationTasks.length;
+    final progression = const ArcProgressionEngine().build(
+      scrappyStates: scrappyStates,
+      records: progressionRecords,
+    );
     final questIntel = const ArcQuestIntelligenceEngine().build(
       scrappyStates: scrappyStates,
+      completedQuestIds: progression.quest.completedQuestIds,
     );
     final benchIntel = const ArcBenchIntelligenceEngine().build(
       scrappyStates: scrappyStates,
+      currentLevelsByStation: {
+        for (final record in progression.bench.recordsByBenchId.values)
+          record.station: record.currentLevel,
+      },
     );
     final traderIntel = const ArcNomadicTraderIntelligenceEngine().build(
       tracker: nomadicTraderTracker,
@@ -125,12 +137,23 @@ class ArcCommandCentreEngine {
     var recommendations = ArcCommandCentreViewMapper.recommendations(
       decisionState,
     );
+    snapshots = _mergeSnapshots(_progressionSnapshots(progression), snapshots);
+    objectives = _mergeObjectives(
+      _progressionObjectives(progression),
+      objectives,
+    );
+    alerts = _mergeAlerts(_progressionAlerts(progression), alerts);
+    recommendations = _mergeRecommendations(
+      _progressionRecommendations(progression),
+      recommendations,
+    );
     var checklist = _checklist(
       loadoutReady: loadoutSummary.ready,
       tradeActivity: tradeActivity,
       readyOperations: readyOperations,
       questIntel: questIntel,
       benchIntel: benchIntel,
+      scrappyProgression: progression.scrappy,
       traderIntel: traderIntel,
       resourceIntel: resourceIntel,
     );
@@ -236,8 +259,8 @@ class ArcCommandCentreEngine {
         duplicateBlueprints: duplicateBlueprints,
         recentBlueprint: recentBlueprint,
       ),
-      questSummary: _questSummary(questIntel),
-      benchSummary: _benchSummary(benchIntel),
+      questSummary: _questSummary(questIntel, progression.quest),
+      benchSummary: _benchSummary(benchIntel, progression.bench),
       operationsSummary: _operationsSummary(
         operationsState: operationsState,
         readyOperations: readyOperations,
@@ -263,12 +286,254 @@ class ArcCommandCentreEngine {
     );
   }
 
+  static List<ArcCommandSnapshotMetric> _progressionSnapshots(
+    ArcProgressionSnapshotBundle progression,
+  ) {
+    final activeQuest = progression.quest.activeQuest;
+    return [
+      ArcCommandSnapshotMetric(
+        label: 'Quest Chain',
+        value: progression.quest.totalCount == 0
+            ? 'Set up'
+            : '${progression.quest.completedCount}/${progression.quest.totalCount}',
+        detail: activeQuest == null
+            ? 'No quest chain target'
+            : activeQuest.readyToComplete
+            ? '${activeQuest.questName} ready'
+            : 'Active: ${activeQuest.questName}',
+        status: activeQuest?.readyToComplete == true
+            ? ArcCommandStatus.ready
+            : activeQuest?.completed == true
+            ? ArcCommandStatus.success
+            : progression.quest.trackingKnown
+            ? ArcCommandStatus.active
+            : ArcCommandStatus.neutral,
+      ),
+      ArcCommandSnapshotMetric(
+        label: 'Scrappy',
+        value: 'Lv.${progression.scrappy.state.currentLevel}',
+        detail: progression.scrappy.nextUpgrade == null
+            ? 'All tracked upgrades complete'
+            : progression.scrappy.readyToUpgrade
+            ? '${progression.scrappy.nextUpgrade!.title} ready'
+            : progression.scrappy.progressLabel,
+        status: progression.scrappy.status,
+      ),
+      ArcCommandSnapshotMetric(
+        label: 'Bench Progression',
+        value: progression.bench.readyToUpgrade
+            ? 'Ready'
+            : '${progression.bench.completionPercent}%',
+        detail: progression.bench.nextUpgrade == null
+            ? 'All tracked benches complete'
+            : progression.bench.upgradeLabel,
+        status: progression.bench.status,
+      ),
+    ];
+  }
+
+  static List<ArcCommandObjective> _progressionObjectives(
+    ArcProgressionSnapshotBundle progression,
+  ) {
+    final objectives = <ArcCommandObjective>[];
+    final activeQuest = progression.quest.activeQuest;
+    if (activeQuest != null && activeQuest.readyToComplete) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Complete ${activeQuest.questName}',
+          reason:
+              '${activeQuest.questLabel} is ready in the dedicated quest chain.',
+          statusLabel: 'Quest ready',
+          progressText: activeQuest.progressLabel,
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Quest Tracker',
+            routeName: ScrappyGridScreen.questRouteName,
+          ),
+        ),
+      );
+    }
+    if (progression.scrappy.readyToUpgrade &&
+        progression.scrappy.nextUpgrade != null) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Upgrade ${progression.scrappy.nextUpgrade!.title}',
+          reason: 'Scrappy progression is ready to confirm for this season.',
+          statusLabel: 'Scrappy ready',
+          progressText: progression.scrappy.progressLabel,
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Scrappy Intel',
+            routeName: ScrappyGridScreen.routeName,
+          ),
+        ),
+      );
+    }
+    if (progression.bench.readyToUpgrade &&
+        progression.bench.nextUpgrade != null) {
+      objectives.add(
+        ArcCommandObjective(
+          title: 'Upgrade ${progression.bench.upgradeLabel}',
+          reason: 'Bench progression is ready to confirm for this station.',
+          statusLabel: 'Bench ready',
+          progressText: progression.bench.progressLabel,
+          status: ArcCommandStatus.ready,
+          action: const ArcCommandAction(
+            label: 'Bench Tracker',
+            routeName: ScrappyGridScreen.benchRouteName,
+          ),
+        ),
+      );
+    }
+    return objectives;
+  }
+
+  static List<ArcCommandAlert> _progressionAlerts(
+    ArcProgressionSnapshotBundle progression,
+  ) {
+    final alerts = <ArcCommandAlert>[];
+    final activeQuest = progression.quest.activeQuest;
+    if (activeQuest != null &&
+        progression.quest.trackingKnown &&
+        !activeQuest.readyToComplete &&
+        activeQuest.missingCount > 0) {
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Quest Chain Blocked',
+          body:
+              '${activeQuest.questName} needs ${activeQuest.missingCount} more tracked item${_plural(activeQuest.missingCount, '', 's')}.',
+          statusLabel: 'Missing items',
+          status: ArcCommandStatus.warning,
+          action: const ArcCommandAction(
+            label: 'Quest Tracker',
+            routeName: ScrappyGridScreen.questRouteName,
+          ),
+        ),
+      );
+    }
+    if (progression.scrappy.trackingKnown &&
+        !progression.scrappy.readyToUpgrade &&
+        progression.scrappy.nextUpgrade != null &&
+        progression.scrappy.requiredCount >
+            progression.scrappy.collectedCount) {
+      final missing =
+          progression.scrappy.requiredCount -
+          progression.scrappy.collectedCount;
+      alerts.add(
+        ArcCommandAlert(
+          title: 'Scrappy Upgrade Short',
+          body:
+              '${progression.scrappy.nextUpgrade!.title} needs $missing more resource${_plural(missing, '', 's')}.',
+          statusLabel: 'Progression blocker',
+          status: ArcCommandStatus.warning,
+          action: const ArcCommandAction(
+            label: 'Scrappy Intel',
+            routeName: ScrappyGridScreen.routeName,
+          ),
+        ),
+      );
+    }
+    return alerts;
+  }
+
+  static List<ArcCommandRecommendation> _progressionRecommendations(
+    ArcProgressionSnapshotBundle progression,
+  ) {
+    final recommendations = <ArcCommandRecommendation>[];
+    if (progression.quest.completedCount > 0 &&
+        progression.quest.activeQuest != null) {
+      recommendations.add(
+        ArcCommandRecommendation(
+          title: 'Quest Chain Advanced',
+          body:
+              '${progression.quest.completedCount} quest step${_plural(progression.quest.completedCount, '', 's')} complete; focus ${progression.quest.activeQuest!.questName} next.',
+          action: const ArcCommandAction(
+            label: 'Quest Tracker',
+            routeName: ScrappyGridScreen.questRouteName,
+          ),
+        ),
+      );
+    }
+    if (progression.scrappy.readyToUpgrade) {
+      recommendations.add(
+        const ArcCommandRecommendation(
+          title: 'Confirm Scrappy Upgrade',
+          body:
+              'The dedicated Scrappy progression state is ready to advance and feed Operations.',
+          action: ArcCommandAction(
+            label: 'Scrappy Intel',
+            routeName: ScrappyGridScreen.routeName,
+          ),
+        ),
+      );
+    }
+    if (progression.bench.readyToUpgrade) {
+      recommendations.add(
+        ArcCommandRecommendation(
+          title: 'Confirm Bench Upgrade',
+          body:
+              '${progression.bench.upgradeLabel} is ready and will update independent bench progression.',
+          action: const ArcCommandAction(
+            label: 'Bench Tracker',
+            routeName: ScrappyGridScreen.benchRouteName,
+          ),
+        ),
+      );
+    }
+    return recommendations;
+  }
+
+  static List<ArcCommandSnapshotMetric> _mergeSnapshots(
+    List<ArcCommandSnapshotMetric> priority,
+    List<ArcCommandSnapshotMetric> existing,
+  ) {
+    final seen = <String>{};
+    return [
+      for (final metric in [...priority, ...existing])
+        if (seen.add(metric.label)) metric,
+    ];
+  }
+
+  static List<ArcCommandObjective> _mergeObjectives(
+    List<ArcCommandObjective> priority,
+    List<ArcCommandObjective> existing,
+  ) {
+    final seen = <String>{};
+    return [
+      for (final objective in [...priority, ...existing])
+        if (seen.add(objective.title)) objective,
+    ];
+  }
+
+  static List<ArcCommandAlert> _mergeAlerts(
+    List<ArcCommandAlert> priority,
+    List<ArcCommandAlert> existing,
+  ) {
+    final seen = <String>{};
+    return [
+      for (final alert in [...priority, ...existing])
+        if (seen.add(alert.title)) alert,
+    ];
+  }
+
+  static List<ArcCommandRecommendation> _mergeRecommendations(
+    List<ArcCommandRecommendation> priority,
+    List<ArcCommandRecommendation> existing,
+  ) {
+    final seen = <String>{};
+    return [
+      for (final recommendation in [...priority, ...existing])
+        if (seen.add(recommendation.title)) recommendation,
+    ];
+  }
+
   static List<ArcCommandChecklistItem> _checklist({
     required bool loadoutReady,
     required ArcCommandTradeActivity tradeActivity,
     required int readyOperations,
     required ArcQuestIntelligence questIntel,
     required ArcBenchIntelligence benchIntel,
+    required ArcScrappyProgressionSnapshot scrappyProgression,
     required ArcNomadicTraderIntelligence traderIntel,
     required ArcResourceIntelligence resourceIntel,
   }) {
@@ -349,6 +614,24 @@ class ArcCommandCentreEngine {
         action: const ArcCommandAction(
           label: 'Quest Tracker',
           routeName: ScrappyGridScreen.questRouteName,
+        ),
+      ),
+      ArcCommandChecklistItem(
+        id: 'upgrade-scrappy',
+        label: scrappyProgression.readyToUpgrade
+            ? 'Upgrade Scrappy'
+            : 'Track Scrappy',
+        reason: scrappyProgression.nextUpgrade == null
+            ? 'All tracked Scrappy upgrades are complete.'
+            : scrappyProgression.trackingKnown
+            ? '${scrappyProgression.nextUpgrade!.title}: ${scrappyProgression.progressLabel}.'
+            : 'Set up Scrappy Intel to track dedicated upgrade progression.',
+        doneByDefault:
+            scrappyProgression.trackingKnown &&
+            !scrappyProgression.readyToUpgrade,
+        action: const ArcCommandAction(
+          label: 'Scrappy Intel',
+          routeName: ScrappyGridScreen.routeName,
         ),
       ),
       ArcCommandChecklistItem(
@@ -547,13 +830,25 @@ class ArcCommandCentreEngine {
     );
   }
 
-  static ArcCommandSummaryPanel _questSummary(ArcQuestIntelligence questIntel) {
+  static ArcCommandSummaryPanel _questSummary(
+    ArcQuestIntelligence questIntel,
+    ArcQuestProgressionSnapshot progression,
+  ) {
+    final activeQuest = progression.activeQuest;
+    final allComplete =
+        progression.totalCount > 0 &&
+        progression.completedCount >= progression.totalCount;
     return ArcCommandSummaryPanel(
       title: 'Quest Progress',
-      statusLabel: questIntel.statusLabel,
-      body: questIntel.summary,
+      statusLabel: allComplete ? 'Complete' : questIntel.statusLabel,
+      body: allComplete
+          ? '${progression.completedCount} quest chain steps are complete this season.'
+          : questIntel.summary,
       details: [
-        'Active quest: ${questIntel.questLabel}',
+        progression.totalCount > 0
+            ? 'Chain: ${progression.completedCount}/${progression.totalCount} complete'
+            : 'Chain: no dedicated quest progress yet',
+        'Active quest: ${activeQuest?.questLabel ?? questIntel.questLabel}',
         questIntel.trackingKnown
             ? 'Progress: ${questIntel.progressLabel}'
             : 'Progress: Set up Mission Operations',
@@ -564,7 +859,7 @@ class ArcCommandCentreEngine {
             ? 'Ready to complete'
             : 'Missing: ${questIntel.missingShortText}',
       ],
-      status: questIntel.status,
+      status: allComplete ? ArcCommandStatus.success : questIntel.status,
       action: const ArcCommandAction(
         label: 'Quest Tracker',
         routeName: ScrappyGridScreen.questRouteName,
@@ -572,12 +867,21 @@ class ArcCommandCentreEngine {
     );
   }
 
-  static ArcCommandSummaryPanel _benchSummary(ArcBenchIntelligence benchIntel) {
+  static ArcCommandSummaryPanel _benchSummary(
+    ArcBenchIntelligence benchIntel,
+    ArcBenchProgressionSnapshot progression,
+  ) {
+    final durableLevels = progression.recordsByBenchId.values
+        .where((record) => record.currentLevel > 0)
+        .toList(growable: false);
     return ArcCommandSummaryPanel(
       title: 'Bench Progress',
       statusLabel: benchIntel.statusLabel,
       body: benchIntel.summary,
       details: [
+        durableLevels.isEmpty
+            ? 'Dedicated levels: no bench upgrades confirmed'
+            : 'Dedicated levels: ${durableLevels.length} station${_plural(durableLevels.length, '', 's')} upgraded',
         'Current level: ${benchIntel.currentLevelLabel}',
         'Next upgrade: ${benchIntel.upgradeLabel}',
         benchIntel.trackingKnown

@@ -38,6 +38,15 @@ class ArcSeasonResetRepository {
   CollectionReference<Map<String, dynamic>> _scrappyStatesRef(String uid) =>
       _userRef(uid).collection('arc_scrappy_states');
 
+  CollectionReference<Map<String, dynamic>> _questProgressRef(String uid) =>
+      _userRef(uid).collection('arc_quest_progress');
+
+  CollectionReference<Map<String, dynamic>> _scrappyProgressRef(String uid) =>
+      _userRef(uid).collection('arc_scrappy_progress');
+
+  CollectionReference<Map<String, dynamic>> _benchProgressRef(String uid) =>
+      _userRef(uid).collection('arc_bench_progress');
+
   DocumentReference<Map<String, dynamic>> _operationSummaryRef(String uid) =>
       _firestore.collection('arc_operation_progress').doc(uid);
 
@@ -82,9 +91,18 @@ class ArcSeasonResetRepository {
     final uid = _uid;
     final state = await getSeasonState();
     final scrappySnapshot = await _scrappyStatesRef(uid).get();
+    final questProgressSnapshot = await _questProgressRef(uid).get();
+    final scrappyProgressSnapshot = await _scrappyProgressRef(uid).get();
+    final benchProgressSnapshot = await _benchProgressRef(uid).get();
     final operationSnapshot = await _operationProgressRef(uid).get();
     final rewardSnapshot = await _rewardInventoryRef(uid).get();
     final groups = _classifyTrackerDocs(scrappySnapshot.docs);
+    final scrappyResetCount =
+        groups.scrappyDocs.length + scrappyProgressSnapshot.docs.length;
+    final questResetCount =
+        groups.questDocs.length + questProgressSnapshot.docs.length;
+    final benchResetCount =
+        groups.benchDocs.length + benchProgressSnapshot.docs.length;
     final seasonalOperationDocs = _seasonalOperationDocs(
       operationSnapshot.docs,
       currentSeasonId: state.currentSeasonId,
@@ -104,15 +122,15 @@ class ArcSeasonResetRepository {
       resetVersion: state.resetVersion + 1,
       generatedAt: generatedAt,
       impacts: ArcSeasonResetPolicy.impacts(
-        scrappyStateCount: groups.scrappyDocs.length,
-        questStateCount: groups.questDocs.length,
-        benchStateCount: groups.benchDocs.length,
+        scrappyStateCount: scrappyResetCount,
+        questStateCount: questResetCount,
+        benchStateCount: benchResetCount,
         operationProgressCount: seasonalOperationDocs.length,
         rewardCount: rewardSnapshot.docs.length,
       ),
-      scrappyStateCount: groups.scrappyDocs.length,
-      questStateCount: groups.questDocs.length,
-      benchStateCount: groups.benchDocs.length,
+      scrappyStateCount: scrappyResetCount,
+      questStateCount: questResetCount,
+      benchStateCount: benchResetCount,
       operationProgressCount: seasonalOperationDocs.length,
       rewardCount: rewardSnapshot.docs.length,
     );
@@ -167,9 +185,18 @@ class ArcSeasonResetRepository {
 
     try {
       final scrappySnapshot = await _scrappyStatesRef(uid).get();
+      final questProgressSnapshot = await _questProgressRef(uid).get();
+      final scrappyProgressSnapshot = await _scrappyProgressRef(uid).get();
+      final benchProgressSnapshot = await _benchProgressRef(uid).get();
       final operationSnapshot = await _operationProgressRef(uid).get();
       final rewardSnapshot = await _rewardInventoryRef(uid).get();
       final groups = _classifyTrackerDocs(scrappySnapshot.docs);
+      final scrappyResetCount =
+          groups.scrappyDocs.length + scrappyProgressSnapshot.docs.length;
+      final questResetCount =
+          groups.questDocs.length + questProgressSnapshot.docs.length;
+      final benchResetCount =
+          groups.benchDocs.length + benchProgressSnapshot.docs.length;
       final seasonalOperationDocs = _seasonalOperationDocs(
         operationSnapshot.docs,
         currentSeasonId: preview.currentSeasonId,
@@ -178,6 +205,9 @@ class ArcSeasonResetRepository {
         ...groups.scrappyDocs,
         ...groups.questDocs,
         ...groups.benchDocs,
+        ...questProgressSnapshot.docs,
+        ...scrappyProgressSnapshot.docs,
+        ...benchProgressSnapshot.docs,
       ];
       final resetStateIds = resetDocs.map((doc) => doc.id).toList()..sort();
       final archivedOperationIds =
@@ -186,9 +216,9 @@ class ArcSeasonResetRepository {
         seasonId: preview.currentSeasonId,
         resetId: preview.resetId,
         completedAt: now,
-        scrappyStateCount: groups.scrappyDocs.length,
-        questStateCount: groups.questDocs.length,
-        benchStateCount: groups.benchDocs.length,
+        scrappyStateCount: scrappyResetCount,
+        questStateCount: questResetCount,
+        benchStateCount: benchResetCount,
         operationProgressCount: seasonalOperationDocs.length,
         rewardCount: rewardSnapshot.docs.length,
       );
@@ -211,6 +241,11 @@ class ArcSeasonResetRepository {
           'scrappy': _archiveDocs(groups.scrappyDocs),
           'quests': _archiveDocs(groups.questDocs),
           'benches': _archiveDocs(groups.benchDocs),
+        },
+        'progressionArchive': {
+          'scrappy': _archiveDocs(scrappyProgressSnapshot.docs),
+          'quests': _archiveDocs(questProgressSnapshot.docs),
+          'benches': _archiveDocs(benchProgressSnapshot.docs),
         },
         'operationArchive': _archiveDocs(seasonalOperationDocs),
         'rewardArchive': _archiveDocs(rewardSnapshot.docs),
