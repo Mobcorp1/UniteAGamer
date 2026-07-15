@@ -78,6 +78,30 @@ void main() {
     }
   });
 
+  test('PASS 259A verified weapon slot counts stay exact', () {
+    expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Anvil'), [
+      'Muzzle Mod',
+      'Tech Mod',
+    ]);
+    expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Stitcher'), [
+      'Muzzle Mod',
+      'Underbarrel Mod',
+      'Magazine Mod',
+      'Stock Mod',
+    ]);
+    expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Ferro'), [
+      'Muzzle Mod',
+      'Underbarrel Mod',
+      'Stock Mod',
+    ]);
+    expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Jupiter'), isEmpty);
+    expect(
+      ArcLoadoutCompatibilityRegistry.slotsForWeapon('Equalizer'),
+      isEmpty,
+    );
+    expect(ArcLoadoutCompatibilityRegistry.slotsForWeapon('Rascal'), isEmpty);
+  });
+
   test('Mod display labels resolve to the correct slot types', () {
     expect(
       ArcLoadoutCompatibilityRegistry.slotTypeForLabel('Muzzle Mod').name,

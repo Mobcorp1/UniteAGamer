@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/fav
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/referral_tools_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -137,7 +138,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
       assetName: 'arc_hub_referral_tools.webp',
-      builder: (_) => const TradingProfileScreen(),
+      builder: (_) => const ReferralToolsScreen(),
     ),
     _ArcHubFeature(
       title: 'Subscriptions',
@@ -356,7 +357,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
                           ),
                           onMic: () => UagVoiceArcAssistantSheet.show(context),
                           onTrading: () =>
-                              _openFeature(_featureByTitle('Trading')),
+                              _openFeature(_featureByTitle('Trading Overview')),
                           onIntel: () =>
                               _openFeature(_featureByTitle('My Intel')),
                         ),

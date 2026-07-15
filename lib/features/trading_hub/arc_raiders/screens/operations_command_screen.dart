@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class OperationsCommandScreen extends StatefulWidget {
+  static const routeName = '/trading-hub/arc-raiders/operations';
+
   const OperationsCommandScreen({super.key});
 
   @override

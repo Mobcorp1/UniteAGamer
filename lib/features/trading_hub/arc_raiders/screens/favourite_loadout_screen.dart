@@ -857,13 +857,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 children: [
                   Expanded(child: _buildWeaponSlot(false, states)),
                   const SizedBox(width: 10),
-                  Expanded(child: _buildMissingBlueprints(states)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildTradeBenchPanel(states)),
+                  Expanded(child: _buildLoadoutPlanningDetails(states)),
                 ],
               ),
-              const SizedBox(height: 10),
-              _buildBetaReadinessPanel(states),
             ],
           );
         }
@@ -889,11 +885,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              _buildMissingBlueprints(states),
-              const SizedBox(height: 10),
-              _buildTradeBenchPanel(states),
-              const SizedBox(height: 10),
-              _buildBetaReadinessPanel(states),
+              _buildLoadoutPlanningDetails(states),
             ],
           );
         }
@@ -908,14 +900,64 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             const SizedBox(height: 10),
             _buildQuickSlots(states),
             const SizedBox(height: 10),
+            _buildLoadoutPlanningDetails(states),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadoutPlanningDetails(Map<String, ArcBlueprintState> states) {
+    final missingCount = _missingBlueprintItems(states).length;
+    final emptyAttachments =
+        _emptyAttachmentCount(
+          weaponName: _primaryWeapon,
+          attachments: _primaryAttachments,
+        ) +
+        _emptyAttachmentCount(
+          weaponName: _secondaryWeapon,
+          attachments: _secondaryAttachments,
+        );
+    final emptyQuickSlots = _quickSlots
+        .where((slot) => slot == 'Empty Slot' || slot.trim().isEmpty)
+        .length;
+
+    return _arcPanel(
+      accent: AppTheme.neonCyan,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: EdgeInsets.zero,
+          iconColor: AppTheme.neonCyan,
+          collapsedIconColor: Colors.white54,
+          title: Text(
+            'PLANNING DETAILS',
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          subtitle: Text(
+            '$missingCount missing blueprints - $emptyAttachments attachment slots open - $emptyQuickSlots quick slots open',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.58),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          children: [
+            const SizedBox(height: 10),
             _buildMissingBlueprints(states),
             const SizedBox(height: 10),
             _buildTradeBenchPanel(states),
             const SizedBox(height: 10),
             _buildBetaReadinessPanel(states),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -952,52 +994,58 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 ? 'MISSING BLUEPRINT'
                 : null,
             onTap: () => _pickWeapon(primary: primary, states: states),
+            imageSize: 92,
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(weapon.slots.length.clamp(0, 6).toInt(), (
-              index,
-            ) {
-              final slotLabel = index < weapon.slots.length
-                  ? weapon.slots[index]
-                  : 'Attachment';
-              final label =
-                  index < attachments.length &&
-                      attachments[index] != 'Empty Slot'
-                  ? attachments[index]
-                  : slotLabel;
-              final attachment = _attachmentSpecForName(label);
-              final assigned = label != slotLabel && label != 'Empty Slot';
-              final attachmentOwned =
-                  !assigned ||
-                  _isOwnedOrNotBlueprint(
-                    itemName: label,
-                    blueprintBased: _blueprintForName(label) != null,
-                    states: states,
-                  );
-              return _attachmentChip(
-                label: label,
-                slotLabel: slotLabel,
-                imageAsset: _assetForLoadoutItem(
-                  label,
-                  ArcLoadoutAssetKind.attachment,
-                  explicitAssetPath: attachment?.imageAssetPath,
-                ),
-                accent: accent,
-                owned: attachmentOwned,
-                compatibilityLabel: _attachmentCompatibilityStatus(
-                  weaponName: weapon.name,
+          if (weapon.slots.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(weapon.slots.length.clamp(0, 6).toInt(), (
+                index,
+              ) {
+                final slotLabel = index < weapon.slots.length
+                    ? weapon.slots[index]
+                    : 'Attachment';
+                final label =
+                    index < attachments.length &&
+                        attachments[index] != 'Empty Slot'
+                    ? attachments[index]
+                    : slotLabel;
+                final attachment = _attachmentSpecForName(label);
+                final assigned = label != slotLabel && label != 'Empty Slot';
+                final attachmentOwned =
+                    !assigned ||
+                    _isOwnedOrNotBlueprint(
+                      itemName: label,
+                      blueprintBased: _blueprintForName(label) != null,
+                      states: states,
+                    );
+                return _attachmentChip(
+                  label: label,
                   slotLabel: slotLabel,
-                  attachmentName: label,
-                ),
-                onTap: () => _pickAttachment(primary: primary, index: index),
-              );
-            }),
-          ),
-          const SizedBox(height: 8),
-          _attachmentSelectionHint(weapon: weapon, accent: accent),
+                  imageAsset: _assetForLoadoutItem(
+                    label,
+                    ArcLoadoutAssetKind.attachment,
+                    explicitAssetPath: attachment?.imageAssetPath,
+                  ),
+                  accent: accent,
+                  owned: attachmentOwned,
+                  compatibilityLabel: _attachmentCompatibilityStatus(
+                    weaponName: weapon.name,
+                    slotLabel: slotLabel,
+                    attachmentName: label,
+                  ),
+                  onTap: () => _pickAttachment(primary: primary, index: index),
+                );
+              }),
+            ),
+            const SizedBox(height: 8),
+            _attachmentSelectionHint(weapon: weapon, accent: accent),
+          ] else ...[
+            const SizedBox(height: 8),
+            _pill('No attachment slots', Colors.white70),
+          ],
         ],
       ),
     );
@@ -1477,12 +1525,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     required bool owned,
     required VoidCallback onTap,
     String? lockedLabel,
+    double imageSize = 70,
   }) {
     final image = _itemImage(
       imageAsset: imageAsset,
       accent: accent,
       owned: owned,
       icon: owned ? Icons.inventory_2_rounded : Icons.lock_rounded,
+      size: imageSize,
     );
 
     return InkWell(

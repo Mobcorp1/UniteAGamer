@@ -15,6 +15,8 @@ import '../widgets/arc_ad_banner_card.dart';
 import '../widgets/arc_asset_thumbnail.dart';
 
 class NomadicTraderScreen extends StatefulWidget {
+  static const routeName = '/trading-hub/arc-raiders/nomadic-trader';
+
   const NomadicTraderScreen({super.key});
 
   @override

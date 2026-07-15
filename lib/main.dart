@@ -16,9 +16,14 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
@@ -140,6 +145,41 @@ class UAGTradersHubApp extends StatelessWidget {
       case BlueprintGridScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const BlueprintGridScreen(),
+          settings: settings,
+        );
+
+      case FavouriteLoadoutScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FavouriteLoadoutScreen(),
+          settings: settings,
+        );
+
+      case MyIntelScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const MyIntelScreen(),
+          settings: settings,
+        );
+
+      case NomadicTraderScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const NomadicTraderScreen(),
+          settings: settings,
+        );
+
+      case OperationsCommandScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const OperationsCommandScreen(),
+          settings: settings,
+        );
+
+      case ArcHelpCentreScreen.routeName:
+        final args = settings.arguments is ArcHelpCentreArgs
+            ? settings.arguments! as ArcHelpCentreArgs
+            : const ArcHelpCentreArgs();
+
+        return MaterialPageRoute(
+          builder: (_) =>
+              ArcHelpCentreScreen(initialCategoryId: args.initialCategoryId),
           settings: settings,
         );
 

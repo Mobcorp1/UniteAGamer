@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_tracker_card_metrics.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_filter.dart';
@@ -781,7 +782,10 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
-  Widget _buildTrackerCarousel(List<Widget> cards) {
+  Widget _buildTrackerCarousel(
+    List<Widget> cards, {
+    required int maxItemCount,
+  }) {
     if (cards.isEmpty) return _buildEmptyState();
 
     if (_trackerCarouselIndex >= cards.length) {
@@ -811,11 +815,10 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             ? 456.0
             : (stageWidth * 0.94).clamp(304.0, 382.0).toDouble();
 
-        final centreHeight = isWide
-            ? 382.0
-            : isTablet
-            ? 372.0
-            : 356.0;
+        final centreHeight = ArcCompactTrackerCardMetrics.centreHeight(
+          stageWidth: stageWidth,
+          maxItemCount: maxItemCount,
+        );
         final sideWidth = centreWidth * (isWide ? 0.76 : 0.72);
         final sideHeight = centreHeight * 0.84;
         final sideOffset = (centreWidth * (isWide ? 0.76 : 0.66))
@@ -1014,7 +1017,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           ),
     ];
 
-    return _buildTrackerCarousel(cards);
+    final maxItemCount = tierGroups.values.fold<int>(
+      0,
+      (max, items) => items.length > max ? items.length : max,
+    );
+
+    return _buildTrackerCarousel(cards, maxItemCount: maxItemCount);
   }
 
   Widget _buildGroupedList(
@@ -1050,7 +1058,12 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         ),
     ];
 
-    return _buildTrackerCarousel(cards);
+    final maxItemCount = grouped.values.fold<int>(
+      0,
+      (max, items) => items.length > max ? items.length : max,
+    );
+
+    return _buildTrackerCarousel(cards, maxItemCount: maxItemCount);
   }
 
   Color _groupColor(List<ArcScrappyItem> items, String group) {

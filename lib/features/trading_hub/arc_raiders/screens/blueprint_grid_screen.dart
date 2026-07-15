@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_layout_metrics.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -28,6 +29,47 @@ class BlueprintGridScreen extends StatefulWidget {
 
   @override
   State<BlueprintGridScreen> createState() => _BlueprintGridScreenState();
+}
+
+class _BlueprintTopRowsFrame extends StatelessWidget {
+  const _BlueprintTopRowsFrame({required this.metrics});
+
+  final ArcBlueprintGridLayoutMetrics metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final frame = metrics.frameForTopRows();
+    if (frame.width <= 0 || frame.height <= 0) return const SizedBox.shrink();
+
+    return Positioned(
+      left: frame.left,
+      top: frame.top,
+      width: frame.width,
+      height: frame.height,
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.56),
+              width: 1.4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                blurRadius: 20,
+                spreadRadius: 1,
+              ),
+              BoxShadow(
+                color: AppTheme.neonPink.withValues(alpha: 0.10),
+                blurRadius: 28,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
@@ -1591,6 +1633,138 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     _blueprintGridTransformController.value = Matrix4.identity();
   }
 
+  void _jumpBlueprintOverviewRows({
+    required bool down,
+    required double fittedHeight,
+    required int rowCount,
+  }) {
+    final current = _blueprintGridTransformController.value;
+    var scale = current.getMaxScaleOnAxis();
+    var currentTranslationY = current.storage[13];
+
+    if (down && scale <= 1.01) {
+      scale = 2.0;
+      currentTranslationY = 0;
+    }
+
+    final targetY = ArcBlueprintGridLayoutMetrics.jumpTranslationY(
+      currentTranslationY: currentTranslationY,
+      scale: scale,
+      viewportHeight: fittedHeight,
+      fittedGridHeight: fittedHeight,
+      rowCount: rowCount,
+      down: down,
+    );
+
+    final next = Matrix4.copy(current)
+      ..setEntry(0, 0, scale)
+      ..setEntry(1, 1, scale)
+      ..setEntry(2, 2, 1)
+      ..setEntry(1, 3, targetY);
+
+    setState(() {
+      _blueprintGridTransformController.value = next;
+    });
+  }
+
+  Widget _buildGridJumpControls({
+    required double fittedHeight,
+    required int rowCount,
+  }) {
+    Widget button({
+      required IconData icon,
+      required String tooltip,
+      required bool enabled,
+      required VoidCallback onTap,
+    }) {
+      final color = enabled ? AppTheme.neonPink : Colors.white30;
+      return Tooltip(
+        message: tooltip,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: enabled ? onTap : null,
+          child: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withValues(alpha: 0.42)),
+              boxShadow: enabled
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.14),
+                        blurRadius: 12,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Icon(icon, color: color, size: 17),
+          ),
+        ),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _blueprintGridTransformController,
+      builder: (context, _) {
+        final current = _blueprintGridTransformController.value;
+        final scale = current.getMaxScaleOnAxis();
+        final translationY = current.storage[13];
+        final state = ArcBlueprintGridLayoutMetrics.jumpState(
+          currentTranslationY: translationY,
+          scale: scale,
+          viewportHeight: fittedHeight,
+          fittedGridHeight: fittedHeight,
+          rowCount: rowCount,
+        );
+        final canJumpDown =
+            rowCount > 5 && (scale <= 1.01 || state.canJumpDown);
+
+        return ElectricChargeBorder(
+          active: true,
+          radius: 999,
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.80),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: AppTheme.neonPink.withValues(alpha: 0.28),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                button(
+                  icon: Icons.keyboard_arrow_up_rounded,
+                  tooltip: 'Jump back to upper grid',
+                  enabled: state.canJumpUp,
+                  onTap: () => _jumpBlueprintOverviewRows(
+                    down: false,
+                    fittedHeight: fittedHeight,
+                    rowCount: rowCount,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                button(
+                  icon: Icons.keyboard_arrow_down_rounded,
+                  tooltip: 'Jump to lower grid',
+                  enabled: canJumpDown,
+                  onTap: () => _jumpBlueprintOverviewRows(
+                    down: true,
+                    fittedHeight: fittedHeight,
+                    rowCount: rowCount,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildGridZoomControls() {
     Widget button({
       required IconData icon,
@@ -1677,12 +1851,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     const spacing = _landscapeSpacing;
     const childAspectRatio = 0.98;
     const naturalTileWidth = 96.0;
-    final rowCount = (filtered.length / crossAxisCount).ceil();
-    final naturalTileHeight = naturalTileWidth / childAspectRatio;
-    final naturalWidth =
-        (naturalTileWidth * crossAxisCount) + (spacing * (crossAxisCount - 1));
-    final naturalHeight =
-        (naturalTileHeight * rowCount) + (spacing * (rowCount - 1));
+    final metrics = ArcBlueprintGridLayoutMetrics(
+      itemCount: filtered.length,
+      columns: crossAxisCount,
+      tileWidth: naturalTileWidth,
+      childAspectRatio: childAspectRatio,
+      spacing: spacing,
+    );
+    final rowCount = metrics.rowCount;
+    final naturalWidth = metrics.naturalWidth;
+    final naturalHeight = metrics.naturalHeight;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1792,58 +1970,75 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                           child: SizedBox(
                             width: naturalWidth,
                             height: naturalHeight,
-                            child: GridView.builder(
-                              itemCount: filtered.length,
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: EdgeInsets.zero,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    crossAxisSpacing: spacing,
-                                    mainAxisSpacing: spacing,
-                                    childAspectRatio: childAspectRatio,
-                                  ),
-                              itemBuilder: (context, index) {
-                                final blueprint = filtered[index];
-                                final state =
-                                    states[blueprint.id] ??
-                                    ArcBlueprintState.empty(blueprint.id);
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                GridView.builder(
+                                  itemCount: filtered.length,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  padding: EdgeInsets.zero,
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        crossAxisSpacing: spacing,
+                                        mainAxisSpacing: spacing,
+                                        childAspectRatio: childAspectRatio,
+                                      ),
+                                  itemBuilder: (context, index) {
+                                    final blueprint = filtered[index];
+                                    final state =
+                                        states[blueprint.id] ??
+                                        ArcBlueprintState.empty(blueprint.id);
 
-                                return GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onDoubleTap: () =>
-                                      _openBlueprintPreview(blueprint, state),
-                                  child: BlueprintTile(
-                                    blueprint: blueprint,
-                                    state: state,
-                                    landscape: true,
-                                    rarityColor: _rarityColor(blueprint.rarity),
-                                    isSelectionMode: _selectionMode,
-                                    isSelected: _selectedBlueprintIds.contains(
-                                      blueprint.id,
-                                    ),
-                                    onTap: () async {
-                                      if (_selectionMode) {
-                                        _toggleSelection(blueprint.id);
-                                        return;
-                                      }
-
-                                      await _openBlueprintPreview(
+                                    return GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onDoubleTap: () => _openBlueprintPreview(
                                         blueprint,
                                         state,
-                                      );
-                                    },
-                                    onLongPress: () =>
-                                        _openBlueprintLoadoutActions(
-                                          blueprint,
-                                          state,
+                                      ),
+                                      child: BlueprintTile(
+                                        blueprint: blueprint,
+                                        state: state,
+                                        landscape: true,
+                                        rarityColor: _rarityColor(
+                                          blueprint.rarity,
                                         ),
-                                  ),
-                                );
-                              },
+                                        isSelectionMode: _selectionMode,
+                                        isSelected: _selectedBlueprintIds
+                                            .contains(blueprint.id),
+                                        onTap: () async {
+                                          if (_selectionMode) {
+                                            _toggleSelection(blueprint.id);
+                                            return;
+                                          }
+
+                                          await _openBlueprintPreview(
+                                            blueprint,
+                                            state,
+                                          );
+                                        },
+                                        onLongPress: () =>
+                                            _openBlueprintLoadoutActions(
+                                              blueprint,
+                                              state,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                _BlueprintTopRowsFrame(metrics: metrics),
+                              ],
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 8,
+                      bottom: 10,
+                      child: _buildGridJumpControls(
+                        fittedHeight: fittedHeight,
+                        rowCount: rowCount,
                       ),
                     ),
                     Positioned(
