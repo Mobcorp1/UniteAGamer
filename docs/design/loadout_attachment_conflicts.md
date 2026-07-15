@@ -1,6 +1,6 @@
 # Loadout Attachment Slot Matrix Conflicts
 
-Mike supplied the compatibility list as authoritative for PASS 258C. These mappings are preserved in the master database even when the current weapon slot matrix cannot display them in Favourite Loadout.
+Mike supplied the compatibility list as authoritative for PASS 258C. These mappings remain preserved even when the current weapon slot matrix cannot display them in Favourite Loadout.
 
 - Conflict attachment rows: 6
 - Conflict mappings: 18

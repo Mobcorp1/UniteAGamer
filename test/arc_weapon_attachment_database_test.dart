@@ -192,19 +192,7 @@ void main() {
           .map((attachment) => attachment.name)
           .toList(growable: false);
 
-      expect(missingExpectedBlueprints, [
-        'Compensator I',
-        'Muzzle Brake I',
-        'Shotgun Choke I',
-        'Angled Grip I',
-        'Vertical Grip I',
-        'Extended Light Mag I',
-        'Extended Medium Mag I',
-        'Extended Shotgun Mag I',
-        'Stable Stock I',
-        'Silencer III',
-        'Horizontal Grip',
-      ]);
+      expect(missingExpectedBlueprints, ['Angled Grip I']);
     });
 
     test('saved loadout serialization remains backward compatible', () {

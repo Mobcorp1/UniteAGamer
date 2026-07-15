@@ -1,6 +1,6 @@
 # Loadout Attachment Master Database
 
-PASS 258C establishes `ArcWeaponAttachmentDatabase` as the single source of truth for Favourite Loadout attachment metadata.
+PASS 258D updates the PASS 258C attachment database to use the normalized kebab-case Blueprint Grid artwork filenames now present in the repository.
 
 ## Summary
 
@@ -8,7 +8,7 @@ PASS 258C establishes `ArcWeaponAttachmentDatabase` as the single source of trut
 - Craftable attachments: 35
 - Find-only attachments: 2
 - Slot-matrix conflict mappings preserved for audit: 18
-- Expected Blueprint Grid artwork gaps: 11
+- Expected Blueprint Grid artwork gaps: 1
 
 TBA crafting material entries are modelled as `craftable: false`, `findOnly: true`, and empty crafting requirements. No fake bench recipe is shown.
 
@@ -16,15 +16,15 @@ TBA crafting material entries are modelled as `craftable: false`, `findOnly: tru
 
 | ID | Name | Slot Type | Bench | State | Materials | Effects | Compatible Weapons | Asset Path |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| compensator-i | Compensator I | Muzzle Mod | 1 | Craftable | 6x Metal Parts; 1x Wires | 25% reduced per-shot dispersion | Ferro; Torrente; Tempest; Arpeggio; Bettina | assets/arc_raiders/scrappy_resources/compensator_i.webp |
-| muzzle-brake-i | Muzzle Brake I | Muzzle Mod | 1 | Craftable | 6x Metal Parts; 1x Wires | 15% reduced horizontal recoil; 15% reduced vertical recoil | Arpeggio; Ferro | assets/arc_raiders/scrappy_resources/muzzle_brake_i.webp |
-| shotgun-choke-i | Shotgun Choke I | Shotgun Muzzle Mod | 1 | Craftable | 6x Metal Parts; 1x Wires | 20% reduced base dispersion | Vulcano; Il Toro | assets/arc_raiders/scrappy_resources/shotgun_choke_i.webp |
+| compensator-i | Compensator I | Muzzle Mod | 1 | Craftable | 6x Metal Parts; 1x Wires | 25% reduced per-shot dispersion | Ferro; Torrente; Tempest; Arpeggio; Bettina | assets/arc_raiders/blueprints/compensator-i.webp |
+| muzzle-brake-i | Muzzle Brake I | Muzzle Mod | 1 | Craftable | 6x Metal Parts; 1x Wires | 15% reduced horizontal recoil; 15% reduced vertical recoil | Arpeggio; Ferro | assets/arc_raiders/blueprints/muzzle-brake-i.webp |
+| shotgun-choke-i | Shotgun Choke I | Shotgun Muzzle Mod | 1 | Craftable | 6x Metal Parts; 1x Wires | 20% reduced base dispersion | Vulcano; Il Toro | assets/arc_raiders/blueprints/shotgun-choke-i.webp |
 | angled-grip-i | Angled Grip I | Underbarrel Mod | 1 | Craftable | 6x Plastic Parts; 1x Duct Tape | 20% reduced horizontal recoil | Vulcano; Osprey; Ferro; Venator; Il Toro | assets/arc_raiders/scrappy_resources/angled_grip_i.webp |
-| vertical-grip-i | Vertical Grip I | Underbarrel Mod | 1 | Craftable | 6x Plastic Parts; 1x Duct Tape | 20% reduced vertical recoil | Vulcano; Ferro; Bobcat; Il Toro; Tempest | assets/arc_raiders/scrappy_resources/vertical_grip_i.webp |
-| extended-light-mag-i | Extended Light Mag I | Light Magazine Mod | 1 | Craftable | 6x Plastic Parts; 1x Steel Spring | +5 magazine size | Bobcat | assets/arc_raiders/scrappy_resources/extended_light_mag_i.webp |
-| extended-medium-mag-i | Extended Medium Mag I | Medium Magazine Mod | 1 | Craftable | 6x Plastic Parts; 1x Steel Spring | +4 magazine size | Arpeggio; Venator; Torrente; Renegade; Osprey; Tempest | assets/arc_raiders/scrappy_resources/extended_medium_mag_i.webp |
-| extended-shotgun-mag-i | Extended Shotgun Mag I | Shotgun Magazine Mod | 1 | Craftable | 6x Plastic Parts; 1x Steel Spring | +2 magazine size | Il Toro; Vulcano | assets/arc_raiders/scrappy_resources/extended_shotgun_mag_i.webp |
-| stable-stock-i | Stable Stock I | Stock Mod | 1 | Craftable | 7x Rubber Parts; 1x Duct Tape | 40% reduced recoil recovery time; 40% reduced dispersion recovery time | Vulcano; Ferro; Bobcat; Il Toro; Torrente; Arpeggio; Rattler | assets/arc_raiders/scrappy_resources/stable_stock_i.webp |
+| vertical-grip-i | Vertical Grip I | Underbarrel Mod | 1 | Craftable | 6x Plastic Parts; 1x Duct Tape | 20% reduced vertical recoil | Vulcano; Ferro; Bobcat; Il Toro; Tempest | assets/arc_raiders/blueprints/vertical-grip-i.webp |
+| extended-light-mag-i | Extended Light Mag I | Light Magazine Mod | 1 | Craftable | 6x Plastic Parts; 1x Steel Spring | +5 magazine size | Bobcat | assets/arc_raiders/blueprints/extended-light-mag-i.webp |
+| extended-medium-mag-i | Extended Medium Mag I | Medium Magazine Mod | 1 | Craftable | 6x Plastic Parts; 1x Steel Spring | +4 magazine size | Arpeggio; Venator; Torrente; Renegade; Osprey; Tempest | assets/arc_raiders/blueprints/extended-medium-mag-i.webp |
+| extended-shotgun-mag-i | Extended Shotgun Mag I | Shotgun Magazine Mod | 1 | Craftable | 6x Plastic Parts; 1x Steel Spring | +2 magazine size | Il Toro; Vulcano | assets/arc_raiders/blueprints/extended-shotgun-mag-i.webp |
+| stable-stock-i | Stable Stock I | Stock Mod | 1 | Craftable | 7x Rubber Parts; 1x Duct Tape | 40% reduced recoil recovery time; 40% reduced dispersion recovery time | Vulcano; Ferro; Bobcat; Il Toro; Torrente; Arpeggio; Rattler | assets/arc_raiders/blueprints/stable-stock-i.webp |
 | compensator-ii | Compensator II | Muzzle Mod | 2 | Craftable | 8x Metal Parts; 1x Wires | 35% reduced per-shot dispersion | Arpeggio; Renegade; Bobcat; Torrente; Burletta; Anvil; Osprey; Ferro | assets/arc_raiders/blueprints/compensator-ii.webp |
 | muzzle-brake-ii | Muzzle Brake II | Muzzle Mod | 2 | Craftable | 1x Mechanical Components; 1x Duct Tape | 20% reduced horizontal recoil; 20% reduced vertical recoil | Arpeggio; Ferro; Tempest; Anvil; Osprey | assets/arc_raiders/blueprints/muzzle-brake-ii.webp |
 | shotgun-choke-ii | Shotgun Choke II | Shotgun Muzzle Mod | 2 | Craftable | 1x Mechanical Components; 1x Duct Tape | 30% reduced base dispersion | Vulcano; Il Toro | assets/arc_raiders/blueprints/shotgun-choke-ii.webp |
@@ -39,17 +39,17 @@ TBA crafting material entries are modelled as `craftable: false`, `findOnly: tru
 | muzzle-brake-iii | Muzzle Brake III | Muzzle Mod | 3 | Craftable | 1x Mod Components; 6x Wires | 25% reduced horizontal recoil; 25% reduced vertical recoil; 20% increased durability burn time | Arpeggio; Anvil; Ferro; Bobcat; Torrente; Tempest; Osprey; Renegade | assets/arc_raiders/blueprints/muzzle-brake-iii.webp |
 | shotgun-choke-iii | Shotgun Choke III | Shotgun Muzzle Mod | 3 | Craftable | 1x Mod Components; 9x Wires | 40% reduced base dispersion; 20% increased durability burn time | Vulcano; Il Toro | assets/arc_raiders/blueprints/shotgun-choke-iii.webp |
 | silencer-ii | Silencer II | Muzzle Mod | 3 | Craftable | 1x Mod Components; 9x Wires | 40% reduced noise | Bobcat; Osprey; Torrente; Tempest; Arpeggio; Anvil; Burletta; Renegade | assets/arc_raiders/blueprints/silencer-ii.webp |
-| silencer-iii | Silencer III | Muzzle Mod | 3 | Craftable | 3x Mod Components; 15x Wires | 60% reduced noise; 20% increased durability burn rate | Bobcat; Osprey; Torrente; Tempest; Arpeggio; Renegade | assets/arc_raiders/scrappy_resources/silencer_iii.webp |
+| silencer-iii | Silencer III | Muzzle Mod | 3 | Craftable | 3x Mod Components; 15x Wires | 60% reduced noise; 20% increased durability burn rate | Bobcat; Osprey; Torrente; Tempest; Arpeggio; Renegade | assets/arc_raiders/blueprints/silencer-iii.webp |
 | shotgun-silencer | Shotgun Silencer | Shotgun Muzzle Mod | 3 | Craftable | 1x Mod Components; 9x Wires | 50% reduced noise | Il Toro; Vulcano | assets/arc_raiders/blueprints/shotgun-silencer.webp |
 | extended-barrel | Extended Barrel | Barrel | 3 | Craftable | 6x Metal Parts; 1x Steel Spring | 25% increased bullet velocity; 15% increased vertical recoil | Osprey; Stitcher; Ferro; Arpeggio; Anvil; Burletta; Kettle | assets/arc_raiders/blueprints/extended-barrel.webp |
 | angled-grip-iii | Angled Grip III | Underbarrel Mod | 3 | Craftable | 1x Mod Components; 6x Duct Tape | 40% reduced horizontal recoil; 30% reduced ADS speed | Vulcano; Osprey; Ferro; Venator; Il Toro | assets/arc_raiders/blueprints/angled-grip-iii.webp |
 | vertical-grip-iii | Vertical Grip III | Underbarrel Mod | 3 | Craftable | 1x Mod Components; 6x Duct Tape | 40% reduced vertical recoil; 30% reduced ADS speed | Arpeggio; Il Toro; Vulcano | assets/arc_raiders/blueprints/vertical-grip-iii.webp |
-| horizontal-grip | Horizontal Grip | Underbarrel Mod | 3 | Craftable | 1x Mod Components; 6x Duct Tape | 30% reduced horizontal recoil; 30% reduced vertical recoil; 30% reduced ADS speed | Tempest; Vulcano; Osprey | assets/arc_raiders/scrappy_resources/horizontal_grip.webp |
+| horizontal-grip | Horizontal Grip | Underbarrel Mod | 3 | Craftable | 1x Mod Components; 6x Duct Tape | 30% reduced horizontal recoil; 30% reduced vertical recoil; 30% reduced ADS speed | Tempest; Vulcano; Osprey | assets/arc_raiders/blueprints/horizontal-grip.webp |
 | extended-light-mag-iii | Extended Light Mag III | Light Magazine Mod | 3 | Craftable | 1x Mod Components; 6x Steel Spring | +15 magazine size | Burletta; Bobcat | assets/arc_raiders/blueprints/extended-light-mag-iii.webp |
 | extended-medium-mag-iii | Extended Medium Mag III | Medium Magazine Mod | 3 | Craftable | 1x Mod Components; 6x Steel Spring | +12 magazine size | Arpeggio; Venator; Torrente; Renegade; Osprey; Tempest | assets/arc_raiders/blueprints/extended-medium-mag-iii.webp |
 | extended-shotgun-mag-iii | Extended Shotgun Mag III | Shotgun Magazine Mod | 3 | Craftable | 1x Mod Components; 6x Steel Spring | +6 magazine size | Il Toro; Vulcano | assets/arc_raiders/blueprints/extended-shotgun-mag-iii.webp |
 | stable-stock-iii | Stable Stock III | Stock Mod | 3 | Craftable | 1x Mod Components; 6x Duct Tape | 50% reduced recoil recovery time; 50% reduced dispersion recovery time; 20% increased equip time; 20% increased unequip time | Bobcat; Vulcano; Osprey; Il Toro; Ferro; Renegade | assets/arc_raiders/blueprints/stable-stock-iii.webp |
 | lightweight-stock | Lightweight Stock | Stock Mod | 3 | Craftable | 1x Mod Components; 6x Duct Tape | 50% increased recoil recovery duration; 50% increased vertical recoil control; 30% reduced equip time; 30% reduced unequip time; 200% increased ADS speed | Renegade; Vulcano | assets/arc_raiders/blueprints/lightweight-stock.webp |
 | padded-stock | Padded Stock | Stock Mod | 3 | Craftable | 1x Mod Components; 6x Duct Tape | 30% reduced horizontal recoil; 30% reduced vertical recoil; 30% reduced per-shot dispersion; 20% increased equip time; 20% increased unequip time; 30% reduced ADS speed | Rattler; Il Toro; Osprey; Stitcher; Ferro; Arpeggio; Renegade; Vulcano | assets/arc_raiders/blueprints/padded-stock.webp |
-| kinetic-converter | Kinetic Converter | Converter | 0 | Find Only |  | 15% increased fire rate; 20% increased horizontal recoil; 20% increased vertical recoil | Arpeggio; Rattler; Kettle; Vulcano; Osprey; Torrente; Ferro; Il Toro | assets/arc_raiders/blueprints/kinetic_converter.webp |
-| anvil-splitter | Anvil Splitter | Tech Mod / Special | 0 | Find Only |  | +3 projectiles per shot; 60% reduced projectile damage | Anvil | assets/arc_raiders/blueprints/anvil_splitter.webp |
+| kinetic-converter | Kinetic Converter | Converter | 0 | Find Only |  | 15% increased fire rate; 20% increased horizontal recoil; 20% increased vertical recoil | Arpeggio; Rattler; Kettle; Vulcano; Osprey; Torrente; Ferro; Il Toro | assets/arc_raiders/blueprints/kinetic-converter.webp |
+| anvil-splitter | Anvil Splitter | Tech Mod / Special | 0 | Find Only |  | +3 projectiles per shot; 60% reduced projectile damage | Anvil | assets/arc_raiders/blueprints/anvil-splitter.webp |

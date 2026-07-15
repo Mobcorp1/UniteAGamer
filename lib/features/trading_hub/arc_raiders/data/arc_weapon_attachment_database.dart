@@ -40,7 +40,7 @@ class ArcWeaponAttachmentDatabase {
         'Arpeggio',
         'Bettina',
       ],
-      assetPath: 'assets/arc_raiders/scrappy_resources/compensator_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/compensator-i.webp',
     ),
     _craftable(
       name: 'Muzzle Brake I',
@@ -60,7 +60,7 @@ class ArcWeaponAttachmentDatabase {
         ),
       ],
       compatibleWeapons: ['Arpeggio', 'Ferro'],
-      assetPath: 'assets/arc_raiders/scrappy_resources/muzzle_brake_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/muzzle-brake-i.webp',
     ),
     _craftable(
       name: 'Shotgun Choke I',
@@ -75,7 +75,7 @@ class ArcWeaponAttachmentDatabase {
         ),
       ],
       compatibleWeapons: ['Vulcano', 'Il Toro'],
-      assetPath: 'assets/arc_raiders/scrappy_resources/shotgun_choke_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/shotgun-choke-i.webp',
     ),
     _craftable(
       name: 'Angled Grip I',
@@ -105,7 +105,7 @@ class ArcWeaponAttachmentDatabase {
         ),
       ],
       compatibleWeapons: ['Vulcano', 'Ferro', 'Bobcat', 'Il Toro', 'Tempest'],
-      assetPath: 'assets/arc_raiders/scrappy_resources/vertical_grip_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/vertical-grip-i.webp',
     ),
     _craftable(
       name: 'Extended Light Mag I',
@@ -121,8 +121,7 @@ class ArcWeaponAttachmentDatabase {
         ),
       ],
       compatibleWeapons: ['Bobcat'],
-      assetPath:
-          'assets/arc_raiders/scrappy_resources/extended_light_mag_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/extended-light-mag-i.webp',
     ),
     _craftable(
       name: 'Extended Medium Mag I',
@@ -145,8 +144,7 @@ class ArcWeaponAttachmentDatabase {
         'Osprey',
         'Tempest',
       ],
-      assetPath:
-          'assets/arc_raiders/scrappy_resources/extended_medium_mag_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/extended-medium-mag-i.webp',
     ),
     _craftable(
       name: 'Extended Shotgun Mag I',
@@ -162,8 +160,7 @@ class ArcWeaponAttachmentDatabase {
         ),
       ],
       compatibleWeapons: ['Il Toro', 'Vulcano'],
-      assetPath:
-          'assets/arc_raiders/scrappy_resources/extended_shotgun_mag_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/extended-shotgun-mag-i.webp',
     ),
     _craftable(
       name: 'Stable Stock I',
@@ -191,7 +188,7 @@ class ArcWeaponAttachmentDatabase {
         'Arpeggio',
         'Rattler',
       ],
-      assetPath: 'assets/arc_raiders/scrappy_resources/stable_stock_i.webp',
+      assetPath: 'assets/arc_raiders/blueprints/stable-stock-i.webp',
     ),
     _craftable(
       name: 'Compensator II',
@@ -505,7 +502,7 @@ class ArcWeaponAttachmentDatabase {
         'Arpeggio',
         'Renegade',
       ],
-      assetPath: 'assets/arc_raiders/scrappy_resources/silencer_iii.webp',
+      assetPath: 'assets/arc_raiders/blueprints/silencer-iii.webp',
     ),
     _craftable(
       name: 'Shotgun Silencer',
@@ -613,7 +610,7 @@ class ArcWeaponAttachmentDatabase {
         ),
       ],
       compatibleWeapons: ['Tempest', 'Vulcano', 'Osprey'],
-      assetPath: 'assets/arc_raiders/scrappy_resources/horizontal_grip.webp',
+      assetPath: 'assets/arc_raiders/blueprints/horizontal-grip.webp',
     ),
     _craftable(
       name: 'Extended Light Mag III',
@@ -813,7 +810,7 @@ class ArcWeaponAttachmentDatabase {
         'Ferro',
         'Il Toro',
       ],
-      assetPath: 'assets/arc_raiders/blueprints/kinetic_converter.webp',
+      assetPath: 'assets/arc_raiders/blueprints/kinetic-converter.webp',
     ),
     _findOnly(
       name: 'Anvil Splitter',
@@ -833,7 +830,7 @@ class ArcWeaponAttachmentDatabase {
         ),
       ],
       compatibleWeapons: ['Anvil'],
-      assetPath: 'assets/arc_raiders/blueprints/anvil_splitter.webp',
+      assetPath: 'assets/arc_raiders/blueprints/anvil-splitter.webp',
       notes: 'Uses the current Tech Mod slot through the special slot type.',
     ),
   ]);
@@ -890,9 +887,9 @@ class ArcWeaponAttachmentDatabase {
   ) {
     switch (attachment.name) {
       case 'Anvil Splitter':
-        return 'assets/arc_raiders/blueprints/anvil_splitter.webp';
+        return 'assets/arc_raiders/blueprints/anvil-splitter.webp';
       case 'Kinetic Converter':
-        return 'assets/arc_raiders/blueprints/kinetic_converter.webp';
+        return 'assets/arc_raiders/blueprints/kinetic-converter.webp';
       default:
         return 'assets/arc_raiders/blueprints/${attachment.id}.webp';
     }

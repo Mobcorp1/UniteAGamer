@@ -16,14 +16,15 @@ class ArcLoadoutAssetRegistry {
 
   static const Map<String, String> _weaponAssets = {
     'anvil': 'assets/arc_raiders/blueprints/anvil.webp',
+    'arpeggio': 'assets/arc_raiders/blueprints/arpeggio.webp',
     'bobcat': 'assets/arc_raiders/blueprints/bobcat.webp',
     'burletta': 'assets/arc_raiders/blueprints/burletta.webp',
     'ferro': 'assets/images/arc_raiders/loadouts/weapons/ferro.webp',
-    'harpin': 'assets/images/arc_raiders/loadouts/weapons/harpin.webp',
-    'hairpin': 'assets/images/arc_raiders/loadouts/weapons/harpin.webp',
+    'hairpin': 'assets/images/arc_raiders/loadouts/weapons/hairpin.webp',
     'il toro': 'assets/arc_raiders/blueprints/il-toro.webp',
     'kettle': 'assets/images/arc_raiders/loadouts/weapons/kettle.webp',
     'osprey': 'assets/arc_raiders/blueprints/osprey.webp',
+    'rattler': 'assets/arc_raiders/blueprints/rattler.webp',
     'stitcher': 'assets/images/arc_raiders/loadouts/weapons/stitcher.webp',
     'tempest': 'assets/arc_raiders/blueprints/tempest.webp',
     'torrente': 'assets/arc_raiders/blueprints/torrente.webp',
@@ -32,7 +33,7 @@ class ArcLoadoutAssetRegistry {
   };
 
   static const Map<String, String> _attachmentAssets = {
-    'anvil splitter': 'assets/arc_raiders/blueprints/anvil_splitter.webp',
+    'anvil splitter': 'assets/arc_raiders/blueprints/anvil-splitter.webp',
     'angled grip ii': 'assets/arc_raiders/blueprints/angled-grip-ii.webp',
     'angled grip iii': 'assets/arc_raiders/blueprints/angled-grip-iii.webp',
     'compensator ii': 'assets/arc_raiders/blueprints/compensator-ii.webp',
@@ -50,7 +51,7 @@ class ArcLoadoutAssetRegistry {
         'assets/arc_raiders/blueprints/extended-shotgun-mag-ii.webp',
     'extended shotgun mag iii':
         'assets/arc_raiders/blueprints/extended-shotgun-mag-iii.webp',
-    'kinetic converter': 'assets/arc_raiders/blueprints/kinetic_converter.webp',
+    'kinetic converter': 'assets/arc_raiders/blueprints/kinetic-converter.webp',
     'lightweight stock': 'assets/arc_raiders/blueprints/lightweight-stock.webp',
     'muzzle brake ii': 'assets/arc_raiders/blueprints/muzzle-brake-ii.webp',
     'muzzle brake iii': 'assets/arc_raiders/blueprints/muzzle-brake-iii.webp',

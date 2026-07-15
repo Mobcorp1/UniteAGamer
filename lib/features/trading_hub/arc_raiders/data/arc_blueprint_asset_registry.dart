@@ -4,11 +4,10 @@ class ArcBlueprintAssetRegistry {
   static const String _basePath = 'assets/arc_raiders/blueprints';
 
   static const Map<String, String> _aliases = {
-    'anvil splitter': 'anvil_splitter',
-    'kinetic converter': 'kinetic_converter',
+    'anvil splitter': 'anvil-splitter',
+    'kinetic converter': 'kinetic-converter',
     'padded stock': 'padded-stock',
-    'harpin': 'harpin',
-    'hairpin': 'harpin',
+    'hairpin': 'hairpin',
     'triggernade': 'trigger-nade',
     'trigger nade': 'trigger-nade',
     'combat augment': 'combat-mk-3-aggressive',
