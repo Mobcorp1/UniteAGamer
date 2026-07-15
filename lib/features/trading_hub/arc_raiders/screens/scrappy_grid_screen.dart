@@ -563,6 +563,70 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
+  Future<void> _confirmMarkSectionComplete({
+    required String title,
+    required List<ArcScrappyItem> items,
+    required Map<String, ArcScrappyState> states,
+  }) async {
+    final incompleteItems = items
+        .where((item) {
+          final current = states[item.id] ?? ArcScrappyState.empty(item.id);
+          return current.collectedCount < item.neededCount;
+        })
+        .toList(growable: false);
+    if (incompleteItems.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.cardBackgroundDeep,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: _modeAccent().withValues(alpha: 0.32)),
+          ),
+          title: Text(
+            'Complete $title?',
+            style: AppTheme.tradingHeading(fontSize: 22, color: _modeAccent()),
+          ),
+          content: Text(
+            'This will set ${incompleteItems.length} unfinished ${_modeWord()} item${incompleteItems.length == 1 ? '' : 's'} to their required target and persist the confirmation for this season.',
+            style: const TextStyle(color: Colors.white70, height: 1.45),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _modeAccent(),
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Confirm Complete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    try {
+      await _markSectionComplete(items, states);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$title completion saved.')));
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not complete $title: $e')));
+    }
+  }
+
   Widget _buildExpansionSection({
     required String id,
     required String title,
@@ -673,7 +737,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   child: OutlinedButton.icon(
                     onPressed: wantedTotal == 0
                         ? null
-                        : () => _markSectionComplete(items, states),
+                        : () => _confirmMarkSectionComplete(
+                            title: title,
+                            items: items,
+                            states: states,
+                          ),
                     icon: Icon(
                       wantedTotal == 0
                           ? Icons.check_circle_rounded

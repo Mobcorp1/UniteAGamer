@@ -583,6 +583,8 @@ class _ClosedBetaDiagnosticsCard extends StatelessWidget {
                 const SizedBox(height: AppTheme.spaceM),
                 _diagnosticNote('Last reconciliation', data.lastReconciliation),
               ],
+              const SizedBox(height: AppTheme.spaceM),
+              _candidateDiagnostics(data.candidates),
             ],
           ),
         );
@@ -653,6 +655,59 @@ class _ClosedBetaDiagnosticsCard extends StatelessWidget {
             TextSpan(text: value),
           ],
         ),
+      ),
+    );
+  }
+
+  static Widget _candidateDiagnostics(List<_CommandCandidateDiagnostic> items) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Command Centre Candidate Diagnostics',
+            style: AppTheme.tradingHeading(
+              fontSize: 18,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    item.included
+                        ? Icons.check_circle_rounded
+                        : Icons.remove_circle_outline_rounded,
+                    color: item.included
+                        ? AppTheme.neonCyan
+                        : AppTheme.tradingMutedText,
+                    size: 16,
+                  ),
+                  const SizedBox(width: AppTheme.spaceS),
+                  Expanded(
+                    child: Text(
+                      '${item.id} - ${item.title} | ${item.status} | ${item.reason}',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -764,6 +819,184 @@ class _ClosedBetaDiagnosticsCard extends StatelessWidget {
           _truthy(userData['founderEligible']) ||
           _truthy(userData['earlySupporter']),
       missingProfileFields: missingProfileFields,
+      candidates: _buildCandidateDiagnostics(
+        profileComplete:
+            profileCompletion['complete'] == true ||
+            profileData['isProfileComplete'] == true,
+        trackerStateCount: trackerDocs.length,
+        operationDocs: operationDocs,
+        rewardDocs: rewardDocs,
+        userData: userData,
+      ),
+    );
+  }
+
+  static List<_CommandCandidateDiagnostic> _buildCandidateDiagnostics({
+    required bool profileComplete,
+    required int trackerStateCount,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> operationDocs,
+    required List<QueryDocumentSnapshot<Map<String, dynamic>>> rewardDocs,
+    required Map<String, dynamic> userData,
+  }) {
+    final readyOperations = operationDocs.where((doc) {
+      final data = doc.data();
+      final progress = (data['progress'] as num?)?.toInt() ?? 0;
+      final target = (data['target'] as num?)?.toInt() ?? 1;
+      return progress >= target && data['claimed'] != true;
+    }).length;
+    final activeOperations = operationDocs.where((doc) {
+      final data = doc.data();
+      final progress = (data['progress'] as num?)?.toInt() ?? 0;
+      final target = (data['target'] as num?)?.toInt() ?? 1;
+      return progress > 0 && progress < target;
+    }).length;
+    final currentRewards = rewardDocs
+        .where((doc) => doc.data()['currentSeasonUnlock'] != false)
+        .length;
+    final hasLoadout =
+        _truthy(userData['favouriteLoadoutSaved']) ||
+        _truthy(userData['hasFavouriteLoadout']);
+    return [
+      _candidate(
+        id: 'complete-profile',
+        title: 'Complete Profile',
+        type: 'profile',
+        included: !profileComplete,
+        reason: profileComplete
+            ? 'Excluded: persisted profile completion is true.'
+            : 'Included: profile completion is missing.',
+        priority: profileComplete ? 0 : 100,
+      ),
+      _candidate(
+        id: 'active-quest',
+        title: 'Active Quest',
+        type: 'quest',
+        included: trackerStateCount > 0,
+        reason: trackerStateCount > 0
+            ? 'Included: quest/tracker documents exist.'
+            : 'Excluded: no quest tracker progress documents found.',
+        priority: trackerStateCount > 0 ? 70 : 0,
+      ),
+      _candidate(
+        id: 'scrappy',
+        title: 'Scrappy',
+        type: 'tracker',
+        included: trackerStateCount > 0,
+        reason: trackerStateCount > 0
+            ? 'Included: tracker state can produce Scrappy guidance.'
+            : 'Excluded: no Scrappy tracker state exists yet.',
+        priority: trackerStateCount > 0 ? 68 : 0,
+      ),
+      _candidate(
+        id: 'bench',
+        title: 'Bench',
+        type: 'tracker',
+        included: trackerStateCount > 0,
+        reason: trackerStateCount > 0
+            ? 'Included: bench intelligence can read tracker documents.'
+            : 'Excluded: no bench tracker state exists yet.',
+        priority: trackerStateCount > 0 ? 66 : 0,
+      ),
+      _candidate(
+        id: 'operation',
+        title: 'Operation',
+        type: 'operation',
+        included: readyOperations > 0 || activeOperations > 0,
+        reason: readyOperations > 0
+            ? 'Included: $readyOperations Operation reward ready to claim.'
+            : activeOperations > 0
+            ? 'Included: $activeOperations Operation in progress.'
+            : 'Excluded: no active or ready Operation progress.',
+        priority: readyOperations > 0
+            ? 80
+            : activeOperations > 0
+            ? 60
+            : 0,
+      ),
+      _candidate(
+        id: 'favourite-loadout',
+        title: 'Favourite Loadout',
+        type: 'loadout',
+        included: !hasLoadout,
+        reason: hasLoadout
+            ? 'Excluded: user has durable loadout proof.'
+            : 'Included: no durable loadout proof found in user summary.',
+        priority: hasLoadout ? 0 : 55,
+      ),
+      _candidate(
+        id: 'blueprint-tracker',
+        title: 'Blueprint Tracker',
+        type: 'blueprint',
+        included: true,
+        reason: 'Included when blueprint state is available to Command Centre.',
+        priority: 50,
+      ),
+      _candidate(
+        id: 'trade-offer',
+        title: 'Trade Offer',
+        type: 'trade',
+        included: false,
+        reason:
+            'Excluded in diagnostics snapshot: trade offer stream is not loaded here.',
+        priority: 0,
+      ),
+      _candidate(
+        id: 'blueprint-watch',
+        title: 'Blueprint Watch',
+        type: 'trade',
+        included: false,
+        reason:
+            'Excluded in diagnostics snapshot: watch stream is not loaded here.',
+        priority: 0,
+      ),
+      _candidate(
+        id: 'listing-queue',
+        title: 'Listing Queue',
+        type: 'trade',
+        included: false,
+        reason:
+            'Excluded in diagnostics snapshot: queue stream is not loaded here.',
+        priority: 0,
+      ),
+      _candidate(
+        id: 'match-rider',
+        title: 'Match Rider',
+        type: 'matchmaking',
+        included: false,
+        reason:
+            'Excluded unless Match Rider repository reports active requests in Command Centre.',
+        priority: 0,
+      ),
+      _candidate(
+        id: 'reward-vault',
+        title: 'Reward Vault',
+        type: 'reward',
+        included: currentRewards > 0,
+        reason: currentRewards > 0
+            ? 'Included: $currentRewards current-season reward records.'
+            : 'Excluded: no current-season reward records.',
+        priority: currentRewards > 0 ? 45 : 0,
+      ),
+    ];
+  }
+
+  static _CommandCandidateDiagnostic _candidate({
+    required String id,
+    required String title,
+    required String type,
+    required bool included,
+    required String reason,
+    required int priority,
+  }) {
+    return _CommandCandidateDiagnostic(
+      id: id,
+      title: title,
+      type: type,
+      status: included ? 'included' : 'excluded',
+      reason: reason,
+      priority: priority,
+      included: included,
+      suppressionKey: '$type:$id',
     );
   }
 
@@ -834,6 +1067,7 @@ class _ClosedBetaDiagnosticsData {
     required this.betaEligible,
     required this.founderEligible,
     required this.missingProfileFields,
+    required this.candidates,
   });
 
   final String uid;
@@ -856,6 +1090,29 @@ class _ClosedBetaDiagnosticsData {
   final bool betaEligible;
   final bool founderEligible;
   final List<String> missingProfileFields;
+  final List<_CommandCandidateDiagnostic> candidates;
+}
+
+class _CommandCandidateDiagnostic {
+  const _CommandCandidateDiagnostic({
+    required this.id,
+    required this.title,
+    required this.type,
+    required this.status,
+    required this.reason,
+    required this.priority,
+    required this.included,
+    required this.suppressionKey,
+  });
+
+  final String id;
+  final String title;
+  final String type;
+  final String status;
+  final String reason;
+  final int priority;
+  final bool included;
+  final String suppressionKey;
 }
 
 class _FeatureToggleCard extends StatelessWidget {

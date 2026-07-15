@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_requirement_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_scrappy_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 
 class ArcSeasonResetRepository {
   ArcSeasonResetRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -34,6 +37,12 @@ class ArcSeasonResetRepository {
 
   CollectionReference<Map<String, dynamic>> _scrappyStatesRef(String uid) =>
       _userRef(uid).collection('arc_scrappy_states');
+
+  DocumentReference<Map<String, dynamic>> _operationSummaryRef(String uid) =>
+      _firestore.collection('arc_operation_progress').doc(uid);
+
+  CollectionReference<Map<String, dynamic>> _operationProgressRef(String uid) =>
+      _operationSummaryRef(uid).collection('operations');
 
   CollectionReference<Map<String, dynamic>> _rewardInventoryRef(String uid) =>
       _firestore
@@ -73,8 +82,13 @@ class ArcSeasonResetRepository {
     final uid = _uid;
     final state = await getSeasonState();
     final scrappySnapshot = await _scrappyStatesRef(uid).get();
+    final operationSnapshot = await _operationProgressRef(uid).get();
     final rewardSnapshot = await _rewardInventoryRef(uid).get();
     final groups = _classifyTrackerDocs(scrappySnapshot.docs);
+    final seasonalOperationDocs = _seasonalOperationDocs(
+      operationSnapshot.docs,
+      currentSeasonId: state.currentSeasonId,
+    );
     final generatedAt = DateTime.now().toUtc();
     final resolvedNextSeasonId = nextSeasonId?.trim().isNotEmpty == true
         ? nextSeasonId!.trim()
@@ -93,11 +107,13 @@ class ArcSeasonResetRepository {
         scrappyStateCount: groups.scrappyDocs.length,
         questStateCount: groups.questDocs.length,
         benchStateCount: groups.benchDocs.length,
+        operationProgressCount: seasonalOperationDocs.length,
         rewardCount: rewardSnapshot.docs.length,
       ),
       scrappyStateCount: groups.scrappyDocs.length,
       questStateCount: groups.questDocs.length,
       benchStateCount: groups.benchDocs.length,
+      operationProgressCount: seasonalOperationDocs.length,
       rewardCount: rewardSnapshot.docs.length,
     );
   }
@@ -151,14 +167,21 @@ class ArcSeasonResetRepository {
 
     try {
       final scrappySnapshot = await _scrappyStatesRef(uid).get();
+      final operationSnapshot = await _operationProgressRef(uid).get();
       final rewardSnapshot = await _rewardInventoryRef(uid).get();
       final groups = _classifyTrackerDocs(scrappySnapshot.docs);
+      final seasonalOperationDocs = _seasonalOperationDocs(
+        operationSnapshot.docs,
+        currentSeasonId: preview.currentSeasonId,
+      );
       final resetDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[
         ...groups.scrappyDocs,
         ...groups.questDocs,
         ...groups.benchDocs,
       ];
       final resetStateIds = resetDocs.map((doc) => doc.id).toList()..sort();
+      final archivedOperationIds =
+          seasonalOperationDocs.map((doc) => doc.id).toList()..sort();
       final historyEntry = ArcSeasonHistoryEntry(
         seasonId: preview.currentSeasonId,
         resetId: preview.resetId,
@@ -166,6 +189,7 @@ class ArcSeasonResetRepository {
         scrappyStateCount: groups.scrappyDocs.length,
         questStateCount: groups.questDocs.length,
         benchStateCount: groups.benchDocs.length,
+        operationProgressCount: seasonalOperationDocs.length,
         rewardCount: rewardSnapshot.docs.length,
       );
       final result = ArcSeasonResetApplyResult(
@@ -175,6 +199,7 @@ class ArcSeasonResetRepository {
         resetVersion: preview.resetVersion,
         completedAt: now,
         resetStateIds: resetStateIds,
+        archivedOperationIds: archivedOperationIds,
         archivedRewardCount: rewardSnapshot.docs.length,
       );
 
@@ -187,6 +212,7 @@ class ArcSeasonResetRepository {
           'quests': _archiveDocs(groups.questDocs),
           'benches': _archiveDocs(groups.benchDocs),
         },
+        'operationArchive': _archiveDocs(seasonalOperationDocs),
         'rewardArchive': _archiveDocs(rewardSnapshot.docs),
         'createdAt': now.toIso8601String(),
         'policyVersion': ArcSeasonResetPolicy.resetPolicyVersion,
@@ -195,6 +221,32 @@ class ArcSeasonResetRepository {
       for (final doc in resetDocs) {
         batch.delete(doc.reference);
       }
+
+      for (final doc in seasonalOperationDocs) {
+        batch.delete(doc.reference);
+      }
+
+      for (final doc in rewardSnapshot.docs) {
+        final data = doc.data();
+        final sourceSeasonId = _string(data['sourceSeasonId']);
+        final currentSeasonUnlock = data['currentSeasonUnlock'] != false;
+        if (sourceSeasonId == preview.currentSeasonId ||
+            (sourceSeasonId == null && currentSeasonUnlock)) {
+          batch.set(doc.reference, {
+            'currentSeasonUnlock': false,
+            'historicalVisible': data['historicalVisible'] != false,
+            'archivedSeasonId': preview.currentSeasonId,
+            'archivedByResetId': preview.resetId,
+            'updatedAt': now.toIso8601String(),
+          }, SetOptions(merge: true));
+        }
+      }
+
+      batch.set(_operationSummaryRef(uid), {
+        'currentSeasonId': preview.nextSeasonId,
+        'lastSeasonReset': result.toMap(),
+        'updatedAt': now.toIso8601String(),
+      }, SetOptions(merge: true));
 
       batch.set(_seasonRef(uid), {
         'currentSeasonId': preview.nextSeasonId,
@@ -213,6 +265,10 @@ class ArcSeasonResetRepository {
       }, SetOptions(merge: true));
 
       await batch.commit();
+      await ArcOperationsRepository(
+        firestore: _firestore,
+        auth: _auth,
+      ).reconcileEquippedCosmetics();
       return result;
     } catch (error) {
       await _seasonRef(uid).set({
@@ -283,6 +339,34 @@ class ArcSeasonResetRepository {
     );
   }
 
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _seasonalOperationDocs(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs, {
+    required String currentSeasonId,
+  }) {
+    return docs
+        .where((doc) {
+          final task = _operationTaskById(doc.id);
+          if (task == null) return false;
+          if (!task.resetsWithSeason) return false;
+          final seasonId = _string(doc.data()['seasonId']);
+          return seasonId == null || seasonId == currentSeasonId;
+        })
+        .toList(growable: false);
+  }
+
+  ArcOperationTask? _operationTaskById(String operationId) {
+    for (final task in <ArcOperationTask>[
+      ...ArcOperationsSeedData.dailyOperations,
+      ...ArcOperationsSeedData.weeklyOperations,
+      ...ArcOperationsSeedData.monthlyOperations,
+      ...ArcOperationsSeedData.betaOperations,
+      ...ArcOperationsSeedData.lifetimeOperations,
+    ]) {
+      if (task.id == operationId) return task;
+    }
+    return null;
+  }
+
   List<Map<String, dynamic>> _archiveDocs(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
   ) {
@@ -311,6 +395,12 @@ class ArcSeasonResetRepository {
       return value.map(_archiveValue).toList(growable: false);
     }
     return value;
+  }
+
+  String? _string(Object? value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 
   String _nextSeasonId(String currentSeasonId) {

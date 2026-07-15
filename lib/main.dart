@@ -21,6 +21,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
@@ -171,6 +172,12 @@ class UAGTradersHubApp extends StatelessWidget {
       case OperationsCommandScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const OperationsCommandScreen(),
+          settings: settings,
+        );
+
+      case ArcSeasonResetScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcSeasonResetScreen(),
           settings: settings,
         );
 

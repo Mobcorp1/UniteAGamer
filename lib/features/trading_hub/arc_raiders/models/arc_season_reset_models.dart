@@ -75,6 +75,7 @@ class ArcSeasonResetPolicy {
     required int questStateCount,
     required int benchStateCount,
     required int rewardCount,
+    int operationProgressCount = 0,
   }) {
     return <ArcSeasonResetSystemImpact>[
       const ArcSeasonResetSystemImpact(
@@ -103,6 +104,14 @@ class ArcSeasonResetPolicy {
         classification: ArcSeasonResetClassification.reset,
         reason: 'Known current-season bench material progress returns to zero.',
         itemCount: benchStateCount,
+      ),
+      ArcSeasonResetSystemImpact(
+        id: 'operations',
+        label: 'Current-season Operations',
+        classification: ArcSeasonResetClassification.reset,
+        reason:
+            'Seasonal Operation progress is archived and starts fresh next season.',
+        itemCount: operationProgressCount,
       ),
       ArcSeasonResetSystemImpact(
         id: 'rewards',
@@ -176,6 +185,7 @@ class ArcSeasonHistoryEntry {
     this.scrappyStateCount = 0,
     this.questStateCount = 0,
     this.benchStateCount = 0,
+    this.operationProgressCount = 0,
     this.rewardCount = 0,
   });
 
@@ -185,6 +195,7 @@ class ArcSeasonHistoryEntry {
   final int scrappyStateCount;
   final int questStateCount;
   final int benchStateCount;
+  final int operationProgressCount;
   final int rewardCount;
 
   Map<String, dynamic> toMap() {
@@ -195,6 +206,7 @@ class ArcSeasonHistoryEntry {
       'scrappyStateCount': scrappyStateCount,
       'questStateCount': questStateCount,
       'benchStateCount': benchStateCount,
+      'operationProgressCount': operationProgressCount,
       'rewardCount': rewardCount,
     };
   }
@@ -208,6 +220,7 @@ class ArcSeasonHistoryEntry {
       scrappyStateCount: _int(map['scrappyStateCount']),
       questStateCount: _int(map['questStateCount']),
       benchStateCount: _int(map['benchStateCount']),
+      operationProgressCount: _int(map['operationProgressCount']),
       rewardCount: _int(map['rewardCount']),
     );
   }
@@ -341,6 +354,7 @@ class ArcSeasonResetPreview {
     this.scrappyStateCount = 0,
     this.questStateCount = 0,
     this.benchStateCount = 0,
+    this.operationProgressCount = 0,
     this.rewardCount = 0,
   });
 
@@ -353,6 +367,7 @@ class ArcSeasonResetPreview {
   final int scrappyStateCount;
   final int questStateCount;
   final int benchStateCount;
+  final int operationProgressCount;
   final int rewardCount;
 
   List<ArcSeasonResetSystemImpact> impactsFor(
@@ -374,6 +389,7 @@ class ArcSeasonResetPreview {
       'scrappyStateCount': scrappyStateCount,
       'questStateCount': questStateCount,
       'benchStateCount': benchStateCount,
+      'operationProgressCount': operationProgressCount,
       'rewardCount': rewardCount,
     };
   }
@@ -388,6 +404,7 @@ class ArcSeasonResetApplyResult {
     required this.completedAt,
     this.alreadyApplied = false,
     this.resetStateIds = const <String>[],
+    this.archivedOperationIds = const <String>[],
     this.archivedRewardCount = 0,
   });
 
@@ -398,6 +415,7 @@ class ArcSeasonResetApplyResult {
   final DateTime completedAt;
   final bool alreadyApplied;
   final List<String> resetStateIds;
+  final List<String> archivedOperationIds;
   final int archivedRewardCount;
 
   Map<String, dynamic> toMap() {
@@ -409,6 +427,7 @@ class ArcSeasonResetApplyResult {
       'completedAt': completedAt.toIso8601String(),
       'alreadyApplied': alreadyApplied,
       'resetStateIds': resetStateIds,
+      'archivedOperationIds': archivedOperationIds,
       'archivedRewardCount': archivedRewardCount,
     };
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -60,6 +61,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         const SizedBox(height: 8),
         _systemCarousel(carouselTiles),
         const SizedBox(height: 8),
+        _seasonResetEntry(),
+        const SizedBox(height: 8),
         _detailAccordion(
           title: 'System Detail',
           subtitle: 'Compact lower-priority system checks.',
@@ -76,6 +79,67 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _seasonResetEntry() {
+    return _tapSurface(
+      action: const ArcCommandAction(
+        label: 'Start Expedition Reset',
+        routeName: ArcSeasonResetScreen.routeName,
+      ),
+      child: ArcCommandCentreCard(
+        padding: const EdgeInsets.all(12),
+        accent: AppTheme.neonPink,
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppTheme.neonPink.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppTheme.neonPink.withValues(alpha: 0.36),
+                ),
+              ),
+              child: const Icon(
+                Icons.restart_alt_rounded,
+                color: AppTheme.neonPink,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'EXPEDITION RESET',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.tradingHeading(
+                      fontSize: 15,
+                      color: AppTheme.neonPink,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Preview what resets, what persists, and archive the current season only after confirmation.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 11,
+                      color: Colors.white60,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded, color: AppTheme.neonPink),
+          ],
+        ),
+      ),
     );
   }
 

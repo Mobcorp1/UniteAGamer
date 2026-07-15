@@ -30,6 +30,7 @@ class ArcUserInitializer {
       await _seasonResetRepository.reconcileInterruptedReset();
       await _repository.refreshProfileCompletion();
       await _operationsRepository.reconcileCurrentUserRewardsAndProgress();
+      await _operationsRepository.reconcileEquippedCosmetics();
       await _operationsRepository.recordLogin();
     } catch (_) {
       // Startup reconciliation should not prevent the user from entering Hub.

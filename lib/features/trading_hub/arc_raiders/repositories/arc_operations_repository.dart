@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_cosmetic_equipability.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_reward_eligibility.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
@@ -223,6 +224,7 @@ class ArcOperationsRepository {
         final update = _equippedUpdateFor(firstCosmetic);
         if (update.isNotEmpty) {
           transaction.set(profileRef, update, SetOptions(merge: true));
+          transaction.set(_equippedRef(uid), update, SetOptions(merge: true));
         }
       }
 
@@ -242,10 +244,91 @@ class ArcOperationsRepository {
     final uid = _uid;
     if (uid == null) return;
 
+    final seasonId = await _currentSeasonId(uid);
+    if (!ArcCosmeticEquipability.canEquip(item, currentSeasonId: seasonId)) {
+      return;
+    }
+
     final update = _equippedUpdateFor(item);
     if (update.isEmpty) return;
 
-    await _profileRef(uid).set(update, SetOptions(merge: true));
+    final batch = _firestore.batch();
+    batch.set(_profileRef(uid), update, SetOptions(merge: true));
+    batch.set(_equippedRef(uid), update, SetOptions(merge: true));
+    await batch.commit();
+  }
+
+  Future<List<String>> reconcileEquippedCosmetics() async {
+    final uid = _uid;
+    if (uid == null) return const <String>[];
+
+    final seasonId = await _currentSeasonId(uid);
+    final inventorySnapshot = await _inventoryRef(uid).get();
+    final inventoryById = <String, ArcRewardInventoryItem>{
+      for (final doc in inventorySnapshot.docs)
+        doc.id: ArcRewardInventoryItem.fromMap(doc.id, doc.data()),
+    };
+    final profileSnapshot = await _profileRef(uid).get();
+    final equippedSnapshot = await _equippedRef(uid).get();
+    final equippedData = <String, dynamic>{
+      ...?equippedSnapshot.data(),
+      ...?profileSnapshot.data(),
+    };
+    final checks = <_EquippedCosmeticCheck>[
+      const _EquippedCosmeticCheck(
+        field: 'equippedBadgeId',
+        mirrorField: 'badgeId',
+      ),
+      const _EquippedCosmeticCheck(
+        field: 'equippedTitleId',
+        mirrorField: 'titleId',
+      ),
+      const _EquippedCosmeticCheck(
+        field: 'equippedProfileFrameId',
+        mirrorField: 'profileFrameId',
+      ),
+      const _EquippedCosmeticCheck(
+        field: 'equippedProfileBannerId',
+        mirrorField: 'profileBannerId',
+      ),
+    ];
+    final cleared = <String>[];
+    final update = <String, dynamic>{
+      'updatedAt': FieldValue.serverTimestamp(),
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    };
+
+    for (final check in checks) {
+      final rewardId =
+          _string(equippedData[check.field]) ??
+          _string(equippedData[check.mirrorField]);
+      if (rewardId == null) continue;
+      final item = inventoryById[rewardId];
+      if (item == null ||
+          ArcCosmeticEquipability.canEquip(item, currentSeasonId: seasonId)) {
+        continue;
+      }
+      update[check.field] = FieldValue.delete();
+      update[check.mirrorField] = FieldValue.delete();
+      cleared.add(rewardId);
+    }
+
+    if (cleared.isEmpty) return const <String>[];
+
+    final batch = _firestore.batch();
+    batch.set(_profileRef(uid), update, SetOptions(merge: true));
+    batch.set(_equippedRef(uid), update, SetOptions(merge: true));
+    batch.set(_summaryRef(uid), {
+      'lastCosmeticReconciliation': {
+        'version': 1,
+        'seasonId': seasonId,
+        'clearedRewardIds': cleared,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      },
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+    return cleared;
   }
 
   Future<void> reconcileCurrentUserRewardsAndProgress() async {
@@ -345,12 +428,16 @@ class ArcOperationsRepository {
     switch (item.type) {
       case ArcOperationRewardType.badge:
         update['equippedBadgeId'] = item.rewardId;
+        update['badgeId'] = item.rewardId;
       case ArcOperationRewardType.title:
         update['equippedTitleId'] = item.rewardId;
+        update['titleId'] = item.rewardId;
       case ArcOperationRewardType.profileFrame:
         update['equippedProfileFrameId'] = item.rewardId;
+        update['profileFrameId'] = item.rewardId;
       case ArcOperationRewardType.profileBanner:
         update['equippedProfileBannerId'] = item.rewardId;
+        update['profileBannerId'] = item.rewardId;
       case ArcOperationRewardType.intelXp:
       case ArcOperationRewardType.tradeSlot:
       case ArcOperationRewardType.matchmakingSlot:
@@ -369,6 +456,12 @@ class ArcOperationsRepository {
       return value.trim();
     }
     return ArcSeasonResetPolicy.defaultCurrentSeasonId;
+  }
+
+  String? _string(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 
   CollectionReference<Map<String, dynamic>> _telemetryRef(String uid) =>
@@ -642,4 +735,14 @@ class ArcOperationsRepository {
     }
     return const <String, dynamic>{};
   }
+}
+
+class _EquippedCosmeticCheck {
+  const _EquippedCosmeticCheck({
+    required this.field,
+    required this.mirrorField,
+  });
+
+  final String field;
+  final String mirrorField;
 }

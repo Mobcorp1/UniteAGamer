@@ -164,6 +164,9 @@ class ArcOperationTask {
   }
 
   bool get isComplete => progress >= target;
+  bool get resetsWithSeason => cadence != ArcOperationCadence.lifetime;
+  bool get repeatableBySeason => resetsWithSeason;
+  bool get permanentProgress => cadence == ArcOperationCadence.lifetime;
 
   ArcOperationTask copyWith({int? progress}) {
     return ArcOperationTask(
@@ -189,6 +192,7 @@ class ArcOperationProgress {
     this.progress = 0,
     this.target = 1,
     this.claimed = false,
+    this.seasonId,
     this.updatedAt,
     this.claimedAt,
   });
@@ -197,6 +201,7 @@ class ArcOperationProgress {
   final int progress;
   final int target;
   final bool claimed;
+  final String? seasonId;
   final DateTime? updatedAt;
   final DateTime? claimedAt;
 
@@ -216,6 +221,7 @@ class ArcOperationProgress {
       'progress': progress,
       'target': target,
       'claimed': claimed,
+      'seasonId': seasonId,
       'updatedAt': updatedAt?.toIso8601String(),
       'claimedAt': claimedAt?.toIso8601String(),
     };
@@ -227,9 +233,17 @@ class ArcOperationProgress {
       progress: (map['progress'] as num?)?.toInt() ?? 0,
       target: (map['target'] as num?)?.toInt() ?? 1,
       claimed: map['claimed'] == true,
+      seasonId: _stringField(map, 'seasonId'),
       updatedAt: DateTime.tryParse((map['updatedAt'] ?? '').toString()),
       claimedAt: DateTime.tryParse((map['claimedAt'] ?? '').toString()),
     );
+  }
+
+  static String? _stringField(Map<String, dynamic> map, String key) {
+    final value = map[key];
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 }
 

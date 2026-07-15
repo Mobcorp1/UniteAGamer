@@ -476,6 +476,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             bannerCount: bannerCount,
           ),
           const SizedBox(height: 10),
+          _buildSeasonalRewardSections(userState),
+          const SizedBox(height: 10),
           _buildRecentUnlockPanel(userState),
           const SizedBox(height: 10),
           _buildBadgeInventoryGrid(userState),
@@ -498,6 +500,152 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSeasonalRewardSections(ArcOperationsUserState userState) {
+    final currentSeason = userState.inventory
+        .where((item) => item.currentSeasonUnlock)
+        .toList(growable: false);
+    final permanent = userState.inventory
+        .where((item) => !item.currentSeasonUnlock && item.permanent)
+        .toList(growable: false);
+    final previous = userState.inventory
+        .where((item) => !item.currentSeasonUnlock && !item.permanent)
+        .toList(growable: false);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 780;
+        final sections = [
+          _seasonalVaultSection(
+            title: 'CURRENT SEASON',
+            subtitle: 'Unlocked this season or still active for this season.',
+            items: currentSeason,
+            emptyText: 'No current-season rewards unlocked yet.',
+            accent: AppTheme.neonCyan,
+          ),
+          _seasonalVaultSection(
+            title: 'PREVIOUS SEASONS',
+            subtitle: 'Historical earned rewards retained after reset.',
+            items: previous,
+            emptyText: 'No previous-season-only rewards archived yet.',
+            accent: AppTheme.neonPink,
+          ),
+          _seasonalVaultSection(
+            title: 'PERMANENT',
+            subtitle: 'Permanent cosmetics and honours that survive seasons.',
+            items: permanent,
+            emptyText:
+                'Permanent rewards will appear here after they are archived from a season.',
+            accent: Colors.amberAccent,
+          ),
+        ];
+
+        if (compact) {
+          return Column(children: _withVerticalSpacing(sections, spacing: 8));
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final section in sections)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: section,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _seasonalVaultSection({
+    required String title,
+    required String subtitle,
+    required List<ArcRewardInventoryItem> items,
+    required String emptyText,
+    required Color accent,
+  }) {
+    final preview = items.take(4).toList(growable: false);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: accent.withValues(alpha: 0.22),
+        backgroundColor: Colors.black.withValues(alpha: 0.18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(fontSize: 14, color: accent),
+                ),
+              ),
+              _tinyVaultChip('${items.length}', accent),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white60),
+          ),
+          const SizedBox(height: 8),
+          if (preview.isEmpty)
+            Text(
+              emptyText,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 11,
+                color: Colors.white54,
+              ),
+            )
+          else
+            Column(
+              children: [
+                for (final item in preview)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _rewardTypeIcon(item.type),
+                          color: accent,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 11,
+                              color: Colors.white,
+                              isBold: true,
+                            ),
+                          ),
+                        ),
+                        if (!item.equipableAfterSeason && !item.permanent)
+                          _tinyVaultChip('HISTORICAL', Colors.orangeAccent),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
         ],
       ),
     );
@@ -3301,6 +3449,20 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
       ),
     );
   }
+}
+
+IconData _rewardTypeIcon(ArcOperationRewardType type) {
+  return switch (type) {
+    ArcOperationRewardType.badge => Icons.military_tech_rounded,
+    ArcOperationRewardType.title => Icons.title_rounded,
+    ArcOperationRewardType.profileFrame => Icons.crop_square_rounded,
+    ArcOperationRewardType.profileBanner => Icons.view_day_rounded,
+    ArcOperationRewardType.tradeSlot => Icons.swap_horiz_rounded,
+    ArcOperationRewardType.matchmakingSlot => Icons.groups_rounded,
+    ArcOperationRewardType.premiumTrial => Icons.workspace_premium_rounded,
+    ArcOperationRewardType.operationCredit => Icons.toll_rounded,
+    ArcOperationRewardType.intelXp => Icons.psychology_rounded,
+  };
 }
 
 class _OperationTaskCard extends StatelessWidget {
