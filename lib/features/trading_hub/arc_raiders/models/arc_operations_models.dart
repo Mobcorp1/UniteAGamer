@@ -242,6 +242,12 @@ class ArcRewardInventoryItem {
     this.rarity = ArcCosmeticRarity.common,
     this.betaExclusive = false,
     this.unlockedAt,
+    this.sourceSeasonId,
+    this.sourceOperationId,
+    this.permanent = true,
+    this.historicalVisible = true,
+    this.equipableAfterSeason = true,
+    this.currentSeasonUnlock = true,
   });
 
   final String rewardId;
@@ -251,6 +257,12 @@ class ArcRewardInventoryItem {
   final ArcCosmeticRarity rarity;
   final bool betaExclusive;
   final DateTime? unlockedAt;
+  final String? sourceSeasonId;
+  final String? sourceOperationId;
+  final bool permanent;
+  final bool historicalVisible;
+  final bool equipableAfterSeason;
+  final bool currentSeasonUnlock;
 
   ArcCosmeticType? get cosmeticType => switch (type) {
     ArcOperationRewardType.badge => ArcCosmeticType.badge,
@@ -276,10 +288,24 @@ class ArcRewardInventoryItem {
       'rarity': rarity.name,
       'betaExclusive': betaExclusive,
       'unlockedAt': unlockedAt?.toIso8601String(),
+      'sourceSeasonId': sourceSeasonId,
+      'sourceOperationId': sourceOperationId,
+      'permanent': permanent,
+      'historicalVisible': historicalVisible,
+      'equipableAfterSeason': equipableAfterSeason,
+      'currentSeasonUnlock': currentSeasonUnlock,
     };
   }
 
-  factory ArcRewardInventoryItem.fromReward(ArcOperationReward reward) {
+  factory ArcRewardInventoryItem.fromReward(
+    ArcOperationReward reward, {
+    String? sourceSeasonId,
+    String? sourceOperationId,
+    bool permanent = true,
+    bool historicalVisible = true,
+    bool equipableAfterSeason = true,
+    bool currentSeasonUnlock = true,
+  }) {
     return ArcRewardInventoryItem(
       rewardId: reward.id,
       label: reward.label,
@@ -288,6 +314,12 @@ class ArcRewardInventoryItem {
       rarity: reward.rarity,
       betaExclusive: reward.betaExclusive,
       unlockedAt: DateTime.now(),
+      sourceSeasonId: sourceSeasonId,
+      sourceOperationId: sourceOperationId,
+      permanent: permanent,
+      historicalVisible: historicalVisible,
+      equipableAfterSeason: equipableAfterSeason,
+      currentSeasonUnlock: currentSeasonUnlock,
     );
   }
 
@@ -306,7 +338,20 @@ class ArcRewardInventoryItem {
       ),
       betaExclusive: map['betaExclusive'] == true,
       unlockedAt: DateTime.tryParse((map['unlockedAt'] ?? '').toString()),
+      sourceSeasonId: _stringField(map, 'sourceSeasonId'),
+      sourceOperationId: _stringField(map, 'sourceOperationId'),
+      permanent: map['permanent'] != false,
+      historicalVisible: map['historicalVisible'] != false,
+      equipableAfterSeason: map['equipableAfterSeason'] != false,
+      currentSeasonUnlock: map['currentSeasonUnlock'] != false,
     );
+  }
+
+  static String? _stringField(Map<String, dynamic> map, String key) {
+    final value = map[key];
+    if (value == null) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 }
 

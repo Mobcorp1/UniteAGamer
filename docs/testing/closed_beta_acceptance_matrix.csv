@@ -1,0 +1,27 @@
+journey,step,expected_result,automated_test,manual_test_required,severity,status
+Existing progressed user,Login with existing account,Profile identity legal consent reputation rewards and historical state remain visible,Profile completion and reward eligibility tests,Yes,P0,partial
+Existing progressed user,Open Command Centre,First screen shows useful current priorities without stale completed setup cards,Command Centre engine tests,Yes,P1,partial
+Existing progressed user,Open Scrappy tracker,Existing current-season tracker docs load without forced reset,None,Yes,P1,partial
+Existing progressed user,Open quest tracker,Existing tracked quest items load and do not duplicate active cards,None,Yes,P1,partial
+Existing progressed user,Open bench tracker,Existing tracked bench items load and card density remains compact,None,Yes,P1,partial
+Existing progressed user,Open Reward Vault,Owned rewards and equipped cosmetics load from persisted inventory/equipped state,Season metadata tests,Yes,P1,partial
+Existing progressed user,Open Admin Console as admin,Closed Beta Diagnostics shows season reset status tracker Operations rewards and equipped cosmetic counts,None,Yes,P1,implemented
+Fresh user,Create account and complete legal consent,Legal accepted state persists and profile completion no longer reports legal missing,Onboarding legal tests,Yes,P0,partial
+Fresh user,Complete onboarding profile and availability,Profile completion is stored and Command Centre personalises from durable state,Profile completion tests,Yes,P0,partial
+Fresh user,Save first Favourite Loadout,Loadout telemetry records once and Command Centre/loadout summary updates,Existing loadout tests,Yes,P1,partial
+Fresh user,Mark first blueprint owned,Blueprint tracker updates through existing ownership logic and Command Centre blueprint summary changes,Blueprint state tests,Yes,P1,partial
+Fresh user,Submit beta feedback,Feedback persists and admin inbox can action it,Feedback tests,Yes,P2,implemented
+Fresh user,Claim eligible Operation reward,Reward inventory item is written once with season metadata,Season metadata tests,Yes,P1,partial
+Reset user,Create reset preview with current tracker state,Preview lists preserved reset recalculated and manual reconfirm groups with counts,Season model tests,Yes,P0,implemented coordinator only
+Reset user,Cancel before confirmation,No tracker reward profile or season state changes occur,None,Yes,P0,deferred UI
+Reset user,Confirm reset through canonical coordinator,Known Scrappy quest and bench tracker docs archive to season history and delete current-season docs,None,Yes,P0,partial
+Reset user,Reload after reset,Season state points to next season and Command Centre recalculates from fresh tracker state,None,Yes,P0,partial
+Reset user,Open Reward Vault after reset,Historical rewards remain visible and permanent rewards remain equipable,None,Yes,P1,deferred UI
+Reset user,Progress first quest after reset,New current-season tracker state persists and stale previous-season card does not appear,None,Yes,P1,partial
+Reset user,Progress Scrappy after reset,New current-season Scrappy state persists and prior state is only in season history,None,Yes,P1,partial
+Reset user,Progress bench after reset,New current-season bench state persists and prior state is only in season history,None,Yes,P1,partial
+Failure recovery,Close app after reset status becomes inProgress,Restart invokes interrupted-reset reconciliation at startup,None,Yes,P0,partial
+Failure recovery,Retry same reset ID,Coordinator returns already-applied result instead of applying duplicate reset,Season model tests cover state shape only,Yes,P0,partial
+Failure recovery,Simulate failed persistence during reset,Season state records failed status and app does not crash,None,Yes,P0,partial
+Failure recovery,Re-run startup reconciliation,Eligible rewards are repaired without duplicate grants,Reward eligibility tests,Yes,P1,partial
+Failure recovery,Verify Firestore rules with owner and non-owner accounts,Owner can read/write own progression and cannot target another user,None,Yes,P0,requires rules deploy/test

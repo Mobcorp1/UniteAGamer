@@ -95,7 +95,7 @@ class AdminConsoleScreen extends StatelessWidget {
           );
         }
 
-        return const _AdminConsoleBody();
+        return _AdminConsoleBody(uid: uid);
       },
     );
   }
@@ -185,7 +185,9 @@ const List<_AdminFeature> _featureToggles = [
 ];
 
 class _AdminConsoleBody extends StatelessWidget {
-  const _AdminConsoleBody();
+  const _AdminConsoleBody({required this.uid});
+
+  final String uid;
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +258,8 @@ class _AdminConsoleBody extends StatelessWidget {
                     ),
                     const SizedBox(height: AppTheme.spaceL),
                     const ArcBetaDeveloperToolsCard(),
+                    const SizedBox(height: AppTheme.spaceL),
+                    _ClosedBetaDiagnosticsCard(uid: uid),
                     const SizedBox(height: AppTheme.spaceXL),
                     Row(
                       children: [
@@ -440,6 +444,418 @@ class _AdminConsoleBody extends StatelessWidget {
       context,
     ).showSnackBar(const SnackBar(content: Text('Feedback deleted.')));
   }
+}
+
+class _ClosedBetaDiagnosticsCard extends StatelessWidget {
+  const _ClosedBetaDiagnosticsCard({required this.uid});
+
+  final String uid;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_ClosedBetaDiagnosticsData>(
+      future: _load(uid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            width: double.infinity,
+            padding: AppTheme.sectionCardPadding,
+            decoration: AppTheme.tradingCardDecoration(),
+            child: const LinearProgressIndicator(color: AppTheme.neonCyan),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _AdminConsoleBody._messageCard(
+            'Closed beta diagnostics could not be loaded.',
+            AppTheme.tradingDanger,
+          );
+        }
+
+        final data = snapshot.data;
+        if (data == null) {
+          return _AdminConsoleBody._messageCard(
+            'Closed beta diagnostics are unavailable.',
+            AppTheme.tradingDanger,
+          );
+        }
+
+        return Container(
+          width: double.infinity,
+          padding: AppTheme.sectionCardPadding,
+          decoration: AppTheme.tradingCardDecoration(
+            borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.monitor_heart_outlined,
+                    color: AppTheme.neonCyan,
+                  ),
+                  const SizedBox(width: AppTheme.spaceS),
+                  Expanded(
+                    child: Text(
+                      'Closed Beta Diagnostics',
+                      style: AppTheme.tradingHeading(fontSize: 22),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              Text(
+                'Read-only production checks for season, tracker, Operations and Reward Vault state.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 13,
+                  color: AppTheme.tradingMutedText,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Wrap(
+                spacing: AppTheme.spaceM,
+                runSpacing: AppTheme.spaceM,
+                children: [
+                  _diagnosticMetric('User', data.uid),
+                  _diagnosticMetric('Season', data.currentSeasonId),
+                  _diagnosticMetric('Reset', data.resetStatus),
+                  _diagnosticMetric('Version', data.resetVersion.toString()),
+                  _diagnosticMetric(
+                    'Onboarding',
+                    data.onboardingComplete ? 'Complete' : 'Incomplete',
+                  ),
+                  _diagnosticMetric(
+                    'Profile',
+                    data.profileComplete ? 'Complete' : 'Incomplete',
+                  ),
+                  _diagnosticMetric(
+                    'Legal',
+                    data.legalComplete ? 'Accepted' : 'Missing',
+                  ),
+                  _diagnosticMetric(
+                    'Tracker docs',
+                    data.trackerStateCount.toString(),
+                  ),
+                  _diagnosticMetric(
+                    'Operations',
+                    '${data.completedOperations}/${data.operationCount} done',
+                  ),
+                  _diagnosticMetric(
+                    'Claimed',
+                    data.claimedOperations.toString(),
+                  ),
+                  _diagnosticMetric('Rewards', data.ownedRewards.toString()),
+                  _diagnosticMetric(
+                    'Current rewards',
+                    data.currentSeasonRewards.toString(),
+                  ),
+                  _diagnosticMetric(
+                    'Historical',
+                    data.historicalRewards.toString(),
+                  ),
+                  _diagnosticMetric(
+                    'Equipped',
+                    data.equippedCosmeticCount.toString(),
+                  ),
+                  _diagnosticMetric(
+                    'Beta',
+                    data.betaEligible ? 'Eligible' : 'Not flagged',
+                  ),
+                  _diagnosticMetric(
+                    'Founder',
+                    data.founderEligible ? 'Eligible' : 'Not flagged',
+                  ),
+                ],
+              ),
+              if (data.missingProfileFields.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spaceM),
+                _diagnosticNote(
+                  'Missing profile fields',
+                  data.missingProfileFields.join(', '),
+                ),
+              ],
+              if (data.lastResetId.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spaceM),
+                _diagnosticNote('Last reset', data.lastResetId),
+              ],
+              if (data.lastReconciliation.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spaceM),
+                _diagnosticNote('Last reconciliation', data.lastReconciliation),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static Widget _diagnosticMetric(String label, String value) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 250),
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spaceM),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.16)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: AppTheme.bodyTextStyle(
+                fontSize: 11,
+                color: AppTheme.tradingMutedText,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ).copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _diagnosticNote(String label, String value) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: AppTheme.bodyTextStyle(
+            fontSize: 13,
+            color: AppTheme.tradingMutedText,
+          ),
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            TextSpan(text: value),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Future<_ClosedBetaDiagnosticsData> _load(String uid) async {
+    final firestore = FirebaseFirestore.instance;
+    final userRef = firestore.collection('users').doc(uid);
+    final profileRef = userRef.collection('trading_activity').doc('profile');
+    final seasonRef = userRef.collection('arc_season_state').doc('current');
+    final trackerRef = userRef.collection('arc_scrappy_states');
+    final operationSummaryRef = firestore
+        .collection('arc_operation_progress')
+        .doc(uid);
+    final operationsRef = operationSummaryRef.collection('operations');
+    final rewardRef = firestore
+        .collection('arc_rewards_inventory')
+        .doc(uid)
+        .collection('items');
+    final equippedRef = firestore.collection('arc_equipped_cosmetics').doc(uid);
+    final telemetryRef = firestore
+        .collection('arc_operation_telemetry')
+        .doc(uid);
+
+    final userData = (await userRef.get()).data() ?? const <String, dynamic>{};
+    final profileData =
+        (await profileRef.get()).data() ?? const <String, dynamic>{};
+    final seasonData =
+        (await seasonRef.get()).data() ?? const <String, dynamic>{};
+    final trackerDocs = (await trackerRef.get()).docs;
+    final operationSummary =
+        (await operationSummaryRef.get()).data() ?? const <String, dynamic>{};
+    final operationDocs = (await operationsRef.get()).docs;
+    final rewardDocs = (await rewardRef.get()).docs;
+    final equippedData =
+        (await equippedRef.get()).data() ?? const <String, dynamic>{};
+    final telemetryData =
+        (await telemetryRef.get()).data() ?? const <String, dynamic>{};
+
+    final profileCompletion = _map(
+      profileData['profileCompletion'],
+      _map(userData['profileCompletion']),
+    );
+    final arcOnboarding = _map(userData['arcOnboarding']);
+    final legalAccepted = _map(userData['legalAccepted']);
+    final missingProfileFields = _stringList(
+      profileCompletion['missingFieldLabels'],
+    );
+
+    final completedOperations = operationDocs.where((doc) {
+      final data = doc.data();
+      final progress = (data['progress'] as num?)?.toInt() ?? 0;
+      final target = (data['target'] as num?)?.toInt() ?? 1;
+      return target > 0 && progress >= target;
+    }).length;
+    final claimedOperations = operationDocs
+        .where((doc) => doc.data()['claimed'] == true)
+        .length;
+    final equippedCosmeticCount = <String>[
+      _string(equippedData['equippedBadgeId']),
+      _string(equippedData['equippedTitleId']),
+      _string(equippedData['equippedProfileFrameId']),
+      _string(equippedData['equippedProfileBannerId']),
+      _string(profileData['equippedBadgeId']),
+      _string(profileData['equippedTitleId']),
+      _string(profileData['equippedProfileFrameId']),
+      _string(profileData['equippedProfileBannerId']),
+    ].where((value) => value.isNotEmpty).toSet().length;
+
+    return _ClosedBetaDiagnosticsData(
+      uid: uid,
+      currentSeasonId: _string(seasonData['currentSeasonId']).isNotEmpty
+          ? _string(seasonData['currentSeasonId'])
+          : 'closed-beta-season-1',
+      resetStatus: _string(seasonData['resetStatus']).isNotEmpty
+          ? _string(seasonData['resetStatus'])
+          : 'idle',
+      resetVersion: (seasonData['resetVersion'] as num?)?.toInt() ?? 0,
+      lastResetId: _string(seasonData['lastResetId']),
+      lastReconciliation: _formatReconciliation(
+        operationSummary['lastRewardReconciliation'],
+      ),
+      onboardingComplete:
+          arcOnboarding['completed'] == true ||
+          arcOnboarding['completedAt'] != null,
+      profileComplete:
+          profileCompletion['complete'] == true ||
+          profileData['isProfileComplete'] == true,
+      legalComplete:
+          legalAccepted['termsAccepted'] == true &&
+          legalAccepted['privacyAccepted'] == true,
+      trackerStateCount: trackerDocs.length,
+      operationCount: operationDocs.length,
+      completedOperations: completedOperations,
+      claimedOperations: claimedOperations,
+      ownedRewards: rewardDocs.length,
+      currentSeasonRewards: rewardDocs
+          .where((doc) => doc.data()['currentSeasonUnlock'] != false)
+          .length,
+      historicalRewards: rewardDocs
+          .where((doc) => doc.data()['currentSeasonUnlock'] == false)
+          .length,
+      equippedCosmeticCount: equippedCosmeticCount,
+      betaEligible:
+          _truthy(userData['closedBetaParticipant']) ||
+          _truthy(userData['betaParticipant']) ||
+          _truthy(telemetryData['closedBetaParticipant']),
+      founderEligible:
+          _truthy(userData['founder']) ||
+          _truthy(userData['founderEligible']) ||
+          _truthy(userData['earlySupporter']),
+      missingProfileFields: missingProfileFields,
+    );
+  }
+
+  static Map<String, dynamic> _map(dynamic value, [dynamic fallback]) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map((key, value) => MapEntry(key.toString(), value));
+    }
+    if (fallback != null) return _map(fallback);
+    return const <String, dynamic>{};
+  }
+
+  static List<String> _stringList(dynamic value) {
+    if (value is! Iterable) return const <String>[];
+    return value.map(_string).where((item) => item.isNotEmpty).toList();
+  }
+
+  static String _string(dynamic value) {
+    if (value == null) return '';
+    return value.toString().trim();
+  }
+
+  static bool _truthy(dynamic value) {
+    if (value == true) return true;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'true' || normalized == 'yes';
+    }
+    return false;
+  }
+
+  static String _formatReconciliation(dynamic value) {
+    final map = _map(value);
+    if (map.isEmpty) return '';
+    final version = _string(map['version']);
+    final granted = _stringList(map['grantedRewardIds']).length;
+    final owned = _stringList(map['alreadyOwnedRewardIds']).length;
+    final updatedAt = _string(map['updatedAt']);
+    final parts = <String>[
+      if (version.isNotEmpty) 'v$version',
+      '$granted granted',
+      '$owned already owned',
+      if (updatedAt.isNotEmpty) updatedAt,
+    ];
+    return parts.join(' - ');
+  }
+}
+
+class _ClosedBetaDiagnosticsData {
+  const _ClosedBetaDiagnosticsData({
+    required this.uid,
+    required this.currentSeasonId,
+    required this.resetStatus,
+    required this.resetVersion,
+    required this.lastResetId,
+    required this.lastReconciliation,
+    required this.onboardingComplete,
+    required this.profileComplete,
+    required this.legalComplete,
+    required this.trackerStateCount,
+    required this.operationCount,
+    required this.completedOperations,
+    required this.claimedOperations,
+    required this.ownedRewards,
+    required this.currentSeasonRewards,
+    required this.historicalRewards,
+    required this.equippedCosmeticCount,
+    required this.betaEligible,
+    required this.founderEligible,
+    required this.missingProfileFields,
+  });
+
+  final String uid;
+  final String currentSeasonId;
+  final String resetStatus;
+  final int resetVersion;
+  final String lastResetId;
+  final String lastReconciliation;
+  final bool onboardingComplete;
+  final bool profileComplete;
+  final bool legalComplete;
+  final int trackerStateCount;
+  final int operationCount;
+  final int completedOperations;
+  final int claimedOperations;
+  final int ownedRewards;
+  final int currentSeasonRewards;
+  final int historicalRewards;
+  final int equippedCosmeticCount;
+  final bool betaEligible;
+  final bool founderEligible;
+  final List<String> missingProfileFields;
 }
 
 class _FeatureToggleCard extends StatelessWidget {

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_reward_eligibility.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
 
 class ArcOperationsRepository {
   ArcOperationsRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -36,6 +37,9 @@ class ArcOperationsRepository {
 
   DocumentReference<Map<String, dynamic>> _userRef(String uid) =>
       _firestore.collection('users').doc(uid);
+
+  DocumentReference<Map<String, dynamic>> _seasonRef(String uid) =>
+      _userRef(uid).collection('arc_season_state').doc('current');
 
   DocumentReference<Map<String, dynamic>> _equippedRef(String uid) =>
       _firestore.collection('arc_equipped_cosmetics').doc(uid);
@@ -139,6 +143,7 @@ class ArcOperationsRepository {
     final uid = _uid;
     if (uid == null) return;
 
+    final seasonId = await _currentSeasonId(uid);
     final ref = _progressRef(uid).doc(task.id);
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
@@ -147,6 +152,7 @@ class ArcOperationsRepository {
       final next = (current + amount).clamp(0, task.target);
       transaction.set(ref, {
         'operationId': task.id,
+        'seasonId': seasonId,
         'progress': next,
         'target': task.target,
         'claimed': existing['claimed'] == true,
@@ -159,6 +165,7 @@ class ArcOperationsRepository {
     final uid = _uid;
     if (uid == null) return;
 
+    final seasonId = await _currentSeasonId(uid);
     final progressRef = _progressRef(uid).doc(task.id);
     final summaryRef = _summaryRef(uid);
     final profileRef = _profileRef(uid);
@@ -192,7 +199,11 @@ class ArcOperationsRepository {
           case ArcOperationRewardType.title:
           case ArcOperationRewardType.profileFrame:
           case ArcOperationRewardType.profileBanner:
-            final item = ArcRewardInventoryItem.fromReward(reward);
+            final item = ArcRewardInventoryItem.fromReward(
+              reward,
+              sourceSeasonId: seasonId,
+              sourceOperationId: task.id,
+            );
             firstCosmetic ??= item;
             transaction.set(_inventoryRef(uid).doc(reward.id), item.toMap());
           case ArcOperationRewardType.premiumTrial:
@@ -217,6 +228,7 @@ class ArcOperationsRepository {
 
       transaction.set(progressRef, {
         'operationId': task.id,
+        'seasonId': seasonId,
         'progress': progress,
         'target': task.target,
         'claimed': true,
@@ -240,6 +252,7 @@ class ArcOperationsRepository {
     final uid = _uid;
     if (uid == null) return;
 
+    final seasonId = await _currentSeasonId(uid);
     final userSnapshot = await _userRef(uid).get();
     final profileSnapshot = await _profileRef(uid).get();
     final telemetrySnapshot = await _telemetrySummaryRef(uid).get();
@@ -293,7 +306,11 @@ class ArcOperationsRepository {
           continue;
         }
 
-        final item = ArcRewardInventoryItem.fromReward(reward);
+        final item = ArcRewardInventoryItem.fromReward(
+          reward,
+          sourceSeasonId: seasonId,
+          sourceOperationId: 'eligibility_reconciliation',
+        );
         transaction.set(_inventoryRef(uid).doc(rewardId), {
           ...item.toMap(),
           'grantSource': 'eligibility_reconciliation',
@@ -311,6 +328,7 @@ class ArcOperationsRepository {
           'grantedRewardIds': grantedRewardIds,
           'alreadyOwnedRewardIds': alreadyOwnedRewardIds,
           'skippedRewardIds': skippedRewardIds,
+          'seasonId': seasonId,
           'updatedAt': now,
         },
         'updatedAt': now,
@@ -344,6 +362,15 @@ class ArcOperationsRepository {
     return update;
   }
 
+  Future<String> _currentSeasonId(String uid) async {
+    final snapshot = await _seasonRef(uid).get();
+    final value = snapshot.data()?['currentSeasonId'];
+    if (value is String && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+    return ArcSeasonResetPolicy.defaultCurrentSeasonId;
+  }
+
   CollectionReference<Map<String, dynamic>> _telemetryRef(String uid) =>
       _firestore
           .collection('arc_operation_telemetry')
@@ -363,6 +390,7 @@ class ArcOperationsRepository {
     final uid = _uid;
     if (uid == null) return;
 
+    final seasonId = await _currentSeasonId(uid);
     final safeAmount = amount <= 0 ? 1 : amount;
     final event = ArcOperationTelemetryEvent(
       type: type,
@@ -381,9 +409,14 @@ class ArcOperationsRepository {
 
     final batch = _firestore.batch();
     final now = DateTime.now().toIso8601String();
-    batch.set(eventRef, {...event.toMap(), 'idempotencyKey': idempotencyKey});
+    batch.set(eventRef, {
+      ...event.toMap(),
+      'seasonId': seasonId,
+      'idempotencyKey': idempotencyKey,
+    });
     batch.set(_telemetrySummaryRef(uid), {
       _summaryFieldForTelemetry(type): FieldValue.increment(safeAmount),
+      'currentSeasonId': seasonId,
       'lastEventName': event.eventName,
       'lastEventAt': now,
       'updatedAt': now,
@@ -397,6 +430,7 @@ class ArcOperationsRepository {
       final next = (current + safeAmount).clamp(0, task.target).toInt();
       batch.set(ref, {
         'operationId': task.id,
+        'seasonId': seasonId,
         'progress': next,
         'target': task.target,
         'claimed': existing['claimed'] == true,

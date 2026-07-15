@@ -133,6 +133,19 @@ service cloud.firestore {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
 
+      match /arc_scrappy_states/{docId} {
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+      }
+
+      match /arc_season_state/{docId} {
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+      }
+
+      match /arc_season_history/{docId} {
+        allow read, create, update: if isOwner(userId) || isAdminOrDev();
+        allow delete: if isAdminOrDev();
+      }
+
       match /trading_activity/{docId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
@@ -368,6 +381,40 @@ service cloud.firestore {
     allow delete: if isAdminOrDev();
   }
 }
+    match /arc_operation_progress/{userId} {
+      allow read, create, update: if isOwner(userId) || isAdminOrDev();
+      allow delete: if isAdminOrDev();
+
+      match /operations/{operationId} {
+        allow read, create, update: if isOwner(userId) || isAdminOrDev();
+        allow delete: if isAdminOrDev();
+      }
+    }
+
+    match /arc_operation_telemetry/{userId} {
+      allow read, create, update: if isOwner(userId) || isAdminOrDev();
+      allow delete: if isAdminOrDev();
+
+      match /events/{eventId} {
+        allow read, create, update: if isOwner(userId) || isAdminOrDev();
+        allow delete: if isAdminOrDev();
+      }
+    }
+
+    match /arc_rewards_inventory/{userId} {
+      allow read, create, update: if isOwner(userId) || isAdminOrDev();
+      allow delete: if isAdminOrDev();
+
+      match /items/{rewardId} {
+        allow read, create, update: if isOwner(userId) || isAdminOrDev();
+        allow delete: if isAdminOrDev();
+      }
+    }
+
+    match /arc_equipped_cosmetics/{userId} {
+      allow read, create, update: if isOwner(userId) || isAdminOrDev();
+      allow delete: if isAdminOrDev();
+    }
  match /config/{docId} {
       allow read: if isSignedIn();
       allow create, update: if isAdminOrDev();
