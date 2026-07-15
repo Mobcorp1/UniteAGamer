@@ -39,7 +39,7 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
     'Trading Activity',
     'Trade Sessions',
     'Alerts',
-    'Trader Profile',
+    'Your Hub Profile',
   ];
 
   static const List<String> _subtitles = <String>[

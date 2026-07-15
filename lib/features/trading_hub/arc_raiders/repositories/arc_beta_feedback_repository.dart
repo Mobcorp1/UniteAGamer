@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/arc_beta_feedback.dart';
+import 'arc_operations_repository.dart';
 
 class ArcBetaFeedbackRepository {
   ArcBetaFeedbackRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -28,6 +29,10 @@ class ArcBetaFeedbackRepository {
 
     final document = _firestore.collection('beta_feedback').doc();
     await document.set({'id': document.id, ...submission.toFirestore()});
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordFeedbackSubmitted();
     return document.id;
   }
 }

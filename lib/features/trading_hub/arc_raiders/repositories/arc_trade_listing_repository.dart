@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/arc_trade_listing.dart';
+import 'arc_operations_repository.dart';
 
 class ArcTradeListingRepository {
   ArcTradeListingRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -67,16 +68,18 @@ class ArcTradeListingRepository {
         : _collection.doc(listing.id);
     final now = DateTime.now();
 
-    await doc.set(
-      listing
-          .copyWith(
-            id: doc.id,
-            userId: _auth.currentUser?.uid ?? listing.userId,
-            createdAt: now,
-            updatedAt: now,
-          )
-          .toMap(),
+    final saved = listing.copyWith(
+      id: doc.id,
+      userId: _auth.currentUser?.uid ?? listing.userId,
+      createdAt: now,
+      updatedAt: now,
     );
+
+    await doc.set(saved.toMap());
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordListingCreated(listingId: saved.id);
   }
 
   Future<void> closeListing(String listingId) async {

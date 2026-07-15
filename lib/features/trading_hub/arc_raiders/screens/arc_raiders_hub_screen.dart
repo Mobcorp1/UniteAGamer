@@ -51,7 +51,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     ),
     _ArcHubFeature(
       title: 'Profile & Reputation',
-      subtitle: 'Edit your trader profile, trust signals and raider identity.',
+      subtitle: 'Edit Your Hub Profile, trust signals and raider identity.',
       icon: Icons.verified_user_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.intel,

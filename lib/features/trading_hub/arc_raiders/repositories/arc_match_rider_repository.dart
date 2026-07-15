@@ -8,6 +8,7 @@ import '../models/arc_favourite_rider.dart';
 import '../models/arc_match_objective_signals.dart';
 import '../models/arc_match_rider_invite.dart';
 import '../models/arc_match_rider_profile.dart';
+import 'arc_operations_repository.dart';
 
 class ArcMatchCandidate {
   const ArcMatchCandidate({
@@ -379,6 +380,13 @@ class ArcMatchRiderRepository {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    if (newStatus == 'accepted') {
+      await ArcOperationsRepository(
+        firestore: _firestore,
+        auth: _auth,
+      ).recordMatchmakingCompleted(matchId: invite.id);
+    }
   }
 
   List<String> _readStringList(

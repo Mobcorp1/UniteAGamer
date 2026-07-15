@@ -166,7 +166,7 @@ class _AppDrawerState extends State<AppDrawer>
       ),
       if (isLoggedIn)
         _DrawerItem(
-          'Trader Profile',
+          'Your Hub Profile',
           Icons.person_pin_circle_outlined,
           TradingProfileScreen.routeName,
           accessFlag: FeatureAccessFlag.traderHub,

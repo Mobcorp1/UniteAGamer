@@ -104,7 +104,7 @@ class _ArcCreateTradeListingScreenState
                 if (profile == null)
                   const Padding(
                     padding: EdgeInsets.only(bottom: 16),
-                    child: Text('Load or complete your trader profile first.'),
+                    child: Text('Load or complete Your Hub Profile first.'),
                   )
                 else
                   Padding(

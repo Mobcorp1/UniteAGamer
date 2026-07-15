@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 
+import 'arc_operations_repository.dart';
+
 class ArcSavedLoadoutRepository {
   ArcSavedLoadoutRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
     : _firestore = firestore ?? FirebaseFirestore.instance,
@@ -71,6 +73,10 @@ class ArcSavedLoadoutRepository {
     await collection
         .doc(loadout.id)
         .set(loadout.toMap(), SetOptions(merge: true));
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordFavouriteLoadoutSaved();
   }
 
   Future<void> deleteLoadout(String id) async {

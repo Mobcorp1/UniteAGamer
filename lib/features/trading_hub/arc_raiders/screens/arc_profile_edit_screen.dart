@@ -489,7 +489,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(
-        title: const Text('Edit Trader Profile'),
+        title: const Text('Edit Your Hub Profile'),
         backgroundColor: AppTheme.darkBackground,
       ),
       body: SafeArea(

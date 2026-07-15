@@ -198,7 +198,7 @@ class ArcOperationsSeedData {
       category: ArcOperationCategory.loadout,
       target: 1,
       progress: 0,
-      rewards: [rewards['founding_raider']!, rewards['xp_10']!],
+      rewards: [rewards['xp_10']!],
       accent: AppTheme.neonPink,
       betaExclusive: true,
     ),

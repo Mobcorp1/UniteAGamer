@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
+import '../data/arc_profile_completion_evaluator.dart';
 import '../models/arc_operations_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_operations_repository.dart';
@@ -28,6 +29,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
   final ArcTraderProfileRepository _repository = ArcTraderProfileRepository();
   final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
+  late final Stream<ArcProfileCompletionResult> _profileCompletionStream =
+      _repository.watchProfileCompletion();
 
   bool _isInitialising = true;
   String? _initError;
@@ -111,7 +114,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         backgroundColor: AppTheme.darkBackground,
         appBar: widget.showAppBar
             ? const UagAppBar(
-                title: 'Trader Profile',
+                title: 'Your Hub Profile',
                 subtitle:
                     'Identity, reputation, availability and match readiness.',
               )
@@ -156,7 +159,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       backgroundColor: AppTheme.darkBackground,
       appBar: widget.showAppBar
           ? const UagAppBar(
-              title: 'Trader Profile',
+              title: 'Your Hub Profile',
               subtitle:
                   'Identity, reputation, availability and match readiness.',
             )
@@ -187,7 +190,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Could not load trader profile data: ${snapshot.error}',
+                        'Could not load Your Hub Profile data: ${snapshot.error}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Colors.white70),
                       ),
@@ -212,36 +215,46 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               );
             }
 
-            return StreamBuilder<ArcOperationsUserState>(
-              stream: _operationsRepository.watchUserState(),
-              builder: (context, operationsSnapshot) {
-                final operationsState =
-                    operationsSnapshot.data ?? ArcOperationsUserState.empty;
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final contentWidth = constraints.maxWidth > 1440
-                        ? 1360.0
-                        : constraints.maxWidth;
-                    return ListView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppTheme.spaceM,
-                        AppTheme.spaceS,
-                        AppTheme.spaceM,
-                        AppTheme.spaceL,
-                      ),
-                      children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: SizedBox(
-                            width: contentWidth,
-                            child: _profileDashboard(
-                              profile,
-                              operationsState,
-                              constraints.maxWidth,
-                            ),
+            return StreamBuilder<ArcProfileCompletionResult>(
+              stream: _profileCompletionStream,
+              initialData: ArcProfileCompletionResult.completeResult,
+              builder: (context, completionSnapshot) {
+                final profileCompletion =
+                    completionSnapshot.data ??
+                    ArcProfileCompletionResult.completeResult;
+                return StreamBuilder<ArcOperationsUserState>(
+                  stream: _operationsRepository.watchUserState(),
+                  builder: (context, operationsSnapshot) {
+                    final operationsState =
+                        operationsSnapshot.data ?? ArcOperationsUserState.empty;
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final contentWidth = constraints.maxWidth > 1440
+                            ? 1360.0
+                            : constraints.maxWidth;
+                        return ListView(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppTheme.spaceM,
+                            AppTheme.spaceS,
+                            AppTheme.spaceM,
+                            AppTheme.spaceL,
                           ),
-                        ),
-                      ],
+                          children: [
+                            Align(
+                              alignment: Alignment.topCenter,
+                              child: SizedBox(
+                                width: contentWidth,
+                                child: _profileDashboard(
+                                  profile,
+                                  operationsState,
+                                  constraints.maxWidth,
+                                  profileCompletion,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                 );
@@ -257,6 +270,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     ArcTraderProfile profile,
     ArcOperationsUserState operationsState,
     double viewportWidth,
+    ArcProfileCompletionResult profileCompletion,
   ) {
     final isWide = viewportWidth >= 1040;
     final gap = isWide ? AppTheme.spaceM : AppTheme.spaceS;
@@ -266,7 +280,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       children: [
         _profileCommandHero(profile, operationsState),
         SizedBox(height: gap),
-        _identityProgressPanel(profile),
+        _identityProgressPanel(profile, profileCompletion),
         SizedBox(height: gap),
         _raiderIdentityPanel(profile),
         SizedBox(height: gap),
@@ -316,20 +330,28 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     );
   }
 
-  Widget _identityProgressPanel(ArcTraderProfile profile) {
+  Widget _identityProgressPanel(
+    ArcTraderProfile profile,
+    ArcProfileCompletionResult profileCompletion,
+  ) {
+    final missing = profileCompletion.missingFieldIds.toSet();
     final sections = <({String label, bool complete})>[
       (label: 'Identity', complete: profile.hasCoreDetails),
-      (label: 'Archetypes', complete: profile.archetypes.isNotEmpty),
-      (label: 'Playstyle', complete: profile.playStyles.isNotEmpty),
+      (label: 'Embark ID', complete: !missing.contains('embarkId')),
+      (label: 'Archetypes', complete: !missing.contains('archetypes')),
       (
         label: 'Communication',
-        complete: profile.communicationStyle.trim().isNotEmpty,
+        complete: !missing.contains('communicationStyle'),
       ),
       (
         label: 'Session intent',
-        complete: profile.squadIntent.trim().isNotEmpty,
+        complete:
+            !missing.contains('squadIntent') &&
+            !missing.contains('socialSessionState'),
       ),
-      (label: 'Availability', complete: profile.timezone.trim().isNotEmpty),
+      (label: 'Availability', complete: !missing.contains('availability')),
+      (label: 'Onboarding', complete: !missing.contains('onboarding')),
+      (label: 'Legal', complete: !missing.contains('legal')),
     ];
     final completed = sections.where((section) => section.complete).length;
     final progress = completed / sections.length;

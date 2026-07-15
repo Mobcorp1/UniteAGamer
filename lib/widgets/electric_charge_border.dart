@@ -61,6 +61,23 @@ class _ElectricChargeBorderState extends State<ElectricChargeBorder>
       return child;
     }
 
+    final mediaQuery = MediaQuery.maybeOf(context);
+    final reduceMotion =
+        mediaQuery?.disableAnimations == true ||
+        mediaQuery?.accessibleNavigation == true;
+
+    if (reduceMotion) {
+      return RepaintBoundary(
+        child: CustomPaint(
+          foregroundPainter: _ElectricChargeBorderPainter(
+            progress: 0.84,
+            radius: widget.radius,
+          ),
+          child: child,
+        ),
+      );
+    }
+
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _controller,

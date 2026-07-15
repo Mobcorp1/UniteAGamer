@@ -346,7 +346,7 @@ class _TradingTradeSessionsScreenState
               ),
               const SizedBox(height: 10),
               Text(
-                'Loaded from your trader profile if saved there already.',
+                'Loaded from Your Hub Profile if saved there already.',
                 style: AppTheme.bodyTextStyle(
                   fontSize: 12,
                   color: AppTheme.tradingFaintText,

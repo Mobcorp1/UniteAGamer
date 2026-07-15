@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
+import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_adaptive_card_deck.dart';
@@ -71,7 +72,14 @@ class _OnboardingBasicProfileScreenState
   bool _acceptedTermsOfService = false;
   bool _acceptedDataSecurity = false;
   bool _adminPreviewMode = false;
-  late final PageController _stepController;
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _stepFocusNode = FocusNode(
+    debugLabel: 'ARC onboarding active step',
+  );
+  final List<GlobalKey> _stepKeys = List<GlobalKey>.generate(
+    6,
+    (_) => GlobalKey(),
+  );
   int _stepIndex = 0;
   bool _hasAppliedRouteArguments = false;
   bool _reachedRaiderLevel25 = false;
@@ -151,7 +159,6 @@ class _OnboardingBasicProfileScreenState
   @override
   void initState() {
     super.initState();
-    _stepController = PageController(viewportFraction: 0.92);
     _prefillFromFirestore();
   }
 
@@ -168,7 +175,8 @@ class _OnboardingBasicProfileScreenState
 
   @override
   void dispose() {
-    _stepController.dispose();
+    _scrollController.dispose();
+    _stepFocusNode.dispose();
     _displayNameController.dispose();
     _bioController.dispose();
     _raiderLevelController.dispose();
@@ -508,11 +516,23 @@ class _OnboardingBasicProfileScreenState
   Future<void> _goToStep(int step) async {
     final nextStep = step.clamp(0, _stepCount - 1);
     setState(() => _stepIndex = nextStep);
-    if (!_stepController.hasClients) return;
-    await _stepController.animateToPage(
-      nextStep,
-      duration: const Duration(milliseconds: 260),
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _revealActiveStep(nextStep);
+    });
+  }
+
+  Future<void> _revealActiveStep(int step) async {
+    final targetContext = _stepKeys[step].currentContext;
+    if (targetContext == null) return;
+
+    FocusScope.of(context).requestFocus(_stepFocusNode);
+    await Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
+      alignment: 0.06,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
     );
   }
 
@@ -586,9 +606,8 @@ class _OnboardingBasicProfileScreenState
       if (step is int) {
         _stepIndex = step.clamp(0, _stepCount - 1);
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_stepController.hasClients) {
-            _stepController.jumpToPage(_stepIndex);
-          }
+          if (!mounted) return;
+          _revealActiveStep(_stepIndex);
         });
       }
     });
@@ -926,7 +945,7 @@ class _OnboardingBasicProfileScreenState
     required bool complete,
   }) {
     final accent = complete ? AppTheme.neonCyan : AppTheme.neonPink;
-    return AnimatedContainer(
+    final card = AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -987,6 +1006,11 @@ class _OnboardingBasicProfileScreenState
           child,
         ],
       ),
+    );
+    return ElectricChargeBorder(
+      active: active && !complete,
+      radius: 18,
+      child: card,
     );
   }
 
@@ -1669,17 +1693,15 @@ class _OnboardingBasicProfileScreenState
 
   Widget _completeStep() {
     final summary = <String>[
-      _isFreshOrReset
-          ? 'Raider Level 25 reached: No after fresh start/reset'
-          : 'Raider Level 25 reached: ${_isNomadicUnlocked ? 'Yes' : 'No'}',
-      _isNomadicUnlocked
-          ? 'Nomadic Trader: enabled'
-          : 'Nomadic Trader: locked until Level 25',
+      'Identity: ${_identityNameComplete ? 'ready' : 'needs display name'}',
+      'Embark ID: ${_identityEmbarkComplete ? 'saved' : 'not added yet'}',
+      'Archetypes: ${_selectedArchetypes.join(', ')}',
       _blueprintChoice == _ArcBlueprintSetupChoice.setupNow
-          ? 'Blueprint Tracker: enabled'
-          : 'Blueprint Tracker: skipped for now',
-      if (_isFreshOrReset) 'Blueprint ownership, quests and benches: reset',
-      'Favourite Loadouts: retained',
+          ? 'Blueprint Tracker: enabled from Tool Deck'
+          : 'Blueprint Tracker: can be finished later',
+      _acceptedTraderCode && _acceptedTermsOfService && _acceptedDataSecurity
+          ? 'Command protocols: acknowledged'
+          : 'Command protocols: incomplete',
     ];
 
     return _contentShell(
@@ -1710,7 +1732,7 @@ class _OnboardingBasicProfileScreenState
           ),
           const SizedBox(height: 14),
           const Text(
-            'Your Command Centre will now prioritise the systems that matter for your current wipe state.',
+            'Review the saved setup areas and launch when the required profile details and command protocols are ready.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, height: 1.38),
           ),
@@ -1731,79 +1753,83 @@ class _OnboardingBasicProfileScreenState
     required bool selected,
     required VoidCallback? onTap,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppTheme.neonCyan.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.25),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
+    return ElectricChargeBorder(
+      active: selected,
+      radius: 16,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
             color: selected
-                ? AppTheme.neonCyan
-                : Colors.white.withValues(alpha: 0.14),
-            width: selected ? 1.5 : 1,
+                ? AppTheme.neonCyan.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected
+                  ? AppTheme.neonCyan
+                  : Colors.white.withValues(alpha: 0.14),
+              width: selected ? 1.5 : 1,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.18),
+                      blurRadius: 22,
+                    ),
+                  ]
+                : null,
           ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: AppTheme.neonCyan.withValues(alpha: 0.18),
-                    blurRadius: 22,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    icon,
+                    color: selected ? AppTheme.neonCyan : Colors.white60,
+                    size: 22,
                   ),
-                ]
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  icon,
-                  color: selected ? AppTheme.neonCyan : Colors.white60,
-                  size: 22,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: selected ? Colors.white : Colors.white70,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 13.5,
-                      height: 1.08,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: selected ? Colors.white : Colors.white70,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13.5,
+                        height: 1.08,
+                      ),
                     ),
                   ),
-                ),
-                Icon(
-                  selected
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: selected ? AppTheme.neonCyan : Colors.white30,
-                  size: 20,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Text(
-                body,
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white60,
-                  height: 1.22,
-                  fontSize: 12.2,
+                  Icon(
+                    selected
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: selected ? AppTheme.neonCyan : Colors.white30,
+                    size: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Text(
+                  body,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    height: 1.22,
+                    fontSize: 12.2,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1888,16 +1914,22 @@ class _OnboardingBasicProfileScreenState
   Widget _currentStep() {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 220),
-      child: KeyedSubtree(
-        key: ValueKey<int>(_stepIndex),
-        child: switch (_stepIndex) {
-          0 => _profileStep(),
-          1 => _playerTypeStep(),
-          2 => _progressionStep(),
-          3 => _blueprintStep(),
-          4 => _traderCodeStep(),
-          _ => _completeStep(),
-        },
+      child: Container(
+        key: _stepKeys[_stepIndex],
+        child: Focus(
+          focusNode: _stepFocusNode,
+          child: KeyedSubtree(
+            key: ValueKey<int>(_stepIndex),
+            child: switch (_stepIndex) {
+              0 => _profileStep(),
+              1 => _playerTypeStep(),
+              2 => _progressionStep(),
+              3 => _blueprintStep(),
+              4 => _traderCodeStep(),
+              _ => _completeStep(),
+            },
+          ),
+        ),
       ),
     );
   }
@@ -1937,6 +1969,7 @@ class _OnboardingBasicProfileScreenState
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
+                  controller: _scrollController,
                   padding: EdgeInsets.all(constraints.maxWidth < 700 ? 14 : 24),
                   child: Center(
                     child: ConstrainedBox(

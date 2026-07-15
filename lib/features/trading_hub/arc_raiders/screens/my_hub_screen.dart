@@ -124,7 +124,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
     ),
     _ArcHubFeature(
       title: 'Profile & Reputation',
-      subtitle: 'Your trader profile, trust layer and account reputation.',
+      subtitle: 'Your Hub Profile, trust layer and account reputation.',
       icon: Icons.verified_user_outlined,
       accent: Colors.lightGreenAccent,
       art: _ArcHubArtKind.smart,

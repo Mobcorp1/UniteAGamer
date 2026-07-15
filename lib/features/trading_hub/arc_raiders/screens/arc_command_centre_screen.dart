@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_watch.dart';
@@ -20,6 +21,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
@@ -46,6 +48,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final ArcSavedLoadoutRepository _loadoutRepository =
       ArcSavedLoadoutRepository();
+  final ArcTraderProfileRepository _profileRepository =
+      ArcTraderProfileRepository();
   final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
   final ArcScrappyRepository _scrappyRepository = ArcScrappyRepository();
@@ -76,6 +80,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       _tradingRepository.watchBlueprintWatches();
   late final Stream<List<ArcTradeListingQueueItem>> _listingQueuesStream =
       _tradingRepository.watchListingQueues();
+  late final Stream<ArcProfileCompletionResult> _profileCompletionStream =
+      _profileRepository.watchProfileCompletion();
   late Future<ArcNomadicTraderTrackerSnapshot> _nomadicTraderSnapshotFuture =
       _nomadicTraderRepository.loadTrackerSnapshot();
   final Map<String, bool> _checklistState = <String, bool>{};
@@ -96,6 +102,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   List<ArcBlueprintWatch> _cachedBlueprintWatches = const <ArcBlueprintWatch>[];
   List<ArcTradeListingQueueItem> _cachedListingQueues =
       const <ArcTradeListingQueueItem>[];
+  ArcProfileCompletionResult _cachedProfileCompletion =
+      ArcProfileCompletionResult.completeResult;
   static ArcCommandCentreState? _lastCommandState;
 
   @override
@@ -197,48 +205,59 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   }
 
   Widget _buildLiveCommandCentre() {
-    return StreamBuilder<Map<String, ArcBlueprintState>>(
-      stream: _blueprintStatesStream,
-      builder: (context, blueprintSnapshot) {
-        if (blueprintSnapshot.hasData) {
-          _cachedBlueprintStates = blueprintSnapshot.data!;
+    return StreamBuilder<ArcProfileCompletionResult>(
+      stream: _profileCompletionStream,
+      builder: (context, profileSnapshot) {
+        if (profileSnapshot.hasData) {
+          _cachedProfileCompletion = profileSnapshot.data!;
         }
-        final blueprintStates = _cachedBlueprintStates;
-        return StreamBuilder<List<ArcSavedLoadout>>(
-          stream: _loadoutsStream,
-          builder: (context, loadoutSnapshot) {
-            if (loadoutSnapshot.hasData) {
-              _cachedLoadouts = loadoutSnapshot.data!;
+        final profileCompletion = _cachedProfileCompletion;
+        return StreamBuilder<Map<String, ArcBlueprintState>>(
+          stream: _blueprintStatesStream,
+          builder: (context, blueprintSnapshot) {
+            if (blueprintSnapshot.hasData) {
+              _cachedBlueprintStates = blueprintSnapshot.data!;
             }
-            final loadouts = _cachedLoadouts;
-            return StreamBuilder<ArcOperationsUserState>(
-              stream: _operationsStateStream,
-              builder: (context, operationsSnapshot) {
-                if (operationsSnapshot.hasData) {
-                  _cachedOperationsState = operationsSnapshot.data!;
+            final blueprintStates = _cachedBlueprintStates;
+            return StreamBuilder<List<ArcSavedLoadout>>(
+              stream: _loadoutsStream,
+              builder: (context, loadoutSnapshot) {
+                if (loadoutSnapshot.hasData) {
+                  _cachedLoadouts = loadoutSnapshot.data!;
                 }
-                final operationsState = _cachedOperationsState;
-                return StreamBuilder<Map<String, ArcScrappyState>>(
-                  stream: _scrappyStatesStream,
-                  builder: (context, scrappySnapshot) {
-                    if (scrappySnapshot.hasData) {
-                      _cachedScrappyStates = scrappySnapshot.data!;
+                final loadouts = _cachedLoadouts;
+                return StreamBuilder<ArcOperationsUserState>(
+                  stream: _operationsStateStream,
+                  builder: (context, operationsSnapshot) {
+                    if (operationsSnapshot.hasData) {
+                      _cachedOperationsState = operationsSnapshot.data!;
                     }
-                    final scrappyStates = _cachedScrappyStates;
-                    return FutureBuilder<ArcNomadicTraderTrackerSnapshot>(
-                      future: _nomadicTraderSnapshotFuture,
-                      builder: (context, traderSnapshot) {
-                        if (traderSnapshot.hasData) {
-                          _cachedNomadicTraderTracker = traderSnapshot.data!;
+                    final operationsState = _cachedOperationsState;
+                    return StreamBuilder<Map<String, ArcScrappyState>>(
+                      stream: _scrappyStatesStream,
+                      builder: (context, scrappySnapshot) {
+                        if (scrappySnapshot.hasData) {
+                          _cachedScrappyStates = scrappySnapshot.data!;
                         }
-                        final nomadicTraderTracker =
-                            _cachedNomadicTraderTracker;
-                        return _buildWithTradeActivity(
-                          blueprintStates: blueprintStates,
-                          loadouts: loadouts,
-                          operationsState: operationsState,
-                          scrappyStates: scrappyStates,
-                          nomadicTraderTracker: nomadicTraderTracker,
+                        final scrappyStates = _cachedScrappyStates;
+                        return FutureBuilder<ArcNomadicTraderTrackerSnapshot>(
+                          future: _nomadicTraderSnapshotFuture,
+                          builder: (context, traderSnapshot) {
+                            if (traderSnapshot.hasData) {
+                              _cachedNomadicTraderTracker =
+                                  traderSnapshot.data!;
+                            }
+                            final nomadicTraderTracker =
+                                _cachedNomadicTraderTracker;
+                            return _buildWithTradeActivity(
+                              blueprintStates: blueprintStates,
+                              loadouts: loadouts,
+                              operationsState: operationsState,
+                              scrappyStates: scrappyStates,
+                              nomadicTraderTracker: nomadicTraderTracker,
+                              profileCompletion: profileCompletion,
+                            );
+                          },
                         );
                       },
                     );
@@ -258,6 +277,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required ArcOperationsUserState operationsState,
     required Map<String, ArcScrappyState> scrappyStates,
     required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
+    required ArcProfileCompletionResult profileCompletion,
   }) {
     return StreamBuilder<List<TradingListing>>(
       stream: _activeListingsStream,
@@ -329,6 +349,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                                           nomadicTraderTracker,
                                       operationsState: operationsState,
                                       tradeActivity: tradeActivity,
+                                      profileCompletion: profileCompletion,
                                     );
                                 _lastCommandState = commandState;
                                 return ArcCommandCentreContent(

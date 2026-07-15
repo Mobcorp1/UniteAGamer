@@ -2,12 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'package:uag_arc_raiders_hub/build/trading_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_availability_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_create_listing_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -23,6 +24,8 @@ class ArcMandatoryOnboardingScreen extends StatefulWidget {
 
 class _ArcMandatoryOnboardingScreenState
     extends State<ArcMandatoryOnboardingScreen> {
+  final ArcTraderProfileRepository _profileRepository =
+      ArcTraderProfileRepository();
   bool _saving = false;
 
   Future<void> _completeSetup() async {
@@ -42,11 +45,12 @@ class _ArcMandatoryOnboardingScreenState
           'recommendedBlueprintSetupMode': 'markMissing',
         },
       }, SetOptions(merge: true));
+      await _profileRepository.refreshProfileCompletion();
 
       if (!mounted) return;
       Navigator.of(
         context,
-      ).pushNamedAndRemoveUntil(TradingHubScreen.routeName, (_) => false);
+      ).pushNamedAndRemoveUntil(ArcCommandCentreScreen.routeName, (_) => false);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_co
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_decision_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_resource_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_bench_intelligence_models.dart';
@@ -42,6 +43,8 @@ class ArcCommandCentreEngine {
         ArcNomadicTraderTrackerSnapshot.empty,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
     ArcCommandTradeActivity tradeActivity = ArcCommandTradeActivity.empty,
+    ArcProfileCompletionResult profileCompletion =
+        ArcProfileCompletionResult.completeResult,
   }) {
     final totalBlueprints = ArcBlueprintSeedData.blueprints.length;
     final blueprintStateKnown = blueprintStates.isNotEmpty;
@@ -113,25 +116,107 @@ class ArcCommandCentreEngine {
       resourceIntel: resourceIntel,
     );
 
+    var priority = ArcCommandCentreViewMapper.priority(
+      decisionState.primaryMission,
+    );
+    var snapshots = ArcCommandCentreViewMapper.snapshots(decisionState);
+    var objectives = ArcCommandCentreViewMapper.objectives(decisionState);
+    var alerts = ArcCommandCentreViewMapper.alerts(decisionState);
+    var recommendations = ArcCommandCentreViewMapper.recommendations(
+      decisionState,
+    );
+    var checklist = _checklist(
+      loadoutReady: loadoutSummary.ready,
+      tradeActivity: tradeActivity,
+      readyOperations: readyOperations,
+      questIntel: questIntel,
+      benchIntel: benchIntel,
+      traderIntel: traderIntel,
+      resourceIntel: resourceIntel,
+    );
+
+    if (!profileCompletion.complete) {
+      final action = _profileCompletionAction(profileCompletion);
+      priority = ArcCommandPriority(
+        title: 'Complete Your Hub Profile',
+        explanation:
+            'Finish ${profileCompletion.missingSummary} so Command Centre, Operations and Match Rider can personalise your next move.',
+        progressLabel:
+            '${profileCompletion.missingFields.length} missing profile ${_plural(profileCompletion.missingFields.length, 'field', 'fields')}',
+        statusTag: 'Setup required',
+        detail:
+            'This card disappears as soon as the required persisted profile fields are complete.',
+        status: ArcCommandStatus.critical,
+        primaryAction: action,
+      );
+      final profileObjective = ArcCommandObjective(
+        title: 'Complete Your Hub Profile',
+        reason: 'Missing: ${profileCompletion.missingSummary}.',
+        statusLabel: 'Setup required',
+        progressText:
+            '${profileCompletion.missingFields.length} missing ${_plural(profileCompletion.missingFields.length, 'field', 'fields')}',
+        status: ArcCommandStatus.critical,
+        action: action,
+      );
+      final profileAlert = ArcCommandAlert(
+        title: 'Profile Setup Blocking Personalisation',
+        body:
+            'Command Centre is using safe defaults until ${profileCompletion.missingSummary} is saved.',
+        statusLabel: 'Required',
+        status: ArcCommandStatus.critical,
+        action: action,
+      );
+      final profileRecommendation = ArcCommandRecommendation(
+        title: 'Finish Your Hub Profile',
+        body:
+            'Open the next incomplete section and save it once. The evaluator will remove this recommendation automatically.',
+        action: action,
+      );
+      final profileChecklistItem = ArcCommandChecklistItem(
+        id: 'complete-profile',
+        label: 'Complete Profile',
+        reason: 'Missing: ${profileCompletion.missingSummary}.',
+        action: action,
+      );
+      snapshots = [
+        ArcCommandSnapshotMetric(
+          label: 'Profile',
+          value: 'Incomplete',
+          detail: profileCompletion.missingSummary,
+          status: ArcCommandStatus.critical,
+        ),
+        ...snapshots.where((metric) => metric.label != 'Profile'),
+      ];
+      objectives = [
+        profileObjective,
+        ...objectives.where(
+          (objective) => objective.title != profileObjective.title,
+        ),
+      ];
+      alerts = [
+        profileAlert,
+        ...alerts.where((alert) => alert.title != profileAlert.title),
+      ];
+      recommendations = [
+        profileRecommendation,
+        ...recommendations.where(
+          (recommendation) =>
+              recommendation.title != profileRecommendation.title,
+        ),
+      ];
+      checklist = [
+        profileChecklistItem,
+        ...checklist.where((item) => item.id != profileChecklistItem.id),
+      ];
+    }
+
     return ArcCommandCentreState(
-      priority: ArcCommandCentreViewMapper.priority(
-        decisionState.primaryMission,
-      ),
-      snapshots: ArcCommandCentreViewMapper.snapshots(decisionState),
-      objectives: ArcCommandCentreViewMapper.objectives(decisionState),
-      alerts: ArcCommandCentreViewMapper.alerts(decisionState),
-      recommendations: ArcCommandCentreViewMapper.recommendations(
-        decisionState,
-      ),
-      checklist: _checklist(
-        loadoutReady: loadoutSummary.ready,
-        tradeActivity: tradeActivity,
-        readyOperations: readyOperations,
-        questIntel: questIntel,
-        benchIntel: benchIntel,
-        traderIntel: traderIntel,
-        resourceIntel: resourceIntel,
-      ),
+      priority: priority,
+      snapshots: snapshots,
+      objectives: objectives,
+      alerts: alerts,
+      recommendations: recommendations,
+      checklist: checklist,
       resources: ArcCommandCentreViewMapper.resources(decisionState),
       tradeSummary: _tradeSummary(
         prioritizedMissing: prioritizedMissing,
@@ -312,6 +397,17 @@ class ArcCommandCentreEngine {
         ),
       ),
     ];
+  }
+
+  static ArcCommandAction _profileCompletionAction(
+    ArcProfileCompletionResult completion,
+  ) {
+    return ArcCommandAction(
+      label: 'Complete Profile',
+      routeName:
+          completion.resumeRouteName ??
+          ArcProfileCompletionEvaluator.profileSetupRouteName,
+    );
   }
 
   static ArcCommandTradeSummary _tradeSummary({

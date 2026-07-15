@@ -315,7 +315,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Set Up Trader Profile',
+                    'Set Up Your Hub Profile',
                     style: AppTheme.tradingHeading(
                       fontSize: 24,
                       color: AppTheme.neonCyan,
@@ -368,7 +368,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Set Up Trader Profile')),
+      appBar: AppBar(title: const Text('Set Up Your Hub Profile')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

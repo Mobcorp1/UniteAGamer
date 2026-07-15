@@ -218,7 +218,7 @@ class _AppEntryGateState extends State<AppEntryGate>
 
                     if (onboardingSnapshot.hasError) {
                       return _GateErrorScaffold(
-                        message: 'Could not prepare your trader profile.',
+                        message: 'Could not prepare Your Hub Profile.',
                         details: onboardingSnapshot.error,
                       );
                     }

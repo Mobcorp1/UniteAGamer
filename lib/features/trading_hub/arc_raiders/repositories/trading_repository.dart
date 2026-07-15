@@ -18,6 +18,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
 
+import 'arc_operations_repository.dart';
+
 class TradingRepository {
   TradingRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
     : _firestore = firestore ?? FirebaseFirestore.instance,
@@ -1500,6 +1502,7 @@ class TradingRepository {
 
     if (safeQueueQuantity <= 0) {
       await listingRef.set(listing.toMap());
+      await _recordListingCreated(listing.id);
       return listing;
     }
 
@@ -1538,6 +1541,7 @@ class TradingRepository {
     batch.set(listingRef, listing.toMap());
     batch.set(_listingQueueCollection.doc(queue.id), queue.toMap());
     await batch.commit();
+    await _recordListingCreated(listing.id);
     return listing;
   }
 
@@ -2439,6 +2443,13 @@ class TradingRepository {
     batch.update(_sessionsCollection.doc(session.id), updates);
     await batch.commit();
 
+    if (derivedStatus == TradingSessionStatus.completed) {
+      await ArcOperationsRepository(
+        firestore: _firestore,
+        auth: _auth,
+      ).recordTradeCompleted(sessionId: session.id);
+    }
+
     await _safeNotify(
       targetUid: targetUid,
       type: TradingNotificationType.sessionOutcome,
@@ -2453,5 +2464,12 @@ class TradingRepository {
 
   Future<void> seedDemoSessionIfEmpty() async {
     return;
+  }
+
+  Future<void> _recordListingCreated(String listingId) async {
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordListingCreated(listingId: listingId);
   }
 }

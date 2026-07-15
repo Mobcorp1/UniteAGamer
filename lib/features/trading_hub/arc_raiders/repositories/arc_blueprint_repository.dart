@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
 
+import 'arc_operations_repository.dart';
+
 class ArcBlueprintRepository {
   ArcBlueprintRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
     : _firestore = firestore ?? FirebaseFirestore.instance,
@@ -253,6 +255,12 @@ class ArcBlueprintRepository {
       }
 
       await existingDoc.reference.set(updatePayload, SetOptions(merge: true));
+      if (!alreadyConfirmed) {
+        await ArcOperationsRepository(
+          firestore: _firestore,
+          auth: _auth,
+        ).recordIntelConfirmed(confirmationId: '${existingDoc.id}:$uid');
+      }
       return;
     }
 
@@ -289,6 +297,10 @@ class ArcBlueprintRepository {
     );
 
     await doc.set({...report.toMap(), 'locationName': report.poiName});
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordBlueprintReportSubmitted(reportId: doc.id);
 
     debugPrint(
       'ARC report saved: blueprint=$blueprintId, map=$mapName, '

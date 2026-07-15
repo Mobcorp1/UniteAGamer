@@ -550,6 +550,8 @@ enum ArcOperationTelemetryType {
   communityContribution,
   favouriteLoadoutSaved,
   feedbackSubmitted,
+  availabilitySaved,
+  intelConfirmed,
 }
 
 class ArcOperationTelemetryEvent {
@@ -584,6 +586,8 @@ class ArcOperationTelemetryEvent {
     ArcOperationTelemetryType.favouriteLoadoutSaved =>
       'favourite_loadout_saved',
     ArcOperationTelemetryType.feedbackSubmitted => 'feedback_submitted',
+    ArcOperationTelemetryType.availabilitySaved => 'availability_saved',
+    ArcOperationTelemetryType.intelConfirmed => 'intel_confirmed',
   };
 
   Map<String, dynamic> toMap() {

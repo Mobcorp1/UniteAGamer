@@ -381,7 +381,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                   children: [
                     Text(
                       profile.uagName.trim().isEmpty
-                          ? 'Trader Profile'
+                          ? 'Your Hub Profile'
                           : profile.uagName,
                       style: AppTheme.tradingHeading(
                         fontSize: 20,
@@ -452,7 +452,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                 Navigator.of(context).pushNamed(TradingProfileScreen.routeName);
               },
               icon: const Icon(Icons.person_outline_rounded),
-              label: const Text('Open Trader Profile'),
+              label: const Text('Open Your Hub Profile'),
             ),
           ),
         ],

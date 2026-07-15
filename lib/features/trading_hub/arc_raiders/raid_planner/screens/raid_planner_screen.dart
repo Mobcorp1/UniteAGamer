@@ -819,7 +819,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         children: [
           Text(
             windows.isEmpty
-                ? 'No active play windows found in your availability. Set your availability in Trader Profile to unlock playtime planning.'
+                ? 'No active play windows found in your availability. Set your availability in Your Hub Profile to unlock playtime planning.'
                 : 'Planner checks your saved availability and shows target events that overlap your usual gaming time.',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,

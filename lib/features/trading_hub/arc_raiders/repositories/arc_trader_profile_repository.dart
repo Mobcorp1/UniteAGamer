@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,9 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
+import '../data/arc_profile_completion_evaluator.dart';
 import '../models/arc_availability.dart';
 import '../models/arc_away_status.dart';
 import '../models/arc_trader_profile.dart';
+import 'arc_operations_repository.dart';
 
 class ArcTraderProfileRepository {
   ArcTraderProfileRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
@@ -659,21 +662,23 @@ class ArcTraderProfileRepository {
       preferredUagId: profile.uagId.trim(),
     );
 
-    await profileDoc(profile.uid).set(
-      _arcProfileToUnifiedMap(
-        profile.copyWith(
-          uagId: uagId,
-          referralCode: referralCode,
-          isProfileComplete: profile.hasCoreDetails,
-          updatedAt: DateTime.now(),
-          lastActiveAt: DateTime.now(),
-        ),
-        serverNow: serverNow,
+    final profileMap = _arcProfileToUnifiedMap(
+      profile.copyWith(
+        uagId: uagId,
+        referralCode: referralCode,
+        isProfileComplete: false,
+        updatedAt: DateTime.now(),
+        lastActiveAt: DateTime.now(),
       ),
-      SetOptions(merge: true),
+      serverNow: serverNow,
     );
 
+    await profileDoc(profile.uid).set(profileMap, SetOptions(merge: true));
     await _syncUagIdAcrossUserDocs(profile.uid, uagId);
+    await _evaluateAndPersistProfileCompletion(
+      profile.uid,
+      profileDataOverride: profileMap,
+    );
   }
 
   Future<ArcAvailability> getAvailability() async {
@@ -699,6 +704,164 @@ class ArcTraderProfileRepository {
     await availabilityDoc(
       uid,
     ).set(availability.toMap(), SetOptions(merge: true));
+    await _evaluateAndPersistProfileCompletion(
+      uid,
+      availabilityOverride: availability,
+    );
+    await ArcOperationsRepository(
+      firestore: _firestore,
+      auth: _auth,
+    ).recordAvailabilitySaved();
+  }
+
+  Future<ArcProfileCompletionResult> getProfileCompletion() async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw StateError('No authenticated user found.');
+    }
+    await ensureDocsExist();
+    return _evaluateAndPersistProfileCompletion(uid);
+  }
+
+  Stream<ArcProfileCompletionResult> watchProfileCompletion() {
+    final uid = currentUid;
+    if (uid == null) {
+      return Stream<ArcProfileCompletionResult>.value(
+        ArcProfileCompletionResult.completeResult,
+      );
+    }
+
+    final controller = StreamController<ArcProfileCompletionResult>();
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    userSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    profileSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    availabilitySubscription;
+    var disposed = false;
+    var loadVersion = 0;
+    var latestUser = const <String, dynamic>{};
+    var latestProfile = const <String, dynamic>{};
+    var latestAvailability = const <String, dynamic>{};
+
+    void addError(Object error, StackTrace stackTrace) {
+      if (!disposed && !controller.isClosed) {
+        controller.addError(error, stackTrace);
+      }
+    }
+
+    Future<void> emitState() async {
+      final version = ++loadVersion;
+      try {
+        final availability = ArcAvailability.fromMap(latestAvailability);
+        final result = const ArcProfileCompletionEvaluator().evaluate(
+          userData: latestUser,
+          profileData: latestProfile,
+          availability: availability,
+        );
+        if (!disposed && !controller.isClosed && version == loadVersion) {
+          controller.add(result);
+        }
+      } catch (error, stackTrace) {
+        addError(error, stackTrace);
+      }
+    }
+
+    controller.onListen = () {
+      userSubscription = _userDoc(uid).snapshots().listen((snapshot) {
+        latestUser = snapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+      profileSubscription = profileDoc(uid).snapshots().listen((snapshot) {
+        latestProfile = snapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+      availabilitySubscription = availabilityDoc(uid).snapshots().listen((
+        snapshot,
+      ) {
+        latestAvailability = snapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+    };
+
+    controller.onCancel = () async {
+      disposed = true;
+      await userSubscription?.cancel();
+      await profileSubscription?.cancel();
+      await availabilitySubscription?.cancel();
+    };
+
+    return controller.stream;
+  }
+
+  Future<ArcProfileCompletionResult> refreshProfileCompletion() async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw StateError('No authenticated user found.');
+    }
+    return _evaluateAndPersistProfileCompletion(uid);
+  }
+
+  Future<ArcProfileCompletionResult> _evaluateAndPersistProfileCompletion(
+    String uid, {
+    Map<String, dynamic>? profileDataOverride,
+    ArcAvailability? availabilityOverride,
+  }) async {
+    final userSnapshot = await _userDoc(uid).get();
+    final profileSnapshot = profileDataOverride == null
+        ? await profileDoc(uid).get()
+        : null;
+    final availabilitySnapshot = availabilityOverride == null
+        ? await availabilityDoc(uid).get()
+        : null;
+
+    final userData = userSnapshot.data() ?? const <String, dynamic>{};
+    final profileData =
+        profileDataOverride ??
+        profileSnapshot?.data() ??
+        const <String, dynamic>{};
+    final availability =
+        availabilityOverride ??
+        ArcAvailability.fromMap(
+          availabilitySnapshot?.data() ?? const <String, dynamic>{},
+        );
+
+    final result = const ArcProfileCompletionEvaluator().evaluate(
+      userData: userData,
+      profileData: profileData,
+      availability: availability,
+    );
+    final now = FieldValue.serverTimestamp();
+    final completionMap = <String, dynamic>{
+      'complete': result.complete,
+      'missingFieldIds': result.missingFieldIds,
+      'missingFieldLabels': result.missingFieldLabels,
+      'resumeRouteName': result.resumeRouteName,
+      'resumeSection': result.resumeSection,
+      'updatedAt': now,
+    };
+
+    final batch = _firestore.batch();
+    batch.set(profileDoc(uid), {
+      'isProfileComplete': result.complete,
+      'profileCompletion': completionMap,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(_userDoc(uid), {
+      'profileCompletion': completionMap,
+      'traderProfile': {'isProfileComplete': result.complete},
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
+
+    if (result.complete) {
+      await ArcOperationsRepository(
+        firestore: _firestore,
+        auth: _auth,
+      ).recordProfileCompleted();
+    }
+
+    return result;
   }
 
   Future<ArcAwayStatus> getAwayStatus() async {

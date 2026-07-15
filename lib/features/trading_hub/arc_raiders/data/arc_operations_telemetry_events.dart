@@ -18,4 +18,6 @@ class ArcOperationsTelemetryEvents {
       ArcOperationTelemetryType.favouriteLoadoutSaved;
   static const feedbackSubmitted = ArcOperationTelemetryType.feedbackSubmitted;
   static const loginRecorded = ArcOperationTelemetryType.loginRecorded;
+  static const availabilitySaved = ArcOperationTelemetryType.availabilitySaved;
+  static const intelConfirmed = ArcOperationTelemetryType.intelConfirmed;
 }

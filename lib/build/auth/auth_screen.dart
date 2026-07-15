@@ -623,7 +623,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _buildStepHeader() {
-    final titles = ['Trader Profile', 'Legal Check', 'Login Details'];
+    final titles = ['Your Hub Profile', 'Legal Check', 'Login Details'];
     final subtitles = [
       'Pick your account path and set your trader identity.',
       'Review the essentials before entering the network.',
