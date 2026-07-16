@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_fitted_weapon_bundle_editor.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
@@ -82,6 +84,8 @@ class _TradingCreateListingScreenState
   final List<ArcBlueprint> _selectedWantedBlueprints = <ArcBlueprint>[];
   final List<ArcTradeItem> _selectedOfferingAssets = <ArcTradeItem>[];
   final List<ArcTradeItem> _selectedWantedAssets = <ArcTradeItem>[];
+  final List<ArcTradeBundleComponent> _fittedWeaponRequirements =
+      <ArcTradeBundleComponent>[];
 
   Map<String, ArcBlueprintState> _states = const <String, ArcBlueprintState>{};
 
@@ -137,7 +141,9 @@ class _TradingCreateListingScreenState
       _seedTotal > 0;
 
   bool get _hasAnyWantedSelection =>
-      _selectedWantedBlueprints.isNotEmpty || _selectedWantedAssets.isNotEmpty;
+      _selectedWantedBlueprints.isNotEmpty ||
+      _selectedWantedAssets.isNotEmpty ||
+      _fittedWeaponRequirements.isNotEmpty;
 
   int get _maxFutureQueueQuantity {
     if (_selectedOfferingBlueprints.length != 1) return 0;
@@ -779,6 +785,130 @@ class _TradingCreateListingScreenState
     return '$lead for ${wantedNames.first}';
   }
 
+  List<ArcTradeBundleTemplate> _buildExactAcceptedBundles() {
+    if (_wantsNothing || _openToOffers || !_hasAnyWantedSelection) {
+      return const <ArcTradeBundleTemplate>[];
+    }
+    final components = <ArcTradeBundleComponent>[
+      ..._selectedWantedBlueprints.map(
+        (item) => ArcTradeBundleComponent(
+          id: 'blueprint-${item.id}',
+          type: ArcTradeBundleComponentType.blueprint,
+          itemId: item.id,
+          itemName: item.name,
+          quantity: 1,
+        ),
+      ),
+      ..._selectedWantedAssets.map(
+        (item) => ArcTradeBundleComponent(
+          id: 'trade-item-${item.id}',
+          type: item.category == ArcTradeItemCategory.key
+              ? ArcTradeBundleComponentType.key
+              : item.category == ArcTradeItemCategory.attachment
+              ? ArcTradeBundleComponentType.attachment
+              : item.category == ArcTradeItemCategory.weapon
+              ? ArcTradeBundleComponentType.weapon
+              : item.category == ArcTradeItemCategory.craftingMaterial
+              ? ArcTradeBundleComponentType.resource
+              : ArcTradeBundleComponentType.tradeItem,
+          itemId: item.id,
+          itemName: item.name,
+          quantity: 1,
+        ),
+      ),
+      ..._fittedWeaponRequirements,
+    ];
+    if (components.isEmpty) return const <ArcTradeBundleTemplate>[];
+    return <ArcTradeBundleTemplate>[
+      ArcTradeBundleTemplate(
+        id: 'exact-${DateTime.now().millisecondsSinceEpoch}',
+        name: 'Exact requested bundle',
+        components: components,
+        allowEquivalentOffers: _allowPartialOffers,
+      ),
+    ];
+  }
+
+  Widget _buildFittedWeaponRequirements() {
+    return _sectionCard(
+      title: 'Fully Kitted Weapon Wants',
+      subtitle:
+          'Request an exact weapon configuration or allow any compatible attachment in selected slots.',
+      child: Column(
+        children: [
+          ..._fittedWeaponRequirements.asMap().entries.map((entry) {
+            final component = entry.value;
+            final config = component.fittedWeapon;
+            final summary = config == null
+                ? component.itemName
+                : config.attachmentsBySlot.entries
+                      .map((slot) {
+                        final value =
+                            slot.value ==
+                                ArcFittedWeaponConfiguration
+                                    .anyCompatibleAttachment
+                            ? 'Any compatible'
+                            : slot.value;
+                        return '${slot.key}: $value';
+                      })
+                      .join(' • ');
+            return Card(
+              color: Colors.white.withValues(alpha: 0.04),
+              child: ListTile(
+                title: Text(
+                  '${component.quantity}× ${component.itemName}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                subtitle: Text(
+                  summary,
+                  style: TextStyle(color: AppTheme.tradingMutedText),
+                ),
+                onTap: () async {
+                  final updated = await ArcFittedWeaponBundleEditor.show(
+                    context,
+                    initialValue: component,
+                  );
+                  if (!mounted || updated == null) return;
+                  setState(() {
+                    _fittedWeaponRequirements[entry.key] = updated;
+                  });
+                },
+                trailing: IconButton(
+                  tooltip: 'Remove fitted weapon',
+                  onPressed: () {
+                    setState(() {
+                      _fittedWeaponRequirements.removeAt(entry.key);
+                    });
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _fittedWeaponRequirements.length >= 6
+                  ? null
+                  : () async {
+                      final component = await ArcFittedWeaponBundleEditor.show(
+                        context,
+                      );
+                      if (!mounted || component == null) return;
+                      setState(() {
+                        _fittedWeaponRequirements.add(component);
+                      });
+                    },
+              icon: const Icon(Icons.build_circle_outlined),
+              label: const Text('Add fully kitted weapon'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _saveListing() async {
     if (!_hasAnyOfferedSelection) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -793,7 +923,9 @@ class _TradingCreateListingScreenState
     if (!_openToOffers && !_wantsNothing && !_hasAnyWantedSelection) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Add at least one wanted blueprint or trade asset.'),
+          content: Text(
+            'Add at least one wanted blueprint, trade asset, or fitted weapon.',
+          ),
         ),
       );
       return;
@@ -859,6 +991,8 @@ class _TradingCreateListingScreenState
         wantsNothing: _wantsNothing,
         tradeAsBundle: _tradeAsBundle,
         allowPartialOffers: _allowPartialOffers,
+        acceptedBundles: _buildExactAcceptedBundles(),
+        allowCustomBundleOffers: _allowPartialOffers || _openToOffers,
         listingMode:
             _listingModeOptions[_wantsNothing ? 'Gift' : _selectedListingMode]!,
         scheduledWindow: _selectedListingMode == 'Scheduled window'
@@ -1260,6 +1394,7 @@ class _TradingCreateListingScreenState
                                 ],
                               ),
                             ),
+                            _buildFittedWeaponRequirements(),
                             _sectionCard(
                               title: 'Trade Structure',
                               subtitle:

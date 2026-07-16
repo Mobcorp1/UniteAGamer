@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_favourite_rider.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_bundle_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_network_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_cosmetic_identity.dart';
@@ -1370,6 +1372,9 @@ class TradingRepository {
     bool wantsNothing = false,
     bool tradeAsBundle = true,
     bool allowPartialOffers = false,
+    List<ArcTradeBundleTemplate> acceptedBundles =
+        const <ArcTradeBundleTemplate>[],
+    bool allowCustomBundleOffers = false,
     TradingListingMode listingMode = TradingListingMode.availableNow,
     String scheduledWindow = '',
     String sellerTimezone = '',
@@ -1386,6 +1391,13 @@ class TradingRepository {
   }) async {
     final uid = currentUid;
     if (uid == null) return TradingListing.empty();
+
+    final bundleErrors = const ArcTradeBundleEngine().validateTemplates(
+      acceptedBundles,
+    );
+    if (bundleErrors.isNotEmpty) {
+      throw Exception(bundleErrors.join(' '));
+    }
 
     _ensureListingInputSafe(
       offeredItem: offeredItem,
@@ -1478,6 +1490,8 @@ class TradingRepository {
       seriousOffersOnly: seriousOffersOnly,
       tradeAsBundle: tradeAsBundle,
       allowPartialOffers: allowPartialOffers,
+      acceptedBundles: acceptedBundles,
+      allowCustomBundleOffers: allowCustomBundleOffers,
       listingMode: wantsNothing ? TradingListingMode.gift : listingMode,
       scheduledWindow: scheduledWindow.trim(),
       sellerTimezone: sellerTimezone.trim(),
@@ -1631,10 +1645,34 @@ class TradingRepository {
     required String note,
     List<String> offeredTradeItemIds = const <String>[],
     List<String> offeredTradeItemNames = const <String>[],
+    ArcExactTradeBundleOffer? exactBundleOffer,
     bool isGiveawayClaim = false,
   }) async {
     final uid = currentUid;
     if (uid == null) return;
+
+    if (exactBundleOffer != null) {
+      final templateMatches = listing.acceptedBundles.where(
+        (bundle) => bundle.id == exactBundleOffer.templateId && bundle.active,
+      );
+      if (templateMatches.isEmpty) {
+        throw Exception('The selected accepted bundle is no longer available.');
+      }
+      final result = const ArcTradeBundleEngine().compare(
+        template: templateMatches.first,
+        offer: exactBundleOffer,
+      );
+      if (!result.isExact && !listing.allowCustomBundleOffers) {
+        final details = <String>[
+          ...result.missing.map((item) => 'Missing $item'),
+          ...result.incorrect,
+          ...result.unexpected.map((item) => 'Unexpected $item'),
+        ];
+        throw Exception(
+          'Offer does not match the selected bundle. ${details.join('; ')}',
+        );
+      }
+    }
 
     _ensureOfferInputSafe(
       listing: listing,
@@ -1645,7 +1683,11 @@ class TradingRepository {
       largeBundles: largeBundles,
       includesResources: includesResources,
       resourcesText: resourcesText,
-      offeredTradeItemIds: offeredTradeItemIds,
+      offeredTradeItemIds: exactBundleOffer == null
+          ? offeredTradeItemIds
+          : exactBundleOffer.components
+                .map((component) => component.itemId)
+                .toList(growable: false),
       isGiveawayClaim: isGiveawayClaim,
     );
     await _ensureNoDuplicatePendingOffer(senderUid: uid, listingId: listing.id);
@@ -1677,6 +1719,7 @@ class TradingRepository {
       offeredTradeItemIds: offeredTradeItemIds,
       offeredTradeItemNames: offeredTradeItemNames,
       isGiveawayClaim: isGiveawayClaim || listing.wantsNothing,
+      exactBundleOffer: exactBundleOffer,
       note: note.trim(),
       status: TradingOfferStatus.pending,
       createdAt: now,

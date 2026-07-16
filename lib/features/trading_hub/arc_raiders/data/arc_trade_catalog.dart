@@ -288,6 +288,85 @@ class ArcTradeCatalog {
       tags: ['key', 'stella montis'],
     ),
 
+    // Riven Tides keys / keycards
+    ArcTradeCatalogItem(
+      id: 'hotel-keycard-no-102',
+      name: 'Hotel Keycard No. 102',
+      category: 'Key',
+      group: 'Riven Tides - Hotel Panorama Azzurro',
+      tags: ['keycard', 'riven tides', 'hotel panorama azzurro'],
+    ),
+    ArcTradeCatalogItem(
+      id: 'hotel-keycard-no-107',
+      name: 'Hotel Keycard No. 107',
+      category: 'Key',
+      group: 'Riven Tides - Hotel Panorama Azzurro',
+      tags: ['keycard', 'riven tides', 'hotel panorama azzurro'],
+    ),
+    ArcTradeCatalogItem(
+      id: 'hotel-keycard-no-113',
+      name: 'Hotel Keycard No. 113',
+      category: 'Key',
+      group: 'Riven Tides - Hotel Panorama Azzurro',
+      tags: ['keycard', 'riven tides', 'hotel panorama azzurro'],
+    ),
+    ArcTradeCatalogItem(
+      id: 'hotel-keycard-no-205',
+      name: 'Hotel Keycard No. 205',
+      category: 'Key',
+      group: 'Riven Tides - Hotel Panorama Azzurro',
+      tags: ['keycard', 'riven tides', 'hotel panorama azzurro'],
+    ),
+    ArcTradeCatalogItem(
+      id: 'hotel-keycard-no-208',
+      name: 'Hotel Keycard No. 208',
+      category: 'Key',
+      group: 'Riven Tides - Hotel Panorama Azzurro',
+      tags: ['keycard', 'riven tides', 'hotel panorama azzurro'],
+    ),
+    ArcTradeCatalogItem(
+      id: 'hotel-keycard-no-311',
+      name: 'Hotel Keycard No. 311',
+      category: 'Key',
+      group: 'Riven Tides - Hotel Panorama Azzurro',
+      tags: ['keycard', 'riven tides', 'hotel panorama azzurro'],
+    ),
+    ArcTradeCatalogItem(
+      id: 'hotel-keycard-no-404',
+      name: 'Hotel Keycard No. 404',
+      category: 'Key',
+      group: 'Riven Tides - Hotel Panorama Azzurro',
+      tags: ['keycard', 'riven tides', 'hotel panorama azzurro'],
+    ),
+    ArcTradeCatalogItem(
+      id: 'classified-records-keycard',
+      name: 'Classified Records Keycard',
+      category: 'Key',
+      group: 'Riven Tides - Port Authority Building',
+      tags: ['keycard', 'riven tides', 'port authority'],
+      highDemand: true,
+    ),
+    ArcTradeCatalogItem(
+      id: 'riven-tides-secure-storage-keycard',
+      name: 'Riven Tides Secure Storage Keycard',
+      category: 'Key',
+      group: 'Riven Tides - Port Authority Building',
+      tags: [
+        'keycard',
+        'riven tides',
+        'port authority',
+        'classified records required',
+      ],
+      highDemand: true,
+    ),
+    ArcTradeCatalogItem(
+      id: 'crane-house-keycard',
+      name: 'Crane House Keycard',
+      category: 'Key',
+      group: 'Riven Tides - Stacking Yard',
+      tags: ['keycard', 'riven tides', 'stacking yard'],
+    ),
+
     // Weapon mods
     ArcTradeCatalogItem(
       id: 'angled-grip-i',

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 
 enum TradingRiskLevel { low, medium, high }
 
@@ -53,6 +54,8 @@ class TradingListing {
   final bool seriousOffersOnly;
   final bool tradeAsBundle;
   final bool allowPartialOffers;
+  final List<ArcTradeBundleTemplate> acceptedBundles;
+  final bool allowCustomBundleOffers;
   final TradingListingMode listingMode;
   final String scheduledWindow;
   final String sellerTimezone;
@@ -105,6 +108,8 @@ class TradingListing {
     required this.seriousOffersOnly,
     required this.tradeAsBundle,
     required this.allowPartialOffers,
+    this.acceptedBundles = const <ArcTradeBundleTemplate>[],
+    this.allowCustomBundleOffers = false,
     this.listingMode = TradingListingMode.availableNow,
     this.scheduledWindow = '',
     this.sellerTimezone = '',
@@ -160,6 +165,8 @@ class TradingListing {
       seriousOffersOnly: false,
       tradeAsBundle: true,
       allowPartialOffers: false,
+      acceptedBundles: const <ArcTradeBundleTemplate>[],
+      allowCustomBundleOffers: false,
       listingMode: TradingListingMode.availableNow,
       scheduledWindow: '',
       sellerTimezone: '',
@@ -371,6 +378,9 @@ class TradingListing {
     return items;
   }
 
+  bool get hasExactAcceptedBundles =>
+      acceptedBundles.any((bundle) => bundle.active);
+
   String get tradeFormatLabel => tradeAsBundle
       ? (allowPartialOffers
             ? 'Bundle preferred - partial offers allowed'
@@ -434,6 +444,10 @@ class TradingListing {
       'seriousOffersOnly': seriousOffersOnly,
       'tradeAsBundle': tradeAsBundle,
       'allowPartialOffers': allowPartialOffers,
+      'acceptedBundles': acceptedBundles
+          .map((bundle) => bundle.toMap())
+          .toList(),
+      'allowCustomBundleOffers': allowCustomBundleOffers,
       'listingMode': listingMode.name,
       'scheduledWindow': scheduledWindow,
       'sellerTimezone': sellerTimezone,
@@ -501,6 +515,18 @@ class TradingListing {
       seriousOffersOnly: _readBool(map['seriousOffersOnly']),
       tradeAsBundle: _readBool(map['tradeAsBundle'], true),
       allowPartialOffers: _readBool(map['allowPartialOffers']),
+      acceptedBundles: map['acceptedBundles'] is List
+          ? (map['acceptedBundles'] as List)
+                .whereType<Map>()
+                .map(
+                  (item) => ArcTradeBundleTemplate.fromMap(
+                    item.map((key, value) => MapEntry(key.toString(), value)),
+                  ),
+                )
+                .where((bundle) => bundle.isValid)
+                .toList(growable: false)
+          : const <ArcTradeBundleTemplate>[],
+      allowCustomBundleOffers: _readBool(map['allowCustomBundleOffers']),
       listingMode: TradingListingMode.values.firstWhere(
         (value) => value.name == _readString(map['listingMode']),
         orElse: () => _readBool(map['wantsNothing'])
@@ -563,6 +589,8 @@ class TradingListing {
     bool? seriousOffersOnly,
     bool? tradeAsBundle,
     bool? allowPartialOffers,
+    List<ArcTradeBundleTemplate>? acceptedBundles,
+    bool? allowCustomBundleOffers,
     TradingListingMode? listingMode,
     String? scheduledWindow,
     String? sellerTimezone,
@@ -617,6 +645,9 @@ class TradingListing {
       seriousOffersOnly: seriousOffersOnly ?? this.seriousOffersOnly,
       tradeAsBundle: tradeAsBundle ?? this.tradeAsBundle,
       allowPartialOffers: allowPartialOffers ?? this.allowPartialOffers,
+      acceptedBundles: acceptedBundles ?? this.acceptedBundles,
+      allowCustomBundleOffers:
+          allowCustomBundleOffers ?? this.allowCustomBundleOffers,
       listingMode: listingMode ?? this.listingMode,
       scheduledWindow: scheduledWindow ?? this.scheduledWindow,
       sellerTimezone: sellerTimezone ?? this.sellerTimezone,

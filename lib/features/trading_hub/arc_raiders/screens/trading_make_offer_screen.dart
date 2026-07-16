@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_tr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -34,6 +35,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   List<String> _matchingDupes = <String>[];
   Set<String> _selectedDupes = <String>{};
   final List<ArcTradeItem> _selectedTradeItems = <ArcTradeItem>[];
+  String _selectedAcceptedBundleId = '';
+  bool _preparingExactBundle = false;
   late final List<ArcTradeItem> _tradeItems;
 
   int _smallBundles = 0;
@@ -60,6 +63,12 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           if (categoryCompare != 0) return categoryCompare;
           return a.name.toLowerCase().compareTo(b.name.toLowerCase());
         });
+    final activeBundles = widget.listing.acceptedBundles
+        .where((bundle) => bundle.active)
+        .toList(growable: false);
+    if (activeBundles.isNotEmpty) {
+      _selectedAcceptedBundleId = activeBundles.first.id;
+    }
     _blueprintController.addListener(_onOfferInputChanged);
     _resourcesController.addListener(_onOfferInputChanged);
     _loadMatchingDupes();
@@ -495,6 +504,154 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     );
   }
 
+  ArcTradeBundleTemplate? get _selectedAcceptedBundle {
+    for (final bundle in widget.listing.acceptedBundles) {
+      if (bundle.active && bundle.id == _selectedAcceptedBundleId) {
+        return bundle;
+      }
+    }
+    return null;
+  }
+
+  ArcExactTradeBundleOffer? _buildExactBundleOffer() {
+    final bundle = _selectedAcceptedBundle;
+    if (bundle == null) {
+      return null;
+    }
+    return ArcExactTradeBundleOffer(
+      templateId: bundle.id,
+      components: bundle.components,
+      preparing: _preparingExactBundle,
+      preparationNote: _preparingExactBundle ? _noteController.text.trim() : '',
+    );
+  }
+
+  String _bundleComponentSummary(ArcTradeBundleComponent component) {
+    final config = component.fittedWeapon;
+    if (config == null) {
+      return '${component.quantity}× ${component.itemName}';
+    }
+    final slots = config.attachmentsBySlot.entries
+        .map((entry) {
+          final value =
+              entry.value ==
+                  ArcFittedWeaponConfiguration.anyCompatibleAttachment
+              ? 'Any compatible'
+              : entry.value;
+          return '${entry.key}: $value';
+        })
+        .join(', ');
+    return '${component.quantity}× ${component.itemName}${slots.isEmpty ? '' : ' ($slots)'}';
+  }
+
+  Widget _buildAcceptedBundlePicker() {
+    final bundles = widget.listing.acceptedBundles
+        .where((bundle) => bundle.active)
+        .toList(growable: false);
+    if (bundles.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return _sectionCard(
+      title: 'Accepted Exact Bundles',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Choose one seller-approved bundle. The offer is validated before submission.',
+            style: TextStyle(color: AppTheme.tradingMutedText),
+          ),
+          const SizedBox(height: 12),
+          ...bundles.map((bundle) {
+            final selected = bundle.id == _selectedAcceptedBundleId;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Semantics(
+                button: true,
+                selected: selected,
+                label: 'Select accepted bundle ${bundle.name}',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () {
+                    setState(() {
+                      _selectedAcceptedBundleId = bundle.id;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      color: selected
+                          ? AppTheme.neonCyan.withValues(alpha: 0.10)
+                          : Colors.white.withValues(alpha: 0.035),
+                      border: Border.all(
+                        color: selected
+                            ? AppTheme.neonCyan
+                            : Colors.white.withValues(alpha: 0.14),
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          selected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: selected
+                              ? AppTheme.neonCyan
+                              : AppTheme.tradingMutedText,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                bundle.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                bundle.components
+                                    .map(_bundleComponentSummary)
+                                    .join(' • '),
+                                style: TextStyle(
+                                  color: AppTheme.tradingMutedText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+          SwitchListTile.adaptive(
+            value: _preparingExactBundle,
+            activeThumbColor: AppTheme.neonCyan,
+            activeTrackColor: AppTheme.neonCyan.withValues(alpha: 0.45),
+            title: const Text(
+              'I am preparing this bundle',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'The seller can see that you intend to farm or assemble the requested items.',
+              style: TextStyle(color: AppTheme.tradingMutedText),
+            ),
+            onChanged: (value) => setState(() => _preparingExactBundle = value),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submitOffer() async {
     if (!widget.listing.wantsNothing && !_formKey.currentState!.validate()) {
       return;
@@ -534,6 +691,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                   .map((item) => item.name)
                   .toList(growable: false),
         isGiveawayClaim: widget.listing.wantsNothing,
+        exactBundleOffer: _buildExactBundleOffer(),
       );
 
       if (!mounted) return;
@@ -634,6 +792,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                           ],
                         ),
                       ),
+                      _buildAcceptedBundlePicker(),
                       _sectionCard(
                         title: 'Auto Matches',
                         child: _isLoadingMatches
