@@ -1,17 +1,37 @@
-{
-  "name": "UAG Arc Raiders Hub",
-  "short_name": "UAG Traders",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#090529",
-  "theme_color": "#090529",
-  "description": "UAG Arc Raiders Hub standalone companion app.",
-  "orientation": "any",
-  "prefer_related_applications": false,
-  "icons": [
-    { "src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/Icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
+﻿{
+    "name":  "UAG ARC Raiders Hub",
+    "short_name":  "UAG Hub",
+    "start_url":  ".",
+    "display":  "standalone",
+    "background_color":  "#0A0925",
+    "theme_color":  "#0A0925",
+    "description":  "UAG ARC Raiders Hub",
+    "orientation":  "any",
+    "prefer_related_applications":  false,
+    "icons":  [
+                  {
+                      "src":  "icons/uag-hub-192.png",
+                      "sizes":  "192x192",
+                      "type":  "image/png",
+                      "purpose":  "any"
+                  },
+                  {
+                      "src":  "icons/uag-hub-512.png",
+                      "sizes":  "512x512",
+                      "type":  "image/png",
+                      "purpose":  "any"
+                  },
+                  {
+                      "src":  "icons/uag-hub-maskable-192.png",
+                      "sizes":  "192x192",
+                      "type":  "image/png",
+                      "purpose":  "maskable"
+                  },
+                  {
+                      "src":  "icons/uag-hub-maskable-512.png",
+                      "sizes":  "512x512",
+                      "type":  "image/png",
+                      "purpose":  "maskable"
+                  }
+              ]
 }
