@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
@@ -50,7 +50,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Firebase Hosting deployment failed."
 }
 
-Write-Host "" 
+Write-Host ""
 Write-Host "UAG web release deployed." -ForegroundColor Green
 Write-Host "Build ID: $buildId" -ForegroundColor Cyan
 Write-Host "Built at: $builtAt" -ForegroundColor Cyan
