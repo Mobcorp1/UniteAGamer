@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_layout_metrics.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -94,6 +94,30 @@ void main() {
 
       expect(state.canJumpUp, isFalse);
       expect(state.canJumpDown, isFalse);
+    });
+
+    test('control rails reserve width without overlapping the grid', () {
+      final gridWidth = ArcBlueprintGridLayoutMetrics.availableGridWidth(
+        availableWidth: 1200,
+        leftRailWidth: 86,
+        rightRailWidth: 46,
+        railGap: 8,
+      );
+
+      expect(gridWidth, 1052);
+      expect(gridWidth + 86 + 46 + 16, 1200);
+    });
+
+    test('compact mobile rails preserve a positive centred grid width', () {
+      final gridWidth = ArcBlueprintGridLayoutMetrics.availableGridWidth(
+        availableWidth: 390,
+        leftRailWidth: 50,
+        rightRailWidth: 46,
+        railGap: 4,
+      );
+
+      expect(gridWidth, 286);
+      expect(gridWidth, greaterThan(0));
     });
 
     test('view mode storage is stable and defaults to framed view', () {

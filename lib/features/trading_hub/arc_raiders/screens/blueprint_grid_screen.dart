@@ -21,7 +21,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_dialogs.dart';
 
@@ -48,17 +47,6 @@ class _BlueprintViewportFrame extends StatelessWidget {
               color: AppTheme.neonCyan.withValues(alpha: 0.68),
               width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.neonCyan.withValues(alpha: 0.20),
-                blurRadius: 18,
-                spreadRadius: 1,
-              ),
-              BoxShadow(
-                color: AppTheme.neonPink.withValues(alpha: 0.08),
-                blurRadius: 26,
-              ),
-            ],
           ),
         ),
       ),
@@ -1678,40 +1666,46 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     });
   }
 
-  Widget _buildGridJumpControls({
+  Widget _buildGridControlRail({
     required double viewportHeight,
     required double gridHeight,
     required int rowCount,
+    required bool enableRowJumps,
   }) {
     Widget button({
       required IconData icon,
       required String tooltip,
+      required Color accent,
       required bool enabled,
       required VoidCallback onTap,
     }) {
-      final color = enabled ? AppTheme.neonPink : Colors.white30;
+      final color = enabled ? accent : Colors.white30;
       return Tooltip(
         message: tooltip,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: enabled ? onTap : null,
-          child: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
-              shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.42)),
-              boxShadow: enabled
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.14),
-                        blurRadius: 12,
-                      ),
-                    ]
-                  : null,
+        child: ElectricChargeBorder(
+          active: enabled,
+          radius: 999,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: enabled ? onTap : null,
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
+                shape: BoxShape.circle,
+                border: Border.all(color: color.withValues(alpha: 0.42)),
+                boxShadow: enabled
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.14),
+                          blurRadius: 12,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(icon, color: color, size: 17),
             ),
-            child: Icon(icon, color: color, size: 17),
           ),
         ),
       );
@@ -1723,7 +1717,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         final current = _blueprintGridTransformController.value;
         final scale = current.getMaxScaleOnAxis();
         final translationY = current.storage[13];
-        final state = ArcBlueprintGridLayoutMetrics.jumpState(
+        final jumpState = ArcBlueprintGridLayoutMetrics.jumpState(
           currentTranslationY: translationY,
           scale: scale,
           viewportHeight: viewportHeight,
@@ -1731,112 +1725,215 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
           rowCount: rowCount,
         );
         final canJumpDown =
-            rowCount > 5 && (scale <= 1.01 || state.canJumpDown);
+            enableRowJumps &&
+            rowCount > 5 &&
+            (scale <= 1.01 || jumpState.canJumpDown);
 
-        return ElectricChargeBorder(
-          active: true,
-          radius: 999,
-          child: Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.80),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: AppTheme.neonPink.withValues(alpha: 0.28),
+        return Container(
+          key: const ValueKey('blueprint-grid-right-control-rail'),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.24),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              button(
+                icon: Icons.keyboard_arrow_up_rounded,
+                tooltip: 'Jump back to upper grid',
+                accent: AppTheme.neonPink,
+                enabled: enableRowJumps && jumpState.canJumpUp,
+                onTap: () => _jumpBlueprintOverviewRows(
+                  down: false,
+                  viewportHeight: viewportHeight,
+                  gridHeight: gridHeight,
+                  rowCount: rowCount,
+                ),
               ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                button(
-                  icon: Icons.keyboard_arrow_up_rounded,
-                  tooltip: 'Jump back to upper grid',
-                  enabled: state.canJumpUp,
-                  onTap: () => _jumpBlueprintOverviewRows(
-                    down: false,
-                    viewportHeight: viewportHeight,
-                    gridHeight: gridHeight,
-                    rowCount: rowCount,
-                  ),
+              const SizedBox(height: 6),
+              button(
+                icon: Icons.keyboard_arrow_down_rounded,
+                tooltip: 'Jump to lower grid',
+                accent: AppTheme.neonPink,
+                enabled: canJumpDown,
+                onTap: () => _jumpBlueprintOverviewRows(
+                  down: true,
+                  viewportHeight: viewportHeight,
+                  gridHeight: gridHeight,
+                  rowCount: rowCount,
                 ),
-                const SizedBox(height: 6),
-                button(
-                  icon: Icons.keyboard_arrow_down_rounded,
-                  tooltip: 'Jump to lower grid',
-                  enabled: canJumpDown,
-                  onTap: () => _jumpBlueprintOverviewRows(
-                    down: true,
-                    viewportHeight: viewportHeight,
-                    gridHeight: gridHeight,
-                    rowCount: rowCount,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+              button(
+                icon: Icons.zoom_in_rounded,
+                tooltip: 'Zoom in',
+                accent: AppTheme.neonCyan,
+                enabled: true,
+                onTap: () => _zoomBlueprintGrid(0.45),
+              ),
+              const SizedBox(height: 6),
+              button(
+                icon: Icons.center_focus_strong_rounded,
+                tooltip: 'Reset grid view',
+                accent: AppTheme.neonCyan,
+                enabled: true,
+                onTap: _resetBlueprintGridZoom,
+              ),
+              const SizedBox(height: 6),
+              button(
+                icon: Icons.zoom_out_rounded,
+                tooltip: 'Zoom out',
+                accent: AppTheme.neonCyan,
+                enabled: true,
+                onTap: () => _zoomBlueprintGrid(-0.45),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildGridZoomControls() {
-    Widget button({
-      required IconData icon,
-      required String tooltip,
-      required VoidCallback onTap,
-    }) {
-      return Tooltip(
-        message: tooltip,
-        child: ElectricChargeBorder(
-          active: true,
-          radius: 999,
+  Widget _buildViewModeRail({required bool compact}) {
+    Widget modeButton(ArcBlueprintGridViewMode mode, IconData icon) {
+      final selected = _viewMode == mode;
+      final label = mode == ArcBlueprintGridViewMode.inGameFramed
+          ? 'IN-GAME'
+          : 'FULL GRID';
+
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: mode.label,
+        child: Tooltip(
+          message: label,
           child: InkWell(
-            borderRadius: BorderRadius.circular(999),
-            onTap: onTap,
-            child: Container(
-              width: 34,
-              height: 34,
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _setViewMode(mode),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: compact ? 42 : 78,
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 7 : 9,
+                vertical: 9,
+              ),
               decoration: BoxDecoration(
-                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
-                shape: BoxShape.circle,
+                color: selected
+                    ? AppTheme.neonCyan.withValues(alpha: 0.14)
+                    : AppTheme.cardBackgroundDeep.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.40),
+                  color: selected
+                      ? AppTheme.neonCyan.withValues(alpha: 0.68)
+                      : Colors.white.withValues(alpha: 0.12),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.neonCyan.withValues(alpha: 0.14),
-                    blurRadius: 12,
-                    spreadRadius: 1,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 17,
+                    color: selected ? AppTheme.neonCyan : Colors.white60,
                   ),
+                  if (!compact) ...[
+                    const SizedBox(height: 5),
+                    Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      style: AppTheme.buttonTextStyle(
+                        color: selected ? AppTheme.neonCyan : Colors.white60,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ],
                 ],
               ),
-              child: Icon(icon, color: AppTheme.neonCyan, size: 16),
             ),
           ),
         ),
       );
     }
 
+    return Container(
+      key: const ValueKey('blueprint-grid-left-view-rail'),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.60),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          modeButton(
+            ArcBlueprintGridViewMode.inGameFramed,
+            Icons.crop_free_rounded,
+          ),
+          const SizedBox(height: 8),
+          modeButton(
+            ArcBlueprintGridViewMode.fullOverview,
+            Icons.grid_view_rounded,
+          ),
+          if (!_viewModeLoaded) ...[
+            const SizedBox(height: 8),
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 1.5),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlueprintHeaderTitle(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final showHint = _showOverviewHint && width >= 650;
+    final hint = _viewMode == ArcBlueprintGridViewMode.inGameFramed
+        ? 'Exact in-game order • Five rows per frame • Pinch to zoom • Drag to pan'
+        : 'Full grid overview • Pinch to zoom • Drag to pan';
+
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        button(
-          icon: Icons.zoom_in_rounded,
-          tooltip: 'Zoom in',
-          onTap: () => _zoomBlueprintGrid(0.45),
+        Text(
+          'BLUEPRINT INTEL',
+          style: AppTheme.tradingHeading(
+            fontSize: width < 430 ? 20 : 24,
+            color: AppTheme.neonCyan,
+          ),
         ),
-        const SizedBox(width: 8),
-        button(
-          icon: Icons.zoom_out_rounded,
-          tooltip: 'Zoom out',
-          onTap: () => _zoomBlueprintGrid(-0.45),
-        ),
-        const SizedBox(width: 8),
-        button(
-          icon: Icons.center_focus_strong_rounded,
-          tooltip: 'Reset grid view',
-          onTap: _resetBlueprintGridZoom,
-        ),
+        if (showHint) ...[
+          const SizedBox(width: 18),
+          Expanded(
+            child: Text(
+              hint,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 11,
+                color: Colors.white70,
+                isBold: true,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Hide grid instructions',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => setState(() => _showOverviewHint = false),
+            icon: Icon(
+              Icons.close_rounded,
+              color: Colors.white.withValues(alpha: 0.70),
+              size: 16,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1911,54 +2008,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       );
     }
 
-    Widget modeButton(ArcBlueprintGridViewMode mode, IconData icon) {
-      final selected = _viewMode == mode;
-      return Semantics(
-        button: true,
-        selected: selected,
-        label: mode.label,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: () => _setViewMode(mode),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-            decoration: BoxDecoration(
-              color: selected
-                  ? AppTheme.neonCyan.withValues(alpha: 0.14)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: selected
-                    ? AppTheme.neonCyan.withValues(alpha: 0.68)
-                    : Colors.white.withValues(alpha: 0.12),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 15,
-                  color: selected ? AppTheme.neonCyan : Colors.white60,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  mode == ArcBlueprintGridViewMode.inGameFramed
-                      ? 'IN-GAME'
-                      : 'FULL GRID',
-                  style: AppTheme.buttonTextStyle(
-                    color: selected ? AppTheme.neonCyan : Colors.white60,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final mediaQuery = MediaQuery.of(context);
@@ -1967,102 +2016,112 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             mediaQuery.padding.top -
             mediaQuery.padding.bottom;
         final isLandscape = mediaQuery.orientation == Orientation.landscape;
-        final reservedChromeHeight = isLandscape ? 116.0 : 218.0;
+        final maxWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : mediaQuery.size.width;
+        final compactRails = maxWidth < 620;
+        final leftRailWidth = compactRails ? 50.0 : 86.0;
+        const rightRailWidth = 46.0;
+        final railGap = compactRails ? 4.0 : 8.0;
+        final availableGridWidth =
+            ArcBlueprintGridLayoutMetrics.availableGridWidth(
+              availableWidth: maxWidth,
+              leftRailWidth: leftRailWidth,
+              rightRailWidth: rightRailWidth,
+              railGap: railGap,
+            );
+        final reservedChromeHeight = isLandscape ? 72.0 : 142.0;
         final availableGridHeight = (safeHeight - reservedChromeHeight).clamp(
           170.0,
           safeHeight,
         );
-        final maxWidth = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : mediaQuery.size.width;
-        const controlRailWidth = 46.0;
-        const controlGap = 8.0;
 
-        Widget gridSurface;
-
-        if (_viewMode == ArcBlueprintGridViewMode.inGameFramed) {
-          final frameWidth = math
-              .max(maxWidth - controlRailWidth - controlGap, 160.0)
-              .clamp(1.0, maxWidth)
-              .toDouble();
+        Widget buildFramedGrid() {
           final layout = ArcBlueprintGridLayoutMetrics.framedLayout(
             itemCount: filtered.length,
             columns: crossAxisCount,
             childAspectRatio: childAspectRatio,
             spacing: spacing,
-            availableWidth: frameWidth,
+            availableWidth: availableGridWidth,
             availableHeight: availableGridHeight,
           );
           final rowCount = filtered.isEmpty
               ? 0
               : (filtered.length / crossAxisCount).ceil();
 
-          gridSurface = Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: SizedBox(
-                  width: layout.viewportWidth + controlGap + controlRailWidth,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: layout.viewportWidth,
-                        height: layout.viewportHeight,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(14),
-                                child: InteractiveViewer(
-                                  transformationController:
-                                      _blueprintGridTransformController,
-                                  alignment: Alignment.topCenter,
-                                  panEnabled: true,
-                                  scaleEnabled: true,
-                                  constrained: false,
-                                  minScale: 1.0,
-                                  maxScale: isLandscape ? 5.5 : 4.2,
-                                  boundaryMargin: const EdgeInsets.symmetric(
-                                    vertical: 32,
-                                  ),
-                                  clipBehavior: Clip.hardEdge,
-                                  child: buildTiles(
-                                    width: layout.gridWidth,
-                                    height: layout.gridHeight,
-                                  ),
-                                ),
+          return Center(
+            child: SizedBox(
+              width:
+                  leftRailWidth +
+                  railGap +
+                  layout.viewportWidth +
+                  railGap +
+                  rightRailWidth,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: leftRailWidth,
+                    height: layout.viewportHeight,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: _buildViewModeRail(compact: compactRails),
+                    ),
+                  ),
+                  SizedBox(width: railGap),
+                  SizedBox(
+                    width: layout.viewportWidth,
+                    height: layout.viewportHeight,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: InteractiveViewer(
+                              transformationController:
+                                  _blueprintGridTransformController,
+                              alignment: Alignment.topCenter,
+                              panEnabled: true,
+                              scaleEnabled: true,
+                              constrained: false,
+                              minScale: 1.0,
+                              maxScale: isLandscape ? 5.5 : 4.2,
+                              boundaryMargin: const EdgeInsets.symmetric(
+                                vertical: 32,
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: buildTiles(
+                                width: layout.gridWidth,
+                                height: layout.gridHeight,
                               ),
                             ),
-                            const _BlueprintViewportFrame(),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: controlGap),
-                      SizedBox(
-                        width: controlRailWidth,
-                        height: layout.viewportHeight,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: _buildGridJumpControls(
-                            viewportHeight: layout.viewportHeight,
-                            gridHeight: layout.gridHeight,
-                            rowCount: rowCount,
                           ),
                         ),
-                      ),
-                    ],
+                        const _BlueprintViewportFrame(),
+                      ],
+                    ),
                   ),
-                ),
+                  SizedBox(width: railGap),
+                  SizedBox(
+                    width: rightRailWidth,
+                    height: layout.viewportHeight,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: _buildGridControlRail(
+                        viewportHeight: layout.viewportHeight,
+                        gridHeight: layout.gridHeight,
+                        rowCount: rowCount,
+                        enableRowJumps: true,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: _buildGridZoomControls(),
-              ),
-            ],
+            ),
           );
-        } else {
+        }
+
+        Widget buildFullOverviewGrid() {
           const naturalTileWidth = 96.0;
           final metrics = ArcBlueprintGridLayoutMetrics(
             itemCount: filtered.length,
@@ -2071,7 +2130,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             childAspectRatio: childAspectRatio,
             spacing: spacing,
           );
-          final widthScale = maxWidth / metrics.naturalWidth;
+          final widthScale = availableGridWidth / metrics.naturalWidth;
           final heightScale = availableGridHeight / metrics.naturalHeight;
           final fittedScale = math
               .min(widthScale, heightScale)
@@ -2079,138 +2138,78 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               .toDouble();
           final fittedHeight = metrics.naturalHeight * fittedScale;
           final fittedWidth = metrics.naturalWidth * fittedScale;
+          final viewportHeight = fittedHeight.clamp(170.0, availableGridHeight);
 
-          gridSurface = Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: SizedBox(
-                  width: fittedWidth.clamp(0.0, maxWidth),
-                  height: fittedHeight,
-                  child: ClipRect(
-                    child: InteractiveViewer(
-                      transformationController:
-                          _blueprintGridTransformController,
+          return Center(
+            child: SizedBox(
+              width:
+                  leftRailWidth +
+                  railGap +
+                  fittedWidth +
+                  railGap +
+                  rightRailWidth,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: leftRailWidth,
+                    height: viewportHeight,
+                    child: Align(
                       alignment: Alignment.center,
-                      panEnabled: true,
-                      scaleEnabled: true,
-                      constrained: true,
-                      minScale: 1.0,
-                      maxScale: isLandscape ? 5.5 : 4.2,
-                      boundaryMargin: const EdgeInsets.all(384),
-                      clipBehavior: Clip.none,
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: buildTiles(
-                          width: metrics.naturalWidth,
-                          height: metrics.naturalHeight,
+                      child: _buildViewModeRail(compact: compactRails),
+                    ),
+                  ),
+                  SizedBox(width: railGap),
+                  SizedBox(
+                    width: fittedWidth,
+                    height: viewportHeight,
+                    child: ClipRect(
+                      child: InteractiveViewer(
+                        transformationController:
+                            _blueprintGridTransformController,
+                        alignment: Alignment.center,
+                        panEnabled: true,
+                        scaleEnabled: true,
+                        constrained: true,
+                        minScale: 1.0,
+                        maxScale: isLandscape ? 5.5 : 4.2,
+                        boundaryMargin: const EdgeInsets.all(384),
+                        clipBehavior: Clip.none,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: buildTiles(
+                            width: metrics.naturalWidth,
+                            height: metrics.naturalHeight,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(width: railGap),
+                  SizedBox(
+                    width: rightRailWidth,
+                    height: viewportHeight,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: _buildGridControlRail(
+                        viewportHeight: viewportHeight,
+                        gridHeight: fittedHeight,
+                        rowCount: metrics.rowCount,
+                        enableRowJumps: false,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: _buildGridZoomControls(),
-              ),
-            ],
+            ),
           );
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                modeButton(
-                  ArcBlueprintGridViewMode.inGameFramed,
-                  Icons.crop_free_rounded,
-                ),
-                modeButton(
-                  ArcBlueprintGridViewMode.fullOverview,
-                  Icons.grid_view_rounded,
-                ),
-              ],
-            ),
-            if (!_viewModeLoaded)
-              const Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Center(
-                  child: SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 1.5),
-                  ),
-                ),
-              ),
-            if (_showOverviewHint) ...[
-              const SizedBox(height: 8),
-              Align(
-                child: Container(
-                  constraints: BoxConstraints(
-                    maxWidth: isLandscape ? 520 : maxWidth,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.neonCyan.withValues(alpha: 0.22),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.help_outline,
-                        color: AppTheme.neonCyan.withValues(alpha: 0.88),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          _viewMode == ArcBlueprintGridViewMode.inGameFramed
-                              ? 'Exact in-game order • Five rows per frame • Pinch to zoom • Drag to pan'
-                              : 'Full grid overview • Pinch to zoom • Drag to pan',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
-                            isBold: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(999),
-                        onTap: () => setState(() => _showOverviewHint = false),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2),
-                          child: Icon(
-                            Icons.close,
-                            color: Colors.white.withValues(alpha: 0.72),
-                            size: 15,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 10),
-            gridSurface,
-          ],
+        return Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: _viewMode == ArcBlueprintGridViewMode.inGameFramed
+              ? buildFramedGrid()
+              : buildFullOverviewGrid(),
         );
       },
     );
@@ -2233,13 +2232,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
-        title: Text(
-          'BLUEPRINT INTEL',
-          style: AppTheme.tradingHeading(
-            fontSize: 24,
-            color: AppTheme.neonCyan,
-          ),
-        ),
+        title: _buildBlueprintHeaderTitle(context),
         actions: [
           PopupMenuButton<String>(
             tooltip: 'Blueprint menu',
@@ -2282,8 +2275,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Track'),
       body: Stack(
         children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-
           SafeArea(
             child: StreamBuilder<Map<String, ArcBlueprintState>>(
               stream: _repository.watchMyBlueprintStates(),

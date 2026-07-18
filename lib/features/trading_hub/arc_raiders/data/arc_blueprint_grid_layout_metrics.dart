@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 class ArcBlueprintGridFrameBounds {
   const ArcBlueprintGridFrameBounds({
@@ -137,6 +137,16 @@ class ArcBlueprintGridLayoutMetrics {
       viewportHeight: viewportHeight,
       visibleRows: visibleRows,
     );
+  }
+
+  static double availableGridWidth({
+    required double availableWidth,
+    required double leftRailWidth,
+    required double rightRailWidth,
+    required double railGap,
+  }) {
+    final reservedWidth = leftRailWidth + rightRailWidth + (railGap * 2);
+    return math.max(availableWidth - reservedWidth, 1.0);
   }
 
   static double fittedRowHeight({
