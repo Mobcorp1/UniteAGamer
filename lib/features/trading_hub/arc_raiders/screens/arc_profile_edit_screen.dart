@@ -395,7 +395,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -487,10 +487,10 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Edit Your Hub Profile'),
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
       ),
       body: SafeArea(
         child: Center(

@@ -103,7 +103,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     if (_isInitialising) {
       return const Scaffold(
         extendBody: true,
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -111,7 +111,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     if (_initError != null) {
       return Scaffold(
         extendBody: true,
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         appBar: widget.showAppBar
             ? const UagAppBar(
                 title: 'Your Hub Profile',
@@ -156,7 +156,7 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: widget.showAppBar
           ? const UagAppBar(
               title: 'Your Hub Profile',

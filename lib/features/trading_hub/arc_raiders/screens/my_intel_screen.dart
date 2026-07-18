@@ -16,9 +16,9 @@ class MyIntelScreen extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.black.withValues(alpha: 0.86),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'My Intel',

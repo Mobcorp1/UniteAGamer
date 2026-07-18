@@ -7,8 +7,11 @@ class ArcDataAttributionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Data Attribution')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Data Attribution'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceL),
         children: [

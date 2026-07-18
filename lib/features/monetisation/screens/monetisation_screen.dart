@@ -53,7 +53,7 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'Plans & Referrals',
         subtitle: 'Free, Essential, Premium, referrals and wallet.',

@@ -359,7 +359,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
     if (uid == null) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         body: const Center(
           child: Text(
             'Sign in to use feedback.',
@@ -377,7 +377,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             userData['isAdmin'] == true || userData['isDev'] == true;
 
         return Scaffold(
-          backgroundColor: AppTheme.darkBackground,
+          backgroundColor: Colors.transparent,
           appBar: UagAppBar(
             title: 'Beta Feedback',
             subtitle:

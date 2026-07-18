@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_app_scroll_behavior.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -434,6 +435,8 @@ class UAGTradersHubApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'UAG Arc Raiders Hub',
       theme: AppTheme.theme,
+      builder: (context, child) =>
+          ArcGlobalVisualSystem(child: child ?? const SizedBox.shrink()),
       scrollBehavior: const ArcAppScrollBehavior(),
       navigatorKey: testMode ? null : TradingPushService.instance.navigatorKey,
       onGenerateRoute: _buildRoute,
@@ -444,7 +447,7 @@ class UAGTradersHubApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
-              backgroundColor: Color(0xFF090529),
+              backgroundColor: Colors.transparent,
               body: Center(child: CircularProgressIndicator()),
             );
           }

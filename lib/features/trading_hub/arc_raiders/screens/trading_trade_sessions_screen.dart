@@ -1355,9 +1355,10 @@ class _TradingTradeSessionsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: widget.showAppBar
           ? AppBar(
+              backgroundColor: Colors.transparent,
               title: Text(
                 'Trade Sessions',
                 style: AppTheme.tradingHeading(fontSize: 25),

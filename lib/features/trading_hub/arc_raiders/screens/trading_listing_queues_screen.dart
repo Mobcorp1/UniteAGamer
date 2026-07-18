@@ -401,8 +401,9 @@ class _TradingListingQueuesScreenState
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Listing Queues',
           style: AppTheme.tradingHeading(fontSize: 25),

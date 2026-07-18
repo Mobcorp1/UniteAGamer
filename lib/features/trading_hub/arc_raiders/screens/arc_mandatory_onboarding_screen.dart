@@ -101,7 +101,7 @@ class _ArcMandatoryOnboardingScreenState
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           const Positioned.fill(child: ArcRaidersScreenBackdrop()),

@@ -196,9 +196,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.black.withValues(alpha: 0.62),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
         title: Text(

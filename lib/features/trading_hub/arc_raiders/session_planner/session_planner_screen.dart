@@ -65,8 +65,9 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: const Text('Session Planner'),
         actions: [
           IconButton(

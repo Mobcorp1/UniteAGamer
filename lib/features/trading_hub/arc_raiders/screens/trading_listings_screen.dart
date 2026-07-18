@@ -526,9 +526,10 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Trading'),
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: widget.showAppBar
           ? AppBar(
+              backgroundColor: Colors.transparent,
               title: Text(
                 'Market',
                 style: AppTheme.tradingHeading(fontSize: 25),

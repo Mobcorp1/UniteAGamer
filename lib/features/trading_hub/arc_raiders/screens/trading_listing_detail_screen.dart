@@ -243,8 +243,9 @@ class TradingListingDetailScreen extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Listing Detail',
           style: AppTheme.tradingHeading(fontSize: 25),

@@ -91,8 +91,11 @@ class _ArcCreateTradeListingScreenState
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Create Trade Listing')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Create Trade Listing'),
+      ),
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         child: Center(

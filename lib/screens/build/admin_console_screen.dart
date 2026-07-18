@@ -20,7 +20,7 @@ class AdminConsoleScreen extends StatelessWidget {
 
     if (uid == null) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         appBar: const UagAppBar(
           title: 'Admin Console',
           subtitle: 'Sign in required.',
@@ -44,7 +44,7 @@ class AdminConsoleScreen extends StatelessWidget {
 
         if (!canAccess) {
           return Scaffold(
-            backgroundColor: AppTheme.darkBackground,
+            backgroundColor: Colors.transparent,
             appBar: const UagAppBar(
               title: 'Admin Console',
               subtitle: 'Restricted to admin and dev accounts.',
@@ -201,7 +201,7 @@ class _AdminConsoleBody extends StatelessWidget {
         .limit(12);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'Admin Console',
         subtitle: 'Feature releases, tester feedback and beta controls.',

@@ -1403,7 +1403,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final phone = size.width < 430;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       body: Stack(
         fit: StackFit.expand,
         children: [

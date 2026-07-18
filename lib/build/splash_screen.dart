@@ -39,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final logoSize = (width * 0.34).clamp(118.0, 170.0);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.transparent,
       body: Stack(
         fit: StackFit.expand,
         children: [

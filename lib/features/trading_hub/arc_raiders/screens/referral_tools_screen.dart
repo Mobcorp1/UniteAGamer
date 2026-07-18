@@ -27,7 +27,7 @@ class _ReferralToolsScreenState extends State<ReferralToolsScreen> {
     final wide = width >= 760;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07111F),
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [

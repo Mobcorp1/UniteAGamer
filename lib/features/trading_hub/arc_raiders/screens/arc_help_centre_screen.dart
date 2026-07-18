@@ -67,10 +67,10 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
         : (categories.isEmpty ? _selected : categories.first);
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       drawer: const AppDrawer(),
       appBar: AppBar(
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(
           'Help Centre',

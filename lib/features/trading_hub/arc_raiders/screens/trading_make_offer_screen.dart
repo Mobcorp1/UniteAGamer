@@ -734,8 +734,9 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text('Make Offer', style: AppTheme.tradingHeading(fontSize: 25)),
       ),
       body: Stack(

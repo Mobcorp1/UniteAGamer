@@ -75,7 +75,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: darkBackground,
+      scaffoldBackgroundColor: Colors.transparent,
       primaryColor: darkBackground,
       colorScheme: const ColorScheme.dark(
         primary: neonPink,
@@ -109,7 +109,9 @@ class AppTheme {
         labelSmall: buttonTextStyle(color: neonCyan, fontSize: 13.0),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: darkBackground,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         iconTheme: const IconThemeData(color: neonPink),
         titleTextStyle: titleTextStyle(
@@ -213,7 +215,7 @@ class AppTheme {
         radius: const Radius.circular(999),
       ),
       cardTheme: CardThemeData(
-        color: cardBackground,
+        color: cardBackgroundDeep.withValues(alpha: 0.84),
         elevation: 0,
         shadowColor: glassShadow,
         shape: RoundedRectangleBorder(

@@ -101,7 +101,7 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           const Positioned.fill(child: _ArcAuthBackdrop()),

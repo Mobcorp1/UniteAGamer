@@ -14,8 +14,11 @@ class LegalHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Legal')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Legal'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceL),
         children: [

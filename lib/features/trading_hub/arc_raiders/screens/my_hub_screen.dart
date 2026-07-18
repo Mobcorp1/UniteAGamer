@@ -259,7 +259,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
     final selected = _features[_selectedIndex];
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'My Hub',
         subtitle: 'Personal tracking, profile, rewards and operations',
@@ -1123,9 +1123,9 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     final selected = _trackingFeatures[_selectedIndex];
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(
           'Tracking',

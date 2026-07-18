@@ -217,8 +217,9 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     final profile = _profile;
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Match-a-Raider',
           style: AppTheme.neonTextStyle(

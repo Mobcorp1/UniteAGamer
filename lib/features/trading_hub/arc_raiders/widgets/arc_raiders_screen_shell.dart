@@ -20,7 +20,7 @@
 // Keep blueprint grid rendering, portrait carousel logic, ownership/dupe logic,
 // _buildGrid, and BlueprintTile structure isolated from architecture cleanup passes.
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_background.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
 
@@ -29,12 +29,7 @@ class ArcRaidersScreenBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const UagCinematicBackground(
-      backgroundAsset: UagVisualAssets.arcBackground,
-      backgroundOpacity: 0.34,
-      watermarkOpacity: 0.10,
-      showGrid: false,
-    );
+    return const ArcBlueprintGridBackground();
   }
 }
 

@@ -1,0 +1,117 @@
+# Global Visual System Manifest
+
+All reachable user and admin full-screen surfaces inherit the canonical Blueprint Grid background from `ArcGlobalVisualSystem`. Root `Scaffold` and `AppBar` surfaces are transparent so the shared background remains visible.
+
+## Shared visual sources
+
+- `ArcBlueprintGridBackground`: canonical Blueprint Grid background.
+- `ArcGlobalVisualSystem`: one application-level background above the Navigator.
+- `ArcVisualSurface`: canonical translucent panel/card surface.
+- `ArcElectricActionBorder`: reduced-motion-aware perimeter current treatment.
+- `UagPageCarousel`: canonical responsive carousel mechanics and indicators.
+
+## Classified source surfaces (103)
+
+- `lib\build\app_entry_gate.dart` — migrated
+- `lib\build\auth\auth_screen.dart` — migrated
+- `lib\build\home_screen.dart` — migrated
+- `lib\build\models\trading_profile.dart` — migrated
+- `lib\build\splash_screen.dart` — migrated
+- `lib\build\trading_hub_screen.dart` — migrated
+- `lib\features\auth\session\uag_biometric_relock_screen.dart` — migrated
+- `lib\features\feature_access_gate.dart` — migrated
+- `lib\features\legal\screens\arc_data_attribution_screen.dart` — migrated
+- `lib\features\legal\screens\legal_hub_screen.dart` — migrated
+- `lib\features\legal\screens\privacy_policy_screen.dart` — migrated
+- `lib\features\legal\screens\terms_of_use_screen.dart` — migrated
+- `lib\features\legal\screens\trader_code_of_conduct_screen.dart` — migrated
+- `lib\features\monetisation\screens\monetisation_screen.dart` — migrated
+- `lib\features\monetisation\screens\uag_plans_screen.dart` — migrated
+- `lib\features\profile\models\user_profile.dart` — migrated
+- `lib\features\profile\screens\profile_settings_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\data\arc_blueprint_grid_view_preferences.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\data\arc_command_centre_engine.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\data\arc_command_centre_view_mapper.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\data\arc_compact_tracker_card_metrics.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\data\arc_help_centre_catalog.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\data\arc_my_hub_module_catalog.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\data\arc_profile_completion_evaluator.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\models\arc_command_centre_models.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\models\arc_match_rider_profile.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\models\arc_trader_profile.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\models\trading_profile.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\raid_planner\data\raid_planner_blueprint_rules.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\raid_planner\data\raid_planner_engine.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\raid_planner\data\raid_planner_event_schedule.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\raid_planner\models\raid_planner_models.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\raid_planner\repositories\raid_planner_repository.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\raid_planner\screens\raid_planner_hunt_targets_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\raid_planner\screens\raid_planner_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\repositories\arc_trader_profile_repository.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_availability_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_away_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_beta_feedback_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_command_centre_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_create_trade_listing_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_help_centre_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_intel_explorer_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_mandatory_onboarding_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_market_intelligence_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_match_rider_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_my_trade_listings_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_profile_edit_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_profile_setup_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_raiders_hub_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_season_reset_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\arc_trader_search_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\blueprint_grid_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\favourite_loadout_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\my_hub_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\my_intel_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\nomadic_trader_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\operations_command_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\play_like_a_pro_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\referral_tools_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\scrappy_grid_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\smart_trade_assist_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trader_hub_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_activity_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_blueprint_watches_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_create_listing_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_listing_detail_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_listing_queues_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_listings_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_make_offer_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_my_listings_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_my_offers_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_notifications_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_profile_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\screens\trading_trade_sessions_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\session_planner\session_planner_screen.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\voice\voice_profiles.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\arc_beta_first_run.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\arc_market_overview_card.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\arc_profile_status_card.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\arc_raiders_screen_shell.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\arc_shared_page_ownership.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\arc_systems_page_wrapper.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\arc_trade_network_panel.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\command_centre\arc_command_centre_content.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\command_centre\arc_command_centre_widgets.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\foundation\arc_cinematic_scaffold.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\foundation\arc_my_hub_command_header.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\foundation\arc_my_hub_intelligence_feed.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\my_hub_cinematic_background.dart` — migrated
+- `lib\features\trading_hub\arc_raiders\widgets\trading_hub_feature_card.dart` — migrated
+- `lib\features\trading_hub\trading_hub_screen.dart` — migrated
+- `lib\home_screen.dart` — migrated
+- `lib\main.dart` — migrated
+- `lib\reg\onboarding_basic_profile_screen.dart` — migrated
+- `lib\screens\build\admin_console_screen.dart` — migrated
+- `lib\screens\build\app_entry_gate.dart` — migrated
+- `lib\screens\build\auth\auth_landing_screen.dart` — migrated
+- `lib\screens\build\feedback_screen.dart` — migrated
+- `lib\screens\build\splash_screen.dart` — migrated
+- `lib\widgets\arc_responsive_page_shell.dart` — migrated
+- `lib\widgets\responsive_layout_helper.dart` — migrated
+- `lib\widgets\uag_page_carousel.dart` — migrated

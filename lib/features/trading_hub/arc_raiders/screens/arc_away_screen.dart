@@ -158,8 +158,11 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Away Mode')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Away Mode'),
+      ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
         child: _isLoading

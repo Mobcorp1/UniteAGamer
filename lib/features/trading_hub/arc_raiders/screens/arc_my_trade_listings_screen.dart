@@ -13,7 +13,11 @@ class ArcMyTradeListingsScreen extends StatelessWidget {
     final repository = ArcTradeListingRepository();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Trade Listings')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('My Trade Listings'),
+      ),
       body: StreamBuilder<List<ArcTradeListing>>(
         stream: repository.watchMyListings(),
         builder: (context, snapshot) {

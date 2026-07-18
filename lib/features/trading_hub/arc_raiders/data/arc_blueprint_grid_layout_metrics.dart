@@ -1,3 +1,5 @@
+﻿import 'dart:math' as math;
+
 class ArcBlueprintGridFrameBounds {
   const ArcBlueprintGridFrameBounds({
     required this.left,
@@ -22,6 +24,26 @@ class ArcBlueprintGridJumpState {
   final bool canJumpUp;
   final bool canJumpDown;
   final double translationY;
+}
+
+class ArcBlueprintGridFittedLayout {
+  const ArcBlueprintGridFittedLayout({
+    required this.tileWidth,
+    required this.tileHeight,
+    required this.gridWidth,
+    required this.gridHeight,
+    required this.viewportWidth,
+    required this.viewportHeight,
+    required this.visibleRows,
+  });
+
+  final double tileWidth;
+  final double tileHeight;
+  final double gridWidth;
+  final double gridHeight;
+  final double viewportWidth;
+  final double viewportHeight;
+  final int visibleRows;
 }
 
 class ArcBlueprintGridLayoutMetrics {
@@ -73,6 +95,50 @@ class ArcBlueprintGridLayoutMetrics {
     );
   }
 
+  static ArcBlueprintGridFittedLayout framedLayout({
+    required int itemCount,
+    required int columns,
+    required double childAspectRatio,
+    required double spacing,
+    required double availableWidth,
+    required double availableHeight,
+    int requestedVisibleRows = 5,
+  }) {
+    final rowCount = itemCount <= 0 ? 0 : (itemCount / columns).ceil();
+    final visibleRows = math.min(requestedVisibleRows, math.max(rowCount, 1));
+    final safeWidth = math.max(availableWidth, 1);
+    final safeHeight = math.max(availableHeight, 1);
+    final widthForTiles = math.max(safeWidth - (spacing * (columns - 1)), 1);
+    final heightForTiles = math.max(
+      safeHeight - (spacing * (visibleRows - 1)),
+      1,
+    );
+    final widthLimitedTileWidth = widthForTiles / columns;
+    final heightLimitedTileWidth =
+        (heightForTiles / visibleRows) * childAspectRatio;
+    final tileWidth = math.max(
+      math.min(widthLimitedTileWidth, heightLimitedTileWidth),
+      1.0,
+    );
+    final tileHeight = tileWidth / childAspectRatio;
+    final gridWidth = (tileWidth * columns) + (spacing * (columns - 1));
+    final gridHeight = rowCount <= 0
+        ? 0.0
+        : (tileHeight * rowCount) + (spacing * (rowCount - 1));
+    final viewportHeight =
+        (tileHeight * visibleRows) + (spacing * (visibleRows - 1));
+
+    return ArcBlueprintGridFittedLayout(
+      tileWidth: tileWidth,
+      tileHeight: tileHeight,
+      gridWidth: gridWidth,
+      gridHeight: gridHeight,
+      viewportWidth: gridWidth,
+      viewportHeight: viewportHeight,
+      visibleRows: visibleRows,
+    );
+  }
+
   static double fittedRowHeight({
     required double fittedGridHeight,
     required int rowCount,
@@ -109,7 +175,8 @@ class ArcBlueprintGridLayoutMetrics {
     required double fittedGridHeight,
     required int rowCount,
     required bool down,
-    int rows = 5,
+    double rows = 5,
+    double contextOverlapRows = 0.45,
   }) {
     final state = jumpState(
       currentTranslationY: currentTranslationY,
@@ -122,7 +189,8 @@ class ArcBlueprintGridLayoutMetrics {
       fittedGridHeight: fittedGridHeight,
       rowCount: rowCount,
     );
-    final step = rowHeight * rows * scale;
+    final effectiveRows = math.max(rows - contextOverlapRows, 1);
+    final step = rowHeight * effectiveRows * scale;
     final contentHeight = fittedGridHeight * scale;
     final minTranslation = (viewportHeight - contentHeight).clamp(
       double.negativeInfinity,

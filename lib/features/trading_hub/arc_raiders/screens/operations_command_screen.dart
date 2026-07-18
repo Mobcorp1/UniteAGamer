@@ -43,7 +43,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Operations',
       ),

@@ -482,7 +482,7 @@ class _RaidPlannerHuntTargetsScreenState
         ],
       ),
       appBar: AppBar(
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(
           'Active Hunt Targets',

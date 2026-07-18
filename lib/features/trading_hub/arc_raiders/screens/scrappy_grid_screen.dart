@@ -1225,8 +1225,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Scrappy Intel',
       ),
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(_modeTitle, style: AppTheme.tradingHeading(fontSize: 25)),
         actions: [ScrappyActionsMenu(onResetGrid: _confirmResetGrid)],
       ),

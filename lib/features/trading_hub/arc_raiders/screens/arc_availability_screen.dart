@@ -144,8 +144,11 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Availability')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Availability'),
+      ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
         child: _isLoading

@@ -1069,9 +1069,10 @@ class _TradingCreateListingScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: widget.showAppBar
           ? AppBar(
+              backgroundColor: Colors.transparent,
               title: Text(
                 'Create Listing',
                 style: AppTheme.tradingHeading(fontSize: 25),

@@ -184,7 +184,7 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
           },
           child: Scaffold(
             extendBody: true,
-            backgroundColor: AppTheme.darkBackground,
+            backgroundColor: Colors.transparent,
             appBar: UagAppBar(
               leading: IconButton(
                 tooltip: 'Back',

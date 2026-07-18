@@ -90,9 +90,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final compact = screenWidth < 650;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkBackground.withValues(alpha: 0.92),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleSpacing: 12,

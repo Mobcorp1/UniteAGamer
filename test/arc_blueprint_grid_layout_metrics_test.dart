@@ -1,5 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_layout_metrics.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 
 void main() {
@@ -23,23 +24,58 @@ void main() {
       expect(frame.height, lessThan(metrics.naturalHeight));
     });
 
-    test('jump target moves directly by around five rows and clamps', () {
+    test('framed layout maximises five rows inside available space', () {
+      final layout = ArcBlueprintGridLayoutMetrics.framedLayout(
+        itemCount: 83,
+        columns: 10,
+        childAspectRatio: 0.98,
+        spacing: 6,
+        availableWidth: 1120,
+        availableHeight: 590,
+      );
+
+      expect(layout.visibleRows, 5);
+      expect(layout.viewportWidth, lessThanOrEqualTo(1120));
+      expect(layout.viewportHeight, lessThanOrEqualTo(590));
+      expect(layout.gridHeight, greaterThan(layout.viewportHeight));
+      expect(layout.tileWidth, greaterThan(90));
+    });
+
+    test('framed layout remains centred and compact on portrait width', () {
+      final layout = ArcBlueprintGridLayoutMetrics.framedLayout(
+        itemCount: 83,
+        columns: 10,
+        childAspectRatio: 0.98,
+        spacing: 6,
+        availableWidth: 340,
+        availableHeight: 520,
+      );
+
+      expect(layout.visibleRows, 5);
+      expect(layout.viewportWidth, lessThanOrEqualTo(340));
+      expect(layout.viewportHeight, lessThan(250));
+      expect(layout.gridWidth, layout.viewportWidth);
+    });
+
+    test('jump target moves by five rows with orientation overlap', () {
       final target = ArcBlueprintGridLayoutMetrics.jumpTranslationY(
         currentTranslationY: 0,
-        scale: 2,
-        viewportHeight: 450,
-        fittedGridHeight: 450,
+        scale: 1,
+        viewportHeight: 500,
+        fittedGridHeight: 900,
         rowCount: 9,
         down: true,
       );
 
-      expect(target, -450);
+      // The requested five-row jump exceeds the remaining scrollable range,
+      // so it must clamp exactly to the bottom of the grid.
+      expect(target, -400);
 
       final upper = ArcBlueprintGridLayoutMetrics.jumpTranslationY(
         currentTranslationY: target,
-        scale: 2,
-        viewportHeight: 450,
-        fittedGridHeight: 450,
+        scale: 1,
+        viewportHeight: 500,
+        fittedGridHeight: 900,
         rowCount: 9,
         down: false,
       );
@@ -58,6 +94,21 @@ void main() {
 
       expect(state.canJumpUp, isFalse);
       expect(state.canJumpDown, isFalse);
+    });
+
+    test('view mode storage is stable and defaults to framed view', () {
+      expect(
+        ArcBlueprintGridViewMode.fromStorage('full_overview'),
+        ArcBlueprintGridViewMode.fullOverview,
+      );
+      expect(
+        ArcBlueprintGridViewMode.fromStorage('unknown'),
+        ArcBlueprintGridViewMode.inGameFramed,
+      );
+      expect(
+        ArcBlueprintGridViewMode.inGameFramed.storageValue,
+        'in_game_framed',
+      );
     });
 
     test('canonical blueprint order remains sortOrder driven', () {

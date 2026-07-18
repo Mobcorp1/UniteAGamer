@@ -17,7 +17,7 @@ class UagPlansScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repository = UagMonetisationRepository();
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'UAG Plans',
         subtitle: 'Free, Essential and Premium access.',

@@ -390,9 +390,9 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
           ),
         ],
       ),
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(
           'Smart Trade Assist',

@@ -725,7 +725,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Loadout'),
       body: ArcRaidersScreenShell(
         useSafeArea: false,

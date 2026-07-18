@@ -367,8 +367,11 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(title: const Text('Set Up Your Hub Profile')),
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Set Up Your Hub Profile'),
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

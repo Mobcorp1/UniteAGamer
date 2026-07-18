@@ -112,7 +112,7 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
     final narrow = MediaQuery.sizeOf(context).width < 620;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'Closed Beta Feedback',
         subtitle: 'Report issues with diagnostics attached',

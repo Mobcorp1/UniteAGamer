@@ -42,8 +42,9 @@ class _ArcMarketIntelligenceScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Intel Snapshot',
           style: AppTheme.tradingHeading(

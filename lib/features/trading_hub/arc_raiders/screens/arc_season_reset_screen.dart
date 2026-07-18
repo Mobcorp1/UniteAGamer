@@ -63,7 +63,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Command'),
       body: ArcRaidersScreenShell(
         useSafeArea: true,

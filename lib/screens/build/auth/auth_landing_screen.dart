@@ -445,7 +445,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 720;

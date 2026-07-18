@@ -120,7 +120,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'Command Centre',
         subtitle: 'Your next ARC Raiders move',

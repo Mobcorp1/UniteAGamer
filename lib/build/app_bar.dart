@@ -70,7 +70,7 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: leading,
       titleSpacing: 16,
       centerTitle: centerTitle,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       iconTheme: const IconThemeData(color: AppTheme.neonPink),
       title: Column(
         crossAxisAlignment: centerTitle

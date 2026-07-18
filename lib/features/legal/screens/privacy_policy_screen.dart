@@ -74,10 +74,10 @@ class _LegalPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black.withValues(alpha: 0.58),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           title,

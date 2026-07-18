@@ -239,7 +239,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
         },
         child: const Icon(Icons.feedback_outlined),
       ),
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'Blueprint Tracker Beta',
         subtitle: 'Track owned, missing and duplicate blueprints',
@@ -1074,9 +1074,9 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
         },
         child: const Icon(Icons.feedback_outlined),
       ),
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         title: Text(
           'Tracking',

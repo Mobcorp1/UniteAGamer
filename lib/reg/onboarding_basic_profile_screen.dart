@@ -1950,7 +1950,7 @@ class _OnboardingBasicProfileScreenState
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         body: Stack(
           children: [
             Positioned.fill(child: StaticWatermark()),
@@ -1961,7 +1961,7 @@ class _OnboardingBasicProfileScreenState
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           Positioned.fill(child: _background()),

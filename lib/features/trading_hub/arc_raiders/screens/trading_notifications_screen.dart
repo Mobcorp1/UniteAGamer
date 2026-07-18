@@ -176,9 +176,10 @@ class TradingNotificationsScreen extends StatelessWidget {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: showAppBar
           ? AppBar(
+              backgroundColor: Colors.transparent,
               title: Text(
                 'Notifications',
                 style: AppTheme.tradingHeading(fontSize: 25),

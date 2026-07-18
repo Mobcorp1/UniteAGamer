@@ -37,8 +37,9 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       bottomNavigationBar: const ArcCompanionBottomDock(
         activeLabel: 'Community Intel',
       ),
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Intel Explorer',
           style: AppTheme.tradingHeading(

@@ -2385,13 +2385,13 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   Widget build(BuildContext context) {
     if (!_loaded) {
       return const Scaffold(
-        backgroundColor: AppTheme.darkBackground,
+        backgroundColor: Colors.transparent,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Stack(
           children: [

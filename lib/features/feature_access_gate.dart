@@ -153,7 +153,7 @@ class FeatureLockedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: UagAppBar(title: title, subtitle: 'Coming soon.'),
       drawer: const AppDrawer(),
       body: Stack(
@@ -224,7 +224,7 @@ class FeatureAccessRouteGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            backgroundColor: AppTheme.darkBackground,
+            backgroundColor: Colors.transparent,
             body: Center(
               child: CircularProgressIndicator(color: AppTheme.neonCyan),
             ),

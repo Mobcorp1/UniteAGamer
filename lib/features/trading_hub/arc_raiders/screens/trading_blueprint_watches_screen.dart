@@ -589,8 +589,9 @@ class _TradingBlueprintWatchesScreenState
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Blueprint Watches',
           style: AppTheme.tradingHeading(fontSize: 25),
