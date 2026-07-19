@@ -1,74 +1,73 @@
 import 'package:flutter/material.dart';
 
+import 'arc_layout_system.dart';
+
 class ResponsiveLayoutHelper {
-  static const double mobileBreakpoint = 600;
-  static const double tabletBreakpoint = 1024;
-  static const double desktopMaxContentWidth = 1600;
+  static const double mobileBreakpoint = ArcLayoutTokens.compactBreakpoint;
+  static const double tabletBreakpoint = ArcLayoutTokens.tabletBreakpoint;
+  static const double desktopBreakpoint = ArcLayoutTokens.desktopBreakpoint;
+  static const double desktopMaxContentWidth = ArcLayoutTokens.wideContentWidth;
 
   static bool isMobile(BuildContext context) {
-    return MediaQuery.of(context).size.width < mobileBreakpoint;
+    return MediaQuery.sizeOf(context).width < mobileBreakpoint;
   }
 
   static bool isTablet(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    return width >= mobileBreakpoint && width < tabletBreakpoint;
+    final width = MediaQuery.sizeOf(context).width;
+    return width >= mobileBreakpoint && width < desktopBreakpoint;
   }
 
   static bool isDesktop(BuildContext context) {
-    return MediaQuery.of(context).size.width >= tabletBreakpoint;
+    return MediaQuery.sizeOf(context).width >= desktopBreakpoint;
   }
 
   static double horizontalPadding(BuildContext context) {
-    if (isDesktop(context)) return 24;
-    if (isTablet(context)) return 18;
-    return 12;
+    return ArcLayoutTokens.pagePadding(context).horizontal / 2;
   }
 
   static double maxContentWidth(BuildContext context) {
-    if (isDesktop(context)) return desktopMaxContentWidth;
-    if (isTablet(context)) return 1100;
-    return MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
+    if (width >= ArcLayoutTokens.wideDesktopBreakpoint) {
+      return ArcLayoutTokens.wideContentWidth;
+    }
+    if (width >= desktopBreakpoint) {
+      return ArcLayoutTokens.standardContentWidth;
+    }
+    if (width >= tabletBreakpoint) return 980;
+    return width;
   }
 
   static int cardGridColumns(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width >= 1600) return 5;
-    if (width >= 1280) return 4;
-    if (width >= 1024) return 3;
-    if (width >= 700) return 2;
-    return 1;
+    return ArcLayoutTokens.columns(
+      context,
+      compact: 1,
+      tablet: 2,
+      desktop: 3,
+      wide: 4,
+    );
   }
 
-  static bool compactStatusRow(BuildContext context) {
-    return isDesktop(context);
-  }
+  static bool compactStatusRow(BuildContext context) => isDesktop(context);
 
   static EdgeInsets contentPadding(BuildContext context) {
-    return EdgeInsets.symmetric(
-      horizontal: horizontalPadding(context),
-      vertical: isDesktop(context) ? 20 : 12,
-    );
+    return ArcLayoutTokens.pagePadding(context);
   }
 }
 
 class ResponsiveContentWrapper extends StatelessWidget {
-  final Widget child;
+  const ResponsiveContentWrapper({
+    super.key,
+    required this.child,
+    this.width = ArcPageWidth.standard,
+    this.padding,
+  });
 
-  const ResponsiveContentWrapper({super.key, required this.child});
+  final Widget child;
+  final ArcPageWidth width;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: ResponsiveLayoutHelper.maxContentWidth(context),
-        ),
-        child: Padding(
-          padding: ResponsiveLayoutHelper.contentPadding(context),
-          child: child,
-        ),
-      ),
-    );
+    return ArcPageViewport(width: width, padding: padding, child: child);
   }
 }

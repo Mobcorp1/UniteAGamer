@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'arc_layout_system.dart';
+
 class ArcResponsiveChrome {
   const ArcResponsiveChrome._();
 
@@ -7,66 +9,53 @@ class ArcResponsiveChrome {
   static double height(BuildContext context) =>
       MediaQuery.sizeOf(context).height;
 
-  static bool isCompact(BuildContext context) => width(context) < 700;
+  static bool isCompact(BuildContext context) =>
+      width(context) < ArcLayoutTokens.compactBreakpoint;
   static bool isTablet(BuildContext context) =>
-      width(context) >= 700 && width(context) < 1100;
-  static bool isDesktop(BuildContext context) => width(context) >= 1100;
-  static bool isLargeDesktop(BuildContext context) => width(context) >= 1440;
+      width(context) >= ArcLayoutTokens.compactBreakpoint &&
+      width(context) < ArcLayoutTokens.desktopBreakpoint;
+  static bool isDesktop(BuildContext context) =>
+      width(context) >= ArcLayoutTokens.desktopBreakpoint;
+  static bool isLargeDesktop(BuildContext context) =>
+      width(context) >= ArcLayoutTokens.wideDesktopBreakpoint;
 
   static double maxContentWidth(BuildContext context) {
-    final w = width(context);
-    if (w >= 1800) return 1480;
-    if (w >= 1440) return 1320;
-    if (w >= 1100) return 1180;
-    if (w >= 700) return 860;
-    return w;
+    if (isLargeDesktop(context)) return ArcLayoutTokens.wideContentWidth;
+    if (isDesktop(context)) return ArcLayoutTokens.standardContentWidth;
+    if (width(context) >= ArcLayoutTokens.tabletBreakpoint) return 980;
+    if (width(context) >= ArcLayoutTokens.compactBreakpoint) return 760;
+    return width(context);
   }
 
-  static EdgeInsets pagePadding(BuildContext context) {
-    final w = width(context);
-    if (w >= 1440) {
-      return const EdgeInsets.symmetric(horizontal: 24, vertical: 18);
-    }
-    if (w >= 1100) {
-      return const EdgeInsets.symmetric(horizontal: 18, vertical: 16);
-    }
-    if (w >= 700) {
-      return const EdgeInsets.symmetric(horizontal: 14, vertical: 14);
-    }
-    return const EdgeInsets.symmetric(horizontal: 12, vertical: 10);
-  }
+  static EdgeInsets pagePadding(BuildContext context) =>
+      ArcLayoutTokens.pagePadding(context);
 
   static double dockHeight(BuildContext context) {
     final h = height(context);
     final w = width(context);
-    if (w < 700) return h < 720 ? 104 : 116;
-    if (w < 1100) return 108;
-    return 76;
+    if (w < ArcLayoutTokens.compactBreakpoint) return h < 720 ? 96 : 108;
+    if (w < ArcLayoutTokens.desktopBreakpoint) return 100;
+    return 72;
   }
 
   static double dockMaxWidth(BuildContext context) {
     final w = width(context);
-    if (w >= 1100) return 820;
-    if (w >= 700) return 760;
+    if (w >= ArcLayoutTokens.desktopBreakpoint) return 860;
+    if (w >= ArcLayoutTokens.compactBreakpoint) return 760;
     return w;
   }
 
   static double adHeight(BuildContext context) {
-    final w = width(context);
-    if (w < 700) return 58;
-    return 90;
+    return width(context) < ArcLayoutTokens.compactBreakpoint ? 58 : 90;
   }
 
   static double adMaxWidth(BuildContext context) {
-    final w = width(context);
-    if (w >= 700) return 728;
-    return 320;
+    return width(context) >= ArcLayoutTokens.compactBreakpoint ? 728 : 320;
   }
 
   static double bottomSafePadding(BuildContext context, {bool hasAd = true}) {
     final safe = MediaQuery.paddingOf(context).bottom;
-    final w = width(context);
-    final gap = w >= 1100 ? 18.0 : 28.0;
+    final gap = isDesktop(context) ? 16.0 : 22.0;
     return safe + dockHeight(context) + (hasAd ? adHeight(context) : 0) + gap;
   }
 
@@ -85,9 +74,9 @@ class ArcResponsiveChrome {
   }) {
     final w = width(context);
     if (w >= 1800) return ultraWide;
-    if (w >= 1440) return largeDesktop;
-    if (w >= 1100) return desktop;
-    if (w >= 700) return tablet;
+    if (w >= ArcLayoutTokens.wideDesktopBreakpoint) return largeDesktop;
+    if (w >= ArcLayoutTokens.desktopBreakpoint) return desktop;
+    if (w >= ArcLayoutTokens.compactBreakpoint) return tablet;
     return mobile;
   }
 }

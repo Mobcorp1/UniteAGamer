@@ -220,20 +220,87 @@ class _UagPageCarouselState extends State<UagPageCarousel> {
                 ),
               ),
             Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                padEnds: widget.padEnds,
-                physics: widget.physics ?? const BouncingScrollPhysics(),
-                onPageChanged: _handlePageChanged,
-                itemCount: widget.pages.length,
-                itemBuilder: widget.enable3d
-                    ? _buildTransformedPage
-                    : (context, index) => widget.pages[index],
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: PageView.builder(
+                      controller: _controller,
+                      padEnds: widget.padEnds,
+                      physics: widget.physics ?? const BouncingScrollPhysics(),
+                      onPageChanged: _handlePageChanged,
+                      itemCount: widget.pages.length,
+                      itemBuilder: widget.enable3d
+                          ? _buildTransformedPage
+                          : (context, index) => widget.pages[index],
+                    ),
+                  ),
+                  if (constraints.maxWidth >= 900) ...[
+                    Positioned(
+                      left: 4,
+                      child: _UagCarouselArrow(
+                        icon: Icons.chevron_left_rounded,
+                        enabled: _currentPage.round() > 0,
+                        onPressed: () {
+                          _controller.previousPage(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                          );
+                        },
+                      ),
+                    ),
+                    Positioned(
+                      right: 4,
+                      child: _UagCarouselArrow(
+                        icon: Icons.chevron_right_rounded,
+                        enabled: _currentPage.round() < widget.pages.length - 1,
+                        onPressed: () {
+                          _controller.nextPage(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _UagCarouselArrow extends StatelessWidget {
+  const _UagCarouselArrow({
+    required this.icon,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      child: IconButton.filledTonal(
+        onPressed: enabled ? onPressed : null,
+        icon: Icon(icon),
+        style: IconButton.styleFrom(
+          backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+          foregroundColor: AppTheme.neonCyan,
+          disabledForegroundColor: Colors.white24,
+          side: BorderSide(
+            color: AppTheme.neonCyan.withValues(alpha: enabled ? 0.42 : 0.12),
+          ),
+        ),
+      ),
     );
   }
 }

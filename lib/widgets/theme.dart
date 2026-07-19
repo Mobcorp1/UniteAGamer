@@ -205,7 +205,68 @@ class AppTheme {
           ),
         ),
       ),
-      dialogTheme: const DialogThemeData(backgroundColor: darkBackground),
+      dialogTheme: DialogThemeData(
+        backgroundColor: cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+          side: BorderSide(color: glassBorder, width: cardBorderWidth),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: cardBackgroundDeep,
+        modalBackgroundColor: cardBackgroundDeep,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        dragHandleColor: neonCyan.withValues(alpha: 0.42),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(cardRadius)),
+        ),
+      ),
+      listTileTheme: ListTileThemeData(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        iconColor: neonCyan,
+        textColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: neonCyan.withValues(alpha: 0.16),
+        thickness: 1,
+        space: spaceL,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: cardBackgroundDeep.withValues(alpha: 0.96),
+        indicatorColor: neonCyan.withValues(alpha: 0.14),
+        surfaceTintColor: Colors.transparent,
+        height: 68,
+        labelTextStyle: WidgetStateProperty.all(
+          buttonTextStyle(color: Colors.white70, fontSize: 12),
+        ),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: cardBackgroundDeep.withValues(alpha: 0.94),
+        indicatorColor: neonCyan.withValues(alpha: 0.14),
+        selectedIconTheme: const IconThemeData(color: neonCyan),
+        unselectedIconTheme: const IconThemeData(color: Colors.white54),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: cardBackgroundDeep,
+        contentTextStyle: bodyTextStyle(fontSize: 14, color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(buttonRadius),
+          side: BorderSide(color: neonCyan.withValues(alpha: 0.34)),
+        ),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: neonCyan,
+        linearTrackColor: cardBackgroundAlt,
+        circularTrackColor: cardBackgroundAlt,
+      ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(neonCyan.withValues(alpha: 0.60)),
         trackColor: WidgetStateProperty.all(

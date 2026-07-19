@@ -1,24 +1,15 @@
 import 'package:flutter/material.dart';
+
+import 'arc_layout_system.dart';
 import 'arc_responsive_chrome.dart';
 
-import 'responsive_layout_helper.dart';
-import 'theme.dart';
-
 class ArcResponsivePageShell extends StatelessWidget {
-  final Widget child;
-  final EdgeInsets? padding;
-  final double? maxWidth;
-  final bool safeArea;
-  final bool scrollable;
-  final bool includeDockPadding;
-  final ScrollController? controller;
-  final Alignment alignment;
-
   const ArcResponsivePageShell({
     super.key,
     required this.child,
     this.padding,
     this.maxWidth,
+    this.width = ArcPageWidth.standard,
     this.safeArea = true,
     this.scrollable = true,
     this.includeDockPadding = true,
@@ -26,41 +17,40 @@ class ArcResponsivePageShell extends StatelessWidget {
     this.alignment = Alignment.topCenter,
   });
 
+  final Widget child;
+  final EdgeInsets? padding;
+  final double? maxWidth;
+  final ArcPageWidth width;
+  final bool safeArea;
+  final bool scrollable;
+  final bool includeDockPadding;
+  final ScrollController? controller;
+  final Alignment alignment;
+
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
-
-    final resolvedPadding =
-        padding ??
-        EdgeInsets.fromLTRB(
-          ResponsiveLayoutHelper.horizontalPadding(context),
-          isDesktop ? AppTheme.spaceM : AppTheme.spaceS,
-          ResponsiveLayoutHelper.horizontalPadding(context),
-          includeDockPadding ? (isDesktop ? 112 : 118) : AppTheme.spaceL,
-        );
+    final isDesktop = ArcResponsiveChrome.isDesktop(context);
+    final base = padding ?? ArcLayoutTokens.pagePadding(context);
+    final resolvedPadding = base.copyWith(
+      bottom: includeDockPadding
+          ? ArcResponsiveChrome.bottomSafePadding(context)
+          : base.bottom,
+    );
 
     Widget content = Align(
       alignment: alignment,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: maxWidth ?? ResponsiveLayoutHelper.maxContentWidth(context),
+          maxWidth:
+              maxWidth ??
+              ArcLayoutTokens.contentMaxWidth(context, width: width),
         ),
-        child: Padding(
-          padding: resolvedPadding.copyWith(
-            bottom: ArcResponsiveChrome.bottomSafePadding(context),
-          ),
-          child: child,
-        ),
+        child: Padding(padding: resolvedPadding, child: child),
       ),
     );
 
-    if (safeArea) {
-      content = SafeArea(child: content);
-    }
-
-    if (!scrollable) {
-      return content;
-    }
+    if (safeArea) content = SafeArea(child: content);
+    if (!scrollable) return content;
 
     return Scrollbar(
       controller: controller,
@@ -77,37 +67,36 @@ class ArcResponsivePageShell extends StatelessWidget {
 }
 
 class ArcResponsiveSliverShell extends StatelessWidget {
-  final List<Widget> children;
-  final EdgeInsets? padding;
-  final double? maxWidth;
-  final bool includeDockPadding;
-  final ScrollController? controller;
-
   const ArcResponsiveSliverShell({
     super.key,
     required this.children,
     this.padding,
     this.maxWidth,
+    this.width = ArcPageWidth.standard,
     this.includeDockPadding = true,
     this.controller,
   });
 
+  final List<Widget> children;
+  final EdgeInsets? padding;
+  final double? maxWidth;
+  final ArcPageWidth width;
+  final bool includeDockPadding;
+  final ScrollController? controller;
+
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
-    final resolvedPadding =
-        padding ??
-        EdgeInsets.fromLTRB(
-          ResponsiveLayoutHelper.horizontalPadding(context),
-          isDesktop ? AppTheme.spaceM : AppTheme.spaceS,
-          ResponsiveLayoutHelper.horizontalPadding(context),
-          includeDockPadding ? (isDesktop ? 112 : 118) : AppTheme.spaceL,
-        );
+    final base = padding ?? ArcLayoutTokens.pagePadding(context);
+    final resolvedPadding = base.copyWith(
+      bottom: includeDockPadding
+          ? ArcResponsiveChrome.bottomSafePadding(context)
+          : base.bottom,
+    );
 
     return SafeArea(
       child: Scrollbar(
         controller: controller,
-        thumbVisibility: isDesktop,
+        thumbVisibility: ArcResponsiveChrome.isDesktop(context),
         interactive: true,
         child: CustomScrollView(
           controller: controller,
@@ -115,9 +104,7 @@ class ArcResponsiveSliverShell extends StatelessWidget {
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             SliverPadding(
-              padding: resolvedPadding.copyWith(
-                bottom: ArcResponsiveChrome.bottomSafePadding(context),
-              ),
+              padding: resolvedPadding,
               sliver: SliverToBoxAdapter(
                 child: Align(
                   alignment: Alignment.topCenter,
@@ -125,7 +112,10 @@ class ArcResponsiveSliverShell extends StatelessWidget {
                     constraints: BoxConstraints(
                       maxWidth:
                           maxWidth ??
-                          ResponsiveLayoutHelper.maxContentWidth(context),
+                          ArcLayoutTokens.contentMaxWidth(
+                            context,
+                            width: width,
+                          ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
