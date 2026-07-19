@@ -43,3 +43,15 @@ PASS 262B converts the screen manifest from a file-level scan into a route-level
 - Route source of truth: `docs/design/global_layout_screen_manifest.csv`
 - Manual QA checklist: `docs/testing/pass_262b_every_screen_layout_checklist.md`
 - Checklist CSV: `docs/testing/pass_262b_every_screen_layout_checklist.csv`
+
+## PASS 262C Runtime Repair Log
+
+### Command Centre Systems Carousel
+
+- Destination: `/trading-hub/arc-raiders/command-centre`
+- Viewport tested: automated desktop/web harness at 1366 x 768 with a 1000 px carousel stage.
+- Issue found: flat/non-3D carousels used the mobile `viewportFraction` on desktop, so the Command Centre systems deck could show oversized mobile-width cards on web.
+- Root cause: `UagPageCarousel._effectiveViewportFraction` returned `viewportFraction` whenever `enable3d` was false.
+- Fix applied: responsive viewport fraction selection now runs independently from the 3D transform mode; `enable3d` only controls page transforms.
+- Automated coverage added: `flat command carousels keep responsive desktop page widths` in `test/arc_every_screen_layout_migration_test.dart`.
+- Remaining manual check: authenticated Command Centre route walkthrough on Android portrait, Android landscape, tablet, and desktop/web to verify live data card density and tap targets.

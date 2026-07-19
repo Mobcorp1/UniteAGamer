@@ -44,3 +44,25 @@ The CSV companion contains one row per reachable route and columns for the requi
 - Android debug build passed.
 - `git diff --check` passed.
 - No unrelated generated files included in the PASS 262B commit.
+
+## PASS 262C Runtime Repair Log
+
+### Command Centre
+
+- Destination: `/trading-hub/arc-raiders/command-centre`
+- Viewport tested: desktop/web automated widget harness at 1366 x 768.
+- Issue found: the systems carousel could stay in mobile-width mode on desktop when rendered as a flat carousel.
+- Root cause: the shared carousel tied responsive viewport fractions to `enable3d`, so flat carousels skipped tablet/web fractions.
+- Fix applied: `UagPageCarousel` now applies tablet/web/mobile viewport fractions regardless of 3D transform mode.
+- Automated coverage added: `flat command carousels keep responsive desktop page widths`.
+- Remaining manual check: live authenticated Command Centre walkthrough on Android portrait, Android landscape, tablet, and desktop/web.
+
+### Reviewed With No Code Repair
+
+- Onboarding: reviewed focus/scroll architecture and retained existing active-card behavior; manual device walkthrough still required for consent progression.
+- Profile & Reputation: reviewed route/layout construction; no deterministic shared blocker found in code scan.
+- Favourite Loadout: reviewed responsive loadout grid usage; no repeatable shared blocker found beyond final build/test validation.
+- Blueprint Tracker: protected grid internals were not modified.
+- Scrappy / Bench / Quest trackers: reviewed shared carousel usage; 3D tracker mode already uses responsive fractions and focused carousel tests pass.
+- Operations / Reward Vault: reviewed page-list shell usage; no safe repeatable shared blocker found in this pass.
+- Trading Listings / Smart Trade / Match Rider / Raid Planner / Hunt Targets / Player Locker Pro / Admin preview tools: reviewed route construction and shared shell use; live data/manual walkthrough remains required where Firebase or entitlement state controls the route.

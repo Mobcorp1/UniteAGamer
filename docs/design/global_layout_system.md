@@ -38,3 +38,7 @@ PASS 262B extends the shared system into route-level screen migration:
 - Command Centre and Scrappy tracker carousels now use `UagPageCarousel` where their layouts can safely share the canonical carousel.
 
 The route-level manifest is maintained in `docs/design/global_layout_screen_manifest.csv`.
+
+## PASS 262C runtime note
+
+`UagPageCarousel` responsive viewport fractions are independent from `enable3d`. Flat carousels, such as the Command Centre systems deck, must still honor mobile, tablet, and desktop page widths; `enable3d` only controls the transform treatment.

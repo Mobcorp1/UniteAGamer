@@ -127,7 +127,6 @@ class _UagPageCarouselState extends State<UagPageCarousel> {
   }
 
   double _effectiveViewportFraction(double width) {
-    if (!widget.enable3d) return widget.viewportFraction;
     if (width >= 1000) return widget.webViewportFraction;
     if (width >= 650) return widget.tabletViewportFraction;
     return widget.viewportFraction;

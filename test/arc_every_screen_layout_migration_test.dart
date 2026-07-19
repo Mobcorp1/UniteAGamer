@@ -171,6 +171,42 @@ void main() {
     expect(find.byType(PageView), findsNothing);
   });
 
+  testWidgets('flat command carousels keep responsive desktop page widths', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1366, 768);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(size: Size(1366, 768)),
+          child: Scaffold(
+            body: SizedBox(
+              width: 1000,
+              height: 220,
+              child: UagPageCarousel(
+                enable3d: false,
+                viewportFraction: 0.86,
+                tabletViewportFraction: 0.52,
+                webViewportFraction: 0.34,
+                pages: [
+                  SizedBox(key: Key('flat-page-one'), height: 120),
+                  SizedBox(key: Key('flat-page-two'), height: 120),
+                  SizedBox(key: Key('flat-page-three'), height: 120),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(const Key('flat-page-one'))).width, 340);
+  });
+
   test(
     'route manifest covers reachable full-screen routes without duplicates',
     () {
