@@ -20,6 +20,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scrappy_progress_header.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scrappy_tile.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_page_carousel.dart';
 
 enum ArcScrappyTrackerMode { scrappy, bench, quest }
 
@@ -922,202 +923,44 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       _trackerCarouselIndex = 0;
     }
 
-    final activeIndex = _trackerCarouselIndex.clamp(0, cards.length - 1);
-    final leftIndex = (activeIndex - 1 + cards.length) % cards.length;
-    final rightIndex = (activeIndex + 1) % cards.length;
-
-    void go(int delta) {
-      setState(() {
-        _trackerCarouselIndex =
-            (_trackerCarouselIndex + delta + cards.length) % cards.length;
-      });
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final stageWidth = constraints.maxWidth;
-        final isWide = stageWidth >= 980;
-        final isTablet = stageWidth >= 680;
-
-        final centreWidth = isWide
-            ? 520.0
-            : isTablet
-            ? 456.0
-            : (stageWidth * 0.94).clamp(304.0, 382.0).toDouble();
-
         final centreHeight = ArcCompactTrackerCardMetrics.centreHeight(
           stageWidth: stageWidth,
           maxItemCount: maxItemCount,
         );
-        final sideWidth = centreWidth * (isWide ? 0.76 : 0.72);
-        final sideHeight = centreHeight * 0.84;
-        final sideOffset = (centreWidth * (isWide ? 0.76 : 0.66))
-            .clamp(204.0, 326.0)
-            .toDouble();
 
-        Widget ringCard({
-          required int index,
-          required double xOffset,
-          required double width,
-          required double height,
-          required double top,
-          required double scale,
-          required double opacity,
-          required bool active,
-        }) {
-          return AnimatedPositioned(
-            duration: const Duration(milliseconds: 260),
-            curve: Curves.easeOutCubic,
-            left: (stageWidth - width) / 2 + xOffset,
-            top: top,
-            width: width,
-            height: height,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 220),
-              opacity: opacity,
-              child: Transform.scale(
-                scale: scale,
-                child: IgnorePointer(
-                  ignoring: !active,
+        return SizedBox(
+          height: centreHeight + 42,
+          child: UagPageCarousel(
+            key: ValueKey(
+              'tracker-carousel-${_mode.name}-${cards.length}-$maxItemCount',
+            ),
+            viewportFraction: 0.90,
+            tabletViewportFraction: 0.66,
+            webViewportFraction: stageWidth >= 1180 ? 0.42 : 0.52,
+            padEnds: true,
+            enable3d: cards.length > 1,
+            sideScale: 0.90,
+            outerScale: 0.78,
+            maxSideLift: 8,
+            maxSideRotation: 0.08,
+            onPageChanged: (index) {
+              setState(() => _trackerCarouselIndex = index);
+            },
+            pages: [
+              for (var i = 0; i < cards.length; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: SingleChildScrollView(
-                    physics: active
+                    physics: i == _trackerCarouselIndex
                         ? const BouncingScrollPhysics()
                         : const NeverScrollableScrollPhysics(),
-                    child: cards[index],
+                    child: cards[i],
                   ),
                 ),
-              ),
-            ),
-          );
-        }
-
-        Widget arrow({required bool next}) {
-          return Positioned(
-            top: 0,
-            bottom: 8,
-            left: next ? null : AppTheme.spaceS,
-            right: next ? AppTheme.spaceS : null,
-            child: Center(
-              child: Material(
-                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.76),
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => go(next ? 1 : -1),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.neonCyan.withValues(alpha: 0.56),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.neonCyan.withValues(alpha: 0.28),
-                          blurRadius: 18,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      next
-                          ? Icons.chevron_right_rounded
-                          : Icons.chevron_left_rounded,
-                      color: AppTheme.neonCyan,
-                      size: 30,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        return GestureDetector(
-          onHorizontalDragEnd: (details) {
-            final velocity = details.primaryVelocity ?? 0;
-            if (velocity < -120) {
-              go(1);
-            } else if (velocity > 120) {
-              go(-1);
-            }
-          },
-          child: SizedBox(
-            height: centreHeight + 28,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                if (cards.length > 1)
-                  ringCard(
-                    index: leftIndex,
-                    xOffset: -sideOffset,
-                    width: sideWidth,
-                    height: sideHeight,
-                    top: 30,
-                    scale: 0.96,
-                    opacity: 0.58,
-                    active: false,
-                  ),
-                if (cards.length > 1)
-                  ringCard(
-                    index: rightIndex,
-                    xOffset: sideOffset,
-                    width: sideWidth,
-                    height: sideHeight,
-                    top: 30,
-                    scale: 0.96,
-                    opacity: 0.58,
-                    active: false,
-                  ),
-                ringCard(
-                  index: activeIndex,
-                  xOffset: 0,
-                  width: centreWidth,
-                  height: centreHeight,
-                  top: 0,
-                  scale: 1,
-                  opacity: 1,
-                  active: true,
-                ),
-                if (cards.length > 1) arrow(next: false),
-                if (cards.length > 1) arrow(next: true),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      for (var i = 0; i < cards.length; i++)
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: i == activeIndex ? 22 : 7,
-                          height: 7,
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(99),
-                            color: i == activeIndex
-                                ? AppTheme.neonPink
-                                : Colors.white.withValues(alpha: 0.24),
-                            boxShadow: i == activeIndex
-                                ? [
-                                    BoxShadow(
-                                      color: AppTheme.neonPink.withValues(
-                                        alpha: 0.42,
-                                      ),
-                                      blurRadius: 12,
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         );
       },

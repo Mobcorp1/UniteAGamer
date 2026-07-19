@@ -3,7 +3,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_page_carousel.dart';
 
 class ArcCommandCentreContent extends StatefulWidget {
   const ArcCommandCentreContent({
@@ -26,16 +28,7 @@ class ArcCommandCentreContent extends StatefulWidget {
 
 class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   final Map<String, bool> _expandedPanels = <String, bool>{};
-  late final PageController _systemsController = PageController(
-    viewportFraction: 0.34,
-  );
   int _systemsIndex = 0;
-
-  @override
-  void dispose() {
-    _systemsController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,19 +38,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final commandMoves = _commandMoves(commandState).take(6).toList();
 
     return ArcRaidersPageList(
-      maxWidth: 920,
+      maxWidth: 1180,
       bottomPadding: 74,
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
       children: [
-        _missionHero(commandState.priority),
-        const SizedBox(height: 8),
-        _actionConsole(commandMoves),
-        const SizedBox(height: 8),
-        _dailyChecklist(commandState.checklist),
-        if (liveTiles.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _liveTileGrid(liveTiles),
-        ],
+        _topCommandDeck(commandState, commandMoves, liveTiles),
         const SizedBox(height: 8),
         _systemCarousel(carouselTiles),
         const SizedBox(height: 8),
@@ -79,6 +63,52 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _topCommandDeck(
+    ArcCommandCentreState commandState,
+    List<_CommandMoveData> commandMoves,
+    List<_CommandTileData> liveTiles,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 980;
+        final primary = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _missionHero(commandState.priority),
+            const SizedBox(height: 8),
+            _actionConsole(commandMoves),
+          ],
+        );
+        final secondary = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _dailyChecklist(commandState.checklist),
+            if (liveTiles.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _liveTileGrid(liveTiles),
+            ],
+          ],
+        );
+
+        if (!desktop) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [primary, const SizedBox(height: 8), secondary],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 7, child: primary),
+            const SizedBox(width: 12),
+            Expanded(flex: 5, child: secondary),
+          ],
+        );
+      },
     );
   }
 
@@ -450,62 +480,39 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                   const Expanded(
                     child: ArcCommandSectionHeader(
                       title: 'Systems',
-                      subtitle: 'Swipe or use arrows.',
+                      subtitle: 'Swipe on mobile. Use arrows on desktop.',
                       accent: AppTheme.neonCyan,
                     ),
-                  ),
-                  _carouselArrow(
-                    icon: Icons.chevron_left_rounded,
-                    enabled: _systemsIndex > 0,
-                    onTap: () => _moveSystemsCarousel(-1, tiles.length),
-                  ),
-                  const SizedBox(width: 6),
-                  _carouselArrow(
-                    icon: Icons.chevron_right_rounded,
-                    enabled: _systemsIndex < tiles.length - 1,
-                    onTap: () => _moveSystemsCarousel(1, tiles.length),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               SizedBox(
                 height: deckHeight,
-                child: PageView.builder(
-                  controller: _systemsController,
-                  padEnds: false,
-                  itemCount: tiles.length,
-                  onPageChanged: (index) =>
-                      setState(() => _systemsIndex = index),
-                  itemBuilder: (context, index) => Padding(
-                    padding: EdgeInsets.only(
-                      right: index == tiles.length - 1 ? 0 : 10,
-                    ),
-                    child: _carouselCard(tiles[index]),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (var i = 0; i < tiles.length; i++)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: i == _systemsIndex ? 18 : 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
-                        color:
-                            (i == _systemsIndex
-                                    ? AppTheme.neonCyan
-                                    : Colors.white24)
-                                .withValues(
-                                  alpha: i == _systemsIndex ? 0.9 : 0.5,
-                                ),
+                child: UagPageCarousel(
+                  key: ValueKey('command-systems-${tiles.length}'),
+                  viewportFraction: 0.86,
+                  tabletViewportFraction: 0.52,
+                  webViewportFraction: 0.34,
+                  showIndicator: true,
+                  indicatorPadding: EdgeInsets.zero,
+                  onPageChanged: (index) {
+                    setState(() => _systemsIndex = index);
+                  },
+                  enable3d: false,
+                  pages: [
+                    for (var i = 0; i < tiles.length; i++)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: i == tiles.length - 1 ? 0 : 10,
+                        ),
+                        child: _carouselCard(
+                          tiles[i],
+                          active: i == _systemsIndex,
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ],
           );
@@ -514,49 +521,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _carouselArrow({
-    required IconData icon,
-    required bool enabled,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha: 0.30),
-          border: Border.all(
-            color: (enabled ? AppTheme.neonCyan : Colors.white24).withValues(
-              alpha: enabled ? 0.55 : 0.22,
-            ),
-          ),
-        ),
-        child: Icon(
-          icon,
-          color: enabled ? AppTheme.neonCyan : Colors.white24,
-          size: 24,
-        ),
-      ),
-    );
-  }
-
-  void _moveSystemsCarousel(int delta, int length) {
-    if (length <= 0) return;
-    final next = (_systemsIndex + delta).clamp(0, length - 1);
-    _systemsController.animateToPage(
-      next,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  Widget _carouselCard(_CommandTileData tile) {
+  Widget _carouselCard(_CommandTileData tile, {required bool active}) {
     final accent = arcCommandStatusAccent(tile.status);
     return _tapSurface(
       action: tile.action,
+      active: active,
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: _imageDecoration(tile.image, accent, radius: 16),
@@ -1220,8 +1189,9 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _tapSurface({
     required ArcCommandAction action,
     required Widget child,
+    bool active = false,
   }) {
-    return Material(
+    final surface = Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -1229,6 +1199,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         child: child,
       ),
     );
+
+    if (!active) return surface;
+
+    return ArcElectricActionBorder(active: active, radius: 20, child: surface);
   }
 
   String _panelSubtitle(ArcCommandSummaryPanel panel) {

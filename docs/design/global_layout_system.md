@@ -26,3 +26,15 @@ Carousels now retain mobile swipe behaviour and add shared desktop previous/next
 - The global Blueprint Grid background remains the canonical backdrop.
 - Electric current remains reserved for the single active/actionable element.
 - New screens should use `ArcPageViewport`, `ArcPageHeader`, `ArcSection`, `ArcAdaptiveGrid`, `ArcActionSurface`, and `ArcStatePanel` rather than adding local layout constants.
+
+## PASS 262B migration notes
+
+PASS 262B extends the shared system into route-level screen migration:
+
+- `ArcRaidersResponsiveContent` and `ArcRaidersPageList` now default to `ArcLayoutTokens.pagePadding(context)` while preserving explicit caller padding.
+- `ArcSystemsPageWrapper` uses the shared global ARC background and `ArcPageViewport` width constraints.
+- `ArcResponsiveSplitPane` provides reusable desktop two-column / compact stacked composition for command-style screens.
+- `ArcFormGrid` provides a standard two-column adaptive form field layout.
+- Command Centre and Scrappy tracker carousels now use `UagPageCarousel` where their layouts can safely share the canonical carousel.
+
+The route-level manifest is maintained in `docs/design/global_layout_screen_manifest.csv`.

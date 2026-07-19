@@ -21,6 +21,7 @@
 // _buildGrid, and BlueprintTile structure isolated from architecture cleanup passes.
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
 
@@ -101,19 +102,19 @@ class ArcRaidersResponsiveContent extends StatelessWidget {
     super.key,
     required this.child,
     this.maxWidth = 1160,
-    this.padding = const EdgeInsets.fromLTRB(8, 0, 8, 2),
+    this.padding,
     this.alignTop = true,
   });
 
   final Widget child;
   final double maxWidth;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final bool alignTop;
 
   @override
   Widget build(BuildContext context) {
     final content = Padding(
-      padding: padding,
+      padding: padding ?? ArcLayoutTokens.pagePadding(context),
       child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
@@ -163,14 +164,14 @@ class ArcRaidersPageList extends StatelessWidget {
     super.key,
     required this.children,
     this.maxWidth = 1160,
-    this.padding = const EdgeInsets.fromLTRB(8, 0, 8, 2),
+    this.padding,
     this.bottomPadding = 38,
     this.physics,
   });
 
   final List<Widget> children;
   final double maxWidth;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final double bottomPadding;
   final ScrollPhysics? physics;
 

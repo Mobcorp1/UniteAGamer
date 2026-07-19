@@ -309,6 +309,81 @@ class ArcAdaptiveGrid extends StatelessWidget {
   }
 }
 
+class ArcResponsiveSplitPane extends StatelessWidget {
+  const ArcResponsiveSplitPane({
+    super.key,
+    required this.primary,
+    required this.secondary,
+    this.primaryFlex = 7,
+    this.secondaryFlex = 5,
+    this.breakpoint = ArcLayoutTokens.tabletBreakpoint,
+    this.spacing,
+    this.primaryFirstOnCompact = true,
+  });
+
+  final Widget primary;
+  final Widget secondary;
+  final int primaryFlex;
+  final int secondaryFlex;
+  final double breakpoint;
+  final double? spacing;
+  final bool primaryFirstOnCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gap = spacing ?? ArcLayoutTokens.cardGap(context);
+        final wide = constraints.maxWidth >= breakpoint;
+        if (!wide) {
+          final children = primaryFirstOnCompact
+              ? [primary, SizedBox(height: gap), secondary]
+              : [secondary, SizedBox(height: gap), primary];
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: primaryFlex, child: primary),
+            SizedBox(width: gap),
+            Expanded(flex: secondaryFlex, child: secondary),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class ArcFormGrid extends StatelessWidget {
+  const ArcFormGrid({
+    super.key,
+    required this.children,
+    this.minFieldWidth = 300,
+    this.spacing,
+    this.runSpacing,
+  });
+
+  final List<Widget> children;
+  final double minFieldWidth;
+  final double? spacing;
+  final double? runSpacing;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArcAdaptiveGrid(
+      minTileWidth: minFieldWidth,
+      maxColumns: 2,
+      spacing: spacing,
+      runSpacing: runSpacing,
+      children: children,
+    );
+  }
+}
+
 class ArcActionSurface extends StatelessWidget {
   const ArcActionSurface({
     super.key,

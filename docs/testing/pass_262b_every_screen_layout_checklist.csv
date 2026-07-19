@@ -1,0 +1,60 @@
+route,screen_name,android_portrait,android_landscape,tablet,desktop_web,checks,notes
+/,App auth gate,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,loading_auth_and_error_states,Root route only.
+/auth-landing,Auth landing,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,landing_carousel_bounded,Controlled carousel exception.
+/auth,Authentication,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,form_width_focus_and_electric_border,Sign-in flow unchanged.
+/app-entry-gate,App entry gate,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,route_gate_loading_retry,Auth flow unchanged.
+/home,Home route alias,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,post_login_command_centre,Alias compatibility.
+/onboarding-basic-profile,Onboarding basic profile,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,active_card_visible_and_focus_moves,Onboarding only.
+/monetisation,Monetisation,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,subscription_cards_readable,No purchase logic changes.
+/monetisation/plans,UAG plans,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,plan_grid_adapts,Plans only.
+/trading-hub,Trading hub router,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,route_redirect_safe,Router only.
+/trading-hub/arc-raiders,ARC Raiders hub,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,hub_carousel_bounded,Controlled carousel exception.
+/my-hub,My Hub command alias,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,command_centre_visible_tool_deck_accessible,Alias compatibility.
+/trading-hub/arc-raiders/command-centre,Command Centre,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,first_screen_next_action_and_system_carousel,Primary PASS 262B focus.
+/trading-hub/arc-raiders/blueprints,Blueprint Grid,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,protected_grid_shell_no_regression,Protected internals.
+/favourite-loadout,Favourite Loadout,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,loadout_slot_grid_no_overflow,Loadout logic unchanged.
+/my-intel,My Intel,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,intel_cards_bounded,Intel state unchanged.
+/trading-hub/arc-raiders/nomadic-trader,Nomadic Trader,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,trader_stock_carousel_no_clipping,Controlled purchase carousel.
+/trading-hub/arc-raiders/operations,Operations,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,operations_sections_and_reward_actions_reachable,Reward state unchanged.
+/trading-hub/arc-raiders/operations#reward-vault,Reward Vault,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,inventory_preview_and_action_area_safe,Embedded surface.
+/trading-hub/arc-raiders/season-reset,Expedition reset,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,reset_choices_and_actions_visible,Persistence unchanged.
+/trading-hub/arc-raiders/profile/setup,Profile setup,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,profile_form_grouping_safe,Persistence unchanged.
+/trading-hub/arc-raiders/profile/edit,Profile edit,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,profile_edit_form_grouping_safe,Persistence unchanged.
+/trading-hub/arc-raiders/profile/availability,Availability,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,availability_controls_reachable,Persistence unchanged.
+/trading-hub/arc-raiders/profile/away,Away status,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,away_controls_reachable,Persistence unchanged.
+/trading-hub/arc-raiders/help,Help Centre,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,category_detail_layout_safe,Help data unchanged.
+/trading-hub/arc-raiders/market,Community Intel,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,intel_panels_scale_safely,Data unchanged.
+/trading-hub/arc-raiders/intel-explorer,Intel explorer,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,report_feed_no_overflow,Filters unchanged.
+/trading-hub/arc-raiders/match-a-raider,Match Rider,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,match_cards_and_actions_safe,Match scoring unchanged.
+/trading-hub/arc-raiders/scrappy,Scrappy Tracker,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,canonical_tracker_carousel_safe,Progression logic unchanged.
+/trading-hub/arc-raiders/bench,Bench Tracker,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,canonical_tracker_carousel_safe,Progression logic unchanged.
+/trading-hub/arc-raiders/quests,Quest Tracker,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,canonical_tracker_carousel_safe,Progression logic unchanged.
+/trading-hub/arc-raiders/play-like-a-pro,Play Like a Pro,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,tracker_cards_safe,Feature gate unchanged.
+/trading-hub/arc-raiders/raid-planner,Raid Planner,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,planner_carousel_and_sections_safe,Planner logic unchanged.
+/trading-hub/arc-raiders/raid-planner/hunt-targets,Hunt targets,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,hunt_cards_no_clipping,Ranking unchanged.
+/trading-hub/arc-raiders/smart-trade-assist,Smart Trade Assist,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,assist_cards_and_actions_safe,Trade intelligence unchanged.
+/trading-hub/arc-raiders/session-planner,Session Planner,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,session_form_no_overflow,Repository unchanged.
+/trading-hub/arc-raiders/trader-hub,Trader Hub,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,tabs_and_nested_sections_safe,Nested routes preserved.
+/trading-hub/arc-raiders/listings,Trading Listings,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,listings_list_and_identity_strip_safe,Privacy unchanged.
+/trading-hub/arc-raiders/create,Create Listing,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,create_listing_form_safe,State transitions unchanged.
+/arc-create-trade-listing,Legacy create listing,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,legacy_create_form_safe,Compatibility route.
+/trading-hub/arc-raiders/activity,Trading Activity,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,activity_tabs_safe,Repository unchanged.
+/trading-hub/arc-raiders/my-listings,My Listings,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,my_listing_cards_safe,Trader Hub route.
+/arc-my-trade-listings,Legacy My Listings,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,legacy_listings_safe,Compatibility route.
+/trading-hub/arc-raiders/offers,My Offers,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,offer_cards_safe,Offer transitions unchanged.
+/trading-hub/arc-raiders/blueprint-watches,Blueprint Watches,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,watch_cards_safe,Watch logic unchanged.
+/trading-hub/arc-raiders/listing-queues,Listing Queues,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,queue_cards_safe,Queue privacy unchanged.
+/trading-hub/arc-raiders/sessions,Trade Sessions,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,session_cards_and_detail_safe,Session actions unchanged.
+/trading-hub/arc-raiders/notifications,Trading Notifications,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,notification_cards_safe,Deep links unchanged.
+/trading-hub/arc-raiders/profile,Trading Profile,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,profile_cosmetic_surfaces_safe,Cosmetics unchanged.
+/arc-trader-search,Trader Search,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,search_results_safe,Search repository unchanged.
+/arc-raiders/closed-beta-feedback,Closed Beta Feedback,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,feedback_form_safe,Submission unchanged.
+/feedback,Feedback Console,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,feedback_tabs_and_details_safe,Admin replies unchanged.
+/admin-console,Admin Console,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,admin_diagnostics_safe,Admin-only.
+/legal,Legal Hub,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,legal_cards_safe,Content unchanged.
+/legal/terms,Terms of Use,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,legal_document_readable,Content unchanged.
+/legal/privacy,Privacy Policy,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,legal_document_readable,Content unchanged.
+/legal/code-of-conduct,Trader Code of Conduct,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,legal_document_readable,Content unchanged.
+/legal/data-attribution,Data Attribution,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,attribution_list_readable,Content unchanged.
+/profile/settings,Profile Settings,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,settings_panels_safe,Persistence unchanged.
+/session/relock,Biometric Relock,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,relock_panel_centered,Session controller unchanged.
