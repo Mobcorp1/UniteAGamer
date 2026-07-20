@@ -147,6 +147,12 @@ class ArcCommandCentreEngine {
       _progressionRecommendations(progression),
       recommendations,
     );
+    objectives = objectives
+        .where(ArcCommandCentreCompletionPolicy.objectiveIsActionable)
+        .toList(growable: false);
+    recommendations = recommendations
+        .where(ArcCommandCentreCompletionPolicy.recommendationIsActionable)
+        .toList(growable: false);
     var checklist = _checklist(
       loadoutReady: loadoutSummary.ready,
       tradeActivity: tradeActivity,
@@ -537,7 +543,7 @@ class ArcCommandCentreEngine {
     required ArcNomadicTraderIntelligence traderIntel,
     required ArcResourceIntelligence resourceIntel,
   }) {
-    return [
+    final items = <ArcCommandChecklistItem>[
       ArcCommandChecklistItem(
         id: 'claim-operations',
         label: 'Claim Operations',
@@ -680,6 +686,9 @@ class ArcCommandCentreEngine {
         ),
       ),
     ];
+    return items
+        .where(ArcCommandCentreCompletionPolicy.checklistItemIsActionable)
+        .toList(growable: false);
   }
 
   static ArcCommandAction _profileCompletionAction(
@@ -1281,5 +1290,40 @@ class _ArcLoadoutCommandSummary {
   String get missingText {
     if (ready) return 'Favourite Loadout has a complete saved kit.';
     return 'Missing $missingShortText; complete the loadout before raid planning.';
+  }
+}
+
+class ArcCommandCentreCompletionPolicy {
+  const ArcCommandCentreCompletionPolicy._();
+
+  static bool objectiveIsActionable(ArcCommandObjective objective) {
+    if (objective.status == ArcCommandStatus.success) return false;
+    return !_looksComplete(
+      '${objective.progressText} ${objective.reason} ${objective.statusLabel}',
+    );
+  }
+
+  static bool recommendationIsActionable(
+    ArcCommandRecommendation recommendation,
+  ) {
+    return !_looksComplete('${recommendation.title} ${recommendation.body}');
+  }
+
+  static bool checklistItemIsActionable(ArcCommandChecklistItem item) {
+    return !item.doneByDefault &&
+        !_looksComplete('${item.label} ${item.reason}');
+  }
+
+  static bool _looksComplete(String text) {
+    final normalized = text.toLowerCase();
+    if (normalized.contains('100%')) return true;
+    if (normalized.contains('all tracked') && normalized.contains('complete')) {
+      return true;
+    }
+    if (normalized.contains('already complete') ||
+        normalized.contains('completed for this season')) {
+      return true;
+    }
+    return false;
   }
 }

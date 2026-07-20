@@ -596,6 +596,12 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       required String image,
       int? progressPercent,
     }) {
+      final resolvedProgress =
+          progressPercent ??
+          _progressForMove(status: status, label: label, detail: detail);
+      if (resolvedProgress >= 100 || status == ArcCommandStatus.success) {
+        return;
+      }
       final key = '${title.toLowerCase()}|${action.intent}|${action.routeName}';
       if (!seen.add(key)) return;
       moves.add(
@@ -608,9 +614,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           icon: icon,
           accent: accent,
           image: image,
-          progressPercent:
-              progressPercent ??
-              _progressForMove(status: status, label: label, detail: detail),
+          progressPercent: resolvedProgress,
         ),
       );
     }

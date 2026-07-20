@@ -235,7 +235,7 @@ class ArcProgressionEngine {
     final definitions = scrappyDefinitions;
     final normalizedState = state.seasonId == seasonId
         ? state
-        : state.copyWith(seasonId: seasonId);
+        : ArcScrappyProgressionState.empty.copyWith(seasonId: seasonId);
     ArcScrappyProgressionDefinition? next;
     for (final definition in definitions) {
       if (definition.level > normalizedState.currentLevel) {
@@ -353,7 +353,11 @@ class ArcProgressionEngine {
         key,
         record.seasonId == seasonId
             ? record
-            : record.copyWith(seasonId: seasonId),
+            : ArcBenchProgressionRecord(
+                benchId: record.benchId,
+                station: record.station,
+                seasonId: seasonId,
+              ),
       ),
     );
     return ArcBenchProgressionSnapshot(
