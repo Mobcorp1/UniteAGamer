@@ -168,6 +168,24 @@ service cloud.firestore {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
 
+      match /notification_devices/{deviceId} {
+        allow read: if isOwner(userId) || isAdminOrDev();
+        allow create, update: if (isOwner(userId) &&
+          request.resource.data.userId == userId &&
+          request.resource.data.deviceId == deviceId) || isAdminOrDev();
+        allow delete: if isOwner(userId) || isAdminOrDev();
+      }
+
+      match /notification_preferences/{preferenceId} {
+        allow read, create, update: if isOwner(userId) || isAdminOrDev();
+        allow delete: if false;
+      }
+
+      match /notifications/{notificationId} {
+        allow read, update, delete: if isOwner(userId) || isAdminOrDev();
+        allow create: if isAdminOrDev();
+      }
+
       match /monetisation_usage/{usageId} {
         allow read: if isOwner(userId) || isAdminOrDev();
         allow create, update: if isOwner(userId) || isAdminOrDev();
@@ -305,6 +323,30 @@ service cloud.firestore {
         request.resource.data.targetUid == resource.data.targetUid &&
         request.resource.data.actorUid == resource.data.actorUid;
       allow delete: if isNotificationTarget() || isAdminOrDev();
+    }
+
+    match /notification_broadcasts/{broadcastId} {
+      allow read: if isAdminOrDev();
+      allow create: if isAdminOrDev() &&
+        request.resource.data.id == broadcastId &&
+        request.resource.data.senderUid == request.auth.uid &&
+        request.resource.data.status == 'queued';
+      allow update, delete: if false;
+    }
+
+    match /notification_delivery_reports/{reportId} {
+      allow read: if isAdminOrDev();
+      allow create, update, delete: if false;
+    }
+
+    match /uag_notification_schedules/{scheduleId} {
+      allow read: if isSignedIn() &&
+        (resource.data.targetUid == request.auth.uid || isAdminOrDev());
+      allow create: if isSignedIn() &&
+        request.resource.data.id == scheduleId &&
+        request.resource.data.targetUid == request.auth.uid &&
+        request.resource.data.status == 'queued';
+      allow update, delete: if isAdminOrDev();
     }
 
     match /arc_match_rider_profiles/{profileUid} {

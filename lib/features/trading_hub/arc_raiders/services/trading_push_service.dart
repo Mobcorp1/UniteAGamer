@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_repository.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
@@ -33,16 +37,25 @@ class TradingPushService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+  final UagNotificationRepository _notificationRepository =
+      UagNotificationRepository();
 
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'trading_alerts',
-    'Trading Alerts',
-    description: 'Offer, session, booking and match notifications.',
+    'UAG Alerts',
+    description: 'Announcements, offers, sessions, rewards and match alerts.',
     importance: Importance.high,
   );
+  static const String _webPushVapidKey = String.fromEnvironment(
+    'UAG_WEB_PUSH_VAPID_KEY',
+  );
+  static const String _installationIdKey = 'uag_notification_installation_id';
 
   bool _initialized = false;
   final Map<String, Timer> _reminderTimers = <String, Timer>{};
+  String? _lastUid;
+  String? _lastDeviceId;
+  String? _lastToken;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -66,20 +79,27 @@ class TradingPushService {
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.createNotificationChannel(_channel);
+
+      await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
     }
 
-    await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
+    await registerCurrentDevice();
+    _messaging.onTokenRefresh.listen((token) async {
+      await _saveTokenValue(token);
+    });
 
-    await _saveCurrentToken();
-    _messaging.onTokenRefresh.listen(_saveTokenValue);
-
-    FirebaseAuth.instance.authStateChanges().listen((_) async {
-      await _saveCurrentToken();
+    FirebaseAuth.instance.authStateChanges().listen((user) async {
+      if (user == null) {
+        await _disableLastDevice();
+        return;
+      }
+      _lastUid = user.uid;
+      await registerCurrentDevice();
     });
 
     FirebaseMessaging.onMessage.listen((message) async {
@@ -99,9 +119,9 @@ class TradingPushService {
         const NotificationDetails(
           android: AndroidNotificationDetails(
             'trading_alerts',
-            'Trading Alerts',
+            'UAG Alerts',
             channelDescription:
-                'Offer, session, booking and match notifications.',
+                'Announcements, offers, sessions, rewards and match alerts.',
             importance: Importance.high,
             priority: Priority.high,
           ),
@@ -153,6 +173,21 @@ class TradingPushService {
 
   void _navigateFromData(Map<String, dynamic> data) {
     final type = (data['type'] ?? '').toString();
+    final route = (data['route'] ?? data['deepLink'] ?? '').toString().trim();
+    if (route.startsWith('/')) {
+      _openRoute(route);
+      return;
+    }
+
+    if (type == 'announcement' ||
+        type == 'open_beta' ||
+        type == 'maintenance' ||
+        type == 'operations' ||
+        type == 'reward' ||
+        type == 'community_event') {
+      _openRoute(ArcCommandCentreScreen.routeName);
+      return;
+    }
 
     if (type == 'offerReceived' ||
         type == 'offerAccepted' ||
@@ -194,12 +229,53 @@ class TradingPushService {
     required String sessionId,
     required DateTime scheduledAt,
     required String otherTraderName,
+    DateTime? scheduledEndAt,
   }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final reminderAt = scheduledAt.subtract(const Duration(minutes: 15));
+      await _notificationRepository.createSchedule(
+        UagScheduledNotification(
+          id: 'trade_${sessionId}_pre15',
+          targetUid: uid,
+          type: UagNotificationType.reminder,
+          title: 'Trade starting soon',
+          body:
+              'Your trade with $otherTraderName starts in 15 minutes. Open the session to confirm or rearrange.',
+          dueAt: reminderAt,
+          route: TradingTradeSessionsScreen.routeName,
+          entityId: sessionId,
+          status: 'queued',
+          metadata: const <String, String>{'kind': 'trade_pre_session'},
+        ),
+      );
+
+      final feedbackAt =
+          (scheduledEndAt ?? scheduledAt.add(const Duration(hours: 1))).add(
+            const Duration(minutes: 15),
+          );
+      await _notificationRepository.createSchedule(
+        UagScheduledNotification(
+          id: 'trade_${sessionId}_feedback15',
+          targetUid: uid,
+          type: UagNotificationType.postSessionFeedback,
+          title: 'How did the trade go?',
+          body:
+              'Rate the session so the trading network can learn from completed swaps.',
+          dueAt: feedbackAt,
+          route: TradingTradeSessionsScreen.routeName,
+          entityId: sessionId,
+          status: 'queued',
+          metadata: const <String, String>{'kind': 'trade_post_session'},
+        ),
+      );
+    }
+
     if (kIsWeb) return;
 
     _reminderTimers[sessionId]?.cancel();
 
-    final reminderAt = scheduledAt.subtract(const Duration(minutes: 30));
+    final reminderAt = scheduledAt.subtract(const Duration(minutes: 15));
     final delay = reminderAt.difference(DateTime.now());
     if (delay.isNegative) return;
 
@@ -207,13 +283,13 @@ class TradingPushService {
       await _localNotifications.show(
         sessionId.hashCode,
         'Trade starting soon',
-        'Your trade with $otherTraderName starts in 30 minutes. Open the session to confirm or rearrange.',
+        'Your trade with $otherTraderName starts in 15 minutes. Open the session to confirm or rearrange.',
         const NotificationDetails(
           android: AndroidNotificationDetails(
             'trading_alerts',
-            'Trading Alerts',
+            'UAG Alerts',
             channelDescription:
-                'Offer, session, booking and match notifications.',
+                'Announcements, offers, sessions, rewards and match alerts.',
             importance: Importance.high,
             priority: Priority.high,
           ),
@@ -226,26 +302,161 @@ class TradingPushService {
     });
   }
 
-  Future<void> _saveCurrentToken() async {
-    final token = await _messaging.getToken();
+  Future<UagNotificationRuntimeStatus> runtimeStatus() async {
+    final settings = await _messaging.getNotificationSettings();
+    final installationId = await _installationId();
+    final deviceId = _deviceIdFor(installationId);
+    return UagNotificationRuntimeStatus(
+      permissionStatus: settings.authorizationStatus.name,
+      platform: _platformName(),
+      deviceId: deviceId,
+      hasWebVapidKey: !kIsWeb || _webPushVapidKey.trim().isNotEmpty,
+      lastTokenRegistered: _lastToken?.trim().isNotEmpty == true,
+    );
+  }
+
+  Future<void> enableNotificationsFromUserAction() async {
+    await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      provisional: false,
+    );
+    await registerCurrentDevice(explicitUserAction: true);
+  }
+
+  Future<bool> showLocalTestNotification() async {
+    if (kIsWeb) return false;
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      'UAG notification test',
+      'Android notifications are ready on this device.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'trading_alerts',
+          'UAG Alerts',
+          channelDescription:
+              'Announcements, offers, sessions, rewards and match alerts.',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      ),
+      payload: jsonEncode(<String, dynamic>{
+        'type': UagNotificationType.announcement.wireName,
+        'route': ArcCommandCentreScreen.routeName,
+      }),
+    );
+    return true;
+  }
+
+  Future<void> registerCurrentDevice({bool explicitUserAction = false}) async {
+    await _saveCurrentToken(explicitUserAction: explicitUserAction);
+  }
+
+  Future<void> _saveCurrentToken({bool explicitUserAction = false}) async {
+    final token = await _getToken(explicitUserAction: explicitUserAction);
     if (token == null || token.trim().isEmpty) return;
     await _saveTokenValue(token);
+  }
+
+  Future<String?> _getToken({bool explicitUserAction = false}) async {
+    if (kIsWeb && _webPushVapidKey.trim().isEmpty) {
+      return null;
+    }
+    if (kIsWeb && !explicitUserAction) {
+      final settings = await _messaging.getNotificationSettings();
+      if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+        return null;
+      }
+    }
+    return _messaging.getToken(
+      vapidKey: kIsWeb ? _webPushVapidKey.trim() : null,
+    );
   }
 
   Future<void> _saveTokenValue(String token) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || token.trim().isEmpty) return;
 
-    final ref = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('notification_tokens')
-        .doc(token);
+    final settings = await _messaging.getNotificationSettings();
+    final preferences = await _notificationRepository.loadPreferences(uid: uid);
+    final installationId = await _installationId();
+    final deviceId = _deviceIdFor(installationId);
+    final authorized =
+        settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
 
-    await ref.set({
-      'token': token,
-      'platform': defaultTargetPlatform.name,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    final device = UagNotificationDevice(
+      deviceId: deviceId,
+      token: token.trim(),
+      userId: uid,
+      platform: _platformName(),
+      enabled: authorized,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      lastSeenAt: DateTime.now(),
+      installationId: installationId,
+      appVersion: '1.0.0+1',
+      preferences: preferences,
+      permissionStatus: settings.authorizationStatus.name,
+      tokenValid: true,
+    );
+
+    await _notificationRepository.saveDeviceRegistration(device);
+    _lastUid = uid;
+    _lastDeviceId = deviceId;
+    _lastToken = token.trim();
   }
+
+  Future<void> _disableLastDevice() async {
+    final uid = _lastUid;
+    final deviceId = _lastDeviceId;
+    if (uid == null || deviceId == null) return;
+    await _notificationRepository.disableDevice(
+      uid: uid,
+      deviceId: deviceId,
+      token: _lastToken ?? '',
+    );
+    _lastUid = null;
+    _lastDeviceId = null;
+    _lastToken = null;
+  }
+
+  Future<String> _installationId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString(_installationIdKey);
+    if (existing != null && existing.trim().isNotEmpty) return existing;
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    final generated = bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
+    await prefs.setString(_installationIdKey, generated);
+    return generated;
+  }
+
+  String _deviceIdFor(String installationId) {
+    return '${_platformName()}_$installationId';
+  }
+
+  String _platformName() {
+    if (kIsWeb) return 'web';
+    return defaultTargetPlatform.name;
+  }
+}
+
+class UagNotificationRuntimeStatus {
+  const UagNotificationRuntimeStatus({
+    required this.permissionStatus,
+    required this.platform,
+    required this.deviceId,
+    required this.hasWebVapidKey,
+    required this.lastTokenRegistered,
+  });
+
+  final String permissionStatus;
+  final String platform;
+  final String deviceId;
+  final bool hasWebVapidKey;
+  final bool lastTokenRegistered;
 }

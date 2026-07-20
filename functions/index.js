@@ -360,61 +360,453 @@ async function handleInvoicePaid(invoice) {
   });
 }
 
+function normalizeString(value) {
+  return String(value || '').trim();
+}
+
+function isInvalidTokenCode(code) {
+  return (
+    code === 'messaging/registration-token-not-registered' ||
+    code === 'messaging/invalid-registration-token'
+  );
+}
+
+function permissionAllowsPush(status) {
+  const normalized = normalizeString(status).toLowerCase();
+  return normalized === 'authorized' || normalized === 'granted' || normalized === 'provisional';
+}
+
+function preferenceKeyForType(type) {
+  switch (normalizeString(type)) {
+    case 'open_beta':
+      return 'openBetaUpdates';
+    case 'trading':
+    case 'offerReceived':
+    case 'offerAccepted':
+    case 'offerDeclined':
+    case 'offerCancelled':
+    case 'sessionCreated':
+    case 'sessionUpdated':
+    case 'sessionReady':
+    case 'sessionOutcome':
+      return 'trading';
+    case 'matchmaking':
+      return 'matchmaking';
+    case 'favourite_rider':
+      return 'favouriteRiders';
+    case 'watch_match':
+    case 'queue_release':
+    case 'blueprintWatchMatch':
+    case 'queuedListingReleased':
+    case 'queuedListingBlocked':
+      return 'watchesAndQueues';
+    case 'operations':
+    case 'reward':
+      return 'operationsAndRewards';
+    case 'community_event':
+      return 'communityEvents';
+    case 'reminder':
+    case 'scheduledTradeReminder':
+      return 'reminders';
+    case 'post_session_feedback':
+      return 'postSessionFeedback';
+    case 'announcement':
+    case 'maintenance':
+    default:
+      return 'announcements';
+  }
+}
+
+function preferencesAllowType(preferences, type) {
+  const key = preferenceKeyForType(type);
+  if (!preferences || typeof preferences !== 'object') return true;
+  if (preferences[key] === false) return false;
+  return true;
+}
+
+function deliveryDataFromNotification(data, notificationId) {
+  return {
+    id: normalizeString(data.id || notificationId),
+    notificationId: normalizeString(notificationId),
+    type: normalizeString(data.type),
+    listingId: normalizeString(data.listingId),
+    offerId: normalizeString(data.offerId),
+    sessionId: normalizeString(data.sessionId),
+    route: normalizeString(data.route),
+    deepLink: normalizeString(data.deepLink),
+    entityId: normalizeString(data.entityId),
+    audience: normalizeString(data.audience),
+    priority: normalizeString(data.priority || 'normal'),
+  };
+}
+
+function buildMessage({ data, tokens }) {
+  const imageUrl = normalizeString(data.imageUrl);
+  const notification = {
+    title: normalizeString(data.title) || 'UAG Arc Raiders Hub',
+    body: normalizeString(data.body) || 'Open the app for details.',
+  };
+  if (imageUrl) notification.imageUrl = imageUrl;
+
+  return {
+    notification,
+    data: deliveryDataFromNotification(data, data.id),
+    android: {
+      priority: data.priority === 'critical' || data.priority === 'high' ? 'high' : 'normal',
+      notification: {
+        channelId: 'trading_alerts',
+        clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+      },
+    },
+    webpush: {
+      notification: {
+        title: notification.title,
+        body: notification.body,
+        icon: '/icons/uag-hub-192.png',
+        image: imageUrl || undefined,
+        data: deliveryDataFromNotification(data, data.id),
+      },
+      fcmOptions: {
+        link: normalizeString(data.deepLink || data.route || '/') || '/',
+      },
+    },
+    tokens,
+  };
+}
+
+async function loadUserPushTargets(uid, type) {
+  const targets = [];
+  const seen = new Set();
+  const devicesSnap = await db
+    .collection('users')
+    .doc(uid)
+    .collection('notification_devices')
+    .where('enabled', '==', true)
+    .get();
+
+  devicesSnap.docs.forEach((doc) => {
+    const device = doc.data() || {};
+    const token = normalizeString(device.token);
+    if (!token || seen.has(token)) return;
+    if (device.tokenValid === false) return;
+    if (!permissionAllowsPush(device.permissionStatus)) return;
+    if (!preferencesAllowType(device.preferences, type)) return;
+    seen.add(token);
+    targets.push({ token, ref: doc.ref, legacy: false });
+  });
+
+  const legacySnap = await db
+    .collection('users')
+    .doc(uid)
+    .collection('notification_tokens')
+    .get();
+
+  legacySnap.docs.forEach((doc) => {
+    const data = doc.data() || {};
+    const token = normalizeString(data.token || doc.id);
+    if (!token || seen.has(token) || data.enabled === false) return;
+    seen.add(token);
+    targets.push({ token, ref: doc.ref, legacy: true });
+  });
+
+  return targets;
+}
+
+async function sendToTargets({ notificationData, targets }) {
+  const chunks = [];
+  for (let i = 0; i < targets.length; i += 500) {
+    chunks.push(targets.slice(i, i + 500));
+  }
+
+  const totals = {
+    attempted: 0,
+    successful: 0,
+    failed: 0,
+    invalidTokens: 0,
+  };
+
+  for (const chunk of chunks) {
+    const tokens = chunk.map((target) => target.token);
+    if (!tokens.length) continue;
+    totals.attempted += tokens.length;
+    const response = await admin.messaging().sendEachForMulticast(
+      buildMessage({ data: notificationData, tokens })
+    );
+    totals.successful += response.successCount;
+    totals.failed += response.failureCount;
+
+    const batch = db.batch();
+    response.responses.forEach((result, index) => {
+      if (result.success) return;
+      const code = result.error && result.error.code;
+      if (!isInvalidTokenCode(code)) return;
+      totals.invalidTokens += 1;
+      const target = chunk[index];
+      if (target.legacy) {
+        batch.delete(target.ref);
+      } else {
+        batch.set(target.ref, {
+          enabled: false,
+          tokenValid: false,
+          invalidatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          invalidReason: code,
+        }, { merge: true });
+      }
+    });
+    await batch.commit();
+  }
+
+  return totals;
+}
+
+async function isAdminUser(uid) {
+  if (!uid) return false;
+  const userSnap = await db.collection('users').doc(uid).get();
+  const data = userSnap.data() || {};
+  return data.isAdmin === true || data.isDev === true;
+}
+
+function userMatchesAudience({ audience, userData }) {
+  switch (audience) {
+    case 'closed_beta_users':
+      return userData.closedBetaParticipant === true || userData.betaParticipant === true;
+    case 'open_beta_users':
+      return userData.openBetaParticipant === true || userData.openBetaEligible === true;
+    default:
+      return true;
+  }
+}
+
+async function loadBroadcastTargets(data) {
+  const audience = normalizeString(data.audience || 'all_eligible');
+  const targetUid = normalizeString(data.targetUid);
+  const type = normalizeString(data.type);
+  let query = db.collectionGroup('notification_devices')
+    .where('enabled', '==', true)
+    .where('tokenValid', '==', true)
+    .limit(1000);
+
+  if (audience === 'android') query = query.where('platform', '==', 'android');
+  if (audience === 'web') query = query.where('platform', '==', 'web');
+  if (audience === 'specific_user' && targetUid) {
+    query = query.where('userId', '==', targetUid);
+  }
+
+  const snap = await query.get();
+  const targets = [];
+  const userIds = new Set();
+  const userCache = new Map();
+  const seenTokens = new Set();
+  let skippedByPreference = 0;
+
+  for (const doc of snap.docs) {
+    const device = doc.data() || {};
+    const uid = normalizeString(device.userId);
+    const token = normalizeString(device.token);
+    if (!uid || !token || seenTokens.has(token)) continue;
+    if (!permissionAllowsPush(device.permissionStatus)) continue;
+    if (!preferencesAllowType(device.preferences, type)) {
+      skippedByPreference += 1;
+      continue;
+    }
+    if (audience === 'specific_user' && uid !== targetUid) continue;
+
+    if (audience === 'closed_beta_users' || audience === 'open_beta_users') {
+      if (!userCache.has(uid)) {
+        const userSnap = await db.collection('users').doc(uid).get();
+        userCache.set(uid, userSnap.data() || {});
+      }
+      if (!userMatchesAudience({ audience, userData: userCache.get(uid) })) {
+        continue;
+      }
+    }
+
+    seenTokens.add(token);
+    userIds.add(uid);
+    targets.push({ token, ref: doc.ref, legacy: false, uid });
+  }
+
+  return { targets, userIds: Array.from(userIds), skippedByPreference };
+}
+
+async function createInAppNotifications({ data, userIds, broadcastId }) {
+  let created = 0;
+  for (let i = 0; i < userIds.length; i += 450) {
+    const batch = db.batch();
+    const chunk = userIds.slice(i, i + 450);
+    chunk.forEach((uid) => {
+      const ref = db.collection('trading_notifications').doc(`${broadcastId}_${uid}`);
+      batch.set(ref, {
+        id: ref.id,
+        broadcastId,
+        broadcastPushHandled: true,
+        targetUid: uid,
+        actorUid: normalizeString(data.senderUid) || 'system',
+        title: normalizeString(data.title),
+        body: normalizeString(data.body),
+        type: normalizeString(data.type || 'announcement'),
+        listingId: '',
+        offerId: '',
+        sessionId: '',
+        watchId: '',
+        queueId: '',
+        preparationId: '',
+        opportunityId: '',
+        route: normalizeString(data.route),
+        deepLink: normalizeString(data.deepLink),
+        imageUrl: normalizeString(data.imageUrl),
+        entityId: normalizeString(data.entityId),
+        audience: normalizeString(data.audience),
+        priority: normalizeString(data.priority || 'normal'),
+        read: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+    await batch.commit();
+    created += chunk.length;
+  }
+  return created;
+}
+
 exports.sendTradingNotificationPush = onDocumentCreated(
   'trading_notifications/{notificationId}',
   async (event) => {
     const snap = event.data;
     if (!snap) return;
     const data = snap.data() || {};
+    if (data.broadcastPushHandled === true) return;
     const targetUid = data.targetUid;
     if (!targetUid) return;
 
-    const tokensSnap = await db
-      .collection('users')
-      .doc(targetUid)
-      .collection('notification_tokens')
-      .get();
-
-    const tokens = tokensSnap.docs
-      .map((doc) => doc.id || doc.data().token)
-      .filter(Boolean);
-
-    if (!tokens.length) return;
-
-    const response = await admin.messaging().sendEachForMulticast({
-      notification: {
-        title: data.title || 'UAG Arc Raiders Hub',
-        body: data.body || 'You have a new trading update.',
-      },
-      data: {
-        type: String(data.type || ''),
-        listingId: String(data.listingId || ''),
-        offerId: String(data.offerId || ''),
-        sessionId: String(data.sessionId || ''),
-        notificationId: snap.id,
-      },
-      tokens,
+    const targets = await loadUserPushTargets(targetUid, data.type);
+    if (!targets.length) return;
+    await sendToTargets({
+      notificationData: { ...data, id: snap.id },
+      targets,
     });
+  }
+);
 
-    const batch = db.batch();
-    response.responses.forEach((result, index) => {
-      if (!result.success) {
-        const code = result.error && result.error.code;
-        if (
-          code === 'messaging/registration-token-not-registered' ||
-          code === 'messaging/invalid-registration-token'
-        ) {
-          batch.delete(
-            db
-              .collection('users')
-              .doc(targetUid)
-              .collection('notification_tokens')
-              .doc(tokens[index])
-          );
-        }
+exports.sendUagNotificationBroadcast = onDocumentCreated(
+  'notification_broadcasts/{broadcastId}',
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const broadcastId = event.params.broadcastId;
+    const ref = snap.ref;
+    const data = snap.data() || {};
+    const senderUid = normalizeString(data.senderUid);
+
+    if (normalizeString(data.status) !== 'queued') return;
+    if (!(await isAdminUser(senderUid))) {
+      await ref.set({
+        status: 'rejected',
+        error: 'Admin privileges are required.',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return;
+    }
+    if (!normalizeString(data.title) || !normalizeString(data.body)) {
+      await ref.set({
+        status: 'rejected',
+        error: 'Title and body are required.',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return;
+    }
+
+    const claimed = await db.runTransaction(async (transaction) => {
+      const current = await transaction.get(ref);
+      const currentData = current.data() || {};
+      if (normalizeString(currentData.status) !== 'queued') return false;
+      transaction.set(ref, {
+        status: 'sending',
+        startedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return true;
+    });
+    if (!claimed) return;
+
+    const delivery = {
+      attempted: 0,
+      successful: 0,
+      failed: 0,
+      invalidTokens: 0,
+      skippedByPreference: 0,
+      inAppCreated: 0,
+      eligibleUsers: 0,
+      eligibleDevices: 0,
+    };
+
+    try {
+      const { targets, userIds, skippedByPreference } = await loadBroadcastTargets(data);
+      delivery.eligibleDevices = targets.length;
+      delivery.eligibleUsers = userIds.length;
+      delivery.skippedByPreference = skippedByPreference;
+
+      if (data.createInApp !== false) {
+        delivery.inAppCreated = await createInAppNotifications({
+          data,
+          userIds,
+          broadcastId,
+        });
       }
-    });
 
-    await batch.commit();
+      if (data.sendPush !== false && targets.length > 0) {
+        const pushTotals = await sendToTargets({
+          notificationData: { ...data, id: broadcastId },
+          targets,
+        });
+        Object.assign(delivery, {
+          ...delivery,
+          attempted: pushTotals.attempted,
+          successful: pushTotals.successful,
+          failed: pushTotals.failed,
+          invalidTokens: pushTotals.invalidTokens,
+        });
+      }
+
+      const finalStatus = delivery.failed > 0 ? 'partial_failed' : 'sent';
+      await db.collection('notification_delivery_reports').doc(broadcastId).set({
+        id: broadcastId,
+        broadcastId,
+        senderUid,
+        type: normalizeString(data.type),
+        audience: normalizeString(data.audience),
+        testMode: data.testMode === true,
+        ...delivery,
+        status: finalStatus,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      await ref.set({
+        status: finalStatus,
+        delivery,
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (error) {
+      console.error('Broadcast delivery failed', error);
+      await db.collection('notification_delivery_reports').doc(broadcastId).set({
+        id: broadcastId,
+        broadcastId,
+        senderUid,
+        status: 'failed',
+        error: error.message || String(error),
+        ...delivery,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      await ref.set({
+        status: 'failed',
+        error: error.message || String(error),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
   }
 );

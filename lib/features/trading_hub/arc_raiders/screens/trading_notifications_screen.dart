@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
@@ -47,6 +48,14 @@ class TradingNotificationsScreen extends StatelessWidget {
       case TradingNotificationType.tradeObjectiveOpportunity:
       case TradingNotificationType.availabilityOverlap:
       case TradingNotificationType.scheduledTradeReminder:
+      case TradingNotificationType.announcement:
+      case TradingNotificationType.openBeta:
+      case TradingNotificationType.operations:
+      case TradingNotificationType.reward:
+      case TradingNotificationType.communityEvent:
+      case TradingNotificationType.reminder:
+      case TradingNotificationType.postSessionFeedback:
+      case TradingNotificationType.maintenance:
         return AppTheme.neonCyan;
       case TradingNotificationType.tradeOfferNeedsResponse:
         return AppTheme.neonPink;
@@ -74,7 +83,31 @@ class TradingNotificationsScreen extends StatelessWidget {
     await repository.markNotificationRead(notification.id);
     if (!context.mounted) return;
 
+    final route = notification.route.trim().isNotEmpty
+        ? notification.route.trim()
+        : notification.deepLink.trim();
+    if (route.startsWith('/')) {
+      Navigator.of(context).pushNamed(route);
+      return;
+    }
+
     switch (notification.type) {
+      case TradingNotificationType.announcement:
+      case TradingNotificationType.openBeta:
+      case TradingNotificationType.operations:
+      case TradingNotificationType.reward:
+      case TradingNotificationType.communityEvent:
+      case TradingNotificationType.reminder:
+      case TradingNotificationType.maintenance:
+        Navigator.of(context).pushNamed(ArcCommandCentreScreen.routeName);
+        return;
+      case TradingNotificationType.postSessionFeedback:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const FeedbackScreen(initialTabIndex: 1),
+          ),
+        );
+        return;
       case TradingNotificationType.offerReceived:
       case TradingNotificationType.tradeOfferNeedsResponse:
       case TradingNotificationType.offerAccepted:

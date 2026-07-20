@@ -23,6 +23,43 @@ enum TradingNotificationType {
   tradeObjectiveOpportunity,
   availabilityOverlap,
   scheduledTradeReminder,
+  announcement,
+  openBeta,
+  operations,
+  reward,
+  communityEvent,
+  reminder,
+  postSessionFeedback,
+  maintenance,
+}
+
+TradingNotificationType tradingNotificationTypeFromWire(String rawType) {
+  final normalized = rawType.trim();
+  return TradingNotificationType.values.firstWhere(
+    (value) => value.name == normalized,
+    orElse: () {
+      switch (normalized) {
+        case 'open_beta':
+          return TradingNotificationType.openBeta;
+        case 'community_event':
+          return TradingNotificationType.communityEvent;
+        case 'post_session_feedback':
+          return TradingNotificationType.postSessionFeedback;
+        case 'watch_match':
+          return TradingNotificationType.blueprintWatchMatch;
+        case 'queue_release':
+          return TradingNotificationType.queuedListingReleased;
+        case 'trading':
+          return TradingNotificationType.sessionUpdated;
+        case 'matchmaking':
+          return TradingNotificationType.availabilityOverlap;
+        case 'favourite_rider':
+          return TradingNotificationType.favouriteRiderListing;
+        default:
+          return TradingNotificationType.sessionUpdated;
+      }
+    },
+  );
 }
 
 class TradingNotification {
@@ -39,6 +76,10 @@ class TradingNotification {
   final String queueId;
   final String preparationId;
   final String opportunityId;
+  final String route;
+  final String deepLink;
+  final String imageUrl;
+  final String entityId;
   final bool read;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -57,6 +98,10 @@ class TradingNotification {
     this.queueId = '',
     this.preparationId = '',
     this.opportunityId = '',
+    this.route = '',
+    this.deepLink = '',
+    this.imageUrl = '',
+    this.entityId = '',
     required this.read,
     required this.createdAt,
     required this.updatedAt,
@@ -108,6 +153,22 @@ class TradingNotification {
         return 'Availability';
       case TradingNotificationType.scheduledTradeReminder:
         return 'Trade Reminder';
+      case TradingNotificationType.announcement:
+        return 'Announcement';
+      case TradingNotificationType.openBeta:
+        return 'Open Beta';
+      case TradingNotificationType.operations:
+        return 'Operations';
+      case TradingNotificationType.reward:
+        return 'Reward';
+      case TradingNotificationType.communityEvent:
+        return 'Community Event';
+      case TradingNotificationType.reminder:
+        return 'Reminder';
+      case TradingNotificationType.postSessionFeedback:
+        return 'Feedback';
+      case TradingNotificationType.maintenance:
+        return 'Maintenance';
     }
   }
 
@@ -131,6 +192,10 @@ class TradingNotification {
       'queueId': queueId,
       'preparationId': preparationId,
       'opportunityId': opportunityId,
+      'route': route,
+      'deepLink': deepLink,
+      'imageUrl': imageUrl,
+      'entityId': entityId,
       'read': read,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
@@ -145,10 +210,7 @@ class TradingNotification {
       actorUid: (map['actorUid'] ?? '') as String,
       title: (map['title'] ?? '') as String,
       body: (map['body'] ?? '') as String,
-      type: TradingNotificationType.values.firstWhere(
-        (value) => value.name == rawType,
-        orElse: () => TradingNotificationType.sessionUpdated,
-      ),
+      type: tradingNotificationTypeFromWire(rawType),
       listingId: (map['listingId'] ?? '') as String,
       offerId: (map['offerId'] ?? '') as String,
       sessionId: (map['sessionId'] ?? '') as String,
@@ -156,6 +218,10 @@ class TradingNotification {
       queueId: (map['queueId'] ?? '') as String,
       preparationId: (map['preparationId'] ?? '') as String,
       opportunityId: (map['opportunityId'] ?? '') as String,
+      route: (map['route'] ?? '') as String,
+      deepLink: (map['deepLink'] ?? '') as String,
+      imageUrl: (map['imageUrl'] ?? '') as String,
+      entityId: (map['entityId'] ?? '') as String,
       read: (map['read'] ?? false) as bool,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
@@ -260,6 +261,8 @@ class _AdminConsoleBody extends StatelessWidget {
                     const ArcBetaDeveloperToolsCard(),
                     const SizedBox(height: AppTheme.spaceL),
                     _ClosedBetaDiagnosticsCard(uid: uid),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const UagAdminBroadcastPanel(),
                     const SizedBox(height: AppTheme.spaceXL),
                     Row(
                       children: [

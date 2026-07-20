@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_notification_preferences_panel.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
+  static const routeName = '/profile-settings';
+
   const ProfileSettingsScreen({super.key});
 
   @override
@@ -303,6 +306,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 18),
+                          const UagNotificationPreferencesPanel(),
                           const SizedBox(height: 18),
                           Container(
                             width: double.infinity,
