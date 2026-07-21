@@ -5,6 +5,25 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('web push service worker', () {
+    test('web token registration passes the VAPID key directly to Firebase', () {
+      final service = File(
+        'lib/features/trading_hub/arc_raiders/services/trading_push_service.dart',
+      ).readAsStringSync();
+
+      expect(service, contains('FirebaseMessaging.instance.getToken('));
+      expect(
+        service,
+        contains(
+          "vapidKey: const String.fromEnvironment('UAG_WEB_PUSH_VAPID_KEY')",
+        ),
+      );
+      expect(service, isNot(contains('atob(')));
+      expect(service, isNot(contains('base64Decode')));
+      expect(service, isNot(contains('base64Url')));
+      expect(service, isNot(contains('Uint8Array')));
+      expect(service, isNot(contains('Uint8List')));
+    });
+
     test('uses FlutterFire-compatible compat scripts without a BOM', () {
       final workerFile = File('web/firebase-messaging-sw.js');
       final bytes = workerFile.readAsBytesSync();

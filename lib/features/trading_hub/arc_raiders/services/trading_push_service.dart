@@ -46,9 +46,6 @@ class TradingPushService {
     description: 'Announcements, offers, sessions, rewards and match alerts.',
     importance: Importance.high,
   );
-  static const String _webPushVapidKey = String.fromEnvironment(
-    'UAG_WEB_PUSH_VAPID_KEY',
-  );
   static const String _installationIdKey = 'uag_notification_installation_id';
 
   bool _initialized = false;
@@ -310,7 +307,9 @@ class TradingPushService {
       permissionStatus: settings.authorizationStatus.name,
       platform: _platformName(),
       deviceId: deviceId,
-      hasWebVapidKey: !kIsWeb || _webPushVapidKey.trim().isNotEmpty,
+      hasWebVapidKey:
+          !kIsWeb ||
+          const String.fromEnvironment('UAG_WEB_PUSH_VAPID_KEY').isNotEmpty,
       lastTokenRegistered: _lastToken?.trim().isNotEmpty == true,
     );
   }
@@ -360,18 +359,21 @@ class TradingPushService {
   }
 
   Future<String?> _getToken({bool explicitUserAction = false}) async {
-    if (kIsWeb && _webPushVapidKey.trim().isEmpty) {
-      return null;
-    }
-    if (kIsWeb && !explicitUserAction) {
-      final settings = await _messaging.getNotificationSettings();
-      if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+    if (kIsWeb) {
+      if (const String.fromEnvironment('UAG_WEB_PUSH_VAPID_KEY').isEmpty) {
         return null;
       }
+      if (!explicitUserAction) {
+        final settings = await _messaging.getNotificationSettings();
+        if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+          return null;
+        }
+      }
+      return FirebaseMessaging.instance.getToken(
+        vapidKey: const String.fromEnvironment('UAG_WEB_PUSH_VAPID_KEY'),
+      );
     }
-    return _messaging.getToken(
-      vapidKey: kIsWeb ? _webPushVapidKey.trim() : null,
-    );
+    return _messaging.getToken();
   }
 
   Future<void> _saveTokenValue(String token) async {
