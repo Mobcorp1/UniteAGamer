@@ -1,5 +1,16 @@
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
+const firebaseSdkVersion = '12.15.0';
+
+try {
+  importScripts(
+    `/__/firebase/${firebaseSdkVersion}/firebase-app-compat.js`,
+    `/__/firebase/${firebaseSdkVersion}/firebase-messaging-compat.js`,
+  );
+} catch (_) {
+  importScripts(
+    `https://www.gstatic.com/firebasejs/${firebaseSdkVersion}/firebase-app-compat.js`,
+    `https://www.gstatic.com/firebasejs/${firebaseSdkVersion}/firebase-messaging-compat.js`,
+  );
+}
 
 firebase.initializeApp({
   apiKey: 'AIzaSyCTvgkH0vRO-Ij5u10hh4jCvhCZ4-LhIFM',
@@ -27,7 +38,7 @@ messaging.onBackgroundMessage((payload) => {
   const title = notification.title || data.title || 'UAG Arc Raiders Hub';
   const options = {
     body: notification.body || data.body || 'Open the app for details.',
-    icon: notification.icon || '/icons/uag-hub-192.png',
+    icon: notification.icon || data.icon || '/icons/uag-hub-192.png',
     image: notification.image || data.imageUrl || undefined,
     badge: '/icons/uag-hub-192.png',
     data,
@@ -53,6 +64,9 @@ self.addEventListener('notificationclick', (event) => {
       if (clientUrl.origin === self.location.origin && 'focus' in client) {
         client.postMessage({ type: 'UAG_NOTIFICATION_CLICK', data });
         await client.focus();
+        if ('navigate' in client) {
+          await client.navigate(targetUrl);
+        }
         return;
       }
     }
