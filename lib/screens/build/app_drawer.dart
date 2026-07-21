@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
@@ -177,6 +178,12 @@ class _AppDrawerState extends State<AppDrawer>
           'Plans & Referrals',
           Icons.workspace_premium_outlined,
           MonetisationScreen.routeName,
+        ),
+      if (isLoggedIn)
+        _DrawerItem(
+          'Settings',
+          Icons.settings_outlined,
+          ProfileSettingsScreen.routeName,
         ),
       if (adminMode)
         _DrawerItem(
