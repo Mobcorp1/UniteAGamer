@@ -17,8 +17,9 @@ enum ArcBlueprintGridViewMode {
 
   static ArcBlueprintGridViewMode fromStorage(String? value) {
     return switch (value) {
+      'in_game_framed' => ArcBlueprintGridViewMode.inGameFramed,
       'full_overview' => ArcBlueprintGridViewMode.fullOverview,
-      _ => ArcBlueprintGridViewMode.inGameFramed,
+      _ => ArcBlueprintGridViewMode.fullOverview,
     };
   }
 }

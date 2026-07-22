@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:uag_arc_raiders_hub/build/auth/uag_auth_autofill.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
@@ -516,13 +517,17 @@ class _AuthScreenState extends State<AuthScreen> {
               isBold: true,
             ),
           ),
-          content: TextField(
-            controller: _resetEmailController,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            enableSuggestions: false,
-            style: const TextStyle(color: Colors.white),
-            decoration: _inputDecoration('Email address'),
+          content: AutofillGroup(
+            child: TextField(
+              controller: _resetEmailController,
+              keyboardType: TextInputType.emailAddress,
+              autofillHints: UagAuthAutofill.resetEmail,
+              textInputAction: TextInputAction.done,
+              autocorrect: false,
+              enableSuggestions: true,
+              style: const TextStyle(color: Colors.white),
+              decoration: _inputDecoration('Email address'),
+            ),
           ),
           actions: [
             TextButton(
@@ -598,6 +603,9 @@ class _AuthScreenState extends State<AuthScreen> {
     required String label,
     required bool isVisible,
     required VoidCallback onToggle,
+    Iterable<String>? autofillHints,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onFieldSubmitted,
     String? Function(String?)? validator,
     FormFieldSetter<String>? onSaved,
   }) {
@@ -605,6 +613,10 @@ class _AuthScreenState extends State<AuthScreen> {
       controller: controller,
       style: const TextStyle(color: Colors.white),
       obscureText: !isVisible,
+      autocorrect: false,
+      enableSuggestions: false,
+      autofillHints: autofillHints,
+      textInputAction: textInputAction,
       decoration: _inputDecoration(
         label,
         suffixIcon: IconButton(
@@ -618,6 +630,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       ),
       onSaved: onSaved,
+      onFieldSubmitted: onFieldSubmitted,
       validator: validator,
     );
   }
@@ -845,6 +858,8 @@ class _AuthScreenState extends State<AuthScreen> {
         const SizedBox(height: AppTheme.spaceL),
         TextFormField(
           controller: _nameController,
+          autofillHints: UagAuthAutofill.displayName,
+          textInputAction: TextInputAction.next,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration('Display name'),
           validator: (value) => value == null || value.trim().isEmpty
@@ -1027,8 +1042,10 @@ class _AuthScreenState extends State<AuthScreen> {
         TextFormField(
           controller: _emailFieldController,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: UagAuthAutofill.registrationEmail,
+          textInputAction: TextInputAction.next,
           autocorrect: false,
-          enableSuggestions: false,
+          enableSuggestions: true,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration('Email address'),
           onSaved: (value) => _email = value?.trim() ?? '',
@@ -1038,8 +1055,10 @@ class _AuthScreenState extends State<AuthScreen> {
         TextFormField(
           controller: _confirmEmailController,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: UagAuthAutofill.registrationEmail,
+          textInputAction: TextInputAction.next,
           autocorrect: false,
-          enableSuggestions: false,
+          enableSuggestions: true,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration('Confirm email address'),
           validator: (value) {
@@ -1060,6 +1079,8 @@ class _AuthScreenState extends State<AuthScreen> {
           label: 'Password',
           isVisible: _showPassword,
           onToggle: () => setState(() => _showPassword = !_showPassword),
+          autofillHints: UagAuthAutofill.newPassword,
+          textInputAction: TextInputAction.next,
           onSaved: (value) {},
           validator: _validatePassword,
         ),
@@ -1070,6 +1091,9 @@ class _AuthScreenState extends State<AuthScreen> {
           isVisible: _showConfirmPassword,
           onToggle: () =>
               setState(() => _showConfirmPassword = !_showConfirmPassword),
+          autofillHints: UagAuthAutofill.newPassword,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
           validator: (value) {
             if (value != _passwordFieldController.text) {
               return 'Passwords do not match';
@@ -1132,8 +1156,10 @@ class _AuthScreenState extends State<AuthScreen> {
         TextFormField(
           controller: _emailFieldController,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: UagAuthAutofill.loginEmail,
+          textInputAction: TextInputAction.next,
           autocorrect: false,
-          enableSuggestions: false,
+          enableSuggestions: true,
           style: const TextStyle(color: Colors.white),
           decoration: _inputDecoration('Email address'),
           onSaved: (value) => _email = value?.trim() ?? '',
@@ -1177,6 +1203,9 @@ class _AuthScreenState extends State<AuthScreen> {
           label: 'Password',
           isVisible: _showPassword,
           onToggle: () => setState(() => _showPassword = !_showPassword),
+          autofillHints: UagAuthAutofill.loginPassword,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
           onSaved: (value) {},
           validator: _validatePassword,
         ),
@@ -1280,86 +1309,91 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
             child: Form(
               key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    _isLogin ? 'Welcome Raider' : 'Create Account',
-                    textAlign: TextAlign.center,
-                    style: AppTheme.tradingHeading(
-                      fontSize: phone ? 22 : 26,
-                      color: AppTheme.neonCyan,
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      _isLogin ? 'Welcome Raider' : 'Create Account',
+                      textAlign: TextAlign.center,
+                      style: AppTheme.tradingHeading(
+                        fontSize: phone ? 22 : 26,
+                        color: AppTheme.neonCyan,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _isLogin
-                        ? 'Log in to access your operations hub.'
-                        : 'Three quick steps to enter the trader network.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  if (!_isLogin) ...[
-                    _buildStepHeader(),
-                    const SizedBox(height: AppTheme.spaceL),
-                    _buildSignupStepBody(),
-                  ] else
-                    _buildLoginBody(),
-                  const SizedBox(height: AppTheme.spaceL),
-                  if (_isLogin)
-                    _gradientButton(
-                      label: 'Log In',
-                      icon: Icons.login_rounded,
-                      onPressed: _isLoading ? null : _submit,
-                    )
-                  else
-                    _buildSignupControls(),
-                  const SizedBox(height: AppTheme.spaceM),
-                  if (_isLogin)
-                    TextButton(
-                      onPressed: _showResetPasswordDialog,
-                      child: const Text('Forgot password?'),
-                    ),
-                  TextButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () {
-                            setState(() {
-                              _isLogin = !_isLogin;
-                              _signupStep = 0;
-                            });
-                          },
-                    child: Text(
+                    const SizedBox(height: 6),
+                    Text(
                       _isLogin
-                          ? 'New here? Create account'
-                          : 'Already have an account? Log in',
+                          ? 'Log in to access your operations hub.'
+                          : 'Three quick steps to enter the trader network.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        height: 1.3,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.shield_outlined,
-                        size: 14,
-                        color: Colors.white54,
+                    const SizedBox(height: AppTheme.spaceL),
+                    if (!_isLogin) ...[
+                      _buildStepHeader(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      _buildSignupStepBody(),
+                    ] else
+                      _buildLoginBody(),
+                    const SizedBox(height: AppTheme.spaceL),
+                    if (_isLogin)
+                      _gradientButton(
+                        label: 'Log In',
+                        icon: Icons.login_rounded,
+                        onPressed: _isLoading ? null : _submit,
+                      )
+                    else
+                      _buildSignupControls(),
+                    const SizedBox(height: AppTheme.spaceM),
+                    if (_isLogin)
+                      TextButton(
+                        onPressed: _showResetPasswordDialog,
+                        child: const Text('Forgot password?'),
                       ),
-                      SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          'Protected by UAG security protocols',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                    TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              setState(() {
+                                _isLogin = !_isLogin;
+                                _signupStep = 0;
+                              });
+                            },
+                      child: Text(
+                        _isLogin
+                            ? 'New here? Create account'
+                            : 'Already have an account? Log in',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.shield_outlined,
+                          size: 14,
+                          color: Colors.white54,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Protected by UAG security protocols',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

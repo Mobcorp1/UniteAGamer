@@ -71,7 +71,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     viewportFraction: 0.96,
   );
   bool _showOverviewHint = true;
-  ArcBlueprintGridViewMode _viewMode = ArcBlueprintGridViewMode.inGameFramed;
+  ArcBlueprintGridViewMode _viewMode = ArcBlueprintGridViewMode.fullOverview;
   bool _viewModeLoaded = false;
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
