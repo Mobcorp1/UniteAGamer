@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -6,6 +7,7 @@ import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
 import '../data/arc_profile_completion_evaluator.dart';
 import '../models/arc_operations_models.dart';
+import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_operations_repository.dart';
 import '../repositories/arc_trader_profile_repository.dart';
@@ -13,6 +15,7 @@ import '../screens/arc_availability_screen.dart';
 import '../screens/arc_away_screen.dart';
 import '../screens/arc_profile_edit_screen.dart';
 import '../screens/arc_profile_setup_screen.dart';
+import '../screens/wall_of_legends_screen.dart';
 
 class TradingProfileScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile';
@@ -288,6 +291,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         SizedBox(height: gap),
         _publicDetailsPanel(profile),
         SizedBox(height: gap),
+        _socialLinksPanel(profile),
+        SizedBox(height: gap),
         _profileActionsPanel(),
       ],
     );
@@ -300,6 +305,8 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         _rewardShowcasePanel(operationsState),
         SizedBox(height: gap),
         _badgeGallery(),
+        SizedBox(height: gap),
+        _creatorProgrammePanel(profile),
         SizedBox(height: gap),
         _communityContributionPanel(operationsState),
         SizedBox(height: gap),
@@ -609,6 +616,102 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
         ),
       ],
     );
+  }
+
+  Widget _socialLinksPanel(ArcTraderProfile profile) {
+    final publicLinks = profile.publicSocialLinks;
+    return _profilePanel(
+      accent: AppTheme.neonCyan,
+      title: 'Public Social Links',
+      icon: Icons.link_rounded,
+      onEdit: _openProfileEditor,
+      child: publicLinks.isEmpty
+          ? _profileEmptyState(
+              icon: Icons.link_off_rounded,
+              title: 'No public social links',
+              copy:
+                  'Add TikTok, YouTube, Twitch, Kick, Discord, Steam or platform links when you want other Raiders to find you.',
+            )
+          : Wrap(
+              spacing: AppTheme.spaceS,
+              runSpacing: AppTheme.spaceS,
+              children: publicLinks.map(_socialLinkTile).toList(),
+            ),
+    );
+  }
+
+  Widget _socialLinkTile(ArcProfileSocialLink link) {
+    final destination = link.destinationUrl;
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: destination.isEmpty ? null : () => _copySocialLink(link),
+      child: Container(
+        width: 210,
+        padding: const EdgeInsets.all(AppTheme.spaceS),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundAlt.withValues(alpha: 0.74),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              _socialPlatformIcon(link.platform),
+              color: AppTheme.neonCyan,
+              size: 20,
+            ),
+            const SizedBox(width: AppTheme.spaceS),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    link.platform.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    link.displayValue,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white60, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.copy_rounded, color: Colors.white54, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copySocialLink(ArcProfileSocialLink link) async {
+    final destination = link.destinationUrl;
+    if (destination.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: destination));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${link.platform.label} link copied.')),
+    );
+  }
+
+  IconData _socialPlatformIcon(ArcSocialPlatform platform) {
+    return switch (platform) {
+      ArcSocialPlatform.tiktok => Icons.music_note_rounded,
+      ArcSocialPlatform.youtube => Icons.play_circle_fill_rounded,
+      ArcSocialPlatform.twitch => Icons.live_tv_rounded,
+      ArcSocialPlatform.kick => Icons.sports_esports_rounded,
+      ArcSocialPlatform.discord => Icons.forum_rounded,
+      ArcSocialPlatform.steam => Icons.gamepad_rounded,
+      ArcSocialPlatform.xbox => Icons.sports_esports_rounded,
+      ArcSocialPlatform.playStation => Icons.videogame_asset_rounded,
+      ArcSocialPlatform.epicGames => Icons.extension_rounded,
+    };
   }
 
   Widget _profileActionsPanel() {
@@ -1412,6 +1515,78 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
               ),
             )
             .toList(),
+      ),
+    );
+  }
+
+  Widget _creatorProgrammePanel(ArcTraderProfile profile) {
+    final creator = profile.creatorProgramme.normalised(
+      referralCode: profile.referralCode,
+      affiliateRequested: profile.affiliateEnabled,
+    );
+    final accent = creator.hasPublicRecognition
+        ? AppTheme.neonPink
+        : Colors.white54;
+
+    return _profilePanel(
+      accent: AppTheme.neonPink,
+      title: 'Creator & Ambassador',
+      icon: Icons.campaign_rounded,
+      onEdit: _openProfileEditor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              _profileChip(
+                icon: Icons.workspace_premium_rounded,
+                label: creator.displayBadgeLabel,
+                accent: accent,
+              ),
+              _profileChip(
+                icon: creator.adminApproved
+                    ? Icons.verified_rounded
+                    : Icons.hourglass_bottom_rounded,
+                label: creator.adminApproved
+                    ? 'Admin approved'
+                    : profile.affiliateEnabled
+                    ? 'Review requested'
+                    : 'Not requested',
+                accent: creator.adminApproved
+                    ? Colors.lightGreenAccent
+                    : Colors.white54,
+              ),
+              if (creator.rewardEligible)
+                _profileChip(
+                  icon: Icons.card_giftcard_rounded,
+                  label: 'Reward eligible',
+                  accent: Colors.amberAccent,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Text(
+            creator.hasPublicRecognition
+                ? '${creator.displayTitle} is visible on public community surfaces.'
+                : 'Creator, partner and ambassador recognition is admin-approved before it becomes public.',
+            style: const TextStyle(color: Colors.white70, height: 1.35),
+          ),
+          if (profile.referralCode.trim().isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            _detailRow('Referral Code', profile.referralCode),
+          ],
+          const SizedBox(height: AppTheme.spaceS),
+          _actionTile(
+            icon: Icons.emoji_events_rounded,
+            title: 'Wall of Legends',
+            subtitle:
+                'View admin-curated founders, beta raiders, creators and community heroes.',
+            onTap: () =>
+                Navigator.of(context).pushNamed(WallOfLegendsScreen.routeName),
+          ),
+        ],
       ),
     );
   }

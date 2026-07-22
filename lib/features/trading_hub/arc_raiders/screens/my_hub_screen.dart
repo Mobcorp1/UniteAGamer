@@ -14,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
@@ -135,13 +136,21 @@ class _MyHubScreenState extends State<MyHubScreen> {
     ),
     _ArcHubFeature(
       title: 'Play Like a Pro',
-      subtitle:
-          'Open Player Locker Pro coaching, setups and improvement tools.',
+      subtitle: 'Open Play Like a Pro coaching, setups and improvement tools.',
       icon: Icons.psychology_outlined,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
       assetName: 'arc_hub_profile_reputation.webp',
       builder: (_) => const PlayLikeAProScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Wall of Legends',
+      subtitle: 'Founders, beta raiders, trusted traders and community heroes.',
+      icon: Icons.emoji_events_outlined,
+      accent: Colors.amberAccent,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_community_intel.webp',
+      builder: (_) => const WallOfLegendsScreen(),
     ),
     _ArcHubFeature(
       title: 'Referral Tools',

@@ -46,6 +46,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/trading_hub_screen.dart';
@@ -409,6 +410,16 @@ class UAGTradersHubApp extends StatelessWidget {
             flag: FeatureAccessFlag.traderHub,
             title: 'Trader Hub',
             child: TraderHubScreen(initialIndex: 5),
+          ),
+          settings: settings,
+        );
+
+      case WallOfLegendsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.traderHub,
+            title: 'Wall of Legends',
+            child: WallOfLegendsScreen(),
           ),
           settings: settings,
         );

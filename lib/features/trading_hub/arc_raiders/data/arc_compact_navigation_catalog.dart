@@ -27,6 +27,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart';
 
 enum ArcDrawerBadgeTarget { none, blueprintTracker, tradingHub, matchRider }
 
@@ -158,6 +159,7 @@ class ArcCompactNavigationCatalog {
             MyHubScreen.toolDeckRouteName,
             TradingProfileScreen.routeName,
             PlayLikeAProScreen.routeName,
+            WallOfLegendsScreen.routeName,
             OperationsCommandScreen.routeName,
           ],
         ),

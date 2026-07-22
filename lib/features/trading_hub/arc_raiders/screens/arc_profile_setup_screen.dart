@@ -4,8 +4,10 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
 import '../data/arc_player_session_catalog.dart';
+import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
+import '../widgets/arc_social_links_editor.dart';
 
 class ArcProfileSetupScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile/setup';
@@ -43,6 +45,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
   String _sessionIntent = ArcPlayerSessionCatalog.defaultIntent;
   String _currentPriority = ArcPlayerSessionCatalog.defaultPriority;
   String _payoutMethod = 'Bank Transfer';
+  List<ArcProfileSocialLink> _socialLinks = const <ArcProfileSocialLink>[];
 
   static const List<String> _payoutMethods = <String>[
     'Bank Transfer',
@@ -168,6 +171,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       _payoutMethod = profile.payoutMethod.isEmpty
           ? 'Bank Transfer'
           : profile.payoutMethod;
+      _socialLinks = profile.socialLinks;
 
       setState(() => _isLoadingProfile = false);
     } catch (_) {
@@ -204,6 +208,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       socialEnergy: _socialEnergy,
       sessionIntent: _sessionIntent,
       currentPriority: _currentPriority,
+      socialLinks: _socialLinks,
       affiliateEnabled: _affiliateEnabled,
       payoutMethod: _payoutMethod == 'Not Set' ? '' : _payoutMethod,
       referredByCode: _referredByController.text.trim(),
@@ -588,6 +593,16 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                         onChanged: (value) =>
                             setState(() => _affiliateEnabled = value),
                         title: const Text('Apply for affiliate programme'),
+                      ),
+                    ],
+                  ),
+                  sectionCard(
+                    title: 'Public Social Links',
+                    icon: Icons.link_rounded,
+                    children: [
+                      ArcSocialLinksEditor(
+                        initialLinks: _socialLinks,
+                        onChanged: (links) => _socialLinks = links,
                       ),
                     ],
                   ),

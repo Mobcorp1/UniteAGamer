@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_profile_social_models.dart';
 
 class ArcTraderProfile {
   final String uid;
@@ -28,6 +29,8 @@ class ArcTraderProfile {
   final bool affiliateEnabled;
   final String payoutMethod;
   final String subscriptionStatus;
+  final List<ArcProfileSocialLink> socialLinks;
+  final ArcCreatorProgrammeProfile creatorProgramme;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? lastActiveAt;
@@ -58,6 +61,8 @@ class ArcTraderProfile {
     required this.affiliateEnabled,
     required this.payoutMethod,
     required this.subscriptionStatus,
+    this.socialLinks = const <ArcProfileSocialLink>[],
+    this.creatorProgramme = const ArcCreatorProgrammeProfile(),
     this.createdAt,
     this.updatedAt,
     this.lastActiveAt,
@@ -90,6 +95,8 @@ class ArcTraderProfile {
       affiliateEnabled: false,
       payoutMethod: 'Bank Transfer',
       subscriptionStatus: 'inactive',
+      socialLinks: const <ArcProfileSocialLink>[],
+      creatorProgramme: const ArcCreatorProgrammeProfile(),
     );
   }
 
@@ -137,7 +144,15 @@ class ArcTraderProfile {
       region.trim().isNotEmpty &&
       platform.trim().isNotEmpty;
 
+  List<ArcProfileSocialLink> get publicSocialLinks =>
+      ArcProfileSocialLinks.publicLinks(socialLinks);
+
   Map<String, dynamic> toMap() {
+    final normalisedSocialLinks = ArcProfileSocialLinks.merge(socialLinks);
+    final normalisedCreatorProgramme = creatorProgramme.normalised(
+      referralCode: referralCode,
+      affiliateRequested: affiliateEnabled,
+    );
     return {
       'uid': uid,
       'uagId': uagId,
@@ -171,11 +186,62 @@ class ArcTraderProfile {
       'affiliateEnabled': affiliateEnabled,
       'payoutMethod': payoutMethod,
       'subscriptionStatus': subscriptionStatus,
+      'socialLinks': normalisedSocialLinks
+          .map((link) => link.toMap())
+          .toList(growable: false),
+      'publicSocialLinks': ArcProfileSocialLinks.publicLinks(
+        normalisedSocialLinks,
+      ).map((link) => link.toPublicMap()).toList(growable: false),
+      'creatorProgramme': normalisedCreatorProgramme.toMap(),
+      'publicCreatorProgramme': normalisedCreatorProgramme.toPublicMap(),
+      'creatorProgrammeStatus': normalisedCreatorProgramme.status.name,
+      'creatorProgrammeApproved': normalisedCreatorProgramme.adminApproved,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
       'lastActiveAt': lastActiveAt == null
           ? null
           : Timestamp.fromDate(lastActiveAt!),
+    };
+  }
+
+  Map<String, dynamic> toPublicProfileMap({required Object updatedAt}) {
+    final normalisedCreatorProgramme = creatorProgramme.normalised(
+      referralCode: referralCode,
+      affiliateRequested: affiliateEnabled,
+    );
+    final publicName = uagName.trim().isEmpty ? 'New Trader' : uagName.trim();
+    return <String, dynamic>{
+      'uid': uid,
+      'uagId': uagId.trim(),
+      'uagName': publicName,
+      'displayName': publicName,
+      'region': region.trim(),
+      'platform': platform.trim(),
+      'serverPreference': serverPreference.trim().isEmpty
+          ? 'Automatic'
+          : serverPreference.trim(),
+      'visibleInSearch': visibleInSearch,
+      'archetypes': ArcPlayerArchetypeCatalog.normalizeLabels(
+        archetypes,
+        includeDefaultWhenEmpty: true,
+      ),
+      'playStyles': playStyles,
+      'communicationStyle': communicationStyle.trim(),
+      'squadIntent': squadIntent.trim(),
+      'socialEnergy': socialEnergy.trim(),
+      'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(sessionIntent),
+      'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
+        currentPriority,
+      ),
+      'publicSocialLinks': publicSocialLinks
+          .map((link) => link.toPublicMap())
+          .toList(growable: false),
+      'creatorProgramme': normalisedCreatorProgramme.toPublicMap(),
+      'creatorProgrammeStatus': normalisedCreatorProgramme.hasPublicRecognition
+          ? normalisedCreatorProgramme.status.name
+          : ArcCreatorProgrammeStatus.none.name,
+      'creatorProgrammeApproved': normalisedCreatorProgramme.adminApproved,
+      'updatedAt': updatedAt,
     };
   }
 
@@ -220,6 +286,14 @@ class ArcTraderProfile {
       affiliateEnabled: _bool(map['affiliateEnabled']),
       payoutMethod: _string(map['payoutMethod'], 'Bank Transfer'),
       subscriptionStatus: _string(map['subscriptionStatus'], 'inactive'),
+      socialLinks: ArcProfileSocialLinks.fromProfileMaps(<Map<String, dynamic>>[
+        map,
+      ]),
+      creatorProgramme: ArcCreatorProgrammeProfile.fromMap(
+        map['creatorProgramme'],
+        fallbackReferralCode: _string(map['referralCode']),
+        affiliateEnabled: _bool(map['affiliateEnabled']),
+      ),
       createdAt: _date(map['createdAt']),
       updatedAt: _date(map['updatedAt']),
       lastActiveAt: _date(map['lastActiveAt']),
@@ -252,6 +326,8 @@ class ArcTraderProfile {
     bool? affiliateEnabled,
     String? payoutMethod,
     String? subscriptionStatus,
+    List<ArcProfileSocialLink>? socialLinks,
+    ArcCreatorProgrammeProfile? creatorProgramme,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastActiveAt,
@@ -282,6 +358,8 @@ class ArcTraderProfile {
       affiliateEnabled: affiliateEnabled ?? this.affiliateEnabled,
       payoutMethod: payoutMethod ?? this.payoutMethod,
       subscriptionStatus: subscriptionStatus ?? this.subscriptionStatus,
+      socialLinks: socialLinks ?? this.socialLinks,
+      creatorProgramme: creatorProgramme ?? this.creatorProgramme,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,

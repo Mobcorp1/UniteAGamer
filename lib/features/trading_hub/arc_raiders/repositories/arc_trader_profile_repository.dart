@@ -9,6 +9,7 @@ import '../data/arc_player_session_catalog.dart';
 import '../data/arc_profile_completion_evaluator.dart';
 import '../models/arc_availability.dart';
 import '../models/arc_away_status.dart';
+import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
 import 'arc_operations_repository.dart';
 
@@ -34,6 +35,9 @@ class ArcTraderProfileRepository {
 
   DocumentReference<Map<String, dynamic>> profileDoc(String uid) =>
       _userDoc(uid).collection('trading_activity').doc('profile');
+
+  DocumentReference<Map<String, dynamic>> publicProfileDoc(String uid) =>
+      _firestore.collection('public_profiles').doc(uid);
 
   DocumentReference<Map<String, dynamic>> availabilityDoc(String uid) =>
       _userDoc(uid).collection('trading_activity').doc('availability');
@@ -482,6 +486,23 @@ class ArcTraderProfileRepository {
         profileData['subscriptionStatus'],
         _string(userData['subscriptionStatus'], 'inactive'),
       ),
+      socialLinks: ArcProfileSocialLinks.fromProfileMaps(<Map<String, dynamic>>[
+        profileData,
+        traderProfile,
+        basicProfile,
+        userData,
+      ]),
+      creatorProgramme: ArcCreatorProgrammeProfile.fromMap(
+        profileData['creatorProgramme'],
+        fallbackReferralCode: _string(
+          profileData['referralCode'],
+          _string(userData['referralCode']),
+        ),
+        affiliateEnabled: _bool(
+          profileData['affiliateEnabled'],
+          _bool(userData['affiliateApplied']),
+        ),
+      ),
       createdAt: createdAt,
       updatedAt: updatedAt,
       lastActiveAt: lastActiveAt,
@@ -493,6 +514,11 @@ class ArcTraderProfileRepository {
     required dynamic serverNow,
   }) {
     final isComplete = profile.hasCoreDetails;
+    final socialLinks = ArcProfileSocialLinks.merge(profile.socialLinks);
+    final creatorProgramme = profile.creatorProgramme.normalised(
+      referralCode: profile.referralCode,
+      affiliateRequested: profile.affiliateEnabled,
+    );
 
     return {
       'uid': profile.uid,
@@ -541,6 +567,16 @@ class ArcTraderProfileRepository {
       'affiliateEnabled': profile.affiliateEnabled,
       'payoutMethod': profile.payoutMethod.trim(),
       'subscriptionStatus': profile.subscriptionStatus.trim(),
+      'socialLinks': socialLinks
+          .map((link) => link.toMap())
+          .toList(growable: false),
+      'publicSocialLinks': ArcProfileSocialLinks.publicLinks(
+        socialLinks,
+      ).map((link) => link.toPublicMap()).toList(growable: false),
+      'creatorProgramme': creatorProgramme.toMap(),
+      'publicCreatorProgramme': creatorProgramme.toPublicMap(),
+      'creatorProgrammeStatus': creatorProgramme.status.name,
+      'creatorProgrammeApproved': creatorProgramme.adminApproved,
       'displayName': profile.uagName.trim().isEmpty
           ? 'New Trader'
           : profile.uagName.trim(),
@@ -552,6 +588,16 @@ class ArcTraderProfileRepository {
           ? serverNow
           : Timestamp.fromDate(profile.createdAt!),
     };
+  }
+
+  Future<void> _syncPublicProfile(
+    ArcTraderProfile profile, {
+    required Object serverNow,
+  }) async {
+    await publicProfileDoc(profile.uid).set(
+      profile.toPublicProfileMap(updatedAt: serverNow),
+      SetOptions(merge: true),
+    );
   }
 
   Future<void> ensureDocsExist() async {
@@ -608,6 +654,16 @@ class ArcTraderProfileRepository {
       await profileDoc(uid).set(updates, SetOptions(merge: true));
     }
 
+    final publicProfileSnapshot = await profileDoc(uid).get();
+    await _syncPublicProfile(
+      _profileFromMaps(
+        uid: uid,
+        userData: userData,
+        profileData: publicProfileSnapshot.data() ?? <String, dynamic>{},
+      ).copyWith(uagId: resolvedUagId),
+      serverNow: now,
+    );
+
     final availabilitySnapshot = await availabilityDoc(uid).get();
     if (!availabilitySnapshot.exists) {
       await availabilityDoc(uid).set(ArcAvailability.initial().toMap());
@@ -662,18 +718,21 @@ class ArcTraderProfileRepository {
       preferredUagId: profile.uagId.trim(),
     );
 
+    final normalisedProfile = profile.copyWith(
+      uagId: uagId,
+      referralCode: referralCode,
+      isProfileComplete: false,
+      updatedAt: DateTime.now(),
+      lastActiveAt: DateTime.now(),
+    );
+
     final profileMap = _arcProfileToUnifiedMap(
-      profile.copyWith(
-        uagId: uagId,
-        referralCode: referralCode,
-        isProfileComplete: false,
-        updatedAt: DateTime.now(),
-        lastActiveAt: DateTime.now(),
-      ),
+      normalisedProfile,
       serverNow: serverNow,
     );
 
     await profileDoc(profile.uid).set(profileMap, SetOptions(merge: true));
+    await _syncPublicProfile(normalisedProfile, serverNow: serverNow);
     await _syncUagIdAcrossUserDocs(profile.uid, uagId);
     await _evaluateAndPersistProfileCompletion(
       profile.uid,
