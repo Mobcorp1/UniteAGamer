@@ -52,5 +52,64 @@ void main() {
         isFalse,
       );
     });
+
+    test('removes claimed and stale previous expedition objectives', () {
+      const claimed = ArcCommandObjective(
+        title: 'Claim Closed Beta Reward',
+        reason: 'Reward claimed for this expedition.',
+        statusLabel: 'Claimed',
+        progressText: 'Claimed',
+        status: ArcCommandStatus.ready,
+        action: action,
+      );
+      const stale = ArcCommandObjective(
+        title: 'Complete Hunt Target',
+        reason: 'Completed for previous expedition.',
+        statusLabel: 'Stale',
+        progressText: 'Previous expedition',
+        status: ArcCommandStatus.active,
+        action: action,
+      );
+
+      expect(
+        ArcCommandCentreCompletionPolicy.objectiveIsActionable(claimed),
+        isFalse,
+      );
+      expect(
+        ArcCommandCentreCompletionPolicy.objectiveIsActionable(stale),
+        isFalse,
+      );
+    });
+
+    test('keeps newly eligible expedition objectives actionable', () {
+      const objective = ArcCommandObjective(
+        title: 'Claim Operation Rewards',
+        reason: 'One operation reward is ready in the current expedition.',
+        statusLabel: 'Ready',
+        progressText: '1 ready to claim',
+        status: ArcCommandStatus.ready,
+        action: action,
+      );
+
+      expect(
+        ArcCommandCentreCompletionPolicy.objectiveIsActionable(objective),
+        isTrue,
+      );
+    });
+
+    test('removes quiet success alerts from blockers', () {
+      const alert = ArcCommandAlert(
+        title: 'Command centre quiet',
+        body: 'No live blockers are waiting.',
+        statusLabel: 'Clear',
+        status: ArcCommandStatus.success,
+        action: action,
+      );
+
+      expect(
+        ArcCommandCentreCompletionPolicy.alertIsActionable(alert),
+        isFalse,
+      );
+    });
   });
 }

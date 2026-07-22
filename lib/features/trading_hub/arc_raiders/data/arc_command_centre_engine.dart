@@ -153,6 +153,9 @@ class ArcCommandCentreEngine {
     recommendations = recommendations
         .where(ArcCommandCentreCompletionPolicy.recommendationIsActionable)
         .toList(growable: false);
+    alerts = alerts
+        .where(ArcCommandCentreCompletionPolicy.alertIsActionable)
+        .toList(growable: false);
     var checklist = _checklist(
       loadoutReady: loadoutSummary.ready,
       tradeActivity: tradeActivity,
@@ -650,16 +653,6 @@ class ArcCommandCentreEngine {
         action: const ArcCommandAction(
           label: 'Bench Tracker',
           routeName: ScrappyGridScreen.benchRouteName,
-        ),
-      ),
-      const ArcCommandChecklistItem(
-        id: 'clear-inventory',
-        label: 'Clear Inventory',
-        reason:
-            'Stash fullness is not wired yet; use resource tracker meanwhile.',
-        action: ArcCommandAction(
-          label: 'Resources',
-          routeName: ScrappyGridScreen.routeName,
         ),
       ),
       ArcCommandChecklistItem(
@@ -1309,6 +1302,11 @@ class ArcCommandCentreCompletionPolicy {
     return !_looksComplete('${recommendation.title} ${recommendation.body}');
   }
 
+  static bool alertIsActionable(ArcCommandAlert alert) {
+    if (alert.status == ArcCommandStatus.success) return false;
+    return !_looksComplete('${alert.title} ${alert.body} ${alert.statusLabel}');
+  }
+
   static bool checklistItemIsActionable(ArcCommandChecklistItem item) {
     return !item.doneByDefault &&
         !_looksComplete('${item.label} ${item.reason}');
@@ -1316,12 +1314,20 @@ class ArcCommandCentreCompletionPolicy {
 
   static bool _looksComplete(String text) {
     final normalized = text.toLowerCase();
-    if (normalized.contains('100%')) return true;
+    if (RegExp(r'\b100\s*%').hasMatch(normalized)) return true;
+    if (RegExp(r'\b100\s+percent\b').hasMatch(normalized)) return true;
+    if (RegExp(r'\bclaimed\b').hasMatch(normalized)) return true;
     if (normalized.contains('all tracked') && normalized.contains('complete')) {
       return true;
     }
     if (normalized.contains('already complete') ||
-        normalized.contains('completed for this season')) {
+        normalized.contains('already completed') ||
+        normalized.contains('reward claimed') ||
+        normalized.contains('completed for this season') ||
+        normalized.contains('previous expedition') ||
+        normalized.contains('previous season') ||
+        normalized.contains('past expedition') ||
+        normalized.contains('stale objective')) {
       return true;
     }
     return false;

@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_system_detail_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -38,6 +39,19 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     final commandState = widget.commandState;
     final liveTiles = _liveTiles(commandState).take(4).toList(growable: false);
     final carouselTiles = _systemCarouselTiles(commandState);
+    final selectedSystemTile = carouselTiles.isEmpty
+        ? null
+        : carouselTiles[_safeSystemIndex(carouselTiles.length)];
+    final selectedSystemPanel = selectedSystemTile == null
+        ? null
+        : ArcCommandSystemDetailMapper.panelFor(
+            state: commandState,
+            title: selectedSystemTile.title,
+            value: selectedSystemTile.value,
+            detail: selectedSystemTile.detail,
+            status: selectedSystemTile.status,
+            action: selectedSystemTile.action,
+          );
     final commandMoves = _commandMoves(commandState).take(6).toList();
 
     return ArcRaidersPageList(
@@ -52,21 +66,35 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         const SizedBox(height: 8),
         _detailAccordion(
           title: 'System Detail',
-          subtitle: 'Compact lower-priority system checks.',
+          subtitle: selectedSystemPanel == null
+              ? 'Compact lower-priority system checks.'
+              : '${selectedSystemPanel.title} status and supporting checks.',
           accent: AppTheme.neonCyan,
           initiallyExpanded: false,
           children: [
-            _systemDetailGrid([
-              _summaryPanel(commandState.operationsSummary),
-              _summaryPanel(commandState.questSummary),
-              _summaryPanel(commandState.weeklyTraderSummary),
-              _summaryPanel(commandState.decisionSummary),
-              _resourceSummary(commandState.resources),
-            ]),
+            if (selectedSystemPanel == null)
+              _quietLine('Select a system to inspect its current status.')
+            else ...[
+              _summaryPanel(selectedSystemPanel),
+              const SizedBox(height: 8),
+              _systemDetailGrid([
+                for (final panel in ArcCommandSystemDetailMapper.overviewPanels(
+                  commandState,
+                  selectedSystemPanel,
+                ))
+                  _summaryPanel(panel),
+                _resourceSummary(commandState.resources),
+              ]),
+            ],
           ],
         ),
       ],
     );
+  }
+
+  int _safeSystemIndex(int tileCount) {
+    if (tileCount <= 0) return 0;
+    return _systemsIndex.clamp(0, tileCount - 1).toInt();
   }
 
   Widget _topCommandDeck(
@@ -516,7 +544,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                         ),
                         child: _carouselCard(
                           tiles[i],
-                          active: i == _systemsIndex,
+                          active: i == _safeSystemIndex(tiles.length),
                         ),
                       ),
                   ],

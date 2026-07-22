@@ -128,7 +128,11 @@ class ArcDecisionEngine {
           ),
         ),
       );
-    } else {
+    } else if (_hasTrackedIncompleteProgress(
+      trackingKnown: benchIntel.trackingKnown,
+      status: benchIntel.status,
+      completionPercent: benchIntel.completionPercent,
+    )) {
       add(
         _signal(
           id: 'bench-progress',
@@ -212,7 +216,11 @@ class ArcDecisionEngine {
           ),
         ),
       );
-    } else {
+    } else if (_hasTrackedIncompleteProgress(
+      trackingKnown: questIntel.trackingKnown,
+      status: questIntel.status,
+      completionPercent: questIntel.completionPercent,
+    )) {
       add(
         _signal(
           id: 'quest-progress',
@@ -395,7 +403,7 @@ class ArcDecisionEngine {
           ),
         ),
       );
-    } else if (traderIntel.trackingKnown) {
+    } else if (traderIntel.trackingKnown && traderIntel.shouldVisit) {
       add(
         _signal(
           id: 'nomadic-review',
@@ -666,25 +674,30 @@ class ArcDecisionEngine {
     }
 
     final ranked = _rank(signals);
-    final primary = ArcDecisionMission.fromSignal(ranked.first);
-    final objectives = ranked
+    final actionableRanked = ranked
+        .where(_signalIsCurrentAction)
+        .toList(growable: false);
+    final primary = ArcDecisionMission.fromSignal(
+      actionableRanked.isNotEmpty ? actionableRanked.first : ranked.first,
+    );
+    final objectives = actionableRanked
         .map(ArcDecisionObjective.fromSignal)
         .toList(growable: false);
-    final blockers = ranked
+    final blockers = actionableRanked
         .where(_isBlocker)
         .map(ArcDecisionBlocker.fromSignal)
         .toList(growable: false);
     final recommendations = _recommendationsFrom(
-      ranked,
+      actionableRanked,
     ).map(ArcDecisionRecommendation.fromSignal).toList(growable: false);
-    final tradeOpportunities = ranked
+    final tradeOpportunities = actionableRanked
         .where(
           (signal) =>
               signal.category == ArcDecisionCategory.trade ||
               signal.tradeAssisted,
         )
         .toList(growable: false);
-    final resourceActions = ranked
+    final resourceActions = actionableRanked
         .where(
           (signal) =>
               signal.category == ArcDecisionCategory.resources ||
@@ -713,36 +726,19 @@ class ArcDecisionEngine {
     return ArcDecisionState(
       primaryMission: primary,
       rankedObjectives: objectives,
-      blockers: blockers.isEmpty
-          ? <ArcDecisionBlocker>[
-              ArcDecisionBlocker.fromSignal(
-                _signal(
-                  id: 'quiet-alert',
-                  title: 'Command centre quiet',
-                  summary:
-                      'No live trade, duplicate, loadout or operation blockers are waiting.',
-                  detail:
-                      'Use the Tool Deck when you want to inspect lower-priority systems.',
-                  category: ArcDecisionCategory.optional,
-                  status: ArcCommandStatus.success,
-                  progressLabel: 'Clear',
-                  action: const ArcDecisionAction(
-                    label: 'Tool Deck',
-                    intent: ArcCommandActionIntent.toolDeck,
-                  ),
-                  sourceSystem: 'Decision Engine',
-                  score: _score(readiness: 28, confidence: 72),
-                ),
-              ),
-            ]
-          : blockers,
+      blockers: blockers,
       smartRecommendations: recommendations,
       tradeAssistedOpportunities: tradeOpportunities,
       resourceActions: resourceActions,
       systemStatuses: statuses,
       signals: ranked,
-      confidenceLabel: _stateConfidenceLabel(ranked),
-      summary: _stateSummary(primary, ranked),
+      confidenceLabel: _stateConfidenceLabel(
+        actionableRanked.isEmpty ? ranked : actionableRanked,
+      ),
+      summary: _stateSummary(
+        primary,
+        actionableRanked.isEmpty ? ranked : actionableRanked,
+      ),
     );
   }
 
@@ -757,7 +753,11 @@ class ArcDecisionEngine {
     if (recommendations.length < 4) {
       recommendations.addAll(
         ranked
-            .where((signal) => !recommendations.contains(signal))
+            .where(
+              (signal) =>
+                  !recommendations.contains(signal) &&
+                  _signalIsCurrentAction(signal),
+            )
             .take(4 - recommendations.length),
       );
     }
@@ -1129,6 +1129,49 @@ class ArcDecisionEngine {
         signal.score.blockerSeverity >= 45 ||
         signal.score.missingResourcePressure >= 45 ||
         signal.status == ArcCommandStatus.ready;
+  }
+
+  bool _hasTrackedIncompleteProgress({
+    required bool trackingKnown,
+    required ArcCommandStatus status,
+    required int completionPercent,
+  }) {
+    if (!trackingKnown || status == ArcCommandStatus.success) return false;
+    return completionPercent < 100;
+  }
+
+  bool _signalIsCurrentAction(ArcDecisionSignal signal) {
+    if (signal.category == ArcDecisionCategory.optional) return false;
+    if (signal.status == ArcCommandStatus.success) return false;
+    if (signal.score.completionPercentage >= 100 &&
+        signal.status != ArcCommandStatus.ready &&
+        signal.status != ArcCommandStatus.critical) {
+      return false;
+    }
+
+    final text =
+        '${signal.id} ${signal.title} ${signal.summary} '
+        '${signal.detail} ${signal.progressLabel} ${signal.sourceSystem}';
+    return !_looksStaleOrComplete(text);
+  }
+
+  bool _looksStaleOrComplete(String text) {
+    final normalized = text.toLowerCase();
+    if (RegExp(r'\b100\s*%').hasMatch(normalized)) return true;
+    if (RegExp(r'\b100\s+percent\b').hasMatch(normalized)) return true;
+    if (RegExp(r'\bclaimed\b').hasMatch(normalized)) return true;
+    if (normalized.contains('already complete') ||
+        normalized.contains('already completed') ||
+        normalized.contains('reward claimed') ||
+        normalized.contains('all tracked') && normalized.contains('complete') ||
+        normalized.contains('completed for this season') ||
+        normalized.contains('previous expedition') ||
+        normalized.contains('previous season') ||
+        normalized.contains('past expedition') ||
+        normalized.contains('stale objective')) {
+      return true;
+    }
+    return false;
   }
 
   String _tradeProgressLabel(ArcCommandTradeActivity tradeActivity) {
