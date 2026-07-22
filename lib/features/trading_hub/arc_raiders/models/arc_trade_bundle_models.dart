@@ -14,6 +14,149 @@ enum ArcTradeBundleComponentType {
 enum ArcTradeBundleMatchStatus { exact, partial, mismatch }
 
 @immutable
+class ArcTradeBundleTerms {
+  const ArcTradeBundleTerms({
+    this.acceptedCategories = const <ArcTradeBundleComponentType>[],
+    this.minimumRequiredComponents = 0,
+    this.minimumRequiredQuantity = 0,
+    this.allowFlexibleAlternatives = false,
+    this.allowEquivalentSubstitutions = false,
+    this.requiresFinalConfirmation = true,
+    this.notes = '',
+  });
+
+  final List<ArcTradeBundleComponentType> acceptedCategories;
+  final int minimumRequiredComponents;
+  final int minimumRequiredQuantity;
+  final bool allowFlexibleAlternatives;
+  final bool allowEquivalentSubstitutions;
+  final bool requiresFinalConfirmation;
+  final String notes;
+
+  bool acceptsCategory(ArcTradeBundleComponentType type) =>
+      acceptedCategories.isEmpty || acceptedCategories.contains(type);
+
+  ArcTradeBundleTerms normalisedFor(List<ArcTradeBundleComponent> components) {
+    final requiredComponents = components
+        .where((component) => component.required)
+        .toList(growable: false);
+    final categories = acceptedCategories.isEmpty
+        ? components.map((component) => component.type).toSet().toList()
+        : acceptedCategories;
+    final componentMinimum = minimumRequiredComponents <= 0
+        ? requiredComponents.length
+        : minimumRequiredComponents;
+    final quantityMinimum = minimumRequiredQuantity <= 0
+        ? requiredComponents.fold<int>(
+            0,
+            (total, component) => total + component.quantity,
+          )
+        : minimumRequiredQuantity;
+    return ArcTradeBundleTerms(
+      acceptedCategories: categories,
+      minimumRequiredComponents: componentMinimum < 0 ? 0 : componentMinimum,
+      minimumRequiredQuantity: quantityMinimum < 0 ? 0 : quantityMinimum,
+      allowFlexibleAlternatives: allowFlexibleAlternatives,
+      allowEquivalentSubstitutions: allowEquivalentSubstitutions,
+      requiresFinalConfirmation: requiresFinalConfirmation,
+      notes: notes,
+    );
+  }
+
+  String get summary {
+    final categoryText = acceptedCategories.isEmpty
+        ? 'listed categories'
+        : acceptedCategories.map((category) => category.label).join(', ');
+    final minimumText = minimumRequiredComponents <= 0
+        ? 'exact requested components'
+        : '$minimumRequiredComponents component minimum';
+    final flexibility = allowFlexibleAlternatives
+        ? 'flexible alternatives allowed'
+        : 'exact components preferred';
+    return '$categoryText - $minimumText - $flexibility';
+  }
+
+  Map<String, dynamic> toMap() => <String, dynamic>{
+    'acceptedCategories': acceptedCategories
+        .map((category) => category.name)
+        .toList(),
+    'minimumRequiredComponents': minimumRequiredComponents,
+    'minimumRequiredQuantity': minimumRequiredQuantity,
+    'allowFlexibleAlternatives': allowFlexibleAlternatives,
+    'allowEquivalentSubstitutions': allowEquivalentSubstitutions,
+    'requiresFinalConfirmation': requiresFinalConfirmation,
+    'notes': notes,
+  };
+
+  factory ArcTradeBundleTerms.fromMap(Map<String, dynamic> map) {
+    return ArcTradeBundleTerms(
+      acceptedCategories: _readCategories(map['acceptedCategories']),
+      minimumRequiredComponents: _readNonNegativeInt(
+        map['minimumRequiredComponents'],
+      ),
+      minimumRequiredQuantity: _readNonNegativeInt(
+        map['minimumRequiredQuantity'],
+      ),
+      allowFlexibleAlternatives: map['allowFlexibleAlternatives'] is bool
+          ? map['allowFlexibleAlternatives'] as bool
+          : false,
+      allowEquivalentSubstitutions: map['allowEquivalentSubstitutions'] is bool
+          ? map['allowEquivalentSubstitutions'] as bool
+          : false,
+      requiresFinalConfirmation: map['requiresFinalConfirmation'] is bool
+          ? map['requiresFinalConfirmation'] as bool
+          : true,
+      notes: map['notes']?.toString().trim() ?? '',
+    );
+  }
+
+  static int _readNonNegativeInt(dynamic value) {
+    final parsed = value is num
+        ? value.toInt()
+        : int.tryParse(value?.toString() ?? '') ?? 0;
+    return parsed < 0 ? 0 : parsed;
+  }
+
+  static List<ArcTradeBundleComponentType> _readCategories(dynamic value) {
+    if (value is! List) return const <ArcTradeBundleComponentType>[];
+    return value
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .map(
+          (item) => ArcTradeBundleComponentType.values.firstWhere(
+            (type) => type.name == item,
+            orElse: () => ArcTradeBundleComponentType.tradeItem,
+          ),
+        )
+        .toSet()
+        .toList(growable: false);
+  }
+}
+
+extension ArcTradeBundleComponentTypeLabel on ArcTradeBundleComponentType {
+  String get label {
+    switch (this) {
+      case ArcTradeBundleComponentType.blueprint:
+        return 'Blueprints';
+      case ArcTradeBundleComponentType.resource:
+        return 'Resources';
+      case ArcTradeBundleComponentType.attachment:
+        return 'Attachments';
+      case ArcTradeBundleComponentType.weapon:
+        return 'Weapons';
+      case ArcTradeBundleComponentType.fittedWeapon:
+        return 'Fitted Weapons';
+      case ArcTradeBundleComponentType.key:
+        return 'Keys';
+      case ArcTradeBundleComponentType.currency:
+        return 'Currency';
+      case ArcTradeBundleComponentType.tradeItem:
+        return 'Trade Items';
+    }
+  }
+}
+
+@immutable
 class ArcFittedWeaponConfiguration {
   const ArcFittedWeaponConfiguration({
     required this.weaponId,
@@ -139,6 +282,7 @@ class ArcTradeBundleTemplate {
     required this.components,
     this.active = true,
     this.allowEquivalentOffers = false,
+    this.terms = const ArcTradeBundleTerms(),
     this.notes = '',
   });
 
@@ -147,7 +291,10 @@ class ArcTradeBundleTemplate {
   final List<ArcTradeBundleComponent> components;
   final bool active;
   final bool allowEquivalentOffers;
+  final ArcTradeBundleTerms terms;
   final String notes;
+
+  ArcTradeBundleTerms get effectiveTerms => terms.normalisedFor(components);
 
   bool get isValid =>
       id.trim().isNotEmpty &&
@@ -167,11 +314,26 @@ class ArcTradeBundleTemplate {
     'components': components.map((item) => item.toMap()).toList(),
     'active': active,
     'allowEquivalentOffers': allowEquivalentOffers,
+    'terms': effectiveTerms.toMap(),
+    'acceptedCategories': effectiveTerms.acceptedCategories
+        .map((category) => category.name)
+        .toList(),
+    'minimumRequiredComponents': effectiveTerms.minimumRequiredComponents,
+    'minimumRequiredQuantity': effectiveTerms.minimumRequiredQuantity,
+    'allowFlexibleAlternatives': effectiveTerms.allowFlexibleAlternatives,
+    'allowEquivalentSubstitutions': effectiveTerms.allowEquivalentSubstitutions,
+    'requiresFinalConfirmation': effectiveTerms.requiresFinalConfirmation,
     'notes': notes,
   };
 
   factory ArcTradeBundleTemplate.fromMap(Map<String, dynamic> map) {
     final rawComponents = map['components'];
+    final rawTerms = map['terms'];
+    final terms = rawTerms is Map
+        ? ArcTradeBundleTerms.fromMap(
+            rawTerms.map((key, value) => MapEntry(key.toString(), value)),
+          )
+        : ArcTradeBundleTerms.fromMap(map);
     return ArcTradeBundleTemplate(
       id: map['id']?.toString().trim() ?? '',
       name: map['name']?.toString().trim() ?? '',
@@ -189,6 +351,7 @@ class ArcTradeBundleTemplate {
       allowEquivalentOffers: map['allowEquivalentOffers'] is bool
           ? map['allowEquivalentOffers'] as bool
           : false,
+      terms: terms,
       notes: map['notes']?.toString().trim() ?? '',
     );
   }
@@ -201,18 +364,21 @@ class ArcExactTradeBundleOffer {
     required this.components,
     this.preparing = false,
     this.preparationNote = '',
+    this.completionConfirmed = false,
   });
 
   final String templateId;
   final List<ArcTradeBundleComponent> components;
   final bool preparing;
   final String preparationNote;
+  final bool completionConfirmed;
 
   Map<String, dynamic> toMap() => <String, dynamic>{
     'templateId': templateId,
     'components': components.map((item) => item.toMap()).toList(),
     'preparing': preparing,
     'preparationNote': preparationNote,
+    'completionConfirmed': completionConfirmed,
   };
 
   factory ArcExactTradeBundleOffer.fromMap(Map<String, dynamic> map) {
@@ -231,6 +397,9 @@ class ArcExactTradeBundleOffer {
           : const <ArcTradeBundleComponent>[],
       preparing: map['preparing'] is bool ? map['preparing'] as bool : false,
       preparationNote: map['preparationNote']?.toString().trim() ?? '',
+      completionConfirmed: map['completionConfirmed'] is bool
+          ? map['completionConfirmed'] as bool
+          : false,
     );
   }
 }
@@ -242,12 +411,14 @@ class ArcTradeBundleMatchResult {
     required this.missing,
     required this.incorrect,
     required this.unexpected,
+    this.equivalentSubstitutions = const <String>[],
   });
 
   final ArcTradeBundleMatchStatus status;
   final List<String> missing;
   final List<String> incorrect;
   final List<String> unexpected;
+  final List<String> equivalentSubstitutions;
 
   bool get isExact => status == ArcTradeBundleMatchStatus.exact;
 }

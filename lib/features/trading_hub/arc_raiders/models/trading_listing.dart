@@ -381,6 +381,20 @@ class TradingListing {
   bool get hasExactAcceptedBundles =>
       acceptedBundles.any((bundle) => bundle.active);
 
+  String get structuredTermsSummary {
+    final activeBundles = acceptedBundles
+        .where((bundle) => bundle.active)
+        .toList(growable: false);
+    if (activeBundles.isEmpty) {
+      return allowCustomBundleOffers
+          ? 'Custom structured offers allowed'
+          : 'No exact bundle terms set';
+    }
+    return activeBundles
+        .map((bundle) => '${bundle.name}: ${bundle.effectiveTerms.summary}')
+        .join(' - ');
+  }
+
   String get tradeFormatLabel => tradeAsBundle
       ? (allowPartialOffers
             ? 'Bundle preferred - partial offers allowed'

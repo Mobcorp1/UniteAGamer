@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_network_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 
@@ -293,6 +294,118 @@ void main() {
       expect(ready.status, ArcTradePreparationStatus.ready);
       expect(ready.remainingItems, isEmpty);
     });
+
+    test('uses structured accepted bundle components for preparation', () {
+      final summary = engine.buildNetworkSummary(
+        blueprintStates: _states(
+          duplicates: const <String, int>{},
+          wantedPriority: const <String, int>{'wolfpack': 1},
+        ),
+        activeListings: <TradingListing>[
+          _listing(
+            id: 'structured-listing',
+            ownerUid: 'raider-b',
+            offered: 'Wolfpack',
+            wanted: 'Exact payment',
+            acceptedBundles: const <ArcTradeBundleTemplate>[
+              ArcTradeBundleTemplate(
+                id: 'queen-payment',
+                name: 'Queen Reactor payment',
+                components: <ArcTradeBundleComponent>[
+                  ArcTradeBundleComponent(
+                    id: 'queen-reactor',
+                    type: ArcTradeBundleComponentType.resource,
+                    itemId: 'queen-reactor',
+                    itemName: 'Queen Reactor',
+                    quantity: 2,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+        currentUid: currentUid,
+        ownedItemQuantities: const <String, int>{'queen-reactor': 1},
+      );
+
+      final opportunity = summary.preparationOpportunities.single;
+
+      expect(opportunity.requiredItems.first.id, 'queen-reactor');
+      expect(opportunity.ownedItems.first.quantity, 1);
+      expect(opportunity.remainingItems.first.quantity, 1);
+    });
+
+    test('scores confirmed structured bundles above preparing bundles', () {
+      const listingBundle = ArcTradeBundleTemplate(
+        id: 'payment',
+        name: 'Payment',
+        components: <ArcTradeBundleComponent>[
+          ArcTradeBundleComponent(
+            id: 'queen-reactor',
+            type: ArcTradeBundleComponentType.resource,
+            itemId: 'queen-reactor',
+            itemName: 'Queen Reactor',
+            quantity: 1,
+          ),
+        ],
+      );
+      final listing = _listing(
+        id: 'structured-score',
+        ownerUid: 'raider-b',
+        offered: 'Wolfpack',
+        wanted: 'Queen Reactor',
+        acceptedBundles: const <ArcTradeBundleTemplate>[listingBundle],
+      );
+      const confirmed = ArcExactTradeBundleOffer(
+        templateId: 'payment',
+        completionConfirmed: true,
+        components: <ArcTradeBundleComponent>[
+          ArcTradeBundleComponent(
+            id: 'queen-reactor',
+            type: ArcTradeBundleComponentType.resource,
+            itemId: 'queen-reactor',
+            itemName: 'Queen Reactor',
+            quantity: 1,
+          ),
+        ],
+      );
+      const preparing = ArcExactTradeBundleOffer(
+        templateId: 'payment',
+        preparing: true,
+        components: <ArcTradeBundleComponent>[
+          ArcTradeBundleComponent(
+            id: 'queen-reactor',
+            type: ArcTradeBundleComponentType.resource,
+            itemId: 'queen-reactor',
+            itemName: 'Queen Reactor',
+            quantity: 1,
+          ),
+        ],
+      );
+
+      final confirmedScore = engine.scoreOfferForListing(
+        listing: listing,
+        offeredBlueprintNames: const <String>[],
+        offeredTradeItemNames: const <String>[],
+        seedTotal: 0,
+        includesResources: false,
+        resourceText: '',
+        exactBundleOffer: confirmed,
+      );
+      final preparingScore = engine.scoreOfferForListing(
+        listing: listing,
+        offeredBlueprintNames: const <String>[],
+        offeredTradeItemNames: const <String>[],
+        seedTotal: 0,
+        includesResources: false,
+        resourceText: '',
+        exactBundleOffer: preparing,
+      );
+
+      expect(confirmedScore.label, 'Structured Match');
+      expect(confirmedScore.score, greaterThan(preparingScore.score));
+      expect(confirmedScore.hints.join(' '), contains('confirmed'));
+    });
   });
 }
 
@@ -331,6 +444,8 @@ TradingListing _listing({
   required String offered,
   required String wanted,
   bool active = true,
+  List<ArcTradeBundleTemplate> acceptedBundles =
+      const <ArcTradeBundleTemplate>[],
 }) {
   final now = DateTime.now();
   return TradingListing(
@@ -368,6 +483,7 @@ TradingListing _listing({
     seriousOffersOnly: false,
     tradeAsBundle: true,
     allowPartialOffers: false,
+    acceptedBundles: acceptedBundles,
     expiresAt: now.add(const Duration(days: 3)),
     notes: '',
     active: active,

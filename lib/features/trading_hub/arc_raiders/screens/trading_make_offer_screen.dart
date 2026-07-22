@@ -246,6 +246,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
       seedTotal: _seedTotal,
       includesResources: _includesResources,
       resourceText: _resourcesController.text,
+      exactBundleOffer: _buildExactBundleOffer(),
     );
 
     return _sectionCard(
@@ -523,6 +524,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
       components: bundle.components,
       preparing: _preparingExactBundle,
       preparationNote: _preparingExactBundle ? _noteController.text.trim() : '',
+      completionConfirmed: !_preparingExactBundle,
     );
   }
 

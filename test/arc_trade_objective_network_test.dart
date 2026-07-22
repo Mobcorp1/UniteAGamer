@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_favourite_rider.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_objective_signals.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
@@ -310,6 +311,48 @@ void main() {
       expect(offer.isExpiredAt(DateTime(2026, 1, 1, 11, 59)), isFalse);
       expect(offer.isExpiredAt(DateTime(2026, 1, 1, 12, 1)), isTrue);
       expect(offer.effectiveStatus, TradingOfferStatus.expired);
+    });
+
+    test('structured offer summaries preserve preparation state', () {
+      final offer = TradingOffer(
+        id: 'offer-structured',
+        listingId: 'listing-1',
+        senderUid: 'buyer',
+        receiverUid: 'seller',
+        senderName: 'Buyer',
+        senderGamerTag: '',
+        senderPlatform: 'PC',
+        offeredBlueprintText: '',
+        smallBundles: 0,
+        mediumBundles: 0,
+        largeBundles: 0,
+        seedTotal: 0,
+        includesResources: false,
+        resourcesText: '',
+        exactBundleOffer: const ArcExactTradeBundleOffer(
+          templateId: 'payment',
+          preparing: true,
+          components: <ArcTradeBundleComponent>[
+            ArcTradeBundleComponent(
+              id: 'queen-reactor',
+              type: ArcTradeBundleComponentType.resource,
+              itemId: 'queen-reactor',
+              itemName: 'Queen Reactor',
+              quantity: 2,
+            ),
+          ],
+        ),
+        note: '',
+        status: TradingOfferStatus.pending,
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        expiresAt: DateTime(2026, 1, 1, 12),
+      );
+
+      final restored = TradingOffer.fromMap(offer.toMap());
+
+      expect(restored.offerSummary, contains('Queen Reactor'));
+      expect(restored.offerSummary, contains('preparing bundle'));
     });
 
     test('listing maps mode fields without public duplicate stock counts', () {

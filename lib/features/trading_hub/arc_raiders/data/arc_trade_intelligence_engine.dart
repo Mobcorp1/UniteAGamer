@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_bundle_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_network_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
@@ -445,6 +447,7 @@ class ArcTradeIntelligenceEngine {
     required int seedTotal,
     required bool includesResources,
     required String resourceText,
+    ArcExactTradeBundleOffer? exactBundleOffer,
   }) {
     if (listing.wantsNothing) {
       return const ArcOfferValueScore(
@@ -454,6 +457,14 @@ class ArcTradeIntelligenceEngine {
         hints: <String>['Keep the note clear and confirm pickup details.'],
       );
     }
+
+    final structuredScore = exactBundleOffer == null
+        ? null
+        : _scoreExactBundleOffer(
+            listing: listing,
+            exactBundleOffer: exactBundleOffer,
+          );
+    if (structuredScore != null) return structuredScore;
 
     final wantedTokens = _tokensFrom([
       listing.wantedText,
@@ -511,6 +522,64 @@ class ArcTradeIntelligenceEngine {
               'Add a requested blueprint, item, seed bundle or resource to improve this offer.',
             ]
           : hints.toList(growable: false),
+    );
+  }
+
+  ArcOfferValueScore? _scoreExactBundleOffer({
+    required TradingListing listing,
+    required ArcExactTradeBundleOffer exactBundleOffer,
+  }) {
+    final templates = listing.acceptedBundles.where(
+      (bundle) => bundle.active && bundle.id == exactBundleOffer.templateId,
+    );
+    if (templates.isEmpty) {
+      return const ArcOfferValueScore(
+        score: 20,
+        label: 'Bundle Unavailable',
+        summary: 'The selected structured bundle is no longer listed.',
+        hints: <String>[
+          'Refresh the listing before sending or shape a custom offer.',
+        ],
+      );
+    }
+
+    final template = templates.first;
+    final result = const ArcTradeBundleEngine().compare(
+      template: template,
+      offer: exactBundleOffer,
+    );
+    final hints = <String>[
+      template.effectiveTerms.summary,
+      if (result.missing.isNotEmpty) 'Missing: ${result.missing.join(', ')}.',
+      if (result.incorrect.isNotEmpty) ...result.incorrect,
+      if (result.unexpected.isNotEmpty)
+        'Unexpected: ${result.unexpected.join(', ')}.',
+      if (result.equivalentSubstitutions.isNotEmpty)
+        'Substitutions: ${result.equivalentSubstitutions.join(', ')}.',
+      if (exactBundleOffer.preparing)
+        'Sender marked this bundle as still being prepared.',
+      if (exactBundleOffer.completionConfirmed)
+        'Sender confirmed the selected bundle is ready.',
+    ];
+    final baseScore = switch (result.status) {
+      ArcTradeBundleMatchStatus.exact => 90,
+      ArcTradeBundleMatchStatus.partial => 58,
+      ArcTradeBundleMatchStatus.mismatch => 24,
+    };
+    final adjusted =
+        (baseScore +
+                (exactBundleOffer.completionConfirmed ? 4 : 0) -
+                (exactBundleOffer.preparing ? 8 : 0))
+            .clamp(0, 100)
+            .toInt();
+
+    return ArcOfferValueScore(
+      score: adjusted,
+      label: result.isExact ? 'Structured Match' : _offerScoreLabel(adjusted),
+      summary: result.isExact
+          ? 'This offer matches the seller-approved structured bundle.'
+          : 'This offer does not fully match the seller-approved bundle yet.',
+      hints: hints,
     );
   }
 
@@ -1283,6 +1352,28 @@ class ArcTradeIntelligenceEngine {
     return _combineListingQuantities(items);
   }
 
+  List<ArcTradeItemQuantity> _itemsFromBundleComponents(
+    Iterable<ArcTradeBundleComponent> components,
+  ) {
+    return _combineListingQuantities(
+      components.map((component) {
+        final source = component.itemId.trim().isNotEmpty
+            ? component.itemId
+            : component.itemName;
+        final item = _itemFromValue(
+          source,
+          fallbackQuantity: component.quantity,
+        );
+        return item.copyWith(
+          label: component.itemName.trim().isEmpty
+              ? item.label
+              : component.itemName.trim(),
+          quantity: component.quantity,
+        );
+      }),
+    );
+  }
+
   List<ArcTradeItemQuantity> _combineListingQuantities(
     Iterable<ArcTradeItemQuantity> items,
   ) {
@@ -1417,30 +1508,41 @@ class _ListingSignal {
 
   factory _ListingSignal.fromListing(TradingListing listing) {
     final engine = const ArcTradeIntelligenceEngine();
+    final offeredItems = engine._extractListingItems(
+      idValues: listing.offeredTradeItemIds,
+      nameValues: <String>[
+        listing.offeredItem,
+        ...listing.offeredBlueprintNames,
+        ...listing.offeredAssetNames,
+        ...listing.offeredTradeItemNames,
+      ],
+      includeSeeds: listing.seedTotalOffered,
+    );
+    final explicitWantedItems = listing.wantsNothing
+        ? const <ArcTradeItemQuantity>[]
+        : engine._extractListingItems(
+            idValues: listing.wantedTradeItemIds,
+            nameValues: <String>[
+              listing.wantedText,
+              ...listing.wantedBlueprintNames,
+              ...listing.wantedAssetNames,
+              ...listing.wantedTradeItemNames,
+            ],
+          );
+    final structuredWantedItems = listing.wantsNothing
+        ? const <ArcTradeItemQuantity>[]
+        : engine._itemsFromBundleComponents(
+            listing.acceptedBundles
+                .where((bundle) => bundle.active)
+                .expand((bundle) => bundle.components),
+          );
     return _ListingSignal(
       listing: listing,
       ownerUid: listing.ownerUid,
-      offeredItems: engine._extractListingItems(
-        idValues: listing.offeredTradeItemIds,
-        nameValues: <String>[
-          listing.offeredItem,
-          ...listing.offeredBlueprintNames,
-          ...listing.offeredAssetNames,
-          ...listing.offeredTradeItemNames,
-        ],
-        includeSeeds: listing.seedTotalOffered,
-      ),
-      wantedItems: listing.wantsNothing
-          ? const <ArcTradeItemQuantity>[]
-          : engine._extractListingItems(
-              idValues: listing.wantedTradeItemIds,
-              nameValues: <String>[
-                listing.wantedText,
-                ...listing.wantedBlueprintNames,
-                ...listing.wantedAssetNames,
-                ...listing.wantedTradeItemNames,
-              ],
-            ),
+      offeredItems: offeredItems,
+      wantedItems: structuredWantedItems.isNotEmpty
+          ? structuredWantedItems
+          : explicitWantedItems,
     );
   }
 }

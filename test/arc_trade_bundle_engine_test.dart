@@ -96,4 +96,74 @@ void main() {
     );
     expect(errors, isNotEmpty);
   });
+
+  test('flexible structured terms allow equivalent component categories', () {
+    const flexibleTemplate = ArcTradeBundleTemplate(
+      id: 'reactor-flex',
+      name: 'Reactor or resource bundle',
+      components: <ArcTradeBundleComponent>[
+        ArcTradeBundleComponent(
+          id: 'queen-reactor',
+          type: ArcTradeBundleComponentType.resource,
+          itemId: 'queen-reactor',
+          itemName: 'Queen Reactor',
+          quantity: 2,
+        ),
+      ],
+      allowEquivalentOffers: true,
+      terms: ArcTradeBundleTerms(
+        acceptedCategories: <ArcTradeBundleComponentType>[
+          ArcTradeBundleComponentType.resource,
+        ],
+        minimumRequiredComponents: 1,
+        minimumRequiredQuantity: 1,
+        allowFlexibleAlternatives: true,
+        allowEquivalentSubstitutions: true,
+      ),
+    );
+    const offer = ArcExactTradeBundleOffer(
+      templateId: 'reactor-flex',
+      completionConfirmed: true,
+      components: <ArcTradeBundleComponent>[
+        ArcTradeBundleComponent(
+          id: 'matriarch-reactor',
+          type: ArcTradeBundleComponentType.resource,
+          itemId: 'matriarch-reactor',
+          itemName: 'Matriarch Reactor',
+          quantity: 1,
+        ),
+      ],
+    );
+
+    final result = engine.compare(template: flexibleTemplate, offer: offer);
+
+    expect(result.isExact, isTrue);
+    expect(result.equivalentSubstitutions.single, contains('Matriarch'));
+  });
+
+  test('terms serialize accepted categories and completion requirements', () {
+    const flexibleTemplate = ArcTradeBundleTemplate(
+      id: 'mixed',
+      name: 'Mixed payment',
+      components: <ArcTradeBundleComponent>[component],
+      terms: ArcTradeBundleTerms(
+        acceptedCategories: <ArcTradeBundleComponentType>[
+          ArcTradeBundleComponentType.weapon,
+          ArcTradeBundleComponentType.resource,
+        ],
+        minimumRequiredComponents: 1,
+        allowFlexibleAlternatives: true,
+        requiresFinalConfirmation: true,
+      ),
+    );
+
+    final restored = ArcTradeBundleTemplate.fromMap(flexibleTemplate.toMap());
+
+    expect(
+      restored.effectiveTerms.acceptedCategories,
+      contains(ArcTradeBundleComponentType.resource),
+    );
+    expect(restored.effectiveTerms.allowFlexibleAlternatives, isTrue);
+    expect(restored.effectiveTerms.requiresFinalConfirmation, isTrue);
+  });
 }

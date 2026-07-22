@@ -237,6 +237,7 @@ class TradingListingDetailScreen extends StatelessWidget {
         : listing.allWantedItems;
     final structureBits = <String>[
       listing.tradeFormatLabel,
+      if (listing.hasExactAcceptedBundles) listing.structuredTermsSummary,
       if (listing.allowPartialOffers) 'Partial offers allowed',
       if (listing.seriousOffersOnly) 'Serious offers only',
     ];

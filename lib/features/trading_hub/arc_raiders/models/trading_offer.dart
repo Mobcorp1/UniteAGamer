@@ -98,6 +98,20 @@ class TradingOffer {
 
   String get offerSummary {
     if (isGiveawayClaim) return 'Free giveaway claim';
+    final structured = exactBundleOffer;
+    if (structured != null) {
+      final parts = structured.components
+          .map((component) => '${component.quantity}x ${component.itemName}')
+          .toList(growable: false);
+      if (parts.isNotEmpty) {
+        final status = structured.completionConfirmed
+            ? 'confirmed'
+            : structured.preparing
+            ? 'preparing'
+            : 'unconfirmed';
+        return '${parts.join(', ')} ($status bundle)';
+      }
+    }
     final parts = <String>[];
     if (offeredBlueprintText.trim().isNotEmpty) {
       parts.add(offeredBlueprintText.trim());

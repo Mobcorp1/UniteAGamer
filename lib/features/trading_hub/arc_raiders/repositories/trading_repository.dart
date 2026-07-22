@@ -1700,6 +1700,14 @@ class TradingRepository {
     final now = DateTime.now();
     final seedTotal =
         (smallBundles * 10) + (mediumBundles * 50) + (largeBundles * 100);
+    final structuredOfferItemIds = exactBundleOffer?.components
+        .map((component) => component.itemId)
+        .where((item) => item.trim().isNotEmpty)
+        .toList(growable: false);
+    final structuredOfferItemNames = exactBundleOffer?.components
+        .map((component) => component.itemName)
+        .where((item) => item.trim().isNotEmpty)
+        .toList(growable: false);
 
     final offer = TradingOffer(
       id: offerRef.id,
@@ -1716,8 +1724,12 @@ class TradingRepository {
       seedTotal: seedTotal,
       includesResources: includesResources,
       resourcesText: resourcesText.trim(),
-      offeredTradeItemIds: offeredTradeItemIds,
-      offeredTradeItemNames: offeredTradeItemNames,
+      offeredTradeItemIds: structuredOfferItemIds?.isNotEmpty ?? false
+          ? structuredOfferItemIds!
+          : offeredTradeItemIds,
+      offeredTradeItemNames: structuredOfferItemNames?.isNotEmpty ?? false
+          ? structuredOfferItemNames!
+          : offeredTradeItemNames,
       isGiveawayClaim: isGiveawayClaim || listing.wantsNothing,
       exactBundleOffer: exactBundleOffer,
       note: note.trim(),

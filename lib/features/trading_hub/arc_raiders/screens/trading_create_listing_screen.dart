@@ -819,12 +819,33 @@ class _TradingCreateListingScreenState
       ..._fittedWeaponRequirements,
     ];
     if (components.isEmpty) return const <ArcTradeBundleTemplate>[];
+    final requiredComponents = components.where(
+      (component) => component.required,
+    );
     return <ArcTradeBundleTemplate>[
       ArcTradeBundleTemplate(
         id: 'exact-${DateTime.now().millisecondsSinceEpoch}',
         name: 'Exact requested bundle',
         components: components,
         allowEquivalentOffers: _allowPartialOffers,
+        terms: ArcTradeBundleTerms(
+          acceptedCategories: components
+              .map((component) => component.type)
+              .toSet()
+              .toList(growable: false),
+          minimumRequiredComponents: _allowPartialOffers
+              ? 1
+              : requiredComponents.length,
+          minimumRequiredQuantity: _allowPartialOffers
+              ? 1
+              : requiredComponents.fold<int>(
+                  0,
+                  (total, component) => total + component.quantity,
+                ),
+          allowFlexibleAlternatives: _allowPartialOffers,
+          allowEquivalentSubstitutions: _allowPartialOffers,
+          requiresFinalConfirmation: true,
+        ),
       ),
     ];
   }
