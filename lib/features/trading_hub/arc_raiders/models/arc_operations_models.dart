@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
 
+class ArcSeasonDefaults {
+  const ArcSeasonDefaults._();
+
+  static const closedBetaSeasonOne = 'closed-beta-season-1';
+}
+
 /// ARC Operations are adaptive reward goals that drive the player, community,
 /// beta testing, referrals, trading, matchmaking and positive behaviour loops.
 enum ArcOperationCadence { daily, weekly, monthly, lifetime, beta }
+
+enum ArcOperationDifficulty { starter, standard, demanding, elite }
+
+enum ArcOperationAccessTier { free, essential, premium }
+
+enum ArcOperationTrack {
+  daily,
+  weekly,
+  monthly,
+  lifetime,
+  community,
+  founder,
+  closedBeta,
+  seasonal,
+}
 
 enum ArcOperationCategory {
   onboarding,
@@ -16,6 +37,8 @@ enum ArcOperationCategory {
   guardian,
   referral,
   beta,
+  founder,
+  seasonal,
 }
 
 enum ArcOperationRewardType {
@@ -143,6 +166,10 @@ class ArcOperationTask {
     this.accent = const Color(0xFF00FFFF),
     this.betaExclusive = false,
     this.verificationRequired = false,
+    this.difficulty = ArcOperationDifficulty.standard,
+    this.accessTier = ArcOperationAccessTier.free,
+    this.weight = 100,
+    this.tracks = const <ArcOperationTrack>[],
   });
 
   final String id;
@@ -157,6 +184,10 @@ class ArcOperationTask {
   final Color accent;
   final bool betaExclusive;
   final bool verificationRequired;
+  final ArcOperationDifficulty difficulty;
+  final ArcOperationAccessTier accessTier;
+  final int weight;
+  final List<ArcOperationTrack> tracks;
 
   double get completion {
     if (target <= 0) {
@@ -169,22 +200,248 @@ class ArcOperationTask {
   bool get resetsWithSeason => cadence != ArcOperationCadence.lifetime;
   bool get repeatableBySeason => resetsWithSeason;
   bool get permanentProgress => cadence == ArcOperationCadence.lifetime;
+  bool get isFairForFreeTier => accessTier == ArcOperationAccessTier.free;
+  bool get grantsPermanentRewards =>
+      cadence == ArcOperationCadence.lifetime ||
+      cadence == ArcOperationCadence.beta ||
+      betaExclusive ||
+      category == ArcOperationCategory.community ||
+      category == ArcOperationCategory.guardian ||
+      category == ArcOperationCategory.referral ||
+      category == ArcOperationCategory.founder;
 
-  ArcOperationTask copyWith({int? progress}) {
+  ArcOperationTask copyWith({
+    int? progress,
+    int? target,
+    List<ArcOperationReward>? rewards,
+    String? actionLabel,
+    bool? betaExclusive,
+    bool? verificationRequired,
+    ArcOperationDifficulty? difficulty,
+    ArcOperationAccessTier? accessTier,
+    int? weight,
+    List<ArcOperationTrack>? tracks,
+  }) {
     return ArcOperationTask(
       id: id,
       title: title,
       description: description,
       cadence: cadence,
       category: category,
-      target: target,
+      target: target ?? this.target,
       progress: progress ?? this.progress,
-      rewards: rewards,
-      actionLabel: actionLabel,
+      rewards: rewards ?? this.rewards,
+      actionLabel: actionLabel ?? this.actionLabel,
       accent: accent,
-      betaExclusive: betaExclusive,
-      verificationRequired: verificationRequired,
+      betaExclusive: betaExclusive ?? this.betaExclusive,
+      verificationRequired: verificationRequired ?? this.verificationRequired,
+      difficulty: difficulty ?? this.difficulty,
+      accessTier: accessTier ?? this.accessTier,
+      weight: weight ?? this.weight,
+      tracks: tracks ?? this.tracks,
     );
+  }
+}
+
+class ArcOperationTuningConfig {
+  const ArcOperationTuningConfig({
+    this.enabled = true,
+    this.seasonId = '',
+    this.startsAt,
+    this.endsAt,
+    this.cadenceLimits = const <ArcOperationCadence, int>{},
+    this.categoryWeights = const <ArcOperationCategory, int>{},
+    this.taskWeightOverrides = const <String, int>{},
+    this.taskTargetOverrides = const <String, int>{},
+    this.disabledTaskIds = const <String>{},
+    this.featuredTaskIds = const <String>{},
+  });
+
+  final bool enabled;
+  final String seasonId;
+  final DateTime? startsAt;
+  final DateTime? endsAt;
+  final Map<ArcOperationCadence, int> cadenceLimits;
+  final Map<ArcOperationCategory, int> categoryWeights;
+  final Map<String, int> taskWeightOverrides;
+  final Map<String, int> taskTargetOverrides;
+  final Set<String> disabledTaskIds;
+  final Set<String> featuredTaskIds;
+
+  static const fallback = ArcOperationTuningConfig(
+    cadenceLimits: <ArcOperationCadence, int>{
+      ArcOperationCadence.daily: 3,
+      ArcOperationCadence.weekly: 4,
+      ArcOperationCadence.monthly: 3,
+      ArcOperationCadence.lifetime: 6,
+      ArcOperationCadence.beta: 6,
+    },
+    categoryWeights: <ArcOperationCategory, int>{
+      ArcOperationCategory.onboarding: 190,
+      ArcOperationCategory.trading: 130,
+      ArcOperationCategory.intel: 120,
+      ArcOperationCategory.matchmaking: 120,
+      ArcOperationCategory.loadout: 115,
+      ArcOperationCategory.quest: 120,
+      ArcOperationCategory.progression: 120,
+      ArcOperationCategory.community: 115,
+      ArcOperationCategory.guardian: 115,
+      ArcOperationCategory.referral: 110,
+      ArcOperationCategory.beta: 220,
+      ArcOperationCategory.founder: 190,
+      ArcOperationCategory.seasonal: 125,
+    },
+  );
+
+  bool get hasActiveWindow {
+    final now = DateTime.now().toUtc();
+    if (startsAt != null && now.isBefore(startsAt!)) return false;
+    if (endsAt != null && now.isAfter(endsAt!)) return false;
+    return true;
+  }
+
+  int limitFor(ArcOperationCadence cadence) {
+    return cadenceLimits[cadence] ?? fallback.cadenceLimits[cadence] ?? 3;
+  }
+
+  int categoryWeight(ArcOperationCategory category) {
+    return categoryWeights[category] ??
+        fallback.categoryWeights[category] ??
+        100;
+  }
+
+  bool isTaskEnabled(ArcOperationTask task) {
+    return enabled && hasActiveWindow && !disabledTaskIds.contains(task.id);
+  }
+
+  bool isTaskFeatured(ArcOperationTask task) =>
+      featuredTaskIds.contains(task.id);
+
+  ArcOperationTask applyToTask(ArcOperationTask task) {
+    final target = taskTargetOverrides[task.id];
+    return task.copyWith(
+      target: target == null || target <= 0 ? null : target,
+      weight: taskWeightOverrides[task.id] ?? task.weight,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'enabled': enabled,
+      'seasonId': seasonId,
+      'startsAt': startsAt?.toIso8601String(),
+      'endsAt': endsAt?.toIso8601String(),
+      'cadenceLimits': {
+        for (final entry in cadenceLimits.entries) entry.key.name: entry.value,
+      },
+      'categoryWeights': {
+        for (final entry in categoryWeights.entries)
+          entry.key.name: entry.value,
+      },
+      'taskWeightOverrides': taskWeightOverrides,
+      'taskTargetOverrides': taskTargetOverrides,
+      'disabledTaskIds': disabledTaskIds.toList()..sort(),
+      'featuredTaskIds': featuredTaskIds.toList()..sort(),
+    };
+  }
+
+  factory ArcOperationTuningConfig.fromMap(Map<String, dynamic>? map) {
+    if (map == null || map.isEmpty) return fallback;
+    return ArcOperationTuningConfig(
+      enabled: _bool(map['enabled'], fallback: fallback.enabled),
+      seasonId: _stringValue(map['seasonId']),
+      startsAt: _dateValue(map['startsAt']),
+      endsAt: _dateValue(map['endsAt']),
+      cadenceLimits: _enumIntMap(
+        map['cadenceLimits'],
+        ArcOperationCadence.values,
+        fallback.cadenceLimits,
+      ),
+      categoryWeights: _enumIntMap(
+        map['categoryWeights'],
+        ArcOperationCategory.values,
+        fallback.categoryWeights,
+      ),
+      taskWeightOverrides: _stringIntMap(map['taskWeightOverrides']),
+      taskTargetOverrides: _stringIntMap(map['taskTargetOverrides']),
+      disabledTaskIds: _stringSet(map['disabledTaskIds']),
+      featuredTaskIds: _stringSet(map['featuredTaskIds']),
+    );
+  }
+
+  static Map<T, int> _enumIntMap<T extends Enum>(
+    dynamic value,
+    List<T> values,
+    Map<T, int> fallback,
+  ) {
+    final raw = value is Map
+        ? value.map((key, value) => MapEntry(key.toString(), value))
+        : const <String, dynamic>{};
+    if (raw.isEmpty) return fallback;
+    final result = <T, int>{};
+    for (final enumValue in values) {
+      final parsed = _intValue(raw[enumValue.name]);
+      if (parsed != null) result[enumValue] = parsed;
+    }
+    return result.isEmpty ? fallback : result;
+  }
+
+  static Map<String, int> _stringIntMap(dynamic value) {
+    if (value is! Map) return const <String, int>{};
+    final result = <String, int>{};
+    value.forEach((key, value) {
+      final text = key.toString().trim();
+      final parsed = _intValue(value);
+      if (text.isNotEmpty && parsed != null) result[text] = parsed;
+    });
+    return result;
+  }
+
+  static Set<String> _stringSet(dynamic value) {
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toSet();
+    }
+    return const <String>{};
+  }
+
+  static String _stringValue(dynamic value) {
+    if (value == null) return '';
+    return value.toString().trim();
+  }
+
+  static int? _intValue(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim());
+    return null;
+  }
+
+  static bool _bool(dynamic value, {required bool fallback}) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' ||
+          normalized == 'yes' ||
+          normalized == 'enabled') {
+        return true;
+      }
+      if (normalized == 'false' ||
+          normalized == 'no' ||
+          normalized == 'disabled') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
+  static DateTime? _dateValue(dynamic value) {
+    if (value is DateTime) return value.toUtc();
+    if (value is String) return DateTime.tryParse(value)?.toUtc();
+    return null;
   }
 }
 
@@ -478,18 +735,28 @@ class ArcOperationsUserState {
     required this.inventory,
     required this.equippedCosmetics,
     this.intelXp = 0,
+    this.seasonalXp = 0,
     this.operationCredits = 0,
     this.extraTradeSlots = 0,
     this.extraMatchmakingSlots = 0,
+    this.currentSeasonId = ArcSeasonDefaults.closedBetaSeasonOne,
+    this.lastCompletedSeasonId,
+    this.telemetrySummary = const ArcOperationTelemetrySummary(),
+    this.tuningConfig = ArcOperationTuningConfig.fallback,
   });
 
   final Map<String, ArcOperationProgress> progressById;
   final List<ArcRewardInventoryItem> inventory;
   final ArcEquippedCosmetics equippedCosmetics;
   final int intelXp;
+  final int seasonalXp;
   final int operationCredits;
   final int extraTradeSlots;
   final int extraMatchmakingSlots;
+  final String currentSeasonId;
+  final String? lastCompletedSeasonId;
+  final ArcOperationTelemetrySummary telemetrySummary;
+  final ArcOperationTuningConfig tuningConfig;
 
   static const empty = ArcOperationsUserState(
     progressById: {},
@@ -508,6 +775,18 @@ class ArcOperationsUserState {
 
   int get completedCount =>
       progressById.values.where((progress) => progress.completed).length;
+
+  int get readyToClaimCount =>
+      progressById.values.where((progress) => progress.readyToClaim).length;
+
+  int get inProgressCount => progressById.values
+      .where(
+        (progress) =>
+            progress.progress > 0 &&
+            progress.progress < progress.target &&
+            !progress.claimed,
+      )
+      .length;
 
   List<ArcRewardInventoryItem> get badges => inventory
       .where((item) => item.type == ArcOperationRewardType.badge)
@@ -677,30 +956,63 @@ class ArcOperationTelemetrySummary {
     this.listingsCreated = 0,
     this.matchmakingSessions = 0,
     this.blueprintReports = 0,
+    this.loginEvents = 0,
+    this.profileCompletions = 0,
     this.playersHelped = 0,
     this.guardianSessions = 0,
     this.referrals = 0,
     this.communityContributions = 0,
+    this.favouriteLoadoutsSaved = 0,
+    this.feedbackSubmitted = 0,
+    this.availabilitySaved = 0,
+    this.intelConfirmed = 0,
+    this.questsCompleted = 0,
+    this.scrappyUpgrades = 0,
+    this.benchUpgrades = 0,
   });
 
   final int tradesCompleted;
   final int listingsCreated;
   final int matchmakingSessions;
   final int blueprintReports;
+  final int loginEvents;
+  final int profileCompletions;
   final int playersHelped;
   final int guardianSessions;
   final int referrals;
   final int communityContributions;
+  final int favouriteLoadoutsSaved;
+  final int feedbackSubmitted;
+  final int availabilitySaved;
+  final int intelConfirmed;
+  final int questsCompleted;
+  final int scrappyUpgrades;
+  final int benchUpgrades;
 
   int get totalActivity =>
       tradesCompleted +
       listingsCreated +
       matchmakingSessions +
       blueprintReports +
+      loginEvents +
+      profileCompletions +
       playersHelped +
       guardianSessions +
       referrals +
-      communityContributions;
+      communityContributions +
+      favouriteLoadoutsSaved +
+      feedbackSubmitted +
+      availabilitySaved +
+      intelConfirmed +
+      questsCompleted +
+      scrappyUpgrades +
+      benchUpgrades;
+
+  int get verifiedIntelActivity => blueprintReports + intelConfirmed;
+  int get progressionActivity =>
+      questsCompleted + scrappyUpgrades + benchUpgrades;
+  int get socialActivity =>
+      playersHelped + guardianSessions + referrals + communityContributions;
 
   factory ArcOperationTelemetrySummary.fromMap(Map<String, dynamic>? map) {
     if (map == null) return const ArcOperationTelemetrySummary();
@@ -710,10 +1022,19 @@ class ArcOperationTelemetrySummary {
       listingsCreated: read('listingsCreated'),
       matchmakingSessions: read('matchmakingSessions'),
       blueprintReports: read('blueprintReports'),
+      loginEvents: read('loginEvents'),
+      profileCompletions: read('profileCompletions'),
       playersHelped: read('playersHelped'),
       guardianSessions: read('guardianSessions'),
       referrals: read('referrals'),
       communityContributions: read('communityContributions'),
+      favouriteLoadoutsSaved: read('favouriteLoadoutsSaved'),
+      feedbackSubmitted: read('feedbackSubmitted'),
+      availabilitySaved: read('availabilitySaved'),
+      intelConfirmed: read('intelConfirmed'),
+      questsCompleted: read('questsCompleted'),
+      scrappyUpgrades: read('scrappyUpgrades'),
+      benchUpgrades: read('benchUpgrades'),
     );
   }
 }

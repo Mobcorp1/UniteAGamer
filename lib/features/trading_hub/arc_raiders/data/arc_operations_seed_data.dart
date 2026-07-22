@@ -120,6 +120,12 @@ class ArcOperationsSeedData {
       type: ArcOperationRewardType.intelXp,
       amount: 25,
     ),
+    'operation_credit': ArcOperationReward(
+      id: 'operation_credit',
+      label: '+1 Operation Credit',
+      type: ArcOperationRewardType.operationCredit,
+      amount: 1,
+    ),
   };
 
   static List<ArcOperationTask> betaOperations = [
@@ -135,6 +141,8 @@ class ArcOperationsSeedData {
       rewards: [rewards['beta_access']!, rewards['xp_10']!],
       accent: AppTheme.neonCyan,
       betaExclusive: true,
+      difficulty: ArcOperationDifficulty.starter,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.founder],
     ),
     _task(
       id: 'beta_first_listing',
@@ -148,6 +156,8 @@ class ArcOperationsSeedData {
       rewards: [rewards['extra_trade']!, rewards['xp_10']!],
       accent: AppTheme.neonPink,
       betaExclusive: true,
+      difficulty: ArcOperationDifficulty.starter,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.community],
     ),
     _task(
       id: 'beta_first_trade',
@@ -161,6 +171,8 @@ class ArcOperationsSeedData {
       rewards: [rewards['trade_pioneer']!, rewards['xp_25']!],
       accent: Colors.amberAccent,
       betaExclusive: true,
+      difficulty: ArcOperationDifficulty.demanding,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.community],
     ),
     _task(
       id: 'beta_verified_intel',
@@ -175,6 +187,7 @@ class ArcOperationsSeedData {
       accent: Colors.lightGreenAccent,
       betaExclusive: true,
       verificationRequired: true,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.community],
     ),
     _task(
       id: 'beta_match_raider',
@@ -188,6 +201,8 @@ class ArcOperationsSeedData {
       rewards: [rewards['extra_match']!, rewards['xp_10']!],
       accent: AppTheme.neonCyan,
       betaExclusive: true,
+      difficulty: ArcOperationDifficulty.starter,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.community],
     ),
     _task(
       id: 'beta_loadout_saved',
@@ -201,6 +216,8 @@ class ArcOperationsSeedData {
       rewards: [rewards['xp_10']!],
       accent: AppTheme.neonPink,
       betaExclusive: true,
+      difficulty: ArcOperationDifficulty.starter,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.seasonal],
     ),
     _task(
       id: 'beta_first_quest_complete',
@@ -214,6 +231,7 @@ class ArcOperationsSeedData {
       rewards: [rewards['xp_10']!],
       accent: Colors.amberAccent,
       betaExclusive: true,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.seasonal],
     ),
     _task(
       id: 'beta_first_scrappy_upgrade',
@@ -227,6 +245,7 @@ class ArcOperationsSeedData {
       rewards: [rewards['xp_10']!],
       accent: AppTheme.neonPink,
       betaExclusive: true,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.seasonal],
     ),
     _task(
       id: 'beta_first_bench_upgrade',
@@ -240,6 +259,7 @@ class ArcOperationsSeedData {
       rewards: [rewards['xp_10']!],
       accent: AppTheme.neonCyan,
       betaExclusive: true,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.seasonal],
     ),
     _task(
       id: 'beta_feedback',
@@ -257,6 +277,7 @@ class ArcOperationsSeedData {
       ],
       accent: Colors.orangeAccent,
       betaExclusive: true,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.community],
     ),
     _task(
       id: 'beta_guardian',
@@ -275,6 +296,8 @@ class ArcOperationsSeedData {
       ],
       accent: Colors.lightGreenAccent,
       betaExclusive: true,
+      difficulty: ArcOperationDifficulty.demanding,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.community],
     ),
     _task(
       id: 'beta_return_days',
@@ -292,6 +315,8 @@ class ArcOperationsSeedData {
       ],
       accent: Colors.amberAccent,
       betaExclusive: true,
+      difficulty: ArcOperationDifficulty.elite,
+      tracks: const [ArcOperationTrack.closedBeta, ArcOperationTrack.founder],
     ),
   ];
 
@@ -306,6 +331,8 @@ class ArcOperationsSeedData {
       target: 1,
       rewards: [rewards['xp_5']!],
       accent: AppTheme.neonPink,
+      difficulty: ArcOperationDifficulty.starter,
+      tracks: const [ArcOperationTrack.daily, ArcOperationTrack.community],
     ),
     _task(
       id: 'daily_update_availability',
@@ -317,6 +344,8 @@ class ArcOperationsSeedData {
       target: 1,
       rewards: [rewards['xp_5']!],
       accent: AppTheme.neonCyan,
+      difficulty: ArcOperationDifficulty.starter,
+      tracks: const [ArcOperationTrack.daily, ArcOperationTrack.community],
     ),
     _task(
       id: 'daily_verify_intel',
@@ -329,6 +358,7 @@ class ArcOperationsSeedData {
       rewards: [rewards['xp_5']!],
       accent: Colors.lightGreenAccent,
       verificationRequired: true,
+      tracks: const [ArcOperationTrack.daily, ArcOperationTrack.community],
     ),
   ];
 
@@ -342,6 +372,8 @@ class ArcOperationsSeedData {
       target: 3,
       rewards: [rewards['extra_trade']!, rewards['xp_25']!],
       accent: AppTheme.neonPink,
+      difficulty: ArcOperationDifficulty.demanding,
+      tracks: const [ArcOperationTrack.weekly, ArcOperationTrack.community],
     ),
     _task(
       id: 'weekly_verified_intel',
@@ -354,6 +386,7 @@ class ArcOperationsSeedData {
       rewards: [rewards['xp_25']!],
       accent: Colors.lightGreenAccent,
       verificationRequired: true,
+      tracks: const [ArcOperationTrack.weekly, ArcOperationTrack.community],
     ),
     _task(
       id: 'weekly_loadout_progress',
@@ -365,6 +398,7 @@ class ArcOperationsSeedData {
       target: 1,
       rewards: [rewards['xp_25']!],
       accent: AppTheme.neonCyan,
+      tracks: const [ArcOperationTrack.weekly, ArcOperationTrack.seasonal],
     ),
   ];
 
@@ -378,6 +412,8 @@ class ArcOperationsSeedData {
       target: 10,
       rewards: [rewards['extra_trade']!, rewards['xp_25']!],
       accent: AppTheme.neonPink,
+      difficulty: ArcOperationDifficulty.elite,
+      tracks: const [ArcOperationTrack.monthly, ArcOperationTrack.seasonal],
     ),
     _task(
       id: 'monthly_guardian',
@@ -389,6 +425,8 @@ class ArcOperationsSeedData {
       target: 5,
       rewards: [rewards['community_raider']!, rewards['xp_25']!],
       accent: Colors.lightGreenAccent,
+      difficulty: ArcOperationDifficulty.demanding,
+      tracks: const [ArcOperationTrack.monthly, ArcOperationTrack.community],
     ),
   ];
 
@@ -402,6 +440,8 @@ class ArcOperationsSeedData {
       target: 1,
       rewards: [rewards['trade_pioneer']!],
       accent: AppTheme.neonPink,
+      difficulty: ArcOperationDifficulty.starter,
+      tracks: const [ArcOperationTrack.lifetime],
     ),
     _task(
       id: 'life_trader_50',
@@ -413,6 +453,8 @@ class ArcOperationsSeedData {
       target: 50,
       rewards: [rewards['extra_trade']!, rewards['xp_25']!],
       accent: AppTheme.neonPink,
+      difficulty: ArcOperationDifficulty.elite,
+      tracks: const [ArcOperationTrack.lifetime, ArcOperationTrack.community],
     ),
     _task(
       id: 'life_guardian_10',
@@ -424,6 +466,8 @@ class ArcOperationsSeedData {
       target: 10,
       rewards: [rewards['community_raider']!],
       accent: Colors.lightGreenAccent,
+      difficulty: ArcOperationDifficulty.demanding,
+      tracks: const [ArcOperationTrack.lifetime, ArcOperationTrack.community],
     ),
     _task(
       id: 'life_recruit_3',
@@ -435,7 +479,17 @@ class ArcOperationsSeedData {
       target: 3,
       rewards: [rewards['inner_circle']!],
       accent: Colors.amberAccent,
+      difficulty: ArcOperationDifficulty.demanding,
+      tracks: const [ArcOperationTrack.lifetime, ArcOperationTrack.founder],
     ),
+  ];
+
+  static List<ArcOperationTask> get allOperations => [
+    ...dailyOperations,
+    ...weeklyOperations,
+    ...monthlyOperations,
+    ...lifetimeOperations,
+    ...betaOperations,
   ];
 
   static ArcOperationsSummary summary = const ArcOperationsSummary(
@@ -458,6 +512,10 @@ class ArcOperationsSeedData {
     required Color accent,
     bool betaExclusive = false,
     bool verificationRequired = false,
+    ArcOperationDifficulty difficulty = ArcOperationDifficulty.standard,
+    ArcOperationAccessTier accessTier = ArcOperationAccessTier.free,
+    int weight = 100,
+    List<ArcOperationTrack> tracks = const <ArcOperationTrack>[],
   }) {
     return ArcOperationTask(
       id: id,
@@ -471,6 +529,10 @@ class ArcOperationsSeedData {
       accent: accent,
       betaExclusive: betaExclusive,
       verificationRequired: verificationRequired,
+      difficulty: difficulty,
+      accessTier: accessTier,
+      weight: weight,
+      tracks: tracks,
     );
   }
 }

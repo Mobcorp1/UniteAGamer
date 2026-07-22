@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
@@ -261,6 +262,8 @@ class _AdminConsoleBody extends StatelessWidget {
                     const ArcBetaDeveloperToolsCard(),
                     const SizedBox(height: AppTheme.spaceL),
                     _ClosedBetaDiagnosticsCard(uid: uid),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const _OperationsTuningAdminCard(),
                     const SizedBox(height: AppTheme.spaceL),
                     const UagAdminBroadcastPanel(),
                     const SizedBox(height: AppTheme.spaceXL),
@@ -1045,6 +1048,135 @@ class _ClosedBetaDiagnosticsCard extends StatelessWidget {
       if (updatedAt.isNotEmpty) updatedAt,
     ];
     return parts.join(' - ');
+  }
+}
+
+class _OperationsTuningAdminCard extends StatelessWidget {
+  const _OperationsTuningAdminCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final configRef = FirebaseFirestore.instance
+        .collection('config')
+        .doc('arc_operations');
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: configRef.snapshots(),
+      builder: (context, snapshot) {
+        final config = ArcOperationTuningConfig.fromMap(snapshot.data?.data());
+        final fallback = ArcOperationTuningConfig.fallback;
+        final currentSeason = config.seasonId.isEmpty
+            ? ArcSeasonDefaults.closedBetaSeasonOne
+            : config.seasonId;
+
+        return Container(
+          width: double.infinity,
+          padding: AppTheme.sectionCardPadding,
+          decoration: AppTheme.tradingCardDecoration(
+            borderColor: Colors.amberAccent.withValues(alpha: 0.26),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.tune_rounded, color: Colors.amberAccent),
+                  const SizedBox(width: AppTheme.spaceS),
+                  Expanded(
+                    child: Text(
+                      'Operations Tuning',
+                      style: AppTheme.tradingHeading(fontSize: 22),
+                    ),
+                  ),
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'State',
+                    config.enabled ? 'Enabled' : 'Paused',
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              Text(
+                'Safe global configuration for adaptive Operation templates, weights, activation and season identifiers. Defaults are used when this document is missing.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 13,
+                  color: AppTheme.tradingMutedText,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Wrap(
+                spacing: AppTheme.spaceM,
+                runSpacing: AppTheme.spaceM,
+                children: [
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'Season',
+                    currentSeason,
+                  ),
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'Daily',
+                    '${config.limitFor(ArcOperationCadence.daily)} visible',
+                  ),
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'Weekly',
+                    '${config.limitFor(ArcOperationCadence.weekly)} visible',
+                  ),
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'Monthly',
+                    '${config.limitFor(ArcOperationCadence.monthly)} visible',
+                  ),
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'Beta',
+                    '${config.limitFor(ArcOperationCadence.beta)} visible',
+                  ),
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'Disabled',
+                    '${config.disabledTaskIds.length} templates',
+                  ),
+                  _ClosedBetaDiagnosticsCard._diagnosticMetric(
+                    'Featured',
+                    '${config.featuredTaskIds.length} templates',
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Wrap(
+                spacing: AppTheme.spaceM,
+                runSpacing: AppTheme.spaceS,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await configRef.set({
+                        ...fallback.toMap(),
+                        'seasonId': ArcSeasonDefaults.closedBetaSeasonOne,
+                        'updatedAt': FieldValue.serverTimestamp(),
+                      }, SetOptions(merge: true));
+                    },
+                    icon: const Icon(Icons.restore_rounded),
+                    label: const Text('Restore Safe Defaults'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await configRef.set({
+                        'enabled': !config.enabled,
+                        'updatedAt': FieldValue.serverTimestamp(),
+                      }, SetOptions(merge: true));
+                    },
+                    icon: Icon(
+                      config.enabled
+                          ? Icons.pause_circle_outline_rounded
+                          : Icons.play_circle_outline_rounded,
+                    ),
+                    label: Text(
+                      config.enabled
+                          ? 'Pause Adaptive Ops'
+                          : 'Enable Adaptive Ops',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

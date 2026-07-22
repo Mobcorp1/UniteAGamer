@@ -45,6 +45,9 @@ class ArcOperationsRepository {
   DocumentReference<Map<String, dynamic>> _equippedRef(String uid) =>
       _firestore.collection('arc_equipped_cosmetics').doc(uid);
 
+  DocumentReference<Map<String, dynamic>> _operationsConfigRef() =>
+      _firestore.collection('config').doc('arc_operations');
+
   Stream<ArcOperationsUserState> watchUserState() {
     final uid = _uid;
     if (uid == null) return Stream.value(ArcOperationsUserState.empty);
@@ -54,10 +57,19 @@ class ArcOperationsRepository {
     summarySubscription;
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
     profileSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    telemetrySubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    seasonSubscription;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+    configSubscription;
     var disposed = false;
     var loadVersion = 0;
     var latestSummary = const <String, dynamic>{};
     Map<String, dynamic>? latestProfile;
+    var latestTelemetry = const <String, dynamic>{};
+    var latestSeason = const <String, dynamic>{};
+    var latestConfig = const <String, dynamic>{};
 
     void addError(Object error, StackTrace stackTrace) {
       if (!disposed && !controller.isClosed) {
@@ -72,6 +84,9 @@ class ArcOperationsRepository {
           uid: uid,
           summary: latestSummary,
           profileData: latestProfile,
+          telemetryData: latestTelemetry,
+          seasonData: latestSeason,
+          configData: latestConfig,
         );
         if (!disposed && !controller.isClosed && version == loadVersion) {
           controller.add(state);
@@ -95,12 +110,34 @@ class ArcOperationsRepository {
         latestProfile = profileSnapshot.data();
         unawaited(emitState());
       }, onError: addError);
+
+      telemetrySubscription = _telemetrySummaryRef(uid).snapshots().listen((
+        telemetrySnapshot,
+      ) {
+        latestTelemetry = telemetrySnapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+
+      seasonSubscription = _seasonRef(uid).snapshots().listen((seasonSnapshot) {
+        latestSeason = seasonSnapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
+
+      configSubscription = _operationsConfigRef().snapshots().listen((
+        configSnapshot,
+      ) {
+        latestConfig = configSnapshot.data() ?? const <String, dynamic>{};
+        unawaited(emitState());
+      }, onError: addError);
     };
 
     controller.onCancel = () async {
       disposed = true;
       await summarySubscription?.cancel();
       await profileSubscription?.cancel();
+      await telemetrySubscription?.cancel();
+      await seasonSubscription?.cancel();
+      await configSubscription?.cancel();
     };
 
     return controller.stream;
@@ -110,6 +147,9 @@ class ArcOperationsRepository {
     required String uid,
     required Map<String, dynamic> summary,
     required Map<String, dynamic>? profileData,
+    required Map<String, dynamic> telemetryData,
+    required Map<String, dynamic> seasonData,
+    required Map<String, dynamic> configData,
   }) async {
     final progressSnapshot = await _progressRef(uid).get();
     final inventorySnapshot = await _inventoryRef(uid).get();
@@ -133,10 +173,21 @@ class ArcOperationsRepository {
       inventory: inventory,
       equippedCosmetics: ArcEquippedCosmetics.fromMap(equippedData),
       intelXp: (summary['intelXp'] as num?)?.toInt() ?? 0,
+      seasonalXp:
+          (summary['seasonalXp'] as num?)?.toInt() ??
+          (summary['seasonXp'] as num?)?.toInt() ??
+          0,
       operationCredits: (summary['operationCredits'] as num?)?.toInt() ?? 0,
       extraTradeSlots: (summary['extraTradeSlots'] as num?)?.toInt() ?? 0,
       extraMatchmakingSlots:
           (summary['extraMatchmakingSlots'] as num?)?.toInt() ?? 0,
+      currentSeasonId:
+          _string(summary['currentSeasonId']) ??
+          _string(seasonData['currentSeasonId']) ??
+          ArcSeasonResetPolicy.defaultCurrentSeasonId,
+      lastCompletedSeasonId: _string(seasonData['lastCompletedSeasonId']),
+      telemetrySummary: ArcOperationTelemetrySummary.fromMap(telemetryData),
+      tuningConfig: ArcOperationTuningConfig.fromMap(configData),
     );
   }
 
@@ -150,6 +201,7 @@ class ArcOperationsRepository {
       final snapshot = await transaction.get(ref);
       final existing = snapshot.data() ?? const <String, dynamic>{};
       final current = (existing['progress'] as num?)?.toInt() ?? task.progress;
+      if (existing['claimed'] == true) return;
       final next = (current + amount).clamp(0, task.target);
       transaction.set(ref, {
         'operationId': task.id,
@@ -200,11 +252,7 @@ class ArcOperationsRepository {
           case ArcOperationRewardType.title:
           case ArcOperationRewardType.profileFrame:
           case ArcOperationRewardType.profileBanner:
-            final item = ArcRewardInventoryItem.fromReward(
-              reward,
-              sourceSeasonId: seasonId,
-              sourceOperationId: task.id,
-            );
+            final item = _inventoryItemForReward(reward, task, seasonId);
             firstCosmetic ??= item;
             transaction.set(_inventoryRef(uid).doc(reward.id), item.toMap());
           case ArcOperationRewardType.premiumTrial:
@@ -214,9 +262,11 @@ class ArcOperationsRepository {
 
       transaction.set(summaryRef, {
         'intelXp': FieldValue.increment(xpGain),
+        'seasonalXp': FieldValue.increment(xpGain),
         'operationCredits': FieldValue.increment(creditsGain),
         'extraTradeSlots': FieldValue.increment(tradeSlots),
         'extraMatchmakingSlots': FieldValue.increment(matchSlots),
+        'currentSeasonId': seasonId,
         'updatedAt': DateTime.now().toIso8601String(),
       }, SetOptions(merge: true));
 
@@ -393,6 +443,8 @@ class ArcOperationsRepository {
           reward,
           sourceSeasonId: seasonId,
           sourceOperationId: 'eligibility_reconciliation',
+          permanent: true,
+          equipableAfterSeason: true,
         );
         transaction.set(_inventoryRef(uid).doc(rewardId), {
           ...item.toMap(),
@@ -447,6 +499,25 @@ class ArcOperationsRepository {
     }
 
     return update;
+  }
+
+  ArcRewardInventoryItem _inventoryItemForReward(
+    ArcOperationReward reward,
+    ArcOperationTask task,
+    String seasonId,
+  ) {
+    final permanent =
+        task.grantsPermanentRewards ||
+        reward.betaExclusive ||
+        reward.rarity.isExclusive;
+    return ArcRewardInventoryItem.fromReward(
+      reward,
+      sourceSeasonId: seasonId,
+      sourceOperationId: task.id,
+      permanent: permanent,
+      equipableAfterSeason: permanent,
+      currentSeasonUnlock: true,
+    );
   }
 
   Future<String> _currentSeasonId(String uid) async {
@@ -510,6 +581,7 @@ class ArcOperationsRepository {
     batch.set(_telemetrySummaryRef(uid), {
       _summaryFieldForTelemetry(type): FieldValue.increment(safeAmount),
       'currentSeasonId': seasonId,
+      'seasonActivity': FieldValue.increment(safeAmount),
       'lastEventName': event.eventName,
       'lastEventAt': now,
       'updatedAt': now,
@@ -678,13 +750,7 @@ class ArcOperationsRepository {
   }
 
   List<ArcOperationTask> _tasksForTelemetry(ArcOperationTelemetryType type) {
-    final allTasks = <ArcOperationTask>[
-      ...ArcOperationsSeedData.dailyOperations,
-      ...ArcOperationsSeedData.weeklyOperations,
-      ...ArcOperationsSeedData.monthlyOperations,
-      ...ArcOperationsSeedData.lifetimeOperations,
-      ...ArcOperationsSeedData.betaOperations,
-    ];
+    final allTasks = ArcOperationsSeedData.allOperations;
 
     final ids = switch (type) {
       ArcOperationTelemetryType.tradeCompleted => const <String>{

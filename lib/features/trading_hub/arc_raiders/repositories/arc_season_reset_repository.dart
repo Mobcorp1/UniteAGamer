@@ -405,13 +405,7 @@ class ArcSeasonResetRepository {
   }
 
   ArcOperationTask? _operationTaskById(String operationId) {
-    for (final task in <ArcOperationTask>[
-      ...ArcOperationsSeedData.dailyOperations,
-      ...ArcOperationsSeedData.weeklyOperations,
-      ...ArcOperationsSeedData.monthlyOperations,
-      ...ArcOperationsSeedData.betaOperations,
-      ...ArcOperationsSeedData.lifetimeOperations,
-    ]) {
+    for (final task in ArcOperationsSeedData.allOperations) {
       if (task.id == operationId) return task;
     }
     return null;

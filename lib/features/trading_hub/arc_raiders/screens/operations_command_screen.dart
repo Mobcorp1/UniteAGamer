@@ -71,7 +71,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                 const SizedBox(height: 10),
                 _buildProfileRewardStrip(userState),
                 const SizedBox(height: 10),
-                _buildCommunityObjectivePanel(),
+                _buildCommunityObjectivePanel(userState),
                 const SizedBox(height: 10),
                 _buildRewardVaultPanel(userState),
                 const SizedBox(height: 10),
@@ -121,6 +121,16 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
                   color: Colors.white60,
                 ),
               ),
+              const SizedBox(height: 4),
+              Text(
+                'Current season: ${userState.currentSeasonId}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 11,
+                  color: AppTheme.tradingMutedText,
+                ),
+              ),
             ],
           );
 
@@ -130,6 +140,11 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             alignment: compact ? WrapAlignment.start : WrapAlignment.end,
             children: [
               _metric('Intel XP', '${userState.intelXp}', AppTheme.neonCyan),
+              _metric(
+                'Season XP',
+                '${userState.seasonalXp}',
+                Colors.amberAccent,
+              ),
               _metric(
                 'Completed',
                 '${userState.completedCount}',
@@ -313,7 +328,12 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     ];
   }
 
-  Widget _buildCommunityObjectivePanel() {
+  Widget _buildCommunityObjectivePanel(ArcOperationsUserState userState) {
+    final telemetry = userState.telemetrySummary;
+    final marketActivity =
+        telemetry.listingsCreated + telemetry.tradesCompleted;
+    final intelActivity = telemetry.verifiedIntelActivity;
+    final guardianActivity = telemetry.socialActivity;
     return ArcRaidersSectionCard(
       accent: AppTheme.neonPink,
       padding: const EdgeInsets.all(12),
@@ -346,9 +366,24 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
             runSpacing: 8,
             alignment: compact ? WrapAlignment.start : WrapAlignment.end,
             children: [
-              _objectiveTile('Market Health', '42%', AppTheme.neonPink),
-              _objectiveTile('Verified Intel', '68%', AppTheme.neonCyan),
-              _objectiveTile('Guardian Aid', '24%', Colors.amberAccent),
+              _objectiveTile(
+                'Market Activity',
+                '$marketActivity',
+                AppTheme.neonPink,
+                progress: _progressAgainst(marketActivity, 4),
+              ),
+              _objectiveTile(
+                'Verified Intel',
+                '$intelActivity',
+                AppTheme.neonCyan,
+                progress: _progressAgainst(intelActivity, 5),
+              ),
+              _objectiveTile(
+                'Guardian Aid',
+                '$guardianActivity',
+                Colors.amberAccent,
+                progress: _progressAgainst(guardianActivity, 3),
+              ),
             ],
           );
 
@@ -372,7 +407,17 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
     );
   }
 
-  Widget _objectiveTile(String label, String value, Color accent) {
+  double _progressAgainst(int value, int target) {
+    if (target <= 0) return 0;
+    return (value / target).clamp(0, 1).toDouble();
+  }
+
+  Widget _objectiveTile(
+    String label,
+    String value,
+    Color accent, {
+    required double progress,
+  }) {
     return Container(
       width: 150,
       padding: const EdgeInsets.all(10),
@@ -407,7 +452,7 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
-              value: (int.tryParse(value.replaceAll('%', '')) ?? 0) / 100,
+              value: progress,
               minHeight: 5,
               backgroundColor: Colors.white.withValues(alpha: 0.08),
               color: accent,
@@ -3296,6 +3341,8 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
           ),
           Text(
             label.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white60),
           ),
         ],
@@ -3359,36 +3406,51 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
         const SizedBox(height: 10),
         _buildGenerationStrategyPanel(plan),
         const SizedBox(height: 10),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 1050
-                ? 3
-                : constraints.maxWidth >= 680
-                ? 2
-                : 1;
-            final spacing = 10.0;
-            final itemWidth =
-                (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+        if (tasks.isEmpty) ...[
+          ArcRaidersSectionCard(
+            accent: plan.accent,
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              plan.disabledCount > 0
+                  ? 'Adaptive Operations are currently on admin hold for this rotation.'
+                  : 'Every available Operation in this rotation is complete. New objectives will appear after live activity changes or the next season reset.',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 13,
+                color: AppTheme.tradingMutedText,
+              ),
+            ),
+          ),
+        ] else
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 1050
+                  ? 3
+                  : constraints.maxWidth >= 680
+                  ? 2
+                  : 1;
+              final spacing = 10.0;
+              final itemWidth =
+                  (constraints.maxWidth - (spacing * (columns - 1))) / columns;
 
-            return Wrap(
-              spacing: spacing,
-              runSpacing: spacing,
-              children: [
-                for (final task in tasks)
-                  SizedBox(
-                    width: itemWidth,
-                    child: _OperationTaskCard(
-                      task: task,
-                      userState: userState,
-                      onTrack: () => _repository.trackProgress(task),
-                      onClaim: () => _repository.claimReward(task),
-                      onEquip: _equipRewardVaultCosmetic,
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  for (final task in tasks)
+                    SizedBox(
+                      width: itemWidth,
+                      child: _OperationTaskCard(
+                        task: task,
+                        userState: userState,
+                        onTrack: () => _repository.trackProgress(task),
+                        onClaim: () => _repository.claimReward(task),
+                        onEquip: _equipRewardVaultCosmetic,
+                      ),
                     ),
-                  ),
-              ],
-            );
-          },
-        ),
+                ],
+              );
+            },
+          ),
       ],
     );
   }
@@ -3407,6 +3469,17 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
               _tagPill(plan.rotationLabel, plan.accent),
               _tagPill(plan.rewardLabel, AppTheme.neonPink),
               _tagPill(plan.priorityLabel, Colors.amberAccent),
+              _tagPill(plan.fairnessLabel, Colors.lightGreenAccent),
+              if (plan.hiddenCompletedCount > 0)
+                _tagPill(
+                  '${plan.hiddenCompletedCount} DONE HIDDEN',
+                  AppTheme.tradingMutedText,
+                ),
+              if (plan.disabledCount > 0)
+                _tagPill(
+                  '${plan.disabledCount} ADMIN HOLD',
+                  AppTheme.tradingMutedText,
+                ),
             ],
           );
 

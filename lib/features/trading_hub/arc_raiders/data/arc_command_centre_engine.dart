@@ -928,10 +928,14 @@ class ArcCommandCentreEngine {
           : 'Operations progress and Reward Vault inventory are live.',
       details: [
         'Intel level ${operationsState.operationLevel} - ${operationsState.intelXp} XP',
+        '${operationsState.currentSeasonId}: ${operationsState.seasonalXp} season XP',
         '${operationsState.completedCount}/$availableOperations operations completed',
         '$readyOperations ready to claim - $inProgressOperations in progress',
         '${operationsState.inventory.length} Vault reward ${_plural(operationsState.inventory.length, 'item', 'items')} owned',
         '$equippedCount/4 cosmetic slots equipped',
+        operationsState.telemetrySummary.totalActivity > 0
+            ? 'Live activity signals: ${operationsState.telemetrySummary.totalActivity}'
+            : 'Live activity signals: waiting for first event',
         operationsState.extraTradeSlots > 0 ||
                 operationsState.extraMatchmakingSlots > 0
             ? 'Bonus slots: ${operationsState.extraTradeSlots} trade / ${operationsState.extraMatchmakingSlots} match'
@@ -1183,13 +1187,8 @@ class ArcCommandCentreEngine {
     );
   }
 
-  static List<ArcOperationTask> get _operationTasks => [
-    ...ArcOperationsSeedData.betaOperations,
-    ...ArcOperationsSeedData.dailyOperations,
-    ...ArcOperationsSeedData.weeklyOperations,
-    ...ArcOperationsSeedData.monthlyOperations,
-    ...ArcOperationsSeedData.lifetimeOperations,
-  ];
+  static List<ArcOperationTask> get _operationTasks =>
+      ArcOperationsSeedData.allOperations;
 
   static int _operationCount(
     ArcOperationsUserState operationsState,
