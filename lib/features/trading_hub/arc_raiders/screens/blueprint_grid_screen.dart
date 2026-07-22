@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_layout_metrics.dart';
@@ -541,35 +542,22 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   Future<void> _confirmResetGrid() async {
     final confirmed = await UagDialogs.confirm(
       context: context,
-      title: 'Reset Blueprint Grid?',
+      title: 'Start New Expedition?',
       message:
-          'This will remove all owned blueprint progress and dupes from the grid, like starting a fresh expedition run. Your grid positions and blueprint list will remain.',
+          'A fresh expedition resets blueprint ownership and duplicates together with Scrappy, quests, bench progress and current-season Operations. Permanent profile, reputation, availability, Favourite Riders and earned reward history remain.',
       titleColor: Colors.redAccent,
-      confirmLabel: 'Confirm Reset',
+      confirmLabel: 'Review Full Reset',
       confirmBackgroundColor: Colors.redAccent,
       confirmForegroundColor: Colors.black,
       borderColor: Colors.redAccent,
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
-    try {
-      await _repository.resetAllBlueprintStates(
-        ArcBlueprintSeedData.blueprints.map((blueprint) => blueprint.id),
-      );
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Blueprint grid reset.')));
-      _clearSelection();
-      _returnToFullGridView();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not reset grid: $e')));
-    }
+    await Navigator.of(context).pushNamed(ArcSeasonResetScreen.routeName);
+    if (!mounted) return;
+    _clearSelection();
+    _returnToFullGridView();
   }
 
   Future<void> _openBlueprintEditor(

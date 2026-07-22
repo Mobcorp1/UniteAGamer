@@ -35,6 +35,9 @@ class ArcSeasonResetRepository {
   CollectionReference<Map<String, dynamic>> _historyRef(String uid) =>
       _userRef(uid).collection('arc_season_history');
 
+  CollectionReference<Map<String, dynamic>> _blueprintStatesRef(String uid) =>
+      _userRef(uid).collection('arc_blueprints');
+
   CollectionReference<Map<String, dynamic>> _scrappyStatesRef(String uid) =>
       _userRef(uid).collection('arc_scrappy_states');
 
@@ -90,6 +93,7 @@ class ArcSeasonResetRepository {
   }) async {
     final uid = _uid;
     final state = await getSeasonState();
+    final blueprintSnapshot = await _blueprintStatesRef(uid).get();
     final scrappySnapshot = await _scrappyStatesRef(uid).get();
     final questProgressSnapshot = await _questProgressRef(uid).get();
     final scrappyProgressSnapshot = await _scrappyProgressRef(uid).get();
@@ -122,12 +126,14 @@ class ArcSeasonResetRepository {
       resetVersion: state.resetVersion + 1,
       generatedAt: generatedAt,
       impacts: ArcSeasonResetPolicy.impacts(
+        blueprintStateCount: blueprintSnapshot.docs.length,
         scrappyStateCount: scrappyResetCount,
         questStateCount: questResetCount,
         benchStateCount: benchResetCount,
         operationProgressCount: seasonalOperationDocs.length,
         rewardCount: rewardSnapshot.docs.length,
       ),
+      blueprintStateCount: blueprintSnapshot.docs.length,
       scrappyStateCount: scrappyResetCount,
       questStateCount: questResetCount,
       benchStateCount: benchResetCount,
@@ -184,6 +190,7 @@ class ArcSeasonResetRepository {
     }, SetOptions(merge: true));
 
     try {
+      final blueprintSnapshot = await _blueprintStatesRef(uid).get();
       final scrappySnapshot = await _scrappyStatesRef(uid).get();
       final questProgressSnapshot = await _questProgressRef(uid).get();
       final scrappyProgressSnapshot = await _scrappyProgressRef(uid).get();
@@ -216,6 +223,7 @@ class ArcSeasonResetRepository {
         seasonId: preview.currentSeasonId,
         resetId: preview.resetId,
         completedAt: now,
+        blueprintStateCount: blueprintSnapshot.docs.length,
         scrappyStateCount: scrappyResetCount,
         questStateCount: questResetCount,
         benchStateCount: benchResetCount,
@@ -228,6 +236,8 @@ class ArcSeasonResetRepository {
         currentSeasonId: preview.nextSeasonId,
         resetVersion: preview.resetVersion,
         completedAt: now,
+        resetBlueprintIds: blueprintSnapshot.docs.map((doc) => doc.id).toList()
+          ..sort(),
         resetStateIds: resetStateIds,
         archivedOperationIds: archivedOperationIds,
         archivedRewardCount: rewardSnapshot.docs.length,
@@ -237,6 +247,7 @@ class ArcSeasonResetRepository {
       batch.set(_historyRef(uid).doc(_historyDocId(preview)), {
         ...historyEntry.toMap(),
         'preview': preview.toMap(),
+        'blueprintArchive': _archiveDocs(blueprintSnapshot.docs),
         'trackerArchive': {
           'scrappy': _archiveDocs(groups.scrappyDocs),
           'quests': _archiveDocs(groups.questDocs),
@@ -252,6 +263,10 @@ class ArcSeasonResetRepository {
         'createdAt': now.toIso8601String(),
         'policyVersion': ArcSeasonResetPolicy.resetPolicyVersion,
       }, SetOptions(merge: true));
+
+      for (final doc in blueprintSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
 
       for (final doc in resetDocs) {
         batch.delete(doc.reference);

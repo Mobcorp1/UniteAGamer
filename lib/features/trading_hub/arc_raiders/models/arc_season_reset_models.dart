@@ -22,7 +22,7 @@ class ArcSeasonResetPolicy {
   const ArcSeasonResetPolicy._();
 
   static const defaultCurrentSeasonId = 'closed-beta-season-1';
-  static const resetPolicyVersion = 1;
+  static const resetPolicyVersion = 2;
 
   static const persistentSystems = <String>[
     'Account identity',
@@ -42,6 +42,7 @@ class ArcSeasonResetPolicy {
   ];
 
   static const resetSystems = <String>[
+    'Current-expedition blueprint ownership and duplicates',
     'Current-season Scrappy progression',
     'Current-season quest item progress',
     'Current-season bench material progress',
@@ -71,6 +72,7 @@ class ArcSeasonResetPolicy {
   ];
 
   static List<ArcSeasonResetSystemImpact> impacts({
+    int blueprintStateCount = 0,
     required int scrappyStateCount,
     required int questStateCount,
     required int benchStateCount,
@@ -83,6 +85,14 @@ class ArcSeasonResetPolicy {
         label: 'Profile, identity and reputation',
         classification: ArcSeasonResetClassification.preserved,
         reason: 'Identity and trust history are account-level state.',
+      ),
+      ArcSeasonResetSystemImpact(
+        id: 'blueprints',
+        label: 'Blueprint Tracker',
+        classification: ArcSeasonResetClassification.reset,
+        reason:
+            'Owned and duplicate blueprint state returns to missing for the new expedition.',
+        itemCount: blueprintStateCount,
       ),
       ArcSeasonResetSystemImpact(
         id: 'scrappy',
@@ -182,6 +192,7 @@ class ArcSeasonHistoryEntry {
     required this.seasonId,
     required this.resetId,
     required this.completedAt,
+    this.blueprintStateCount = 0,
     this.scrappyStateCount = 0,
     this.questStateCount = 0,
     this.benchStateCount = 0,
@@ -192,6 +203,7 @@ class ArcSeasonHistoryEntry {
   final String seasonId;
   final String resetId;
   final DateTime completedAt;
+  final int blueprintStateCount;
   final int scrappyStateCount;
   final int questStateCount;
   final int benchStateCount;
@@ -203,6 +215,7 @@ class ArcSeasonHistoryEntry {
       'seasonId': seasonId,
       'resetId': resetId,
       'completedAt': completedAt.toIso8601String(),
+      'blueprintStateCount': blueprintStateCount,
       'scrappyStateCount': scrappyStateCount,
       'questStateCount': questStateCount,
       'benchStateCount': benchStateCount,
@@ -217,6 +230,7 @@ class ArcSeasonHistoryEntry {
       resetId: (map['resetId'] ?? '').toString(),
       completedAt:
           _date(map['completedAt']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+      blueprintStateCount: _int(map['blueprintStateCount']),
       scrappyStateCount: _int(map['scrappyStateCount']),
       questStateCount: _int(map['questStateCount']),
       benchStateCount: _int(map['benchStateCount']),
@@ -351,6 +365,7 @@ class ArcSeasonResetPreview {
     required this.resetVersion,
     required this.generatedAt,
     required this.impacts,
+    this.blueprintStateCount = 0,
     this.scrappyStateCount = 0,
     this.questStateCount = 0,
     this.benchStateCount = 0,
@@ -364,6 +379,7 @@ class ArcSeasonResetPreview {
   final int resetVersion;
   final DateTime generatedAt;
   final List<ArcSeasonResetSystemImpact> impacts;
+  final int blueprintStateCount;
   final int scrappyStateCount;
   final int questStateCount;
   final int benchStateCount;
@@ -386,6 +402,7 @@ class ArcSeasonResetPreview {
       'resetVersion': resetVersion,
       'generatedAt': generatedAt.toIso8601String(),
       'impacts': impacts.map((impact) => impact.toMap()).toList(),
+      'blueprintStateCount': blueprintStateCount,
       'scrappyStateCount': scrappyStateCount,
       'questStateCount': questStateCount,
       'benchStateCount': benchStateCount,
@@ -403,6 +420,7 @@ class ArcSeasonResetApplyResult {
     required this.resetVersion,
     required this.completedAt,
     this.alreadyApplied = false,
+    this.resetBlueprintIds = const <String>[],
     this.resetStateIds = const <String>[],
     this.archivedOperationIds = const <String>[],
     this.archivedRewardCount = 0,
@@ -414,6 +432,7 @@ class ArcSeasonResetApplyResult {
   final int resetVersion;
   final DateTime completedAt;
   final bool alreadyApplied;
+  final List<String> resetBlueprintIds;
   final List<String> resetStateIds;
   final List<String> archivedOperationIds;
   final int archivedRewardCount;
@@ -426,6 +445,7 @@ class ArcSeasonResetApplyResult {
       'resetVersion': resetVersion,
       'completedAt': completedAt.toIso8601String(),
       'alreadyApplied': alreadyApplied,
+      'resetBlueprintIds': resetBlueprintIds,
       'resetStateIds': resetStateIds,
       'archivedOperationIds': archivedOperationIds,
       'archivedRewardCount': archivedRewardCount,

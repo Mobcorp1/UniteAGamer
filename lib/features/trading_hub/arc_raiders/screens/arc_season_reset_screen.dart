@@ -165,7 +165,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                 checkColor: Colors.black,
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  'I understand this archives current-season tracker and Operation progress. Profile, reputation, legal consent and permanent rewards remain.',
+                  'I understand this archives blueprint, tracker and current-season Operation progress. Profile, reputation, legal consent and permanent rewards remain.',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 13,
                     color: Colors.white70,
@@ -234,6 +234,10 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
               _metricRow('Reset ID', result.resetId),
               _metricRow('Reset version', result.resetVersion.toString()),
               _metricRow(
+                'Blueprints reset',
+                result.resetBlueprintIds.length.toString(),
+              ),
+              _metricRow(
                 'Tracker docs reset',
                 result.resetStateIds.length.toString(),
               ),
@@ -278,6 +282,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
           _metricTile('Next season', preview.nextSeasonId),
           _metricTile('Reset version', preview.resetVersion.toString()),
           _metricTile('Reset status', state.resetStatus.name),
+          _metricTile('Blueprints', preview.blueprintStateCount.toString()),
           _metricTile('Scrappy docs', preview.scrappyStateCount.toString()),
           _metricTile('Quest docs', preview.questStateCount.toString()),
           _metricTile('Bench docs', preview.benchStateCount.toString()),
