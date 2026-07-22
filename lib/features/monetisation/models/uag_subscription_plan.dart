@@ -1,3 +1,4 @@
+import 'uag_match_intelligence_copy.dart';
 import 'uag_plan_limits.dart';
 import 'uag_subscription_tier.dart';
 
@@ -53,6 +54,7 @@ class UagSubscriptionPlan {
       limits: UagPlanLimits.free,
       features: [
         'Full Blueprint Tracker access',
+        UagMatchIntelligenceCopy.freeDescription,
         'Core UAG Raider voice item advice',
         'Intel contribution stays unlimited',
         'Trade participation with 2 active listings and 5 daily offers',
@@ -78,6 +80,7 @@ class UagSubscriptionPlan {
       creatorOnboardingDiscountPercent: 20,
       limits: UagPlanLimits.essential,
       features: [
+        UagMatchIntelligenceCopy.essentialDescription,
         '10 active trade listings and 25 daily offers',
         '50 weekly trade actions and 50 Match Raider searches',
         '40 weekly Intel hints and 12 premium Intel unlocks',
@@ -105,6 +108,7 @@ class UagSubscriptionPlan {
       creatorOnboardingDiscountPercent: 25,
       limits: UagPlanLimits.premium,
       features: [
+        UagMatchIntelligenceCopy.premiumDescription,
         'Unlimited trade actions, listings and offers',
         'Unlimited Match Raider searches and session tools',
         'Unlimited Intel hints and premium Intel unlocks',

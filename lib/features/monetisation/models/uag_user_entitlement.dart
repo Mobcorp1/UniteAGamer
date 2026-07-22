@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'uag_ad_policy.dart';
+import 'uag_match_intelligence_copy.dart';
 import 'uag_plan_limits.dart';
 import 'uag_subscription_tier.dart';
 
@@ -43,6 +44,10 @@ class UagUserEntitlement {
 
   UagAdPolicy get adPolicy =>
       hasAdminBypass ? UagAdPolicy.premium : UagAdPolicy.forTier(tier);
+  UagMatchIntelligenceTierCopy get matchIntelligence =>
+      UagMatchIntelligenceCopy.forTier(
+        hasAdminBypass ? UagSubscriptionTier.premium : tier,
+      );
 
   bool get canShowAds => adPolicy.hasAnyAds;
   bool get canUseTraderProAnalytics =>

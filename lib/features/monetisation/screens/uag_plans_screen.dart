@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisation_models.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_match_intelligence_comparison_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -86,6 +87,8 @@ class UagPlansScreen extends StatelessWidget {
                         );
                       },
                     ),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const UagMatchIntelligenceComparisonCard(),
                     const SizedBox(height: AppTheme.spaceXL),
                     _paymentsNote(),
                   ],

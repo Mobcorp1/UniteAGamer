@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import '../models/uag_subscription_plan.dart';
 import '../models/uag_subscription_tier.dart';
 import '../services/uag_entitlement_service.dart';
+import '../widgets/uag_match_intelligence_comparison_card.dart';
 
 class MonetisationScreen extends StatefulWidget {
   static const routeName = '/monetisation';
@@ -138,6 +139,8 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                         );
                       },
                     ),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const UagMatchIntelligenceComparisonCard(),
                     const SizedBox(height: AppTheme.spaceL),
                     _LaunchNotesCard(),
                   ],

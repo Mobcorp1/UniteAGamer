@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_user_entitlement.dart';
 
 import '../data/arc_match_compatibility_engine.dart';
 import '../data/arc_player_archetype_catalog.dart';
@@ -11,20 +15,19 @@ import '../models/arc_match_rider_profile.dart';
 import 'arc_operations_repository.dart';
 
 class ArcMatchCandidate {
-  const ArcMatchCandidate({
-    required this.profile,
-    required this.score,
-    required this.reasons,
-  });
+  const ArcMatchCandidate({required this.profile, required this.result});
 
   final ArcMatchRiderProfile profile;
-  final int score;
-  final List<String> reasons;
+  final ArcMatchCompatibilityResult result;
 
-  String get percentageLabel => '$score% Match';
-  String get publicMatchLabel => ArcMatchCompatibilityEngine.matchLabel(score);
-  String get publicExplanation =>
-      ArcMatchCompatibilityEngine.protectedExplanation;
+  int get score => result.score;
+  List<String> get reasons => result.reasons;
+  String get percentageLabel => result.percentageLabel;
+  String get publicMatchLabel => result.publicLabel;
+  String get publicExplanation => result.publicExplanation;
+  String get tierLabel => result.tierLabel;
+  String get confidenceLabel => result.confidenceLabel;
+  List<String> get publicTags => result.publicTags;
 }
 
 class ArcMatchRiderRepository {
@@ -147,7 +150,9 @@ class ArcMatchRiderRepository {
     if (uid == null) throw StateError('No signed-in user found.');
 
     final normalized = profile.copyWith(uid: uid);
-    await _profiles.doc(uid).set(normalized.toMap(), SetOptions(merge: true));
+    await _profiles
+        .doc(uid)
+        .set(normalized.toPublicMap(), SetOptions(merge: true));
   }
 
   Stream<List<ArcMatchCandidate>> watchCandidates(
@@ -156,41 +161,138 @@ class ArcMatchRiderRepository {
     final uid = currentUid;
     if (uid == null) return const Stream<List<ArcMatchCandidate>>.empty();
 
-    return _profiles.where('visibleInSearch', isEqualTo: true).snapshots().map((
-      snapshot,
-    ) {
-      final matches = <ArcMatchCandidate>[];
-      final currentSignals = _objectiveSignalsFromProfile(currentProfile);
-      for (final doc in snapshot.docs) {
-        if (doc.id == uid) continue;
-        final profile = ArcMatchRiderProfile.fromMap(doc.data(), doc.id);
-        final result = _compatibilityEngine.score(
-          me: currentProfile,
-          other: profile,
-          meSignals: currentSignals,
-          otherSignals: _objectiveSignalsFromProfile(profile),
-        );
-        matches.add(
-          ArcMatchCandidate(
-            profile: profile,
-            score: result.score,
-            reasons: result.reasons,
-          ),
-        );
-      }
+    late StreamController<List<ArcMatchCandidate>> controller;
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? userSub;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? profileSub;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? favouriteSub;
+    QuerySnapshot<Map<String, dynamic>>? latestProfileSnapshot;
+    var latestEntitlement = UagUserEntitlement.fromUserDoc(
+      uid: uid,
+      data: const <String, dynamic>{},
+    );
+    var latestBlockedUserIds = const <String>{};
+    var latestFavouriteRiders = const <String, ArcFavouriteRider>{};
 
-      matches.sort((a, b) {
-        final scoreCompare = b.score.compareTo(a.score);
-        if (scoreCompare != 0) return scoreCompare;
-        if (a.profile.lookingNow != b.profile.lookingNow) {
-          return a.profile.lookingNow ? -1 : 1;
-        }
-        return a.profile.title.toLowerCase().compareTo(
-          b.profile.title.toLowerCase(),
-        );
-      });
-      return matches;
-    });
+    void emit() {
+      final snapshot = latestProfileSnapshot;
+      if (snapshot == null || controller.isClosed) return;
+      controller.add(
+        _buildCandidates(
+          currentUid: uid,
+          currentProfile: currentProfile,
+          snapshot: snapshot,
+          entitlement: latestEntitlement,
+          blockedUserIds: latestBlockedUserIds,
+          favouriteRiders: latestFavouriteRiders,
+        ),
+      );
+    }
+
+    controller = StreamController<List<ArcMatchCandidate>>(
+      onListen: () {
+        userSub = _firestore.collection('users').doc(uid).snapshots().listen((
+          snapshot,
+        ) {
+          final userData = snapshot.data() ?? const <String, dynamic>{};
+          latestEntitlement = UagUserEntitlement.fromUserDoc(
+            uid: uid,
+            data: userData,
+          );
+          latestBlockedUserIds = _readStringList(
+            userData['blockedMatchRiderUids'],
+          ).toSet();
+          emit();
+        }, onError: controller.addError);
+
+        profileSub = _profiles
+            .where('visibleInSearch', isEqualTo: true)
+            .snapshots()
+            .listen((snapshot) {
+              latestProfileSnapshot = snapshot;
+              emit();
+            }, onError: controller.addError);
+
+        favouriteSub = _favouriteRiders
+            .where('ownerUid', isEqualTo: uid)
+            .snapshots()
+            .listen((snapshot) {
+              latestFavouriteRiders = {
+                for (final doc in snapshot.docs)
+                  ArcFavouriteRider.fromMap(doc.data()).riderUid:
+                      ArcFavouriteRider.fromMap(doc.data()),
+              };
+              emit();
+            }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await userSub?.cancel();
+        await profileSub?.cancel();
+        await favouriteSub?.cancel();
+      },
+    );
+
+    return controller.stream;
+  }
+
+  List<ArcMatchCandidate> _buildCandidates({
+    required String currentUid,
+    required ArcMatchRiderProfile currentProfile,
+    required QuerySnapshot<Map<String, dynamic>> snapshot,
+    required UagUserEntitlement entitlement,
+    required Set<String> blockedUserIds,
+    required Map<String, ArcFavouriteRider> favouriteRiders,
+  }) {
+    final matches = <ArcMatchCandidate>[];
+    final tier = _matchTierForEntitlement(entitlement);
+    final currentSignals = _objectiveSignalsFromProfile(currentProfile);
+    for (final doc in snapshot.docs) {
+      if (doc.id == currentUid) continue;
+      if (blockedUserIds.contains(doc.id)) continue;
+      final profile = ArcMatchRiderProfile.fromMap(doc.data(), doc.id);
+      final favourite = favouriteRiders[profile.uid];
+      final result = _compatibilityEngine.score(
+        me: currentProfile,
+        other: profile,
+        meSignals: currentSignals,
+        otherSignals: _objectiveSignalsFromProfile(
+          profile,
+          favourite: favourite,
+        ),
+        tier: tier,
+        blockedUserIds: blockedUserIds,
+      );
+      if (result.isExcluded) continue;
+      matches.add(ArcMatchCandidate(profile: profile, result: result));
+    }
+
+    matches.sort(compareCandidates);
+    return matches;
+  }
+
+  static int compareCandidates(ArcMatchCandidate a, ArcMatchCandidate b) {
+    final rankCompare = b.result.ranking.rankScore.compareTo(
+      a.result.ranking.rankScore,
+    );
+    if (rankCompare != 0) return rankCompare;
+    final tieCompare = a.result.ranking.tieBreaker.compareTo(
+      b.result.ranking.tieBreaker,
+    );
+    if (tieCompare != 0) return tieCompare;
+    return a.profile.uid.compareTo(b.profile.uid);
+  }
+
+  ArcMatchIntelligenceTier _matchTierForEntitlement(
+    UagUserEntitlement entitlement,
+  ) {
+    if (entitlement.hasAdminBypass) return ArcMatchIntelligenceTier.advanced;
+    switch (entitlement.tier) {
+      case UagSubscriptionTier.free:
+        return ArcMatchIntelligenceTier.basic;
+      case UagSubscriptionTier.essential:
+        return ArcMatchIntelligenceTier.enhanced;
+      case UagSubscriptionTier.premium:
+        return ArcMatchIntelligenceTier.advanced;
+    }
   }
 
   Stream<Set<String>> watchFavouriteRiderIds() {
@@ -426,11 +528,12 @@ class ArcMatchRiderRepository {
   }
 
   ArcMatchObjectiveSignals _objectiveSignalsFromProfile(
-    ArcMatchRiderProfile profile,
-  ) {
+    ArcMatchRiderProfile profile, {
+    ArcFavouriteRider? favourite,
+  }) {
     return ArcMatchObjectiveSignals(
       ownedBlueprintIds: profile.helperBlueprintIds,
-      availableBlueprintIds: const <String>[],
+      availableBlueprintIds: profile.helperBlueprintIds,
       neededBlueprintIds: profile.blueprintTargets,
       blueprintHuntIds: profile.raidPlannerTargetIds,
       questIds: profile.questFocusIds,
@@ -450,6 +553,12 @@ class ArcMatchRiderRepository {
       completedTrades: profile.completedTrades,
       noShows: profile.noShows,
       betrayalFlags: profile.betrayalFlags,
+      isFavouriteRider: favourite != null,
+      previousCompletedTrades: favourite?.completedTrades ?? 0,
+      previousSquadSessions: favourite?.squadSessions ?? 0,
+      previousBlueprintOffers: favourite?.previousBlueprintOffer == true
+          ? 1
+          : 0,
     );
   }
 

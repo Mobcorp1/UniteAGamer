@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_match_intelligence_copy.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_subscription_tier.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_user_entitlement.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -67,6 +72,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
   ];
 
   final ArcMatchRiderRepository _repository = ArcMatchRiderRepository();
+  final UagEntitlementService _entitlementService = UagEntitlementService();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _inviteNoteController = TextEditingController();
 
@@ -535,63 +541,184 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
-            'Sorted by private profile compatibility. Match cards only show the protected summary.',
+            'Sorted by private compatibility. Cards show only the protected match percentage, broad label and safe tags.',
             style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: AppTheme.spaceM),
-          StreamBuilder<List<ArcMatchCandidate>>(
-            stream: _repository.watchCandidates(profile),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Text(
-                  'Could not load feed: ${snapshot.error}',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 14,
-                    color: AppTheme.dangerRed,
+          StreamBuilder<UagUserEntitlement>(
+            stream: _entitlementService.watchMyEntitlement(),
+            builder: (context, entitlementSnapshot) {
+              final entitlement = entitlementSnapshot.data;
+              final tierCopy =
+                  entitlement?.matchIntelligence ??
+                  UagMatchIntelligenceCopy.free;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildMatchIntelligenceStatus(
+                    profile: profile,
+                    tierCopy: tierCopy,
+                    entitlement: entitlement,
                   ),
-                );
-              }
-              if (!snapshot.hasData) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppTheme.spaceL),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              final matches = snapshot.data!;
-              if (matches.isEmpty) {
-                return Text(
-                  'No raiders match yet. Save your profile and check back after more players opt in.',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                );
-              }
-
-              return StreamBuilder<Set<String>>(
-                stream: _repository.watchFavouriteRiderIds(),
-                builder: (context, favouriteSnapshot) {
-                  final favouriteIds =
-                      favouriteSnapshot.data ?? const <String>{};
-                  return Column(
-                    children: [
-                      for (final candidate in matches.take(10)) ...[
-                        _buildMatchCard(
-                          candidate,
-                          isFavourite: favouriteIds.contains(
-                            candidate.profile.uid,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                      ],
-                    ],
-                  );
-                },
+                  const SizedBox(height: AppTheme.spaceM),
+                  if (_profileCompleteness(profile) < 55) ...[
+                    _buildInsufficientProfileState(profile),
+                    const SizedBox(height: AppTheme.spaceM),
+                  ],
+                  _buildCandidateStream(),
+                ],
               );
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCandidateStream() {
+    final profile = _profile;
+    if (profile == null) return const SizedBox.shrink();
+    return StreamBuilder<List<ArcMatchCandidate>>(
+      stream: _repository.watchCandidates(profile),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text(
+            'Could not load feed: ${snapshot.error}',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 14,
+              color: AppTheme.dangerRed,
+            ),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(AppTheme.spaceL),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final matches = snapshot.data!;
+        if (matches.isEmpty) {
+          return _buildFeedEmptyState();
+        }
+
+        return StreamBuilder<Set<String>>(
+          stream: _repository.watchFavouriteRiderIds(),
+          builder: (context, favouriteSnapshot) {
+            final favouriteIds = favouriteSnapshot.data ?? const <String>{};
+            return Column(
+              children: [
+                for (final candidate in matches.take(10)) ...[
+                  _buildMatchCard(
+                    candidate,
+                    isFavourite: favouriteIds.contains(candidate.profile.uid),
+                  ),
+                  const SizedBox(height: 18),
+                ],
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMatchIntelligenceStatus({
+    required ArcMatchRiderProfile profile,
+    required UagMatchIntelligenceTierCopy tierCopy,
+    required UagUserEntitlement? entitlement,
+  }) {
+    final completeness = _profileCompleteness(profile);
+    final color = tierCopy.tier.isPaid ? AppTheme.neonPink : AppTheme.neonCyan;
+    final shouldUpgrade =
+        entitlement == null ||
+        entitlement.matchIntelligence.tier != UagSubscriptionTier.premium;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: color.withValues(alpha: 0.24),
+        radius: 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _buildStatusPill(tierCopy.label, color),
+              _buildStatusPill('Profile $completeness%', Colors.white70),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            tierCopy.description,
+            style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            'Private inventory and exact scoring weights stay hidden from other players.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          if (shouldUpgrade) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(MonetisationScreen.routeName),
+              icon: const Icon(Icons.auto_awesome_rounded),
+              label: const Text('Compare Match Intelligence'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsufficientProfileState(ArcMatchRiderProfile profile) {
+    final missing = <String>[
+      if (profile.platform.trim().isEmpty) 'platform',
+      if (profile.region.trim().isEmpty) 'region',
+      if (profile.archetypes.isEmpty) 'archetype',
+      if (profile.playstyles.isEmpty) 'playstyle',
+      if (profile.comms.isEmpty) 'comms',
+      if (profile.squadPreferences.isEmpty) 'squad preference',
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.warningAmber.withValues(alpha: 0.28),
+        radius: 16,
+      ),
+      child: Text(
+        missing.isEmpty
+            ? 'Save your Match Profile to improve confidence.'
+            : 'Add ${missing.take(3).join(', ')} to improve match confidence.',
+        style: AppTheme.bodyTextStyle(
+          fontSize: 13,
+          color: AppTheme.warningAmber,
+          isBold: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceL),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+        radius: 16,
+      ),
+      child: Text(
+        'No raiders match yet. Save your profile and check back after more players opt in.',
+        style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
       ),
     );
   }
@@ -611,6 +738,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
@@ -624,18 +752,24 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                           isBold: true,
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        candidate.publicExplanation,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                        ),
+                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: AppTheme.spaceM),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    _buildStatusPill(
-                      candidate.percentageLabel,
-                      AppTheme.neonPink,
-                    ),
+                    _buildScoreBadge(candidate.score),
                     IconButton(
                       tooltip: isFavourite
                           ? 'Remove Favourite Rider'
@@ -663,7 +797,10 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
               runSpacing: 8,
               children: [
                 _buildStatusPill(candidate.publicMatchLabel, AppTheme.neonCyan),
-                _buildStatusPill(candidate.publicExplanation, Colors.white70),
+                _buildStatusPill(candidate.tierLabel, AppTheme.neonPink),
+                _buildStatusPill(candidate.confidenceLabel, Colors.white70),
+                for (final tag in candidate.publicTags)
+                  _buildStatusPill(tag, AppTheme.warningAmber),
               ],
             ),
             const SizedBox(height: AppTheme.spaceM),
@@ -971,6 +1108,56 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
       ),
     );
+  }
+
+  Widget _buildScoreBadge(int score) {
+    return Container(
+      width: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: AppTheme.neonPink.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$score%',
+            style: AppTheme.neonTextStyle(
+              fontSize: 24,
+              color: AppTheme.neonPink,
+              isBold: true,
+            ),
+          ),
+          Text(
+            'Match',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 11,
+              color: Colors.white70,
+              isBold: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _profileCompleteness(ArcMatchRiderProfile profile) {
+    var score = 0;
+    if (profile.platform.trim().isNotEmpty) score += 14;
+    if (profile.region.trim().isNotEmpty) score += 14;
+    if (profile.archetypes.isNotEmpty) score += 14;
+    if (profile.playstyles.isNotEmpty) score += 14;
+    if (profile.goals.isNotEmpty) score += 12;
+    if (profile.comms.isNotEmpty) score += 12;
+    if (profile.squadPreferences.isNotEmpty) score += 12;
+    if (profile.sessionIntent != ArcPlayerSessionCatalog.defaultIntent) {
+      score += 4;
+    }
+    if (profile.currentPriority != ArcPlayerSessionCatalog.defaultPriority) {
+      score += 4;
+    }
+    return score.clamp(0, 100).toInt();
   }
 
   void _setProfile(ArcMatchRiderProfile value) {

@@ -18,11 +18,11 @@ void main() {
     const engine = ArcMatchCompatibilityEngine();
 
     test('maps percentage bands to protected labels', () {
-      expect(ArcMatchCompatibilityEngine.matchLabel(100), 'Perfect Match');
-      expect(ArcMatchCompatibilityEngine.matchLabel(92), 'Excellent Match');
-      expect(ArcMatchCompatibilityEngine.matchLabel(77), 'Strong Match');
-      expect(ArcMatchCompatibilityEngine.matchLabel(60), 'Good Match');
-      expect(ArcMatchCompatibilityEngine.matchLabel(40), 'Possible Match');
+      expect(ArcMatchCompatibilityEngine.matchLabel(100), 'Strong fit');
+      expect(ArcMatchCompatibilityEngine.matchLabel(92), 'Strong fit');
+      expect(ArcMatchCompatibilityEngine.matchLabel(77), 'Good fit');
+      expect(ArcMatchCompatibilityEngine.matchLabel(60), 'Compatible');
+      expect(ArcMatchCompatibilityEngine.matchLabel(40), 'Worth a look');
     });
 
     test('keeps public summary free of internal reasons', () {
@@ -30,7 +30,10 @@ void main() {
 
       expect(result.percentageLabel, endsWith('% Match'));
       expect(result.publicLabel, isNotEmpty);
-      expect(result.publicExplanation, 'Based on your profiles.');
+      expect(
+        result.publicExplanation,
+        'Your score is based on compatibility signals from your profile, availability and activity.',
+      );
       expect(result.publicExplanation, isNot(contains('Shared')));
       expect(result.publicExplanation, isNot(contains('Blueprint')));
     });
@@ -320,18 +323,26 @@ void main() {
       expect(map.containsKey('publicStockCount'), isFalse);
     });
 
-    test('match profile does not serialize private inventory counts', () {
+    test('public match profile deletes private inventory fields', () {
       final map = _profile('me')
           .copyWith(
             helperBlueprintIds: const <String>['bettina'],
             blueprintTargets: const <String>['tempest'],
           )
-          .toMap();
+          .toPublicMap();
 
       expect(map.containsKey('helperBlueprintIds'), isTrue);
-      expect(map.containsKey('ownedBlueprintIds'), isFalse);
-      expect(map.containsKey('duplicateBlueprintIds'), isFalse);
-      expect(map.containsKey('dupesOwned'), isFalse);
+      expect(
+        map.values.map((value) => value.toString()),
+        isNot(contains('bettina')),
+      );
+      expect(
+        map.values.map((value) => value.toString()),
+        isNot(contains('tempest')),
+      );
+      expect(map.containsKey('ownedBlueprintIds'), isTrue);
+      expect(map.containsKey('duplicateBlueprintIds'), isTrue);
+      expect(map.containsKey('dupesOwned'), isTrue);
     });
   });
 }

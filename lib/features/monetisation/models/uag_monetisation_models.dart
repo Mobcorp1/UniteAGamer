@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'uag_match_intelligence_copy.dart';
+
 enum UagPlanTier { free, essential, premium }
 
 extension UagPlanTierX on UagPlanTier {
@@ -112,6 +114,7 @@ class UagPlans {
     adsLabel: 'Passive ads + optional rewarded boosts',
     benefits: [
       'Full Blueprint Tracker access',
+      UagMatchIntelligenceCopy.freeDescription,
       'Core UAG Raider voice item advice',
       'Unlimited Intel contribution',
       '2 active listings and 5 daily offers',
@@ -135,6 +138,7 @@ class UagPlans {
     charityProfitPercent: 10,
     adsLabel: 'Reduced passive ads',
     benefits: [
+      UagMatchIntelligenceCopy.essentialDescription,
       '10 active trade listings and 25 daily offers',
       '50 weekly trade actions and 50 Match Raider searches',
       '40 weekly Intel hints and 12 premium Intel unlocks',
@@ -159,6 +163,7 @@ class UagPlans {
     charityProfitPercent: 20,
     adsLabel: 'No ads',
     benefits: [
+      UagMatchIntelligenceCopy.premiumDescription,
       'Unlimited listings, offers, trades and sessions',
       'Unlimited Match Raider searches',
       'Unlimited Intel hints and premium Intel unlocks',

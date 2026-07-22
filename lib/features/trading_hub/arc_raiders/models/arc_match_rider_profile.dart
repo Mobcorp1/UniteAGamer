@@ -215,6 +215,60 @@ class ArcMatchRiderProfile {
     };
   }
 
+  Map<String, dynamic> toPublicMap() {
+    return {
+      'uid': uid,
+      'uagId': uagId,
+      'displayName': displayName,
+      'region': region,
+      'platform': platform,
+      'serverPreference': serverPreference,
+      'crossplayEnabled': crossplayEnabled,
+      'archetypes': ArcPlayerArchetypeCatalog.normalizeLabels(archetypes),
+      'playstyles': playstyles,
+      'preferredMaps': preferredMaps,
+      'preferredModes': preferredModes,
+      'goals': goals,
+      'sessionIntent': ArcPlayerSessionCatalog.normalizeIntent(sessionIntent),
+      'currentPriority': ArcPlayerSessionCatalog.normalizePriority(
+        currentPriority,
+      ),
+      'availabilityDayKeys': availabilityDayKeys,
+      'timezone': timezone,
+      'comms': comms,
+      'squadPreferences': squadPreferences,
+      'lookingNow': lookingNow,
+      'visibleInSearch': visibleInSearch,
+      'notes': notes,
+      'updatedAt': FieldValue.serverTimestamp(),
+      for (final field in privateMatchFields) field: FieldValue.delete(),
+    };
+  }
+
+  static const privateMatchFields = <String>[
+    'blueprintTargets',
+    'helperBlueprintIds',
+    'questFocusIds',
+    'questChainIds',
+    'trialFocusIds',
+    'benchGoalIds',
+    'favouriteLoadoutNeedIds',
+    'raidPlannerTargetIds',
+    'tradePreferences',
+    'giftFriendly',
+    'tradeOnly',
+    'helperMentor',
+    'reputationScore',
+    'completedTrades',
+    'noShows',
+    'betrayalFlags',
+    'ownedBlueprintIds',
+    'availableBlueprintIds',
+    'neededBlueprintIds',
+    'duplicateBlueprintIds',
+    'dupesOwned',
+  ];
+
   factory ArcMatchRiderProfile.empty(String uid) {
     return ArcMatchRiderProfile(
       uid: uid,
