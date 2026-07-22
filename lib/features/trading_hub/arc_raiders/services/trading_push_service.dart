@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -10,6 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_repository.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/models/uag_session_schedule_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
@@ -49,7 +49,6 @@ class TradingPushService {
   static const String _installationIdKey = 'uag_notification_installation_id';
 
   bool _initialized = false;
-  final Map<String, Timer> _reminderTimers = <String, Timer>{};
   String? _lastUid;
   String? _lastDeviceId;
   String? _lastToken;
@@ -227,76 +226,29 @@ class TradingPushService {
     required DateTime scheduledAt,
     required String otherTraderName,
     DateTime? scheduledEndAt,
+    String listingId = '',
+    String offerId = '',
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      final reminderAt = scheduledAt.subtract(const Duration(minutes: 15));
-      await _notificationRepository.createSchedule(
-        UagScheduledNotification(
-          id: 'trade_${sessionId}_pre15',
-          targetUid: uid,
-          type: UagNotificationType.reminder,
-          title: 'Trade starting soon',
-          body:
-              'Your trade with $otherTraderName starts in 15 minutes. Open the session to confirm or rearrange.',
-          dueAt: reminderAt,
-          route: TradingTradeSessionsScreen.routeName,
-          entityId: sessionId,
-          status: 'queued',
-          metadata: const <String, String>{'kind': 'trade_pre_session'},
-        ),
-      );
+    if (uid == null) return;
 
-      final feedbackAt =
-          (scheduledEndAt ?? scheduledAt.add(const Duration(hours: 1))).add(
-            const Duration(minutes: 15),
-          );
-      await _notificationRepository.createSchedule(
-        UagScheduledNotification(
-          id: 'trade_${sessionId}_feedback15',
-          targetUid: uid,
-          type: UagNotificationType.postSessionFeedback,
-          title: 'How did the trade go?',
-          body:
-              'Rate the session so the trading network can learn from completed swaps.',
-          dueAt: feedbackAt,
-          route: TradingTradeSessionsScreen.routeName,
-          entityId: sessionId,
-          status: 'queued',
-          metadata: const <String, String>{'kind': 'trade_post_session'},
-        ),
-      );
+    final endAt = scheduledEndAt ?? scheduledAt.add(const Duration(hours: 1));
+    final plan = const UagSessionSchedulePlanner().notificationPlan(
+      sessionId: sessionId,
+      kind: UagSessionScheduleKind.trade,
+      targetUid: uid,
+      startAt: scheduledAt,
+      duration: endAt.difference(scheduledAt),
+      route: TradingTradeSessionsScreen.routeName,
+      deepLink: TradingTradeSessionsScreen.routeName,
+      otherParticipantName: otherTraderName,
+      listingId: listingId,
+      offerId: offerId,
+    );
+
+    for (final schedule in plan.schedules) {
+      await _notificationRepository.createSchedule(schedule);
     }
-
-    if (kIsWeb) return;
-
-    _reminderTimers[sessionId]?.cancel();
-
-    final reminderAt = scheduledAt.subtract(const Duration(minutes: 15));
-    final delay = reminderAt.difference(DateTime.now());
-    if (delay.isNegative) return;
-
-    _reminderTimers[sessionId] = Timer(delay, () async {
-      await _localNotifications.show(
-        sessionId.hashCode,
-        'Trade starting soon',
-        'Your trade with $otherTraderName starts in 15 minutes. Open the session to confirm or rearrange.',
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'trading_alerts',
-            'UAG Alerts',
-            channelDescription:
-                'Announcements, offers, sessions, rewards and match alerts.',
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-        ),
-        payload: jsonEncode(<String, dynamic>{
-          'type': 'tradeReminder',
-          'sessionId': sessionId,
-        }),
-      );
-    });
   }
 
   Future<UagNotificationRuntimeStatus> runtimeStatus() async {

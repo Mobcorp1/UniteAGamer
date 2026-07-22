@@ -2,6 +2,7 @@ import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/models/uag_session_schedule_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/embark_id_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_creation_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
@@ -31,33 +32,68 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
         .toList(growable: false);
   }
 
+  UagSessionCalendarPayload _calendarPayload(UagSession session) {
+    final kind = switch (session.type.trim().toLowerCase()) {
+      'matchmaking' ||
+      'match' ||
+      'match_rider' => UagSessionScheduleKind.matchmaking,
+      'raid' || 'planner' => UagSessionScheduleKind.raid,
+      _ => UagSessionScheduleKind.trade,
+    };
+
+    return const UagSessionSchedulePlanner().calendarPayload(
+      sessionId: session.id,
+      kind: kind,
+      startAt: session.scheduledAt,
+      route: SessionPlannerScreen.routeName,
+      deepLink: SessionPlannerScreen.routeName,
+      location: 'ARC Raiders',
+      notes: session.notes ?? '',
+      participants: [
+        UagSessionParticipant(
+          uid: session.participantOneUid,
+          displayName: session.participantOneDisplayName,
+          embarkId: session.participantOneEmbarkId,
+        ),
+        UagSessionParticipant(
+          uid: session.participantTwoUid,
+          displayName: session.participantTwoDisplayName,
+          embarkId: session.participantTwoEmbarkId,
+        ),
+      ],
+    );
+  }
+
   Future<void> _addToCalendar(UagSession session) async {
-    final description = StringBuffer()
-      ..writeln('Game: ARC Raiders')
-      ..writeln('Embark ID: ${session.participantTwoEmbarkId}')
-      ..writeln('Notes: ${session.notes ?? ''}');
+    final payload = _calendarPayload(session);
 
     final event = Event(
-      title:
-          'UAG ${session.type == 'trade' ? 'Trade' : 'Match'}: ${session.participantTwoDisplayName}',
-      description: description.toString().trim(),
-      startDate: session.scheduledAt,
-      endDate: session.scheduledAt.add(const Duration(hours: 1)),
+      title: payload.title,
+      description: payload.description,
+      location: payload.location,
+      startDate: payload.startAt,
+      endDate: payload.endAt,
     );
 
     await Add2Calendar.addEvent2Cal(event);
   }
 
   Future<void> _share(UagSession session) async {
+    final payload = _calendarPayload(session);
     final text = StringBuffer()
       ..writeln('UAG ${session.type} session for ARC Raiders')
-      ..writeln('When: ${session.scheduledAt}')
+      ..writeln('When: ${payload.startAt}')
       ..writeln('With: ${session.participantTwoDisplayName}')
       ..writeln('Embark ID: ${session.participantTwoEmbarkId}');
 
     if (session.notes?.isNotEmpty == true) {
       text.writeln('Notes: ${session.notes}');
     }
+    text
+      ..writeln()
+      ..writeln('Calendar link: ${payload.googleCalendarUrl}')
+      ..writeln()
+      ..writeln(payload.icsText);
 
     await Share.share(text.toString().trim());
   }

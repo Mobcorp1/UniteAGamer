@@ -2286,6 +2286,8 @@ class TradingRepository {
         sessionId: session.id,
         scheduledAt: selected,
         otherTraderName: otherTraderName,
+        listingId: session.listingId,
+        offerId: session.offerId,
       );
     } catch (_) {
       // Never break the booking flow if reminder scheduling fails.

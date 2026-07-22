@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onRequest } = require('firebase-functions/v2/https');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
 const Stripe = require('stripe');
 
@@ -669,6 +670,450 @@ async function createInAppNotifications({ data, userIds, broadcastId }) {
   }
   return created;
 }
+
+function timestampMillis(value) {
+  if (!value) return null;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+}
+
+function safeIdComponent(value) {
+  const normalized = normalizeString(value).toLowerCase();
+  return (normalized || 'unknown').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'unknown';
+}
+
+function sessionScheduleId({ kind, sessionId, targetUid, phase }) {
+  return ['uag', kind, safeIdComponent(sessionId), safeIdComponent(targetUid), phase].join('_');
+}
+
+function readSessionKind(value) {
+  const normalized = normalizeString(value).toLowerCase();
+  if (normalized === 'match' || normalized === 'match_rider' || normalized === 'matchmaking') return 'matchmaking';
+  if (normalized === 'raid' || normalized === 'planner') return 'raid';
+  return 'trade';
+}
+
+function sessionKindLabel(kind) {
+  switch (kind) {
+    case 'matchmaking':
+      return 'Matchmaking';
+    case 'raid':
+      return 'Raid';
+    case 'trade':
+    default:
+      return 'Trade';
+  }
+}
+
+function sessionIsTerminal(status) {
+  const normalized = normalizeString(status).toLowerCase();
+  return normalized === 'completed' ||
+    normalized === 'no_show' ||
+    normalized === 'noshow' ||
+    normalized === 'cancelled' ||
+    normalized === 'canceled' ||
+    normalized === 'betrayal';
+}
+
+function preSessionBody(kind, otherName) {
+  const withText = otherName ? ` with ${otherName}` : '';
+  if (kind === 'matchmaking') {
+    return `Your Match Rider squad-up${withText} starts in 15 minutes. Open the session to get ready.`;
+  }
+  if (kind === 'raid') {
+    return `Your planned ARC Raiders run${withText} starts in 15 minutes. Open the planner to get ready.`;
+  }
+  return `Your ARC Raiders trade${withText} starts in 15 minutes. Open the session to confirm or rearrange.`;
+}
+
+function feedbackTitle(kind) {
+  if (kind === 'matchmaking') return 'How did the squad-up go?';
+  if (kind === 'raid') return 'How did the raid go?';
+  return 'How did the trade go?';
+}
+
+function feedbackBody(kind) {
+  if (kind === 'matchmaking') {
+    return 'Share a quick rating, no-show or issue report so Match Rider learns from the session.';
+  }
+  if (kind === 'raid') {
+    return 'Log the result, no-show or support issue so your planned run history stays accurate.';
+  }
+  return 'Confirm completed, no-show or issues so UAG can protect session quality.';
+}
+
+function feedbackAction(kind) {
+  if (kind === 'matchmaking') return 'submit_match_feedback';
+  if (kind === 'raid') return 'submit_raid_feedback';
+  return 'confirm_trade_outcome';
+}
+
+function buildSessionSchedules({
+  sessionId,
+  kind,
+  targetUid,
+  startMillis,
+  route,
+  deepLink,
+  otherParticipantName = '',
+  listingId = '',
+  offerId = '',
+  location = 'ARC Raiders',
+}) {
+  const label = sessionKindLabel(kind);
+  const endMillis = startMillis + 60 * 60 * 1000;
+  const sharedMetadata = {
+    sessionId,
+    sessionKind: kind,
+    otherParticipantName: normalizeString(otherParticipantName),
+    locationPlatform: normalizeString(location),
+    startsAt: new Date(startMillis).toISOString(),
+    endsAt: new Date(endMillis).toISOString(),
+  };
+
+  return [
+    {
+      id: sessionScheduleId({ kind, sessionId, targetUid, phase: 'pre_session' }),
+      targetUid,
+      actorUid: 'system',
+      type: 'reminder',
+      title: `${label} starts in 15 minutes`,
+      body: preSessionBody(kind, normalizeString(otherParticipantName)),
+      dueAt: admin.firestore.Timestamp.fromMillis(startMillis - 15 * 60 * 1000),
+      route,
+      deepLink,
+      entityId: sessionId,
+      sessionId,
+      listingId,
+      offerId,
+      priority: 'high',
+      status: 'queued',
+      deliveryChannels: ['push', 'in_app'],
+      metadata: { ...sharedMetadata, phase: 'pre_session' },
+    },
+    {
+      id: sessionScheduleId({ kind, sessionId, targetUid, phase: 'post_session_feedback' }),
+      targetUid,
+      actorUid: 'system',
+      type: 'post_session_feedback',
+      title: feedbackTitle(kind),
+      body: feedbackBody(kind),
+      dueAt: admin.firestore.Timestamp.fromMillis(endMillis + 15 * 60 * 1000),
+      route,
+      deepLink,
+      entityId: sessionId,
+      sessionId,
+      listingId,
+      offerId,
+      priority: 'normal',
+      status: 'queued',
+      deliveryChannels: ['push', 'in_app'],
+      metadata: {
+        ...sharedMetadata,
+        phase: 'post_session_feedback',
+        recommendedAction: feedbackAction(kind),
+      },
+    },
+  ];
+}
+
+async function upsertSessionSchedules(scheduleInputs) {
+  if (!scheduleInputs.length) return;
+  const batch = db.batch();
+  scheduleInputs.forEach((schedule) => {
+    const ref = db.collection('uag_notification_schedules').doc(schedule.id);
+    batch.set(ref, {
+      ...schedule,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+  await batch.commit();
+}
+
+async function cancelSessionSchedules({ sessionId, kind, targetUids }) {
+  const uniqueTargets = Array.from(new Set(targetUids.map(normalizeString).filter(Boolean)));
+  if (!uniqueTargets.length) return;
+  const batch = db.batch();
+  uniqueTargets.forEach((targetUid) => {
+    ['pre_session', 'post_session_feedback'].forEach((phase) => {
+      const id = sessionScheduleId({ kind, sessionId, targetUid, phase });
+      batch.set(db.collection('uag_notification_schedules').doc(id), {
+        id,
+        targetUid,
+        sessionId,
+        status: 'cancelled',
+        cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+  });
+  await batch.commit();
+}
+
+function participantsForTradingSession(data) {
+  const traderOneUid = normalizeString(data.traderOneUid);
+  const traderTwoUid = normalizeString(data.traderTwoUid);
+  return [
+    {
+      uid: traderOneUid,
+      otherUid: traderTwoUid,
+      otherName: normalizeString(data.traderTwoName),
+    },
+    {
+      uid: traderTwoUid,
+      otherUid: traderOneUid,
+      otherName: normalizeString(data.traderOneName),
+    },
+  ].filter((participant) => participant.uid && participant.uid !== participant.otherUid);
+}
+
+function participantsForUagSession(data) {
+  const participantOneUid = normalizeString(data.participantOneUid);
+  const participantTwoUid = normalizeString(data.participantTwoUid);
+  return [
+    {
+      uid: participantOneUid,
+      otherUid: participantTwoUid,
+      otherName: normalizeString(data.participantTwoDisplayName),
+    },
+    {
+      uid: participantTwoUid,
+      otherUid: participantOneUid,
+      otherName: normalizeString(data.participantOneDisplayName),
+    },
+  ].filter((participant) => participant.uid && participant.uid !== participant.otherUid);
+}
+
+async function syncTradingSessionSchedules(event) {
+  const sessionId = event.params.sessionId;
+  const after = event.data?.after;
+  const beforeData = event.data?.before?.data() || {};
+  const afterData = after?.exists ? after.data() || {} : null;
+  const fallbackParticipants = participantsForTradingSession(afterData || beforeData);
+
+  if (!afterData) {
+    await cancelSessionSchedules({
+      sessionId,
+      kind: 'trade',
+      targetUids: fallbackParticipants.map((participant) => participant.uid),
+    });
+    return;
+  }
+
+  const startMillis =
+    timestampMillis(afterData.selectedBooking) ||
+    timestampMillis(afterData.scheduledAt);
+  const participants = participantsForTradingSession(afterData);
+  if (!startMillis || !participants.length || sessionIsTerminal(afterData.status)) {
+    await cancelSessionSchedules({
+      sessionId,
+      kind: 'trade',
+      targetUids: participants.length
+        ? participants.map((participant) => participant.uid)
+        : fallbackParticipants.map((participant) => participant.uid),
+    });
+    return;
+  }
+
+  const schedules = participants.flatMap((participant) => buildSessionSchedules({
+    sessionId,
+    kind: 'trade',
+    targetUid: participant.uid,
+    startMillis,
+    route: '/trading-hub/arc-raiders/sessions',
+    deepLink: '/trading-hub/arc-raiders/sessions',
+    otherParticipantName: participant.otherName,
+    listingId: normalizeString(afterData.listingId),
+    offerId: normalizeString(afterData.offerId),
+    location: 'ARC Raiders trade session',
+  }));
+  await upsertSessionSchedules(schedules);
+}
+
+async function syncUagSessionSchedules(event) {
+  const sessionId = event.params.sessionId;
+  const after = event.data?.after;
+  const beforeData = event.data?.before?.data() || {};
+  const afterData = after?.exists ? after.data() || {} : null;
+  const kind = readSessionKind((afterData || beforeData).type);
+  const fallbackParticipants = participantsForUagSession(afterData || beforeData);
+
+  if (!afterData) {
+    await cancelSessionSchedules({
+      sessionId,
+      kind,
+      targetUids: fallbackParticipants.map((participant) => participant.uid),
+    });
+    return;
+  }
+
+  const startMillis = timestampMillis(afterData.scheduledAt);
+  const participants = participantsForUagSession(afterData);
+  if (!startMillis || !participants.length || sessionIsTerminal(afterData.status)) {
+    await cancelSessionSchedules({
+      sessionId,
+      kind,
+      targetUids: participants.length
+        ? participants.map((participant) => participant.uid)
+        : fallbackParticipants.map((participant) => participant.uid),
+    });
+    return;
+  }
+
+  const route = '/trading-hub/arc-raiders/session-planner';
+  const schedules = participants.flatMap((participant) => buildSessionSchedules({
+    sessionId,
+    kind,
+    targetUid: participant.uid,
+    startMillis,
+    route,
+    deepLink: route,
+    otherParticipantName: participant.otherName,
+    listingId: normalizeString(afterData.tradeListingId),
+    offerId: '',
+    location: 'ARC Raiders',
+  }));
+  await upsertSessionSchedules(schedules);
+}
+
+async function schedulePreferencesAllow(targetUid, type) {
+  const snap = await db
+    .collection('users')
+    .doc(targetUid)
+    .collection('notification_preferences')
+    .doc('current')
+    .get();
+  return preferencesAllowType(snap.data() || {}, type);
+}
+
+async function processScheduleDoc(ref) {
+  const now = admin.firestore.Timestamp.now();
+  const schedule = await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    if (!snap.exists) return null;
+    const data = snap.data() || {};
+    if (normalizeString(data.status) !== 'queued') return null;
+    const dueMillis = timestampMillis(data.dueAt);
+    if (!dueMillis || dueMillis > now.toMillis()) return null;
+    transaction.set(ref, {
+      status: 'processing',
+      processingAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { ...data, id: normalizeString(data.id || snap.id) };
+  });
+
+  if (!schedule) return { processed: false, status: 'skipped' };
+
+  try {
+    const targetUid = normalizeString(schedule.targetUid);
+    const type = normalizeString(schedule.type);
+    if (!targetUid || !normalizeString(schedule.title) || !normalizeString(schedule.body)) {
+      throw new Error('Schedule is missing targetUid, title or body.');
+    }
+
+    if (!(await schedulePreferencesAllow(targetUid, type))) {
+      await ref.set({
+        status: 'skipped_preference',
+        skippedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return { processed: true, status: 'skipped_preference' };
+    }
+
+    const dueMillis = timestampMillis(schedule.dueAt) || Date.now();
+    const notificationId = `${schedule.id}_${dueMillis}`;
+    const notificationRef = db.collection('trading_notifications').doc(notificationId);
+    const existing = await notificationRef.get();
+    if (!existing.exists) {
+      await notificationRef.set({
+        id: notificationId,
+        scheduledNotificationId: schedule.id,
+        targetUid,
+        actorUid: normalizeString(schedule.actorUid) || 'system',
+        title: normalizeString(schedule.title),
+        body: normalizeString(schedule.body),
+        type,
+        listingId: normalizeString(schedule.listingId),
+        offerId: normalizeString(schedule.offerId),
+        sessionId: normalizeString(schedule.sessionId || schedule.entityId),
+        watchId: '',
+        queueId: '',
+        preparationId: '',
+        opportunityId: '',
+        route: normalizeString(schedule.route),
+        deepLink: normalizeString(schedule.deepLink || schedule.route),
+        imageUrl: normalizeString(schedule.imageUrl),
+        entityId: normalizeString(schedule.entityId),
+        audience: 'specific_user',
+        priority: normalizeString(schedule.priority || 'normal'),
+        metadata: schedule.metadata || {},
+        read: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    await ref.set({
+      status: 'sent',
+      notificationId,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { processed: true, status: existing.exists ? 'duplicate_skipped' : 'sent' };
+  } catch (error) {
+    console.error('Scheduled notification processing failed', error);
+    await ref.set({
+      status: 'failed',
+      error: error.message || String(error),
+      failedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { processed: true, status: 'failed' };
+  }
+}
+
+exports.syncTradingSessionNotificationSchedules = onDocumentWritten(
+  'trading_sessions/{sessionId}',
+  syncTradingSessionSchedules
+);
+
+exports.syncUagSessionNotificationSchedules = onDocumentWritten(
+  'uag_sessions/{sessionId}',
+  syncUagSessionSchedules
+);
+
+exports.processUagNotificationSchedules = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: 'Europe/London',
+  },
+  async () => {
+    const dueSnap = await db.collection('uag_notification_schedules')
+      .where('status', '==', 'queued')
+      .where('dueAt', '<=', admin.firestore.Timestamp.now())
+      .orderBy('dueAt', 'asc')
+      .limit(100)
+      .get();
+
+    const results = [];
+    for (const doc of dueSnap.docs) {
+      results.push(await processScheduleDoc(doc.ref));
+    }
+    console.log('Processed UAG notification schedules', {
+      due: dueSnap.size,
+      sent: results.filter((result) => result.status === 'sent').length,
+      skipped: results.filter((result) => result.status === 'skipped_preference').length,
+      failed: results.filter((result) => result.status === 'failed').length,
+    });
+  }
+);
 
 exports.sendTradingNotificationPush = onDocumentCreated(
   'trading_notifications/{notificationId}',

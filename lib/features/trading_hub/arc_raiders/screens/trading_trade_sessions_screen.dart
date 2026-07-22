@@ -1,9 +1,11 @@
+import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/models/uag_session_schedule_models.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -443,6 +445,52 @@ class _TradingTradeSessionsScreenState
 
   Future<void> _shareInvite(TradingSession session) async {
     await Share.share(_repository.buildSessionInviteText(session));
+  }
+
+  UagSessionCalendarPayload? _calendarPayload(TradingSession session) {
+    final scheduledAt = session.effectiveScheduledAt;
+    if (scheduledAt == null) return null;
+
+    return const UagSessionSchedulePlanner().calendarPayload(
+      sessionId: session.id,
+      kind: UagSessionScheduleKind.trade,
+      startAt: scheduledAt,
+      route: TradingTradeSessionsScreen.routeName,
+      deepLink: TradingTradeSessionsScreen.routeName,
+      location: 'ARC Raiders trade session',
+      notes:
+          'Protocol: ${session.protocolLabel}\nListing ID: ${session.listingId}',
+      participants: [
+        UagSessionParticipant(
+          uid: session.traderOneUid,
+          displayName: session.traderOneName,
+          embarkId: session.traderOneEmbarkId,
+        ),
+        UagSessionParticipant(
+          uid: session.traderTwoUid,
+          displayName: session.traderTwoName,
+          embarkId: session.traderTwoEmbarkId,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addToCalendar(TradingSession session) async {
+    final payload = _calendarPayload(session);
+    if (payload == null) {
+      _showSnack('Confirm a booking slot before adding it to your calendar.');
+      return;
+    }
+
+    await Add2Calendar.addEvent2Cal(
+      Event(
+        title: payload.title,
+        description: payload.description,
+        location: payload.location,
+        startDate: payload.startAt,
+        endDate: payload.endAt,
+      ),
+    );
   }
 
   Future<void> _openBookingComposer(TradingSession session) async {
@@ -1232,6 +1280,12 @@ class _TradingTradeSessionsScreenState
                   icon: Icons.ios_share_rounded,
                   onPressed: () => _shareInvite(session),
                 ),
+                if (confirmedBooking != null)
+                  _actionButton(
+                    label: 'Calendar',
+                    icon: Icons.event_rounded,
+                    onPressed: () => _addToCalendar(session),
+                  ),
                 _actionButton(
                   label: myEmbarkShared
                       ? 'Update Embark ID'

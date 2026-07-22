@@ -155,7 +155,7 @@ Created schedule examples:
 - 15 minutes before a scheduled trade
 - 15 minutes after the expected session end for feedback
 
-These are data foundations only. A reliable server scheduler still needs Firebase scheduled functions or Cloud Tasks before the schedule queue can deliver notifications without the app being open.
+PASS 272 promotes these foundations into reliable server-side scheduling with the `processUagNotificationSchedules` scheduled function. Live delivery still depends on deploying functions successfully and verifying Cloud Scheduler support for the Firebase project.
 
 ## Firestore Collections Added Or Changed
 
@@ -190,9 +190,4 @@ Do not invent this key. Generate or copy it from Firebase Console:
 Firebase Console > Project settings > Cloud Messaging > Web Push certificates
 ```
 
-Reliable scheduled delivery for trade reminders and post-session feedback still needs one of:
-
-- Firebase scheduled function polling `uag_notification_schedules`, or
-- Cloud Tasks queueing per schedule item.
-
-This pass does not enable paid/billing-dependent scheduling automatically.
+Reliable scheduled delivery for trade reminders and post-session feedback is implemented in PASS 272 by a Firebase scheduled function polling `uag_notification_schedules`. This does not enable paid or billing-dependent Firebase project settings automatically; verify the deployed scheduler job before relying on live reminders.

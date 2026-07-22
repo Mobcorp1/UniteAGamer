@@ -346,7 +346,15 @@ service cloud.firestore {
         request.resource.data.id == scheduleId &&
         request.resource.data.targetUid == request.auth.uid &&
         request.resource.data.status == 'queued';
-      allow update, delete: if isAdminOrDev();
+      allow update: if isAdminOrDev() || (
+        isSignedIn() &&
+        resource.data.targetUid == request.auth.uid &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.targetUid == resource.data.targetUid &&
+        (request.resource.data.status == 'queued' ||
+          request.resource.data.status == 'cancelled')
+      );
+      allow delete: if isAdminOrDev();
     }
 
     match /arc_match_rider_profiles/{profileUid} {

@@ -520,7 +520,19 @@ class UagScheduledNotification {
     required this.route,
     required this.entityId,
     required this.status,
+    this.actorUid = 'system',
+    this.deepLink = '',
+    this.sessionId = '',
+    this.listingId = '',
+    this.offerId = '',
+    this.priority = UagNotificationPriority.normal,
+    this.deliveryChannels = const <UagNotificationDeliveryChannel>[
+      UagNotificationDeliveryChannel.push,
+      UagNotificationDeliveryChannel.inApp,
+    ],
     this.createdAt,
+    this.updatedAt,
+    this.cancelledAt,
     this.metadata = const <String, String>{},
   });
 
@@ -533,7 +545,16 @@ class UagScheduledNotification {
   final String route;
   final String entityId;
   final String status;
+  final String actorUid;
+  final String deepLink;
+  final String sessionId;
+  final String listingId;
+  final String offerId;
+  final UagNotificationPriority priority;
+  final List<UagNotificationDeliveryChannel> deliveryChannels;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? cancelledAt;
   final Map<String, String> metadata;
 
   Map<String, dynamic> toMap() {
@@ -547,9 +568,77 @@ class UagScheduledNotification {
       'route': route,
       'entityId': entityId,
       'status': status,
+      'actorUid': actorUid,
+      'deepLink': deepLink,
+      'sessionId': sessionId,
+      'listingId': listingId,
+      'offerId': offerId,
+      'priority': priority.wireName,
+      'deliveryChannels': deliveryChannels
+          .map((channel) => channel.wireName)
+          .toList(growable: false),
       'metadata': metadata,
       if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
+      if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+      if (cancelledAt != null) 'cancelledAt': Timestamp.fromDate(cancelledAt!),
     };
+  }
+
+  UagScheduledNotification copyWith({
+    String? status,
+    DateTime? dueAt,
+    DateTime? updatedAt,
+    DateTime? cancelledAt,
+  }) {
+    return UagScheduledNotification(
+      id: id,
+      targetUid: targetUid,
+      type: type,
+      title: title,
+      body: body,
+      dueAt: dueAt ?? this.dueAt,
+      route: route,
+      entityId: entityId,
+      status: status ?? this.status,
+      actorUid: actorUid,
+      deepLink: deepLink,
+      sessionId: sessionId,
+      listingId: listingId,
+      offerId: offerId,
+      priority: priority,
+      deliveryChannels: deliveryChannels,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      metadata: metadata,
+    );
+  }
+
+  factory UagScheduledNotification.fromMap(Map<String, dynamic> map) {
+    return UagScheduledNotification(
+      id: _readString(map['id']),
+      targetUid: _readString(map['targetUid']),
+      type: UagNotificationType.fromWire(_readString(map['type'])),
+      title: _readString(map['title']),
+      body: _readString(map['body']),
+      dueAt: _readDate(map['dueAt']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+      route: _readString(map['route']),
+      entityId: _readString(map['entityId']),
+      status: _readString(map['status'], fallback: 'queued'),
+      actorUid: _readString(map['actorUid'], fallback: 'system'),
+      deepLink: _readString(map['deepLink']),
+      sessionId: _readString(map['sessionId']),
+      listingId: _readString(map['listingId']),
+      offerId: _readString(map['offerId']),
+      priority: UagNotificationPriority.fromWire(_readString(map['priority'])),
+      deliveryChannels: _readStringList(
+        map['deliveryChannels'],
+      ).map(UagNotificationDeliveryChannel.fromWire).toList(growable: false),
+      createdAt: _readDate(map['createdAt']),
+      updatedAt: _readDate(map['updatedAt']),
+      cancelledAt: _readDate(map['cancelledAt']),
+      metadata: _readStringMap(map['metadata']),
+    );
   }
 }
 
