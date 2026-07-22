@@ -30,6 +30,7 @@ The CSV companion contains one row per reachable route and columns for the requi
 
 - Command Centre: first screen answers the next action before scrolling; systems carousel remains compact.
 - ARC Raiders hub and My Hub: route compatibility remains intact and old My Hub stays accessible through the Tool Deck path.
+- Progress Trackers: grouped Scrappy, Bench, Quest, and Hunt Target cards route to the existing tracker screens without layout overflow.
 - Scrappy, Bench, and Quest trackers: canonical carousel is swipeable on mobile and arrowable on desktop.
 - Operations and Reward Vault: preview panels and equip/claim actions remain reachable.
 - Trading Hub flows: listing, offer, session, notification, and profile surfaces do not overflow on compact widths.

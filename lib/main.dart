@@ -22,6 +22,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
@@ -148,6 +149,18 @@ class UAGTradersHubApp extends StatelessWidget {
       case ArcCommandCentreScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcCommandCentreScreen(),
+          settings: settings,
+        );
+
+      case MyHubScreen.toolDeckRouteName:
+        return MaterialPageRoute(
+          builder: (_) => const MyHubScreen(),
+          settings: settings,
+        );
+
+      case ArcProgressTrackersScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcProgressTrackersScreen(),
           settings: settings,
         );
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_expedition_state_manager.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_season_reset_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -16,25 +17,26 @@ class ArcSeasonResetScreen extends StatefulWidget {
 }
 
 class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
-  final ArcSeasonResetRepository _repository = ArcSeasonResetRepository();
+  final ArcExpeditionStateManager _expeditionStateManager =
+      ArcExpeditionStateManager.instance;
   late final Future<_ResetScreenData> _future = _load();
   bool _confirmed = false;
   bool _applying = false;
   ArcSeasonResetApplyResult? _result;
 
   Future<_ResetScreenData> _load() async {
-    await _repository.ensureSeasonStateExists();
-    await _repository.reconcileInterruptedReset();
-    final state = await _repository.getSeasonState();
-    final preview = await _repository.createResetPreview();
-    return _ResetScreenData(state: state, preview: preview);
+    final snapshot = await _expeditionStateManager.refresh(
+      reason: ArcExpeditionRefreshReason.initialLoad,
+    );
+    final preview = await _expeditionStateManager.createResetPreview();
+    return _ResetScreenData(state: snapshot.seasonState, preview: preview);
   }
 
   Future<void> _apply(ArcSeasonResetPreview preview) async {
     if (_applying || !_confirmed) return;
     setState(() => _applying = true);
     try {
-      final result = await _repository.applyReset(preview);
+      final result = await _expeditionStateManager.beginReset(preview);
       if (!mounted) return;
       setState(() {
         _result = result;

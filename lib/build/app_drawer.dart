@@ -1,22 +1,15 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
-import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
-import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
-import 'package:uag_arc_raiders_hub/screens/build/admin_console_screen.dart';
-import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_navigation_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_drawer_nav_tile.dart';
 
@@ -31,8 +24,19 @@ class AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<AppDrawer>
     with SingleTickerProviderStateMixin {
+  final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
+  final TradingRepository _tradingRepository = TradingRepository();
+  final ArcMatchRiderRepository _matchRiderRepository =
+      ArcMatchRiderRepository();
+
   late final AnimationController _controller;
   late final Animation<Color?> _colorAnimation;
+  late final Stream<Map<String, ArcBlueprintState>> _blueprintStatesStream =
+      _blueprintRepository.watchMyBlueprintStates();
+  late final Stream<List<TradingNotification>> _notificationsStream =
+      _tradingRepository.watchNotifications();
+  late final Stream<List<ArcMatchRiderInvite>> _incomingInvitesStream =
+      _matchRiderRepository.watchIncomingInvites();
 
   @override
   void initState() {
@@ -54,14 +58,74 @@ class _AppDrawerState extends State<AppDrawer>
   }
 
   Future<void> _logout(BuildContext context) async {
-    final navigator = Navigator.of(context);
-    navigator.pop();
+    Navigator.of(context).pop();
     await FirebaseAuth.instance.signOut();
-    if (!mounted) return;
-    navigator.pushNamedAndRemoveUntil(
-      AuthLandingScreen.routeName,
-      (_) => false,
+    if (!context.mounted) return;
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AuthLandingScreen.routeName, (_) => false);
+  }
+
+  Future<void> _showComingSoon(BuildContext context, String title) async {
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.cardBackgroundDeep,
+          shape: AppTheme.tradingDialogShape(),
+          title: Text(
+            '$title Coming Soon',
+            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+          ),
+          content: Text(
+            'This feature is not available in the current beta build yet.',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 14,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'OK',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 14,
+                  color: AppTheme.neonCyan,
+                  isBold: true,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  Future<void> _openItem(
+    BuildContext context,
+    ArcCompactNavigationItem item,
+  ) async {
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    Navigator.of(context).pop();
+
+    if (item.accessFlag != null) {
+      final hasAccess = await FeatureAccess.hasAccess(item.accessFlag!);
+      if (!context.mounted) return;
+      if (!hasAccess) {
+        if (item.comingSoonWhenLocked) {
+          await _showComingSoon(context, item.label);
+        } else {
+          await FeatureAccess.showLockedDialog(context, title: item.label);
+        }
+        return;
+      }
+    }
+
+    if (!context.mounted || item.isSelected(currentRoute)) return;
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(item.routeName, (route) => route.isFirst);
   }
 
   Widget _buildDrawerHeader(Color dynamicColor) {
@@ -113,166 +177,56 @@ class _AppDrawerState extends State<AppDrawer>
     );
   }
 
-  List<_DrawerItem> _buildItems(bool isLoggedIn, bool adminMode) {
-    return <_DrawerItem>[
-      _DrawerItem(
-        'Home',
-        Icons.home_outlined,
-        ArcCommandCentreScreen.routeName,
-      ),
-      _DrawerItem(
-        'My Hub',
-        Icons.dashboard_customize_outlined,
-        ArcCommandCentreScreen.routeName,
-      ),
-      _DrawerItem(
-        'Intel Snapshot',
-        Icons.insights_rounded,
-        ArcMarketIntelligenceScreen.routeName,
-      ),
-      _DrawerItem(
-        'Tracking',
-        Icons.dashboard_customize_outlined,
-        ArcCommandCentreScreen.routeName,
-      ),
-      _DrawerItem(
-        'Raid Planner',
-        Icons.route_rounded,
-        RaidPlannerScreen.routeName,
-      ),
-      _DrawerItem(
-        'Scrappy Tracker',
-        Icons.widgets_rounded,
-        ScrappyGridScreen.routeName,
-        accessFlag: FeatureAccessFlag.scrappyTracker,
-      ),
-      _DrawerItem(
-        'Trader Hub',
-        Icons.storefront_rounded,
-        TraderHubScreen.routeName,
-        accessFlag: FeatureAccessFlag.traderHub,
-      ),
-      _DrawerItem(
-        'Match A Raider',
-        Icons.groups_2_outlined,
-        ArcMatchRiderScreen.routeName,
-        accessFlag: FeatureAccessFlag.matchRaider,
-        comingSoonWhenLocked: true,
-      ),
-      _DrawerItem(
-        'Play Like a Pro',
-        Icons.psychology_outlined,
-        PlayLikeAProScreen.routeName,
-        accessFlag: FeatureAccessFlag.playLockerPro,
-        comingSoonWhenLocked: true,
-      ),
-      if (isLoggedIn)
-        _DrawerItem(
-          'Your Hub Profile',
-          Icons.person_pin_circle_outlined,
-          TradingProfileScreen.routeName,
-          accessFlag: FeatureAccessFlag.traderHub,
-        ),
-      if (isLoggedIn)
-        _DrawerItem(
-          'Plans & Referrals',
-          Icons.workspace_premium_outlined,
-          MonetisationScreen.routeName,
-        ),
-      if (isLoggedIn)
-        _DrawerItem(
-          'Settings',
-          Icons.settings_outlined,
-          ProfileSettingsScreen.routeName,
-        ),
-      if (adminMode)
-        _DrawerItem(
-          'Admin Console',
-          Icons.admin_panel_settings_outlined,
-          AdminConsoleScreen.routeName,
-        ),
-      if (isLoggedIn)
-        _DrawerItem(
-          'Beta Feedback',
-          Icons.rate_review_outlined,
-          FeedbackScreen.routeName,
-        ),
-      _DrawerItem(
-        'Help Centre',
-        Icons.help_outline_rounded,
-        ArcHelpCentreScreen.routeName,
-      ),
-    ];
-  }
+  Widget _buildNavigationList(String? currentRoute) {
+    return StreamBuilder<Map<String, ArcBlueprintState>>(
+      stream: _blueprintStatesStream,
+      builder: (context, blueprintSnapshot) {
+        return StreamBuilder<List<TradingNotification>>(
+          stream: _notificationsStream,
+          builder: (context, notificationSnapshot) {
+            return StreamBuilder<List<ArcMatchRiderInvite>>(
+              stream: _incomingInvitesStream,
+              builder: (context, inviteSnapshot) {
+                final counts = ArcDrawerBadgeEngine.fromLiveData(
+                  blueprintStates:
+                      blueprintSnapshot.data?.values ??
+                      const <ArcBlueprintState>[],
+                  notifications:
+                      notificationSnapshot.data ??
+                      const <TradingNotification>[],
+                  incomingInvites:
+                      inviteSnapshot.data ?? const <ArcMatchRiderInvite>[],
+                );
 
-  Future<void> _showComingSoon(BuildContext context, String title) async {
-    await showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: AppTheme.tradingDialogShape(),
-          title: Text(
-            '$title Coming Soon',
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
-          ),
-          content: Text(
-            'This feature is not available in the current beta build yet.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 14,
-              color: AppTheme.tradingMutedText,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                'OK',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 14,
-                  color: AppTheme.neonCyan,
-                  isBold: true,
-                ),
-              ),
-            ),
-          ],
+                return ListView(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.paddingOf(context).bottom + 12,
+                  ),
+                  children: [
+                    for (final group in ArcCompactNavigationCatalog.groups) ...[
+                      _DrawerGroupLabel(label: group.label),
+                      for (final item in group.items)
+                        UagDrawerNavTile(
+                          title: item.label,
+                          icon: item.icon,
+                          selected: item.isSelected(currentRoute),
+                          badgeCount: counts.countFor(item.badgeTarget),
+                          onTap: () => _openItem(context, item),
+                        ),
+                      const SizedBox(height: 6),
+                    ],
+                  ],
+                );
+              },
+            );
+          },
         );
       },
     );
   }
 
-  Future<void> _openRoute(
-    BuildContext context,
-    String routeName, {
-    String? accessFlag,
-    String? title,
-    bool comingSoonWhenLocked = false,
-  }) async {
-    final navigator = Navigator.of(context);
-    navigator.pop();
-    if (accessFlag != null) {
-      final hasAccess = await FeatureAccess.hasAccess(accessFlag);
-      if (!context.mounted) return;
-      if (!hasAccess) {
-        if (comingSoonWhenLocked) {
-          await _showComingSoon(context, title ?? 'Coming Soon');
-        } else {
-          await FeatureAccess.showLockedDialog(
-            context,
-            title: title ?? 'Coming Soon',
-          );
-        }
-        return;
-      }
-    }
-    final currentRoute = ModalRoute.of(context)?.settings.name;
-    if (currentRoute == routeName) return;
-    navigator.pushNamedAndRemoveUntil(routeName, (route) => route.isFirst);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final dynamicColor = _colorAnimation.value ?? Colors.white;
     final user = FirebaseAuth.instance.currentUser;
     final isLoggedIn = user != null;
     final currentRoute = ModalRoute.of(context)?.settings.name;
@@ -280,6 +234,7 @@ class _AppDrawerState extends State<AppDrawer>
     return AnimatedBuilder(
       animation: _colorAnimation,
       builder: (context, child) {
+        final dynamicColor = _colorAnimation.value ?? Colors.white;
         return Align(
           alignment: Alignment.centerLeft,
           child: Container(
@@ -303,47 +258,7 @@ class _AppDrawerState extends State<AppDrawer>
                     color: dynamicColor.withValues(alpha: 0.7),
                     thickness: 1.5,
                   ),
-                  Expanded(
-                    child:
-                        FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                          future: user == null
-                              ? null
-                              : FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(user.uid)
-                                    .get(),
-                          builder: (context, snapshot) {
-                            final userData = snapshot.data?.data() ?? {};
-                            final adminMode =
-                                userData['isAdmin'] == true ||
-                                userData['isDev'] == true;
-                            final items = _buildItems(isLoggedIn, adminMode);
-                            return ListView.builder(
-                              padding: EdgeInsets.only(
-                                bottom:
-                                    MediaQuery.of(context).padding.bottom + 12,
-                              ),
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                final item = items[index];
-                                return UagDrawerNavTile(
-                                  title: item.title,
-                                  icon: item.icon,
-                                  selected: currentRoute == item.routeName,
-                                  onTap: () => _openRoute(
-                                    context,
-                                    item.routeName,
-                                    accessFlag: item.accessFlag,
-                                    title: item.title,
-                                    comingSoonWhenLocked:
-                                        item.comingSoonWhenLocked,
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                  ),
+                  Expanded(child: _buildNavigationList(currentRoute)),
                   if (isLoggedIn)
                     SafeArea(
                       top: false,
@@ -371,18 +286,23 @@ class _AppDrawerState extends State<AppDrawer>
   }
 }
 
-class _DrawerItem {
-  const _DrawerItem(
-    this.title,
-    this.icon,
-    this.routeName, {
-    this.accessFlag,
-    this.comingSoonWhenLocked = false,
-  });
+class _DrawerGroupLabel extends StatelessWidget {
+  const _DrawerGroupLabel({required this.label});
 
-  final String title;
-  final IconData icon;
-  final String routeName;
-  final String? accessFlag;
-  final bool comingSoonWhenLocked;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      child: Text(
+        label,
+        style: AppTheme.bodyTextStyle(
+          fontSize: 10,
+          color: AppTheme.neonCyan.withValues(alpha: 0.72),
+          isBold: true,
+        ),
+      ),
+    );
+  }
 }

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_expedition_state_manager.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_watch.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
@@ -60,8 +63,12 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   final ArcNomadicTraderRepository _nomadicTraderRepository =
       const ArcNomadicTraderRepository();
   final TradingRepository _tradingRepository = TradingRepository();
+  final ArcExpeditionStateManager _expeditionStateManager =
+      ArcExpeditionStateManager.instance;
   final ArcTradeIntelligenceEngine _tradeIntelligenceEngine =
       const ArcTradeIntelligenceEngine();
+  late final Stream<ArcExpeditionStateSnapshot> _expeditionStateStream =
+      _expeditionStateManager.watchState();
   late final Stream<Map<String, ArcBlueprintState>> _blueprintStatesStream =
       _blueprintRepository.watchMyBlueprintStates();
   late final Stream<List<ArcSavedLoadout>> _loadoutsStream = _loadoutRepository
@@ -111,6 +118,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       const <ArcTradeListingQueueItem>[];
   ArcProfileCompletionResult _cachedProfileCompletion =
       ArcProfileCompletionResult.completeResult;
+  ArcExpeditionStateSnapshot _cachedExpeditionState =
+      ArcExpeditionStateSnapshot.fromSeasonState(ArcSeasonState.initial());
   static ArcCommandCentreState? _lastCommandState;
 
   @override
@@ -170,9 +179,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           MaterialPageRoute(builder: (_) => const FavouriteLoadoutScreen()),
         );
       case ArcCommandActionIntent.toolDeck:
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const MyHubScreen()));
+        Navigator.of(context).pushNamed(MyHubScreen.toolDeckRouteName);
       case ArcCommandActionIntent.smartTrade:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const SmartTradeAssistScreen()),
@@ -212,69 +219,80 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   }
 
   Widget _buildLiveCommandCentre() {
-    return StreamBuilder<ArcProfileCompletionResult>(
-      stream: _profileCompletionStream,
-      builder: (context, profileSnapshot) {
-        if (profileSnapshot.hasData) {
-          _cachedProfileCompletion = profileSnapshot.data!;
+    return StreamBuilder<ArcExpeditionStateSnapshot>(
+      stream: _expeditionStateStream,
+      builder: (context, expeditionSnapshot) {
+        if (expeditionSnapshot.hasData) {
+          _cachedExpeditionState = expeditionSnapshot.data!;
         }
-        final profileCompletion = _cachedProfileCompletion;
-        return StreamBuilder<Map<String, ArcBlueprintState>>(
-          stream: _blueprintStatesStream,
-          builder: (context, blueprintSnapshot) {
-            if (blueprintSnapshot.hasData) {
-              _cachedBlueprintStates = blueprintSnapshot.data!;
+        final expeditionState = _cachedExpeditionState;
+        return StreamBuilder<ArcProfileCompletionResult>(
+          stream: _profileCompletionStream,
+          builder: (context, profileSnapshot) {
+            if (profileSnapshot.hasData) {
+              _cachedProfileCompletion = profileSnapshot.data!;
             }
-            final blueprintStates = _cachedBlueprintStates;
-            return StreamBuilder<List<ArcSavedLoadout>>(
-              stream: _loadoutsStream,
-              builder: (context, loadoutSnapshot) {
-                if (loadoutSnapshot.hasData) {
-                  _cachedLoadouts = loadoutSnapshot.data!;
+            final profileCompletion = _cachedProfileCompletion;
+            return StreamBuilder<Map<String, ArcBlueprintState>>(
+              stream: _blueprintStatesStream,
+              builder: (context, blueprintSnapshot) {
+                if (blueprintSnapshot.hasData) {
+                  _cachedBlueprintStates = blueprintSnapshot.data!;
                 }
-                final loadouts = _cachedLoadouts;
-                return StreamBuilder<ArcOperationsUserState>(
-                  stream: _operationsStateStream,
-                  builder: (context, operationsSnapshot) {
-                    if (operationsSnapshot.hasData) {
-                      _cachedOperationsState = operationsSnapshot.data!;
+                final blueprintStates = _cachedBlueprintStates;
+                return StreamBuilder<List<ArcSavedLoadout>>(
+                  stream: _loadoutsStream,
+                  builder: (context, loadoutSnapshot) {
+                    if (loadoutSnapshot.hasData) {
+                      _cachedLoadouts = loadoutSnapshot.data!;
                     }
-                    final operationsState = _cachedOperationsState;
-                    return StreamBuilder<Map<String, ArcScrappyState>>(
-                      stream: _scrappyStatesStream,
-                      builder: (context, scrappySnapshot) {
-                        if (scrappySnapshot.hasData) {
-                          _cachedScrappyStates = scrappySnapshot.data!;
+                    final loadouts = _cachedLoadouts;
+                    return StreamBuilder<ArcOperationsUserState>(
+                      stream: _operationsStateStream,
+                      builder: (context, operationsSnapshot) {
+                        if (operationsSnapshot.hasData) {
+                          _cachedOperationsState = operationsSnapshot.data!;
                         }
-                        final scrappyStates = _cachedScrappyStates;
-                        return StreamBuilder<ArcProgressionRecords>(
-                          stream: _progressionRecordsStream,
-                          builder: (context, progressionSnapshot) {
-                            if (progressionSnapshot.hasData) {
-                              _cachedProgressionRecords =
-                                  progressionSnapshot.data!;
+                        final operationsState = _cachedOperationsState;
+                        return StreamBuilder<Map<String, ArcScrappyState>>(
+                          stream: _scrappyStatesStream,
+                          builder: (context, scrappySnapshot) {
+                            if (scrappySnapshot.hasData) {
+                              _cachedScrappyStates = scrappySnapshot.data!;
                             }
-                            final progressionRecords =
-                                _cachedProgressionRecords;
-                            return FutureBuilder<
-                              ArcNomadicTraderTrackerSnapshot
-                            >(
-                              future: _nomadicTraderSnapshotFuture,
-                              builder: (context, traderSnapshot) {
-                                if (traderSnapshot.hasData) {
-                                  _cachedNomadicTraderTracker =
-                                      traderSnapshot.data!;
+                            final scrappyStates = _cachedScrappyStates;
+                            return StreamBuilder<ArcProgressionRecords>(
+                              stream: _progressionRecordsStream,
+                              builder: (context, progressionSnapshot) {
+                                if (progressionSnapshot.hasData) {
+                                  _cachedProgressionRecords =
+                                      progressionSnapshot.data!;
                                 }
-                                final nomadicTraderTracker =
-                                    _cachedNomadicTraderTracker;
-                                return _buildWithTradeActivity(
-                                  blueprintStates: blueprintStates,
-                                  loadouts: loadouts,
-                                  operationsState: operationsState,
-                                  scrappyStates: scrappyStates,
-                                  progressionRecords: progressionRecords,
-                                  nomadicTraderTracker: nomadicTraderTracker,
-                                  profileCompletion: profileCompletion,
+                                final progressionRecords =
+                                    _cachedProgressionRecords;
+                                return FutureBuilder<
+                                  ArcNomadicTraderTrackerSnapshot
+                                >(
+                                  future: _nomadicTraderSnapshotFuture,
+                                  builder: (context, traderSnapshot) {
+                                    if (traderSnapshot.hasData) {
+                                      _cachedNomadicTraderTracker =
+                                          traderSnapshot.data!;
+                                    }
+                                    final nomadicTraderTracker =
+                                        _cachedNomadicTraderTracker;
+                                    return _buildWithTradeActivity(
+                                      expeditionState: expeditionState,
+                                      blueprintStates: blueprintStates,
+                                      loadouts: loadouts,
+                                      operationsState: operationsState,
+                                      scrappyStates: scrappyStates,
+                                      progressionRecords: progressionRecords,
+                                      nomadicTraderTracker:
+                                          nomadicTraderTracker,
+                                      profileCompletion: profileCompletion,
+                                    );
+                                  },
                                 );
                               },
                             );
@@ -293,6 +311,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   }
 
   Widget _buildWithTradeActivity({
+    required ArcExpeditionStateSnapshot expeditionState,
     required Map<String, ArcBlueprintState> blueprintStates,
     required List<ArcSavedLoadout> loadouts,
     required ArcOperationsUserState operationsState,
@@ -376,6 +395,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                                     );
                                 _lastCommandState = commandState;
                                 return ArcCommandCentreContent(
+                                  expeditionState: expeditionState,
                                   commandState:
                                       _lastCommandState ?? commandState,
                                   checklistState: _checklistState,

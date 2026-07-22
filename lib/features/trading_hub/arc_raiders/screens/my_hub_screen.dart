@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/fav
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/referral_tools_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
@@ -25,6 +26,7 @@ import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 
 class MyHubScreen extends StatefulWidget {
   static const routeName = '/my-hub';
+  static const toolDeckRouteName = '/trading-hub/arc-raiders/my-hub';
 
   const MyHubScreen({super.key});
 
@@ -130,6 +132,16 @@ class _MyHubScreenState extends State<MyHubScreen> {
       art: _ArcHubArtKind.smart,
       assetName: 'arc_hub_profile_reputation.webp',
       builder: (_) => const TradingProfileScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Play Like a Pro',
+      subtitle:
+          'Open Player Locker Pro coaching, setups and improvement tools.',
+      icon: Icons.psychology_outlined,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_profile_reputation.webp',
+      builder: (_) => const PlayLikeAProScreen(),
     ),
     _ArcHubFeature(
       title: 'Referral Tools',
@@ -243,6 +255,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       case 'Voice Assistant':
         return FeatureAccessFlag.voiceAssistant;
       case 'Play Like A Pro':
+      case 'Play Like a Pro':
       case 'Play Locker Pro':
         return FeatureAccessFlag.playLockerPro;
       default:

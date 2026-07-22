@@ -10,7 +10,9 @@ route,screen_name,android_portrait,android_landscape,tablet,desktop_web,checks,n
 /trading-hub,Trading hub router,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,route_redirect_safe,Router only.
 /trading-hub/arc-raiders,ARC Raiders hub,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,hub_carousel_bounded,Controlled carousel exception.
 /my-hub,My Hub command alias,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,command_centre_visible_tool_deck_accessible,Alias compatibility.
+/trading-hub/arc-raiders/my-hub,My Hub Tool Deck,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,tool_deck_carousel_bounded,Controlled carousel exception opened from compact Profile drawer group.
 /trading-hub/arc-raiders/command-centre,Command Centre,pending_manual_qa,pending_manual_qa,pending_manual_qa,pass,first_screen_next_action_and_system_carousel,PASS 262C automated desktop-web regression repaired flat systems carousel viewport sizing; live route walkthrough remains manual.
+/trading-hub/arc-raiders/progress-trackers,Progress Trackers,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,grouped_tracker_cards_and_routes_safe,Compact grouped route for Scrappy Bench Quest and Hunt Targets.
 /trading-hub/arc-raiders/blueprints,Blueprint Grid,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,protected_grid_shell_no_regression,Protected internals.
 /favourite-loadout,Favourite Loadout,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,loadout_slot_grid_no_overflow,Loadout logic unchanged.
 /my-intel,My Intel,pending_manual_qa,pending_manual_qa,pending_manual_qa,pending_manual_qa,intel_cards_bounded,Intel state unchanged.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
@@ -10,12 +11,14 @@ import 'package:uag_arc_raiders_hub/widgets/uag_page_carousel.dart';
 class ArcCommandCentreContent extends StatefulWidget {
   const ArcCommandCentreContent({
     super.key,
+    required this.expeditionState,
     required this.commandState,
     required this.checklistState,
     required this.onAction,
     required this.onChecklistChanged,
   });
 
+  final ArcExpeditionStateSnapshot expeditionState;
   final ArcCommandCentreState commandState;
   final Map<String, bool> checklistState;
   final ValueChanged<ArcCommandAction> onAction;
@@ -113,6 +116,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   }
 
   Widget _seasonResetEntry() {
+    final expeditionState = widget.expeditionState;
+    final resetSubtitle = expeditionState.resetInProgress
+        ? '${expeditionState.currentSeasonId} reset is in progress. Review state before continuing.'
+        : '${expeditionState.currentSeasonId} - ${expeditionState.statusLabel}. Preview what resets, what persists, and archive only after confirmation.';
+
     return _tapSurface(
       action: const ArcCommandAction(
         label: 'Start Expedition Reset',
@@ -154,7 +162,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Preview what resets, what persists, and archive the current season only after confirmation.',
+                    resetSubtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
