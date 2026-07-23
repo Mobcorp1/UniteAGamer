@@ -30,6 +30,8 @@ class ArcBlueprintDropReport {
     this.mapEventLabel,
     this.acquisitionSource = ArcBlueprintAcquisitionSource.lootDrop,
     this.foundAt,
+    this.localTimeLabel,
+    this.timezoneOffsetMinutes,
     this.lastConfirmedAt,
     this.notes = '',
     this.signature = '',
@@ -56,6 +58,8 @@ class ArcBlueprintDropReport {
   final ArcEntryTime entryTime;
   final ArcTimeOfDay timeOfDay;
   final DateTime? foundAt;
+  final String? localTimeLabel;
+  final int? timezoneOffsetMinutes;
   final DateTime? lastConfirmedAt;
   final String notes;
   final DateTime? createdAt;
@@ -191,6 +195,8 @@ class ArcBlueprintDropReport {
     ArcEntryTime? entryTime,
     ArcTimeOfDay? timeOfDay,
     DateTime? foundAt,
+    String? localTimeLabel,
+    int? timezoneOffsetMinutes,
     DateTime? lastConfirmedAt,
     String? notes,
     DateTime? createdAt,
@@ -221,6 +227,9 @@ class ArcBlueprintDropReport {
       entryTime: entryTime ?? this.entryTime,
       timeOfDay: timeOfDay ?? this.timeOfDay,
       foundAt: foundAt ?? this.foundAt,
+      localTimeLabel: localTimeLabel ?? this.localTimeLabel,
+      timezoneOffsetMinutes:
+          timezoneOffsetMinutes ?? this.timezoneOffsetMinutes,
       lastConfirmedAt: lastConfirmedAt ?? this.lastConfirmedAt,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
@@ -257,6 +266,8 @@ class ArcBlueprintDropReport {
       'entryTime': entryTime.name,
       'timeOfDay': timeOfDay.name,
       'foundAt': foundAt == null ? null : Timestamp.fromDate(foundAt!),
+      'localTimeLabel': localTimeLabel,
+      'timezoneOffsetMinutes': timezoneOffsetMinutes,
       'lastConfirmedAt': lastConfirmedAt == null
           ? null
           : Timestamp.fromDate(lastConfirmedAt!),
@@ -290,14 +301,24 @@ class ArcBlueprintDropReport {
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
 
+    final mapName = (map['mapName'] as String?)?.trim() ?? 'Unknown Map';
+    final rawPoiName = sourceType == ArcDropSourceType.poi
+        ? (poiName ?? legacyLocation)
+        : poiName;
+    final canonicalPoiName = ArcPoiDataStore.canonicalPoiNameForMap(
+      mapName,
+      rawPoiName,
+    );
+
     final report = ArcBlueprintDropReport(
       id: (map['id'] as String?) ?? '',
       blueprintId: (map['blueprintId'] as String?) ?? '',
       userId: (map['userId'] as String?) ?? '',
-      mapName: (map['mapName'] as String?)?.trim() ?? 'Unknown Map',
+      mapName: mapName,
       sourceType: sourceType,
       poiId: (map['poiId'] as String?)?.trim(),
       poiName:
+          canonicalPoiName ??
           poiName ??
           (sourceType == ArcDropSourceType.poi ? legacyLocation : null),
       enemySourceId: (map['enemySourceId'] as String?)?.trim(),
@@ -319,8 +340,7 @@ class ArcBlueprintDropReport {
               ? legacyConditionLabel
               : null),
       acquisitionSource:
-          _enumByName(
-            ArcBlueprintAcquisitionSource.values,
+          ArcBlueprintAcquisitionSourceX.fromStorage(
             map['acquisitionSource'] as String?,
           ) ??
           ArcBlueprintAcquisitionSource.lootDrop,
@@ -328,7 +348,7 @@ class ArcBlueprintDropReport {
           _enumByName(ArcRaidMode.values, map['mode'] as String?) ??
           ArcRaidMode.dayRaid,
       raidType:
-          _enumByName(ArcRaidType.values, map['raidType'] as String?) ??
+          ArcRaidTypeX.fromStorage(map['raidType'] as String?) ??
           ArcRaidType.fullRaid,
       entryTime:
           _enumByName(ArcEntryTime.values, map['entryTime'] as String?) ??
@@ -337,6 +357,8 @@ class ArcBlueprintDropReport {
           _enumByName(ArcTimeOfDay.values, map['timeOfDay'] as String?) ??
           ArcTimeOfDay.unknown,
       foundAt: (map['foundAt'] as Timestamp?)?.toDate(),
+      localTimeLabel: (map['localTimeLabel'] as String?)?.trim(),
+      timezoneOffsetMinutes: (map['timezoneOffsetMinutes'] as num?)?.toInt(),
       lastConfirmedAt: (map['lastConfirmedAt'] as Timestamp?)?.toDate(),
       notes: (map['notes'] as String?)?.trim() ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
@@ -397,7 +419,13 @@ enum ArcTimeOfDay {
   unknown,
 }
 
-enum ArcBlueprintAcquisitionSource { lootDrop, questReward, trialReward, trade }
+enum ArcBlueprintAcquisitionSource {
+  lootDrop,
+  questReward,
+  trade,
+  gifted,
+  trialReward,
+}
 
 extension ArcRaidModeX on ArcRaidMode {
   String get label {
@@ -414,12 +442,36 @@ extension ArcRaidTypeX on ArcRaidType {
   String get label {
     switch (this) {
       case ArcRaidType.fullRaid:
-        return 'Full Raid';
+        return 'Full';
       case ArcRaidType.midRaid:
-        return 'Mid Raid';
+        return 'Mid';
       case ArcRaidType.lateRaid:
-        return 'Late Raid';
+        return 'Late';
     }
+  }
+
+  static ArcRaidType? fromStorage(String? rawName) {
+    if (rawName == null || rawName.trim().isEmpty) return null;
+    final normalized = rawName.trim().toLowerCase().replaceAll(
+      RegExp(r'[\s_-]+'),
+      '',
+    );
+
+    switch (normalized) {
+      case 'full':
+      case 'fullraid':
+      case 'early':
+      case 'earlyraid':
+        return ArcRaidType.fullRaid;
+      case 'mid':
+      case 'midraid':
+        return ArcRaidType.midRaid;
+      case 'late':
+      case 'lateraid':
+        return ArcRaidType.lateRaid;
+    }
+
+    return null;
   }
 }
 
@@ -463,13 +515,43 @@ extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
   String get label {
     switch (this) {
       case ArcBlueprintAcquisitionSource.lootDrop:
-        return 'Loot Drop';
+        return 'Normal Drop';
       case ArcBlueprintAcquisitionSource.questReward:
         return 'Quest Reward';
-      case ArcBlueprintAcquisitionSource.trialReward:
-        return 'Trial Reward';
       case ArcBlueprintAcquisitionSource.trade:
         return 'Trade';
+      case ArcBlueprintAcquisitionSource.gifted:
+        return 'Gifted';
+      case ArcBlueprintAcquisitionSource.trialReward:
+        return 'Trial';
     }
+  }
+
+  static ArcBlueprintAcquisitionSource? fromStorage(String? rawName) {
+    if (rawName == null || rawName.trim().isEmpty) return null;
+    final normalized = rawName.trim().toLowerCase().replaceAll(
+      RegExp(r'[\s_-]+'),
+      '',
+    );
+
+    switch (normalized) {
+      case 'lootdrop':
+      case 'normaldrop':
+      case 'drop':
+        return ArcBlueprintAcquisitionSource.lootDrop;
+      case 'questreward':
+      case 'quest':
+        return ArcBlueprintAcquisitionSource.questReward;
+      case 'trade':
+        return ArcBlueprintAcquisitionSource.trade;
+      case 'gifted':
+      case 'gift':
+        return ArcBlueprintAcquisitionSource.gifted;
+      case 'trialreward':
+      case 'trial':
+        return ArcBlueprintAcquisitionSource.trialReward;
+    }
+
+    return null;
   }
 }

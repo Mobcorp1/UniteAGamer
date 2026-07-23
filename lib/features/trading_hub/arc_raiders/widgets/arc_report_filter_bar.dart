@@ -97,7 +97,11 @@ class ArcReportFilterBar extends StatelessWidget {
                 width: 180,
                 value: filters.raidType,
                 label: 'Raid Type',
-                items: ArcRaidType.values,
+                items: const <ArcRaidType>[
+                  ArcRaidType.fullRaid,
+                  ArcRaidType.midRaid,
+                  ArcRaidType.lateRaid,
+                ],
                 labelBuilder: (value) => value.label,
                 onChanged: (value) => onChanged(
                   value == null

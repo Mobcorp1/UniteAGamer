@@ -49,6 +49,7 @@ class _ArcBlueprintDropReportSheetState
     extends State<ArcBlueprintDropReportSheet> {
   late final TextEditingController _dupesController;
   late final TextEditingController _notesController;
+  late final TextEditingController _localTimeController;
   final ScrollController _scrollController = ScrollController();
 
   late bool _owned;
@@ -61,6 +62,8 @@ class _ArcBlueprintDropReportSheetState
   ArcTimeOfDay? _timeOfDay;
   final List<_AdditionalBlueprintReportEntry> _additionalReports = [];
   bool _isSaving = false;
+  late final DateTime _capturedReportTime;
+  late final int _capturedTimezoneOffsetMinutes;
 
   @override
   void initState() {
@@ -69,6 +72,13 @@ class _ArcBlueprintDropReportSheetState
       text: widget.initialState.dupesOwned.toString(),
     );
     _notesController = TextEditingController();
+    _capturedReportTime = DateTime.now();
+    _capturedTimezoneOffsetMinutes =
+        _capturedReportTime.timeZoneOffset.inMinutes;
+    _localTimeController = TextEditingController(
+      text: _formatLocalTime(_capturedReportTime),
+    );
+    _timeOfDay = _timeOfDayForLocalLabel(_localTimeController.text);
     _owned = widget.initialState.owned;
     _applyBlueprintDefaults();
   }
@@ -77,6 +87,7 @@ class _ArcBlueprintDropReportSheetState
   void dispose() {
     _dupesController.dispose();
     _notesController.dispose();
+    _localTimeController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -124,8 +135,13 @@ class _ArcBlueprintDropReportSheetState
         _selectedContainerType != null &&
         _selectedMapEvent != null &&
         _raidType != null &&
+        _localTimeInputValid &&
         _timeOfDay != null;
   }
+
+  bool get _localTimeInputValid => RegExp(
+    r'^([01]\d|2[0-3]):[0-5]\d$',
+  ).hasMatch(_localTimeController.text.trim());
 
   bool get _allAdditionalReportsValid {
     for (final entry in _additionalReports) {
@@ -153,6 +169,21 @@ class _ArcBlueprintDropReportSheetState
   }
 
   bool get _usesAssessorFlow => widget.blueprint.id == 'dolabra';
+
+  String _formatLocalTime(DateTime value) {
+    String twoDigits(int number) => number.toString().padLeft(2, '0');
+    return '${twoDigits(value.hour)}:${twoDigits(value.minute)}';
+  }
+
+  ArcTimeOfDay _timeOfDayForLocalLabel(String label) {
+    final hour = int.tryParse(label.trim().split(':').first) ?? 12;
+    if (hour >= 5 && hour < 9) return ArcTimeOfDay.earlyMorning;
+    if (hour >= 9 && hour < 12) return ArcTimeOfDay.midMorning;
+    if (hour >= 12 && hour < 14) return ArcTimeOfDay.midday;
+    if (hour >= 14 && hour < 18) return ArcTimeOfDay.midAfternoon;
+    if (hour >= 18 && hour < 22) return ArcTimeOfDay.night;
+    return ArcTimeOfDay.lateNight;
+  }
 
   void _applyBlueprintDefaults() {
     final blueprintId = widget.blueprint.id;
@@ -231,7 +262,7 @@ class _ArcBlueprintDropReportSheetState
     setState(() => _isSaving = true);
 
     try {
-      final reportTime = DateTime.now();
+      final reportTime = _capturedReportTime;
       final isRaidReport = _requiresRaidDetails;
 
       final selectedPoi = isRaidReport
@@ -267,6 +298,12 @@ class _ArcBlueprintDropReportSheetState
           acquisitionSource:
               _acquisitionSource ?? ArcBlueprintAcquisitionSource.lootDrop,
           foundAt: reportTime,
+          localTimeLabel: isRaidReport
+              ? _localTimeController.text.trim()
+              : null,
+          timezoneOffsetMinutes: isRaidReport
+              ? _capturedTimezoneOffsetMinutes
+              : null,
           notes: _notesController.text,
         );
       }
@@ -531,6 +568,9 @@ class _ArcBlueprintDropReportSheetState
       _timeOfDay = null;
       _additionalReports.clear();
       _applyBlueprintDefaults();
+      if (_localTimeInputValid) {
+        _timeOfDay = _timeOfDayForLocalLabel(_localTimeController.text);
+      }
     });
     _scrollToNextStep();
   }
@@ -599,7 +639,11 @@ class _ArcBlueprintDropReportSheetState
   Future<void> _pickRaidType() async {
     final selection = await _showSearchPicker<ArcRaidType>(
       title: 'Raid Round',
-      items: ArcRaidType.values,
+      items: const <ArcRaidType>[
+        ArcRaidType.fullRaid,
+        ArcRaidType.midRaid,
+        ArcRaidType.lateRaid,
+      ],
       labelBuilder: (item) => item.label,
     );
     if (selection == null || !mounted) return;
@@ -610,7 +654,13 @@ class _ArcBlueprintDropReportSheetState
   Future<void> _pickAcquisitionSource() async {
     final selection = await _showSearchPicker<ArcBlueprintAcquisitionSource>(
       title: 'How Was It Obtained?',
-      items: ArcBlueprintAcquisitionSource.values,
+      items: const <ArcBlueprintAcquisitionSource>[
+        ArcBlueprintAcquisitionSource.lootDrop,
+        ArcBlueprintAcquisitionSource.questReward,
+        ArcBlueprintAcquisitionSource.trade,
+        ArcBlueprintAcquisitionSource.gifted,
+        ArcBlueprintAcquisitionSource.trialReward,
+      ],
       labelBuilder: (item) => item.label,
     );
     if (selection == null || !mounted) return;
@@ -624,19 +674,31 @@ class _ArcBlueprintDropReportSheetState
         _raidType = null;
         _timeOfDay = null;
       }
+      if (selection == ArcBlueprintAcquisitionSource.lootDrop &&
+          _localTimeInputValid) {
+        _timeOfDay = _timeOfDayForLocalLabel(_localTimeController.text);
+      }
     });
     _scrollToNextStep();
   }
 
   Future<void> _pickTimeOfDay() async {
     final selection = await _showSearchPicker<ArcTimeOfDay>(
-      title: 'Raider Time of Day',
+      title: 'Raid Phase',
       items: ArcTimeOfDay.values,
       labelBuilder: (item) => item.label,
     );
     if (selection == null || !mounted) return;
     setState(() => _timeOfDay = selection);
     _scrollToNextStep();
+  }
+
+  void _updateLocalTime(String value) {
+    setState(() {
+      if (_localTimeInputValid) {
+        _timeOfDay = _timeOfDayForLocalLabel(value);
+      }
+    });
   }
 
   Future<void> _pickAdditionalBlueprint(int index) async {
@@ -1046,9 +1108,30 @@ class _ArcBlueprintDropReportSheetState
           onTap: _selectedMap == null ? null : _pickRaidType,
         ),
         const SizedBox(height: AppTheme.spaceM),
+        TextField(
+          controller: _localTimeController,
+          enabled: _selectedMap != null,
+          keyboardType: TextInputType.datetime,
+          style: const TextStyle(color: Colors.white),
+          decoration:
+              AppTheme.tradingInputDecoration(
+                label: 'Local Raid Time (24h) *',
+              ).copyWith(
+                helperText: _localTimeInputValid
+                    ? 'Captured once from this device. You can correct it manually.'
+                    : 'Use 24-hour time, e.g. 20:37.',
+                helperStyle: TextStyle(
+                  color: _localTimeInputValid
+                      ? Colors.white60
+                      : Colors.redAccent.withValues(alpha: 0.86),
+                ),
+              ),
+          onChanged: _updateLocalTime,
+        ),
+        const SizedBox(height: AppTheme.spaceS),
         _buildSelectorField(
-          label: 'Raider Time of Day *',
-          value: _timeOfDay?.label ?? 'Select Raider Time of Day',
+          label: 'Raid Phase',
+          value: _timeOfDay?.label ?? 'Derived from local time',
           onTap: _selectedMap == null ? null : _pickTimeOfDay,
         ),
       ],
@@ -1249,7 +1332,7 @@ class _ArcBlueprintDropReportSheetState
                     icon: Icons.add_location_alt_outlined,
                     children: [
                       Text(
-                        'Start with how the blueprint was obtained. Loot Drop reports can include map, event, area, container, raid round and Raider time of day. Quest rewards, trial rewards and trades do not need raid details.',
+                        'Start with how the blueprint was obtained. Normal Drop reports can include map, event, area, container, raid round and captured local time. Quest rewards, trades, gifted items and trials do not need raid details.',
                         style: const TextStyle(
                           color: Colors.white60,
                           height: 1.35,

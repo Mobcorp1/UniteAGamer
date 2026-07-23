@@ -161,6 +161,8 @@ class ArcBlueprintRepository {
     String? conditionId,
     String? conditionLabel,
     DateTime? foundAt,
+    String? localTimeLabel,
+    int? timezoneOffsetMinutes,
     String notes = '',
   }) async {
     final uid = currentUid;
@@ -225,6 +227,7 @@ class ArcBlueprintRepository {
       raidType: raidType,
       entryTime: ArcEntryTime.unknown,
       timeOfDay: timeOfDay,
+      acquisitionSource: acquisitionSource,
     );
 
     final existingSnapshot = await _reportsCollection
@@ -288,6 +291,8 @@ class ArcBlueprintRepository {
       timeOfDay: timeOfDay,
       acquisitionSource: acquisitionSource,
       foundAt: foundAt ?? now,
+      localTimeLabel: localTimeLabel?.trim(),
+      timezoneOffsetMinutes: timezoneOffsetMinutes,
       lastConfirmedAt: now,
       notes: notes.trim(),
       createdAt: now,

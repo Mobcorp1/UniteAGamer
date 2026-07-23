@@ -876,6 +876,8 @@ class _ArcMarketIntelligenceScreenState
             _buildInfoLine('Area / POI', report.areaLabel),
             _buildInfoLine('Container', report.resolvedContainerLabel),
             _buildInfoLine('Raid Round', report.raidType.label),
+            if ((report.localTimeLabel ?? '').trim().isNotEmpty)
+              _buildInfoLine('Local Time', report.localTimeLabel!.trim()),
             _buildInfoLine('Raider Time', report.timeOfDay.label),
             if (showLegacyEntryTime)
               _buildInfoLine('Legacy Entry Time', report.entryTime.label),

@@ -16,6 +16,8 @@ class BlueprintTile extends StatelessWidget {
     required this.onLongPress,
     this.isSelectionMode = false,
     this.isSelected = false,
+    this.loadoutAction,
+    this.contentScale = 1.0,
   });
 
   final ArcBlueprint blueprint;
@@ -26,6 +28,8 @@ class BlueprintTile extends StatelessWidget {
   final VoidCallback onLongPress;
   final bool isSelectionMode;
   final bool isSelected;
+  final Widget? loadoutAction;
+  final double contentScale;
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +81,7 @@ class BlueprintTile extends StatelessWidget {
                     state: state,
                     isSelectionMode: isSelectionMode,
                     isSelected: isSelected,
+                    loadoutAction: loadoutAction,
                   ),
                 ),
                 SizedBox(height: landscape ? 2 : 2),
@@ -85,7 +90,7 @@ class BlueprintTile extends StatelessWidget {
                   maxLines: landscape ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.tradingHeading(
-                    fontSize: landscape ? 9 : 10,
+                    fontSize: (landscape ? 9 : 10) * contentScale,
                     color: owned ? Colors.white : Colors.white70,
                   ),
                 ),
@@ -95,7 +100,10 @@ class BlueprintTile extends StatelessWidget {
                     blueprint.rarityLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white54, fontSize: 9),
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 9 * contentScale,
+                    ),
                   ),
                 ],
               ],
@@ -115,6 +123,7 @@ class _BlueprintTileVisual extends StatelessWidget {
     required this.state,
     required this.isSelectionMode,
     required this.isSelected,
+    this.loadoutAction,
   });
 
   final ArcBlueprint blueprint;
@@ -123,6 +132,7 @@ class _BlueprintTileVisual extends StatelessWidget {
   final ArcBlueprintState state;
   final bool isSelectionMode;
   final bool isSelected;
+  final Widget? loadoutAction;
 
   @override
   Widget build(BuildContext context) {
@@ -227,6 +237,8 @@ class _BlueprintTileVisual extends StatelessWidget {
               color: isSelected ? AppTheme.neonPink : Colors.white54,
             ),
           ),
+        if (loadoutAction != null)
+          Positioned(left: 4, bottom: 4, child: loadoutAction!),
       ],
     );
   }

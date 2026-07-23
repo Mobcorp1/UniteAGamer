@@ -776,20 +776,12 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.residential, ArcBuildingType.nature],
     ),
     ArcPoiData(
-      id: 'blue_gate_pilgrims_peak',
+      id: 'blue_gate_barracks_parking',
       mapName: blueGate,
-      name: "Pilgrim's Peak",
-      sourceType: ArcDropSourceType.poi,
-      lootLevel: ArcLootLevel.high,
-      buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.nature],
-    ),
-    ArcPoiData(
-      id: 'blue_gate_reinforced_reception',
-      mapName: blueGate,
-      name: 'Reinforced Reception',
+      name: 'Barracks Parking',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.mechanical],
     ),
     ArcPoiData(
       id: 'blue_gate_raiders_refuge',
@@ -800,6 +792,14 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.nature, ArcBuildingType.security],
     ),
     ArcPoiData(
+      id: 'blue_gate_trappers_glade',
+      mapName: blueGate,
+      name: "Trapper's Glade",
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.nature],
+    ),
+    ArcPoiData(
       id: 'blue_gate_adorned_wreckage',
       mapName: blueGate,
       name: 'Adorned Wreckage',
@@ -808,20 +808,28 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.mechanical],
     ),
     ArcPoiData(
-      id: 'blue_gate_warehouse_complex',
+      id: 'blue_gate_highway_collapse',
       mapName: blueGate,
-      name: 'Warehouse Complex',
+      name: 'Highway Collapse',
       sourceType: ArcDropSourceType.poi,
-      lootLevel: ArcLootLevel.medium,
-      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.mechanical],
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.mechanical],
     ),
     ArcPoiData(
-      id: 'blue_gate_checkpoint',
+      id: 'blue_gate_olive_grove',
       mapName: blueGate,
-      name: 'Checkpoint',
+      name: 'Olive Grove',
       sourceType: ArcDropSourceType.poi,
-      lootLevel: ArcLootLevel.high,
-      buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.nature],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_ruined_homestead',
+      mapName: blueGate,
+      name: 'Ruined Homestead',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.residential, ArcBuildingType.oldWorld],
     ),
     ArcPoiData(
       id: 'blue_gate_ancient_fort',
@@ -832,49 +840,92 @@ class ArcPoiDataStore {
       buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.security],
     ),
     ArcPoiData(
-      id: 'blue_gate_security_wing',
+      id: 'blue_gate_checkpoint',
       mapName: blueGate,
-      name: 'Security Wing',
+      name: 'Checkpoint',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.technological],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_outer_gates',
+      mapName: blueGate,
+      name: 'Outer Gates',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.security],
-      notes: 'Detailed in-match sub-location around Checkpoint.',
     ),
     ArcPoiData(
-      id: 'blue_gate_traffic_tunnel',
+      id: 'blue_gate_gate_control_room',
       mapName: blueGate,
-      name: 'Traffic Tunnel',
+      name: 'Gate Control Room',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_warehouse_complex',
+      mapName: blueGate,
+      name: 'Warehouse Complex',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.industrial, ArcBuildingType.mechanical],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_reinforced_reception',
+      mapName: blueGate,
+      name: 'Reinforced Reception',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.oldWorld, ArcBuildingType.security],
-      notes: 'Detailed in-match sub-location around Checkpoint.',
+      buildingTypes: [ArcBuildingType.security, ArcBuildingType.arc],
     ),
     ArcPoiData(
-      id: 'blue_gate_maintenance_wing',
+      id: 'blue_gate_headhouse',
       mapName: blueGate,
-      name: 'Maintenance Wing',
+      name: 'Headhouse',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.medium,
+      buildingTypes: [ArcBuildingType.arc, ArcBuildingType.security],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_data_vault',
+      mapName: blueGate,
+      name: 'Data Vault',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.high,
+      buildingTypes: [ArcBuildingType.arc, ArcBuildingType.technological],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_maintenance_bunker',
+      mapName: blueGate,
+      name: 'Maintenance Bunker',
       sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
       buildingTypes: [ArcBuildingType.mechanical, ArcBuildingType.security],
-      notes: 'Detailed in-match sub-location around Checkpoint.',
     ),
     ArcPoiData(
-      id: 'blue_gate_airshaft',
+      id: 'blue_gate_broken_earth',
       mapName: blueGate,
-      name: 'Airshaft',
-      sourceType: ArcDropSourceType.other,
+      name: 'Broken Earth',
+      sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.mechanical],
-      notes: 'Access area / map marker.',
+      buildingTypes: [ArcBuildingType.nature, ArcBuildingType.oldWorld],
     ),
     ArcPoiData(
-      id: 'blue_gate_raider_hatch',
+      id: 'blue_gate_ridgeline',
       mapName: blueGate,
-      name: 'Raider Hatch',
-      sourceType: ArcDropSourceType.other,
+      name: 'Ridgeline',
+      sourceType: ArcDropSourceType.poi,
       lootLevel: ArcLootLevel.none,
-      buildingTypes: [ArcBuildingType.security],
-      notes: 'Access area / map marker.',
+      buildingTypes: [ArcBuildingType.nature],
+    ),
+    ArcPoiData(
+      id: 'blue_gate_abandoned_housing_project',
+      mapName: blueGate,
+      name: 'Abandoned Housing Project',
+      sourceType: ArcDropSourceType.poi,
+      lootLevel: ArcLootLevel.none,
+      buildingTypes: [ArcBuildingType.residential],
     ),
   ];
 
@@ -1656,10 +1707,55 @@ class ArcPoiDataStore {
   static List<String> get availableMaps =>
       poisByMap.keys.toList(growable: false);
 
+  static bool _isBlueGateMap(String mapName) {
+    final normalized = mapName.trim().toLowerCase();
+    return normalized == 'blue gate' || normalized == blueGate.toLowerCase();
+  }
+
+  static List<ArcPoiData> _poisForMap(String mapName) {
+    if (_isBlueGateMap(mapName)) {
+      return poisByMap[blueGate] ?? const <ArcPoiData>[];
+    }
+    return poisByMap[mapName] ?? const <ArcPoiData>[];
+  }
+
+  static const Map<String, String> _blueGatePoiAliases = {
+    'abandoned': 'Abandoned Housing Project',
+    'abanndened housing project': 'Abandoned Housing Project',
+    'abandoned housing': 'Abandoned Housing Project',
+    'abandoned housing projects': 'Abandoned Housing Project',
+    'olive garden': 'Olive Grove',
+    'maintenance wing': 'Maintenance Bunker',
+    'security wing': 'Checkpoint',
+    'traffic tunnel': 'Checkpoint',
+    'airshaft': 'Maintenance Bunker',
+    'raider hatch': 'Outer Gates',
+    'pilgrim\'s peak': 'Ridgeline',
+    'underground entrance': 'Gate Control Room',
+    'mantikor room': 'Reinforced Reception',
+  };
+
+  static String? canonicalPoiNameForMap(String mapName, String? rawName) {
+    final name = rawName?.trim();
+    if (name == null || name.isEmpty) return null;
+    final canonical = blueprintReportPoisForMap(mapName)
+        .cast<ArcPoiData?>()
+        .firstWhere(
+          (poi) => poi?.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => null,
+        );
+    if (canonical != null) return canonical.name;
+
+    if (_isBlueGateMap(mapName)) {
+      return _blueGatePoiAliases[name.toLowerCase()];
+    }
+    return null;
+  }
+
   static List<ArcPoiData> blueprintReportPoisForMap(String mapName) {
-    return (poisByMap[mapName] ?? const <ArcPoiData>[])
-        .where((poi) => poi.includeInBlueprintReports)
-        .toList(growable: false);
+    return _poisForMap(
+      mapName,
+    ).where((poi) => poi.includeInBlueprintReports).toList(growable: false);
   }
 
   static List<String> blueprintReportAreasForMap(String mapName) {
@@ -1682,7 +1778,7 @@ class ArcPoiDataStore {
   }
 
   static ArcPoiData? findPoiById(String mapName, String poiId) {
-    for (final poi in poisByMap[mapName] ?? const <ArcPoiData>[]) {
+    for (final poi in _poisForMap(mapName)) {
       if (poi.id == poiId) return poi;
     }
     return null;

@@ -40,7 +40,7 @@ class ArcMapConditions {
 
   static const ArcMapCondition noSpecialCondition = ArcMapCondition(
     id: 'none',
-    label: 'No Map Event / Condition',
+    label: 'No Map Event',
     type: ArcMapConditionType.neutral,
   );
 

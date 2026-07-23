@@ -6,13 +6,17 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_layout_metrics.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_responsive_policy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
@@ -57,6 +61,8 @@ class _BlueprintViewportFrame extends StatelessWidget {
 
 class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   final ArcBlueprintRepository _repository = ArcBlueprintRepository();
+  final ArcSavedLoadoutRepository _loadoutRepository =
+      ArcSavedLoadoutRepository();
   final TextEditingController _searchController = TextEditingController();
   final TransformationController _blueprintGridTransformController =
       TransformationController();
@@ -590,6 +596,236 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     if (saved == true && mounted) {
       _returnToFullGridView();
     }
+  }
+
+  Widget? _buildLoadoutAction(
+    ArcBlueprint blueprint,
+    ArcSavedLoadout? loadout, {
+    required bool compact,
+  }) {
+    final candidate = ArcBlueprintLoadoutBridge.candidateFor(blueprint);
+    if (candidate == null) return null;
+    final selected = ArcBlueprintLoadoutBridge.isSelected(
+      blueprint: blueprint,
+      loadout: loadout,
+    );
+    final label = selected
+        ? 'Remove ${blueprint.name} from Favourite Loadout'
+        : 'Add ${blueprint.name} to Favourite Loadout';
+    final size = compact ? 26.0 : 34.0;
+
+    return Semantics(
+      button: true,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => _toggleBlueprintLoadoutItem(blueprint, loadout),
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.82),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected
+                      ? Colors.amberAccent.withValues(alpha: 0.86)
+                      : AppTheme.neonCyan.withValues(alpha: 0.62),
+                ),
+              ),
+              child: Icon(
+                selected ? Icons.star_rounded : Icons.star_border_rounded,
+                size: compact ? 16 : 21,
+                color: selected ? Colors.amberAccent : AppTheme.neonCyan,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleBlueprintLoadoutItem(
+    ArcBlueprint blueprint,
+    ArcSavedLoadout? currentLoadout,
+  ) async {
+    final candidate = ArcBlueprintLoadoutBridge.candidateFor(blueprint);
+    if (candidate == null) return;
+
+    try {
+      final selected = ArcBlueprintLoadoutBridge.isSelected(
+        blueprint: blueprint,
+        loadout: currentLoadout,
+      );
+      final baseLoadout = ArcBlueprintLoadoutBridge.baseLoadout(currentLoadout);
+
+      ArcSavedLoadout? nextLoadout;
+      if (selected) {
+        nextLoadout = ArcBlueprintLoadoutBridge.remove(
+          blueprint: blueprint,
+          loadout: baseLoadout,
+        );
+      } else {
+        final destinations = ArcBlueprintLoadoutBridge.destinationsFor(
+          blueprint: blueprint,
+          loadout: baseLoadout,
+        );
+        if (destinations.isEmpty) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${blueprint.name} is not compatible with your current Favourite Loadout slots.',
+              ),
+            ),
+          );
+          return;
+        }
+
+        final destination = destinations.length == 1
+            ? destinations.single
+            : await _pickLoadoutDestination(
+                blueprint: blueprint,
+                candidate: candidate,
+                destinations: destinations,
+              );
+        if (destination == null) return;
+
+        nextLoadout = ArcBlueprintLoadoutBridge.applyDestination(
+          blueprint: blueprint,
+          loadout: baseLoadout,
+          destination: destination,
+        );
+      }
+
+      await _loadoutRepository.saveLoadout(nextLoadout);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            selected
+                ? '${blueprint.name} removed from Favourite Loadout.'
+                : '${blueprint.name} added to Favourite Loadout.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update Favourite Loadout: $error')),
+      );
+    }
+  }
+
+  Future<ArcBlueprintLoadoutDestination?> _pickLoadoutDestination({
+    required ArcBlueprint blueprint,
+    required ArcBlueprintLoadoutCandidate candidate,
+    required List<ArcBlueprintLoadoutDestination> destinations,
+  }) {
+    return showModalBottomSheet<ArcBlueprintLoadoutDestination>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.all(14),
+          child: ElectricChargeBorder(
+            active: true,
+            radius: 24,
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.72,
+              ),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.32),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'ADD ${blueprint.name.toUpperCase()}',
+                            style: AppTheme.tradingHeading(
+                              fontSize: 20,
+                              color: AppTheme.neonCyan,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Close',
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                    child: Text(
+                      '${candidate.kindLabel} blueprint. Pick the Favourite Loadout slot to update.',
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: destinations.length,
+                      separatorBuilder: (_, _) => Divider(
+                        height: 1,
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                      itemBuilder: (context, index) {
+                        final destination = destinations[index];
+                        final replacement = destination.replacesOccupiedSlot
+                            ? 'Replaces ${destination.currentItem}'
+                            : 'Empty slot';
+                        return ListTile(
+                          title: Text(
+                            destination.label,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          subtitle: Text(
+                            replacement,
+                            style: const TextStyle(color: Colors.white60),
+                          ),
+                          trailing: const Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppTheme.neonCyan,
+                          ),
+                          onTap: () =>
+                              Navigator.of(sheetContext).pop(destination),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildSearchAppBarTitle() {
@@ -1930,6 +2166,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     BuildContext context,
     List<ArcBlueprint> filtered,
     Map<String, ArcBlueprintState> states,
+    ArcSavedLoadout? loadout,
   ) {
     if (filtered.isEmpty) {
       return Container(
@@ -1949,6 +2186,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     const crossAxisCount = _gridColumns;
     const spacing = _landscapeSpacing;
     const childAspectRatio = 0.98;
+    final searchActive = _searchQuery.trim().isNotEmpty;
 
     Widget buildTiles({required double width, required double height}) {
       return SizedBox(
@@ -1979,6 +2217,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 rarityColor: _rarityColor(blueprint.rarity),
                 isSelectionMode: _selectionMode,
                 isSelected: _selectedBlueprintIds.contains(blueprint.id),
+                loadoutAction: _buildLoadoutAction(
+                  blueprint,
+                  loadout,
+                  compact: true,
+                ),
                 onTap: () async {
                   if (_selectionMode) {
                     _toggleSelection(blueprint.id);
@@ -1996,6 +2239,162 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       );
     }
 
+    Widget buildResponsiveSearchResults() {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width;
+          final layout = ArcBlueprintGridResponsivePolicy.searchLayout(
+            resultCount: filtered.length,
+            width: maxWidth,
+          );
+          final resultSpacing = maxWidth < 520 ? 10.0 : 12.0;
+          final gridWidth = math.min(
+            maxWidth,
+            layout.columns * layout.maxTileWidth +
+                (layout.columns - 1) * resultSpacing,
+          );
+
+          return Center(
+            child: SizedBox(
+              width: gridWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      '${filtered.length} search result${filtered.length == 1 ? '' : 's'}',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 13,
+                        color: Colors.white70,
+                        isBold: true,
+                      ),
+                    ),
+                  ),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    itemCount: filtered.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: layout.columns,
+                      crossAxisSpacing: resultSpacing,
+                      mainAxisSpacing: resultSpacing,
+                      childAspectRatio: layout.childAspectRatio,
+                    ),
+                    itemBuilder: (context, index) {
+                      final blueprint = filtered[index];
+                      final state =
+                          states[blueprint.id] ??
+                          ArcBlueprintState.empty(blueprint.id);
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onDoubleTap: () =>
+                            _openBlueprintPreview(blueprint, state),
+                        child: BlueprintTile(
+                          blueprint: blueprint,
+                          state: state,
+                          landscape: false,
+                          rarityColor: _rarityColor(blueprint.rarity),
+                          isSelectionMode: _selectionMode,
+                          isSelected: _selectedBlueprintIds.contains(
+                            blueprint.id,
+                          ),
+                          contentScale:
+                              layout.size == ArcBlueprintSearchResultSize.single
+                              ? 1.35
+                              : layout.size == ArcBlueprintSearchResultSize.grid
+                              ? 1.08
+                              : 1.20,
+                          loadoutAction: _buildLoadoutAction(
+                            blueprint,
+                            loadout,
+                            compact: false,
+                          ),
+                          onTap: () async {
+                            if (_selectionMode) {
+                              _toggleSelection(blueprint.id);
+                              return;
+                            }
+
+                            await _openBlueprintPreview(blueprint, state);
+                          },
+                          onLongPress: () =>
+                              _openBlueprintLoadoutActions(blueprint, state),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    Widget buildRotatePrompt() {
+      return Semantics(
+        container: true,
+        label:
+            'Rotate your device. The In-Game View needs a wider screen. Turn your device to landscape, or use Full Grid Overview.',
+        child: Container(
+          padding: AppTheme.sectionCardPadding,
+          decoration: AppTheme.tradingCardDecoration(
+            borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.screen_rotation_alt_rounded,
+                    color: AppTheme.neonCyan,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Rotate your device',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 24,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'The In-Game View needs a wider screen. Turn your device to landscape, or use Full Grid Overview.',
+                style: TextStyle(color: Colors.white70, height: 1.35),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        _setViewMode(ArcBlueprintGridViewMode.fullOverview),
+                    icon: const Icon(Icons.grid_view_rounded),
+                    label: const Text('Use Full Grid'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => setState(() {}),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final mediaQuery = MediaQuery.of(context);
@@ -2007,6 +2406,14 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         final maxWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : mediaQuery.size.width;
+        if (searchActive) return buildResponsiveSearchResults();
+        if (_viewMode == ArcBlueprintGridViewMode.inGameFramed &&
+            ArcBlueprintGridResponsivePolicy.shouldShowInGameRotatePrompt(
+              width: maxWidth,
+              height: mediaQuery.size.height,
+            )) {
+          return buildRotatePrompt();
+        }
         final compactRails = maxWidth < 620;
         final leftRailWidth = compactRails ? 50.0 : 86.0;
         const rightRailWidth = 46.0;
@@ -2271,25 +2678,31 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                 final filtered = _applyFilter(allBlueprints, states);
                 final counts = _buildCounts(allBlueprints, states);
 
-                return ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    AppTheme.pagePadding.left,
-                    8,
-                    AppTheme.pagePadding.right,
-                    AppTheme.pagePadding.bottom + 82,
-                  ),
-                  children: [
-                    _buildOverviewGrid(context, filtered, states),
-                    const SizedBox(height: 18),
-                    _buildBottomControls(
-                      allBlueprints,
-                      filtered,
-                      states,
-                      counts,
-                    ),
-                    const SizedBox(height: 10),
-                    const ArcAdBannerCard(),
-                  ],
+                return StreamBuilder<ArcSavedLoadout?>(
+                  stream: _loadoutRepository.watchFavouriteLoadout(),
+                  builder: (context, loadoutSnapshot) {
+                    final loadout = loadoutSnapshot.data;
+                    return ListView(
+                      padding: EdgeInsets.fromLTRB(
+                        AppTheme.pagePadding.left,
+                        8,
+                        AppTheme.pagePadding.right,
+                        AppTheme.pagePadding.bottom + 82,
+                      ),
+                      children: [
+                        _buildOverviewGrid(context, filtered, states, loadout),
+                        const SizedBox(height: 18),
+                        _buildBottomControls(
+                          allBlueprints,
+                          filtered,
+                          states,
+                          counts,
+                        ),
+                        const SizedBox(height: 10),
+                        const ArcAdBannerCard(),
+                      ],
+                    );
+                  },
                 );
               },
             ),
