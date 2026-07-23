@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_decision_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_bench_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
@@ -7,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 
 void main() {
@@ -74,6 +76,40 @@ void main() {
       expect(
         state.rankedObjectives.map((objective) => objective.action.routeName),
         contains(TradingListingQueuesScreen.routeName),
+      );
+    });
+
+    test('adds Raid Intelligence as a current blueprint-run action', () {
+      final raidIntel = const ArcRaidIntelligenceEngine().build(
+        mapId: 'blue_gate',
+      );
+      final state = const ArcDecisionEngine().build(
+        blueprintStateKnown: true,
+        ownedBlueprints: 9,
+        totalBlueprints: 10,
+        missingBlueprints: 1,
+        duplicateBlueprints: 0,
+        prioritizedMissingBlueprints: const ['Anvil Splitter'],
+        favouriteLoadout: _completeLoadout,
+        operationsState: ArcOperationsUserState.empty,
+        tradeActivity: ArcCommandTradeActivity.empty,
+        readyOperations: 0,
+        inProgressOperations: 0,
+        availableOperations: 0,
+        questIntel: _quietQuest,
+        benchIntel: _quietBench,
+        traderIntel: _quietTrader,
+        resourceIntel: _quietResources,
+        raidIntelligence: raidIntel,
+      );
+
+      expect(
+        state.rankedObjectives.map((objective) => objective.title),
+        contains('Generate Blueprint Run'),
+      );
+      expect(
+        state.rankedObjectives.map((objective) => objective.action.routeName),
+        contains(ArcRaidIntelligenceScreen.routeName),
       );
     });
   });

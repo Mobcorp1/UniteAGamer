@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
@@ -37,6 +38,7 @@ void main() {
         'Command Centre',
         'Blueprint Tracker',
         'Progress Trackers',
+        'Raid Intelligence',
         'Raid Planner',
         'Favourite Loadout',
         'Trading Hub',
@@ -101,6 +103,7 @@ void main() {
       expect(routeNames, contains(ArcCommandCentreScreen.routeName));
       expect(routeNames, contains(BlueprintGridScreen.routeName));
       expect(routeNames, contains(ArcProgressTrackersScreen.routeName));
+      expect(routeNames, contains(ArcRaidIntelligenceScreen.routeName));
       expect(routeNames, contains(RaidPlannerScreen.routeName));
       expect(routeNames, contains(FavouriteLoadoutScreen.routeName));
       expect(routeNames, contains(TraderHubScreen.routeName));

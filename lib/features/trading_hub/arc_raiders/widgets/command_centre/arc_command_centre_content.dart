@@ -375,6 +375,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         image: _operationAsset('missing_resources_card.webp'),
       ),
       _tileFromPanel(
+        state.raidIntelligenceSummary,
+        image: _imageForAction(state.raidIntelligenceSummary.action),
+      ),
+      _tileFromPanel(
         state.questSummary,
         image: _operationAsset('track_quests_card.webp'),
       ),
@@ -1512,6 +1516,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       case ArcCommandActionIntent.route:
       case ArcCommandActionIntent.placeholder:
         final route = action.routeName ?? '';
+        if (route.contains('raid-intelligence') ||
+            route.contains('raid-planner')) {
+          return _operationAsset('weekly_raid_card.webp');
+        }
         if (route.contains('blueprint')) {
           return _operationAsset('complete_blueprint_collection_card.webp');
         }

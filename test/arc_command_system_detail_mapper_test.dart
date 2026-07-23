@@ -52,6 +52,22 @@ void main() {
       );
       expect(overview, isNotEmpty);
     });
+
+    test('maps raid intelligence systems to the raid summary panel', () {
+      final state = _commandState();
+
+      final selected = ArcCommandSystemDetailMapper.panelFor(
+        state: state,
+        title: 'Raid Intelligence',
+        value: 'Generate',
+        detail: 'Plan route',
+        status: ArcCommandStatus.active,
+        action: _action,
+      );
+
+      expect(selected.title, 'Raid Intelligence');
+      expect(selected.details, contains('2 opportunity clusters'));
+    });
   });
 }
 
@@ -95,6 +111,10 @@ ArcCommandCentreState _commandState() {
     operationsSummary: _panel(title: 'Operations Summary'),
     weeklyTraderSummary: _panel(title: 'Nomadic Trader Summary'),
     resourceSummary: resources,
+    raidIntelligenceSummary: _panel(
+      title: 'Raid Intelligence',
+      details: const ['2 opportunity clusters', 'Generate Blueprint Run'],
+    ),
     decisionSummary: _panel(title: 'Decision Summary'),
     communitySummary: _panel(title: 'Community Summary'),
     statisticsSummary: _panel(title: 'Statistics Summary'),

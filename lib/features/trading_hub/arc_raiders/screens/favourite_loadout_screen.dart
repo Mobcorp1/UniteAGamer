@@ -12,6 +12,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
@@ -1252,6 +1253,14 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 onTap: () => Navigator.of(
                   context,
                 ).pushNamed(ArcMarketIntelligenceScreen.routeName),
+              ),
+              _smallAction(
+                label: 'Find Components',
+                icon: Icons.route_rounded,
+                color: Colors.amberAccent,
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcRaidIntelligenceScreen.routeName),
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_op
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_quest_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_resource_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_bench_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -20,10 +21,12 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -109,6 +112,12 @@ class ArcCommandCentreEngine {
       blueprintStates: blueprintStates,
       tradeActivity: tradeActivity,
     );
+    final raidIntel = const ArcRaidIntelligenceEngine().build(
+      mapId: 'blue_gate',
+      blueprintStates: blueprintStates,
+      favouriteLoadout: loadout,
+      operationsState: operationsState,
+    );
     final decisionState = const ArcDecisionEngine().build(
       blueprintStateKnown: blueprintStateKnown,
       ownedBlueprints: ownedBlueprints,
@@ -126,6 +135,7 @@ class ArcCommandCentreEngine {
       benchIntel: benchIntel,
       traderIntel: traderIntel,
       resourceIntel: resourceIntel,
+      raidIntelligence: raidIntel,
     );
 
     var priority = ArcCommandCentreViewMapper.priority(
@@ -278,6 +288,7 @@ class ArcCommandCentreEngine {
       ),
       weeklyTraderSummary: _weeklyTraderSummary(traderIntel),
       resourceSummary: _resourceSummary(resourceIntel),
+      raidIntelligenceSummary: _raidIntelligenceSummary(raidIntel),
       decisionSummary: _decisionSummary(decisionState),
       communitySummary: _communitySummary(tradeActivity),
       statisticsSummary: _statisticsSummary(
@@ -1042,6 +1053,45 @@ class ArcCommandCentreEngine {
       action: const ArcCommandAction(
         label: 'Resource Tracker',
         routeName: ScrappyGridScreen.routeName,
+      ),
+    );
+  }
+
+  static ArcCommandSummaryPanel _raidIntelligenceSummary(
+    ArcRaidIntelligenceState raidIntel,
+  ) {
+    final clusters = raidIntel.opportunityClusters.length;
+    final targets = raidIntel.opportunityClusters.fold<int>(
+      0,
+      (total, cluster) => total + cluster.blueprintIds.length,
+    );
+    final routeReady = raidIntel.routePlan != null;
+    return ArcCommandSummaryPanel(
+      title: 'Raid Intelligence',
+      statusLabel: routeReady
+          ? 'Route ready'
+          : clusters == 0
+          ? 'No current priority'
+          : 'Generate a run',
+      body: raidIntel.recommendation,
+      details: [
+        'Map: ${raidIntel.map.displayName}',
+        '$clusters opportunity ${_plural(clusters, 'cluster', 'clusters')}',
+        '$targets Blueprint ${_plural(targets, 'target', 'targets')}',
+        'Mode: ${raidIntel.map.hasCalibratedMap ? 'Calibrated game map' : 'Tactical schematic'}',
+        'Condition: ${raidIntel.activeConditionLabel}',
+        routeReady
+            ? 'Active route: ${raidIntel.routePlan!.summary}'
+            : 'Action: Generate Blueprint Run',
+      ],
+      status: routeReady
+          ? ArcCommandStatus.ready
+          : clusters > 0
+          ? ArcCommandStatus.active
+          : ArcCommandStatus.neutral,
+      action: ArcCommandAction(
+        label: routeReady ? 'Continue Route' : 'Generate Run',
+        routeName: ArcRaidIntelligenceScreen.routeName,
       ),
     );
   }

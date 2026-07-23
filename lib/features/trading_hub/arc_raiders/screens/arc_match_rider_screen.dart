@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -353,6 +354,13 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 profile.crossplayEnabled
                     ? AppTheme.neonCyan
                     : AppTheme.warningAmber,
+              ),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcRaidIntelligenceScreen.routeName),
+                icon: const Icon(Icons.route_rounded, size: 18),
+                label: const Text('Plan a Raid'),
               ),
             ],
           ),

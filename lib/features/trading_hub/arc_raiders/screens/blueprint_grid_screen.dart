@@ -22,6 +22,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_tile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/blueprint_voice_search_button.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
@@ -1613,6 +1614,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                       title: 'View Intel',
                       subtitle: 'Open Community Intel for drop reports.',
                     ),
+                    actionTile(
+                      value: 'raid',
+                      icon: Icons.route_rounded,
+                      title: 'Generate Blueprint Run',
+                      subtitle: 'Open Raid Intelligence for a route.',
+                    ),
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -1646,6 +1653,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         return;
       case 'intel':
         Navigator.of(context).pushNamed(ArcMarketIntelligenceScreen.routeName);
+        return;
+      case 'raid':
+        Navigator.of(context).pushNamed(ArcRaidIntelligenceScreen.routeName);
         return;
     }
   }
@@ -1831,6 +1841,17 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                             } else {
                               await _markMissingAsOwned(blueprint, state);
                             }
+                          },
+                        ),
+                        _buildBlueprintActionButton(
+                          label: 'Generate Run',
+                          icon: Icons.route_rounded,
+                          color: Colors.amberAccent,
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            Navigator.of(
+                              context,
+                            ).pushNamed(ArcRaidIntelligenceScreen.routeName);
                           },
                         ),
                       ],

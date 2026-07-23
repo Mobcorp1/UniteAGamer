@@ -13,6 +13,9 @@ class ArcCommandSystemDetailMapper {
   }) {
     final key = _key(title);
     if (key.contains('blueprint')) return state.blueprintSummary;
+    if (key.contains('raid') || key.contains('route')) {
+      return state.raidIntelligenceSummary;
+    }
     if (key.contains('bench')) return state.benchSummary;
     if (key.contains('resource') || key.contains('inventory')) {
       return state.resourceSummary;
@@ -55,6 +58,7 @@ class ArcCommandSystemDetailMapper {
       state.blueprintSummary,
       state.benchSummary,
       state.resourceSummary,
+      state.raidIntelligenceSummary,
       state.questSummary,
       state.operationsSummary,
       state.weeklyTraderSummary,

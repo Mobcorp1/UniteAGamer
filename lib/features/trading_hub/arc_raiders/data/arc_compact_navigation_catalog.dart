@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
@@ -104,6 +105,11 @@ class ArcCompactNavigationCatalog {
     ArcCompactNavigationGroup(
       label: 'PLAN',
       items: <ArcCompactNavigationItem>[
+        ArcCompactNavigationItem(
+          label: 'Raid Intelligence',
+          icon: Icons.radar_rounded,
+          routeName: ArcRaidIntelligenceScreen.routeName,
+        ),
         ArcCompactNavigationItem(
           label: 'Raid Planner',
           icon: Icons.route_rounded,

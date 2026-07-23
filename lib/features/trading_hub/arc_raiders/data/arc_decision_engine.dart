@@ -7,7 +7,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_quest_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -36,6 +38,7 @@ class ArcDecisionEngine {
     required ArcBenchIntelligence benchIntel,
     required ArcNomadicTraderIntelligence traderIntel,
     required ArcResourceIntelligence resourceIntel,
+    ArcRaidIntelligenceState? raidIntelligence,
   }) {
     final loadoutSummary = _loadoutSummary(favouriteLoadout);
     final signals = <ArcDecisionSignal>[];
@@ -572,6 +575,55 @@ class ArcDecisionEngine {
       );
     }
 
+    if (raidIntelligence != null &&
+        raidIntelligence.opportunityClusters.isNotEmpty) {
+      final clusters = raidIntelligence.opportunityClusters.length;
+      final blueprintTargets = raidIntelligence.opportunityClusters.fold<int>(
+        0,
+        (total, cluster) => total + cluster.blueprintIds.length,
+      );
+      final routeReady = raidIntelligence.routePlan != null;
+      add(
+        _signal(
+          id: routeReady
+              ? 'raid-intelligence-route-ready'
+              : 'raid-intelligence-blueprint-run',
+          title: routeReady
+              ? 'Continue Blueprint Run'
+              : 'Generate Blueprint Run',
+          summary: raidIntelligence.recommendation,
+          detail:
+              'Raid Intelligence can route $blueprintTargets evidence-backed Blueprint ${_plural(blueprintTargets, 'target', 'targets')} on ${raidIntelligence.map.displayName}.',
+          category: ArcDecisionCategory.raidIntelligence,
+          status: routeReady ? ArcCommandStatus.ready : ArcCommandStatus.active,
+          progressLabel:
+              '$clusters opportunity ${_plural(clusters, 'cluster', 'clusters')}',
+          action: ArcDecisionAction(
+            label: routeReady ? 'Continue Route' : 'Generate Run',
+            routeName: ArcRaidIntelligenceScreen.routeName,
+          ),
+          secondaryAction: const ArcDecisionAction(
+            label: 'Open Blueprints',
+            routeName: BlueprintGridScreen.routeName,
+          ),
+          sourceSystem: 'Raid Intelligence',
+          score: _score(
+            readiness: routeReady ? 88 : 64,
+            multiSystemImpact: favouriteLoadout == null ? 36 : 58,
+            progressionUnlockValue: math.min(92, 46 + blueprintTargets * 8),
+            missingResourcePressure: _missingPressure(missingBlueprints ?? 0),
+            setupCompleteness: 86,
+            confidence: math.min(
+              94,
+              58 +
+                  raidIntelligence.opportunityClusters.first.confidence.score ~/
+                      2,
+            ),
+          ),
+        ),
+      );
+    }
+
     if (!blueprintStateKnown) {
       add(
         _signal(
@@ -713,6 +765,7 @@ class ArcDecisionEngine {
       duplicateBlueprints: duplicateBlueprints,
       favouriteLoadout: favouriteLoadout,
       loadoutSummary: loadoutSummary,
+      raidIntelligence: raidIntelligence,
       operationsState: operationsState,
       tradeActivity: tradeActivity,
       readyOperations: readyOperations,
@@ -772,6 +825,7 @@ class ArcDecisionEngine {
     required int duplicateBlueprints,
     required ArcSavedLoadout? favouriteLoadout,
     required _LoadoutDecisionSummary loadoutSummary,
+    required ArcRaidIntelligenceState? raidIntelligence,
     required ArcOperationsUserState operationsState,
     required ArcCommandTradeActivity tradeActivity,
     required int readyOperations,
@@ -911,6 +965,32 @@ class ArcDecisionEngine {
         action: const ArcDecisionAction(
           label: 'Open Loadout',
           intent: ArcCommandActionIntent.favouriteLoadout,
+        ),
+      ),
+      _systemStatus(
+        id: 'status-raid-intelligence',
+        title: 'Raid Intelligence',
+        value: raidIntelligence == null
+            ? 'Set up'
+            : raidIntelligence.routePlan != null
+            ? 'Route ready'
+            : raidIntelligence.opportunityClusters.isEmpty
+            ? 'Quiet'
+            : '${raidIntelligence.opportunityClusters.length} clusters',
+        detail: raidIntelligence == null
+            ? 'Generate Blueprint Run'
+            : raidIntelligence.recommendation,
+        category: ArcDecisionCategory.raidIntelligence,
+        status:
+            raidIntelligence == null ||
+                raidIntelligence.opportunityClusters.isEmpty
+            ? ArcCommandStatus.neutral
+            : raidIntelligence.routePlan != null
+            ? ArcCommandStatus.ready
+            : ArcCommandStatus.active,
+        action: const ArcDecisionAction(
+          label: 'Raid Intelligence',
+          routeName: ArcRaidIntelligenceScreen.routeName,
         ),
       ),
       _systemStatus(
@@ -1114,6 +1194,7 @@ class ArcDecisionEngine {
       ArcDecisionCategory.inventory => 4,
       ArcDecisionCategory.loadout => 5,
       ArcDecisionCategory.blueprint => 3,
+      ArcDecisionCategory.raidIntelligence => 9,
       ArcDecisionCategory.nomadicTrader => 7,
       ArcDecisionCategory.operations => 14,
       ArcDecisionCategory.rewardVault => 6,
