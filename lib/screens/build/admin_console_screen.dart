@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
@@ -254,6 +255,14 @@ class _AdminConsoleBody extends StatelessWidget {
 
                     const SizedBox(height: AppTheme.spaceXL),
                     _sectionHeader(
+                      title: 'ARC Rollout Controls',
+                      subtitle:
+                          'Manage rollout, maintenance posture, read-only safety, beta-only access, and per-map availability from one place.',
+                    ),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const _ArcAdminControlPanel(),
+                    const SizedBox(height: AppTheme.spaceXL),
+                    _sectionHeader(
                       title: 'Closed Beta Tools',
                       subtitle:
                           'Admin-only reset controls for onboarding, tutorial replay and beta testing utilities.',
@@ -449,6 +458,332 @@ class _AdminConsoleBody extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Feedback deleted.')));
+  }
+}
+
+class _ArcAdminControlPanel extends StatelessWidget {
+  const _ArcAdminControlPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    final configRef = FirebaseFirestore.instance
+        .collection('config')
+        .doc('arc_admin_controls');
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: configRef.snapshots(),
+      builder: (context, snapshot) {
+        final config = ArcAdminControlConfig.fromDocument(
+          snapshot.data?.data(),
+        );
+
+        return Container(
+          width: double.infinity,
+          padding: AppTheme.sectionCardPadding,
+          decoration: AppTheme.tradingCardDecoration(
+            borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.tune_rounded, color: AppTheme.neonCyan),
+                  const SizedBox(width: AppTheme.spaceS),
+                  Expanded(
+                    child: Text(
+                      'ARC rollout posture',
+                      style: AppTheme.tradingHeading(fontSize: 22),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              Text(
+                'Use this panel to gate rollout, protect production, and keep beta-only surfaces limited to the intended audience.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 13,
+                  color: AppTheme.tradingMutedText,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Wrap(
+                spacing: AppTheme.spaceM,
+                runSpacing: AppTheme.spaceM,
+                children: [
+                  _controlChip('Rollout', '${config.rolloutPercent}%'),
+                  _controlChip(
+                    'Maintenance',
+                    config.isMaintenanceMode ? 'On' : 'Off',
+                  ),
+                  _controlChip(
+                    'Read-only',
+                    config.isReadOnlyMode ? 'On' : 'Off',
+                  ),
+                  _controlChip(
+                    'Beta-only',
+                    config.isBetaOnlyMode ? 'On' : 'Off',
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Wrap(
+                spacing: AppTheme.spaceM,
+                runSpacing: AppTheme.spaceM,
+                children: [
+                  _toggleCard(
+                    title: 'Maintenance mode',
+                    subtitle:
+                        'Pause new flows while preserving visibility for existing users.',
+                    value: config.isMaintenanceMode,
+                    onChanged: (value) async {
+                      await configRef.set({
+                        'maintenanceMode': value,
+                        'updatedAt': FieldValue.serverTimestamp(),
+                      }, SetOptions(merge: true));
+                    },
+                  ),
+                  _toggleCard(
+                    title: 'Read-only mode',
+                    subtitle:
+                        'Allow inspection without mutation for critical surfaces.',
+                    value: config.isReadOnlyMode,
+                    onChanged: (value) async {
+                      await configRef.set({
+                        'readOnlyMode': value,
+                        'updatedAt': FieldValue.serverTimestamp(),
+                      }, SetOptions(merge: true));
+                    },
+                  ),
+                  _toggleCard(
+                    title: 'Beta-only access',
+                    subtitle:
+                        'Keep content restricted to approved beta participants.',
+                    value: config.isBetaOnlyMode,
+                    onChanged: (value) async {
+                      await configRef.set({
+                        'betaOnlyMode': value,
+                        'updatedAt': FieldValue.serverTimestamp(),
+                      }, SetOptions(merge: true));
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              _rolloutSlider(config: config, configRef: configRef),
+              const SizedBox(height: AppTheme.spaceM),
+              _mapFlagList(config: config, configRef: configRef),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _controlChip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        '$label: $value',
+        style: AppTheme.bodyTextStyle(
+          fontSize: 12,
+          color: AppTheme.neonCyan,
+          isBold: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _toggleCard({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required Future<void> Function(bool) onChanged,
+  }) {
+    return SizedBox(
+      width: 320,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spaceM),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      isBold: true,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 12,
+                      color: AppTheme.tradingMutedText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch.adaptive(
+              value: value,
+              activeThumbColor: AppTheme.neonCyan,
+              activeTrackColor: AppTheme.neonCyan.withValues(alpha: 0.35),
+              onChanged: onChanged,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _rolloutSlider({
+    required ArcAdminControlConfig config,
+    required DocumentReference<Map<String, dynamic>> configRef,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Rollout percentage',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 14,
+              color: Colors.white,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Slider.adaptive(
+            value: config.rolloutPercent.toDouble(),
+            min: 0,
+            max: 100,
+            divisions: 20,
+            label: '${config.rolloutPercent}%',
+            activeColor: AppTheme.neonCyan,
+            onChanged: (value) async {
+              await configRef.set({
+                'rolloutPercent': value.round(),
+                'updatedAt': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true));
+            },
+          ),
+          Text(
+            'Current rollout: ${config.rolloutPercent}%',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: AppTheme.tradingMutedText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mapFlagList({
+    required ArcAdminControlConfig config,
+    required DocumentReference<Map<String, dynamic>> configRef,
+  }) {
+    final maps = config.mapFlags.keys.toList()..sort();
+
+    if (maps.isEmpty) {
+      maps.addAll(const ['Blue Gate', 'Riven Tides']);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Per-map availability',
+          style: AppTheme.bodyTextStyle(
+            fontSize: 14,
+            color: Colors.white,
+            isBold: true,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: AppTheme.spaceM,
+          runSpacing: AppTheme.spaceM,
+          children: [
+            for (final mapName in maps)
+              Container(
+                width: 260,
+                padding: const EdgeInsets.all(AppTheme.spaceM),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            mapName,
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 13,
+                              color: Colors.white,
+                              isBold: true,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Enable or disable this map for live rollout.',
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 12,
+                              color: AppTheme.tradingMutedText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: config.isMapEnabled(mapName),
+                      activeThumbColor: AppTheme.neonCyan,
+                      activeTrackColor: AppTheme.neonCyan.withValues(
+                        alpha: 0.35,
+                      ),
+                      onChanged: (value) async {
+                        final updated = {...config.mapFlags, mapName: value};
+                        await configRef.set({
+                          'mapFlags': updated,
+                          'updatedAt': FieldValue.serverTimestamp(),
+                        }, SetOptions(merge: true));
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
   }
 }
 

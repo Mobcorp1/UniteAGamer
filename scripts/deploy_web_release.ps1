@@ -26,13 +26,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $versionPath = Join-Path $repo "build\web\version.json"
-@{
-    buildId = $buildId
-    builtAt = $builtAt
-    branch = $branch
-} |
-    ConvertTo-Json -Depth 4 |
-    Set-Content -Path $versionPath -Encoding utf8
+dart run tool/generate_web_version.dart --output $versionPath
+if ($LASTEXITCODE -ne 0) {
+    throw "version.json generation failed."
+}
 
 if (-not (Test-Path $versionPath)) {
     throw "version.json was not generated."

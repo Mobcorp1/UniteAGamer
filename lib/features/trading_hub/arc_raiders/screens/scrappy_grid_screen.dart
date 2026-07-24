@@ -1078,7 +1078,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         useSafeArea: true,
         showAdBanner: false,
         child: StreamBuilder<Map<String, ArcScrappyState>>(
-          stream: _repository.watchMyScrappyStates(),
+          stream: _repository.watchMyScrappyStateMap(),
           builder: (context, snapshot) {
             final states = snapshot.data ?? <String, ArcScrappyState>{};
             final filtered = _applyFilter(allItems, states);

@@ -35,7 +35,9 @@ jobs:
         run: flutter analyze
 
       - name: Build web
-        run: flutter build web --release
+        run: |
+          flutter build web --release
+          dart run tool/generate_web_version.dart --output build/web/version.json
 
       - name: Deploy Firestore Rules and Indexes
         run: firebase deploy --only firestore:rules,firestore:indexes --project unite-a-gamer

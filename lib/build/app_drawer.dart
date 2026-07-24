@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
@@ -37,6 +40,9 @@ class _AppDrawerState extends State<AppDrawer>
       _tradingRepository.watchNotifications();
   late final Stream<List<ArcMatchRiderInvite>> _incomingInvitesStream =
       _matchRiderRepository.watchIncomingInvites();
+  StreamSubscription<User?>? _authSubscription;
+  bool _isAdmin = false;
+  bool _isAdminResolved = false;
 
   @override
   void initState() {
@@ -49,12 +55,41 @@ class _AppDrawerState extends State<AppDrawer>
       begin: AppTheme.neonCyan,
       end: AppTheme.neonPink,
     ).animate(_controller);
+
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (!mounted) return;
+      setState(() {
+        _isAdminResolved = false;
+        _isAdmin = false;
+      });
+      if (user?.uid == null || user!.uid.isEmpty) return;
+      _resolveAdminStatus(user.uid);
+    });
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      _resolveAdminStatus(currentUser.uid);
+    }
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _resolveAdminStatus(String uid) async {
+    if (!mounted) return;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+    if (!mounted) return;
+    final data = snapshot.data() ?? const <String, dynamic>{};
+    setState(() {
+      _isAdminResolved = true;
+      _isAdmin = data['isAdmin'] == true || data['isDev'] == true;
+    });
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -204,16 +239,41 @@ class _AppDrawerState extends State<AppDrawer>
                   ),
                   children: [
                     for (final group in ArcCompactNavigationCatalog.groups) ...[
-                      _DrawerGroupLabel(label: group.label),
-                      for (final item in group.items)
-                        UagDrawerNavTile(
-                          title: item.label,
-                          icon: item.icon,
-                          selected: item.isSelected(currentRoute),
-                          badgeCount: counts.countFor(item.badgeTarget),
-                          onTap: () => _openItem(context, item),
-                        ),
-                      const SizedBox(height: 6),
+                      if (group.label == 'PROFILE') ...[
+                        _DrawerGroupLabel(label: group.label),
+                        for (final item in group.items)
+                          UagDrawerNavTile(
+                            title: item.label,
+                            icon: item.icon,
+                            selected: item.isSelected(currentRoute),
+                            badgeCount: counts.countFor(item.badgeTarget),
+                            onTap: () => _openItem(context, item),
+                          ),
+                        if (_isAdminResolved && _isAdmin) ...[
+                          _DrawerGroupLabel(label: 'ADMIN'),
+                          UagDrawerNavTile(
+                            title: 'Admin Console',
+                            icon: Icons.admin_panel_settings_outlined,
+                            selected: currentRoute == '/admin-console',
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pushNamed('/admin-console');
+                            },
+                          ),
+                        ],
+                        const SizedBox(height: 6),
+                      ] else ...[
+                        _DrawerGroupLabel(label: group.label),
+                        for (final item in group.items)
+                          UagDrawerNavTile(
+                            title: item.label,
+                            icon: item.icon,
+                            selected: item.isSelected(currentRoute),
+                            badgeCount: counts.countFor(item.badgeTarget),
+                            onTap: () => _openItem(context, item),
+                          ),
+                        const SizedBox(height: 6),
+                      ],
                     ],
                   ],
                 );
@@ -230,6 +290,7 @@ class _AppDrawerState extends State<AppDrawer>
     final user = FirebaseAuth.instance.currentUser;
     final isLoggedIn = user != null;
     final currentRoute = ModalRoute.of(context)?.settings.name;
+    final showAdminLoading = user != null && !_isAdminResolved;
 
     return AnimatedBuilder(
       animation: _colorAnimation,
@@ -259,6 +320,17 @@ class _AppDrawerState extends State<AppDrawer>
                     thickness: 1.5,
                   ),
                   Expanded(child: _buildNavigationList(currentRoute)),
+                  if (showAdminLoading)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                      child: Text(
+                        'Resolving access…',
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 12,
+                          color: AppTheme.tradingMutedText,
+                        ),
+                      ),
+                    ),
                   if (isLoggedIn)
                     SafeArea(
                       top: false,

@@ -1,5 +1,7 @@
 export 'access/arc_feature_access_controller.dart';
 export 'access/arc_feature_access_state.dart';
+export 'models/arc_admin_control_config.dart';
+export 'repositories/arc_scrappy_repository_state.dart';
 export 'controllers/arc_collapsible_panel_controller.dart';
 export 'controllers/arc_raiders_section_controller.dart';
 export 'data/canonical/arc_canonical_containers.dart';

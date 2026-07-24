@@ -91,7 +91,7 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
 
   Stream<Map<String, ArcScrappyState>> _watchScrappyStates() {
     try {
-      return _scrappyRepository.watchMyScrappyStates();
+      return _scrappyRepository.watchMyScrappyStateMap();
     } catch (_) {
       return Stream.value(const <String, ArcScrappyState>{});
     }

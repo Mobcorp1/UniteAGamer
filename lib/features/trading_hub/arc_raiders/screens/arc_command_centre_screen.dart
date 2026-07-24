@@ -26,6 +26,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_progression_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
@@ -75,8 +76,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       .watchSavedLoadouts();
   late final Stream<ArcOperationsUserState> _operationsStateStream =
       _operationsRepository.watchUserState();
-  late final Stream<Map<String, ArcScrappyState>> _scrappyStatesStream =
-      _scrappyRepository.watchMyScrappyStates();
+  late final Stream<ArcScrappyRepositoryState<Map<String, ArcScrappyState>>>
+  _scrappyStatesStream = _scrappyRepository.watchMyScrappyStates();
   late final Stream<ArcProgressionRecords> _progressionRecordsStream =
       _progressionRepository.watchProgressionRecords();
   late final Stream<List<TradingListing>> _activeListingsStream =
@@ -102,8 +103,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       <String, ArcBlueprintState>{};
   List<ArcSavedLoadout> _cachedLoadouts = const <ArcSavedLoadout>[];
   ArcOperationsUserState _cachedOperationsState = ArcOperationsUserState.empty;
-  Map<String, ArcScrappyState> _cachedScrappyStates =
-      <String, ArcScrappyState>{};
+  ArcScrappyRepositoryState<Map<String, ArcScrappyState>> _cachedScrappyState =
+      const ArcScrappyRepositoryState<Map<String, ArcScrappyState>>(
+        status: ArcScrappyRepositoryStateStatus.restoring,
+      );
   ArcProgressionRecords _cachedProgressionRecords = ArcProgressionRecords.empty;
   ArcNomadicTraderTrackerSnapshot _cachedNomadicTraderTracker =
       ArcNomadicTraderTrackerSnapshot.empty;
@@ -254,13 +257,20 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                           _cachedOperationsState = operationsSnapshot.data!;
                         }
                         final operationsState = _cachedOperationsState;
-                        return StreamBuilder<Map<String, ArcScrappyState>>(
+                        return StreamBuilder<
+                          ArcScrappyRepositoryState<
+                            Map<String, ArcScrappyState>
+                          >
+                        >(
                           stream: _scrappyStatesStream,
                           builder: (context, scrappySnapshot) {
                             if (scrappySnapshot.hasData) {
-                              _cachedScrappyStates = scrappySnapshot.data!;
+                              _cachedScrappyState = scrappySnapshot.data!;
                             }
-                            final scrappyStates = _cachedScrappyStates;
+                            final scrappyState = _cachedScrappyState;
+                            final scrappyStates =
+                                scrappyState.data ??
+                                const <String, ArcScrappyState>{};
                             return StreamBuilder<ArcProgressionRecords>(
                               stream: _progressionRecordsStream,
                               builder: (context, progressionSnapshot) {
@@ -394,13 +404,18 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                                       progressionRecords: progressionRecords,
                                     );
                                 _lastCommandState = commandState;
-                                return ArcCommandCentreContent(
+                                return _buildResilientContent(
                                   expeditionState: expeditionState,
                                   commandState:
                                       _lastCommandState ?? commandState,
-                                  checklistState: _checklistState,
-                                  onAction: _handleAction,
-                                  onChecklistChanged: _handleChecklistChanged,
+                                  scrappyState: _cachedScrappyState,
+                                  profileCompletion: profileCompletion,
+                                  operationsState: operationsState,
+                                  blueprintStates: blueprintStates,
+                                  loadouts: loadouts,
+                                  progressionRecords: progressionRecords,
+                                  nomadicTraderTracker: nomadicTraderTracker,
+                                  tradeActivity: tradeActivity,
                                 );
                               },
                             );
@@ -415,6 +430,54 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           },
         );
       },
+    );
+  }
+
+  Widget _buildResilientContent({
+    required ArcExpeditionStateSnapshot expeditionState,
+    required ArcCommandCentreState commandState,
+    required ArcScrappyRepositoryState<Map<String, ArcScrappyState>>
+    scrappyState,
+    required ArcProfileCompletionResult profileCompletion,
+    required ArcOperationsUserState operationsState,
+    required Map<String, ArcBlueprintState> blueprintStates,
+    required List<ArcSavedLoadout> loadouts,
+    required ArcProgressionRecords progressionRecords,
+    required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
+    required ArcCommandTradeActivity tradeActivity,
+  }) {
+    if (scrappyState.status == ArcScrappyRepositoryStateStatus.error) {
+      return ArcCommandCentreContent(
+        expeditionState: expeditionState,
+        commandState: commandState,
+        checklistState: _checklistState,
+        onAction: _handleAction,
+        onChecklistChanged: _handleChecklistChanged,
+        fallbackNotice:
+            'Scrappy tracking is temporarily unavailable. Your Command Centre remains usable and will retry automatically.',
+      );
+    }
+
+    if (scrappyState.status ==
+            ArcScrappyRepositoryStateStatus.unauthenticated ||
+        scrappyState.status == ArcScrappyRepositoryStateStatus.restoring) {
+      return ArcCommandCentreContent(
+        expeditionState: expeditionState,
+        commandState: commandState,
+        checklistState: _checklistState,
+        onAction: _handleAction,
+        onChecklistChanged: _handleChecklistChanged,
+        fallbackNotice:
+            'Restoring your account state… the Command Centre will appear as soon as your tracker data is ready.',
+      );
+    }
+
+    return ArcCommandCentreContent(
+      expeditionState: expeditionState,
+      commandState: commandState,
+      checklistState: _checklistState,
+      onAction: _handleAction,
+      onChecklistChanged: _handleChecklistChanged,
     );
   }
 

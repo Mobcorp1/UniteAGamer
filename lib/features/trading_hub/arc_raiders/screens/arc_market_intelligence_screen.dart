@@ -70,7 +70,7 @@ class _ArcMarketIntelligenceScreenState
                     <String, ArcBlueprintState>{};
 
                 return StreamBuilder<Map<String, ArcScrappyState>>(
-                  stream: _scrappyRepository.watchMyScrappyStates(),
+                  stream: _scrappyRepository.watchMyScrappyStateMap(),
                   builder: (context, scrappySnapshot) {
                     final scrappyStates =
                         scrappySnapshot.data ?? <String, ArcScrappyState>{};

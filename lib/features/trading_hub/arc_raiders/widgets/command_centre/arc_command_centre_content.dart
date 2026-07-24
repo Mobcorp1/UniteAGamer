@@ -17,6 +17,7 @@ class ArcCommandCentreContent extends StatefulWidget {
     required this.checklistState,
     required this.onAction,
     required this.onChecklistChanged,
+    this.fallbackNotice,
   });
 
   final ArcExpeditionStateSnapshot expeditionState;
@@ -24,6 +25,7 @@ class ArcCommandCentreContent extends StatefulWidget {
   final Map<String, bool> checklistState;
   final ValueChanged<ArcCommandAction> onAction;
   final void Function(String id, bool value) onChecklistChanged;
+  final String? fallbackNotice;
 
   @override
   State<ArcCommandCentreContent> createState() =>
@@ -58,6 +60,38 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
       maxWidth: 1180,
       bottomPadding: 74,
       children: [
+        if (widget.fallbackNotice != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.neonCyan.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppTheme.neonCyan,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.fallbackNotice!,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         _topCommandDeck(commandState, commandMoves, liveTiles),
         const SizedBox(height: 8),
         _systemCarousel(carouselTiles),
