@@ -203,6 +203,25 @@ service cloud.firestore {
       allow delete: if isAdminOrDev();
     }
 
+    match /arc_community_intel_reports/{reportId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.mapId is string &&
+        request.resource.data.layer is string &&
+        request.resource.data.category is string &&
+        request.resource.data.signature is string;
+      allow update: if isAdminOrDev() ||
+        (isSignedIn() &&
+          request.resource.data.reporterUid == resource.data.reporterUid &&
+          request.resource.data.mapId == resource.data.mapId &&
+          request.resource.data.layer == resource.data.layer &&
+          request.resource.data.category == resource.data.category &&
+          request.resource.data.signature == resource.data.signature);
+      allow delete: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.reporterUid == request.auth.uid);
+    }
+
     match /arc_blueprint_demand/{blueprintId} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn();

@@ -73,4 +73,36 @@ void main() {
     expect(find.text('Community Intel'), findsOneWidget);
     expect(find.text('Everything'), findsOneWidget);
   });
+
+  testWidgets('map exposes long-press and secondary-click Intel reporting', (
+    tester,
+  ) async {
+    ArcNormalizedPoint? reportedPoint;
+    final state = const ArcRaidIntelligenceEngine().build(mapId: 'blue_gate');
+    final controller = TransformationController();
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 800,
+            height: 600,
+            child: ArcRaidIntelligenceMapRenderer(
+              state: state,
+              controller: controller,
+              onIntelReportRequested: (point) => reportedPoint = point,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.longPressAt(const Offset(400, 300));
+    await tester.pump();
+
+    expect(reportedPoint, isNotNull);
+    expect(reportedPoint!.x, inInclusiveRange(0, 1));
+    expect(reportedPoint!.y, inInclusiveRange(0, 1));
+  });
 }

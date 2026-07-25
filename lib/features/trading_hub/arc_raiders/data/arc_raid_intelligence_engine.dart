@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
@@ -22,6 +23,8 @@ class ArcRaidIntelligenceEngine {
     ArcSavedLoadout? favouriteLoadout,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
     List<ArcBlueprintDropReport> dropReports = const <ArcBlueprintDropReport>[],
+    List<ArcCommunityIntelReport> communityReports =
+        const <ArcCommunityIntelReport>[],
     ArcRaidMapFilterState filters = ArcRaidMapFilterState.defaults,
     ArcRaidMapLayer activeLayer = ArcRaidMapLayer.surface,
     ArcRaidRoutePlan? activeRoute,
@@ -62,8 +65,17 @@ class ArcRaidIntelligenceEngine {
             )
             .toList(growable: false) ??
         const <ArcRaidMapMarker>[];
+    final communityMarkers = communityReports
+        .where((report) => report.mapId == map.id && report.active)
+        .map(_markerForCommunityReport)
+        .toList(growable: false);
     final rawVisibleMarkers =
-        [...map.markers, ...clusterMarkers, ...routeMarkers]
+        [
+              ...map.markers,
+              ...clusterMarkers,
+              ...communityMarkers,
+              ...routeMarkers,
+            ]
             .where((marker) => marker.layer == resolvedLayer)
             .where(filters.allows)
             .toList(growable: false)
@@ -92,6 +104,39 @@ class ArcRaidIntelligenceEngine {
       recommendation: relevantCount == 0
           ? 'No evidence-backed Blueprint opportunities for current needs on ${map.displayName}.'
           : 'Generate a Blueprint Run through $relevantCount relevant opportunity ${_plural(relevantCount, 'cluster', 'clusters')}.',
+    );
+  }
+
+  ArcRaidMapMarker _markerForCommunityReport(ArcCommunityIntelReport report) {
+    final category = report.isStale
+        ? ArcRaidMapMarkerCategory.staleIntel
+        : report.confirmationCount >= 5
+        ? ArcRaidMapMarkerCategory.confirmedIntel
+        : report.confirmationCount >= 2
+        ? ArcRaidMapMarkerCategory.researchedIntel
+        : ArcRaidMapMarkerCategory.communityIntel;
+    final tags = <String>[
+      report.category.label,
+      if (report.poiName?.trim().isNotEmpty == true) report.poiName!.trim(),
+      if (report.blueprintName?.trim().isNotEmpty == true)
+        report.blueprintName!.trim(),
+      '${report.confirmationCount} ${_plural(report.confirmationCount, 'confirmation', 'confirmations')}',
+    ];
+    return ArcRaidMapMarker(
+      id: 'community_${report.id}',
+      mapId: report.mapId,
+      category: category,
+      label: report.displayLabel,
+      point: report.point,
+      layer: report.layer,
+      payloadId: report.id,
+      confidence: report.confidence,
+      approximate: false,
+      count: report.confirmationCount,
+      detail: report.notes.trim().isEmpty
+          ? 'Community-submitted Intel.'
+          : report.notes.trim(),
+      tags: tags,
     );
   }
 

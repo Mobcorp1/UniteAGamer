@@ -7,15 +7,18 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_filter_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_community_intel_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -38,6 +41,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ArcSavedLoadoutRepository();
   final ArcRaidIntelligenceRepository _routeRepository =
       ArcRaidIntelligenceRepository();
+  final ArcCommunityIntelRepository _communityIntelRepository =
+      ArcCommunityIntelRepository();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
@@ -213,16 +218,28 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                   builder: (context, reportSnapshot) {
                     final reports =
                         reportSnapshot.data ?? const <ArcBlueprintDropReport>[];
-                    final intelligence = _engine.build(
-                      mapId: _mapId,
-                      blueprintStates: states,
-                      favouriteLoadout: loadout,
-                      dropReports: reports,
-                      filters: _filters,
-                      activeLayer: _activeLayer,
-                      activeRoute: _routePlan,
+                    return StreamBuilder<List<ArcCommunityIntelReport>>(
+                      stream: _communityIntelRepository.watchMapReports(_mapId),
+                      builder: (context, communitySnapshot) {
+                        final communityReports =
+                            communitySnapshot.data ??
+                            const <ArcCommunityIntelReport>[];
+                        final intelligence = _engine.build(
+                          mapId: _mapId,
+                          blueprintStates: states,
+                          favouriteLoadout: loadout,
+                          dropReports: reports,
+                          communityReports: communityReports,
+                          filters: _filters,
+                          activeLayer: _activeLayer,
+                          activeRoute: _routePlan,
+                        );
+                        return _buildLayout(
+                          intelligence,
+                          communityReports: communityReports,
+                        );
+                      },
                     );
-                    return _buildLayout(intelligence);
                   },
                 );
               },
@@ -233,11 +250,18 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
-  Widget _buildLayout(ArcRaidIntelligenceState intelligence) {
+  Widget _buildLayout(
+    ArcRaidIntelligenceState intelligence, {
+    required List<ArcCommunityIntelReport> communityReports,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 980;
-        final panel = _controlPanel(intelligence, desktop: desktop);
+        final panel = _controlPanel(
+          intelligence,
+          desktop: desktop,
+          communityReports: communityReports,
+        );
         final map = _mapPanel(intelligence);
         if (desktop) {
           return Padding(
@@ -287,6 +311,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 onMarkerSelected: (marker) =>
                     setState(() => _selectedMarker = marker),
                 onMapTapped: _setFreeformSpawn,
+                onIntelReportRequested: (point) =>
+                    _openCommunityIntelReport(intelligence.map, point),
               ),
             ),
           ),
@@ -320,6 +346,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         _mapButton(Icons.remove_rounded, 'Zoom out', () => _scaleMap(0.82)),
         const SizedBox(height: 7),
         _mapButton(Icons.center_focus_strong_rounded, 'Fit map', _resetMap),
+        const SizedBox(height: 7),
+        _mapButton(
+          Icons.add_location_alt_rounded,
+          'Report Intel at map centre',
+          () => _openCommunityIntelReport(
+            intelligence.map,
+            const ArcNormalizedPoint(x: 0.5, y: 0.5),
+          ),
+        ),
         const SizedBox(height: 7),
         _mapButton(
           Icons.my_location_rounded,
@@ -426,6 +461,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Widget _controlPanel(
     ArcRaidIntelligenceState intelligence, {
     required bool desktop,
+    required List<ArcCommunityIntelReport> communityReports,
   }) {
     return Container(
       decoration: AppTheme.tradingCardDecoration(
@@ -441,6 +477,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           _setupSection(intelligence),
           const SizedBox(height: 12),
           _filterSection(),
+          const SizedBox(height: 12),
+          _communityIntelSection(intelligence.map, communityReports),
           const SizedBox(height: 12),
           _selectedMarkerSection(intelligence),
           const SizedBox(height: 12),
@@ -663,6 +701,98 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         },
       ),
     );
+  }
+
+  Widget _communityIntelSection(
+    ArcRaidMap map,
+    List<ArcCommunityIntelReport> reports,
+  ) {
+    final visible = reports
+        .where((report) => report.layer == _activeLayer)
+        .take(5)
+        .toList(growable: false);
+    return _section(
+      title: 'Community Intel',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Long-press the map on mobile or right-click on desktop to report a location.',
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white60),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _openCommunityIntelReport(
+                map,
+                const ArcNormalizedPoint(x: 0.5, y: 0.5),
+              ),
+              icon: const Icon(Icons.add_location_alt_rounded),
+              label: const Text('Report Intel'),
+            ),
+          ),
+          if (visible.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            for (final report in visible)
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  radius: 16,
+                  child: Text(report.confirmationCount.toString()),
+                ),
+                title: Text(
+                  report.displayLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  '${report.confidence.label} • ${report.layer.label}',
+                ),
+                trailing: IconButton(
+                  tooltip: 'Confirm this Intel',
+                  onPressed: () => unawaited(_confirmCommunityIntel(report.id)),
+                  icon: const Icon(Icons.verified_outlined),
+                ),
+                onTap: () => _jumpTo(report.point),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openCommunityIntelReport(
+    ArcRaidMap map,
+    ArcNormalizedPoint point,
+  ) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.cardBackgroundDeep,
+      builder: (context) => ArcCommunityIntelReportSheet(
+        map: map,
+        layer: _activeLayer,
+        point: point,
+        repository: _communityIntelRepository,
+      ),
+    );
+  }
+
+  Future<void> _confirmCommunityIntel(String reportId) async {
+    try {
+      await _communityIntelRepository.confirm(reportId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Intel confirmed.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not confirm Intel: $error')),
+      );
+    }
   }
 
   Widget _selectedMarkerSection(ArcRaidIntelligenceState intelligence) {

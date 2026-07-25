@@ -13,6 +13,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     this.selectedMarkerId,
     this.onMarkerSelected,
     this.onMapTapped,
+    this.onIntelReportRequested,
   });
 
   final ArcRaidIntelligenceState state;
@@ -20,6 +21,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
   final String? selectedMarkerId;
   final ValueChanged<ArcRaidMapMarker>? onMarkerSelected;
   final ValueChanged<ArcNormalizedPoint>? onMapTapped;
+  final ValueChanged<ArcNormalizedPoint>? onIntelReportRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -60,19 +62,19 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                     onDoubleTap: () => _doubleTapZoom(mapSize),
                     onTapUp: onMapTapped == null
                         ? null
-                        : (details) {
-                            final imagePoint = ArcNormalizedPoint(
-                              x: details.localPosition.dx / mapSize.width,
-                              y: details.localPosition.dy / mapSize.height,
-                            ).clamp();
-                            final calibration = state.map.calibrationForLayer(
-                              state.activeLayer,
-                            );
-                            onMapTapped!(
-                              calibration?.imageToCanonical(imagePoint) ??
-                                  imagePoint,
-                            );
-                          },
+                        : (details) => onMapTapped!(
+                            _canonicalPoint(details.localPosition, mapSize),
+                          ),
+                    onLongPressStart: onIntelReportRequested == null
+                        ? null
+                        : (details) => onIntelReportRequested!(
+                            _canonicalPoint(details.localPosition, mapSize),
+                          ),
+                    onSecondaryTapUp: onIntelReportRequested == null
+                        ? null
+                        : (details) => onIntelReportRequested!(
+                            _canonicalPoint(details.localPosition, mapSize),
+                          ),
                     child: SizedBox.fromSize(
                       size: mapSize,
                       child: Stack(
@@ -106,6 +108,15 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
         },
       ),
     );
+  }
+
+  ArcNormalizedPoint _canonicalPoint(Offset localPosition, Size mapSize) {
+    final imagePoint = ArcNormalizedPoint(
+      x: localPosition.dx / mapSize.width,
+      y: localPosition.dy / mapSize.height,
+    ).clamp();
+    final calibration = state.map.calibrationForLayer(state.activeLayer);
+    return calibration?.imageToCanonical(imagePoint) ?? imagePoint;
   }
 
   Widget _mapBackground() {
