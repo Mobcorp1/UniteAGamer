@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -33,61 +34,70 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
           final height = constraints.maxHeight.isFinite
               ? constraints.maxHeight
               : MediaQuery.sizeOf(context).height * 0.62;
-          final mapSize = Size(
-            width.clamp(320.0, 1400.0).toDouble(),
-            height.clamp(360.0, 900.0).toDouble(),
+          final viewportSize = Size(
+            width.clamp(320.0, 1800.0).toDouble(),
+            height.clamp(360.0, 1100.0).toDouble(),
           );
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: InteractiveViewer(
-              transformationController: controller,
-              minScale: 0.75,
-              maxScale: 5,
-              boundaryMargin: const EdgeInsets.all(220),
-              panEnabled: true,
-              scaleEnabled: true,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onDoubleTap: _doubleTapZoom,
-                onTapUp: onMapTapped == null
-                    ? null
-                    : (details) {
-                        final imagePoint = ArcNormalizedPoint(
-                          x: details.localPosition.dx / mapSize.width,
-                          y: details.localPosition.dy / mapSize.height,
-                        ).clamp();
-                        final calibration = state.map.calibrationForLayer(
-                          state.activeLayer,
-                        );
-                        onMapTapped!(
-                          calibration?.imageToCanonical(imagePoint) ??
-                              imagePoint,
-                        );
-                      },
-                child: SizedBox.fromSize(
-                  size: mapSize,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(child: _mapBackground()),
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _ArcRaidSchematicPainter(
-                            state: state,
-                            selectedMarkerId: selectedMarkerId,
-                            showSchematicGuides: !state.map.hasCalibratedLayer(
+          final mapSize = _fittedMapSize(viewportSize);
+          return SizedBox.fromSize(
+            size: viewportSize,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Listener(
+                onPointerSignal: _handlePointerSignal,
+                child: InteractiveViewer(
+                  transformationController: controller,
+                  minScale: 0.75,
+                  maxScale: 5,
+                  boundaryMargin: const EdgeInsets.all(260),
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  panEnabled: true,
+                  scaleEnabled: true,
+                  trackpadScrollCausesScale: true,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onDoubleTap: () => _doubleTapZoom(mapSize),
+                    onTapUp: onMapTapped == null
+                        ? null
+                        : (details) {
+                            final imagePoint = ArcNormalizedPoint(
+                              x: details.localPosition.dx / mapSize.width,
+                              y: details.localPosition.dy / mapSize.height,
+                            ).clamp();
+                            final calibration = state.map.calibrationForLayer(
                               state.activeLayer,
+                            );
+                            onMapTapped!(
+                              calibration?.imageToCanonical(imagePoint) ??
+                                  imagePoint,
+                            );
+                          },
+                    child: SizedBox.fromSize(
+                      size: mapSize,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(child: _mapBackground()),
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _ArcRaidSchematicPainter(
+                                state: state,
+                                selectedMarkerId: selectedMarkerId,
+                                showSchematicGuides: !state.map
+                                    .hasCalibratedLayer(state.activeLayer),
+                              ),
                             ),
                           ),
-                        ),
+                          Positioned(
+                            left: 12,
+                            top: 12,
+                            child: _modeBadge(state.map),
+                          ),
+                          for (final marker in state.visibleMarkers)
+                            _markerButton(marker, mapSize),
+                        ],
                       ),
-                      Positioned(
-                        left: 12,
-                        top: 12,
-                        child: _modeBadge(state.map),
-                      ),
-                      for (final marker in state.visibleMarkers)
-                        _markerButton(marker, mapSize),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -220,11 +230,45 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     );
   }
 
-  void _doubleTapZoom() {
-    final current = controller.value.getMaxScaleOnAxis();
-    controller.value = current > 1.2
-        ? Matrix4.identity()
-        : (Matrix4.identity()..scaleByDouble(1.75, 1.75, 1.75, 1));
+  Size _fittedMapSize(Size viewportSize) {
+    final asset = state.map.assetForLayer(state.activeLayer);
+    final width = asset?.width?.toDouble();
+    final height = asset?.height?.toDouble();
+    final aspectRatio = width != null && height != null && height > 0
+        ? width / height
+        : 1.25;
+    final viewportRatio = viewportSize.width / viewportSize.height;
+    if (viewportRatio > aspectRatio) {
+      return Size(viewportSize.height * aspectRatio, viewportSize.height);
+    }
+    return Size(viewportSize.width, viewportSize.width / aspectRatio);
+  }
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    final currentScale = controller.value.getMaxScaleOnAxis();
+    final zoomFactor = event.scrollDelta.dy > 0 ? 0.90 : 1.10;
+    final targetScale = (currentScale * zoomFactor).clamp(0.75, 5.0);
+    if ((targetScale - currentScale).abs() < 0.001) return;
+
+    final scenePoint = controller.toScene(event.localPosition);
+    controller.value = Matrix4.identity()
+      ..translateByDouble(event.localPosition.dx, event.localPosition.dy, 0, 1)
+      ..scaleByDouble(targetScale, targetScale, targetScale, 1)
+      ..translateByDouble(-scenePoint.dx, -scenePoint.dy, 0, 1);
+  }
+
+  void _doubleTapZoom(Size mapSize) {
+    final currentScale = controller.value.getMaxScaleOnAxis();
+    if (currentScale > 1.2) {
+      controller.value = Matrix4.identity();
+      return;
+    }
+    final center = Offset(mapSize.width / 2, mapSize.height / 2);
+    controller.value = Matrix4.identity()
+      ..translateByDouble(center.dx, center.dy, 0, 1)
+      ..scaleByDouble(1.85, 1.85, 1.85, 1)
+      ..translateByDouble(-center.dx, -center.dy, 0, 1);
   }
 
   static Color _markerColor(

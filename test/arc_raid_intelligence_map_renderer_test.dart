@@ -31,6 +31,13 @@ void main() {
     );
     expect(find.byType(Image), findsOneWidget);
     expect(find.byType(InteractiveViewer), findsOneWidget);
+    expect(find.byType(Listener), findsWidgets);
+    final viewer = tester.widget<InteractiveViewer>(
+      find.byType(InteractiveViewer),
+    );
+    expect(viewer.trackpadScrollCausesScale, isTrue);
+    expect(viewer.minScale, 0.75);
+    expect(viewer.maxScale, 5);
     expect(
       find.bySemanticsLabel(RegExp(r'Blue Gate Raid Intelligence map')),
       findsOneWidget,

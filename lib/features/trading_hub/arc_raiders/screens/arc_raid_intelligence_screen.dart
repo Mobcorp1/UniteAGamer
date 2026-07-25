@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -32,6 +35,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ArcSavedLoadoutRepository();
   final ArcRaidIntelligenceRepository _routeRepository =
       ArcRaidIntelligenceRepository();
+  final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
 
@@ -49,15 +53,21 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   bool _hatchKeyConfirmed = false;
   ArcRaidRoutePlan? _routePlan;
   ArcRaidMapMarker? _selectedMarker;
+  Timer? _mapViewSaveTimer;
+  bool _restoringMapView = false;
 
   @override
   void initState() {
     super.initState();
-    _loadActiveRoute();
+    _mapController.addListener(_onMapTransformChanged);
+    unawaited(_initialiseScreen());
   }
 
   @override
   void dispose() {
+    _mapViewSaveTimer?.cancel();
+    _mapController.removeListener(_onMapTransformChanged);
+    unawaited(_persistMapView());
     _mapController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -80,6 +90,86 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       _hatchKeyConfirmed = route.hatchKeyConfirmed;
       _routePlan = route;
     });
+  }
+
+  Future<void> _initialiseScreen() async {
+    await _loadActiveRoute();
+    await _restoreLastMapView();
+  }
+
+  Future<void> _restoreLastMapView() async {
+    final snapshot = await _mapViewRepository.loadLast();
+    if (!mounted || snapshot == null) return;
+    if (!ArcRaidIntelligenceSeedData.supportedMapIds.contains(snapshot.mapId)) {
+      return;
+    }
+    final map = ArcRaidIntelligenceSeedData.mapById(snapshot.mapId);
+    if (!map.availableLayers.contains(snapshot.layer)) return;
+
+    _restoringMapView = true;
+    setState(() {
+      _mapId = snapshot.mapId;
+      _activeLayer = snapshot.layer;
+      _selectedMarker = null;
+    });
+    _mapController.value = Matrix4.fromList(snapshot.matrixValues);
+    _restoringMapView = false;
+  }
+
+  Future<void> _restoreLayerView({
+    required String mapId,
+    required ArcRaidMapLayer layer,
+  }) async {
+    final snapshot = await _mapViewRepository.loadFor(
+      mapId: mapId,
+      layer: layer,
+    );
+    if (!mounted || mapId != _mapId || layer != _activeLayer) return;
+
+    _restoringMapView = true;
+    _mapController.value = snapshot == null
+        ? Matrix4.identity()
+        : Matrix4.fromList(snapshot.matrixValues);
+    _restoringMapView = false;
+    await _persistMapView();
+  }
+
+  void _onMapTransformChanged() {
+    if (_restoringMapView) return;
+    _mapViewSaveTimer?.cancel();
+    _mapViewSaveTimer = Timer(
+      const Duration(milliseconds: 400),
+      () => unawaited(_persistMapView()),
+    );
+  }
+
+  Future<void> _persistMapView() {
+    return _mapViewRepository.save(
+      ArcMapViewSnapshot(
+        mapId: _mapId,
+        layer: _activeLayer,
+        matrixValues: _mapController.value.storage.toList(growable: false),
+        updatedAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  Future<void> _changeMap(String mapId) async {
+    final nextMap = ArcRaidIntelligenceSeedData.mapById(mapId);
+    final nextLayer = nextMap.availableLayers.contains(ArcRaidMapLayer.surface)
+        ? ArcRaidMapLayer.surface
+        : (nextMap.availableLayers.isEmpty
+              ? ArcRaidMapLayer.surface
+              : nextMap.availableLayers.first);
+    setState(() {
+      _mapId = mapId;
+      _activeLayer = nextLayer;
+      _spawn = null;
+      _extraction = null;
+      _routePlan = null;
+      _selectedMarker = null;
+    });
+    await _restoreLayerView(mapId: mapId, layer: nextLayer);
   }
 
   @override
@@ -190,6 +280,16 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             ),
           ),
           Positioned(right: 16, top: 16, child: _mapControls(intelligence)),
+          if (intelligence.map.availableLayers.length > 1)
+            Positioned(
+              left: 70,
+              top: 16,
+              right: 86,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: _layerSelector(intelligence.map),
+              ),
+            ),
           Positioned(
             left: 18,
             bottom: 18,
@@ -209,14 +309,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         _mapButton(Icons.remove_rounded, 'Zoom out', () => _scaleMap(0.82)),
         const SizedBox(height: 7),
         _mapButton(Icons.center_focus_strong_rounded, 'Fit map', _resetMap),
-        if (intelligence.map.availableLayers.length > 1) ...[
-          const SizedBox(height: 7),
-          _mapButton(
-            Icons.layers_rounded,
-            'Switch to ${_nextLayer(intelligence.map).label}',
-            () => _switchLayer(intelligence.map),
-          ),
-        ],
         const SizedBox(height: 7),
         _mapButton(
           Icons.my_location_rounded,
@@ -241,19 +333,45 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     );
   }
 
-  ArcRaidMapLayer _nextLayer(ArcRaidMap map) {
-    final layers = map.availableLayers;
-    if (layers.isEmpty) return ArcRaidMapLayer.surface;
-    final currentIndex = layers.indexOf(_activeLayer);
-    return layers[(currentIndex + 1) % layers.length];
+  Widget _layerSelector(ArcRaidMap map) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final layer in map.availableLayers)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: ChoiceChip(
+                selected: layer == _activeLayer,
+                showCheckmark: false,
+                label: Text(layer.label),
+                avatar: Icon(
+                  layer == ArcRaidMapLayer.surface
+                      ? Icons.public_rounded
+                      : Icons.layers_rounded,
+                  size: 16,
+                ),
+                onSelected: (_) => unawaited(_selectLayer(layer)),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
-  void _switchLayer(ArcRaidMap map) {
+  Future<void> _selectLayer(ArcRaidMapLayer layer) async {
+    if (layer == _activeLayer) return;
     setState(() {
-      _activeLayer = _nextLayer(map);
+      _activeLayer = layer;
       _selectedMarker = null;
-      _resetMap();
     });
+    await _restoreLayerView(mapId: _mapId, layer: layer);
   }
 
   Widget _mapButton(IconData icon, String tooltip, VoidCallback? onTap) {
@@ -379,21 +497,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             ],
             onChanged: (value) {
               if (value == null) return;
-              setState(() {
-                _mapId = value;
-                final nextMap = ArcRaidIntelligenceSeedData.mapById(value);
-                _activeLayer =
-                    nextMap.availableLayers.contains(ArcRaidMapLayer.surface)
-                    ? ArcRaidMapLayer.surface
-                    : (nextMap.availableLayers.isEmpty
-                          ? ArcRaidMapLayer.surface
-                          : nextMap.availableLayers.first);
-                _spawn = null;
-                _extraction = null;
-                _routePlan = null;
-                _selectedMarker = null;
-                _resetMap();
-              });
+              unawaited(_changeMap(value));
             },
           ),
           const SizedBox(height: 10),
@@ -996,8 +1100,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   void _scaleMap(double factor) {
+    final currentScale = _mapController.value.getMaxScaleOnAxis();
+    final targetScale = (currentScale * factor).clamp(0.75, 5.0);
+    final appliedFactor = targetScale / currentScale;
     final next = _mapController.value.clone()
-      ..scaleByDouble(factor, factor, factor, 1);
+      ..scaleByDouble(appliedFactor, appliedFactor, appliedFactor, 1);
     _mapController.value = next;
   }
 
