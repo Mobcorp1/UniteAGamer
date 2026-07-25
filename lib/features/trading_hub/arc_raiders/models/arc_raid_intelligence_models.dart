@@ -630,6 +630,9 @@ class ArcRaidMapMarker {
     this.detail = '',
     this.tags = const <String>[],
     this.clusterMemberIds = const <String>[],
+    this.blueprintIds = const <String>[],
+    this.blueprintFindCounts = const <String, int>{},
+    this.prioritizedBlueprintIds = const <String>[],
   });
 
   final String id;
@@ -647,8 +650,16 @@ class ArcRaidMapMarker {
   final String detail;
   final List<String> tags;
   final List<String> clusterMemberIds;
+  final List<String> blueprintIds;
+  final Map<String, int> blueprintFindCounts;
+  final List<String> prioritizedBlueprintIds;
 
   bool get isCluster => clusterMemberIds.length > 1 || count > 1;
+  bool get isBlueprintOpportunity =>
+      category == ArcRaidMapMarkerCategory.blueprintOpportunity &&
+      blueprintIds.isNotEmpty;
+  int findsForBlueprint(String blueprintId) =>
+      blueprintFindCounts[blueprintId] ?? 0;
 
   String get semanticLabel {
     final clusterText = isCluster ? ', $count grouped markers' : '';

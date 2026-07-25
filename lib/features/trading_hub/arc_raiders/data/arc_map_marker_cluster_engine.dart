@@ -72,6 +72,24 @@ class ArcMapMarkerClusterEngine {
           )
           .toSet()
           .toList(growable: false);
+      final blueprintIds = nearby
+          .expand((item) => item.blueprintIds)
+          .toSet()
+          .toList(growable: false);
+      final prioritizedBlueprintIds = nearby
+          .expand((item) => item.prioritizedBlueprintIds)
+          .toSet()
+          .toList(growable: false);
+      final blueprintFindCounts = <String, int>{};
+      for (final item in nearby) {
+        for (final entry in item.blueprintFindCounts.entries) {
+          blueprintFindCounts.update(
+            entry.key,
+            (value) => value + entry.value,
+            ifAbsent: () => entry.value,
+          );
+        }
+      }
 
       output.add(
         ArcRaidMapMarker(
@@ -91,6 +109,9 @@ class ArcMapMarkerClusterEngine {
               .toSet()
               .toList(growable: false),
           clusterMemberIds: ids,
+          blueprintIds: blueprintIds,
+          blueprintFindCounts: blueprintFindCounts,
+          prioritizedBlueprintIds: prioritizedBlueprintIds,
         ),
       );
     }

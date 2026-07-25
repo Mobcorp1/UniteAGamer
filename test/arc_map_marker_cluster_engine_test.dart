@@ -68,4 +68,40 @@ void main() {
 
     expect(engine.cluster(markers), hasLength(2));
   });
+
+  test('combines Blueprint artwork metadata when opportunities cluster', () {
+    const engine = ArcMapMarkerClusterEngine();
+    final output = engine.cluster(const <ArcRaidMapMarker>[
+      ArcRaidMapMarker(
+        id: 'a',
+        mapId: 'blue_gate',
+        category: ArcRaidMapMarkerCategory.blueprintOpportunity,
+        label: 'Tempest',
+        point: ArcNormalizedPoint(x: 0.40, y: 0.40),
+        count: 3,
+        blueprintIds: <String>['tempest'],
+        blueprintFindCounts: <String, int>{'tempest': 3},
+        prioritizedBlueprintIds: <String>['tempest'],
+      ),
+      ArcRaidMapMarker(
+        id: 'b',
+        mapId: 'blue_gate',
+        category: ArcRaidMapMarkerCategory.blueprintOpportunity,
+        label: 'Bobcat',
+        point: ArcNormalizedPoint(x: 0.41, y: 0.41),
+        count: 2,
+        blueprintIds: <String>['bobcat'],
+        blueprintFindCounts: <String, int>{'bobcat': 2},
+      ),
+    ]);
+
+    expect(output, hasLength(1));
+    expect(
+      output.single.blueprintIds,
+      containsAll(<String>['tempest', 'bobcat']),
+    );
+    expect(output.single.blueprintFindCounts['tempest'], 3);
+    expect(output.single.blueprintFindCounts['bobcat'], 2);
+    expect(output.single.prioritizedBlueprintIds, contains('tempest'));
+  });
 }

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_marker.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
@@ -183,59 +184,73 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     final point =
         calibration?.canonicalToImage(marker.point) ?? marker.point.clamp();
     final color = _markerColor(marker.category, marker.confidence);
-    final size = marker.isCluster ? 38.0 : 28.0;
+    final size = marker.isBlueprintOpportunity
+        ? (marker.blueprintIds.length > 1 ? 60.0 : 54.0)
+        : marker.isCluster
+        ? 38.0
+        : 28.0;
     return Positioned(
       left: (point.x * mapSize.width) - (size / 2),
       top: (point.y * mapSize.height) - (size / 2),
-      child: Semantics(
-        button: true,
-        label: marker.semanticLabel,
-        child: Tooltip(
-          message: marker.semanticLabel,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(999),
+      child: marker.isBlueprintOpportunity
+          ? ArcBlueprintOpportunityMarker(
+              marker: marker,
+              selected: selected,
               onTap: () => onMarkerSelected?.call(marker),
-              child: AnimatedContainer(
-                duration: AppTheme.fastAnimation,
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: selected ? 0.90 : 0.72),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: selected ? Colors.white : color,
-                    width: selected ? 2.2 : 1.4,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: selected ? 0.48 : 0.22),
-                      blurRadius: selected ? 20 : 12,
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: marker.isCluster
-                      ? Text(
-                          marker.count.toString(),
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                            isBold: true,
-                          ),
-                        )
-                      : Icon(
-                          _markerIcon(marker.category),
-                          color: color,
-                          size: 15,
+            )
+          : Semantics(
+              button: true,
+              label: marker.semanticLabel,
+              child: Tooltip(
+                message: marker.semanticLabel,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(999),
+                    onTap: () => onMarkerSelected?.call(marker),
+                    child: AnimatedContainer(
+                      duration: AppTheme.fastAnimation,
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(
+                          alpha: selected ? 0.90 : 0.72,
                         ),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selected ? Colors.white : color,
+                          width: selected ? 2.2 : 1.4,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(
+                              alpha: selected ? 0.48 : 0.22,
+                            ),
+                            blurRadius: selected ? 20 : 12,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: marker.isCluster
+                            ? Text(
+                                marker.count.toString(),
+                                style: AppTheme.bodyTextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  isBold: true,
+                                ),
+                              )
+                            : Icon(
+                                _markerIcon(marker.category),
+                                color: color,
+                                size: 15,
+                              ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      ),
     );
   }
 

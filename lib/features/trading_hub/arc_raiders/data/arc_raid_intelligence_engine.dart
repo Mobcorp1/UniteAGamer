@@ -42,7 +42,9 @@ class ArcRaidIntelligenceEngine {
       operationsState: operationsState,
       dropReports: dropReports,
     );
-    final clusterMarkers = clusters.map(_markerForCluster).toList();
+    final clusterMarkers = clusters
+        .map((cluster) => _markerForCluster(cluster, blueprintStates))
+        .toList();
     final routeMarkers =
         activeRoute?.orderedStops
             .map(
@@ -596,23 +598,46 @@ class ArcRaidIntelligenceEngine {
     return a.label.compareTo(b.label);
   }
 
-  static ArcRaidMapMarker _markerForCluster(ArcRaidIntelCluster cluster) {
-    final category = cluster.blueprintIds.length > 1
-        ? ArcRaidMapMarkerCategory.blueprintOpportunity
-        : ArcRaidMapMarkerCategory.blueprintOpportunity;
+  static ArcRaidMapMarker _markerForCluster(
+    ArcRaidIntelCluster cluster,
+    Map<String, ArcBlueprintState> blueprintStates,
+  ) {
     final reportDriven = cluster.evidence.any(
       (item) => item.sourceCategory == 'community_drop_report',
     );
+    final sortedBlueprintIds = List<String>.from(cluster.blueprintIds)
+      ..sort((a, b) {
+        final aState = blueprintStates[a];
+        final bState = blueprintStates[b];
+        final aRank = aState?.priorityRank ?? 0;
+        final bRank = bState?.priorityRank ?? 0;
+        if ((aRank > 0) != (bRank > 0)) return aRank > 0 ? -1 : 1;
+        if (aRank > 0 && bRank > 0 && aRank != bRank) {
+          return aRank.compareTo(bRank);
+        }
+        return a.compareTo(b);
+      });
+    final prioritizedIds = sortedBlueprintIds
+        .where((id) => (blueprintStates[id]?.priorityRank ?? 0) > 0)
+        .toList(growable: false);
+    final findsPerBlueprint = <String, int>{
+      for (final id in sortedBlueprintIds)
+        id: cluster.evidence
+            .where((item) => item.blueprintId == id)
+            .fold<int>(0, (total, _) => total + 1)
+            .clamp(1, cluster.reportCount),
+    };
+
     return ArcRaidMapMarker(
       id: '${cluster.id}_marker',
       mapId: cluster.mapId,
-      category: category,
+      category: ArcRaidMapMarkerCategory.blueprintOpportunity,
       label: cluster.label,
       point: cluster.point,
       layer: cluster.layer,
       payloadId: cluster.id,
       confidence: cluster.confidence,
-      count: cluster.blueprintIds.length,
+      count: math.max(cluster.reportCount, sortedBlueprintIds.length),
       approximate: !reportDriven,
       detail:
           '${cluster.cautiousSummary}. ${cluster.reportCount} report confirmations from ${cluster.independentReporterCount} independent Raiders. ${cluster.freshnessLabel}.',
@@ -622,6 +647,9 @@ class ArcRaidIntelligenceEngine {
         cluster.conditionCorrelation,
         cluster.freshnessLabel,
       ],
+      blueprintIds: sortedBlueprintIds,
+      blueprintFindCounts: findsPerBlueprint,
+      prioritizedBlueprintIds: prioritizedIds,
     );
   }
 

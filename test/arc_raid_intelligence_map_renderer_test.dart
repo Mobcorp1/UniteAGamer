@@ -31,7 +31,27 @@ void main() {
       find.textContaining('Surface • calibrated game map'),
       findsOneWidget,
     );
-    expect(find.byType(Image), findsOneWidget);
+    expect(find.byType(Image), findsWidgets);
+    final images = tester.widgetList<Image>(find.byType(Image)).toList();
+    expect(
+      images.where(
+        (image) =>
+            image.image is AssetImage &&
+            (image.image as AssetImage).assetName ==
+                'assets/arc_raiders/maps/blue_gate/bluegate_master.webp',
+      ),
+      hasLength(1),
+    );
+    expect(
+      images.where(
+        (image) =>
+            image.image is AssetImage &&
+            (image.image as AssetImage).assetName.startsWith(
+              'assets/arc_raiders/blueprints/',
+            ),
+      ),
+      isNotEmpty,
+    );
     expect(find.byType(InteractiveViewer), findsOneWidget);
     expect(find.byType(Listener), findsWidgets);
     final viewer = tester.widget<InteractiveViewer>(

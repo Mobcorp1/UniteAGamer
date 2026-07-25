@@ -18,6 +18,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_filter_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_carousel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_community_intel_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
@@ -838,6 +839,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        ArcBlueprintOpportunityCarousel(
+                          marker: marker,
+                          cluster: cluster,
+                          onOpenBlueprint: (_) => Navigator.of(
+                            context,
+                          ).pushNamed(BlueprintGridScreen.routeName),
+                        ),
+                        const SizedBox(height: 10),
                         Text(
                           cluster.cautiousSummary,
                           style: const TextStyle(color: Colors.white70),
