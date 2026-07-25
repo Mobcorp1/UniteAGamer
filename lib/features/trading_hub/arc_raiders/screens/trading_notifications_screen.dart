@@ -213,10 +213,11 @@ class _TradingNotificationsScreenState
             return;
           }
         }
-        if (mounted)
+        if (mounted) {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const TradingListingsScreen()),
           );
+        }
         return;
       case TradingNotificationType.tradeReadyPreparation:
         Navigator.of(context).push(
@@ -326,7 +327,7 @@ class _TradingNotificationsScreenState
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             scrollDirection: Axis.horizontal,
                             itemCount: _InboxFilter.values.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (context, index) =>
                                 const SizedBox(width: 8),
                             itemBuilder: (context, index) {
                               final filter = _InboxFilter.values[index];
@@ -506,7 +507,7 @@ class _TradingNotificationsScreenState
                                                       ],
                                                     ),
                                                   ),
-                                                  const Icon(
+                                                  Icon(
                                                     Icons.chevron_right_rounded,
                                                     color: AppTheme
                                                         .tradingFaintText,
