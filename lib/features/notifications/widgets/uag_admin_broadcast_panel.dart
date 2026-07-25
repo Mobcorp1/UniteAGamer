@@ -221,7 +221,7 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
-                  'Open Beta Broadcast',
+                  'Communications Centre Broadcast',
                   style: AppTheme.tradingHeading(fontSize: 22),
                 ),
               ),
@@ -236,7 +236,7 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
-            'Queue admin-only announcements for secure Cloud Function delivery. Always test-send before the final broadcast.',
+            'Send durable inbox messages and optional push alerts to all eligible users, platform audiences, or a selected user. Always test-send before the final broadcast.',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,

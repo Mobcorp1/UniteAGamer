@@ -12,6 +12,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_drawer_nav_tile.dart';
@@ -238,6 +239,26 @@ class _AppDrawerState extends State<AppDrawer>
                     bottom: MediaQuery.paddingOf(context).bottom + 12,
                   ),
                   children: [
+                    _DrawerGroupLabel(label: 'COMMUNICATIONS'),
+                    UagDrawerNavTile(
+                      title: 'Communications Centre',
+                      icon: Icons.notifications_active_outlined,
+                      selected:
+                          currentRoute == TradingNotificationsScreen.routeName,
+                      badgeCount: counts.tradingHub,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        if (currentRoute ==
+                            TradingNotificationsScreen.routeName) {
+                          return;
+                        }
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                          TradingNotificationsScreen.routeName,
+                          (route) => route.isFirst,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 6),
                     for (final group in ArcCompactNavigationCatalog.groups) ...[
                       if (group.label == 'PROFILE') ...[
                         _DrawerGroupLabel(label: group.label),

@@ -1226,6 +1226,25 @@ class TradingRepository {
     }, SetOptions(merge: true));
   }
 
+  Future<void> markAllNotificationsRead() async {
+    final uid = currentUid;
+    if (uid == null) return;
+    final unread = await _notificationsCollection
+        .where('targetUid', isEqualTo: uid)
+        .where('read', isEqualTo: false)
+        .get();
+    if (unread.docs.isEmpty) return;
+    final batch = _firestore.batch();
+    final now = Timestamp.fromDate(DateTime.now());
+    for (final doc in unread.docs) {
+      batch.set(doc.reference, {
+        'read': true,
+        'updatedAt': now,
+      }, SetOptions(merge: true));
+    }
+    await batch.commit();
+  }
+
   Future<void> deleteNotification(String notificationId) async {
     await _notificationsCollection.doc(notificationId).delete();
   }

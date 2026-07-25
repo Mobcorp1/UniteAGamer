@@ -403,11 +403,7 @@ class UAGTradersHubApp extends StatelessWidget {
 
       case TradingNotificationsScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const FeatureAccessRouteGate(
-            flag: FeatureAccessFlag.traderHub,
-            title: 'Trader Hub',
-            child: TraderHubScreen(initialIndex: 4),
-          ),
+          builder: (_) => const TradingNotificationsScreen(),
           settings: settings,
         );
 
