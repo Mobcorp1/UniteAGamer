@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
@@ -207,15 +208,23 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               stream: _loadoutRepository.watchFavouriteLoadout(),
               builder: (context, loadoutSnapshot) {
                 final loadout = loadoutSnapshot.data;
-                final intelligence = _engine.build(
-                  mapId: _mapId,
-                  blueprintStates: states,
-                  favouriteLoadout: loadout,
-                  filters: _filters,
-                  activeLayer: _activeLayer,
-                  activeRoute: _routePlan,
+                return StreamBuilder<List<ArcBlueprintDropReport>>(
+                  stream: _blueprintRepository.watchRecentReports(limit: 300),
+                  builder: (context, reportSnapshot) {
+                    final reports =
+                        reportSnapshot.data ?? const <ArcBlueprintDropReport>[];
+                    final intelligence = _engine.build(
+                      mapId: _mapId,
+                      blueprintStates: states,
+                      favouriteLoadout: loadout,
+                      dropReports: reports,
+                      filters: _filters,
+                      activeLayer: _activeLayer,
+                      activeRoute: _routePlan,
+                    );
+                    return _buildLayout(intelligence);
+                  },
                 );
-                return _buildLayout(intelligence);
               },
             );
           },

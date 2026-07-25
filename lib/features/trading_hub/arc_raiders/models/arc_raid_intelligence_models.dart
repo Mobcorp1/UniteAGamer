@@ -927,6 +927,7 @@ class ArcRaidIntelCluster {
     required this.point,
     required this.blueprintIds,
     required this.evidence,
+    this.layer = ArcRaidMapLayer.surface,
     this.poiId,
     this.confidence = ArcRaidIntelConfidence.limited,
     this.reportCount = 0,
@@ -940,6 +941,7 @@ class ArcRaidIntelCluster {
   final String mapId;
   final String label;
   final ArcNormalizedPoint point;
+  final ArcRaidMapLayer layer;
   final List<String> blueprintIds;
   final List<ArcRaidIntelEvidence> evidence;
   final String? poiId;

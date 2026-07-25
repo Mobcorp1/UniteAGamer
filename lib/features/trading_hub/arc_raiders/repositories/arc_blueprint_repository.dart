@@ -120,7 +120,7 @@ class ArcBlueprintRepository {
         });
   }
 
-  Stream<List<ArcBlueprintDropReport>> watchRecentReports({int limit = 120}) {
+  Stream<List<ArcBlueprintDropReport>> watchRecentReports({int limit = 300}) {
     return _reportsCollection
         .orderBy('createdAt', descending: true)
         .limit(limit)

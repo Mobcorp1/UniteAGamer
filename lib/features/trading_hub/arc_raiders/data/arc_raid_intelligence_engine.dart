@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_opportunity_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_cluster_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
@@ -19,6 +21,7 @@ class ArcRaidIntelligenceEngine {
         const <String, ArcBlueprintState>{},
     ArcSavedLoadout? favouriteLoadout,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
+    List<ArcBlueprintDropReport> dropReports = const <ArcBlueprintDropReport>[],
     ArcRaidMapFilterState filters = ArcRaidMapFilterState.defaults,
     ArcRaidMapLayer activeLayer = ArcRaidMapLayer.surface,
     ArcRaidRoutePlan? activeRoute,
@@ -34,6 +37,7 @@ class ArcRaidIntelligenceEngine {
       blueprintStates: blueprintStates,
       favouriteLoadout: favouriteLoadout,
       operationsState: operationsState,
+      dropReports: dropReports,
     );
     final clusterMarkers = clusters.map(_markerForCluster).toList();
     final routeMarkers =
@@ -97,11 +101,29 @@ class ArcRaidIntelligenceEngine {
         const <String, ArcBlueprintState>{},
     ArcSavedLoadout? favouriteLoadout,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
+    List<ArcBlueprintDropReport> dropReports = const <ArcBlueprintDropReport>[],
   }) {
     final loadoutNames = _loadoutItemNames(favouriteLoadout);
     final mapClusters = <ArcRaidIntelCluster>[];
     final missing = _missingBlueprints(blueprintStates);
+    final reportClusters = const ArcBlueprintOpportunityEngine().build(
+      map: map,
+      reports: dropReports,
+      blueprintStates: blueprintStates,
+    );
+    final reportBlueprintIds = reportClusters
+        .expand((cluster) => cluster.blueprintIds)
+        .toSet();
+    for (final cluster in reportClusters) {
+      mapClusters.add(cluster);
+      _clusterScores[cluster.id] =
+          120 +
+          cluster.confidence.score +
+          (cluster.reportCount * 4) +
+          (cluster.independentReporterCount * 8);
+    }
     for (final blueprint in missing) {
+      if (reportBlueprintIds.contains(blueprint.id)) continue;
       final hint = ArcBlueprintIntelLibrary.resolve(blueprint);
       if (!_hintSupportsMap(hint, map)) continue;
       final poi = _poiForBlueprint(map, blueprint);
@@ -388,16 +410,28 @@ class ArcRaidIntelligenceEngine {
     final category = cluster.blueprintIds.length > 1
         ? ArcRaidMapMarkerCategory.blueprintOpportunity
         : ArcRaidMapMarkerCategory.blueprintOpportunity;
+    final reportDriven = cluster.evidence.any(
+      (item) => item.sourceCategory == 'community_drop_report',
+    );
     return ArcRaidMapMarker(
       id: '${cluster.id}_marker',
       mapId: cluster.mapId,
       category: category,
       label: cluster.label,
       point: cluster.point,
+      layer: cluster.layer,
       payloadId: cluster.id,
       confidence: cluster.confidence,
       count: cluster.blueprintIds.length,
-      approximate: true,
+      approximate: !reportDriven,
+      detail:
+          '${cluster.cautiousSummary}. ${cluster.reportCount} report confirmations from ${cluster.independentReporterCount} independent Raiders. ${cluster.freshnessLabel}.',
+      tags: <String>[
+        if (reportDriven) 'Drop Reports' else 'Seeded Intel',
+        cluster.commonSource,
+        cluster.conditionCorrelation,
+        cluster.freshnessLabel,
+      ],
     );
   }
 
@@ -505,6 +539,7 @@ class ArcRaidIntelligenceEngine {
             (other) =>
                 other.id != cluster.id &&
                 !used.contains(other.id) &&
+                other.layer == cluster.layer &&
                 other.point.distanceTo(cluster.point) < 0.055,
           )
           .toList(growable: false);
@@ -522,6 +557,7 @@ class ArcRaidIntelligenceEngine {
           mapId: cluster.mapId,
           label: '${all.length} Blueprint opportunities',
           point: cluster.point,
+          layer: cluster.layer,
           poiId: cluster.poiId,
           blueprintIds: all
               .expand((item) => item.blueprintIds)
