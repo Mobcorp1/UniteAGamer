@@ -151,8 +151,10 @@ class ArcRaidIntelligenceSeedData {
           confidence: ArcRaidIntelConfidence.moderate,
         ),
       ..._genericLootMarkers(mapId),
-      if (mapId == ArcMapAssetRegistry.blueGateMapId)
+      if (mapId == ArcMapAssetRegistry.blueGateMapId) ...[
         ..._blueGateProductionMarkers(),
+        ..._blueGateProductionPoiMarkers(),
+      ],
     ];
     final layerAssets = ArcMapAssetRegistry.assetsFor(mapId);
     final layerCalibrations = ArcMapAssetRegistry.calibrationsFor(mapId);
@@ -177,7 +179,7 @@ class ArcRaidIntelligenceSeedData {
       layerAssets: layerAssets,
       layerCalibrations: layerCalibrations,
       dataVersion: mapId == ArcMapAssetRegistry.blueGateMapId
-          ? 'pass-281-shared-marker-engine-v1'
+          ? 'pass-282-raid-intelligence-core-v1'
           : 'pass-275-local-schematic-v1',
       lastReviewed: DateTime.utc(2026, 7, 23),
     );
@@ -333,6 +335,136 @@ class ArcRaidIntelligenceSeedData {
       );
     }
     return edges;
+  }
+
+  static List<ArcRaidMapMarker> _blueGateProductionPoiMarkers() {
+    const mapId = ArcMapAssetRegistry.blueGateMapId;
+    return const <ArcRaidMapMarker>[
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_raider_refuge',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Raider Refuge',
+        point: ArcNormalizedPoint(x: 0.305, y: 0.085),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        detail: 'Northern fortified POI.',
+        tags: <String>['POI', 'North'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_trapper_glade',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: "Trapper's Glade",
+        point: ArcNormalizedPoint(x: 0.381, y: 0.215),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        detail: 'Northern woodland POI.',
+        tags: <String>['POI', 'North'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_adorned_wreckage',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Adorned Wreckage',
+        point: ArcNormalizedPoint(x: 0.596, y: 0.190),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'North'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_checkpoint',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Checkpoint',
+        point: ArcNormalizedPoint(x: 0.702, y: 0.215),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'Northeast'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_reinforced_reception',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Reinforced Reception',
+        point: ArcNormalizedPoint(x: 0.545, y: 0.306),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'Central'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_white_valley',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'White Valley',
+        point: ArcNormalizedPoint(x: 0.635, y: 0.393),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'East'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_village',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Village',
+        point: ArcNormalizedPoint(x: 0.387, y: 0.381),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'West'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_warehouse_complex',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Warehouse Complex',
+        point: ArcNormalizedPoint(x: 0.313, y: 0.476),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'West'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_highway_collapse',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Highway Collapse',
+        point: ArcNormalizedPoint(x: 0.535, y: 0.474),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'Central'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_confiscation_room',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Confiscation Room',
+        point: ArcNormalizedPoint(x: 0.664, y: 0.510),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'East'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_ancient_fort',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Ancient Fort',
+        point: ArcNormalizedPoint(x: 0.481, y: 0.704),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        tags: <String>['POI', 'South'],
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_poi_underground',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.poi,
+        label: 'Blue Gate Underground',
+        point: ArcNormalizedPoint(x: 0.500, y: 0.510),
+        layer: ArcRaidMapLayer.underground,
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+        detail: 'Level 2 underground map layer.',
+        tags: <String>['POI', 'Level 2'],
+      ),
+    ];
   }
 
   static List<ArcRaidMapMarker> _blueGateProductionMarkers() {

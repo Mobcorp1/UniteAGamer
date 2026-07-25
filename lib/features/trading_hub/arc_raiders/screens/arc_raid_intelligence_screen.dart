@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_filter_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -666,6 +667,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         }
       }
     }
+
     return _section(
       title: 'Selected Intel',
       child: marker == null
@@ -673,60 +675,67 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               'Select a marker or Blueprint Opportunity cluster.',
               style: TextStyle(color: Colors.white60),
             )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  marker.label,
-                  style: AppTheme.tradingHeading(
-                    fontSize: 18,
-                    color: AppTheme.neonCyan,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${marker.category.label} • ${marker.confidence.label}',
-                  style: const TextStyle(color: Colors.white60),
-                ),
-                if (cluster != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    cluster.cautiousSummary,
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${cluster.blueprintIds.length} Blueprint ${cluster.blueprintIds.length == 1 ? 'target' : 'targets'} • ${cluster.commonSource} • ${cluster.conditionCorrelation}',
-                    style: const TextStyle(color: Colors.white54),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _smallButton(
-                        'Add Stop',
-                        Icons.add_location_alt_rounded,
-                        () => _addClusterStop(cluster!),
-                      ),
-                      _smallButton(
-                        'Open Blueprint',
-                        Icons.grid_view_rounded,
-                        () => Navigator.of(
-                          context,
-                        ).pushNamed(BlueprintGridScreen.routeName),
-                      ),
-                      _smallButton(
-                        'Add to Raid Planner',
-                        Icons.playlist_add_rounded,
-                        () => Navigator.of(
-                          context,
-                        ).pushNamed(RaidPlannerScreen.routeName),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
+          : ArcMapMarkerDetailCard(
+              marker: marker,
+              footer: cluster == null
+                  ? Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _smallButton(
+                          'Centre Map',
+                          Icons.center_focus_strong_rounded,
+                          () => _jumpTo(marker.point),
+                        ),
+                        _smallButton(
+                          'Add to Raid Planner',
+                          Icons.playlist_add_rounded,
+                          () => Navigator.of(
+                            context,
+                          ).pushNamed(RaidPlannerScreen.routeName),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          cluster.cautiousSummary,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${cluster.blueprintIds.length} Blueprint ${cluster.blueprintIds.length == 1 ? 'target' : 'targets'} • ${cluster.commonSource} • ${cluster.conditionCorrelation}',
+                          style: const TextStyle(color: Colors.white54),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _smallButton(
+                              'Add Stop',
+                              Icons.add_location_alt_rounded,
+                              () => _addClusterStop(cluster!),
+                            ),
+                            _smallButton(
+                              'Open Blueprint',
+                              Icons.grid_view_rounded,
+                              () => Navigator.of(
+                                context,
+                              ).pushNamed(BlueprintGridScreen.routeName),
+                            ),
+                            _smallButton(
+                              'Add to Raid Planner',
+                              Icons.playlist_add_rounded,
+                              () => Navigator.of(
+                                context,
+                              ).pushNamed(RaidPlannerScreen.routeName),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
             ),
     );
   }

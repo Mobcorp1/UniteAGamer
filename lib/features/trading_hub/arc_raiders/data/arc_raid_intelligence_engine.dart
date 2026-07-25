@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_cluster_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -57,12 +58,15 @@ class ArcRaidIntelligenceEngine {
             )
             .toList(growable: false) ??
         const <ArcRaidMapMarker>[];
-    final visibleMarkers =
+    final rawVisibleMarkers =
         [...map.markers, ...clusterMarkers, ...routeMarkers]
             .where((marker) => marker.layer == resolvedLayer)
             .where(filters.allows)
             .toList(growable: false)
           ..sort(_markerSort);
+    final visibleMarkers = const ArcMapMarkerClusterEngine().cluster(
+      rawVisibleMarkers,
+    )..sort(_markerSort);
     final relevantCount = clusters.fold<int>(
       0,
       (total, cluster) => total + cluster.blueprintIds.length,

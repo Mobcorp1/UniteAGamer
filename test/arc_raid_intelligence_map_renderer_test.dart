@@ -44,6 +44,7 @@ void main() {
       find.bySemanticsLabel(RegExp(r'Blue Gate Raid Intelligence map')),
       findsOneWidget,
     );
+    expect(find.byTooltip(RegExp(r'.+')), findsWidgets);
   });
 
   testWidgets('shared marker filter panel exposes global quick layers', (

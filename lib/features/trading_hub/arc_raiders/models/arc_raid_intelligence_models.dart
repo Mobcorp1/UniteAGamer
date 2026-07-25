@@ -627,6 +627,9 @@ class ArcRaidMapMarker {
     this.approximate = true,
     this.enabled = true,
     this.count = 1,
+    this.detail = '',
+    this.tags = const <String>[],
+    this.clusterMemberIds = const <String>[],
   });
 
   final String id;
@@ -641,9 +644,17 @@ class ArcRaidMapMarker {
   final bool approximate;
   final bool enabled;
   final int count;
+  final String detail;
+  final List<String> tags;
+  final List<String> clusterMemberIds;
 
-  String get semanticLabel =>
-      '${category.label}: $label${approximate ? ', approximate' : ''}';
+  bool get isCluster => clusterMemberIds.length > 1 || count > 1;
+
+  String get semanticLabel {
+    final clusterText = isCluster ? ', $count grouped markers' : '';
+    final approximationText = approximate ? ', approximate' : '';
+    return '${category.label}: $label$clusterText$approximationText';
+  }
 }
 
 @immutable

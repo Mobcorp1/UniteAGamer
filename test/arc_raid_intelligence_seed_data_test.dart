@@ -50,6 +50,26 @@ void main() {
       },
     );
 
+    test('Blue Gate includes calibrated production POI markers', () {
+      final blueGate = ArcRaidIntelligenceSeedData.mapById('blue_gate');
+      final productionPois = blueGate.markers.where(
+        (marker) =>
+            marker.category == ArcRaidMapMarkerCategory.poi &&
+            marker.approximate == false,
+      );
+
+      expect(productionPois.length, greaterThanOrEqualTo(10));
+      expect(
+        productionPois.map((marker) => marker.label),
+        containsAll(<String>[
+          'Raider Refuge',
+          "Trapper's Glade",
+          'Ancient Fort',
+          'Warehouse Complex',
+        ]),
+      );
+    });
+
     test('normalises Blue Gate aliases without duplicate map records', () {
       expect(
         ArcRaidIntelligenceSeedData.normalizeMapId('Blue Gate'),

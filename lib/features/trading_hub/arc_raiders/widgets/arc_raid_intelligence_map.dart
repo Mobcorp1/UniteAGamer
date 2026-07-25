@@ -172,9 +172,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     final point =
         calibration?.canonicalToImage(marker.point) ?? marker.point.clamp();
     final color = _markerColor(marker.category, marker.confidence);
-    final size = marker.category.clustersByDefault || marker.count > 1
-        ? 34.0
-        : 26.0;
+    final size = marker.isCluster ? 38.0 : 28.0;
     return Positioned(
       left: (point.x * mapSize.width) - (size / 2),
       top: (point.y * mapSize.height) - (size / 2),
@@ -207,7 +205,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                   ],
                 ),
                 child: Center(
-                  child: marker.count > 1
+                  child: marker.isCluster
                       ? Text(
                           marker.count.toString(),
                           style: AppTheme.bodyTextStyle(
