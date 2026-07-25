@@ -576,7 +576,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ElevatedButton.icon(
             onPressed: () => _generateRoute(intelligence),
             icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('Generate Blueprint Run'),
+            label: const Text('Generate Best Loot Run'),
           ),
         ],
       ),
@@ -757,7 +757,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ? Text(
               _usesHatch && !_hatchKeyConfirmed
                   ? 'Confirm Raider Hatch Key before generating a hatch route.'
-                  : 'Choose spawn and extraction, then generate a route.',
+                  : 'Choose a spawn. UAG can select the best extraction automatically.',
               style: const TextStyle(color: Colors.white60),
             )
           : Column(
@@ -767,6 +767,28 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                   route.summary,
                   style: const TextStyle(color: Colors.white70),
                 ),
+                if (route.metrics.hasData) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _pill(
+                        '${route.metrics.estimatedMinutes} min',
+                        AppTheme.neonCyan,
+                      ),
+                      _pill(
+                        '${route.metrics.blueprintTargetCount} targets',
+                        AppTheme.neonPink,
+                      ),
+                      _pill(
+                        '${route.metrics.efficiencyScore}% efficiency',
+                        Colors.lightGreenAccent,
+                      ),
+                      _pill(route.metrics.riskLabel, Colors.amberAccent),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 8),
                 for (final stop in route.orderedStops)
                   ListTile(
@@ -924,16 +946,30 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Future<void> _generateRoute(ArcRaidIntelligenceState intelligence) async {
     final spawn = _spawn;
-    final extraction = _extraction;
-    if (spawn == null || extraction == null) {
-      _showSnack('Choose a spawn and extraction first.');
+    var extraction = _extraction;
+    if (spawn == null) {
+      _showSnack('Choose a spawn region or tap the map first.');
       return;
+    }
+    extraction ??= _engine.recommendExtraction(
+      map: intelligence.map,
+      spawn: spawn,
+      clusters: intelligence.opportunityClusters,
+      usesRaiderHatch: _usesHatch,
+    );
+    if (extraction == null) {
+      _showSnack('No valid extraction is available for this map.');
+      return;
+    }
+    final resolvedExtraction = extraction;
+    if (_extraction == null) {
+      setState(() => _extraction = resolvedExtraction);
     }
     final route = _engine.generateRoute(
       map: intelligence.map,
       clusters: intelligence.opportunityClusters,
       spawn: spawn,
-      extraction: extraction,
+      extraction: resolvedExtraction,
       routeStyle: _routeStyle,
       raidStage: _raidStage,
       squadMode: _squadMode,

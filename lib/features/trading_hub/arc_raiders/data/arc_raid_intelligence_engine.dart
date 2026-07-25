@@ -215,6 +215,7 @@ class ArcRaidIntelligenceEngine {
   }) {
     if (usesRaiderHatch && !hatchKeyConfirmed) return null;
     if (clusters.isEmpty) return null;
+
     final stopLimit = routeStyle.stopLimitForStage(raidStage);
     final ranked = [...clusters]
       ..sort((a, b) {
@@ -242,24 +243,35 @@ class ArcRaidIntelligenceEngine {
         if (scoreCompare != 0) return scoreCompare;
         return a.label.compareTo(b.label);
       });
+
     final selected = ranked.take(stopLimit).toList(growable: false);
+    final ordered = _orderClustersForTravel(
+      map: map,
+      clusters: selected,
+      start: spawn.point,
+      extraction: extraction.point,
+    );
     final stops = <ArcRaidRouteStop>[
-      for (var index = 0; index < selected.length; index++)
+      for (var index = 0; index < ordered.length; index++)
         ArcRaidRouteStop(
-          id: 'stop_${selected[index].id}',
-          label: selected[index].label,
-          point: selected[index].point,
+          id: 'stop_${ordered[index].id}',
+          label: ordered[index].label,
+          point: ordered[index].point,
           order: index + 1,
-          clusterId: selected[index].id,
-          blueprintIds: selected[index].blueprintIds,
-          reason: selected[index].cautiousSummary,
+          clusterId: ordered[index].id,
+          blueprintIds: ordered[index].blueprintIds,
+          reason: ordered[index].cautiousSummary,
         ),
     ];
-    final score = stops.fold<int>(
-      0,
-      (total, stop) =>
-          total + (100 - (spawn.point.distanceTo(stop.point) * 60)).round(),
+    final metrics = _buildRouteMetrics(
+      map: map,
+      spawn: spawn,
+      extraction: extraction,
+      clusters: ordered,
+      squadMode: squadMode,
+      routeStyle: routeStyle,
     );
+
     return ArcRaidRoutePlan(
       id: 'route_${map.id}_${DateTime.now().millisecondsSinceEpoch}',
       mapId: map.id,
@@ -274,13 +286,49 @@ class ArcRaidIntelligenceEngine {
       usesRaiderHatch: usesRaiderHatch,
       hatchKeyConfirmed: hatchKeyConfirmed,
       participants: _privacySafeParticipants(participants),
-      score: score,
+      metrics: metrics,
+      score: metrics.efficiencyScore,
       summary:
-          '${routeStyle.label} ${squadMode.label} route: spawn, ${stops.length} opportunity ${_plural(stops.length, 'stop', 'stops')}, then extraction.',
+          '${routeStyle.label} ${squadMode.label} Loot Run: ${metrics.opportunityCount} opportunity ${_plural(metrics.opportunityCount, 'stop', 'stops')}, ${metrics.blueprintTargetCount} Blueprint ${_plural(metrics.blueprintTargetCount, 'target', 'targets')}, about ${metrics.estimatedMinutes} min, then ${extraction.label}.',
       approximate: true,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
+  }
+
+  ArcRaidRouteStop? recommendExtraction({
+    required ArcRaidMap map,
+    required ArcRaidRouteStop spawn,
+    required List<ArcRaidIntelCluster> clusters,
+    bool usesRaiderHatch = false,
+  }) {
+    if (usesRaiderHatch) {
+      if (map.hatches.isEmpty) return null;
+      final target = clusters.isEmpty ? spawn.point : clusters.first.point;
+      final hatch = [...map.hatches]
+        ..sort(
+          (a, b) =>
+              a.point.distanceTo(target).compareTo(b.point.distanceTo(target)),
+        );
+      return stopFromHatch(hatch.first);
+    }
+    if (map.extractions.isEmpty) return null;
+    final target = clusters.isEmpty
+        ? spawn.point
+        : ArcNormalizedPoint(
+            x:
+                clusters.map((item) => item.point.x).reduce((a, b) => a + b) /
+                clusters.length,
+            y:
+                clusters.map((item) => item.point.y).reduce((a, b) => a + b) /
+                clusters.length,
+          );
+    final extractions = [...map.extractions]
+      ..sort(
+        (a, b) =>
+            a.point.distanceTo(target).compareTo(b.point.distanceTo(target)),
+      );
+    return stopFromExtraction(extractions.first);
   }
 
   ArcRaidRoutePlan addStop(ArcRaidRoutePlan plan, ArcRaidIntelCluster cluster) {
@@ -332,6 +380,103 @@ class ArcRaidIntelligenceEngine {
     final stop = stops.removeAt(oldIndex);
     stops.insert(adjustedIndex.clamp(0, stops.length), stop);
     return _renumber(plan.copyWith(stops: stops));
+  }
+
+  static List<ArcRaidIntelCluster> _orderClustersForTravel({
+    required ArcRaidMap map,
+    required List<ArcRaidIntelCluster> clusters,
+    required ArcNormalizedPoint start,
+    required ArcNormalizedPoint extraction,
+  }) {
+    final remaining = [...clusters];
+    final ordered = <ArcRaidIntelCluster>[];
+    var current = start;
+    while (remaining.isNotEmpty) {
+      remaining.sort((a, b) {
+        final aCost =
+            _graphTravelCost(map, current, a.point) +
+            (_graphTravelCost(map, a.point, extraction) * 0.18);
+        final bCost =
+            _graphTravelCost(map, current, b.point) +
+            (_graphTravelCost(map, b.point, extraction) * 0.18);
+        final costCompare = aCost.compareTo(bCost);
+        if (costCompare != 0) return costCompare;
+        return b.confidence.score.compareTo(a.confidence.score);
+      });
+      final next = remaining.removeAt(0);
+      ordered.add(next);
+      current = next.point;
+    }
+    return ordered;
+  }
+
+  static ArcRaidRouteMetrics _buildRouteMetrics({
+    required ArcRaidMap map,
+    required ArcRaidRouteStop spawn,
+    required ArcRaidRouteStop extraction,
+    required List<ArcRaidIntelCluster> clusters,
+    required ArcRaidSquadMode squadMode,
+    required ArcRaidRouteStyle routeStyle,
+  }) {
+    var travelCost = 0.0;
+    var current = spawn.point;
+    for (final cluster in clusters) {
+      travelCost += _graphTravelCost(map, current, cluster.point);
+      current = cluster.point;
+    }
+    travelCost += _graphTravelCost(map, current, extraction.point);
+
+    final blueprintCount = clusters
+        .expand((cluster) => cluster.blueprintIds)
+        .toSet()
+        .length;
+    final averageConfidence = clusters.isEmpty
+        ? 0
+        : (clusters.fold<int>(
+                    0,
+                    (total, cluster) => total + cluster.confidence.score,
+                  ) /
+                  clusters.length)
+              .round();
+    final paceFactor = switch (routeStyle) {
+      ArcRaidRouteStyle.fast => 0.78,
+      ArcRaidRouteStyle.balanced => 1.0,
+      ArcRaidRouteStyle.thorough => 1.24,
+      ArcRaidRouteStyle.safer => 1.14,
+    };
+    final squadFactor = 1 - ((squadMode.size - 1) * 0.08);
+    final estimatedMinutes = math
+        .max(
+          4,
+          ((travelCost * 1.7 + clusters.length * 2.4) *
+                  paceFactor *
+                  squadFactor)
+              .round(),
+        )
+        .toInt();
+    final efficiency =
+        ((blueprintCount * 120 + averageConfidence * 2) /
+                math.max(1.0, travelCost + estimatedMinutes * 0.55))
+            .round()
+            .clamp(0, 100)
+            .toInt();
+    final riskLabel = routeStyle == ArcRaidRouteStyle.safer
+        ? 'Lower risk'
+        : travelCost > 24
+        ? 'High exposure'
+        : travelCost > 15
+        ? 'Moderate exposure'
+        : 'Compact route';
+
+    return ArcRaidRouteMetrics(
+      totalDistance: double.parse(travelCost.toStringAsFixed(2)),
+      estimatedMinutes: estimatedMinutes,
+      opportunityCount: clusters.length,
+      blueprintTargetCount: blueprintCount,
+      averageConfidence: averageConfidence,
+      efficiencyScore: efficiency,
+      riskLabel: riskLabel,
+    );
   }
 
   ArcRaidIntelConfidence confidenceForEvidence({

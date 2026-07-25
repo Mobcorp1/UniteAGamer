@@ -77,6 +77,15 @@ class ArcRaidIntelligenceRepository {
       'spawn': _stopToMap(route.spawn),
       'extraction': _stopToMap(route.extraction),
       'stops': route.stops.map(_stopToMap).toList(growable: false),
+      'metrics': {
+        'totalDistance': route.metrics.totalDistance,
+        'estimatedMinutes': route.metrics.estimatedMinutes,
+        'opportunityCount': route.metrics.opportunityCount,
+        'blueprintTargetCount': route.metrics.blueprintTargetCount,
+        'averageConfidence': route.metrics.averageConfidence,
+        'efficiencyScore': route.metrics.efficiencyScore,
+        'riskLabel': route.metrics.riskLabel,
+      },
       'participants': route.participants
           .map(
             (participant) => {
@@ -139,6 +148,9 @@ class ArcRaidIntelligenceRepository {
       participants: participantsData
           .map(_participantFromMap)
           .toList(growable: false),
+      metrics: _metricsFromMap(
+        Map<String, dynamic>.from(map['metrics'] as Map? ?? const {}),
+      ),
       score: (map['score'] as num?)?.round() ?? 0,
       summary: _string(map['summary'], ''),
       approximate: map['approximate'] != false,
@@ -163,6 +175,18 @@ class ArcRaidIntelligenceRepository {
           .toList(growable: false),
       state: _routeStopState(map['state']),
       reason: _string(map['reason'], ''),
+    );
+  }
+
+  ArcRaidRouteMetrics _metricsFromMap(Map<String, dynamic> map) {
+    return ArcRaidRouteMetrics(
+      totalDistance: (map['totalDistance'] as num?)?.toDouble() ?? 0,
+      estimatedMinutes: (map['estimatedMinutes'] as num?)?.round() ?? 0,
+      opportunityCount: (map['opportunityCount'] as num?)?.round() ?? 0,
+      blueprintTargetCount: (map['blueprintTargetCount'] as num?)?.round() ?? 0,
+      averageConfidence: (map['averageConfidence'] as num?)?.round() ?? 0,
+      efficiencyScore: (map['efficiencyScore'] as num?)?.round() ?? 0,
+      riskLabel: _string(map['riskLabel'], 'Unknown'),
     );
   }
 

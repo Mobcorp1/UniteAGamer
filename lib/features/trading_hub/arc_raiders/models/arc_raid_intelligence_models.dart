@@ -1047,6 +1047,31 @@ class ArcRaidRouteStop {
 }
 
 @immutable
+class ArcRaidRouteMetrics {
+  const ArcRaidRouteMetrics({
+    this.totalDistance = 0,
+    this.estimatedMinutes = 0,
+    this.opportunityCount = 0,
+    this.blueprintTargetCount = 0,
+    this.averageConfidence = 0,
+    this.efficiencyScore = 0,
+    this.riskLabel = 'Unknown',
+  });
+
+  static const ArcRaidRouteMetrics empty = ArcRaidRouteMetrics();
+
+  final double totalDistance;
+  final int estimatedMinutes;
+  final int opportunityCount;
+  final int blueprintTargetCount;
+  final int averageConfidence;
+  final int efficiencyScore;
+  final String riskLabel;
+
+  bool get hasData => opportunityCount > 0 || totalDistance > 0;
+}
+
+@immutable
 class ArcRaidRoutePlan {
   const ArcRaidRoutePlan({
     required this.id,
@@ -1062,6 +1087,7 @@ class ArcRaidRoutePlan {
     this.usesRaiderHatch = false,
     this.hatchKeyConfirmed = false,
     this.participants = const <ArcRaidRouteParticipant>[],
+    this.metrics = ArcRaidRouteMetrics.empty,
     this.score = 0,
     this.summary = '',
     this.approximate = true,
@@ -1082,6 +1108,7 @@ class ArcRaidRoutePlan {
   final bool usesRaiderHatch;
   final bool hatchKeyConfirmed;
   final List<ArcRaidRouteParticipant> participants;
+  final ArcRaidRouteMetrics metrics;
   final int score;
   final String summary;
   final bool approximate;
@@ -1105,6 +1132,7 @@ class ArcRaidRoutePlan {
     ArcRaidRouteStop? extraction,
     bool? usesRaiderHatch,
     bool? hatchKeyConfirmed,
+    ArcRaidRouteMetrics? metrics,
     int? score,
     String? summary,
   }) {
@@ -1122,6 +1150,7 @@ class ArcRaidRoutePlan {
       usesRaiderHatch: usesRaiderHatch ?? this.usesRaiderHatch,
       hatchKeyConfirmed: hatchKeyConfirmed ?? this.hatchKeyConfirmed,
       participants: participants,
+      metrics: metrics ?? this.metrics,
       score: score ?? this.score,
       summary: summary ?? this.summary,
       approximate: approximate,
