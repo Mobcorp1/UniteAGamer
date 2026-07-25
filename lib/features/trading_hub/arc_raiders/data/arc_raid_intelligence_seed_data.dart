@@ -151,6 +151,8 @@ class ArcRaidIntelligenceSeedData {
           confidence: ArcRaidIntelConfidence.moderate,
         ),
       ..._genericLootMarkers(mapId),
+      if (mapId == ArcMapAssetRegistry.blueGateMapId)
+        ..._blueGateProductionMarkers(),
     ];
     final layerAssets = ArcMapAssetRegistry.assetsFor(mapId);
     final layerCalibrations = ArcMapAssetRegistry.calibrationsFor(mapId);
@@ -175,7 +177,7 @@ class ArcRaidIntelligenceSeedData {
       layerAssets: layerAssets,
       layerCalibrations: layerCalibrations,
       dataVersion: mapId == ArcMapAssetRegistry.blueGateMapId
-          ? 'pass-279-blue-gate-map-v1'
+          ? 'pass-281-shared-marker-engine-v1'
           : 'pass-275-local-schematic-v1',
       lastReviewed: DateTime.utc(2026, 7, 23),
     );
@@ -331,6 +333,58 @@ class ArcRaidIntelligenceSeedData {
       );
     }
     return edges;
+  }
+
+  static List<ArcRaidMapMarker> _blueGateProductionMarkers() {
+    const mapId = ArcMapAssetRegistry.blueGateMapId;
+    return const <ArcRaidMapMarker>[
+      ArcRaidMapMarker(
+        id: 'blue_gate_airshaft_raider_hatch_northwest',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.surfaceTransition,
+        label: 'Airshaft / Raider Hatch',
+        point: ArcNormalizedPoint(x: 0.244, y: 0.121),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_airshaft_ridgeline',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.surfaceTransition,
+        label: 'Airshaft',
+        point: ArcNormalizedPoint(x: 0.507, y: 0.113),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_airshaft_white_valley',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.surfaceTransition,
+        label: 'Airshaft',
+        point: ArcNormalizedPoint(x: 0.585, y: 0.394),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_raider_hatch_ancient_fort',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.raiderHatch,
+        label: 'Raider Hatch',
+        point: ArcNormalizedPoint(x: 0.490, y: 0.794),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+      ),
+      ArcRaidMapMarker(
+        id: 'blue_gate_level2_transition',
+        mapId: mapId,
+        category: ArcRaidMapMarkerCategory.undergroundTransition,
+        label: 'Level 2 Access',
+        point: ArcNormalizedPoint(x: 0.503, y: 0.502),
+        layer: ArcRaidMapLayer.underground,
+        confidence: ArcRaidIntelConfidence.confirmed,
+        approximate: false,
+      ),
+    ];
   }
 
   static List<ArcRaidMapMarker> _genericLootMarkers(String mapId) {

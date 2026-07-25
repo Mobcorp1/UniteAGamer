@@ -14,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_filter_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -638,125 +639,18 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _filterSection() {
     return _section(
-      title: 'Filters',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: _searchController,
-            style: const TextStyle(color: Colors.white),
-            decoration: AppTheme.tradingInputDecoration(
-              label: 'Search Blueprint, POI or marker',
-            ),
-            onChanged: (value) {
-              setState(() => _filters = _filters.copyWith(searchQuery: value));
-            },
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _filterChip(
-                'Missing',
-                _filters.missingBlueprints,
-                (value) =>
-                    _filters = _filters.copyWith(missingBlueprints: value),
-              ),
-              _filterChip(
-                'Top 5',
-                _filters.topWanted,
-                (value) => _filters = _filters.copyWith(topWanted: value),
-              ),
-              _filterChip(
-                'Loadout',
-                _filters.favouriteLoadout,
-                (value) =>
-                    _filters = _filters.copyWith(favouriteLoadout: value),
-              ),
-              _filterChip(
-                'Trade prep',
-                _filters.tradePreparation,
-                (value) =>
-                    _filters = _filters.copyWith(tradePreparation: value),
-              ),
-              _filterChip(
-                'Operations',
-                _filters.operations,
-                (value) => _filters = _filters.copyWith(operations: value),
-              ),
-              _filterChip(
-                'Quests',
-                _filters.quests,
-                (value) => _filters = _filters.copyWith(quests: value),
-              ),
-              _filterChip(
-                'Squad',
-                _filters.squadObjectives,
-                (value) => _filters = _filters.copyWith(squadObjectives: value),
-              ),
-              _filterChip(
-                'Loot',
-                _filters.lootSources,
-                (value) => _filters = _filters.copyWith(lootSources: value),
-              ),
-              _filterChip(
-                'Map basics',
-                _filters.mapBasics,
-                (value) => _filters = _filters.copyWith(mapBasics: value),
-              ),
-              _filterChip(
-                'Community',
-                _filters.communityIntel,
-                (value) => _filters = _filters.copyWith(communityIntel: value),
-              ),
-              _filterChip(
-                'Researched',
-                _filters.researchedIntel,
-                (value) => _filters = _filters.copyWith(researchedIntel: value),
-              ),
-              _filterChip(
-                'Confirmed',
-                _filters.confirmedIntel,
-                (value) => _filters = _filters.copyWith(confirmedIntel: value),
-              ),
-              _filterChip(
-                'High confidence',
-                _filters.highConfidence,
-                (value) => _filters = _filters.copyWith(highConfidence: value),
-              ),
-              _filterChip(
-                'Limited evidence',
-                _filters.includeLimitedEvidence,
-                (value) =>
-                    _filters = _filters.copyWith(includeLimitedEvidence: value),
-              ),
-              _filterChip(
-                'Hide disputed',
-                _filters.hideDisputed,
-                (value) => _filters = _filters.copyWith(hideDisputed: value),
-              ),
-              _filterChip(
-                'Hide stale',
-                _filters.hideStale,
-                (value) => _filters = _filters.copyWith(hideStale: value),
-              ),
-              _filterChip(
-                'Route only',
-                _filters.routeOnly,
-                (value) => _filters = _filters.copyWith(routeOnly: value),
-              ),
-            ],
-          ),
-          TextButton.icon(
-            onPressed: () => setState(() {
-              _filters = ArcRaidMapFilterState.defaults;
-              _searchController.clear();
-            }),
-            icon: const Icon(Icons.restart_alt_rounded),
-            label: Text('Reset Filters (${_filters.activeCount})'),
-          ),
-        ],
+      title: 'Map Layers',
+      child: ArcMapMarkerFilterPanel(
+        filters: _filters,
+        searchController: _searchController,
+        onChanged: (filters) {
+          setState(() {
+            _filters = filters;
+            if (_selectedMarker != null && !_filters.allows(_selectedMarker!)) {
+              _selectedMarker = null;
+            }
+          });
+        },
       ),
     );
   }
@@ -961,18 +855,6 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             onSelected: (_) => onSelected(value),
           ),
       ],
-    );
-  }
-
-  Widget _filterChip(
-    String label,
-    bool selected,
-    ValueChanged<bool> onChanged,
-  ) {
-    return FilterChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (value) => setState(() => onChanged(value)),
     );
   }
 
