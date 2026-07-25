@@ -19,9 +19,15 @@ class ArcRaidIntelligenceEngine {
     ArcSavedLoadout? favouriteLoadout,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
     ArcRaidMapFilterState filters = ArcRaidMapFilterState.defaults,
+    ArcRaidMapLayer activeLayer = ArcRaidMapLayer.surface,
     ArcRaidRoutePlan? activeRoute,
   }) {
     final map = ArcRaidIntelligenceSeedData.mapById(mapId);
+    final resolvedLayer = map.availableLayers.contains(activeLayer)
+        ? activeLayer
+        : (map.availableLayers.isEmpty
+              ? ArcRaidMapLayer.surface
+              : map.availableLayers.first);
     final clusters = opportunityClusters(
       map: map,
       blueprintStates: blueprintStates,
@@ -51,11 +57,12 @@ class ArcRaidIntelligenceEngine {
             )
             .toList(growable: false) ??
         const <ArcRaidMapMarker>[];
-    final visibleMarkers = [
-      ...map.markers,
-      ...clusterMarkers,
-      ...routeMarkers,
-    ].where(filters.allows).toList(growable: false)..sort(_markerSort);
+    final visibleMarkers =
+        [...map.markers, ...clusterMarkers, ...routeMarkers]
+            .where((marker) => marker.layer == resolvedLayer)
+            .where(filters.allows)
+            .toList(growable: false)
+          ..sort(_markerSort);
     final relevantCount = clusters.fold<int>(
       0,
       (total, cluster) => total + cluster.blueprintIds.length,
@@ -67,6 +74,7 @@ class ArcRaidIntelligenceEngine {
         : 'Generate a run';
     return ArcRaidIntelligenceState(
       map: map,
+      activeLayer: resolvedLayer,
       filters: filters,
       visibleMarkers: visibleMarkers,
       opportunityClusters: clusters,

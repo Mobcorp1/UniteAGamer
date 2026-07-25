@@ -93,6 +93,21 @@ extension ArcRaidMapRenderModeX on ArcRaidMapRenderMode {
   }
 }
 
+extension ArcRaidMapLayerX on ArcRaidMapLayer {
+  String get label {
+    switch (this) {
+      case ArcRaidMapLayer.surface:
+        return 'Surface';
+      case ArcRaidMapLayer.underground:
+        return 'Level 2';
+      case ArcRaidMapLayer.transition:
+        return 'Transition';
+    }
+  }
+
+  String get storageValue => name;
+}
+
 extension ArcRaidMapMarkerCategoryX on ArcRaidMapMarkerCategory {
   String get id => name;
 
@@ -348,6 +363,7 @@ class ArcRaidMapAsset {
     required this.id,
     required this.mapId,
     required this.renderMode,
+    this.layer = ArcRaidMapLayer.surface,
     this.localAssetPath,
     this.remoteUrl,
     this.width,
@@ -358,6 +374,7 @@ class ArcRaidMapAsset {
   final String id;
   final String mapId;
   final ArcRaidMapRenderMode renderMode;
+  final ArcRaidMapLayer layer;
   final String? localAssetPath;
   final String? remoteUrl;
   final int? width;
@@ -603,6 +620,7 @@ class ArcRaidMapMarker {
     required this.category,
     required this.label,
     required this.point,
+    this.layer = ArcRaidMapLayer.surface,
     this.radius,
     this.payloadId,
     this.confidence = ArcRaidIntelConfidence.limited,
@@ -616,6 +634,7 @@ class ArcRaidMapMarker {
   final ArcRaidMapMarkerCategory category;
   final String label;
   final ArcNormalizedPoint point;
+  final ArcRaidMapLayer layer;
   final double? radius;
   final String? payloadId;
   final ArcRaidIntelConfidence confidence;
@@ -1116,6 +1135,8 @@ class ArcRaidMap {
     this.aliases = const <String>[],
     this.asset,
     this.calibration,
+    this.layerAssets = const <ArcRaidMapLayer, ArcRaidMapAsset>{},
+    this.layerCalibrations = const <ArcRaidMapLayer, ArcRaidMapCalibration>{},
     this.publicationState = ArcRaidMapPublicationState.published,
     this.dataVersion = 'local-seed-v1',
     this.lastReviewed,
@@ -1136,19 +1157,48 @@ class ArcRaidMap {
   final List<ArcRaidMapMarker> markers;
   final ArcRaidMapAsset? asset;
   final ArcRaidMapCalibration? calibration;
+  final Map<ArcRaidMapLayer, ArcRaidMapAsset> layerAssets;
+  final Map<ArcRaidMapLayer, ArcRaidMapCalibration> layerCalibrations;
   final ArcRaidMapPublicationState publicationState;
   final String dataVersion;
   final DateTime? lastReviewed;
   final String schematicLabel;
 
-  bool get hasCalibratedMap =>
-      asset?.hasRenderableImage == true && calibration?.valid == true;
+  ArcRaidMapAsset? assetForLayer(ArcRaidMapLayer layer) {
+    if (layerAssets.containsKey(layer)) return layerAssets[layer];
+    if (layer == ArcRaidMapLayer.surface) return asset;
+    return null;
+  }
+
+  ArcRaidMapCalibration? calibrationForLayer(ArcRaidMapLayer layer) {
+    if (layerCalibrations.containsKey(layer)) {
+      return layerCalibrations[layer];
+    }
+    if (layer == ArcRaidMapLayer.surface) return calibration;
+    return null;
+  }
+
+  List<ArcRaidMapLayer> get availableLayers {
+    final layers = <ArcRaidMapLayer>{
+      ...layerAssets.keys,
+      if (asset != null) ArcRaidMapLayer.surface,
+    }.toList(growable: false)..sort((a, b) => a.index.compareTo(b.index));
+    return layers;
+  }
+
+  bool hasCalibratedLayer(ArcRaidMapLayer layer) {
+    return assetForLayer(layer)?.hasRenderableImage == true &&
+        calibrationForLayer(layer)?.valid == true;
+  }
+
+  bool get hasCalibratedMap => availableLayers.any(hasCalibratedLayer);
 }
 
 @immutable
 class ArcRaidIntelligenceState {
   const ArcRaidIntelligenceState({
     required this.map,
+    required this.activeLayer,
     required this.filters,
     required this.visibleMarkers,
     required this.opportunityClusters,
@@ -1159,6 +1209,7 @@ class ArcRaidIntelligenceState {
   });
 
   final ArcRaidMap map;
+  final ArcRaidMapLayer activeLayer;
   final ArcRaidMapFilterState filters;
   final List<ArcRaidMapMarker> visibleMarkers;
   final List<ArcRaidIntelCluster> opportunityClusters;

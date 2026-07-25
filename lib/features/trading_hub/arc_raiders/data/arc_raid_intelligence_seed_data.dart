@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
@@ -151,6 +152,8 @@ class ArcRaidIntelligenceSeedData {
         ),
       ..._genericLootMarkers(mapId),
     ];
+    final layerAssets = ArcMapAssetRegistry.assetsFor(mapId);
+    final layerCalibrations = ArcMapAssetRegistry.calibrationsFor(mapId);
     return ArcRaidMap(
       id: mapId,
       displayName: displayName,
@@ -167,7 +170,13 @@ class ArcRaidIntelligenceSeedData {
       routeNodes: routeNodes,
       routeEdges: routeEdges,
       markers: markers,
-      dataVersion: 'pass-275-local-schematic-v1',
+      asset: layerAssets[ArcRaidMapLayer.surface],
+      calibration: layerCalibrations[ArcRaidMapLayer.surface],
+      layerAssets: layerAssets,
+      layerCalibrations: layerCalibrations,
+      dataVersion: mapId == ArcMapAssetRegistry.blueGateMapId
+          ? 'pass-279-blue-gate-map-v1'
+          : 'pass-275-local-schematic-v1',
       lastReviewed: DateTime.utc(2026, 7, 23),
     );
   }

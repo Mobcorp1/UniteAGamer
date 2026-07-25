@@ -36,6 +36,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   String _mapId = 'blue_gate';
+  ArcRaidMapLayer _activeLayer = ArcRaidMapLayer.surface;
   ArcRaidMapFilterState _filters = ArcRaidMapFilterState.defaults;
   ArcRaidSquadMode _squadMode = ArcRaidSquadMode.solo;
   ArcRaidRouteStyle _routeStyle = ArcRaidRouteStyle.balanced;
@@ -119,6 +120,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                   blueprintStates: states,
                   favouriteLoadout: loadout,
                   filters: _filters,
+                  activeLayer: _activeLayer,
                   activeRoute: _routePlan,
                 );
                 return _buildLayout(intelligence);
@@ -207,6 +209,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         _mapButton(Icons.remove_rounded, 'Zoom out', () => _scaleMap(0.82)),
         const SizedBox(height: 7),
         _mapButton(Icons.center_focus_strong_rounded, 'Fit map', _resetMap),
+        if (intelligence.map.availableLayers.length > 1) ...[
+          const SizedBox(height: 7),
+          _mapButton(
+            Icons.layers_rounded,
+            'Switch to ${_nextLayer(intelligence.map).label}',
+            () => _switchLayer(intelligence.map),
+          ),
+        ],
         const SizedBox(height: 7),
         _mapButton(
           Icons.my_location_rounded,
@@ -229,6 +239,21 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         ),
       ],
     );
+  }
+
+  ArcRaidMapLayer _nextLayer(ArcRaidMap map) {
+    final layers = map.availableLayers;
+    if (layers.isEmpty) return ArcRaidMapLayer.surface;
+    final currentIndex = layers.indexOf(_activeLayer);
+    return layers[(currentIndex + 1) % layers.length];
+  }
+
+  void _switchLayer(ArcRaidMap map) {
+    setState(() {
+      _activeLayer = _nextLayer(map);
+      _selectedMarker = null;
+      _resetMap();
+    });
   }
 
   Widget _mapButton(IconData icon, String tooltip, VoidCallback? onTap) {
@@ -326,9 +351,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               AppTheme.neonCyan,
             ),
             _pill(
-              intelligence.map.hasCalibratedMap ? 'Calibrated' : 'Schematic',
+              intelligence.map.hasCalibratedLayer(intelligence.activeLayer)
+                  ? 'Calibrated'
+                  : 'Schematic',
               Colors.lightGreenAccent,
             ),
+            _pill(intelligence.activeLayer.label, Colors.amberAccent),
           ],
         ),
       ],
@@ -353,6 +381,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               if (value == null) return;
               setState(() {
                 _mapId = value;
+                final nextMap = ArcRaidIntelligenceSeedData.mapById(value);
+                _activeLayer =
+                    nextMap.availableLayers.contains(ArcRaidMapLayer.surface)
+                    ? ArcRaidMapLayer.surface
+                    : (nextMap.availableLayers.isEmpty
+                          ? ArcRaidMapLayer.surface
+                          : nextMap.availableLayers.first);
                 _spawn = null;
                 _extraction = null;
                 _routePlan = null;

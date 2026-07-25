@@ -68,6 +68,7 @@ flutter:
     - assets/arc_raiders/items/
     - assets/arc_raiders/operations/
     - assets/arc_raiders/operations/badges/
+    - assets/arc_raiders/maps/blue_gate/
 
     - assets/arc_raiders/hero_cards/
   fonts:

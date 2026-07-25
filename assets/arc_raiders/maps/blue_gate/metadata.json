@@ -1,0 +1,25 @@
+{
+  "mapId": "blue_gate",
+  "displayName": "Blue Gate",
+  "version": "pass-279-blue-gate-map-v1",
+  "source": "In-game map captures stitched by UAG",
+  "layers": [
+    {
+      "id": "surface",
+      "asset": "bluegate_master.webp",
+      "width": 2048,
+      "height": 1740,
+      "published": true
+    },
+    {
+      "id": "underground",
+      "label": "Level 2",
+      "asset": "bluegate_level_2.webp",
+      "width": 2048,
+      "height": 1152,
+      "published": true
+    }
+  ],
+  "defaultLayer": "surface",
+  "defaultOverlay": "blueprintOpportunity"
+}

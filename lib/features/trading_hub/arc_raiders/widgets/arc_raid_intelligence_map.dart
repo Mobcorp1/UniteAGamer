@@ -52,33 +52,30 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                 onTapUp: onMapTapped == null
                     ? null
                     : (details) {
-                        final point = ArcNormalizedPoint(
+                        final imagePoint = ArcNormalizedPoint(
                           x: details.localPosition.dx / mapSize.width,
                           y: details.localPosition.dy / mapSize.height,
                         ).clamp();
-                        onMapTapped!(point);
+                        final calibration = state.map.calibrationForLayer(
+                          state.activeLayer,
+                        );
+                        onMapTapped!(
+                          calibration?.imageToCanonical(imagePoint) ??
+                              imagePoint,
+                        );
                       },
                 child: SizedBox.fromSize(
                   size: mapSize,
                   child: Stack(
                     children: [
+                      Positioned.fill(child: _mapBackground()),
                       Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppTheme.cardBackgroundDeep,
-                                AppTheme.cardBackground,
-                                Colors.black.withValues(alpha: 0.94),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: CustomPaint(
-                            painter: _ArcRaidSchematicPainter(
-                              state: state,
-                              selectedMarkerId: selectedMarkerId,
+                        child: CustomPaint(
+                          painter: _ArcRaidSchematicPainter(
+                            state: state,
+                            selectedMarkerId: selectedMarkerId,
+                            showSchematicGuides: !state.map.hasCalibratedLayer(
+                              state.activeLayer,
                             ),
                           ),
                         ),
@@ -101,8 +98,40 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     );
   }
 
+  Widget _mapBackground() {
+    final asset = state.map.assetForLayer(state.activeLayer);
+    final localPath = asset?.localAssetPath?.trim();
+    if (state.map.hasCalibratedLayer(state.activeLayer) &&
+        localPath != null &&
+        localPath.isNotEmpty) {
+      return Image.asset(
+        localPath,
+        fit: BoxFit.fill,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (context, error, stackTrace) => _schematicBackground(),
+      );
+    }
+    return _schematicBackground();
+  }
+
+  Widget _schematicBackground() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.cardBackgroundDeep,
+            AppTheme.cardBackground,
+            Colors.black.withValues(alpha: 0.94),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+    );
+  }
+
   Widget _modeBadge(ArcRaidMap map) {
-    final calibrated = map.hasCalibratedMap;
+    final calibrated = map.hasCalibratedLayer(state.activeLayer);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -116,8 +145,8 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
       ),
       child: Text(
         calibrated
-            ? 'Calibrated game map'
-            : 'Tactical schematic — positions are approximate',
+            ? '${state.activeLayer.label} • calibrated game map'
+            : '${state.activeLayer.label} • tactical schematic',
         style: AppTheme.bodyTextStyle(
           fontSize: 11,
           color: calibrated ? Colors.lightGreenAccent : AppTheme.neonCyan,
@@ -129,7 +158,9 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
 
   Widget _markerButton(ArcRaidMapMarker marker, Size mapSize) {
     final selected = marker.id == selectedMarkerId;
-    final point = marker.point.clamp();
+    final calibration = state.map.calibrationForLayer(state.activeLayer);
+    final point =
+        calibration?.canonicalToImage(marker.point) ?? marker.point.clamp();
     final color = _markerColor(marker.category, marker.confidence);
     final size = marker.category.clustersByDefault || marker.count > 1
         ? 34.0
@@ -253,15 +284,19 @@ class _ArcRaidSchematicPainter extends CustomPainter {
   const _ArcRaidSchematicPainter({
     required this.state,
     required this.selectedMarkerId,
+    required this.showSchematicGuides,
   });
 
   final ArcRaidIntelligenceState state;
   final String? selectedMarkerId;
+  final bool showSchematicGuides;
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawGrid(canvas, size);
-    _drawRegions(canvas, size);
+    if (showSchematicGuides) {
+      _drawGrid(canvas, size);
+      _drawRegions(canvas, size);
+    }
     _drawRoute(canvas, size);
   }
 
@@ -328,8 +363,9 @@ class _ArcRaidSchematicPainter extends CustomPainter {
   }
 
   Offset _offset(ArcNormalizedPoint point, Size size) {
-    final clamped = point.clamp();
-    return Offset(clamped.x * size.width, clamped.y * size.height);
+    final calibration = state.map.calibrationForLayer(state.activeLayer);
+    final calibrated = calibration?.canonicalToImage(point) ?? point.clamp();
+    return Offset(calibrated.x * size.width, calibrated.y * size.height);
   }
 
   @override

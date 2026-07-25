@@ -1,0 +1,31 @@
+{
+  "mapId": "blue_gate",
+  "coordinateSystem": "normalized-0-1",
+  "version": 1,
+  "layers": {
+    "surface": {
+      "cropOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "cropSize": {
+        "x": 1,
+        "y": 1
+      },
+      "rotationDegrees": 0,
+      "residualError": 0
+    },
+    "underground": {
+      "cropOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "cropSize": {
+        "x": 1,
+        "y": 1
+      },
+      "rotationDegrees": 0,
+      "residualError": 0
+    }
+  }
+}

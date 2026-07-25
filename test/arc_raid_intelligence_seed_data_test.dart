@@ -4,33 +4,51 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 
 void main() {
   group('ArcRaidIntelligenceSeedData', () {
-    test('loads every official map with schematic fallback data', () {
-      final maps = ArcRaidIntelligenceSeedData.maps;
+    test(
+      'loads Blue Gate as calibrated production data and keeps schematic fallbacks',
+      () {
+        final maps = ArcRaidIntelligenceSeedData.maps;
 
-      expect(
-        maps.map((map) => map.id),
-        containsAll(ArcRaidIntelligenceSeedData.supportedMapIds),
-      );
-      expect(maps, hasLength(6));
+        expect(
+          maps.map((map) => map.id),
+          containsAll(ArcRaidIntelligenceSeedData.supportedMapIds),
+        );
+        expect(maps, hasLength(6));
 
-      for (final map in maps) {
-        expect(map.publicationState, ArcRaidMapPublicationState.published);
-        expect(map.hasCalibratedMap, isFalse);
-        expect(map.schematicLabel, contains('Tactical schematic'));
-        expect(map.regions, isNotEmpty);
-        expect(map.spawnRegions, isNotEmpty);
-        expect(map.extractions, isNotEmpty);
-        expect(map.hatches, isNotEmpty);
-        expect(map.routeNodes, isNotEmpty);
-        expect(map.routeEdges, isNotEmpty);
-        expect(map.markers, isNotEmpty);
+        for (final map in maps) {
+          expect(map.publicationState, ArcRaidMapPublicationState.published);
 
-        for (final marker in map.markers) {
-          expect(marker.point.x, inInclusiveRange(0, 1));
-          expect(marker.point.y, inInclusiveRange(0, 1));
+          if (map.id == 'blue_gate') {
+            expect(map.hasCalibratedMap, isTrue);
+            expect(
+              map.availableLayers,
+              containsAll(const [
+                ArcRaidMapLayer.surface,
+                ArcRaidMapLayer.underground,
+              ]),
+            );
+            expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
+            expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isTrue);
+          } else {
+            expect(map.hasCalibratedMap, isFalse);
+            expect(map.schematicLabel, contains('Tactical schematic'));
+          }
+
+          expect(map.regions, isNotEmpty);
+          expect(map.spawnRegions, isNotEmpty);
+          expect(map.extractions, isNotEmpty);
+          expect(map.hatches, isNotEmpty);
+          expect(map.routeNodes, isNotEmpty);
+          expect(map.routeEdges, isNotEmpty);
+          expect(map.markers, isNotEmpty);
+
+          for (final marker in map.markers) {
+            expect(marker.point.x, inInclusiveRange(0, 1));
+            expect(marker.point.y, inInclusiveRange(0, 1));
+          }
         }
-      }
-    });
+      },
+    );
 
     test('normalises Blue Gate aliases without duplicate map records', () {
       expect(

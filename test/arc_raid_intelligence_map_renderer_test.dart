@@ -25,7 +25,11 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('Tactical schematic'), findsOneWidget);
+    expect(
+      find.textContaining('Surface • calibrated game map'),
+      findsOneWidget,
+    );
+    expect(find.byType(Image), findsOneWidget);
     expect(find.byType(InteractiveViewer), findsOneWidget);
     expect(
       find.bySemanticsLabel(RegExp(r'Blue Gate Raid Intelligence map')),
