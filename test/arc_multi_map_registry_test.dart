@@ -31,16 +31,30 @@ void main() {
     );
   });
 
-  test('Stella Montis renders its master image but remains provisional', () {
+  test('Stella Montis exposes both provisional map layers', () {
     final map = ArcRaidIntelligenceSeedData.mapById('stella_montis');
-    final asset = map.assetForLayer(ArcRaidMapLayer.surface);
+    final surface = map.assetForLayer(ArcRaidMapLayer.surface);
+    final underground = map.assetForLayer(ArcRaidMapLayer.underground);
 
     expect(
-      asset?.localAssetPath,
+      surface?.localAssetPath,
       'assets/arc_raiders/maps/stella_montis/stella_montis_master.webp',
     );
+    expect(
+      underground?.localAssetPath,
+      'assets/arc_raiders/maps/stella_montis/stella_montis_level_2.webp',
+    );
+    expect(
+      map.availableLayers,
+      containsAll(<ArcRaidMapLayer>[
+        ArcRaidMapLayer.surface,
+        ArcRaidMapLayer.underground,
+      ]),
+    );
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
+    expect(map.hasRenderableLayer(ArcRaidMapLayer.underground), isTrue);
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isFalse);
     expect(
       ArcMapAssetRegistry.statusFor('stella_montis'),
       'Provisional map image',

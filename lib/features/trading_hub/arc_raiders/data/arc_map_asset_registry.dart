@@ -137,12 +137,28 @@ class ArcMapAssetRegistry {
           'assets/arc_raiders/maps/stella_montis/stella_montis_master.webp',
       published: true,
     ),
+    ArcRaidMapLayer.underground: ArcRaidMapAsset(
+      id: 'stella_montis_level_2_master_v1',
+      mapId: stellaMontisMapId,
+      renderMode: ArcRaidMapRenderMode.calibratedGameMap,
+      layer: ArcRaidMapLayer.underground,
+      localAssetPath:
+          'assets/arc_raiders/maps/stella_montis/stella_montis_level_2.webp',
+      published: true,
+    ),
   };
 
   static const Map<ArcRaidMapLayer, ArcRaidMapCalibration>
   stellaMontisCalibrations = {
     ArcRaidMapLayer.surface: ArcRaidMapCalibration(
       id: 'stella_montis_surface_provisional_v1',
+      mapId: stellaMontisMapId,
+      anchors: _identityAnchors,
+      residualError: 0,
+      published: false,
+    ),
+    ArcRaidMapLayer.underground: ArcRaidMapCalibration(
+      id: 'stella_montis_level_2_provisional_v1',
       mapId: stellaMontisMapId,
       anchors: _identityAnchors,
       residualError: 0,
