@@ -3,9 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_sighting_aggregator.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_carousel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_sighting_activity.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcBlueprintIntelCard extends StatelessWidget {
@@ -47,6 +49,9 @@ class ArcBlueprintIntelCard extends StatelessWidget {
         .where((value) => value.isNotEmpty)
         .toSet()
         .toList(growable: false);
+    final sightingActivity = const ArcBlueprintSightingAggregator().aggregate(
+      cluster,
+    );
 
     return Container(
       decoration: AppTheme.tradingCardDecoration(
@@ -72,6 +77,8 @@ class ArcBlueprintIntelCard extends StatelessWidget {
                   cluster: cluster,
                   onOpenBlueprint: (_) => onOpenBlueprint(),
                 ),
+                const SizedBox(height: 14),
+                ArcBlueprintSightingActivity(activity: sightingActivity),
                 const SizedBox(height: 14),
                 _sectionTitle('INTEL SUMMARY'),
                 const SizedBox(height: 7),
