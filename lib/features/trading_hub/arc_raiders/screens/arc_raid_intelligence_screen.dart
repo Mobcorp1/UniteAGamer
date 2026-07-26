@@ -18,7 +18,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_filter_panel.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_carousel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_intel_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_community_intel_report_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
@@ -815,75 +815,39 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               'Select a marker or Blueprint Opportunity cluster.',
               style: TextStyle(color: Colors.white60),
             )
+          : cluster != null && marker.isBlueprintOpportunity
+          ? ArcBlueprintIntelCard(
+              marker: marker,
+              cluster: cluster,
+              map: intelligence.map,
+              onCentreMap: () => _jumpTo(marker.point),
+              onAddStop: () => _addClusterStop(cluster!),
+              onOpenBlueprint: () => Navigator.of(
+                context,
+              ).pushNamed(BlueprintGridScreen.routeName),
+              onOpenRaidPlanner: () =>
+                  Navigator.of(context).pushNamed(RaidPlannerScreen.routeName),
+            )
           : ArcMapMarkerDetailCard(
               marker: marker,
-              footer: cluster == null
-                  ? Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _smallButton(
-                          'Centre Map',
-                          Icons.center_focus_strong_rounded,
-                          () => _jumpTo(marker.point),
-                        ),
-                        _smallButton(
-                          'Add to Raid Planner',
-                          Icons.playlist_add_rounded,
-                          () => Navigator.of(
-                            context,
-                          ).pushNamed(RaidPlannerScreen.routeName),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ArcBlueprintOpportunityCarousel(
-                          marker: marker,
-                          cluster: cluster,
-                          onOpenBlueprint: (_) => Navigator.of(
-                            context,
-                          ).pushNamed(BlueprintGridScreen.routeName),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          cluster.cautiousSummary,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${cluster.blueprintIds.length} Blueprint ${cluster.blueprintIds.length == 1 ? 'target' : 'targets'} • ${cluster.commonSource} • ${cluster.conditionCorrelation}',
-                          style: const TextStyle(color: Colors.white54),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _smallButton(
-                              'Add Stop',
-                              Icons.add_location_alt_rounded,
-                              () => _addClusterStop(cluster!),
-                            ),
-                            _smallButton(
-                              'Open Blueprint',
-                              Icons.grid_view_rounded,
-                              () => Navigator.of(
-                                context,
-                              ).pushNamed(BlueprintGridScreen.routeName),
-                            ),
-                            _smallButton(
-                              'Add to Raid Planner',
-                              Icons.playlist_add_rounded,
-                              () => Navigator.of(
-                                context,
-                              ).pushNamed(RaidPlannerScreen.routeName),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+              footer: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _smallButton(
+                    'Centre Map',
+                    Icons.center_focus_strong_rounded,
+                    () => _jumpTo(marker.point),
+                  ),
+                  _smallButton(
+                    'Add to Raid Planner',
+                    Icons.playlist_add_rounded,
+                    () => Navigator.of(
+                      context,
+                    ).pushNamed(RaidPlannerScreen.routeName),
+                  ),
+                ],
+              ),
             ),
     );
   }
