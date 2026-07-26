@@ -760,10 +760,22 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 subtitle: Text(
                   '${report.confidence.label} • ${report.layer.label}',
                 ),
-                trailing: IconButton(
-                  tooltip: 'Confirm this Intel',
-                  onPressed: () => unawaited(_confirmCommunityIntel(report.id)),
-                  icon: const Icon(Icons.verified_outlined),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Confirm this Intel',
+                      onPressed: () =>
+                          unawaited(_confirmCommunityIntel(report.id)),
+                      icon: const Icon(Icons.verified_outlined),
+                    ),
+                    IconButton(
+                      tooltip: 'Dispute this Intel',
+                      onPressed: () =>
+                          unawaited(_disputeCommunityIntel(report.id)),
+                      icon: const Icon(Icons.flag_outlined),
+                    ),
+                  ],
                 ),
                 onTap: () => _jumpTo(report.point),
               ),
@@ -801,6 +813,21 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not confirm Intel: $error')),
+      );
+    }
+  }
+
+  Future<void> _disputeCommunityIntel(String reportId) async {
+    try {
+      await _communityIntelRepository.dispute(reportId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Intel disputed.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not dispute Intel: $error')),
       );
     }
   }
