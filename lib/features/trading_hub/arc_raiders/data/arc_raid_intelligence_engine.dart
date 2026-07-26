@@ -110,9 +110,12 @@ class ArcRaidIntelligenceEngine {
   }
 
   ArcRaidMapMarker _markerForCommunityReport(ArcCommunityIntelReport report) {
-    final category = report.isStale
+    final verification = report.verificationState;
+    final category = verification == ArcCommunityIntelVerificationState.expired
         ? ArcRaidMapMarkerCategory.staleIntel
-        : report.confirmationCount >= 5
+        : verification == ArcCommunityIntelVerificationState.disputed
+        ? ArcRaidMapMarkerCategory.staleIntel
+        : verification == ArcCommunityIntelVerificationState.communityVerified
         ? ArcRaidMapMarkerCategory.confirmedIntel
         : report.confirmationCount >= 2
         ? ArcRaidMapMarkerCategory.researchedIntel
@@ -123,6 +126,8 @@ class ArcRaidIntelligenceEngine {
       if (report.blueprintName?.trim().isNotEmpty == true)
         report.blueprintName!.trim(),
       '${report.confirmationCount} ${_plural(report.confirmationCount, 'confirmation', 'confirmations')}',
+      '${report.disputeCount} ${_plural(report.disputeCount, 'dispute', 'disputes')}',
+      verification.label,
     ];
     return ArcRaidMapMarker(
       id: 'community_${report.id}',

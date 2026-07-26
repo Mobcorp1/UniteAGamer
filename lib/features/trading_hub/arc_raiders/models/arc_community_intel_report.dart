@@ -3,6 +3,29 @@ import 'package:flutter/foundation.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
+enum ArcCommunityIntelVerificationState {
+  unverified,
+  communityVerified,
+  disputed,
+  expired,
+}
+
+extension ArcCommunityIntelVerificationStateX
+    on ArcCommunityIntelVerificationState {
+  String get label {
+    switch (this) {
+      case ArcCommunityIntelVerificationState.unverified:
+        return 'Unverified';
+      case ArcCommunityIntelVerificationState.communityVerified:
+        return 'Community Verified';
+      case ArcCommunityIntelVerificationState.disputed:
+        return 'Disputed';
+      case ArcCommunityIntelVerificationState.expired:
+        return 'Expired';
+    }
+  }
+}
+
 enum ArcCommunityIntelCategory {
   blueprintFound,
   lockedRoom,
@@ -78,6 +101,8 @@ class ArcCommunityIntelReport {
     required this.updatedAt,
     required this.confirmationCount,
     required this.confirmedByUserIds,
+    this.disputeCount = 0,
+    this.disputedByUserIds = const <String>[],
     required this.signature,
     this.poiId,
     this.poiName,
@@ -85,6 +110,9 @@ class ArcCommunityIntelReport {
     this.blueprintName,
     this.notes = '',
     this.lastConfirmedAt,
+    this.lastDisputedAt,
+    this.expiresAt,
+    this.reporterTrustWeight = 1,
     this.active = true,
   });
 
@@ -104,8 +132,33 @@ class ArcCommunityIntelReport {
   final DateTime? lastConfirmedAt;
   final int confirmationCount;
   final List<String> confirmedByUserIds;
+  final int disputeCount;
+  final List<String> disputedByUserIds;
   final String signature;
+  final DateTime? lastDisputedAt;
+  final DateTime? expiresAt;
+  final double reporterTrustWeight;
   final bool active;
+
+  int get verificationScore =>
+      ((confirmationCount * reporterTrustWeight) - (disputeCount * 1.25))
+          .round();
+
+  ArcCommunityIntelVerificationState verificationStateAt(DateTime now) {
+    if (!active || (expiresAt != null && !expiresAt!.isAfter(now))) {
+      return ArcCommunityIntelVerificationState.expired;
+    }
+    if (disputeCount >= 2 && disputeCount >= confirmationCount) {
+      return ArcCommunityIntelVerificationState.disputed;
+    }
+    if (verificationScore >= 3) {
+      return ArcCommunityIntelVerificationState.communityVerified;
+    }
+    return ArcCommunityIntelVerificationState.unverified;
+  }
+
+  ArcCommunityIntelVerificationState get verificationState =>
+      verificationStateAt(DateTime.now());
 
   String get displayLabel {
     final blueprint = blueprintName?.trim();
@@ -122,9 +175,10 @@ class ArcCommunityIntelReport {
   }
 
   ArcRaidIntelConfidence get confidence {
-    if (confirmationCount >= 5) return ArcRaidIntelConfidence.confirmed;
-    if (confirmationCount >= 3) return ArcRaidIntelConfidence.strong;
-    if (confirmationCount >= 2) return ArcRaidIntelConfidence.moderate;
+    final score = verificationScore;
+    if (score >= 5) return ArcRaidIntelConfidence.confirmed;
+    if (score >= 3) return ArcRaidIntelConfidence.strong;
+    if (score >= 2) return ArcRaidIntelConfidence.moderate;
     return ArcRaidIntelConfidence.limited;
   }
 
@@ -153,7 +207,16 @@ class ArcCommunityIntelReport {
           : Timestamp.fromDate(lastConfirmedAt!),
       'confirmationCount': confirmationCount,
       'confirmedByUserIds': confirmedByUserIds,
+      'disputeCount': disputeCount,
+      'disputedByUserIds': disputedByUserIds,
       'signature': signature,
+      'lastDisputedAt': lastDisputedAt == null
+          ? null
+          : Timestamp.fromDate(lastDisputedAt!),
+      'expiresAt': expiresAt == null ? null : Timestamp.fromDate(expiresAt!),
+      'reporterTrustWeight': reporterTrustWeight,
+      'verificationScore': verificationScore,
+      'verificationState': verificationState.name,
       'active': active,
     };
   }
@@ -199,7 +262,17 @@ class ArcCommunityIntelReport {
               ?.map((value) => value.toString())
               .toList(growable: false) ??
           const <String>[],
+      disputeCount: (map['disputeCount'] as num?)?.toInt() ?? 0,
+      disputedByUserIds:
+          (map['disputedByUserIds'] as Iterable?)
+              ?.map((value) => value.toString())
+              .toList(growable: false) ??
+          const <String>[],
       signature: map['signature']?.toString() ?? '',
+      lastDisputedAt: _dateFrom(map['lastDisputedAt']),
+      expiresAt: _dateFrom(map['expiresAt']),
+      reporterTrustWeight:
+          (map['reporterTrustWeight'] as num?)?.toDouble() ?? 1,
       active: map['active'] is bool ? map['active'] as bool : true,
     );
   }

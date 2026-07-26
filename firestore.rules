@@ -217,7 +217,9 @@ service cloud.firestore {
           request.resource.data.mapId == resource.data.mapId &&
           request.resource.data.layer == resource.data.layer &&
           request.resource.data.category == resource.data.category &&
-          request.resource.data.signature == resource.data.signature);
+          request.resource.data.signature == resource.data.signature &&
+          request.resource.data.confirmationCount >= 0 &&
+          request.resource.data.disputeCount >= 0);
       allow delete: if isAdminOrDev() ||
         (isSignedIn() && resource.data.reporterUid == request.auth.uid);
     }
