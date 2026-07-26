@@ -1,4 +1,4 @@
-﻿name: uag_arc_raiders_hub
+name: uag_arc_raiders_hub
 description: "UAG Arc Raiders Hub standalone app."
 publish_to: 'none'
 
@@ -69,6 +69,7 @@ flutter:
     - assets/arc_raiders/operations/
     - assets/arc_raiders/operations/badges/
     - assets/arc_raiders/maps/blue_gate/
+    - assets/arc_raiders/maps/buried_city/
 
     - assets/arc_raiders/hero_cards/
   fonts:

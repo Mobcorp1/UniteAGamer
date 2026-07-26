@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
@@ -543,7 +544,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             decoration: AppTheme.tradingInputDecoration(label: 'Map'),
             items: [
               for (final map in ArcRaidIntelligenceSeedData.maps)
-                DropdownMenuItem(value: map.id, child: Text(map.displayName)),
+                DropdownMenuItem(
+                  value: map.id,
+                  child: Text(
+                    ArcMapAssetRegistry.hasRegisteredAsset(map.id)
+                        ? '${map.displayName} • ${ArcMapAssetRegistry.statusFor(map.id)}'
+                        : '${map.displayName} • Schematic',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
             ],
             onChanged: (value) {
               if (value == null) return;

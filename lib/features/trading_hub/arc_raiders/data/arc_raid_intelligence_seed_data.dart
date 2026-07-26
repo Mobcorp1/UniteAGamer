@@ -178,9 +178,13 @@ class ArcRaidIntelligenceSeedData {
       calibration: layerCalibrations[ArcRaidMapLayer.surface],
       layerAssets: layerAssets,
       layerCalibrations: layerCalibrations,
-      dataVersion: mapId == ArcMapAssetRegistry.blueGateMapId
-          ? 'pass-282-raid-intelligence-core-v1'
-          : 'pass-275-local-schematic-v1',
+      dataVersion: switch (mapId) {
+        ArcMapAssetRegistry.blueGateMapId =>
+          'pass-282-raid-intelligence-core-v1',
+        ArcMapAssetRegistry.buriedCityMapId =>
+          'pass-289-buried-city-provisional-v1',
+        _ => 'pass-275-local-schematic-v1',
+      },
       lastReviewed: DateTime.utc(2026, 7, 23),
     );
   }

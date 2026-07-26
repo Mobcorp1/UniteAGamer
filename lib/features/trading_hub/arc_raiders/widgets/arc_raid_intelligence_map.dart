@@ -87,7 +87,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                                 state: state,
                                 selectedMarkerId: selectedMarkerId,
                                 showSchematicGuides: !state.map
-                                    .hasCalibratedLayer(state.activeLayer),
+                                    .hasRenderableLayer(state.activeLayer),
                               ),
                             ),
                           ),
@@ -123,7 +123,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
   Widget _mapBackground() {
     final asset = state.map.assetForLayer(state.activeLayer);
     final localPath = asset?.localAssetPath?.trim();
-    if (state.map.hasCalibratedLayer(state.activeLayer) &&
+    if (state.map.hasRenderableLayer(state.activeLayer) &&
         localPath != null &&
         localPath.isNotEmpty) {
       return Image.asset(
@@ -154,6 +154,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
 
   Widget _modeBadge(ArcRaidMap map) {
     final calibrated = map.hasCalibratedLayer(state.activeLayer);
+    final renderable = map.hasRenderableLayer(state.activeLayer);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -162,16 +163,24 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
         border: Border.all(
           color: calibrated
               ? Colors.lightGreenAccent.withValues(alpha: 0.42)
+              : renderable
+              ? Colors.amberAccent.withValues(alpha: 0.42)
               : AppTheme.neonCyan.withValues(alpha: 0.34),
         ),
       ),
       child: Text(
         calibrated
             ? '${state.activeLayer.label} • calibrated game map'
+            : renderable
+            ? '${state.activeLayer.label} • provisional game map'
             : '${state.activeLayer.label} • tactical schematic',
         style: AppTheme.bodyTextStyle(
           fontSize: 11,
-          color: calibrated ? Colors.lightGreenAccent : AppTheme.neonCyan,
+          color: calibrated
+              ? Colors.lightGreenAccent
+              : renderable
+              ? Colors.amberAccent
+              : AppTheme.neonCyan,
           isBold: true,
         ),
       ),

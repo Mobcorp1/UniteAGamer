@@ -1239,11 +1239,18 @@ class ArcRaidMap {
     return layers;
   }
 
-  bool hasCalibratedLayer(ArcRaidMapLayer layer) {
-    return assetForLayer(layer)?.hasRenderableImage == true &&
-        calibrationForLayer(layer)?.valid == true;
+  bool hasRenderableLayer(ArcRaidMapLayer layer) {
+    return assetForLayer(layer)?.hasRenderableImage == true;
   }
 
+  bool hasCalibratedLayer(ArcRaidMapLayer layer) {
+    final calibration = calibrationForLayer(layer);
+    return hasRenderableLayer(layer) &&
+        calibration?.valid == true &&
+        calibration?.published == true;
+  }
+
+  bool get hasRenderableMap => availableLayers.any(hasRenderableLayer);
   bool get hasCalibratedMap => availableLayers.any(hasCalibratedLayer);
 }
 
