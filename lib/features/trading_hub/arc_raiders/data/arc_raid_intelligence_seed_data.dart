@@ -183,6 +183,8 @@ class ArcRaidIntelligenceSeedData {
           'pass-282-raid-intelligence-core-v1',
         ArcMapAssetRegistry.buriedCityMapId =>
           'pass-289-buried-city-provisional-v1',
+        ArcMapAssetRegistry.stellaMontisMapId =>
+          'pass-291-stella-montis-provisional-v1',
         _ => 'pass-275-local-schematic-v1',
       },
       lastReviewed: DateTime.utc(2026, 7, 23),

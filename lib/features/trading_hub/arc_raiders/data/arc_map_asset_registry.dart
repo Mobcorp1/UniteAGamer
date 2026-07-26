@@ -34,6 +34,7 @@ class ArcMapAssetRegistry {
 
   static const String blueGateMapId = 'blue_gate';
   static const String buriedCityMapId = 'buried_city';
+  static const String stellaMontisMapId = 'stella_montis';
 
   static const List<ArcRaidMapAnchor> _identityAnchors = [
     ArcRaidMapAnchor(
@@ -126,6 +127,29 @@ class ArcMapAssetRegistry {
     ),
   };
 
+  static const Map<ArcRaidMapLayer, ArcRaidMapAsset> stellaMontisAssets = {
+    ArcRaidMapLayer.surface: ArcRaidMapAsset(
+      id: 'stella_montis_surface_master_v1',
+      mapId: stellaMontisMapId,
+      renderMode: ArcRaidMapRenderMode.calibratedGameMap,
+      layer: ArcRaidMapLayer.surface,
+      localAssetPath:
+          'assets/arc_raiders/maps/stella_montis/stella_montis_master.webp',
+      published: true,
+    ),
+  };
+
+  static const Map<ArcRaidMapLayer, ArcRaidMapCalibration>
+  stellaMontisCalibrations = {
+    ArcRaidMapLayer.surface: ArcRaidMapCalibration(
+      id: 'stella_montis_surface_provisional_v1',
+      mapId: stellaMontisMapId,
+      anchors: _identityAnchors,
+      residualError: 0,
+      published: false,
+    ),
+  };
+
   static const List<ArcRegisteredMapAsset> registeredMaps = [
     ArcRegisteredMapAsset(
       mapId: blueGateMapId,
@@ -139,6 +163,13 @@ class ArcMapAssetRegistry {
       displayName: 'Buried City',
       layerAssets: buriedCityAssets,
       layerCalibrations: buriedCityCalibrations,
+      statusLabel: 'Provisional map image',
+    ),
+    ArcRegisteredMapAsset(
+      mapId: stellaMontisMapId,
+      displayName: 'Stella Montis',
+      layerAssets: stellaMontisAssets,
+      layerCalibrations: stellaMontisCalibrations,
       statusLabel: 'Provisional map image',
     ),
   ];

@@ -8,10 +8,11 @@ void main() {
   test('registers Blue Gate and Buried City in one shared registry', () {
     expect(
       ArcMapAssetRegistry.registeredMaps.map((item) => item.mapId),
-      containsAll(<String>['blue_gate', 'buried_city']),
+      containsAll(<String>['blue_gate', 'buried_city', 'stella_montis']),
     );
     expect(ArcMapAssetRegistry.hasRegisteredAsset('blue_gate'), isTrue);
     expect(ArcMapAssetRegistry.hasRegisteredAsset('buried_city'), isTrue);
+    expect(ArcMapAssetRegistry.hasRegisteredAsset('stella_montis'), isTrue);
   });
 
   test('Buried City renders its master image but remains provisional', () {
@@ -26,6 +27,22 @@ void main() {
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
     expect(
       ArcMapAssetRegistry.statusFor('buried_city'),
+      'Provisional map image',
+    );
+  });
+
+  test('Stella Montis renders its master image but remains provisional', () {
+    final map = ArcRaidIntelligenceSeedData.mapById('stella_montis');
+    final asset = map.assetForLayer(ArcRaidMapLayer.surface);
+
+    expect(
+      asset?.localAssetPath,
+      'assets/arc_raiders/maps/stella_montis/stella_montis_master.webp',
+    );
+    expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
+    expect(
+      ArcMapAssetRegistry.statusFor('stella_montis'),
       'Provisional map image',
     );
   });
