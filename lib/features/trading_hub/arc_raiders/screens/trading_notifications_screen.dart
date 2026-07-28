@@ -228,6 +228,19 @@ class _TradingNotificationsScreenState
       case TradingNotificationType.openBeta:
       case TradingNotificationType.operations:
       case TradingNotificationType.reward:
+      case TradingNotificationType.itemRelevanceWarning:
+      case TradingNotificationType.blueprintReportConfirmed:
+      case TradingNotificationType.communityIntelConfirmation:
+      case TradingNotificationType.communityIntelDispute:
+      case TradingNotificationType.conductReportResponse:
+      case TradingNotificationType.conductReportOutcome:
+      case TradingNotificationType.creatorReferral:
+      case TradingNotificationType.creatorPaidConversion:
+      case TradingNotificationType.creatorCommissionChanged:
+      case TradingNotificationType.subscriptionEvent:
+      case TradingNotificationType.paymentFailure:
+      case TradingNotificationType.foundingSupporterEvent:
+      case TradingNotificationType.ageVerificationRequired:
       case TradingNotificationType.communityEvent:
       case TradingNotificationType.reminder:
       case TradingNotificationType.maintenance:

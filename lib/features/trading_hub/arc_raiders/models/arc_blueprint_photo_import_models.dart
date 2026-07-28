@@ -4,6 +4,7 @@ enum ArcBlueprintPhotoImportStatus {
   draft,
   uploaded,
   awaitingProvider,
+  providerConfigurationRequired,
   needsUserReview,
   confirmed,
   rejected,
@@ -56,6 +57,92 @@ class ArcBlueprintPhotoCandidate {
   }
 }
 
+class ArcBlueprintPhotoCapture {
+  const ArcBlueprintPhotoCapture({
+    required this.id,
+    required this.imagePath,
+    required this.sequenceIndex,
+    this.orientation = '',
+    this.detectedRows = 0,
+    this.detectedCells = 0,
+    this.overlapSignature = '',
+    this.createdAt,
+  });
+
+  final String id;
+  final String imagePath;
+  final int sequenceIndex;
+  final String orientation;
+  final int detectedRows;
+  final int detectedCells;
+  final String overlapSignature;
+  final DateTime? createdAt;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'imagePath': imagePath,
+      'sequenceIndex': sequenceIndex,
+      'orientation': orientation,
+      'detectedRows': detectedRows,
+      'detectedCells': detectedCells,
+      'overlapSignature': overlapSignature,
+      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+    };
+  }
+
+  factory ArcBlueprintPhotoCapture.fromMap(Map<String, dynamic> map) {
+    return ArcBlueprintPhotoCapture(
+      id: _readString(map['id']),
+      imagePath: _readString(map['imagePath']),
+      sequenceIndex: _readInt(map['sequenceIndex']),
+      orientation: _readString(map['orientation']),
+      detectedRows: _readInt(map['detectedRows']),
+      detectedCells: _readInt(map['detectedCells']),
+      overlapSignature: _readString(map['overlapSignature']),
+      createdAt: _readDate(map['createdAt']),
+    );
+  }
+}
+
+class ArcBlueprintPhotoReviewChange {
+  const ArcBlueprintPhotoReviewChange({
+    required this.blueprintId,
+    required this.owned,
+    required this.source,
+    this.confidence = 0,
+    this.manualCorrection = false,
+  });
+
+  final String blueprintId;
+  final bool owned;
+  final String source;
+  final double confidence;
+  final bool manualCorrection;
+
+  bool get needsReview => confidence < 0.92 && !manualCorrection;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'blueprintId': blueprintId,
+      'owned': owned,
+      'source': source,
+      'confidence': confidence,
+      'manualCorrection': manualCorrection,
+    };
+  }
+
+  factory ArcBlueprintPhotoReviewChange.fromMap(Map<String, dynamic> map) {
+    return ArcBlueprintPhotoReviewChange(
+      blueprintId: _readString(map['blueprintId']),
+      owned: map['owned'] == true,
+      source: _readString(map['source']),
+      confidence: (map['confidence'] as num?)?.toDouble() ?? 0,
+      manualCorrection: map['manualCorrection'] == true,
+    );
+  }
+}
+
 class ArcBlueprintPhotoImportSession {
   const ArcBlueprintPhotoImportSession({
     required this.id,
@@ -65,6 +152,11 @@ class ArcBlueprintPhotoImportSession {
     this.provider = '',
     this.errorMessage = '',
     this.candidates = const <ArcBlueprintPhotoCandidate>[],
+    this.captures = const <ArcBlueprintPhotoCapture>[],
+    this.reviewChanges = const <ArcBlueprintPhotoReviewChange>[],
+    this.confirmedByUser = false,
+    this.writePreviewOnly = true,
+    this.retentionDays = 14,
     this.createdAt,
     this.updatedAt,
   });
@@ -76,14 +168,27 @@ class ArcBlueprintPhotoImportSession {
   final String provider;
   final String errorMessage;
   final List<ArcBlueprintPhotoCandidate> candidates;
+  final List<ArcBlueprintPhotoCapture> captures;
+  final List<ArcBlueprintPhotoReviewChange> reviewChanges;
+  final bool confirmedByUser;
+  final bool writePreviewOnly;
+  final int retentionDays;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   bool get hasProviderConfigured => provider.trim().isNotEmpty;
   bool get canWriteBlueprintState =>
       status == ArcBlueprintPhotoImportStatus.confirmed &&
+      confirmedByUser &&
+      !writePreviewOnly &&
       candidates.isNotEmpty &&
-      candidates.every((candidate) => !candidate.needsReview);
+      candidates.every((candidate) => !candidate.needsReview) &&
+      reviewChanges.every((change) => !change.needsReview);
+
+  bool get providerConfigurationRequired =>
+      status == ArcBlueprintPhotoImportStatus.providerConfigurationRequired ||
+      (status == ArcBlueprintPhotoImportStatus.awaitingProvider &&
+          !hasProviderConfigured);
 
   Map<String, dynamic> toMap() {
     return {
@@ -94,6 +199,11 @@ class ArcBlueprintPhotoImportSession {
       'provider': provider,
       'errorMessage': errorMessage,
       'candidates': candidates.map((candidate) => candidate.toMap()).toList(),
+      'captures': captures.map((capture) => capture.toMap()).toList(),
+      'reviewChanges': reviewChanges.map((change) => change.toMap()).toList(),
+      'confirmedByUser': confirmedByUser,
+      'writePreviewOnly': writePreviewOnly,
+      'retentionDays': retentionDays,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
@@ -110,6 +220,11 @@ class ArcBlueprintPhotoImportSession {
       provider: _readString(map['provider']),
       errorMessage: _readString(map['errorMessage']),
       candidates: _readCandidateList(map['candidates']),
+      captures: _readCaptureList(map['captures']),
+      reviewChanges: _readReviewChangeList(map['reviewChanges']),
+      confirmedByUser: map['confirmedByUser'] == true,
+      writePreviewOnly: map['writePreviewOnly'] != false,
+      retentionDays: _readInt(map['retentionDays'], fallback: 14),
       createdAt: _readDate(map['createdAt']),
       updatedAt: _readDate(map['updatedAt']),
     );
@@ -127,7 +242,35 @@ List<ArcBlueprintPhotoCandidate> _readCandidateList(dynamic value) {
       .toList(growable: false);
 }
 
+List<ArcBlueprintPhotoCapture> _readCaptureList(dynamic value) {
+  if (value is! Iterable) return const <ArcBlueprintPhotoCapture>[];
+  return value
+      .whereType<Map>()
+      .map(
+        (item) =>
+            ArcBlueprintPhotoCapture.fromMap(item.cast<String, dynamic>()),
+      )
+      .toList(growable: false);
+}
+
+List<ArcBlueprintPhotoReviewChange> _readReviewChangeList(dynamic value) {
+  if (value is! Iterable) return const <ArcBlueprintPhotoReviewChange>[];
+  return value
+      .whereType<Map>()
+      .map(
+        (item) =>
+            ArcBlueprintPhotoReviewChange.fromMap(item.cast<String, dynamic>()),
+      )
+      .toList(growable: false);
+}
+
 String _readString(dynamic value) => value?.toString().trim() ?? '';
+
+int _readInt(dynamic value, {int fallback = 0}) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(_readString(value)) ?? fallback;
+}
 
 DateTime? _readDate(dynamic value) {
   if (value is Timestamp) return value.toDate();

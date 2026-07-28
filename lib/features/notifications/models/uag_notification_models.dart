@@ -15,6 +15,7 @@ enum UagNotificationType {
   queueRelease('queue_release'),
   operations('operations'),
   reward('reward'),
+  itemRelevanceWarning('item_relevance_warning'),
   blueprintReportConfirmed('blueprint_report_confirmed'),
   communityIntelConfirmation('community_intel_confirmation'),
   communityIntelDispute('community_intel_dispute'),
@@ -25,6 +26,12 @@ enum UagNotificationType {
   contractDispute('contract_dispute'),
   conductReportResponse('conduct_report_response'),
   conductReportOutcome('conduct_report_outcome'),
+  creatorReferral('creator_referral'),
+  creatorPaidConversion('creator_paid_conversion'),
+  creatorCommissionChanged('creator_commission_changed'),
+  subscriptionEvent('subscription_event'),
+  paymentFailure('payment_failure'),
+  foundingSupporterEvent('founding_supporter_event'),
   communityEvent('community_event'),
   reminder('reminder'),
   postSessionFeedback('post_session_feedback'),
@@ -32,6 +39,7 @@ enum UagNotificationType {
   betaUpdate('beta_update'),
   featureUpdate('feature_update'),
   termsPrivacyUpdate('terms_privacy_update'),
+  ageVerificationRequired('age_verification_required'),
   maintenance('maintenance');
 
   const UagNotificationType(this.wireName);
@@ -219,6 +227,8 @@ class UagNotificationPreferences {
         return watchesAndQueues;
       case UagNotificationType.operations:
       case UagNotificationType.reward:
+      case UagNotificationType.itemRelevanceWarning:
+      case UagNotificationType.foundingSupporterEvent:
         return operationsAndRewards;
       case UagNotificationType.blueprintReportConfirmed:
       case UagNotificationType.communityIntelConfirmation:
@@ -232,6 +242,12 @@ class UagNotificationPreferences {
       case UagNotificationType.conductReportResponse:
       case UagNotificationType.conductReportOutcome:
         return contractsAndReports;
+      case UagNotificationType.creatorReferral:
+      case UagNotificationType.creatorPaidConversion:
+      case UagNotificationType.creatorCommissionChanged:
+      case UagNotificationType.subscriptionEvent:
+      case UagNotificationType.paymentFailure:
+        return announcements;
       case UagNotificationType.communityEvent:
         return communityEvents;
       case UagNotificationType.reminder:
@@ -239,6 +255,7 @@ class UagNotificationPreferences {
       case UagNotificationType.postSessionFeedback:
         return postSessionFeedback;
       case UagNotificationType.termsPrivacyUpdate:
+      case UagNotificationType.ageVerificationRequired:
         return legalAndPolicy;
     }
   }

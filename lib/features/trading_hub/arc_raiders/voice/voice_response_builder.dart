@@ -1,8 +1,13 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_advice_index.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_personal_item_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_voice_item_database.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/unified_item_index.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_personal_item_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_intent.dart';
 
 class UagVoiceResponse {
@@ -32,6 +37,11 @@ class UagVoiceResponseBuilder {
     UagVoiceIntent intent, {
     Map<String, ArcBlueprintState> blueprintStates =
         const <String, ArcBlueprintState>{},
+    ArcResourceIntelligence? resourceIntelligence,
+    ArcSavedLoadout? favouriteLoadout,
+    ArcPersonalItemInventorySnapshot personalInventory =
+        const ArcPersonalItemInventorySnapshot(),
+    List<TradingListing> activeListings = const <TradingListing>[],
   }) {
     final query = _resolveQuery(intent);
 
@@ -116,6 +126,19 @@ class UagVoiceResponseBuilder {
             'Ask about an item, blueprint, Scrappy material, bench upgrade, quest item, or trade value.',
         shouldSpeak: true,
       );
+    }
+
+    final personalDecision = const ArcPersonalItemIntelligenceEngine().evaluate(
+      query: _normaliseSpeechQuery(query),
+      blueprintStates: blueprintStates,
+      resourceIntelligence: resourceIntelligence,
+      favouriteLoadout: favouriteLoadout,
+      inventory: personalInventory,
+      activeListings: activeListings,
+    );
+
+    if (personalDecision.itemRecognized) {
+      return _personalItemResponse(personalDecision);
     }
 
     final decision = ArcItemAdviceIndex.decide(
@@ -269,6 +292,11 @@ class UagVoiceResponseBuilder {
     String itemName, {
     Map<String, ArcBlueprintState> blueprintStates =
         const <String, ArcBlueprintState>{},
+    ArcResourceIntelligence? resourceIntelligence,
+    ArcSavedLoadout? favouriteLoadout,
+    ArcPersonalItemInventorySnapshot personalInventory =
+        const ArcPersonalItemInventorySnapshot(),
+    List<TradingListing> activeListings = const <TradingListing>[],
   }) {
     return build(
       UagVoiceIntent(
@@ -277,6 +305,10 @@ class UagVoiceResponseBuilder {
         itemQuery: itemName,
       ),
       blueprintStates: blueprintStates,
+      resourceIntelligence: resourceIntelligence,
+      favouriteLoadout: favouriteLoadout,
+      personalInventory: personalInventory,
+      activeListings: activeListings,
     );
   }
 
@@ -394,6 +426,35 @@ class UagVoiceResponseBuilder {
     }
 
     return parts.join('\n');
+  }
+
+  UagVoiceResponse _personalItemResponse(
+    ArcPersonalItemRecommendationResult decision,
+  ) {
+    final record = decision.record!;
+    final details = <String>[
+      'Action: ${decision.outcome.label}.',
+      decision.primaryReason,
+      if (decision.requiredQuantity > 0)
+        'Required/reserved: ${decision.requiredQuantity}.',
+      'Owned: ${decision.ownedQuantity}.',
+      'Surplus: ${decision.surplusQuantity}.',
+      'Data: ${decision.dataVersion} (${decision.dataFreshness}).',
+      if (decision.relevantRouteOrFarmingOpportunity.trim().isNotEmpty)
+        'Route/Farm: ${decision.relevantRouteOrFarmingOpportunity}.',
+      if (decision.relevantTradeOpportunities.isNotEmpty)
+        'Trade: ${decision.relevantTradeOpportunities.first.reason}',
+      if (decision.secondaryReasons.isNotEmpty)
+        'Why:\n${decision.secondaryReasons.take(5).map((reason) => '- $reason').join('\n')}',
+      'Next: ${decision.suggestedAction}',
+    ];
+
+    return UagVoiceResponse(
+      title: record.name,
+      body: details.join('\n\n'),
+      spokenBody: decision.spokenSummary,
+      shouldSpeak: true,
+    );
   }
 }
 

@@ -83,6 +83,23 @@ service cloud.firestore {
         request.resource.data.recipientUid != request.auth.uid;
     }
 
+    function blockDocId(blockerUid, blockedUid) {
+      return blockerUid + '_' + blockedUid;
+    }
+
+    function hasUserBlock(blockerUid, blockedUid) {
+      return exists(/databases/$(database)/documents/uag_user_blocks/$(blockDocId(blockerUid, blockedUid)));
+    }
+
+    function noUserBlockBetween(leftUid, rightUid) {
+      return leftUid is string &&
+        rightUid is string &&
+        leftUid != '' &&
+        rightUid != '' &&
+        !hasUserBlock(leftUid, rightUid) &&
+        !hasUserBlock(rightUid, leftUid);
+    }
+
     function isNotificationTarget() {
       return isSignedIn() && resource.data.targetUid == request.auth.uid;
     }
@@ -179,6 +196,17 @@ service cloud.firestore {
       match /notification_preferences/{preferenceId} {
         allow read, create, update: if isOwner(userId) || isAdminOrDev();
         allow delete: if false;
+      }
+
+      match /arc_item_protections/{itemId} {
+        allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+      }
+
+      match /arc_item_recommendation_logs/{logId} {
+        allow read: if isOwner(userId) || isAdminOrDev();
+        allow create: if isOwner(userId) &&
+          request.resource.data.uid == userId;
+        allow update, delete: if isAdminOrDev();
       }
 
       match /notifications/{notificationId} {
@@ -303,7 +331,12 @@ service cloud.firestore {
 
     match /trading_offers/{offerId} {
       allow read: if isTradingOfferParticipant() || isAdminOrDev();
-      allow create: if isIncomingTradingOfferSender() && request.resource.data.id == offerId;
+      allow create: if isIncomingTradingOfferSender() &&
+        request.resource.data.id == offerId &&
+        noUserBlockBetween(
+          request.resource.data.senderUid,
+          request.resource.data.receiverUid
+        );
       allow update: if (isTradingOfferParticipant() || isAdminOrDev()) &&
         request.resource.data.id == resource.data.id &&
         request.resource.data.listingId == resource.data.listingId &&
@@ -430,7 +463,12 @@ service cloud.firestore {
 
     match /arc_match_rider_invites/{inviteId} {
       allow read: if isMatchInviteParticipant() || isAdminOrDev();
-      allow create: if isIncomingMatchInviteSender() && request.resource.data.id == inviteId;
+      allow create: if isIncomingMatchInviteSender() &&
+        request.resource.data.id == inviteId &&
+        noUserBlockBetween(
+          request.resource.data.senderUid,
+          request.resource.data.recipientUid
+        );
       allow update: if (isMatchInviteParticipant() || isAdminOrDev()) &&
         request.resource.data.id == resource.data.id &&
         request.resource.data.senderUid == resource.data.senderUid &&
@@ -548,6 +586,153 @@ service cloud.firestore {
     match /legal_policies/{policyId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_item_dataset_versions/{versionId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdminOrDev();
+      allow delete: if false;
+    }
+
+    match /uag_creator_applications/{applicationId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.id == applicationId &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update, delete: if isAdminOrDev();
+    }
+
+    match /uag_creator_campaign_code_requests/{codeId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.id == codeId &&
+        request.resource.data.code == codeId &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.status == 'pending_admin_approval';
+      allow update, delete: if isAdminOrDev();
+    }
+
+    match /uag_creator_dashboard_aggregates/{creatorUid} {
+      allow read: if isOwner(creatorUid) || isAdminOrDev();
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /uag_creator_commission_ledgers/{creatorUid} {
+      allow read: if isOwner(creatorUid) || isAdminOrDev();
+      allow create, update, delete: if isAdminOrDev();
+
+      match /entries/{entryId} {
+        allow read: if isOwner(creatorUid) || isAdminOrDev();
+        allow create, update, delete: if isAdminOrDev();
+      }
+    }
+
+    match /uag_age_verification_requests/{requestId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.id == requestId &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.status == 'pending';
+      allow update: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          resource.data.uid == request.auth.uid &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.diff(resource.data).changedKeys().hasOnly([
+            'status',
+            'appealReason',
+            'updatedAt'
+          ]) &&
+          request.resource.data.status == 'appealed'
+        );
+      allow delete: if isAdminOrDev();
+    }
+
+    match /uag_user_blocks/{blockId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.blockerUid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.id == blockId &&
+        request.resource.data.blockerUid == request.auth.uid &&
+        request.resource.data.blockedUid is string &&
+        request.resource.data.blockedUid != request.auth.uid;
+      allow update: if false;
+      allow delete: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.blockerUid == request.auth.uid);
+    }
+
+    match /uag_message_outbox/{messageId} {
+      allow read: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          (
+            resource.data.senderUid == request.auth.uid ||
+            resource.data.recipientUid == request.auth.uid
+          )
+        );
+      allow create: if isSignedIn() &&
+        request.resource.data.id == messageId &&
+        request.resource.data.senderUid == request.auth.uid &&
+        request.resource.data.recipientUid is string &&
+        request.resource.data.recipientUid != request.auth.uid &&
+        request.resource.data.status == 'queued' &&
+        noUserBlockBetween(
+          request.resource.data.senderUid,
+          request.resource.data.recipientUid
+        );
+      allow update, delete: if false;
+    }
+
+    match /uag_messages/{messageId} {
+      allow read: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          (
+            resource.data.senderUid == request.auth.uid ||
+            resource.data.recipientUid == request.auth.uid
+          )
+        );
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /uag_message_reports/{reportId} {
+      allow read: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          (
+            resource.data.reporterUid == request.auth.uid ||
+            resource.data.reportedUid == request.auth.uid
+          )
+        );
+      allow create: if isSignedIn() &&
+        request.resource.data.id == reportId &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.reportedUid != request.auth.uid;
+      allow update, delete: if isAdminOrDev();
+    }
+
+    match /uag_conversation_reports/{reportId} {
+      allow read: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          (
+            resource.data.reporterUid == request.auth.uid ||
+            resource.data.reportedUid == request.auth.uid
+          )
+        );
+      allow create: if isSignedIn() &&
+        request.resource.data.id == reportId &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.reportedUid != request.auth.uid;
+      allow update, delete: if isAdminOrDev();
+    }
+
+    match /uag_moderation_queue/{queueId} {
+      allow read, create, update, delete: if isAdminOrDev();
     }
 
     match /legal_acceptance_events/{eventId} {

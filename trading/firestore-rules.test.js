@@ -191,6 +191,151 @@ async function run() {
         .get(),
     );
 
+    const itemProtectionRef = owner.doc(
+      "users/owner/arc_item_protections/queen-reactor",
+    );
+    await succeeds(
+      itemProtectionRef.set({
+        userId: "owner",
+        itemId: "queen-reactor",
+        protections: ["neverRecycle"],
+      }),
+    );
+    await fails(
+      outsider.doc("users/owner/arc_item_protections/queen-reactor").set({
+        userId: "outsider",
+        itemId: "queen-reactor",
+      }),
+    );
+
+    await succeeds(
+      admin.doc("arc_item_dataset_versions/active").set({
+        version: "uag-arc-items-2026-07-28-pass-297",
+        gameVersion: "ARC Raiders 1.28",
+        published: true,
+      }),
+    );
+    await succeeds(owner.doc("arc_item_dataset_versions/active").get());
+    await fails(
+      owner.doc("arc_item_dataset_versions/active").set({
+        version: "client-edit",
+      }),
+    );
+
+    await succeeds(
+      owner.doc("uag_creator_applications/app-owner").set({
+        id: "app-owner",
+        uid: "owner",
+        status: "pending",
+        agreedTermsVersion: 1,
+      }),
+    );
+    await fails(
+      owner.doc("uag_creator_applications/app-owner").set({
+        id: "app-owner",
+        uid: "owner",
+        status: "approved",
+        agreedTermsVersion: 1,
+      }),
+    );
+    await succeeds(
+      admin.doc("uag_creator_applications/app-owner").set({
+        id: "app-owner",
+        uid: "owner",
+        status: "approved",
+        agreedTermsVersion: 1,
+      }),
+    );
+    await fails(outsider.doc("uag_creator_applications/app-owner").get());
+
+    await succeeds(
+      owner.doc("uag_age_verification_requests/age-owner").set({
+        id: "age-owner",
+        uid: "owner",
+        dateOfBirthIso: "2000-01-01T00:00:00.000Z",
+        status: "pending",
+      }),
+    );
+    await fails(
+      owner.doc("uag_age_verification_requests/age-cheat").set({
+        id: "age-cheat",
+        uid: "owner",
+        dateOfBirthIso: "2010-01-01T00:00:00.000Z",
+        status: "accepted",
+        verifiedOver18: true,
+      }),
+    );
+    await succeeds(
+      owner.doc("uag_age_verification_requests/age-owner").set(
+        {
+          status: "appealed",
+          appealReason: "Please review manually.",
+          updatedAt: new Date(),
+        },
+        { merge: true },
+      ),
+    );
+
+    await succeeds(
+      owner.doc("uag_user_blocks/owner_outsider").set({
+        id: "owner_outsider",
+        blockerUid: "owner",
+        blockedUid: "outsider",
+      }),
+    );
+    await succeeds(
+      owner.doc("uag_message_outbox/message-safe").set({
+        id: "message-safe",
+        senderUid: "owner",
+        recipientUid: "third",
+        body: "Can trade after 7pm?",
+        status: "queued",
+      }),
+    );
+    await fails(
+      outsider.doc("uag_message_outbox/message-blocked").set({
+        id: "message-blocked",
+        senderUid: "outsider",
+        recipientUid: "owner",
+        body: "Trade?",
+        status: "queued",
+      }),
+    );
+    await fails(
+      owner.doc("uag_messages/client-delivery").set({
+        id: "client-delivery",
+        senderUid: "owner",
+        recipientUid: "third",
+        body: "Bypass server",
+      }),
+    );
+    await fails(
+      outsider.doc("trading_offers/blocked-offer").set({
+        id: "blocked-offer",
+        senderUid: "outsider",
+        receiverUid: "owner",
+        listingId: "listing-1",
+      }),
+    );
+    await fails(
+      outsider.doc("arc_match_rider_invites/blocked-invite").set({
+        id: "blocked-invite",
+        senderUid: "outsider",
+        recipientUid: "owner",
+      }),
+    );
+    await succeeds(
+      owner.doc("uag_message_reports/report-1").set({
+        id: "report-1",
+        reporterUid: "owner",
+        reportedUid: "outsider",
+        messageId: "message-x",
+        category: "scam",
+      }),
+    );
+    await fails(outsider.doc("uag_moderation_queue/report-1").get());
+    await succeeds(admin.doc("uag_moderation_queue/report-1").get());
+
     console.log(`Firestore release candidate rules checks passed: ${checks}.`);
   } finally {
     await env.cleanup();

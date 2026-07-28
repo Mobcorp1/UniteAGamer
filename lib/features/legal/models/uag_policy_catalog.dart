@@ -187,8 +187,26 @@ class UagPolicyCatalog {
       effectiveDate: effectiveDate,
       summary: 'Referral discounts, commission timing and payout review.',
       body:
-          '$legalReviewNotice Referral balances remain pending during refund '
-          'risk and require provider-confirmed ledger events.',
+          '$legalReviewNotice Referral and Creator Programme participation is '
+          'not employment, does not guarantee earnings, requires truthful '
+          'promotion and disclosure where required, prohibits spam, '
+          'self-referrals, fraudulent accounts and prohibited brand claims, '
+          'and keeps balances pending during refund or chargeback risk. Paid '
+          'conversions and commissions require provider-confirmed ledger '
+          'events before they are payable.',
+    ),
+    UagPolicyDocument(
+      id: 'age_restriction_policy',
+      title: '18+ Age Restriction Policy',
+      version: currentPolicyVersion,
+      effectiveDate: effectiveDate,
+      summary: 'UAG ARC Raiders Hub accounts are restricted to adults.',
+      body:
+          '$legalReviewNotice UAG ARC Raiders Hub is an 18+ account service. '
+          'Users must complete the age gate before messaging, trading, '
+          'creator, subscription or community features are made available. '
+          'Rejected users may request human review where operationally '
+          'available.',
     ),
     UagPolicyDocument(
       id: 'notifications_policy',
@@ -238,8 +256,13 @@ class UagPolicyCatalog {
       effectiveDate: effectiveDate,
       summary: 'Moderation outcomes, appeals and admin review.',
       body:
-          '$legalReviewNotice Moderation decisions should be logged, '
-          'reviewable and appealable where practical.',
+          '$legalReviewNotice UAG may analyse messages, reports and user '
+          'content with automated rules and configured service providers to '
+          'detect abuse, threats, scams, doxxing, sexual or grooming risk, '
+          'spam and blocked links. High-risk material may be withheld for '
+          'human review, preserved as evidence and appealed where practical. '
+          'Moderation decisions should be logged, reviewable and appealable '
+          'where practical.',
     ),
     UagPolicyDocument(
       id: 'data_rights_policy',

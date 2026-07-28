@@ -77,6 +77,18 @@ void main() {
         tradingNotificationTypeFromWire('community_event'),
         TradingNotificationType.communityEvent,
       );
+      expect(
+        tradingNotificationTypeFromWire('item_relevance_warning'),
+        TradingNotificationType.itemRelevanceWarning,
+      );
+      expect(
+        tradingNotificationTypeFromWire('creator_commission_changed'),
+        TradingNotificationType.creatorCommissionChanged,
+      );
+      expect(
+        tradingNotificationTypeFromWire('age_verification_required'),
+        TradingNotificationType.ageVerificationRequired,
+      );
     });
 
     test('new compliance and intel notification types obey preferences', () {
@@ -95,6 +107,18 @@ void main() {
         UagNotificationType.termsPrivacyUpdate,
       );
       expect(
+        UagNotificationType.fromWire('item_relevance_warning'),
+        UagNotificationType.itemRelevanceWarning,
+      );
+      expect(
+        UagNotificationType.fromWire('creator_paid_conversion'),
+        UagNotificationType.creatorPaidConversion,
+      );
+      expect(
+        UagNotificationType.fromWire('age_verification_required'),
+        UagNotificationType.ageVerificationRequired,
+      );
+      expect(
         muted.allowsType(UagNotificationType.communityIntelConfirmation),
         isFalse,
       );
@@ -107,6 +131,14 @@ void main() {
         isFalse,
       );
       expect(muted.allowsType(UagNotificationType.termsPrivacyUpdate), isFalse);
+      expect(
+        muted.allowsType(UagNotificationType.ageVerificationRequired),
+        isFalse,
+      );
+      expect(
+        muted.allowsType(UagNotificationType.itemRelevanceWarning),
+        isTrue,
+      );
       expect(muted.allowsType(UagNotificationType.openBeta), isTrue);
     });
   });

@@ -27,6 +27,19 @@ enum TradingNotificationType {
   openBeta,
   operations,
   reward,
+  itemRelevanceWarning,
+  blueprintReportConfirmed,
+  communityIntelConfirmation,
+  communityIntelDispute,
+  conductReportResponse,
+  conductReportOutcome,
+  creatorReferral,
+  creatorPaidConversion,
+  creatorCommissionChanged,
+  subscriptionEvent,
+  paymentFailure,
+  foundingSupporterEvent,
+  ageVerificationRequired,
   communityEvent,
   reminder,
   postSessionFeedback,
@@ -49,12 +62,47 @@ TradingNotificationType tradingNotificationTypeFromWire(String rawType) {
           return TradingNotificationType.blueprintWatchMatch;
         case 'queue_release':
           return TradingNotificationType.queuedListingReleased;
+        case 'trade_offer':
+          return TradingNotificationType.offerReceived;
+        case 'trade_accepted':
+          return TradingNotificationType.offerAccepted;
+        case 'trade_rejected':
+          return TradingNotificationType.offerDeclined;
+        case 'trade_reminder':
+          return TradingNotificationType.scheduledTradeReminder;
         case 'trading':
           return TradingNotificationType.sessionUpdated;
+        case 'matchmaking_session':
         case 'matchmaking':
           return TradingNotificationType.availabilityOverlap;
         case 'favourite_rider':
           return TradingNotificationType.favouriteRiderListing;
+        case 'item_relevance_warning':
+          return TradingNotificationType.itemRelevanceWarning;
+        case 'blueprint_report_confirmed':
+          return TradingNotificationType.blueprintReportConfirmed;
+        case 'community_intel_confirmation':
+          return TradingNotificationType.communityIntelConfirmation;
+        case 'community_intel_dispute':
+          return TradingNotificationType.communityIntelDispute;
+        case 'conduct_report_response':
+          return TradingNotificationType.conductReportResponse;
+        case 'conduct_report_outcome':
+          return TradingNotificationType.conductReportOutcome;
+        case 'creator_referral':
+          return TradingNotificationType.creatorReferral;
+        case 'creator_paid_conversion':
+          return TradingNotificationType.creatorPaidConversion;
+        case 'creator_commission_changed':
+          return TradingNotificationType.creatorCommissionChanged;
+        case 'subscription_event':
+          return TradingNotificationType.subscriptionEvent;
+        case 'payment_failure':
+          return TradingNotificationType.paymentFailure;
+        case 'founding_supporter_event':
+          return TradingNotificationType.foundingSupporterEvent;
+        case 'age_verification_required':
+          return TradingNotificationType.ageVerificationRequired;
         default:
           return TradingNotificationType.sessionUpdated;
       }
@@ -161,6 +209,32 @@ class TradingNotification {
         return 'Operations';
       case TradingNotificationType.reward:
         return 'Reward';
+      case TradingNotificationType.itemRelevanceWarning:
+        return 'Item Warning';
+      case TradingNotificationType.blueprintReportConfirmed:
+        return 'Blueprint Confirmed';
+      case TradingNotificationType.communityIntelConfirmation:
+        return 'Intel Confirmed';
+      case TradingNotificationType.communityIntelDispute:
+        return 'Intel Dispute';
+      case TradingNotificationType.conductReportResponse:
+        return 'Report Response';
+      case TradingNotificationType.conductReportOutcome:
+        return 'Report Outcome';
+      case TradingNotificationType.creatorReferral:
+        return 'Creator Referral';
+      case TradingNotificationType.creatorPaidConversion:
+        return 'Creator Conversion';
+      case TradingNotificationType.creatorCommissionChanged:
+        return 'Commission';
+      case TradingNotificationType.subscriptionEvent:
+        return 'Subscription';
+      case TradingNotificationType.paymentFailure:
+        return 'Payment';
+      case TradingNotificationType.foundingSupporterEvent:
+        return 'Supporter';
+      case TradingNotificationType.ageVerificationRequired:
+        return 'Age Verification';
       case TradingNotificationType.communityEvent:
         return 'Community Event';
       case TradingNotificationType.reminder:

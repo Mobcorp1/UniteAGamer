@@ -327,6 +327,14 @@ async function handleInvoicePaid(invoice) {
 
     if (referralOwnerUid && referralCommissionPence > 0) {
       const walletRef = db.collection('referral_wallets').doc(referralOwnerUid);
+      const creatorLedgerRef = db
+        .collection('uag_creator_commission_ledgers')
+        .doc(referralOwnerUid)
+        .collection('entries')
+        .doc(invoice.id);
+      const creatorAggregateRef = db
+        .collection('uag_creator_dashboard_aggregates')
+        .doc(referralOwnerUid);
       transaction.set(walletRef, {
         uid: referralOwnerUid,
         pendingPence: admin.firestore.FieldValue.increment(referralCommissionPence),
@@ -343,6 +351,32 @@ async function handleInvoicePaid(invoice) {
         releaseAfter: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+      transaction.set(creatorLedgerRef, {
+        id: invoice.id,
+        creatorUid: referralOwnerUid,
+        status: 'qualifying',
+        amountPence: referralCommissionPence,
+        currency: normalizeString(invoice.currency || 'gbp').toLowerCase() || 'gbp',
+        referredAccountRef: stableAnonymizedUserRef(uid),
+        subscriptionId,
+        billingEventId: invoice.id,
+        grossAmountPence: grossPence,
+        discountPence: invoice.total_discount_amounts && invoice.total_discount_amounts.length
+          ? invoice.total_discount_amounts.reduce((total, discount) => total + (discount.amount || 0), 0)
+          : 0,
+        netEligibleAmountPence: grossPence,
+        commissionRatePercent: plan.creatorCommissionPercent,
+        reason: 'Stripe invoice paid with creator referral attribution.',
+        qualificationDate: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(creatorAggregateRef, {
+        uid: referralOwnerUid,
+        paidConversions: admin.firestore.FieldValue.increment(1),
+        pendingCommissionPence: admin.firestore.FieldValue.increment(referralCommissionPence),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
     }
 
     if (charityPence > 0) {
@@ -365,6 +399,12 @@ function normalizeString(value) {
   return String(value || '').trim();
 }
 
+function stableAnonymizedUserRef(uid) {
+  const normalized = normalizeString(uid);
+  if (!normalized) return 'user_unknown';
+  return `user_${normalized.slice(-6)}`;
+}
+
 function isInvalidTokenCode(code) {
   return (
     code === 'messaging/registration-token-not-registered' ||
@@ -382,6 +422,10 @@ function preferenceKeyForType(type) {
     case 'open_beta':
       return 'openBetaUpdates';
     case 'trading':
+    case 'trade_offer':
+    case 'trade_accepted':
+    case 'trade_rejected':
+    case 'trade_reminder':
     case 'offerReceived':
     case 'offerAccepted':
     case 'offerDeclined':
@@ -392,6 +436,7 @@ function preferenceKeyForType(type) {
     case 'sessionOutcome':
       return 'trading';
     case 'matchmaking':
+    case 'matchmaking_session':
       return 'matchmaking';
     case 'favourite_rider':
       return 'favouriteRiders';
@@ -403,7 +448,30 @@ function preferenceKeyForType(type) {
       return 'watchesAndQueues';
     case 'operations':
     case 'reward':
+    case 'item_relevance_warning':
+    case 'founding_supporter_event':
       return 'operationsAndRewards';
+    case 'blueprint_report_confirmed':
+    case 'community_intel_confirmation':
+    case 'community_intel_dispute':
+      return 'blueprintIntel';
+    case 'contract_offered':
+    case 'contract_accepted':
+    case 'contract_evidence_submitted':
+    case 'contract_reward_ready':
+    case 'contract_dispute':
+    case 'conduct_report_response':
+    case 'conduct_report_outcome':
+      return 'contractsAndReports';
+    case 'terms_privacy_update':
+    case 'age_verification_required':
+      return 'legalAndPolicy';
+    case 'creator_referral':
+    case 'creator_paid_conversion':
+    case 'creator_commission_changed':
+    case 'subscription_event':
+    case 'payment_failure':
+      return 'announcements';
     case 'community_event':
       return 'communityEvents';
     case 'reminder':
@@ -669,6 +737,168 @@ async function createInAppNotifications({ data, userIds, broadcastId }) {
     created += chunk.length;
   }
   return created;
+}
+
+function parseDateOnly(value) {
+  const parsed = Date.parse(normalizeString(value));
+  if (Number.isNaN(parsed)) return null;
+  const date = new Date(parsed);
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function evaluateAgeVerification(dateOfBirthIso, now = new Date()) {
+  const birthDate = parseDateOnly(dateOfBirthIso);
+  if (!birthDate) {
+    return {
+      status: 'rejected',
+      verifiedOver18: false,
+      ageYears: 0,
+      decisionReason: 'Date of birth is missing or invalid.',
+    };
+  }
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  if (birthDate > today) {
+    return {
+      status: 'rejected',
+      verifiedOver18: false,
+      ageYears: 0,
+      decisionReason: 'Date of birth cannot be in the future.',
+    };
+  }
+  let ageYears = today.getUTCFullYear() - birthDate.getUTCFullYear();
+  const birthdayThisYear = new Date(Date.UTC(
+    today.getUTCFullYear(),
+    birthDate.getUTCMonth(),
+    birthDate.getUTCDate()
+  ));
+  if (birthdayThisYear > today) ageYears -= 1;
+  if (ageYears >= 18) {
+    return {
+      status: 'accepted',
+      verifiedOver18: true,
+      ageYears,
+      decisionReason: 'Account holder meets the 18+ service requirement.',
+    };
+  }
+  return {
+    status: 'rejected',
+    verifiedOver18: false,
+    ageYears,
+    decisionReason: 'UAG ARC Raiders Hub is an 18+ service.',
+  };
+}
+
+function messagingBlockId(blockerUid, blockedUid) {
+  return `${normalizeString(blockerUid)}_${normalizeString(blockedUid)}`;
+}
+
+async function userHasVerifiedAge(uid) {
+  const userSnap = await db.collection('users').doc(uid).get();
+  const data = userSnap.data() || {};
+  return data.ageVerification?.verifiedOver18 === true;
+}
+
+async function usersBlockedBetween(leftUid, rightUid) {
+  const [leftBlock, rightBlock] = await Promise.all([
+    db.collection('uag_user_blocks').doc(messagingBlockId(leftUid, rightUid)).get(),
+    db.collection('uag_user_blocks').doc(messagingBlockId(rightUid, leftUid)).get(),
+  ]);
+  return leftBlock.exists || rightBlock.exists;
+}
+
+function deterministicModerationDecision(body) {
+  const normalized = normalizeString(body).toLowerCase();
+  const rules = [];
+  let score = 0;
+  const add = (rule, value) => {
+    if (!rules.includes(rule)) rules.push(rule);
+    score += value;
+  };
+  if (!normalized) add('empty_message', 0.45);
+  if (/\b(kill yourself|kys|i will kill|death threat)\b/.test(normalized)) {
+    add('threat_or_self_harm_abuse', 0.95);
+  }
+  if (/\b(child|minor|underage)\b.*\b(sex|nude|meet)\b/.test(normalized)) {
+    add('sexual_or_grooming_risk', 1);
+  }
+  if (/\b(password|2fa|verification code|login code)\b/.test(normalized)) {
+    add('credential_phishing', 0.65);
+  }
+  if (/\b(paypal|bank transfer|crypto|wallet address|cashapp)\b/.test(normalized)) {
+    add('off_platform_payment_request', 0.3);
+  }
+  if (/\b\d{3,}[- .]?\d{3,}[- .]?\d{3,}\b/.test(normalized)) {
+    add('phone_or_private_number', 0.25);
+  }
+  if (/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/.test(normalized)) {
+    add('email_address', 0.25);
+  }
+  if (/https?:\/\/|www\./.test(normalized)) add('external_url', 0.15);
+  ['bit.ly', 'tinyurl.com', 't.me', 'discord.gg'].forEach((domain) => {
+    if (normalized.includes(domain)) add(`blocked_domain:${domain}`, 0.35);
+  });
+
+  const boundedScore = Math.max(0, Math.min(1, score));
+  const severe = rules.includes('threat_or_self_harm_abuse') ||
+    rules.includes('sexual_or_grooming_risk');
+  if (severe && boundedScore >= 0.95) {
+    return {
+      state: 'blocked',
+      action: 'blockAndEscalate',
+      score: boundedScore,
+      triggeredRules: rules,
+      reason: 'Severe automated safety rule triggered.',
+    };
+  }
+  if (boundedScore >= 0.7) {
+    return {
+      state: 'quarantined',
+      action: 'quarantine',
+      score: boundedScore,
+      triggeredRules: rules,
+      reason: 'Message withheld for moderation review.',
+    };
+  }
+  if (boundedScore >= 0.35) {
+    return {
+      state: 'warned',
+      action: 'warnAndAllowEdit',
+      score: boundedScore,
+      triggeredRules: rules,
+      reason: 'Message should be edited or confirmed before delivery.',
+    };
+  }
+  return {
+    state: 'allowed',
+    action: 'deliver',
+    score: boundedScore,
+    triggeredRules: rules,
+    reason: 'No blocking safety rule triggered.',
+  };
+}
+
+async function writeModerationQueue({ id, data, decision, reason }) {
+  await db.collection('uag_moderation_queue').doc(id).set({
+    id,
+    source: 'uag_message_outbox',
+    sourceId: id,
+    senderUid: normalizeString(data.senderUid),
+    recipientUid: normalizeString(data.recipientUid),
+    conversationId: normalizeString(data.conversationId),
+    contextType: normalizeString(data.contextType || 'direct_message'),
+    contextId: normalizeString(data.contextId),
+    body: normalizeString(data.body),
+    state: decision.state,
+    action: decision.action,
+    score: decision.score,
+    triggeredRules: decision.triggeredRules,
+    providerConfigured: false,
+    provider: 'deterministic_rules',
+    reason: reason || decision.reason,
+    illegalContentPriority: decision.triggeredRules.some((rule) => rule.includes('grooming')),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
 }
 
 function timestampMillis(value) {
@@ -1253,5 +1483,142 @@ exports.sendUagNotificationBroadcast = onDocumentCreated(
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
     }
+  }
+);
+
+exports.processUagAgeVerificationRequest = onDocumentCreated(
+  'uag_age_verification_requests/{requestId}',
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const requestId = event.params.requestId;
+    const data = snap.data() || {};
+    const uid = normalizeString(data.uid);
+    if (!uid || normalizeString(data.id || requestId) !== requestId) {
+      await snap.ref.set({
+        status: 'rejected',
+        verifiedOver18: false,
+        decisionReason: 'Age verification request is malformed.',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return;
+    }
+
+    const decision = evaluateAgeVerification(data.dateOfBirthIso);
+    await db.runTransaction(async (transaction) => {
+      transaction.set(snap.ref, {
+        status: decision.status,
+        verifiedOver18: decision.verifiedOver18,
+        ageYearsAtDecision: decision.ageYears,
+        decisionReason: decision.decisionReason,
+        provider: 'server_dob_gate',
+        decidedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(db.collection('users').doc(uid), {
+        ageVerification: {
+          status: decision.status,
+          verifiedOver18: decision.verifiedOver18,
+          verificationRequestId: requestId,
+          provider: 'server_dob_gate',
+          decisionReason: decision.decisionReason,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+      }, { merge: true });
+    });
+  }
+);
+
+exports.processUagMessageOutbox = onDocumentCreated(
+  'uag_message_outbox/{messageId}',
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+    const messageId = event.params.messageId;
+    const data = snap.data() || {};
+    const senderUid = normalizeString(data.senderUid);
+    const recipientUid = normalizeString(data.recipientUid);
+    const body = normalizeString(data.body);
+
+    async function reject(status, reason, decision = null) {
+      if (decision) {
+        await writeModerationQueue({ id: messageId, data, decision, reason });
+      }
+      await snap.ref.set({
+        status,
+        deliveryBlocked: true,
+        reason,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+
+    if (!senderUid || !recipientUid || senderUid === recipientUid || !body) {
+      await reject('blocked_invalid_request', 'Message request is invalid.');
+      return;
+    }
+    if (!(await userHasVerifiedAge(senderUid))) {
+      await reject(
+        'blocked_age_verification_required',
+        'Sender must complete 18+ verification before messaging.'
+      );
+      return;
+    }
+    if (!(await userHasVerifiedAge(recipientUid))) {
+      await reject(
+        'blocked_recipient_age_unverified',
+        'Recipient has not completed 18+ verification.'
+      );
+      return;
+    }
+    if (await usersBlockedBetween(senderUid, recipientUid)) {
+      await reject('blocked_user_block', 'Messaging is blocked between these users.');
+      return;
+    }
+
+    const decision = deterministicModerationDecision(body);
+    if (decision.action === 'warnAndAllowEdit') {
+      await reject('warning_required', decision.reason, decision);
+      return;
+    }
+    if (decision.action !== 'deliver') {
+      await reject(decision.state, decision.reason, decision);
+      return;
+    }
+
+    await db.runTransaction(async (transaction) => {
+      const current = await transaction.get(snap.ref);
+      const currentData = current.data() || {};
+      if (normalizeString(currentData.status) !== 'queued') return;
+      const messageRef = db.collection('uag_messages').doc(messageId);
+      transaction.set(messageRef, {
+        id: messageId,
+        outboxId: messageId,
+        senderUid,
+        recipientUid,
+        participants: [senderUid, recipientUid],
+        body,
+        conversationId: normalizeString(data.conversationId),
+        contextType: normalizeString(data.contextType || 'direct_message'),
+        contextId: normalizeString(data.contextId),
+        moderation: {
+          state: decision.state,
+          action: decision.action,
+          score: decision.score,
+          triggeredRules: decision.triggeredRules,
+          providerConfigured: false,
+          provider: 'deterministic_rules',
+        },
+        status: 'delivered',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: false });
+      transaction.set(snap.ref, {
+        status: 'delivered',
+        messageId,
+        moderationState: decision.state,
+        deliveredAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
   }
 );
