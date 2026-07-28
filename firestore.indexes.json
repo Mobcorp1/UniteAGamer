@@ -1,4 +1,4 @@
-﻿{
+{
     "indexes":  [
                     {
                         "collectionGroup":  "dose_events",
@@ -698,109 +698,95 @@
                         "collectionGroup":  "arc_admin_map_markers",
                         "queryScope":  "COLLECTION",
                         "fields":  [
-                                      {
-                                          "fieldPath":  "mapId",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "layer",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "state",
-                                          "order":  "ASCENDING"
-                                      }
-                                  ]
+                                       {
+                                           "fieldPath":  "mapId",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "layer",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "state",
+                                           "order":  "ASCENDING"
+                                       }
+                                   ]
                     },
                     {
                         "collectionGroup":  "arc_admin_map_markers",
                         "queryScope":  "COLLECTION",
                         "fields":  [
-                                      {
-                                          "fieldPath":  "mapId",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "layer",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "provisionalVisible",
-                                          "order":  "ASCENDING"
-                                      }
-                                  ]
+                                       {
+                                           "fieldPath":  "mapId",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "layer",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "provisionalVisible",
+                                           "order":  "ASCENDING"
+                                       }
+                                   ]
                     },
                     {
                         "collectionGroup":  "arc_admin_map_markers",
                         "queryScope":  "COLLECTION",
                         "fields":  [
-                                      {
-                                          "fieldPath":  "mapId",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "layer",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "kind",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "confidence",
-                                          "order":  "ASCENDING"
-                                      }
-                                  ]
-                    },
-                    {
-                        "collectionGroup":  "arc_map_marker_coverage_reports",
-                        "queryScope":  "COLLECTION",
-                        "fields":  [
-                                      {
-                                          "fieldPath":  "generatedAt",
-                                          "order":  "DESCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "__name__",
-                                          "order":  "DESCENDING"
-                                      }
-                                  ]
+                                       {
+                                           "fieldPath":  "mapId",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "layer",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "kind",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "confidence",
+                                           "order":  "ASCENDING"
+                                       }
+                                   ]
                     },
                     {
                         "collectionGroup":  "arc_map_marker_exception_queue",
                         "queryScope":  "COLLECTION",
                         "fields":  [
-                                      {
-                                          "fieldPath":  "mapId",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "layer",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "confidence",
-                                          "order":  "ASCENDING"
-                                      }
-                                  ]
+                                       {
+                                           "fieldPath":  "mapId",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "layer",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "confidence",
+                                           "order":  "ASCENDING"
+                                       }
+                                   ]
                     },
                     {
                         "collectionGroup":  "arc_map_marker_duplicate_groups",
                         "queryScope":  "COLLECTION",
                         "fields":  [
-                                      {
-                                          "fieldPath":  "mapId",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "layer",
-                                          "order":  "ASCENDING"
-                                      },
-                                      {
-                                          "fieldPath":  "createdAt",
-                                          "order":  "DESCENDING"
-                                      }
-                                  ]
+                                       {
+                                           "fieldPath":  "mapId",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "layer",
+                                           "order":  "ASCENDING"
+                                       },
+                                       {
+                                           "fieldPath":  "createdAt",
+                                           "order":  "DESCENDING"
+                                       }
+                                   ]
                     },
                     {
                         "collectionGroup":  "sessions",
