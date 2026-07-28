@@ -1,0 +1,129 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return firestore.get(/databases/(default)/documents/users/$(uid)).data;
+    }
+
+    function userExists(uid) {
+      return uid is string &&
+        firestore.exists(/databases/(default)/documents/users/$(uid));
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdminOrModerator() {
+      return isSignedIn() &&
+        userExists(request.auth.uid) &&
+        (
+          userDoc(request.auth.uid).isAdmin == true ||
+          userDoc(request.auth.uid).isDev == true ||
+          userDoc(request.auth.uid).isModerator == true
+        );
+    }
+
+    function isAgeVerified() {
+      return isSignedIn() &&
+        userExists(request.auth.uid) &&
+        userDoc(request.auth.uid).ageVerification.verifiedOver18 == true;
+    }
+
+    function hasSafeFileName(fileName) {
+      return !fileName.matches('.*\\.(exe|bat|cmd|com|scr|js|jar|ps1|sh|php|html|svg)$');
+    }
+
+    function isImageUpload(maxBytes, fileName) {
+      return request.resource != null &&
+        request.resource.size > 0 &&
+        request.resource.size <= maxBytes &&
+        request.resource.contentType.matches('image/(jpeg|jpg|png|webp)') &&
+        hasSafeFileName(fileName);
+    }
+
+    function isEvidenceUpload(maxBytes, fileName) {
+      return request.resource != null &&
+        request.resource.size > 0 &&
+        request.resource.size <= maxBytes &&
+        (
+          request.resource.contentType.matches('image/(jpeg|jpg|png|webp)') ||
+          request.resource.contentType == 'application/pdf' ||
+          request.resource.contentType.matches('video/mp4')
+        ) &&
+        hasSafeFileName(fileName);
+    }
+
+    match /users/{uid}/profile_media/{fileName} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(uid) &&
+        isImageUpload(5 * 1024 * 1024, fileName);
+      allow delete: if isOwner(uid) || isAdminOrModerator();
+    }
+
+    match /users/{uid}/blueprint_screenshots/{sessionId}/{fileName} {
+      allow read: if isOwner(uid) || isAdminOrModerator();
+      allow create, update: if isOwner(uid) &&
+        isAgeVerified() &&
+        isImageUpload(12 * 1024 * 1024, fileName);
+      allow delete: if isOwner(uid) || isAdminOrModerator();
+    }
+
+    match /users/{uid}/ocr_sessions/{sessionId}/{fileName} {
+      allow read: if isOwner(uid) || isAdminOrModerator();
+      allow create, update: if isOwner(uid) &&
+        isAgeVerified() &&
+        isImageUpload(12 * 1024 * 1024, fileName);
+      allow delete: if isOwner(uid) || isAdminOrModerator();
+    }
+
+    match /users/{uid}/creator_content/{fileName} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(uid) &&
+        isAgeVerified() &&
+        isEvidenceUpload(25 * 1024 * 1024, fileName);
+      allow delete: if isOwner(uid) || isAdminOrModerator();
+    }
+
+    match /conduct_evidence/{caseId}/{uid}/{fileName} {
+      allow read: if isOwner(uid) || isAdminOrModerator();
+      allow create: if isOwner(uid) &&
+        isAgeVerified() &&
+        isEvidenceUpload(25 * 1024 * 1024, fileName);
+      allow update: if false;
+      allow delete: if isAdminOrModerator();
+    }
+
+    match /message_evidence/{conversationId}/{uid}/{fileName} {
+      allow read: if isOwner(uid) || isAdminOrModerator();
+      allow create: if isOwner(uid) &&
+        isAgeVerified() &&
+        isEvidenceUpload(15 * 1024 * 1024, fileName);
+      allow update: if false;
+      allow delete: if isAdminOrModerator();
+    }
+
+    match /contract_evidence/{contractId}/{uid}/{fileName} {
+      allow read: if isOwner(uid) || isAdminOrModerator();
+      allow create: if isOwner(uid) &&
+        isAgeVerified() &&
+        isEvidenceUpload(25 * 1024 * 1024, fileName);
+      allow update: if false;
+      allow delete: if isAdminOrModerator();
+    }
+
+    match /legal_exports/{uid}/{fileName} {
+      allow read: if isOwner(uid) || isAdminOrModerator();
+      allow create, update, delete: if isAdminOrModerator();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

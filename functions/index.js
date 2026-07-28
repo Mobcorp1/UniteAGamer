@@ -14,9 +14,10 @@ const db = admin.firestore();
 
 const PLAN_CONFIG = {
   essential_monthly: {
+    kind: 'core',
     tier: 'essential',
     billingPeriod: 'monthly',
-    pricePence: 599,
+    pricePence: 499,
     stripePriceEnv: 'STRIPE_PRICE_ESSENTIAL_MONTHLY',
     creatorDiscountPercent: 10,
     creatorCommissionPercent: 10,
@@ -24,6 +25,7 @@ const PLAN_CONFIG = {
     impactPotId: 'essential',
   },
   essential_yearly: {
+    kind: 'core',
     tier: 'essential',
     billingPeriod: 'yearly',
     pricePence: 4999,
@@ -34,9 +36,10 @@ const PLAN_CONFIG = {
     impactPotId: 'essential',
   },
   premium_monthly: {
+    kind: 'core',
     tier: 'premium',
     billingPeriod: 'monthly',
-    pricePence: 1099,
+    pricePence: 799,
     stripePriceEnv: 'STRIPE_PRICE_PREMIUM_MONTHLY',
     creatorDiscountPercent: 20,
     creatorCommissionPercent: 20,
@@ -44,14 +47,29 @@ const PLAN_CONFIG = {
     impactPotId: 'premium',
   },
   premium_yearly: {
+    kind: 'core',
     tier: 'premium',
     billingPeriod: 'yearly',
-    pricePence: 9499,
+    pricePence: 7999,
     stripePriceEnv: 'STRIPE_PRICE_PREMIUM_YEARLY',
     creatorDiscountPercent: 20,
     creatorCommissionPercent: 20,
     charityProfitPercent: 20,
     impactPotId: 'premium',
+  },
+  founding_supporter_monthly: {
+    kind: 'supporter',
+    tier: 'supporter',
+    billingPeriod: 'monthly',
+    pricePence: 399,
+    minimumPricePence: 299,
+    maximumPricePence: 499,
+    stripePriceEnv: 'STRIPE_PRICE_FOUNDING_SUPPORTER_MONTHLY',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
+    impactPotId: 'supporter',
+    futureDiscountPercent: 15,
   },
 };
 
@@ -100,6 +118,12 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
     const userRef = db.collection('users').doc(uid);
     const userSnap = await userRef.get();
     const userData = userSnap.data() || {};
+    if (userData.ageVerification?.verifiedOver18 !== true) {
+      res.status(403).json({
+        error: '18+ verification is required before starting a paid subscription.',
+      });
+      return;
+    }
     let customerId = userData?.monetisation?.stripeCustomerId || userData.stripeCustomerId;
     const stripe = stripeClient();
 
@@ -233,6 +257,16 @@ async function handleCheckoutCompleted(session) {
   const uid = session.metadata?.uid || session.client_reference_id;
   if (!uid) return;
   const plan = getPlan(session.metadata?.planId);
+  if (plan.kind === 'supporter') {
+    await writeSupporterEntitlement({
+      uid,
+      plan,
+      status: 'active',
+      stripeCustomerId: session.customer || null,
+      stripeSubscriptionId: session.subscription || null,
+    });
+    return;
+  }
   await db.collection('users').doc(uid).set({
     monetisation: {
       tier: plan.tier,
@@ -253,6 +287,17 @@ async function handleSubscriptionUpdated(subscription) {
   const uid = subscription.metadata?.uid;
   if (!uid) return;
   const plan = getPlan(subscription.metadata?.planId);
+  if (plan.kind === 'supporter') {
+    await writeSupporterEntitlement({
+      uid,
+      plan,
+      status: subscription.status,
+      stripeSubscriptionId: subscription.id,
+      currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
+      active: subscription.status === 'active' || subscription.status === 'trialing',
+    });
+    return;
+  }
   await db.collection('users').doc(uid).set({
     monetisation: {
       tier: subscription.status === 'active' || subscription.status === 'trialing' ? plan.tier : 'free',
@@ -270,6 +315,18 @@ async function handleSubscriptionUpdated(subscription) {
 async function handleSubscriptionDeleted(subscription) {
   const uid = subscription.metadata?.uid;
   if (!uid) return;
+  const plan = getPlan(subscription.metadata?.planId);
+  if (plan.kind === 'supporter') {
+    await writeSupporterEntitlement({
+      uid,
+      plan,
+      status: 'cancelled',
+      stripeSubscriptionId: subscription.id,
+      active: false,
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return;
+  }
   await db.collection('users').doc(uid).set({
     monetisation: {
       tier: 'free',
@@ -280,6 +337,48 @@ async function handleSubscriptionDeleted(subscription) {
     tier: 'free',
     subscriptionStatus: 'cancelled',
   }, { merge: true });
+}
+
+async function writeSupporterEntitlement({
+  uid,
+  plan,
+  status,
+  stripeCustomerId = null,
+  stripeSubscriptionId = null,
+  currentPeriodEnd = null,
+  active = true,
+  cancelledAt = null,
+}) {
+  const supporterData = {
+    active,
+    foundingSupporter: true,
+    status,
+    monthlyPricePence: plan.pricePence,
+    minimumMonthlyPricePence: plan.minimumPricePence,
+    maximumMonthlyPricePence: plan.maximumPricePence,
+    discountPercent: plan.futureDiscountPercent,
+    stripeCustomerId,
+    stripeSubscriptionId,
+    currentPeriodEnd,
+    cancelledAt,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  if (active) {
+    supporterData.startedAt = admin.firestore.FieldValue.serverTimestamp();
+  }
+  await Promise.all([
+    db.collection('supporter_entitlements').doc(uid).set({
+      uid,
+      ...supporterData,
+    }, { merge: true }),
+    db.collection('users').doc(uid).set({
+      monetisation: {
+        supporter: supporterData,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      supporter: supporterData,
+    }, { merge: true }),
+  ]);
 }
 
 async function handleInvoicePaid(invoice) {
@@ -877,6 +976,198 @@ function deterministicModerationDecision(body) {
   };
 }
 
+function moderationProviderConfig() {
+  const enabled = normalizeString(process.env.UAG_MODERATION_PROVIDER_ENABLED).toLowerCase() === 'true';
+  const provider = normalizeString(process.env.UAG_MODERATION_PROVIDER || 'google_natural_language');
+  const projectId = normalizeString(
+    process.env.UAG_MODERATION_PROJECT_ID ||
+      process.env.GOOGLE_CLOUD_PROJECT ||
+      process.env.GCLOUD_PROJECT
+  );
+  const timeoutMs = Math.max(
+    1000,
+    Math.min(15000, Number.parseInt(process.env.UAG_MODERATION_TIMEOUT_MS || '5000', 10) || 5000)
+  );
+  return {
+    enabled,
+    provider,
+    projectId,
+    region: normalizeString(process.env.UAG_MODERATION_REGION || 'global'),
+    timeoutMs,
+  };
+}
+
+function disabledProviderResult(config) {
+  return {
+    configured: false,
+    provider: config.provider,
+    state: 'disabled',
+    score: 0,
+    categories: [],
+    triggeredRules: [],
+    reason: 'External moderation provider is disabled. Deterministic checks remain active.',
+    auditMetadata: {
+      provider: config.provider,
+      projectIdConfigured: Boolean(config.projectId),
+      region: config.region,
+    },
+  };
+}
+
+async function fetchGoogleAccessToken(timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(
+      'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
+      {
+        headers: { 'Metadata-Flavor': 'Google' },
+        signal: controller.signal,
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`metadata_token_${response.status}`);
+    }
+    const json = await response.json();
+    return normalizeString(json.access_token);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function mapNaturalLanguageCategory(category) {
+  const name = normalizeString(category.name);
+  const confidence = Math.max(0, Math.min(1, Number(category.confidence || 0)));
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return {
+    name,
+    key,
+    confidence,
+    rule: `provider_google_natural_language:${key || 'unknown'}`,
+  };
+}
+
+function providerDecisionFromCategories(categories) {
+  const meaningful = categories.filter((category) => category.confidence >= 0.55);
+  const score = categories.reduce((best, category) => Math.max(best, category.confidence), 0);
+  const sensitive = meaningful.filter((category) => [
+    'toxic',
+    'derogatory',
+    'violent',
+    'sexual',
+    'insult',
+    'profanity',
+    'death_harm_tragedy',
+    'firearms_weapons',
+    'public_safety',
+    'illicit_drugs',
+    'war_conflict',
+  ].includes(category.key));
+
+  if (sensitive.some((category) => category.confidence >= 0.85)) {
+    return {
+      state: 'quarantined',
+      action: 'quarantine',
+      score,
+      triggeredRules: sensitive.map((category) => category.rule),
+      reason: 'External moderation provider flagged high-confidence safety categories.',
+    };
+  }
+  if (sensitive.length > 0) {
+    return {
+      state: 'warning_required',
+      action: 'warnAndAllowEdit',
+      score,
+      triggeredRules: sensitive.map((category) => category.rule),
+      reason: 'External moderation provider flagged content that should be reviewed before delivery.',
+    };
+  }
+  return {
+    state: 'allowed',
+    action: 'deliver',
+    score,
+    triggeredRules: [],
+    reason: 'External moderation provider did not flag configured safety categories.',
+  };
+}
+
+async function runExternalModerationProvider(body) {
+  const config = moderationProviderConfig();
+  if (!config.enabled) return disabledProviderResult(config);
+  if (config.provider !== 'google_natural_language') {
+    return {
+      configured: true,
+      provider: config.provider,
+      state: 'provider_unavailable',
+      score: 0,
+      categories: [],
+      triggeredRules: ['provider_unknown'],
+      reason: `Unsupported moderation provider configured: ${config.provider}.`,
+      auditMetadata: { provider: config.provider, region: config.region },
+    };
+  }
+  try {
+    const token = await fetchGoogleAccessToken(config.timeoutMs);
+    if (!token) throw new Error('metadata_token_empty');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+    try {
+      const response = await fetch('https://language.googleapis.com/v1/documents:moderateText', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify({
+          document: {
+            type: 'PLAIN_TEXT',
+            content: body,
+          },
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`language_moderate_text_${response.status}`);
+      }
+      const json = await response.json();
+      const categories = Array.isArray(json.moderationCategories)
+        ? json.moderationCategories.map(mapNaturalLanguageCategory)
+        : [];
+      const decision = providerDecisionFromCategories(categories);
+      return {
+        configured: true,
+        provider: 'google_natural_language',
+        categories,
+        ...decision,
+        auditMetadata: {
+          provider: 'google_natural_language',
+          projectId: config.projectId,
+          region: config.region,
+          categoryCount: categories.length,
+        },
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch (error) {
+    return {
+      configured: true,
+      provider: 'google_natural_language',
+      state: 'provider_unavailable',
+      action: 'humanReview',
+      score: 0,
+      categories: [],
+      triggeredRules: ['provider_unavailable'],
+      reason: `External moderation provider unavailable: ${error.message || error}`,
+      auditMetadata: {
+        provider: 'google_natural_language',
+        projectId: config.projectId,
+        region: config.region,
+      },
+    };
+  }
+}
+
 async function writeModerationQueue({ id, data, decision, reason }) {
   await db.collection('uag_moderation_queue').doc(id).set({
     id,
@@ -892,8 +1183,10 @@ async function writeModerationQueue({ id, data, decision, reason }) {
     action: decision.action,
     score: decision.score,
     triggeredRules: decision.triggeredRules,
-    providerConfigured: false,
-    provider: 'deterministic_rules',
+    providerConfigured: decision.providerConfigured === true,
+    provider: decision.provider || 'deterministic_rules',
+    providerCategories: decision.providerCategories || [],
+    providerAudit: decision.providerAudit || {},
     reason: reason || decision.reason,
     illegalContentPriority: decision.triggeredRules.some((rule) => rule.includes('grooming')),
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1486,6 +1779,47 @@ exports.sendUagNotificationBroadcast = onDocumentCreated(
   }
 );
 
+exports.uagReleaseHealthCheck = onRequest(async (req, res) => {
+  try {
+    const moderation = moderationProviderConfig();
+    const planChecks = Object.entries(PLAN_CONFIG).map(([id, plan]) => ({
+      id,
+      kind: plan.kind,
+      tier: plan.tier,
+      priceEnv: plan.stripePriceEnv,
+      priceConfigured: Boolean(process.env[plan.stripePriceEnv]),
+    }));
+    res.status(200).json({
+      ok: true,
+      generatedAt: new Date().toISOString(),
+      firebaseProject: process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || '',
+      moderation: {
+        enabled: moderation.enabled,
+        provider: moderation.provider,
+        projectConfigured: Boolean(moderation.projectId),
+        region: moderation.region,
+        timeoutMs: moderation.timeoutMs,
+      },
+      stripe: {
+        secretBound: Boolean(process.env.STRIPE_SECRET_KEY),
+        webhookSecretBound: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+        planChecks,
+      },
+      notifications: {
+        fcmAdminSdkAvailable: Boolean(admin.messaging),
+      },
+      storage: {
+        rulesTargetRequired: true,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message || 'Release health check failed.',
+    });
+  }
+});
+
 exports.processUagAgeVerificationRequest = onDocumentCreated(
   'uag_age_verification_requests/{requestId}',
   async (event) => {
@@ -1585,6 +1919,31 @@ exports.processUagMessageOutbox = onDocumentCreated(
       return;
     }
 
+    const providerResult = await runExternalModerationProvider(body);
+    const providerDecision = {
+      state: providerResult.state,
+      action: providerResult.action || 'deliver',
+      score: providerResult.score || 0,
+      triggeredRules: providerResult.triggeredRules || [],
+      reason: providerResult.reason,
+      providerConfigured: providerResult.configured === true,
+      provider: providerResult.provider,
+      providerCategories: providerResult.categories || [],
+      providerAudit: providerResult.auditMetadata || {},
+    };
+    if (providerDecision.state === 'provider_unavailable') {
+      await reject('provider_unavailable', providerDecision.reason, providerDecision);
+      return;
+    }
+    if (providerDecision.action === 'warnAndAllowEdit') {
+      await reject('warning_required', providerDecision.reason, providerDecision);
+      return;
+    }
+    if (providerDecision.action !== 'deliver') {
+      await reject(providerDecision.state, providerDecision.reason, providerDecision);
+      return;
+    }
+
     await db.runTransaction(async (transaction) => {
       const current = await transaction.get(snap.ref);
       const currentData = current.data() || {};
@@ -1605,8 +1964,12 @@ exports.processUagMessageOutbox = onDocumentCreated(
           action: decision.action,
           score: decision.score,
           triggeredRules: decision.triggeredRules,
-          providerConfigured: false,
-          provider: 'deterministic_rules',
+          providerConfigured: providerResult.configured === true,
+          provider: providerResult.provider,
+          providerState: providerResult.state,
+          providerScore: providerResult.score,
+          providerCategories: providerResult.categories || [],
+          providerAudit: providerResult.auditMetadata || {},
         },
         status: 'delivered',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),

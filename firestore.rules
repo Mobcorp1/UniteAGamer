@@ -18,6 +18,16 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
+    function userAgeVerified(uid) {
+      return uid is string &&
+        exists(/databases/$(database)/documents/users/$(uid)) &&
+        get(/databases/$(database)/documents/users/$(uid)).data.ageVerification.verifiedOver18 == true;
+    }
+
+    function currentUserAgeVerified() {
+      return isSignedIn() && userAgeVerified(request.auth.uid);
+    }
+
     function isAdminOrDev() {
       return userDocExists() &&
         (currentUserData().isAdmin == true || currentUserData().isDev == true);
@@ -304,25 +314,33 @@ service cloud.firestore {
 
     match /arc_trader_profiles/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId() || isAdminOrDev();
+      allow create, update: if (currentUserAgeVerified() &&
+        (isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId())) ||
+        isAdminOrDev();
       allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /arc_trader_availability/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId() || isAdminOrDev();
+      allow create, update: if (currentUserAgeVerified() &&
+        (isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId())) ||
+        isAdminOrDev();
       allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /arc_trader_away/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId() || isAdminOrDev();
+      allow create, update: if (currentUserAgeVerified() &&
+        (isOwner(profileUid) || ownsIncomingDocByUid() || ownsIncomingDocByUserId())) ||
+        isAdminOrDev();
       allow delete: if isOwner(profileUid) || ownsExistingDocByUid() || ownsExistingDocByUserId() || isAdminOrDev();
     }
 
     match /trading_listings/{listingId} {
       allow read: if isSignedIn();
-      allow create: if ownsIncomingDocByOwnerUid() && request.resource.data.id == listingId;
+      allow create: if currentUserAgeVerified() &&
+        ownsIncomingDocByOwnerUid() &&
+        request.resource.data.id == listingId;
       allow update: if ownsExistingDocByOwnerUid() &&
         request.resource.data.ownerUid == resource.data.ownerUid &&
         request.resource.data.id == resource.data.id;
@@ -331,7 +349,9 @@ service cloud.firestore {
 
     match /trading_offers/{offerId} {
       allow read: if isTradingOfferParticipant() || isAdminOrDev();
-      allow create: if isIncomingTradingOfferSender() &&
+      allow create: if currentUserAgeVerified() &&
+        userAgeVerified(request.resource.data.receiverUid) &&
+        isIncomingTradingOfferSender() &&
         request.resource.data.id == offerId &&
         noUserBlockBetween(
           request.resource.data.senderUid,
@@ -347,7 +367,11 @@ service cloud.firestore {
 
     match /trading_sessions/{sessionId} {
       allow read: if isTradingSessionParticipant() || isAdminOrDev();
-      allow create: if isIncomingTradingSessionParticipant() && request.resource.data.id == sessionId;
+      allow create: if currentUserAgeVerified() &&
+        userAgeVerified(request.resource.data.traderOneUid) &&
+        userAgeVerified(request.resource.data.traderTwoUid) &&
+        isIncomingTradingSessionParticipant() &&
+        request.resource.data.id == sessionId;
       allow update: if (isTradingSessionParticipant() || isAdminOrDev()) &&
         request.resource.data.id == resource.data.id &&
         request.resource.data.traderOneUid == resource.data.traderOneUid &&
@@ -457,13 +481,17 @@ service cloud.firestore {
 
     match /arc_match_rider_profiles/{profileUid} {
       allow read: if isSignedIn();
-      allow create, update: if (isOwner(profileUid) && request.resource.data.uid == request.auth.uid) || isAdminOrDev();
+      allow create, update: if ((currentUserAgeVerified() &&
+        isOwner(profileUid) &&
+        request.resource.data.uid == request.auth.uid) || isAdminOrDev());
       allow delete: if isOwner(profileUid) || isAdminOrDev();
     }
 
     match /arc_match_rider_invites/{inviteId} {
       allow read: if isMatchInviteParticipant() || isAdminOrDev();
-      allow create: if isIncomingMatchInviteSender() &&
+      allow create: if currentUserAgeVerified() &&
+        userAgeVerified(request.resource.data.recipientUid) &&
+        isIncomingMatchInviteSender() &&
         request.resource.data.id == inviteId &&
         noUserBlockBetween(
           request.resource.data.senderUid,
@@ -478,7 +506,9 @@ service cloud.firestore {
 
     match /arc_trade_listings/{listingId} {
       allow read: if isSignedIn();
-      allow create: if ownsIncomingDocByUserId() && request.resource.data.id == listingId;
+      allow create: if currentUserAgeVerified() &&
+        ownsIncomingDocByUserId() &&
+        request.resource.data.id == listingId;
       allow update: if ownsExistingDocByUserId() &&
         request.resource.data.userId == resource.data.userId &&
         request.resource.data.id == resource.data.id;
@@ -487,7 +517,7 @@ service cloud.firestore {
 
     match /arc_trade_sessions/{sessionId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         (
           request.resource.data.traderOneUid == request.auth.uid ||
           request.resource.data.traderTwoUid == request.auth.uid ||
@@ -508,7 +538,8 @@ service cloud.firestore {
     match /sessions/{sessionId} {
       allow read: if isSessionPlannerParticipant() || isAdminOrDev();
       allow list: if isSignedIn();
-      allow create: if isIncomingSessionPlannerParticipant() || isAdminOrDev();
+      allow create: if (currentUserAgeVerified() &&
+        isIncomingSessionPlannerParticipant()) || isAdminOrDev();
       allow update: if (isSessionPlannerParticipant() || isAdminOrDev()) &&
         request.resource.data.createdBy == resource.data.createdBy &&
         request.resource.data.participantOneUid == resource.data.participantOneUid &&
@@ -519,7 +550,8 @@ service cloud.firestore {
     match /uag_sessions/{sessionId} {
       allow read: if isSessionPlannerParticipant() || isAdminOrDev();
       allow list: if isSignedIn();
-      allow create: if isIncomingSessionPlannerParticipant() || isAdminOrDev();
+      allow create: if (currentUserAgeVerified() &&
+        isIncomingSessionPlannerParticipant()) || isAdminOrDev();
       allow update: if (isSessionPlannerParticipant() || isAdminOrDev()) &&
         request.resource.data.createdBy == resource.data.createdBy &&
         request.resource.data.participantOneUid == resource.data.participantOneUid &&
@@ -597,7 +629,7 @@ service cloud.firestore {
     match /uag_creator_applications/{applicationId} {
       allow read: if isAdminOrDev() ||
         (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.id == applicationId &&
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.status == 'pending';
@@ -607,7 +639,7 @@ service cloud.firestore {
     match /uag_creator_campaign_code_requests/{codeId} {
       allow read: if isAdminOrDev() ||
         (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.id == codeId &&
         request.resource.data.code == codeId &&
         request.resource.data.uid == request.auth.uid &&
@@ -674,7 +706,8 @@ service cloud.firestore {
             resource.data.recipientUid == request.auth.uid
           )
         );
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
+        userAgeVerified(request.resource.data.recipientUid) &&
         request.resource.data.id == messageId &&
         request.resource.data.senderUid == request.auth.uid &&
         request.resource.data.recipientUid is string &&
@@ -708,7 +741,7 @@ service cloud.firestore {
             resource.data.reportedUid == request.auth.uid
           )
         );
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.id == reportId &&
         request.resource.data.reporterUid == request.auth.uid &&
         request.resource.data.reportedUid != request.auth.uid;
@@ -724,7 +757,7 @@ service cloud.firestore {
             resource.data.reportedUid == request.auth.uid
           )
         );
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.id == reportId &&
         request.resource.data.reporterUid == request.auth.uid &&
         request.resource.data.reportedUid != request.auth.uid;
@@ -767,7 +800,7 @@ service cloud.firestore {
           (resource.data.reporterUid == request.auth.uid ||
             resource.data.subjectUid == request.auth.uid)
         );
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.id == reportId &&
         request.resource.data.reporterUid == request.auth.uid &&
         request.resource.data.subjectUid != request.auth.uid;
@@ -781,7 +814,8 @@ service cloud.firestore {
           (resource.data.ownerUid == request.auth.uid ||
             resource.data.assigneeUid == request.auth.uid)
         );
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
+        userAgeVerified(request.resource.data.assigneeUid) &&
         request.resource.data.id == contractId &&
         request.resource.data.ownerUid == request.auth.uid &&
         request.resource.data.assigneeUid != request.auth.uid;
@@ -805,7 +839,7 @@ service cloud.firestore {
               get(/databases/$(database)/documents/uag_community_contracts/$(contractId)).data.assigneeUid == request.auth.uid
             )
           );
-        allow create: if isSignedIn() &&
+        allow create: if currentUserAgeVerified() &&
           request.resource.data.createdBy == request.auth.uid;
         allow update, delete: if isAdminOrDev();
       }
@@ -814,7 +848,7 @@ service cloud.firestore {
     match /uag_image_import_sessions/{sessionId} {
       allow read, update, delete: if isAdminOrDev() ||
         (isSignedIn() && resource.data.uid == request.auth.uid);
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.id == sessionId &&
         request.resource.data.uid == request.auth.uid;
     }
@@ -851,7 +885,7 @@ service cloud.firestore {
 
     match /referral_codes/{code} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.code == code &&
         request.resource.data.ownerUid == request.auth.uid;
       allow update: if isSignedIn() &&
@@ -879,7 +913,7 @@ service cloud.firestore {
           resource.data.userId == request.auth.uid ||
           isAdminOrDev()
         );
-      allow create: if isSignedIn() &&
+      allow create: if currentUserAgeVerified() &&
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.amountPence is int &&
         request.resource.data.amountPence > 0 &&

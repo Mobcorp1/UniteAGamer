@@ -1,10 +1,13 @@
 enum UagModerationState {
   allowed,
   warned,
+  warningRequired,
   quarantined,
   blocked,
   escalated,
+  providerUnavailable,
   underReview,
+  manuallyReviewed,
   restored,
   actioned,
   appealed,
@@ -13,11 +16,40 @@ enum UagModerationState {
 
 extension UagModerationStateX on UagModerationState {
   static UagModerationState fromWire(String? value) {
-    final normalized = (value ?? '').trim();
-    return UagModerationState.values.firstWhere(
-      (state) => state.name == normalized,
-      orElse: () => UagModerationState.underReview,
-    );
+    final normalized = (value ?? '').trim().toLowerCase();
+    switch (normalized) {
+      case 'allowed':
+        return UagModerationState.allowed;
+      case 'warned':
+        return UagModerationState.warned;
+      case 'warning_required':
+      case 'warningrequired':
+        return UagModerationState.warningRequired;
+      case 'quarantined':
+        return UagModerationState.quarantined;
+      case 'blocked':
+        return UagModerationState.blocked;
+      case 'escalated':
+        return UagModerationState.escalated;
+      case 'provider_unavailable':
+      case 'providerunavailable':
+        return UagModerationState.providerUnavailable;
+      case 'manually_reviewed':
+      case 'manuallyreviewed':
+        return UagModerationState.manuallyReviewed;
+      case 'restored':
+        return UagModerationState.restored;
+      case 'actioned':
+        return UagModerationState.actioned;
+      case 'appealed':
+        return UagModerationState.appealed;
+      case 'overturned':
+        return UagModerationState.overturned;
+      case 'underreview':
+      case 'under_review':
+      default:
+        return UagModerationState.underReview;
+    }
   }
 }
 

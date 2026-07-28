@@ -48,4 +48,21 @@ void main() {
       expect(UagUserBlock.idFor('user-a', 'user-b'), 'user-a_user-b');
     });
   });
+
+  group('UagModerationStateX', () {
+    test('parses release candidate backend wire states', () {
+      expect(
+        UagModerationStateX.fromWire('warning_required'),
+        UagModerationState.warningRequired,
+      );
+      expect(
+        UagModerationStateX.fromWire('provider_unavailable'),
+        UagModerationState.providerUnavailable,
+      );
+      expect(
+        UagModerationStateX.fromWire('manually_reviewed'),
+        UagModerationState.manuallyReviewed,
+      );
+    });
+  });
 }

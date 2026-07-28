@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
+import 'package:uag_arc_raiders_hub/features/release/widgets/uag_release_readiness_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
@@ -282,6 +283,8 @@ class _AdminConsoleBody extends StatelessWidget {
                     const ArcBetaDeveloperToolsCard(),
                     const SizedBox(height: AppTheme.spaceL),
                     _ClosedBetaDiagnosticsCard(uid: uid),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const UagReleaseReadinessPanel(),
                     const SizedBox(height: AppTheme.spaceL),
                     const _OperationsTuningAdminCard(),
                     const SizedBox(height: AppTheme.spaceL),

@@ -43,6 +43,19 @@ async function run() {
       userRef.set({
         uid: "owner",
         arcOnboarding: { completed: true },
+        ageVerification: { verifiedOver18: true },
+      }),
+    );
+    await succeeds(
+      admin.doc("users/third").set({
+        uid: "third",
+        ageVerification: { verifiedOver18: true },
+      }),
+    );
+    await succeeds(
+      admin.doc("users/unverified").set({
+        uid: "unverified",
+        ageVerification: { verifiedOver18: false },
       }),
     );
     await succeeds(userRef.get());
@@ -291,6 +304,16 @@ async function run() {
         body: "Can trade after 7pm?",
         status: "queued",
       }),
+    );
+    await fails(
+      env.authenticatedContext("unverified").firestore()
+        .doc("uag_message_outbox/message-unverified").set({
+          id: "message-unverified",
+          senderUid: "unverified",
+          recipientUid: "owner",
+          body: "Can I message before age verification?",
+          status: "queued",
+        }),
     );
     await fails(
       outsider.doc("uag_message_outbox/message-blocked").set({
