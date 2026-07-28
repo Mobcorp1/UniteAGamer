@@ -34,6 +34,7 @@ class ArcMapAssetRegistry {
 
   static const String blueGateMapId = 'blue_gate';
   static const String buriedCityMapId = 'buried_city';
+  static const String rivenTidesMapId = 'riven_tides';
   static const String stellaMontisMapId = 'stella_montis';
 
   static const List<ArcRaidMapAnchor> _identityAnchors = [
@@ -166,6 +167,29 @@ class ArcMapAssetRegistry {
     ),
   };
 
+  static const Map<ArcRaidMapLayer, ArcRaidMapAsset> rivenTidesAssets = {
+    ArcRaidMapLayer.surface: ArcRaidMapAsset(
+      id: 'riven_tides_surface_master_v1',
+      mapId: rivenTidesMapId,
+      renderMode: ArcRaidMapRenderMode.calibratedGameMap,
+      layer: ArcRaidMapLayer.surface,
+      localAssetPath:
+          'assets/arc_raiders/maps/riven_tides/riven_tides_master.webp',
+      published: true,
+    ),
+  };
+
+  static const Map<ArcRaidMapLayer, ArcRaidMapCalibration>
+  rivenTidesCalibrations = {
+    ArcRaidMapLayer.surface: ArcRaidMapCalibration(
+      id: 'riven_tides_surface_provisional_v1',
+      mapId: rivenTidesMapId,
+      anchors: _identityAnchors,
+      residualError: 0,
+      published: false,
+    ),
+  };
+
   static const List<ArcRegisteredMapAsset> registeredMaps = [
     ArcRegisteredMapAsset(
       mapId: blueGateMapId,
@@ -186,6 +210,13 @@ class ArcMapAssetRegistry {
       displayName: 'Stella Montis',
       layerAssets: stellaMontisAssets,
       layerCalibrations: stellaMontisCalibrations,
+      statusLabel: 'Provisional map image',
+    ),
+    ArcRegisteredMapAsset(
+      mapId: rivenTidesMapId,
+      displayName: 'Riven Tides',
+      layerAssets: rivenTidesAssets,
+      layerCalibrations: rivenTidesCalibrations,
       statusLabel: 'Provisional map image',
     ),
   ];

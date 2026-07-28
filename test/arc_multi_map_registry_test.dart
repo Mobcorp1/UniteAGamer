@@ -8,11 +8,17 @@ void main() {
   test('registers Blue Gate and Buried City in one shared registry', () {
     expect(
       ArcMapAssetRegistry.registeredMaps.map((item) => item.mapId),
-      containsAll(<String>['blue_gate', 'buried_city', 'stella_montis']),
+      containsAll(<String>[
+        'blue_gate',
+        'buried_city',
+        'stella_montis',
+        'riven_tides',
+      ]),
     );
     expect(ArcMapAssetRegistry.hasRegisteredAsset('blue_gate'), isTrue);
     expect(ArcMapAssetRegistry.hasRegisteredAsset('buried_city'), isTrue);
     expect(ArcMapAssetRegistry.hasRegisteredAsset('stella_montis'), isTrue);
+    expect(ArcMapAssetRegistry.hasRegisteredAsset('riven_tides'), isTrue);
   });
 
   test('Buried City renders its master image but remains provisional', () {
@@ -57,6 +63,22 @@ void main() {
     expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isFalse);
     expect(
       ArcMapAssetRegistry.statusFor('stella_montis'),
+      'Provisional map image',
+    );
+  });
+
+  test('Riven Tides renders its master image but remains provisional', () {
+    final map = ArcRaidIntelligenceSeedData.mapById('riven_tides');
+    final asset = map.assetForLayer(ArcRaidMapLayer.surface);
+
+    expect(
+      asset?.localAssetPath,
+      'assets/arc_raiders/maps/riven_tides/riven_tides_master.webp',
+    );
+    expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
+    expect(
+      ArcMapAssetRegistry.statusFor('riven_tides'),
       'Provisional map image',
     );
   });

@@ -204,7 +204,10 @@ service cloud.firestore {
     }
 
     match /arc_admin_map_markers/{markerId} {
-      allow read: if true;
+      allow read: if isAdminOrDev() ||
+        resource.data.state == 'published' ||
+        (resource.data.provisionalVisible == true &&
+          resource.data.sourcePermission == 'permitted');
       allow create, update, delete: if isAdminOrDev();
     }
 
@@ -614,5 +617,4 @@ service cloud.firestore {
     }
   }
 }
-
 

@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_cluster_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -25,6 +26,7 @@ class ArcRaidIntelligenceEngine {
     List<ArcBlueprintDropReport> dropReports = const <ArcBlueprintDropReport>[],
     List<ArcCommunityIntelReport> communityReports =
         const <ArcCommunityIntelReport>[],
+    List<ArcAdminMapMarker> adminMarkers = const <ArcAdminMapMarker>[],
     ArcRaidMapFilterState filters = ArcRaidMapFilterState.defaults,
     ArcRaidMapLayer activeLayer = ArcRaidMapLayer.surface,
     ArcRaidRoutePlan? activeRoute,
@@ -71,13 +73,18 @@ class ArcRaidIntelligenceEngine {
         .where((report) => report.mapId == map.id && report.active)
         .map(_markerForCommunityReport)
         .toList(growable: false);
+    final importedMarkers = adminMarkers
+        .where((marker) => marker.mapId == map.id && marker.isLive)
+        .map(_markerForAdminMarker)
+        .toList(growable: false);
     final rawVisibleMarkers =
-        [
+        _dedupeMarkers([
               ...map.markers,
+              ...importedMarkers,
               ...clusterMarkers,
               ...communityMarkers,
               ...routeMarkers,
-            ]
+            ])
             .where((marker) => marker.layer == resolvedLayer)
             .where(filters.allows)
             .toList(growable: false)
@@ -144,6 +151,48 @@ class ArcRaidIntelligenceEngine {
           ? 'Community-submitted Intel.'
           : report.notes.trim(),
       tags: tags,
+    );
+  }
+
+  ArcRaidMapMarker _markerForAdminMarker(ArcAdminMapMarker marker) {
+    final category = _categoryForAdminMarker(marker);
+    final sourceLabel = marker.sourceName?.trim().isNotEmpty == true
+        ? marker.sourceName!.trim()
+        : marker.sourceLabel;
+    final tags = <String>[
+      sourceLabel,
+      marker.kind.label,
+      marker.confidence.label,
+      if (marker.sourceAttribution?.trim().isNotEmpty == true)
+        marker.sourceAttribution!.trim(),
+      if (marker.alignmentConfidence != null)
+        'Alignment ${(marker.alignmentConfidence! * 100).round()}%',
+      if (marker.provisionalVisible) 'Provisional',
+      if (marker.adminVerified) 'Admin verified',
+    ];
+    final detail = marker.description.trim().isEmpty
+        ? 'Admin-published Raid Intelligence from $sourceLabel.'
+        : marker.description.trim();
+
+    return ArcRaidMapMarker(
+      id: 'admin_${marker.id}',
+      mapId: marker.mapId,
+      category: category,
+      label: marker.name,
+      point: marker.point,
+      layer: marker.layer,
+      payloadId: marker.id,
+      confidence: marker.confidence,
+      approximate: !marker.adminVerified,
+      count: math.max(1, marker.evidenceCount),
+      detail: detail,
+      tags: tags,
+      blueprintIds: marker.blueprintId == null
+          ? const <String>[]
+          : <String>[marker.blueprintId!],
+      prioritizedBlueprintIds: marker.blueprintId == null
+          ? const <String>[]
+          : <String>[marker.blueprintId!],
     );
   }
 
@@ -601,6 +650,79 @@ class ArcRaidIntelligenceEngine {
     final countCompare = b.count.compareTo(a.count);
     if (countCompare != 0) return countCompare;
     return a.label.compareTo(b.label);
+  }
+
+  static ArcRaidMapMarkerCategory _categoryForAdminMarker(
+    ArcAdminMapMarker marker,
+  ) {
+    if (marker.provisionalVisible) {
+      return ArcRaidMapMarkerCategory.researchedIntel;
+    }
+    if (marker.adminVerified ||
+        marker.confidence == ArcRaidIntelConfidence.confirmed) {
+      return ArcRaidMapMarkerCategory.confirmedIntel;
+    }
+    switch (marker.kind) {
+      case ArcAdminMapMarkerKind.poi:
+        return ArcRaidMapMarkerCategory.poi;
+      case ArcAdminMapMarkerKind.extraction:
+        return ArcRaidMapMarkerCategory.standardExtraction;
+      case ArcAdminMapMarkerKind.raiderHatch:
+        return ArcRaidMapMarkerCategory.raiderHatch;
+      case ArcAdminMapMarkerKind.blueprint:
+        return ArcRaidMapMarkerCategory.blueprintOpportunity;
+      case ArcAdminMapMarkerKind.questLocation:
+        return ArcRaidMapMarkerCategory.questObjective;
+      case ArcAdminMapMarkerKind.resourceNode:
+        return ArcRaidMapMarkerCategory.tradePreparationRequirement;
+      case ArcAdminMapMarkerKind.weaponCache:
+        return ArcRaidMapMarkerCategory.weaponCase;
+      case ArcAdminMapMarkerKind.lootContainer:
+        return ArcRaidMapMarkerCategory.fieldCrate;
+      case ArcAdminMapMarkerKind.lockedRoom:
+        return ArcRaidMapMarkerCategory.lockedRoom;
+      case ArcAdminMapMarkerKind.highValueLoot:
+        return ArcRaidMapMarkerCategory.raiderCache;
+      case ArcAdminMapMarkerKind.arcThreat:
+        return ArcRaidMapMarkerCategory.arcThreat;
+      case ArcAdminMapMarkerKind.extractionDanger:
+        return ArcRaidMapMarkerCategory.configuredHazard;
+      case ArcAdminMapMarkerKind.customIntel:
+        return ArcRaidMapMarkerCategory.researchedIntel;
+    }
+  }
+
+  static List<ArcRaidMapMarker> _dedupeMarkers(
+    Iterable<ArcRaidMapMarker> markers,
+  ) {
+    final merged = <ArcRaidMapMarker>[];
+    for (final marker in markers) {
+      final duplicateIndex = merged.indexWhere(
+        (existing) =>
+            existing.mapId == marker.mapId &&
+            existing.layer == marker.layer &&
+            existing.category == marker.category &&
+            existing.label.trim().toLowerCase() ==
+                marker.label.trim().toLowerCase() &&
+            _pointDistance(existing.point, marker.point) <= 0.025,
+      );
+      if (duplicateIndex == -1) {
+        merged.add(marker);
+        continue;
+      }
+      final existing = merged[duplicateIndex];
+      if (marker.confidence.score > existing.confidence.score ||
+          marker.count > existing.count) {
+        merged[duplicateIndex] = marker;
+      }
+    }
+    return merged;
+  }
+
+  static double _pointDistance(ArcNormalizedPoint a, ArcNormalizedPoint b) {
+    final dx = a.x - b.x;
+    final dy = a.y - b.y;
+    return math.sqrt((dx * dx) + (dy * dy));
   }
 
   static ArcRaidMapMarker _markerForCluster(

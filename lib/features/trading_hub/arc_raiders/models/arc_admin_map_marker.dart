@@ -8,6 +8,8 @@ enum ArcAdminMapMarkerKind {
   extraction,
   raiderHatch,
   blueprint,
+  questLocation,
+  resourceNode,
   weaponCache,
   lootContainer,
   lockedRoom,
@@ -28,6 +30,10 @@ extension ArcAdminMapMarkerKindX on ArcAdminMapMarkerKind {
         return 'Raider Hatch';
       case ArcAdminMapMarkerKind.blueprint:
         return 'Blueprint Find';
+      case ArcAdminMapMarkerKind.questLocation:
+        return 'Quest Location';
+      case ArcAdminMapMarkerKind.resourceNode:
+        return 'Resource Node';
       case ArcAdminMapMarkerKind.weaponCache:
         return 'Weapon Cache';
       case ArcAdminMapMarkerKind.lootContainer:
@@ -53,6 +59,50 @@ extension ArcAdminMapMarkerKindX on ArcAdminMapMarkerKind {
 
 enum ArcAdminMapMarkerState { draft, published, archived }
 
+enum ArcAdminMapMarkerSourcePermission {
+  permitted,
+  restricted,
+  unknown,
+  prohibited,
+}
+
+extension ArcAdminMapMarkerSourcePermissionX
+    on ArcAdminMapMarkerSourcePermission {
+  String get label {
+    switch (this) {
+      case ArcAdminMapMarkerSourcePermission.permitted:
+        return 'Permitted';
+      case ArcAdminMapMarkerSourcePermission.restricted:
+        return 'Restricted';
+      case ArcAdminMapMarkerSourcePermission.unknown:
+        return 'Unknown';
+      case ArcAdminMapMarkerSourcePermission.prohibited:
+        return 'Prohibited';
+    }
+  }
+
+  bool get canCache => this == ArcAdminMapMarkerSourcePermission.permitted;
+
+  bool get canPublish => this == ArcAdminMapMarkerSourcePermission.permitted;
+
+  static ArcAdminMapMarkerSourcePermission fromStorage(String? value) {
+    final normalized = value?.trim().toLowerCase().replaceAll('-', '_') ?? '';
+    return switch (normalized) {
+      'permitted' ||
+      'approved' ||
+      'authorized' ||
+      'authorised' ||
+      'open_license' ||
+      'uag_internal' => ArcAdminMapMarkerSourcePermission.permitted,
+      'restricted' || 'limited' => ArcAdminMapMarkerSourcePermission.restricted,
+      'prohibited' ||
+      'blocked' ||
+      'denied' => ArcAdminMapMarkerSourcePermission.prohibited,
+      _ => ArcAdminMapMarkerSourcePermission.unknown,
+    };
+  }
+}
+
 @immutable
 class ArcAdminMapMarker {
   const ArcAdminMapMarker({
@@ -69,6 +119,21 @@ class ArcAdminMapMarker {
     this.state = ArcAdminMapMarkerState.draft,
     this.adminVerified = true,
     this.seedReferenceId,
+    this.sourceName,
+    this.sourceRecordId,
+    this.sourceAttribution,
+    this.sourceUrl,
+    this.sourcePermission = ArcAdminMapMarkerSourcePermission.permitted,
+    this.sourceLayerId,
+    this.originalPoint,
+    this.coordinateSpace,
+    this.importBatchId,
+    this.alignmentConfidence,
+    this.alignmentResidual,
+    this.duplicateGroupId,
+    this.evidenceCount = 1,
+    this.provisionalVisible = false,
+    this.exceptionReason,
     this.createdByUid,
     this.createdAt,
     this.updatedAt,
@@ -87,11 +152,34 @@ class ArcAdminMapMarker {
   final ArcAdminMapMarkerState state;
   final bool adminVerified;
   final String? seedReferenceId;
+  final String? sourceName;
+  final String? sourceRecordId;
+  final String? sourceAttribution;
+  final String? sourceUrl;
+  final ArcAdminMapMarkerSourcePermission sourcePermission;
+  final String? sourceLayerId;
+  final ArcNormalizedPoint? originalPoint;
+  final String? coordinateSpace;
+  final String? importBatchId;
+  final double? alignmentConfidence;
+  final double? alignmentResidual;
+  final String? duplicateGroupId;
+  final int evidenceCount;
+  final bool provisionalVisible;
+  final String? exceptionReason;
   final String? createdByUid;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   bool get isPublished => state == ArcAdminMapMarkerState.published;
+
+  bool get isLive =>
+      isPublished ||
+      (provisionalVisible &&
+          sourcePermission == ArcAdminMapMarkerSourcePermission.permitted &&
+          state != ArcAdminMapMarkerState.archived);
+
+  bool get hasImportException => exceptionReason?.trim().isNotEmpty == true;
 
   ArcAdminMapMarker copyWith({
     String? id,
@@ -108,6 +196,33 @@ class ArcAdminMapMarker {
     ArcAdminMapMarkerState? state,
     bool? adminVerified,
     String? seedReferenceId,
+    String? sourceName,
+    bool clearSourceName = false,
+    String? sourceRecordId,
+    bool clearSourceRecordId = false,
+    String? sourceAttribution,
+    bool clearSourceAttribution = false,
+    String? sourceUrl,
+    bool clearSourceUrl = false,
+    ArcAdminMapMarkerSourcePermission? sourcePermission,
+    String? sourceLayerId,
+    bool clearSourceLayerId = false,
+    ArcNormalizedPoint? originalPoint,
+    bool clearOriginalPoint = false,
+    String? coordinateSpace,
+    bool clearCoordinateSpace = false,
+    String? importBatchId,
+    bool clearImportBatchId = false,
+    double? alignmentConfidence,
+    bool clearAlignmentConfidence = false,
+    double? alignmentResidual,
+    bool clearAlignmentResidual = false,
+    String? duplicateGroupId,
+    bool clearDuplicateGroupId = false,
+    int? evidenceCount,
+    bool? provisionalVisible,
+    String? exceptionReason,
+    bool clearExceptionReason = false,
     String? createdByUid,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -126,6 +241,41 @@ class ArcAdminMapMarker {
       state: state ?? this.state,
       adminVerified: adminVerified ?? this.adminVerified,
       seedReferenceId: seedReferenceId ?? this.seedReferenceId,
+      sourceName: clearSourceName ? null : (sourceName ?? this.sourceName),
+      sourceRecordId: clearSourceRecordId
+          ? null
+          : (sourceRecordId ?? this.sourceRecordId),
+      sourceAttribution: clearSourceAttribution
+          ? null
+          : (sourceAttribution ?? this.sourceAttribution),
+      sourceUrl: clearSourceUrl ? null : (sourceUrl ?? this.sourceUrl),
+      sourcePermission: sourcePermission ?? this.sourcePermission,
+      sourceLayerId: clearSourceLayerId
+          ? null
+          : (sourceLayerId ?? this.sourceLayerId),
+      originalPoint: clearOriginalPoint
+          ? null
+          : (originalPoint ?? this.originalPoint),
+      coordinateSpace: clearCoordinateSpace
+          ? null
+          : (coordinateSpace ?? this.coordinateSpace),
+      importBatchId: clearImportBatchId
+          ? null
+          : (importBatchId ?? this.importBatchId),
+      alignmentConfidence: clearAlignmentConfidence
+          ? null
+          : (alignmentConfidence ?? this.alignmentConfidence),
+      alignmentResidual: clearAlignmentResidual
+          ? null
+          : (alignmentResidual ?? this.alignmentResidual),
+      duplicateGroupId: clearDuplicateGroupId
+          ? null
+          : (duplicateGroupId ?? this.duplicateGroupId),
+      evidenceCount: evidenceCount ?? this.evidenceCount,
+      provisionalVisible: provisionalVisible ?? this.provisionalVisible,
+      exceptionReason: clearExceptionReason
+          ? null
+          : (exceptionReason ?? this.exceptionReason),
       createdByUid: createdByUid ?? this.createdByUid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -147,6 +297,21 @@ class ArcAdminMapMarker {
       'state': state.name,
       'adminVerified': adminVerified,
       'seedReferenceId': seedReferenceId,
+      'sourceName': sourceName,
+      'sourceRecordId': sourceRecordId,
+      'sourceAttribution': sourceAttribution,
+      'sourceUrl': sourceUrl,
+      'sourcePermission': sourcePermission.name,
+      'sourceLayerId': sourceLayerId,
+      'originalPoint': originalPoint?.toMap(),
+      'coordinateSpace': coordinateSpace,
+      'importBatchId': importBatchId,
+      'alignmentConfidence': alignmentConfidence,
+      'alignmentResidual': alignmentResidual,
+      'duplicateGroupId': duplicateGroupId,
+      'evidenceCount': evidenceCount,
+      'provisionalVisible': provisionalVisible,
+      'exceptionReason': exceptionReason,
       'createdByUid': createdByUid,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
@@ -191,6 +356,27 @@ class ArcAdminMapMarker {
       ),
       adminVerified: map['adminVerified'] != false,
       seedReferenceId: map['seedReferenceId']?.toString(),
+      sourceName: map['sourceName']?.toString(),
+      sourceRecordId: map['sourceRecordId']?.toString(),
+      sourceAttribution: map['sourceAttribution']?.toString(),
+      sourceUrl: map['sourceUrl']?.toString(),
+      sourcePermission: ArcAdminMapMarkerSourcePermissionX.fromStorage(
+        map['sourcePermission']?.toString(),
+      ),
+      sourceLayerId: map['sourceLayerId']?.toString(),
+      originalPoint: map['originalPoint'] is Map
+          ? _pointFromMapUnclamped(
+              Map<String, dynamic>.from(map['originalPoint'] as Map),
+            )
+          : null,
+      coordinateSpace: map['coordinateSpace']?.toString(),
+      importBatchId: map['importBatchId']?.toString(),
+      alignmentConfidence: _doubleFrom(map['alignmentConfidence']),
+      alignmentResidual: _doubleFrom(map['alignmentResidual']),
+      duplicateGroupId: map['duplicateGroupId']?.toString(),
+      evidenceCount: _intFrom(map['evidenceCount'], fallback: 1),
+      provisionalVisible: map['provisionalVisible'] == true,
+      exceptionReason: map['exceptionReason']?.toString(),
       createdByUid: map['createdByUid']?.toString(),
       createdAt: _dateFrom(map['createdAt']),
       updatedAt: _dateFrom(map['updatedAt']),
@@ -202,5 +388,25 @@ class ArcAdminMapMarker {
     if (value is DateTime) return value;
     if (value is String) return DateTime.tryParse(value);
     return null;
+  }
+
+  static double? _doubleFrom(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static int _intFrom(dynamic value, {required int fallback}) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  static ArcNormalizedPoint _pointFromMapUnclamped(Map<String, dynamic> map) {
+    return ArcNormalizedPoint(
+      x: _doubleFrom(map['x']) ?? 0.5,
+      y: _doubleFrom(map['y']) ?? 0.5,
+    );
   }
 }

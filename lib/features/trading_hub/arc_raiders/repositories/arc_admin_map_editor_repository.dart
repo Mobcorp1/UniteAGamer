@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,6 +16,7 @@ class ArcAdminMapEditorRepository {
        _providedAuth = auth;
 
   static const _draftKeyPrefix = 'arc_admin_map_editor_drafts_v1';
+  static const _importCacheKeyPrefix = 'arc_admin_map_import_cache_v1';
   static const collectionName = 'arc_admin_map_markers';
 
   final FirebaseFirestore? _providedFirestore;
@@ -27,6 +29,9 @@ class ArcAdminMapEditorRepository {
 
   String _draftKey(String mapId, ArcRaidMapLayer layer) =>
       '$_draftKeyPrefix:$mapId:${layer.name}';
+
+  String _importCacheKey(String mapId, ArcRaidMapLayer layer) =>
+      '$_importCacheKeyPrefix:$mapId:${layer.name}';
 
   Future<List<ArcAdminMapMarker>> loadDrafts(
     String mapId,
@@ -65,26 +70,114 @@ class ArcAdminMapEditorRepository {
     await preferences.remove(_draftKey(mapId, layer));
   }
 
+  Future<List<ArcAdminMapMarker>> loadImportCache(
+    String mapId,
+    ArcRaidMapLayer layer,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    final raw = preferences.getString(_importCacheKey(mapId, layer));
+    if (raw == null || raw.trim().isEmpty) return const <ArcAdminMapMarker>[];
+
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return const <ArcAdminMapMarker>[];
+    return decoded
+        .whereType<Map>()
+        .map(
+          (value) =>
+              ArcAdminMapMarker.fromMap(Map<String, dynamic>.from(value)),
+        )
+        .toList(growable: false);
+  }
+
+  Future<void> saveImportCache(
+    String mapId,
+    ArcRaidMapLayer layer,
+    Iterable<ArcAdminMapMarker> markers,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    final values = markers
+        .where(
+          (item) =>
+              item.mapId == mapId &&
+              item.layer == layer &&
+              item.sourceRecordId?.trim().isNotEmpty == true,
+        )
+        .map((item) => item.toJsonMap())
+        .toList(growable: false);
+    await preferences.setString(
+      _importCacheKey(mapId, layer),
+      jsonEncode(values),
+    );
+  }
+
   Stream<List<ArcAdminMapMarker>> watchPublished(
     String mapId,
     ArcRaidMapLayer layer,
   ) {
-    return _firestore
+    return watchLiveMarkers(mapId, layer);
+  }
+
+  Stream<List<ArcAdminMapMarker>> watchLiveMarkers(
+    String mapId,
+    ArcRaidMapLayer layer,
+  ) {
+    final controller = StreamController<List<ArcAdminMapMarker>>();
+    var published = const <ArcAdminMapMarker>[];
+    var provisional = const <ArcAdminMapMarker>[];
+
+    void emit() {
+      final merged =
+          <String, ArcAdminMapMarker>{
+              for (final marker in published) marker.id: marker,
+              for (final marker in provisional) marker.id: marker,
+            }.values.toList(growable: false)
+            ..sort((a, b) => a.name.compareTo(b.name));
+      if (!controller.isClosed) controller.add(merged);
+    }
+
+    final publishedSubscription = _firestore
         .collection(collectionName)
         .where('mapId', isEqualTo: mapId)
         .where('layer', isEqualTo: layer.name)
+        .where('state', isEqualTo: ArcAdminMapMarkerState.published.name)
         .snapshots()
+        .listen((snapshot) {
+          published = _markersFromSnapshot(
+            snapshot,
+          ).where((marker) => marker.isLive).toList(growable: false);
+          emit();
+        }, onError: controller.addError);
+    final provisionalSubscription = _firestore
+        .collection(collectionName)
+        .where('mapId', isEqualTo: mapId)
+        .where('layer', isEqualTo: layer.name)
+        .where('provisionalVisible', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+          provisional = _markersFromSnapshot(
+            snapshot,
+          ).where((marker) => marker.isLive).toList(growable: false);
+          emit();
+        }, onError: controller.addError);
+
+    controller.onCancel = () async {
+      await publishedSubscription.cancel();
+      await provisionalSubscription.cancel();
+    };
+    return controller.stream;
+  }
+
+  static List<ArcAdminMapMarker> _markersFromSnapshot(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    return snapshot.docs
         .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => ArcAdminMapMarker.fromMap(<String, dynamic>{
-                  ...doc.data(),
-                  'id': doc.id,
-                }),
-              )
-              .where((item) => item.state != ArcAdminMapMarkerState.archived)
-              .toList(growable: false),
-        );
+          (doc) => ArcAdminMapMarker.fromMap(<String, dynamic>{
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
+        .toList(growable: false);
   }
 
   Future<void> publish(ArcAdminMapMarker marker) async {

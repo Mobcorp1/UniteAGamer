@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
@@ -51,6 +52,39 @@ void main() {
           (marker) => marker.category.filteringGroup == 'Loot Sources',
         ),
         isTrue,
+      );
+    });
+
+    test('merges live admin import markers into visible intelligence', () {
+      const imported = ArcAdminMapMarker(
+        id: 'imported_cache',
+        mapId: 'blue_gate',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.weaponCache,
+        name: 'Imported Cache',
+        point: ArcNormalizedPoint(x: 0.61, y: 0.32),
+        confidence: ArcRaidIntelConfidence.strong,
+        state: ArcAdminMapMarkerState.published,
+        adminVerified: false,
+        sourceName: 'Permitted source',
+        sourceRecordId: 'cache-1',
+      );
+
+      final intelligence = engine.build(
+        mapId: 'blue_gate',
+        adminMarkers: const [imported],
+        filters: ArcRaidMapFilterState.defaults.copyWith(lootSources: true),
+      );
+
+      expect(
+        intelligence.visibleMarkers.map((marker) => marker.label),
+        contains('Imported Cache'),
+      );
+      expect(
+        intelligence.visibleMarkers
+            .firstWhere((marker) => marker.label == 'Imported Cache')
+            .tags,
+        contains('Permitted source'),
       );
     });
 

@@ -185,6 +185,8 @@ class ArcRaidIntelligenceSeedData {
           'pass-289-buried-city-provisional-v1',
         ArcMapAssetRegistry.stellaMontisMapId =>
           'pass-292-stella-montis-two-layer-provisional-v1',
+        ArcMapAssetRegistry.rivenTidesMapId =>
+          'pass-294-riven-tides-provisional-v1',
         _ => 'pass-275-local-schematic-v1',
       },
       lastReviewed: DateTime.utc(2026, 7, 23),

@@ -25,6 +25,21 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
   ) async {}
 
   @override
+  Future<List<ArcAdminMapMarker>> loadImportCache(
+    String mapId,
+    ArcRaidMapLayer layer,
+  ) async {
+    return const <ArcAdminMapMarker>[];
+  }
+
+  @override
+  Future<void> saveImportCache(
+    String mapId,
+    ArcRaidMapLayer layer,
+    Iterable<ArcAdminMapMarker> markers,
+  ) async {}
+
+  @override
   Future<void> publish(ArcAdminMapMarker marker) async {}
 
   @override
@@ -38,6 +53,11 @@ void main() {
   testWidgets('Admin Map Editor exposes calibration and Intel controls', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       MaterialApp(
         home: ArcAdminMapEditorScreen(
@@ -53,6 +73,8 @@ void main() {
     expect(find.text('New Intel'), findsOneWidget);
     expect(find.text('Save Draft'), findsOneWidget);
     expect(find.text('Export JSON'), findsOneWidget);
+    expect(find.text('Import JSON'), findsOneWidget);
+    expect(find.text('IMPORT PIPELINE'), findsOneWidget);
     expect(find.text('Publish Selected'), findsOneWidget);
   });
 }

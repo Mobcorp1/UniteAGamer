@@ -15,6 +15,14 @@ void main() {
       point: ArcNormalizedPoint(x: 0.42, y: 0.71),
       sourceLabel: 'Admin Intel',
       confidence: ArcRaidIntelConfidence.confirmed,
+      sourceName: 'Permitted Atlas',
+      sourceRecordId: 'atlas_cache_7',
+      sourcePermission: ArcAdminMapMarkerSourcePermission.permitted,
+      originalPoint: ArcNormalizedPoint(x: 420, y: 710),
+      coordinateSpace: 'imagePixel',
+      alignmentConfidence: 0.93,
+      duplicateGroupId: 'blue_gate:surface:weaponCache:hidden:42:71',
+      provisionalVisible: true,
     );
 
     final restored = ArcAdminMapMarker.fromMap(marker.toJsonMap());
@@ -24,6 +32,14 @@ void main() {
     expect(restored.point.x, closeTo(0.42, 0.0001));
     expect(restored.point.y, closeTo(0.71, 0.0001));
     expect(restored.adminVerified, isTrue);
+    expect(restored.sourceName, 'Permitted Atlas');
+    expect(restored.sourceRecordId, 'atlas_cache_7');
+    expect(restored.sourcePermission.canPublish, isTrue);
+    expect(restored.originalPoint?.x, 420);
+    expect(restored.coordinateSpace, 'imagePixel');
+    expect(restored.alignmentConfidence, closeTo(0.93, 0.0001));
+    expect(restored.provisionalVisible, isTrue);
+    expect(restored.isLive, isTrue);
   });
 
   test('copyWith clamps through normalized point helper', () {

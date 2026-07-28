@@ -34,6 +34,15 @@ void main() {
             expect(map.schematicLabel, contains('Tactical schematic'));
           }
 
+          if (map.id == 'riven_tides') {
+            expect(map.hasRenderableMap, isTrue);
+            expect(
+              map.assetForLayer(ArcRaidMapLayer.surface)?.localAssetPath,
+              'assets/arc_raiders/maps/riven_tides/riven_tides_master.webp',
+            );
+            expect(map.dataVersion, 'pass-294-riven-tides-provisional-v1');
+          }
+
           expect(map.regions, isNotEmpty);
           expect(map.spawnRegions, isNotEmpty);
           expect(map.extractions, isNotEmpty);

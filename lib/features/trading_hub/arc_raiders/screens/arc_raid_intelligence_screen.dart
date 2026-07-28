@@ -6,11 +6,13 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_raid_intelligence_repository.dart';
@@ -45,6 +47,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ArcRaidIntelligenceRepository();
   final ArcCommunityIntelRepository _communityIntelRepository =
       ArcCommunityIntelRepository();
+  final ArcAdminMapEditorRepository _adminMapRepository =
+      ArcAdminMapEditorRepository();
   final ArcMapViewRepository _mapViewRepository = const ArcMapViewRepository();
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
@@ -226,19 +230,31 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                         final communityReports =
                             communitySnapshot.data ??
                             const <ArcCommunityIntelReport>[];
-                        final intelligence = _engine.build(
-                          mapId: _mapId,
-                          blueprintStates: states,
-                          favouriteLoadout: loadout,
-                          dropReports: reports,
-                          communityReports: communityReports,
-                          filters: _filters,
-                          activeLayer: _activeLayer,
-                          activeRoute: _routePlan,
-                        );
-                        return _buildLayout(
-                          intelligence,
-                          communityReports: communityReports,
+                        return StreamBuilder<List<ArcAdminMapMarker>>(
+                          stream: _adminMapRepository.watchLiveMarkers(
+                            _mapId,
+                            _activeLayer,
+                          ),
+                          builder: (context, adminSnapshot) {
+                            final adminMarkers =
+                                adminSnapshot.data ??
+                                const <ArcAdminMapMarker>[];
+                            final intelligence = _engine.build(
+                              mapId: _mapId,
+                              blueprintStates: states,
+                              favouriteLoadout: loadout,
+                              dropReports: reports,
+                              communityReports: communityReports,
+                              adminMarkers: adminMarkers,
+                              filters: _filters,
+                              activeLayer: _activeLayer,
+                              activeRoute: _routePlan,
+                            );
+                            return _buildLayout(
+                              intelligence,
+                              communityReports: communityReports,
+                            );
+                          },
                         );
                       },
                     );

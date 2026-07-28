@@ -695,6 +695,42 @@
                         "density":  "SPARSE_ALL"
                     },
                     {
+                        "collectionGroup":  "arc_admin_map_markers",
+                        "queryScope":  "COLLECTION",
+                        "fields":  [
+                                      {
+                                          "fieldPath":  "mapId",
+                                          "order":  "ASCENDING"
+                                      },
+                                      {
+                                          "fieldPath":  "layer",
+                                          "order":  "ASCENDING"
+                                      },
+                                      {
+                                          "fieldPath":  "state",
+                                          "order":  "ASCENDING"
+                                      }
+                                  ]
+                    },
+                    {
+                        "collectionGroup":  "arc_admin_map_markers",
+                        "queryScope":  "COLLECTION",
+                        "fields":  [
+                                      {
+                                          "fieldPath":  "mapId",
+                                          "order":  "ASCENDING"
+                                      },
+                                      {
+                                          "fieldPath":  "layer",
+                                          "order":  "ASCENDING"
+                                      },
+                                      {
+                                          "fieldPath":  "provisionalVisible",
+                                          "order":  "ASCENDING"
+                                      }
+                                  ]
+                    },
+                    {
                         "collectionGroup":  "sessions",
                         "queryScope":  "COLLECTION",
                         "fields":  [

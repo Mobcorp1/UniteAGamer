@@ -7,9 +7,13 @@ import 'package:uuid/uuid.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_alignment_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_adapters.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_map_marker_import_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
@@ -30,7 +34,11 @@ class ArcAdminMapEditorScreen extends StatefulWidget {
 
 class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   late final ArcAdminMapEditorRepository _repository;
+  final _importAdapter = const ArcPermittedJsonMapMarkerImportAdapter();
+  final _importEngine = const ArcMapMarkerImportEngine();
+  final _alignmentEngine = const ArcMapMarkerAlignmentEngine();
   final _transformationController = TransformationController();
+  final _searchController = TextEditingController();
   final _undoStack = <List<ArcAdminMapMarker>>[];
 
   late String _mapId;
@@ -41,6 +49,9 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _saving = false;
   bool _showSeedDefinitions = true;
   bool _showCustomIntel = true;
+  String _searchQuery = '';
+  ArcAdminMapMarkerKind? _kindFilter;
+  ArcMapMarkerImportSummary? _lastImportSummary;
 
   ArcRaidMap get _map => ArcRaidIntelligenceSeedData.mapById(_mapId);
 
@@ -59,6 +70,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   @override
   void dispose() {
     _transformationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -67,9 +79,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
 
     final drafts = await _repository.loadDrafts(_mapId, _layer);
     final seedMarkers = _seedMarkers(_map, _layer);
+    final cachedImports = await _repository.loadImportCache(_mapId, _layer);
     final merged = <String, ArcAdminMapMarker>{
       for (final marker in seedMarkers) marker.id: marker,
       for (final marker in drafts) marker.id: marker,
+      for (final marker in cachedImports) marker.id: marker,
     };
 
     if (!mounted) return;
@@ -77,6 +91,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       _markers = merged.values.toList(growable: false)
         ..sort((a, b) => a.name.compareTo(b.name));
       _selected = null;
+      _lastImportSummary = null;
       _undoStack.clear();
       _loading = false;
       _transformationController.value = Matrix4.identity();
@@ -125,6 +140,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   }
 
   List<ArcAdminMapMarker> get _visibleMarkers {
+    final query = _searchQuery.trim().toLowerCase();
     return _markers
         .where((marker) {
           if (marker.kind.isSeedDefinition && !_showSeedDefinitions) {
@@ -133,8 +149,29 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           if (!marker.kind.isSeedDefinition && !_showCustomIntel) {
             return false;
           }
+          if (_kindFilter != null && marker.kind != _kindFilter) {
+            return false;
+          }
+          if (query.isNotEmpty &&
+              !marker.name.toLowerCase().contains(query) &&
+              !marker.description.toLowerCase().contains(query) &&
+              !marker.sourceLabel.toLowerCase().contains(query) &&
+              !(marker.sourceName?.toLowerCase().contains(query) ?? false)) {
+            return false;
+          }
           return marker.mapId == _mapId && marker.layer == _layer;
         })
+        .toList(growable: false);
+  }
+
+  List<ArcAdminMapMarker> get _importedMarkers {
+    return _markers
+        .where(
+          (marker) =>
+              marker.mapId == _mapId &&
+              marker.layer == _layer &&
+              marker.sourceRecordId?.trim().isNotEmpty == true,
+        )
         .toList(growable: false);
   }
 
@@ -243,6 +280,131 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     final json = _repository.exportJson(_visibleMarkers);
     await Clipboard.setData(ClipboardData(text: json));
     if (mounted) _message('Production marker JSON copied to clipboard.');
+  }
+
+  Future<void> _importJsonFromClipboard() async {
+    setState(() => _saving = true);
+    try {
+      final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+      final raw = clipboard?.text;
+      if (raw == null || raw.trim().isEmpty) {
+        _message('Clipboard does not contain marker JSON.');
+        return;
+      }
+      final payload = _importAdapter.parse(
+        raw,
+        defaultMapId: _mapId,
+        defaultLayer: _layer,
+      );
+      final mapAsset = _map.assetForLayer(_layer);
+      final alignment = _alignmentEngine.identity(
+        mapId: _mapId,
+        layer: _layer,
+        sourceId: payload.source.id,
+      );
+      final summary = _importEngine.importRecords(
+        payload: payload,
+        mapId: _mapId,
+        layer: _layer,
+        existingMarkers: _markers,
+        alignment: alignment,
+        mapAsset: mapAsset,
+        importedAt: DateTime.now().toUtc(),
+      );
+      final accepted = summary.acceptedMarkers;
+      _snapshotUndo();
+      setState(() {
+        _lastImportSummary = summary;
+        _markers = _mergeMarkers(_markers, accepted);
+        _showCustomIntel = true;
+        if (accepted.isNotEmpty) _selected = accepted.first;
+      });
+      await _repository.saveImportCache(_mapId, _layer, _importedMarkers);
+
+      if (summary.autoPublishedMarkers.isNotEmpty) {
+        try {
+          await _repository.publishAll(summary.autoPublishedMarkers);
+        } catch (error) {
+          if (mounted) {
+            _message('Import cached; auto-publish needs admin sign-in: $error');
+          }
+          return;
+        }
+      }
+      if (mounted) {
+        _message(
+          'Import processed: ${summary.autoPublishedCount} published, '
+          '${summary.provisionalCount} provisional, '
+          '${summary.exceptionCount} exceptions, '
+          '${summary.duplicateCount} duplicates.',
+        );
+      }
+    } catch (error) {
+      if (mounted) _message('Could not import marker JSON: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _publishEligibleImports() async {
+    final eligible = _visibleMarkers
+        .where(
+          (marker) =>
+              marker.sourceRecordId?.trim().isNotEmpty == true &&
+              !marker.isPublished &&
+              !marker.hasImportException &&
+              marker.sourcePermission.canPublish,
+        )
+        .toList(growable: false);
+    if (eligible.isEmpty) {
+      _message('No eligible imported markers are ready to publish.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _repository.publishAll(eligible);
+      if (!mounted) return;
+      setState(() {
+        _markers = [
+          for (final marker in _markers)
+            if (eligible.any((item) => item.id == marker.id))
+              marker.copyWith(state: ArcAdminMapMarkerState.published)
+            else
+              marker,
+        ];
+      });
+      await _repository.saveImportCache(_mapId, _layer, _importedMarkers);
+      _message('${eligible.length} imported markers published.');
+    } catch (error) {
+      if (mounted) _message('Could not publish imported markers: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _reprocessImportCache() async {
+    final cached = await _repository.loadImportCache(_mapId, _layer);
+    if (!mounted) return;
+    setState(() {
+      _markers = _mergeMarkers(
+        _markers.where((marker) => marker.sourceRecordId == null),
+        cached,
+      );
+      _selected = cached.isEmpty ? null : cached.first;
+    });
+    _message('${cached.length} cached imported markers reloaded.');
+  }
+
+  static List<ArcAdminMapMarker> _mergeMarkers(
+    Iterable<ArcAdminMapMarker> base,
+    Iterable<ArcAdminMapMarker> incoming,
+  ) {
+    final merged = <String, ArcAdminMapMarker>{
+      for (final marker in base) marker.id: marker,
+      for (final marker in incoming) marker.id: marker,
+    };
+    return merged.values.toList(growable: false)
+      ..sort((a, b) => a.name.compareTo(b.name));
   }
 
   Future<void> _createMarker() async {
@@ -588,6 +750,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   icon: const Icon(Icons.data_object_rounded),
                   label: const Text('Export JSON'),
                 ),
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _importJsonFromClipboard,
+                  icon: const Icon(Icons.input_rounded),
+                  label: const Text('Import JSON'),
+                ),
               ],
             ),
           ),
@@ -596,6 +763,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             child: ListView(
               padding: const EdgeInsets.all(10),
               children: [
+                _importDashboardCard(),
+                const SizedBox(height: 10),
+                _markerFiltersCard(),
+                const SizedBox(height: 10),
                 if (_selected != null) _selectedCard(_selected!),
                 const SizedBox(height: 10),
                 Text(
@@ -623,17 +794,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                     subtitle: Text(
                       '${marker.kind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
                     ),
-                    trailing: marker.isPublished
-                        ? const Icon(
-                            Icons.cloud_done_rounded,
-                            color: Colors.lightGreenAccent,
-                            size: 18,
-                          )
-                        : const Icon(
-                            Icons.edit_note_rounded,
-                            color: Colors.amberAccent,
-                            size: 18,
-                          ),
+                    trailing: _markerStateIcon(marker),
                     onTap: () => setState(() => _selected = marker),
                   ),
               ],
@@ -661,11 +822,182 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                       : _publishAll,
                   icon: const Icon(Icons.cloud_sync_rounded),
                 ),
+                IconButton(
+                  tooltip: 'Publish eligible imported markers',
+                  onPressed: _saving ? null : _publishEligibleImports,
+                  icon: const Icon(Icons.verified_rounded),
+                ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _importDashboardCard() {
+    final imported = _importedMarkers;
+    final exceptions = imported.where((marker) => marker.hasImportException);
+    final provisional = imported.where((marker) => marker.provisionalVisible);
+    final duplicateGroups = imported
+        .map((marker) => marker.duplicateGroupId)
+        .whereType<String>()
+        .toSet();
+    final confidenceValues = imported
+        .map((marker) => marker.alignmentConfidence)
+        .whereType<double>()
+        .toList(growable: false);
+    final averageConfidence = confidenceValues.isEmpty
+        ? null
+        : confidenceValues.reduce((a, b) => a + b) / confidenceValues.length;
+    final last = _lastImportSummary;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        backgroundColor: Colors.black.withValues(alpha: 0.26),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('IMPORT PIPELINE', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _metricPill('Cached', imported.length.toString()),
+              _metricPill('Exceptions', exceptions.length.toString()),
+              _metricPill('Provisional', provisional.length.toString()),
+              _metricPill('Groups', duplicateGroups.length.toString()),
+              _metricPill(
+                'Alignment',
+                averageConfidence == null
+                    ? 'None'
+                    : '${(averageConfidence * 100).round()}%',
+              ),
+            ],
+          ),
+          if (last != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${last.source.name}: ${last.totalRecords} records • '
+              '${last.alignment.confidenceLabel} alignment • '
+              '${last.duplicateCount} duplicates',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _importJsonFromClipboard,
+                icon: const Icon(Icons.content_paste_go_rounded),
+                label: const Text('Import Clipboard'),
+              ),
+              TextButton.icon(
+                onPressed: _reprocessImportCache,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reprocess Cache'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _markerFiltersCard() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: AppTheme.tradingCardDecoration(
+        backgroundColor: Colors.black.withValues(alpha: 0.18),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              labelText: 'Search markers',
+              prefixIcon: Icon(Icons.search_rounded),
+            ),
+            onChanged: (value) => setState(() => _searchQuery = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcAdminMapMarkerKind?>(
+            isExpanded: true,
+            initialValue: _kindFilter,
+            decoration: const InputDecoration(labelText: 'Category filter'),
+            items: <DropdownMenuItem<ArcAdminMapMarkerKind?>>[
+              const DropdownMenuItem<ArcAdminMapMarkerKind?>(
+                value: null,
+                child: Text('All marker categories'),
+              ),
+              for (final kind in ArcAdminMapMarkerKind.values)
+                DropdownMenuItem<ArcAdminMapMarkerKind?>(
+                  value: kind,
+                  child: Text(kind.label),
+                ),
+            ],
+            onChanged: (value) => setState(() => _kindFilter = value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricPill(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        '$label $value',
+        style: const TextStyle(color: Colors.white70, fontSize: 11),
+      ),
+    );
+  }
+
+  Widget _markerStateIcon(ArcAdminMapMarker marker) {
+    if (marker.hasImportException) {
+      return const Icon(
+        Icons.report_problem_rounded,
+        color: Colors.redAccent,
+        size: 18,
+      );
+    }
+    if (marker.isPublished) {
+      return const Icon(
+        Icons.cloud_done_rounded,
+        color: Colors.lightGreenAccent,
+        size: 18,
+      );
+    }
+    if (marker.provisionalVisible) {
+      return const Icon(
+        Icons.visibility_rounded,
+        color: AppTheme.neonCyan,
+        size: 18,
+      );
+    }
+    return const Icon(
+      Icons.edit_note_rounded,
+      color: Colors.amberAccent,
+      size: 18,
+    );
+  }
+
+  TextStyle _sectionLabelStyle() {
+    return AppTheme.bodyTextStyle(
+      fontSize: 10,
+      color: AppTheme.neonCyan,
+      isBold: true,
     );
   }
 
@@ -708,6 +1040,25 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               style: const TextStyle(color: AppTheme.neonCyan),
             ),
           ],
+          if (marker.sourceRecordId != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Source: ${marker.sourceName ?? marker.sourceLabel} • '
+              '${marker.sourcePermission.label}',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            if (marker.alignmentConfidence != null)
+              Text(
+                'Alignment ${(marker.alignmentConfidence! * 100).round()}% '
+                '• ${marker.coordinateSpace ?? 'normalized'}',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+            if (marker.exceptionReason?.trim().isNotEmpty == true)
+              Text(
+                'Review: ${marker.exceptionReason}',
+                style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              ),
+          ],
           const SizedBox(height: 9),
           Wrap(
             spacing: 6,
@@ -748,6 +1099,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Colors.amberAccent;
       case ArcAdminMapMarkerKind.blueprint:
         return AppTheme.neonPink;
+      case ArcAdminMapMarkerKind.questLocation:
+        return Colors.cyanAccent;
+      case ArcAdminMapMarkerKind.resourceNode:
+        return Colors.tealAccent;
       case ArcAdminMapMarkerKind.weaponCache:
         return Colors.orangeAccent;
       case ArcAdminMapMarkerKind.lootContainer:
@@ -773,6 +1128,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Icons.key_rounded;
       case ArcAdminMapMarkerKind.blueprint:
         return Icons.extension_rounded;
+      case ArcAdminMapMarkerKind.questLocation:
+        return Icons.assignment_turned_in_rounded;
+      case ArcAdminMapMarkerKind.resourceNode:
+        return Icons.construction_rounded;
       case ArcAdminMapMarkerKind.weaponCache:
         return Icons.gps_fixed_rounded;
       case ArcAdminMapMarkerKind.lootContainer:
