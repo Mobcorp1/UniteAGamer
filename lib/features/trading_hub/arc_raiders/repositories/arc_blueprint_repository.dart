@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
 import 'arc_operations_repository.dart';
 
@@ -148,6 +149,22 @@ class ArcBlueprintRepository {
     required ArcEntryTime entryTime,
     required ArcTimeOfDay timeOfDay,
     required ArcBlueprintAcquisitionSource acquisitionSource,
+    ArcGiftedBlueprintRelationship giftRelationship =
+        ArcGiftedBlueprintRelationship.unknown,
+    String? originalFindMapName,
+    ArcRaidMapLayer? originalFindLayer,
+    String? originalFindPoiId,
+    String? originalFindPoiName,
+    String? handoverMapName,
+    ArcRaidMapLayer? handoverLayer,
+    String? handoverPoiId,
+    String? handoverPoiName,
+    bool recipientWitnessedOriginalPickup = false,
+    String? originalFinderUid,
+    String? originalFinderEmbarkId,
+    String acquisitionEvidence = '',
+    ArcBlueprintReportConfidence acquisitionConfidence =
+        ArcBlueprintReportConfidence.standard,
     String? poiId,
     String? poiName,
     String? enemySourceId,
@@ -228,6 +245,11 @@ class ArcBlueprintRepository {
       entryTime: ArcEntryTime.unknown,
       timeOfDay: timeOfDay,
       acquisitionSource: acquisitionSource,
+      giftRelationship: giftRelationship,
+      originalFindMapName: originalFindMapName,
+      originalFindPoiId: originalFindPoiId,
+      handoverMapName: handoverMapName,
+      handoverPoiId: handoverPoiId,
     );
 
     final existingSnapshot = await _reportsCollection
@@ -290,6 +312,20 @@ class ArcBlueprintRepository {
       entryTime: ArcEntryTime.unknown,
       timeOfDay: timeOfDay,
       acquisitionSource: acquisitionSource,
+      giftRelationship: giftRelationship,
+      originalFindMapName: originalFindMapName?.trim(),
+      originalFindLayer: originalFindLayer,
+      originalFindPoiId: originalFindPoiId?.trim(),
+      originalFindPoiName: originalFindPoiName?.trim(),
+      handoverMapName: handoverMapName?.trim(),
+      handoverLayer: handoverLayer,
+      handoverPoiId: handoverPoiId?.trim(),
+      handoverPoiName: handoverPoiName?.trim(),
+      recipientWitnessedOriginalPickup: recipientWitnessedOriginalPickup,
+      originalFinderUid: originalFinderUid?.trim(),
+      originalFinderEmbarkId: originalFinderEmbarkId?.trim(),
+      acquisitionEvidence: acquisitionEvidence.trim(),
+      acquisitionConfidence: acquisitionConfidence,
       foundAt: foundAt ?? now,
       localTimeLabel: localTimeLabel?.trim(),
       timezoneOffsetMinutes: timezoneOffsetMinutes,

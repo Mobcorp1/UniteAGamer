@@ -87,14 +87,14 @@ class UagSubscriptionPlan {
         'Unlimited advanced voice commands',
         'Smart item, trade and session alerts',
         'Raid Companion presets and 6 voice profiles',
-        'Reduced passive ads',
+        'No advertising',
         '10% follower discounts and 10% recurring creator commission',
       ],
       bestFor: [
         'regular players',
         'squad organisers',
         'active traders',
-        'users who want fewer ads',
+        'users who want no ads',
       ],
     ),
     UagSubscriptionPlan(
@@ -103,8 +103,8 @@ class UagSubscriptionPlan {
       shortName: 'Premium',
       positioning:
           'The power-user tier: unlimited systems, no ads, Trader Pro analytics and full automation.',
-      monthlyPricePence: 999,
-      yearlyPricePence: 9999,
+      monthlyPricePence: 799,
+      yearlyPricePence: 7999,
       creatorOnboardingDiscountPercent: 25,
       limits: UagPlanLimits.premium,
       features: [

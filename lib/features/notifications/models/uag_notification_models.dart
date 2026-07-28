@@ -4,15 +4,34 @@ enum UagNotificationType {
   announcement('announcement'),
   openBeta('open_beta'),
   trading('trading'),
+  tradeOffer('trade_offer'),
+  tradeAccepted('trade_accepted'),
+  tradeRejected('trade_rejected'),
+  tradeReminder('trade_reminder'),
   matchmaking('matchmaking'),
+  matchmakingSession('matchmaking_session'),
   favouriteRider('favourite_rider'),
   watchMatch('watch_match'),
   queueRelease('queue_release'),
   operations('operations'),
   reward('reward'),
+  blueprintReportConfirmed('blueprint_report_confirmed'),
+  communityIntelConfirmation('community_intel_confirmation'),
+  communityIntelDispute('community_intel_dispute'),
+  contractOffered('contract_offered'),
+  contractAccepted('contract_accepted'),
+  contractEvidenceSubmitted('contract_evidence_submitted'),
+  contractRewardReady('contract_reward_ready'),
+  contractDispute('contract_dispute'),
+  conductReportResponse('conduct_report_response'),
+  conductReportOutcome('conduct_report_outcome'),
   communityEvent('community_event'),
   reminder('reminder'),
   postSessionFeedback('post_session_feedback'),
+  adminAnnouncement('admin_announcement'),
+  betaUpdate('beta_update'),
+  featureUpdate('feature_update'),
+  termsPrivacyUpdate('terms_privacy_update'),
   maintenance('maintenance');
 
   const UagNotificationType(this.wireName);
@@ -95,9 +114,12 @@ enum UagNotificationCategory {
   favouriteRiders('favouriteRiders', 'Favourite Riders'),
   watchesAndQueues('watchesAndQueues', 'Watches & Queues'),
   operationsAndRewards('operationsAndRewards', 'Operations & Rewards'),
+  blueprintIntel('blueprintIntel', 'Blueprint Intel'),
+  contractsAndReports('contractsAndReports', 'Contracts & Reports'),
   communityEvents('communityEvents', 'Community Events'),
   reminders('reminders', 'Reminders'),
-  postSessionFeedback('postSessionFeedback', 'Post-Session Feedback');
+  postSessionFeedback('postSessionFeedback', 'Post-Session Feedback'),
+  legalAndPolicy('legalAndPolicy', 'Legal & Policy');
 
   const UagNotificationCategory(this.key, this.label);
 
@@ -114,9 +136,12 @@ class UagNotificationPreferences {
     this.favouriteRiders = true,
     this.watchesAndQueues = true,
     this.operationsAndRewards = true,
+    this.blueprintIntel = true,
+    this.contractsAndReports = true,
     this.communityEvents = true,
     this.reminders = true,
     this.postSessionFeedback = true,
+    this.legalAndPolicy = true,
     this.updatedAt,
   });
 
@@ -127,9 +152,12 @@ class UagNotificationPreferences {
   final bool favouriteRiders;
   final bool watchesAndQueues;
   final bool operationsAndRewards;
+  final bool blueprintIntel;
+  final bool contractsAndReports;
   final bool communityEvents;
   final bool reminders;
   final bool postSessionFeedback;
+  final bool legalAndPolicy;
   final DateTime? updatedAt;
 
   static const defaults = UagNotificationPreferences();
@@ -150,25 +178,39 @@ class UagNotificationPreferences {
         return watchesAndQueues;
       case UagNotificationCategory.operationsAndRewards:
         return operationsAndRewards;
+      case UagNotificationCategory.blueprintIntel:
+        return blueprintIntel;
+      case UagNotificationCategory.contractsAndReports:
+        return contractsAndReports;
       case UagNotificationCategory.communityEvents:
         return communityEvents;
       case UagNotificationCategory.reminders:
         return reminders;
       case UagNotificationCategory.postSessionFeedback:
         return postSessionFeedback;
+      case UagNotificationCategory.legalAndPolicy:
+        return legalAndPolicy;
     }
   }
 
   bool allowsType(UagNotificationType type) {
     switch (type) {
       case UagNotificationType.announcement:
+      case UagNotificationType.adminAnnouncement:
+      case UagNotificationType.featureUpdate:
       case UagNotificationType.maintenance:
         return announcements;
       case UagNotificationType.openBeta:
+      case UagNotificationType.betaUpdate:
         return openBetaUpdates;
       case UagNotificationType.trading:
+      case UagNotificationType.tradeOffer:
+      case UagNotificationType.tradeAccepted:
+      case UagNotificationType.tradeRejected:
+      case UagNotificationType.tradeReminder:
         return trading;
       case UagNotificationType.matchmaking:
+      case UagNotificationType.matchmakingSession:
         return matchmaking;
       case UagNotificationType.favouriteRider:
         return favouriteRiders;
@@ -178,12 +220,26 @@ class UagNotificationPreferences {
       case UagNotificationType.operations:
       case UagNotificationType.reward:
         return operationsAndRewards;
+      case UagNotificationType.blueprintReportConfirmed:
+      case UagNotificationType.communityIntelConfirmation:
+      case UagNotificationType.communityIntelDispute:
+        return blueprintIntel;
+      case UagNotificationType.contractOffered:
+      case UagNotificationType.contractAccepted:
+      case UagNotificationType.contractEvidenceSubmitted:
+      case UagNotificationType.contractRewardReady:
+      case UagNotificationType.contractDispute:
+      case UagNotificationType.conductReportResponse:
+      case UagNotificationType.conductReportOutcome:
+        return contractsAndReports;
       case UagNotificationType.communityEvent:
         return communityEvents;
       case UagNotificationType.reminder:
         return reminders;
       case UagNotificationType.postSessionFeedback:
         return postSessionFeedback;
+      case UagNotificationType.termsPrivacyUpdate:
+        return legalAndPolicy;
     }
   }
 
@@ -206,12 +262,18 @@ class UagNotificationPreferences {
         return copyWith(watchesAndQueues: enabled);
       case UagNotificationCategory.operationsAndRewards:
         return copyWith(operationsAndRewards: enabled);
+      case UagNotificationCategory.blueprintIntel:
+        return copyWith(blueprintIntel: enabled);
+      case UagNotificationCategory.contractsAndReports:
+        return copyWith(contractsAndReports: enabled);
       case UagNotificationCategory.communityEvents:
         return copyWith(communityEvents: enabled);
       case UagNotificationCategory.reminders:
         return copyWith(reminders: enabled);
       case UagNotificationCategory.postSessionFeedback:
         return copyWith(postSessionFeedback: enabled);
+      case UagNotificationCategory.legalAndPolicy:
+        return copyWith(legalAndPolicy: enabled);
     }
   }
 
@@ -223,9 +285,12 @@ class UagNotificationPreferences {
     bool? favouriteRiders,
     bool? watchesAndQueues,
     bool? operationsAndRewards,
+    bool? blueprintIntel,
+    bool? contractsAndReports,
     bool? communityEvents,
     bool? reminders,
     bool? postSessionFeedback,
+    bool? legalAndPolicy,
     DateTime? updatedAt,
   }) {
     return UagNotificationPreferences(
@@ -236,9 +301,12 @@ class UagNotificationPreferences {
       favouriteRiders: favouriteRiders ?? this.favouriteRiders,
       watchesAndQueues: watchesAndQueues ?? this.watchesAndQueues,
       operationsAndRewards: operationsAndRewards ?? this.operationsAndRewards,
+      blueprintIntel: blueprintIntel ?? this.blueprintIntel,
+      contractsAndReports: contractsAndReports ?? this.contractsAndReports,
       communityEvents: communityEvents ?? this.communityEvents,
       reminders: reminders ?? this.reminders,
       postSessionFeedback: postSessionFeedback ?? this.postSessionFeedback,
+      legalAndPolicy: legalAndPolicy ?? this.legalAndPolicy,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -252,9 +320,12 @@ class UagNotificationPreferences {
       'favouriteRiders': favouriteRiders,
       'watchesAndQueues': watchesAndQueues,
       'operationsAndRewards': operationsAndRewards,
+      'blueprintIntel': blueprintIntel,
+      'contractsAndReports': contractsAndReports,
       'communityEvents': communityEvents,
       'reminders': reminders,
       'postSessionFeedback': postSessionFeedback,
+      'legalAndPolicy': legalAndPolicy,
       if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     };
   }
@@ -269,9 +340,12 @@ class UagNotificationPreferences {
       favouriteRiders: _readBool(map['favouriteRiders'], true),
       watchesAndQueues: _readBool(map['watchesAndQueues'], true),
       operationsAndRewards: _readBool(map['operationsAndRewards'], true),
+      blueprintIntel: _readBool(map['blueprintIntel'], true),
+      contractsAndReports: _readBool(map['contractsAndReports'], true),
       communityEvents: _readBool(map['communityEvents'], true),
       reminders: _readBool(map['reminders'], true),
       postSessionFeedback: _readBool(map['postSessionFeedback'], true),
+      legalAndPolicy: _readBool(map['legalAndPolicy'], true),
       updatedAt: _readDate(map['updatedAt']),
     );
   }

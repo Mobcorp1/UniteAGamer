@@ -40,17 +40,13 @@ class UagAdPolicy {
 
   static const essential = UagAdPolicy(
     tier: UagSubscriptionTier.essential,
-    showBannerAds: true,
+    showBannerAds: false,
     showInterstitialAds: false,
-    showRewardedAds: true,
+    showRewardedAds: false,
     allowVoiceAssistantAds: false,
     allowMidSessionAds: false,
-    bannerPlacement:
-        'Reduced passive banner only; never during active voice/session flow.',
-    rewardedBoosts: [
-      'Optional temporary Premium Intel unlock',
-      'Optional temporary Trader Pro preview',
-    ],
+    bannerPlacement: 'No ads.',
+    rewardedBoosts: <String>[],
   );
 
   static const premium = UagAdPolicy(

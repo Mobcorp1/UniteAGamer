@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
 @immutable
 class ArcBlueprintDropReport {
@@ -29,6 +30,22 @@ class ArcBlueprintDropReport {
     this.mapEventId,
     this.mapEventLabel,
     this.acquisitionSource = ArcBlueprintAcquisitionSource.lootDrop,
+    this.giftRelationship = ArcGiftedBlueprintRelationship.unknown,
+    this.originalFindMapName,
+    this.originalFindLayer,
+    this.originalFindPoiId,
+    this.originalFindPoiName,
+    this.handoverMapName,
+    this.handoverLayer,
+    this.handoverPoiId,
+    this.handoverPoiName,
+    this.recipientWitnessedOriginalPickup = false,
+    this.originalFinderUid,
+    this.originalFinderEmbarkId,
+    this.acquisitionEvidence = '',
+    this.acquisitionConfidence = ArcBlueprintReportConfidence.standard,
+    this.withdrawn = false,
+    this.disputed = false,
     this.foundAt,
     this.localTimeLabel,
     this.timezoneOffsetMinutes,
@@ -53,6 +70,22 @@ class ArcBlueprintDropReport {
   final String? mapEventId;
   final String? mapEventLabel;
   final ArcBlueprintAcquisitionSource acquisitionSource;
+  final ArcGiftedBlueprintRelationship giftRelationship;
+  final String? originalFindMapName;
+  final ArcRaidMapLayer? originalFindLayer;
+  final String? originalFindPoiId;
+  final String? originalFindPoiName;
+  final String? handoverMapName;
+  final ArcRaidMapLayer? handoverLayer;
+  final String? handoverPoiId;
+  final String? handoverPoiName;
+  final bool recipientWitnessedOriginalPickup;
+  final String? originalFinderUid;
+  final String? originalFinderEmbarkId;
+  final String acquisitionEvidence;
+  final ArcBlueprintReportConfidence acquisitionConfidence;
+  final bool withdrawn;
+  final bool disputed;
   final ArcRaidMode mode;
   final ArcRaidType raidType;
   final ArcEntryTime entryTime;
@@ -82,6 +115,12 @@ class ArcBlueprintDropReport {
     String? containerTypeId,
     String? weatherConditionId,
     String? mapEventId,
+    ArcGiftedBlueprintRelationship giftRelationship =
+        ArcGiftedBlueprintRelationship.unknown,
+    String? originalFindMapName,
+    String? originalFindPoiId,
+    String? handoverMapName,
+    String? handoverPoiId,
   }) {
     String normalize(String? value, {String fallback = 'none'}) {
       final trimmed = value?.trim().toLowerCase();
@@ -102,6 +141,11 @@ class ArcBlueprintDropReport {
       entryTime.name.toLowerCase(),
       timeOfDay.name.toLowerCase(),
       acquisitionSource.name.toLowerCase(),
+      giftRelationship.name.toLowerCase(),
+      normalize(originalFindMapName),
+      normalize(originalFindPoiId),
+      normalize(handoverMapName),
+      normalize(handoverPoiId),
     ].join('|');
   }
 
@@ -162,6 +206,34 @@ class ArcBlueprintDropReport {
     return null;
   }
 
+  bool get isGiftedOrIndirect => acquisitionSource.isGiftedOrIndirect;
+
+  bool get hasOriginalFindLocation {
+    final map = originalFindMapName?.trim();
+    final poi = originalFindPoiId?.trim() ?? originalFindPoiName?.trim();
+    return map != null && map.isNotEmpty && poi != null && poi.isNotEmpty;
+  }
+
+  bool get countsForMapIntelligence =>
+      !withdrawn &&
+      !disputed &&
+      (!isGiftedOrIndirect ||
+          recipientWitnessedOriginalPickup ||
+          hasOriginalFindLocation);
+
+  String get intelligenceMapName =>
+      hasOriginalFindLocation ? originalFindMapName!.trim() : mapName;
+
+  String? get intelligencePoiId =>
+      hasOriginalFindLocation ? originalFindPoiId?.trim() : poiId;
+
+  String? get intelligencePoiName =>
+      hasOriginalFindLocation ? originalFindPoiName?.trim() : poiName;
+
+  ArcRaidMapLayer get intelligenceLayer => hasOriginalFindLocation
+      ? (originalFindLayer ?? ArcRaidMapLayer.surface)
+      : ArcRaidMapLayer.surface;
+
   String get areaKey {
     final sourceKey = switch (sourceType) {
       ArcDropSourceType.poi => poiId ?? poiName ?? 'poi_unknown',
@@ -190,6 +262,22 @@ class ArcBlueprintDropReport {
     String? mapEventId,
     String? mapEventLabel,
     ArcBlueprintAcquisitionSource? acquisitionSource,
+    ArcGiftedBlueprintRelationship? giftRelationship,
+    String? originalFindMapName,
+    ArcRaidMapLayer? originalFindLayer,
+    String? originalFindPoiId,
+    String? originalFindPoiName,
+    String? handoverMapName,
+    ArcRaidMapLayer? handoverLayer,
+    String? handoverPoiId,
+    String? handoverPoiName,
+    bool? recipientWitnessedOriginalPickup,
+    String? originalFinderUid,
+    String? originalFinderEmbarkId,
+    String? acquisitionEvidence,
+    ArcBlueprintReportConfidence? acquisitionConfidence,
+    bool? withdrawn,
+    bool? disputed,
     ArcRaidMode? mode,
     ArcRaidType? raidType,
     ArcEntryTime? entryTime,
@@ -222,6 +310,26 @@ class ArcBlueprintDropReport {
       mapEventId: mapEventId ?? this.mapEventId,
       mapEventLabel: mapEventLabel ?? this.mapEventLabel,
       acquisitionSource: acquisitionSource ?? this.acquisitionSource,
+      giftRelationship: giftRelationship ?? this.giftRelationship,
+      originalFindMapName: originalFindMapName ?? this.originalFindMapName,
+      originalFindLayer: originalFindLayer ?? this.originalFindLayer,
+      originalFindPoiId: originalFindPoiId ?? this.originalFindPoiId,
+      originalFindPoiName: originalFindPoiName ?? this.originalFindPoiName,
+      handoverMapName: handoverMapName ?? this.handoverMapName,
+      handoverLayer: handoverLayer ?? this.handoverLayer,
+      handoverPoiId: handoverPoiId ?? this.handoverPoiId,
+      handoverPoiName: handoverPoiName ?? this.handoverPoiName,
+      recipientWitnessedOriginalPickup:
+          recipientWitnessedOriginalPickup ??
+          this.recipientWitnessedOriginalPickup,
+      originalFinderUid: originalFinderUid ?? this.originalFinderUid,
+      originalFinderEmbarkId:
+          originalFinderEmbarkId ?? this.originalFinderEmbarkId,
+      acquisitionEvidence: acquisitionEvidence ?? this.acquisitionEvidence,
+      acquisitionConfidence:
+          acquisitionConfidence ?? this.acquisitionConfidence,
+      withdrawn: withdrawn ?? this.withdrawn,
+      disputed: disputed ?? this.disputed,
       mode: mode ?? this.mode,
       raidType: raidType ?? this.raidType,
       entryTime: entryTime ?? this.entryTime,
@@ -261,6 +369,23 @@ class ArcBlueprintDropReport {
       'locationName': areaLabel,
       'acquisitionSource': acquisitionSource.name,
       'acquisitionSourceLabel': acquisitionSource.label,
+      'giftRelationship': giftRelationship.name,
+      'giftRelationshipLabel': giftRelationship.label,
+      'originalFindMapName': originalFindMapName,
+      'originalFindLayer': originalFindLayer?.storageValue,
+      'originalFindPoiId': originalFindPoiId,
+      'originalFindPoiName': originalFindPoiName,
+      'handoverMapName': handoverMapName,
+      'handoverLayer': handoverLayer?.storageValue,
+      'handoverPoiId': handoverPoiId,
+      'handoverPoiName': handoverPoiName,
+      'recipientWitnessedOriginalPickup': recipientWitnessedOriginalPickup,
+      'originalFinderUid': originalFinderUid,
+      'originalFinderEmbarkId': originalFinderEmbarkId,
+      'acquisitionEvidence': acquisitionEvidence,
+      'acquisitionConfidence': acquisitionConfidence.name,
+      'withdrawn': withdrawn,
+      'disputed': disputed,
       'mode': mode.name,
       'raidType': raidType.name,
       'entryTime': entryTime.name,
@@ -344,6 +469,33 @@ class ArcBlueprintDropReport {
             map['acquisitionSource'] as String?,
           ) ??
           ArcBlueprintAcquisitionSource.lootDrop,
+      giftRelationship:
+          ArcGiftedBlueprintRelationshipX.fromStorage(
+            map['giftRelationship'] as String?,
+          ) ??
+          ArcGiftedBlueprintRelationship.unknown,
+      originalFindMapName: (map['originalFindMapName'] as String?)?.trim(),
+      originalFindLayer: _layerFromStorage(map['originalFindLayer'] as String?),
+      originalFindPoiId: (map['originalFindPoiId'] as String?)?.trim(),
+      originalFindPoiName: (map['originalFindPoiName'] as String?)?.trim(),
+      handoverMapName: (map['handoverMapName'] as String?)?.trim(),
+      handoverLayer: _layerFromStorage(map['handoverLayer'] as String?),
+      handoverPoiId: (map['handoverPoiId'] as String?)?.trim(),
+      handoverPoiName: (map['handoverPoiName'] as String?)?.trim(),
+      recipientWitnessedOriginalPickup:
+          map['recipientWitnessedOriginalPickup'] == true,
+      originalFinderUid: (map['originalFinderUid'] as String?)?.trim(),
+      originalFinderEmbarkId: (map['originalFinderEmbarkId'] as String?)
+          ?.trim(),
+      acquisitionEvidence:
+          (map['acquisitionEvidence'] as String?)?.trim() ?? '',
+      acquisitionConfidence:
+          ArcBlueprintReportConfidenceX.fromStorage(
+            map['acquisitionConfidence'] as String?,
+          ) ??
+          ArcBlueprintReportConfidence.standard,
+      withdrawn: map['withdrawn'] == true,
+      disputed: map['disputed'] == true,
       mode:
           _enumByName(ArcRaidMode.values, map['mode'] as String?) ??
           ArcRaidMode.dayRaid,
@@ -384,8 +536,33 @@ class ArcBlueprintDropReport {
         entryTime: report.entryTime,
         timeOfDay: report.timeOfDay,
         acquisitionSource: report.acquisitionSource,
+        giftRelationship: report.giftRelationship,
+        originalFindMapName: report.originalFindMapName,
+        originalFindPoiId: report.originalFindPoiId,
+        handoverMapName: report.handoverMapName,
+        handoverPoiId: report.handoverPoiId,
       ),
     );
+  }
+
+  static ArcRaidMapLayer? _layerFromStorage(String? rawName) {
+    if (rawName == null || rawName.trim().isEmpty) return null;
+    final normalized = rawName.trim().toLowerCase().replaceAll(
+      RegExp(r'[\s_-]+'),
+      '',
+    );
+    for (final layer in ArcRaidMapLayer.values) {
+      final storageValue = layer.storageValue.toLowerCase().replaceAll(
+        RegExp(r'[\s_-]+'),
+        '',
+      );
+      if (layer.name.toLowerCase() == normalized ||
+          storageValue == normalized) {
+        return layer;
+      }
+    }
+    if (normalized == 'level2') return ArcRaidMapLayer.underground;
+    return null;
   }
 
   static T? _enumByName<T>(List<T> values, String? rawName) {
@@ -424,8 +601,17 @@ enum ArcBlueprintAcquisitionSource {
   questReward,
   trade,
   gifted,
+  giftedBySquadmate,
+  giftedByAnotherRaider,
+  tradedDuringRaid,
+  recoveredFromAnotherRaider,
+  unknown,
   trialReward,
 }
+
+enum ArcGiftedBlueprintRelationship { squadmate, otherRaider, unknown }
+
+enum ArcBlueprintReportConfidence { low, standard, high, verified }
 
 extension ArcRaidModeX on ArcRaidMode {
   String get label {
@@ -515,15 +701,42 @@ extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
   String get label {
     switch (this) {
       case ArcBlueprintAcquisitionSource.lootDrop:
-        return 'Normal Drop';
+        return 'Found Personally';
       case ArcBlueprintAcquisitionSource.questReward:
         return 'Quest Reward';
       case ArcBlueprintAcquisitionSource.trade:
         return 'Trade';
       case ArcBlueprintAcquisitionSource.gifted:
         return 'Gifted';
+      case ArcBlueprintAcquisitionSource.giftedBySquadmate:
+        return 'Gifted by Squadmate';
+      case ArcBlueprintAcquisitionSource.giftedByAnotherRaider:
+        return 'Gifted by Another Raider';
+      case ArcBlueprintAcquisitionSource.tradedDuringRaid:
+        return 'Traded During Raid';
+      case ArcBlueprintAcquisitionSource.recoveredFromAnotherRaider:
+        return 'Recovered from Another Raider';
+      case ArcBlueprintAcquisitionSource.unknown:
+        return 'Unknown / Not Sure';
       case ArcBlueprintAcquisitionSource.trialReward:
         return 'Trial';
+    }
+  }
+
+  bool get isGiftedOrIndirect {
+    switch (this) {
+      case ArcBlueprintAcquisitionSource.gifted:
+      case ArcBlueprintAcquisitionSource.trade:
+      case ArcBlueprintAcquisitionSource.giftedBySquadmate:
+      case ArcBlueprintAcquisitionSource.giftedByAnotherRaider:
+      case ArcBlueprintAcquisitionSource.tradedDuringRaid:
+      case ArcBlueprintAcquisitionSource.recoveredFromAnotherRaider:
+      case ArcBlueprintAcquisitionSource.unknown:
+        return true;
+      case ArcBlueprintAcquisitionSource.lootDrop:
+      case ArcBlueprintAcquisitionSource.questReward:
+      case ArcBlueprintAcquisitionSource.trialReward:
+        return false;
     }
   }
 
@@ -537,6 +750,8 @@ extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
     switch (normalized) {
       case 'lootdrop':
       case 'normaldrop':
+      case 'foundpersonally':
+      case 'found':
       case 'drop':
         return ArcBlueprintAcquisitionSource.lootDrop;
       case 'questreward':
@@ -547,11 +762,105 @@ extension ArcBlueprintAcquisitionSourceX on ArcBlueprintAcquisitionSource {
       case 'gifted':
       case 'gift':
         return ArcBlueprintAcquisitionSource.gifted;
+      case 'giftedbysquadmate':
+      case 'squadmate':
+      case 'squadmategift':
+        return ArcBlueprintAcquisitionSource.giftedBySquadmate;
+      case 'giftedbyanotherraider':
+      case 'otherraider':
+      case 'anotherraider':
+        return ArcBlueprintAcquisitionSource.giftedByAnotherRaider;
+      case 'tradedduringraid':
+      case 'raidtrade':
+      case 'traded':
+        return ArcBlueprintAcquisitionSource.tradedDuringRaid;
+      case 'recoveredfromanotherraider':
+      case 'recovered':
+      case 'pickedupfromraider':
+        return ArcBlueprintAcquisitionSource.recoveredFromAnotherRaider;
+      case 'unknown':
+      case 'notsure':
+      case 'unsure':
+        return ArcBlueprintAcquisitionSource.unknown;
       case 'trialreward':
       case 'trial':
         return ArcBlueprintAcquisitionSource.trialReward;
     }
 
+    return null;
+  }
+}
+
+extension ArcGiftedBlueprintRelationshipX on ArcGiftedBlueprintRelationship {
+  String get label {
+    switch (this) {
+      case ArcGiftedBlueprintRelationship.squadmate:
+        return 'Squadmate';
+      case ArcGiftedBlueprintRelationship.otherRaider:
+        return 'Other Raider';
+      case ArcGiftedBlueprintRelationship.unknown:
+        return 'Unknown';
+    }
+  }
+
+  static ArcGiftedBlueprintRelationship? fromStorage(String? rawName) {
+    if (rawName == null || rawName.trim().isEmpty) return null;
+    final normalized = rawName.trim().toLowerCase().replaceAll(
+      RegExp(r'[\s_-]+'),
+      '',
+    );
+    switch (normalized) {
+      case 'squadmate':
+      case 'squad':
+      case 'friend':
+        return ArcGiftedBlueprintRelationship.squadmate;
+      case 'otherraider':
+      case 'anotherraider':
+      case 'raider':
+        return ArcGiftedBlueprintRelationship.otherRaider;
+      case 'unknown':
+      case 'unsure':
+      case 'notsure':
+        return ArcGiftedBlueprintRelationship.unknown;
+    }
+    return null;
+  }
+}
+
+extension ArcBlueprintReportConfidenceX on ArcBlueprintReportConfidence {
+  String get label {
+    switch (this) {
+      case ArcBlueprintReportConfidence.low:
+        return 'Low';
+      case ArcBlueprintReportConfidence.standard:
+        return 'Standard';
+      case ArcBlueprintReportConfidence.high:
+        return 'High';
+      case ArcBlueprintReportConfidence.verified:
+        return 'Verified';
+    }
+  }
+
+  static ArcBlueprintReportConfidence? fromStorage(String? rawName) {
+    if (rawName == null || rawName.trim().isEmpty) return null;
+    final normalized = rawName.trim().toLowerCase().replaceAll(
+      RegExp(r'[\s_-]+'),
+      '',
+    );
+    switch (normalized) {
+      case 'low':
+      case 'limited':
+        return ArcBlueprintReportConfidence.low;
+      case 'standard':
+      case 'normal':
+        return ArcBlueprintReportConfidence.standard;
+      case 'high':
+      case 'strong':
+        return ArcBlueprintReportConfidence.high;
+      case 'verified':
+      case 'confirmed':
+        return ArcBlueprintReportConfidence.verified;
+    }
     return null;
   }
 }

@@ -78,6 +78,37 @@ void main() {
         TradingNotificationType.communityEvent,
       );
     });
+
+    test('new compliance and intel notification types obey preferences', () {
+      const muted = UagNotificationPreferences(
+        blueprintIntel: false,
+        contractsAndReports: false,
+        legalAndPolicy: false,
+      );
+
+      expect(
+        UagNotificationType.fromWire('blueprint_report_confirmed'),
+        UagNotificationType.blueprintReportConfirmed,
+      );
+      expect(
+        UagNotificationType.fromWire('terms_privacy_update'),
+        UagNotificationType.termsPrivacyUpdate,
+      );
+      expect(
+        muted.allowsType(UagNotificationType.communityIntelConfirmation),
+        isFalse,
+      );
+      expect(
+        muted.allowsType(UagNotificationType.contractRewardReady),
+        isFalse,
+      );
+      expect(
+        muted.allowsType(UagNotificationType.conductReportOutcome),
+        isFalse,
+      );
+      expect(muted.allowsType(UagNotificationType.termsPrivacyUpdate), isFalse);
+      expect(muted.allowsType(UagNotificationType.openBeta), isTrue);
+    });
   });
 
   group('unified notification delivery engine', () {

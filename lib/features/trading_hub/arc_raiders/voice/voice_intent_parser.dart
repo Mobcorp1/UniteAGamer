@@ -8,13 +8,109 @@ class UagVoiceIntentParser {
 
   UagVoiceIntent parse(String text) {
     final raw = text.trim();
-    final normalized = UnifiedItemIndex.normalize(_normaliseSpeech(raw));
+    final commandText = _stripWakePhrase(_normaliseSpeech(raw));
+    final normalized = UnifiedItemIndex.normalize(commandText);
 
     if (normalized.isEmpty) {
-      return UagVoiceIntent(type: UagVoiceIntentType.unknown, rawText: raw);
+      final wakeOnly = _containsWakePhrase(raw);
+      return UagVoiceIntent(
+        type: wakeOnly
+            ? UagVoiceIntentType.wakePhrase
+            : UagVoiceIntentType.unknown,
+        rawText: raw,
+      );
     }
 
-    final itemQuery = _extractItem(raw);
+    final itemQuery = _extractItem(commandText);
+
+    if (_isExactAny(normalized, const ['yes', 'confirm', 'accept', 'do it'])) {
+      return UagVoiceIntent(type: UagVoiceIntentType.confirm, rawText: raw);
+    }
+
+    if (_isExactAny(normalized, const ['no', 'cancel', 'stop', 'abort'])) {
+      return UagVoiceIntent(type: UagVoiceIntentType.cancel, rawText: raw);
+    }
+
+    if (_isExactAny(normalized, const ['repeat', 'say again', 'again'])) {
+      return UagVoiceIntent(type: UagVoiceIntentType.repeat, rawText: raw);
+    }
+
+    if (_containsAny(normalized, const [
+      'read notifications',
+      'notifications',
+      'what did i miss',
+      'alerts',
+    ])) {
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.readNotifications,
+        rawText: raw,
+      );
+    }
+
+    if (_containsAny(normalized, const [
+      'next objective',
+      'current priority',
+      'what next',
+      'what should i do',
+    ])) {
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.readNextObjective,
+        rawText: raw,
+      );
+    }
+
+    if (_containsAny(normalized, const [
+      'conduct risk',
+      'trust check',
+      'is this trader safe',
+      'report player',
+      'conduct report',
+    ])) {
+      return UagVoiceIntent(
+        type: normalized.contains('report')
+            ? UagVoiceIntentType.startConductReport
+            : UagVoiceIntentType.conductRiskCheck,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
+    }
+
+    if (_containsAny(normalized, const [
+      'report blueprint',
+      'log blueprint',
+      'blueprint report',
+    ])) {
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.reportBlueprint,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
+    }
+
+    if (_containsAny(normalized, const [
+      'weapon cache',
+      'report cache',
+      'log cache',
+    ])) {
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.reportWeaponCache,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
+    }
+
+    if (_containsAny(normalized, const [
+      'add location',
+      'add waypoint',
+      'route marker',
+      'mark location',
+    ])) {
+      return UagVoiceIntent(
+        type: UagVoiceIntentType.addLocationToRoute,
+        rawText: raw,
+        itemQuery: itemQuery,
+      );
+    }
 
     if (_containsAny(normalized, const [
       'hunt',
@@ -116,6 +212,12 @@ class UagVoiceIntentParser {
     );
   }
 
+  bool _isExactAny(String normalized, List<String> phrases) {
+    return phrases.any(
+      (phrase) => normalized == UnifiedItemIndex.normalize(phrase),
+    );
+  }
+
   String? _extractItem(String raw) {
     final normalisedRaw = _normaliseSpeech(raw);
 
@@ -186,6 +288,9 @@ class UagVoiceIntentParser {
       'hey uag raider',
       'okay uag raider',
       'ok uag raider',
+      'hey raider',
+      'okay raider',
+      'ok raider',
       'arc assistant',
       'hey arc',
       'ok arc',
@@ -237,4 +342,35 @@ class UagVoiceIntentParser {
 
     return value;
   }
+
+  bool _containsWakePhrase(String text) {
+    final normalized = UnifiedItemIndex.normalize(_normaliseSpeech(text));
+    return _wakePhrases.any(
+      (phrase) => normalized.contains(UnifiedItemIndex.normalize(phrase)),
+    );
+  }
+
+  String _stripWakePhrase(String text) {
+    var cleaned = text.trim();
+    for (final phrase in _wakePhrases) {
+      cleaned = cleaned.replaceAll(
+        RegExp(RegExp.escape(phrase), caseSensitive: false),
+        ' ',
+      );
+    }
+    return cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  static const _wakePhrases = <String>[
+    'hey raider',
+    'ok raider',
+    'okay raider',
+    'uag raider',
+    'hey uag raider',
+    'okay uag raider',
+    'ok uag raider',
+    'arc assistant',
+    'hey arc',
+    'ok arc',
+  ];
 }

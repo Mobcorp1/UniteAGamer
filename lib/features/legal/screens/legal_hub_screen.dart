@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/arc_data_attribution_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
@@ -42,14 +43,98 @@ class LegalHubScreen extends StatelessWidget {
             onTap: () => _open(context, const ArcDataAttributionScreen()),
           ),
           const SizedBox(height: AppTheme.spaceM),
+          Text(
+            'Policy Catalogue',
+            style: AppTheme.tradingHeading(
+              fontSize: 22,
+              color: AppTheme.neonCyan,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          for (final policy in UagPolicyCatalog.documents.where(
+            (document) => !const <String>{
+              'terms_of_use',
+              'privacy_policy',
+              'data_attribution',
+            }.contains(document.id),
+          ))
+            _LegalTile(
+              title: policy.title,
+              subtitle: policy.summary,
+              icon: policy.requiresLegalReview
+                  ? Icons.gavel_outlined
+                  : Icons.verified_user_outlined,
+              onTap: () => _open(context, _PolicyDocumentScreen(policy)),
+            ),
+          const SizedBox(height: AppTheme.spaceM),
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceL),
             decoration: AppTheme.tradingCardDecoration(
               borderColor: AppTheme.neonPink.withValues(alpha: 0.14),
             ),
             child: const Text(
-              'UAG Arc Raiders Hub is an unofficial fan-made companion tool. ARC Raiders and all related rights belong to their respective owners.',
+              UagFanProjectNotice.text,
               style: TextStyle(color: Colors.white70, height: 1.45),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PolicyDocumentScreen extends StatelessWidget {
+  const _PolicyDocumentScreen(this.policy);
+
+  final UagPolicyDocument policy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: Text(policy.title),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(AppTheme.spaceL),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spaceL),
+            decoration: AppTheme.tradingCardDecoration(
+              borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Version ${policy.version} - Effective ${policy.effectiveDate}',
+                  style: const TextStyle(color: Colors.white60),
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                Text(
+                  policy.summary,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 20,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                Text(
+                  policy.body,
+                  style: const TextStyle(color: Colors.white70, height: 1.45),
+                ),
+                if (policy.requiresLegalReview) ...[
+                  const SizedBox(height: AppTheme.spaceM),
+                  Text(
+                    UagPolicyCatalog.legalReviewNotice,
+                    style: TextStyle(
+                      color: AppTheme.neonPink.withValues(alpha: 0.9),
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

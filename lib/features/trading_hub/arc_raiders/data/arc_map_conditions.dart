@@ -40,7 +40,7 @@ class ArcMapConditions {
 
   static const ArcMapCondition noSpecialCondition = ArcMapCondition(
     id: 'none',
-    label: 'No Map Event',
+    label: 'No event / standard raid',
     type: ArcMapConditionType.neutral,
   );
 
@@ -187,9 +187,9 @@ class ArcMapConditions {
   ];
 
   static List<ArcMapCondition> combinedOptionsForMap(String mapName) {
-    return _allConditions
-        .where((item) => item.supportsMap(mapName))
-        .toList(growable: false);
+    return canonicalOrder(
+      _allConditions.where((item) => item.supportsMap(mapName)),
+    );
   }
 
   static List<ArcMapCondition> eventsForMap(String mapName) {
@@ -207,9 +207,49 @@ class ArcMapConditions {
   static ArcMapCondition? byId(String? id) {
     final trimmed = id?.trim();
     if (trimmed == null || trimmed.isEmpty) return null;
+    final normalized = trimmed.toLowerCase().replaceAll(RegExp(r'[\s_-]+'), '');
+    if (normalized == 'none' ||
+        normalized == 'noevent' ||
+        normalized == 'nomapevent' ||
+        normalized == 'standardraid') {
+      return noSpecialCondition;
+    }
     for (final condition in _allConditions) {
       if (condition.id == trimmed) return condition;
     }
     return null;
+  }
+
+  static List<ArcMapCondition> canonicalOrder(
+    Iterable<ArcMapCondition> conditions,
+  ) {
+    final deduped = <String, ArcMapCondition>{};
+    for (final condition in conditions) {
+      deduped[condition.id] = condition;
+    }
+    final ordered = deduped.values.toList(growable: false)
+      ..sort((a, b) {
+        if (a.isNeutral != b.isNeutral) return a.isNeutral ? -1 : 1;
+        final typeCompare = _typeRank(a.type).compareTo(_typeRank(b.type));
+        if (typeCompare != 0) return typeCompare;
+        return _conditionRank(a).compareTo(_conditionRank(b));
+      });
+    return ordered;
+  }
+
+  static int _typeRank(ArcMapConditionType type) {
+    switch (type) {
+      case ArcMapConditionType.neutral:
+        return 0;
+      case ArcMapConditionType.weather:
+        return 1;
+      case ArcMapConditionType.event:
+        return 2;
+    }
+  }
+
+  static int _conditionRank(ArcMapCondition condition) {
+    final index = _allConditions.indexWhere((item) => item.id == condition.id);
+    return index == -1 ? 999 : index;
   }
 }

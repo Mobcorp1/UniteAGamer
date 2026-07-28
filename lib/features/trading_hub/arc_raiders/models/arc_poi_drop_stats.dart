@@ -61,7 +61,10 @@ class ArcPoiDropStats {
     required String poiName,
     required List<ArcBlueprintDropReport> reports,
   }) {
-    if (reports.isEmpty) {
+    final intelligenceReports = reports
+        .where((report) => report.countsForMapIntelligence)
+        .toList(growable: false);
+    if (intelligenceReports.isEmpty) {
       return ArcPoiDropStats.empty(
         mapName: mapName,
         poiId: poiId,
@@ -75,7 +78,7 @@ class ArcPoiDropStats {
     final blueprintLabels = <String, String>{};
     DateTime? lastReportedAt;
 
-    for (final report in reports) {
+    for (final report in intelligenceReports) {
       blueprintCounts.update(
         report.blueprintId,
         (value) => value + 1,
@@ -105,7 +108,7 @@ class ArcPoiDropStats {
       }
     }
 
-    final totalReports = reports.length;
+    final totalReports = intelligenceReports.length;
 
     List<ArcStatsBreakdownItem> buildBreakdown(
       Map<String, int> counts, {

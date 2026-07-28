@@ -4,6 +4,7 @@ import 'uag_ad_policy.dart';
 import 'uag_match_intelligence_copy.dart';
 import 'uag_plan_limits.dart';
 import 'uag_subscription_tier.dart';
+import 'uag_supporter_entitlement.dart';
 
 class UagUserEntitlement {
   const UagUserEntitlement({
@@ -18,6 +19,7 @@ class UagUserEntitlement {
     required this.totalEarnedPence,
     required this.referralDiscountPercent,
     required this.referralCommissionPercent,
+    this.supporter = UagSupporterEntitlement.none,
     this.currentPeriodEnd,
   });
 
@@ -32,12 +34,18 @@ class UagUserEntitlement {
   final int totalEarnedPence;
   final int referralDiscountPercent;
   final int referralCommissionPercent;
+  final UagSupporterEntitlement supporter;
   final DateTime? currentPeriodEnd;
 
   bool get hasAdminBypass => isAdmin || isDev;
   bool get isPaid => hasAdminBypass || tier.isPaid;
   bool get isPremiumLike =>
       hasAdminBypass || tier == UagSubscriptionTier.premium;
+  bool get hasSupporter => supporter.active;
+  bool get hasFoundingSupporter =>
+      supporter.active && supporter.foundingSupporter;
+  int get futureSupporterDiscountPercent =>
+      supporter.hasFutureDiscount ? supporter.discountPercent : 0;
 
   UagPlanLimits get limits =>
       hasAdminBypass ? UagPlanLimits.premium : UagPlanLimits.forTier(tier);
@@ -113,6 +121,10 @@ class UagUserEntitlement {
           (data['referralCommissionPercent'] as num?)?.toInt() ??
           (monetisation['referralCommissionPercent'] as num?)?.toInt() ??
           limits.referralCommissionPercent,
+      supporter: UagSupporterEntitlement.fromMap(
+        (monetisation['supporter'] as Map?)?.cast<String, dynamic>() ??
+            (data['supporter'] as Map?)?.cast<String, dynamic>(),
+      ),
       currentPeriodEnd: parseDate(
         data['subscriptionCurrentPeriodEnd'] ??
             monetisation['currentPeriodEnd'],

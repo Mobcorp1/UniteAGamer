@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 
 class LegalRepository {
   final _firestore = FirebaseFirestore.instance;
@@ -16,8 +17,29 @@ class LegalRepository {
     await _firestore.collection('users').doc(uid).set({
       'legalAccepted': {
         'fanDisclaimerAccepted': true,
-        'fanDisclaimerVersion': 1,
+        'fanDisclaimerVersion': UagFanProjectNotice.version,
         'fanDisclaimerAcceptedAt': FieldValue.serverTimestamp(),
+      },
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> acceptPolicy({
+    required String policyId,
+    required int version,
+    bool mandatory = true,
+    bool optionalConsent = false,
+  }) async {
+    await _firestore.collection('users').doc(uid).set({
+      'legalAccepted': {
+        'policies': {
+          policyId: {
+            'accepted': true,
+            'version': version,
+            'mandatory': mandatory,
+            'optionalConsent': optionalConsent,
+            'acceptedAt': FieldValue.serverTimestamp(),
+          },
+        },
       },
     }, SetOptions(merge: true));
   }

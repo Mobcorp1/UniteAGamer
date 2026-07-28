@@ -111,7 +111,10 @@ class ArcDropIntel {
     required String blueprintId,
     required List<ArcBlueprintDropReport> reports,
   }) {
-    if (reports.isEmpty) return ArcDropIntel.empty(blueprintId);
+    final intelligenceReports = reports
+        .where((report) => report.countsForMapIntelligence)
+        .toList(growable: false);
+    if (intelligenceReports.isEmpty) return ArcDropIntel.empty(blueprintId);
 
     final countsByMap = <String, int>{};
     final countsByArea = <String, int>{};
@@ -126,20 +129,21 @@ class ArcDropIntel {
     DateTime? lastReportedAt;
     var weightedTotal = 0;
 
-    for (final report in reports) {
+    for (final report in intelligenceReports) {
       final weight = report.confirmationCount <= 0
           ? 1
           : report.confirmationCount;
       weightedTotal += weight;
 
-      final mapLabel = report.mapName.trim().isEmpty
+      final mapLabel = report.intelligenceMapName.trim().isEmpty
           ? 'Unknown Map'
-          : report.mapName.trim();
+          : report.intelligenceMapName.trim();
       countsByMap[mapLabel] = (countsByMap[mapLabel] ?? 0) + weight;
 
-      final areaLabel = report.areaLabel.trim().isEmpty
+      final reportArea = report.intelligencePoiName ?? report.areaLabel;
+      final areaLabel = reportArea.trim().isEmpty
           ? 'Unknown Area'
-          : report.areaLabel.trim();
+          : reportArea.trim();
       countsByArea[areaLabel] = (countsByArea[areaLabel] ?? 0) + weight;
 
       final containerLabel = report.resolvedContainerLabel;

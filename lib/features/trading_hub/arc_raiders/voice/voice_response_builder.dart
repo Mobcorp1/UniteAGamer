@@ -35,6 +35,9 @@ class UagVoiceResponseBuilder {
   }) {
     final query = _resolveQuery(intent);
 
+    final operationalResponse = _operationalResponse(intent);
+    if (operationalResponse != null) return operationalResponse;
+
     if (intent.type == UagVoiceIntentType.blueprintSearch) {
       final lowerRaw = intent.rawText.toLowerCase();
       final blueprints = ArcBlueprintSeedData.blueprints;
@@ -160,6 +163,106 @@ class UagVoiceResponseBuilder {
           'I could not match that to a tracked ARC Raiders item yet. Try the exact item name, blueprint name, or a shorter phrase.',
       shouldSpeak: true,
     );
+  }
+
+  UagVoiceResponse? _operationalResponse(UagVoiceIntent intent) {
+    switch (intent.type) {
+      case UagVoiceIntentType.wakePhrase:
+        return const UagVoiceResponse(
+          title: 'Raider online',
+          body:
+              'Say an item, blueprint, route, notification or priority command.',
+          spokenBody: 'Raider online. What do you need?',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.reportBlueprint:
+        return const UagVoiceResponse(
+          title: 'Blueprint report ready',
+          body:
+              'Open the Blueprint Tracker report sheet to submit map, source and acquisition evidence.',
+          spokenBody: 'Open the Blueprint Tracker report sheet to submit it.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.reportWeaponCache:
+        return const UagVoiceResponse(
+          title: 'Cache report ready',
+          body:
+              'Open Raid Intelligence to place a weapon cache marker with evidence.',
+          spokenBody: 'Open Raid Intelligence to place a cache marker.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.addLocationToRoute:
+        return const UagVoiceResponse(
+          title: 'Route marker ready',
+          body: 'Open Route Builder to add the current location as a waypoint.',
+          spokenBody: 'Open Route Builder to add that waypoint.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.readNotifications:
+        return const UagVoiceResponse(
+          title: 'Notifications',
+          body:
+              'Live notification reading needs the signed-in notification inbox context.',
+          spokenBody: 'I need your live inbox before I can read notifications.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.readNextObjective:
+        return const UagVoiceResponse(
+          title: 'Next objective',
+          body:
+              'Open Command Centre for the current Decision Engine priority and top actions.',
+          spokenBody: 'Open Command Centre for your current priority.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.conductRiskCheck:
+        return const UagVoiceResponse(
+          title: 'Trust check',
+          body:
+              'Open the trader profile or session detail to review trust, reports and conduct context.',
+          spokenBody: 'Open the trader profile to review trust context.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.startConductReport:
+        return const UagVoiceResponse(
+          title: 'Conduct report',
+          body:
+              'Open the conduct report flow from the related trade, session or profile so evidence stays attached.',
+          spokenBody: 'Open the related profile or session to file a report.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.confirm:
+        return const UagVoiceResponse(
+          title: 'Confirmed',
+          body: 'Confirmed. Continue with the selected action.',
+          spokenBody: 'Confirmed.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.cancel:
+        return const UagVoiceResponse(
+          title: 'Cancelled',
+          body: 'Cancelled. No action was taken.',
+          spokenBody: 'Cancelled.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.repeat:
+        return const UagVoiceResponse(
+          title: 'Repeat',
+          body: 'Repeat the last response when a live voice session is active.',
+          spokenBody: 'Repeat the last response when a live session is active.',
+          shouldSpeak: true,
+        );
+      case UagVoiceIntentType.needCheck:
+      case UagVoiceIntentType.tradeCheck:
+      case UagVoiceIntentType.tradeMarketCheck:
+      case UagVoiceIntentType.benchLookup:
+      case UagVoiceIntentType.questLookup:
+      case UagVoiceIntentType.keepCheck:
+      case UagVoiceIntentType.blueprintSearch:
+      case UagVoiceIntentType.todayTradeSessions:
+      case UagVoiceIntentType.todayMatchSessions:
+      case UagVoiceIntentType.unknown:
+        return null;
+    }
   }
 
   UagVoiceResponse buildConfirmedSuggestion(

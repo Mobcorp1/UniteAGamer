@@ -20,7 +20,10 @@ class ArcBlueprintOpportunityEngine {
     final utcNow = (now ?? DateTime.now()).toUtc();
     final relevantReports = reports
         .where((report) {
-          if (ArcRaidIntelligenceSeedData.normalizeMapId(report.mapName) !=
+          if (!report.countsForMapIntelligence) return false;
+          if (ArcRaidIntelligenceSeedData.normalizeMapId(
+                report.intelligenceMapName,
+              ) !=
               map.id) {
             return false;
           }
@@ -91,9 +94,9 @@ class ArcBlueprintOpportunityEngine {
           .where((value) => value.isNotEmpty)
           .toSet()
           .toList(growable: false);
-      final locationLabel = first.locationName.trim().isEmpty
+      final locationLabel = _intelligenceLocationName(first).trim().isEmpty
           ? pointResolution.label
-          : first.locationName.trim();
+          : _intelligenceLocationName(first).trim();
 
       final evidence = [
         for (final report in group)
@@ -101,21 +104,26 @@ class ArcBlueprintOpportunityEngine {
             id: report.id,
             blueprintId: report.blueprintId,
             mapId: map.id,
-            poiId: report.poiId,
+            poiId: report.intelligencePoiId,
             approximateArea: locationLabel,
             point: pointResolution.point,
             containerSource: report.resolvedContainerLabel,
             conditionId: report.conditionId,
             acquisitionSource: report.acquisitionSource.name,
-            claimSummary:
-                '$blueprintName reported at $locationLabel from ${report.resolvedContainerLabel}.',
+            claimSummary: _claimSummary(
+              blueprintName: blueprintName,
+              report: report,
+              locationLabel: locationLabel,
+            ),
             sourceCategory: 'community_drop_report',
             sourceReference: report.signature.isEmpty
                 ? report.id
                 : report.signature,
             publishedAt: report.createdAt,
             reviewedAt: report.lastConfirmedAt,
-            direct: true,
+            direct:
+                !report.isGiftedOrIndirect ||
+                report.recipientWitnessedOriginalPickup,
             confidence: confidence,
             notes: report.notes,
           ),
@@ -128,7 +136,7 @@ class ArcBlueprintOpportunityEngine {
           label: '$blueprintName near $locationLabel',
           point: pointResolution.point,
           layer: pointResolution.layer,
-          poiId: first.poiId,
+          poiId: first.intelligencePoiId,
           blueprintIds: <String>[first.blueprintId],
           evidence: evidence,
           confidence: confidence,
@@ -159,8 +167,8 @@ class ArcBlueprintOpportunityEngine {
     ArcRaidMap map,
     ArcBlueprintDropReport report,
   ) {
-    final poiId = report.poiId?.trim();
-    final poiName = report.poiName?.trim();
+    final poiId = report.intelligencePoiId?.trim();
+    final poiName = report.intelligencePoiName?.trim();
 
     if (poiId != null && poiId.isNotEmpty) {
       final matches =
@@ -207,7 +215,7 @@ class ArcBlueprintOpportunityEngine {
         if (poi.id == poiId) {
           return _ResolvedReportPoint(
             point: poi.point,
-            layer: ArcRaidMapLayer.surface,
+            layer: report.intelligenceLayer,
             label: poi.name,
             approximate: poi.approximate,
           );
@@ -220,7 +228,7 @@ class ArcBlueprintOpportunityEngine {
         if (_normalize(poi.name) == _normalize(poiName)) {
           return _ResolvedReportPoint(
             point: poi.point,
-            layer: ArcRaidMapLayer.surface,
+            layer: report.intelligenceLayer,
             label: poi.name,
             approximate: poi.approximate,
           );
@@ -322,9 +330,9 @@ class ArcBlueprintOpportunityEngine {
   }
 
   String _locationKey(ArcBlueprintDropReport report) {
-    final poiId = report.poiId?.trim();
+    final poiId = report.intelligencePoiId?.trim();
     if (poiId != null && poiId.isNotEmpty) return 'poi:$poiId';
-    final poiName = report.poiName?.trim();
+    final poiName = report.intelligencePoiName?.trim();
     if (poiName != null && poiName.isNotEmpty) {
       return 'poi_name:${_normalize(poiName)}';
     }
@@ -335,6 +343,31 @@ class ArcBlueprintOpportunityEngine {
       return 'enemy_name:${_normalize(enemyName)}';
     }
     return 'source:${report.sourceType.name}';
+  }
+
+  String _intelligenceLocationName(ArcBlueprintDropReport report) {
+    final poiName = report.intelligencePoiName?.trim();
+    if (poiName != null && poiName.isNotEmpty) return poiName;
+    final poiId = report.intelligencePoiId?.trim();
+    if (poiId != null && poiId.isNotEmpty) return poiId;
+    return report.locationName;
+  }
+
+  String _claimSummary({
+    required String blueprintName,
+    required ArcBlueprintDropReport report,
+    required String locationLabel,
+  }) {
+    if (report.isGiftedOrIndirect && report.hasOriginalFindLocation) {
+      return '$blueprintName reported from original find location '
+          '$locationLabel after ${report.acquisitionSource.label.toLowerCase()}.';
+    }
+    if (report.isGiftedOrIndirect) {
+      return '$blueprintName indirect report at $locationLabel from '
+          '${report.acquisitionSource.label.toLowerCase()}.';
+    }
+    return '$blueprintName reported at $locationLabel from '
+        '${report.resolvedContainerLabel}.';
   }
 
   String _freshness(Duration age) {

@@ -656,10 +656,13 @@ class _ArcBlueprintDropReportSheetState
       title: 'How Was It Obtained?',
       items: const <ArcBlueprintAcquisitionSource>[
         ArcBlueprintAcquisitionSource.lootDrop,
+        ArcBlueprintAcquisitionSource.giftedBySquadmate,
+        ArcBlueprintAcquisitionSource.giftedByAnotherRaider,
+        ArcBlueprintAcquisitionSource.tradedDuringRaid,
+        ArcBlueprintAcquisitionSource.recoveredFromAnotherRaider,
         ArcBlueprintAcquisitionSource.questReward,
-        ArcBlueprintAcquisitionSource.trade,
-        ArcBlueprintAcquisitionSource.gifted,
         ArcBlueprintAcquisitionSource.trialReward,
+        ArcBlueprintAcquisitionSource.unknown,
       ],
       labelBuilder: (item) => item.label,
     );
@@ -1047,7 +1050,7 @@ class _ArcBlueprintDropReportSheetState
         borderColor: AppTheme.neonCyan.withValues(alpha: 0.22),
       ),
       child: Text(
-        'This report is not tied to a raid location. Save it with the source selected so other players can see it came from a quest reward, trial reward, trade, or another non-loot source. You can also attach additional blueprints from the same source.',
+        'This report is not tied to a raid location. Save it with the source selected so other players can see whether it came from a quest reward, trial, gifted handoff, in-raid trade, recovery, or another non-loot source. You can also attach additional blueprints from the same source.',
         style: AppTheme.bodyTextStyle(
           fontSize: 14,
           color: AppTheme.tradingMutedText,
@@ -1332,7 +1335,7 @@ class _ArcBlueprintDropReportSheetState
                     icon: Icons.add_location_alt_outlined,
                     children: [
                       Text(
-                        'Start with how the blueprint was obtained. Normal Drop reports can include map, event, area, container, raid round and captured local time. Quest rewards, trades, gifted items and trials do not need raid details.',
+                        'Start with how the blueprint was obtained. Found Personally reports can include map, event, area, container, raid round and captured local time. Quest rewards, trades, gifted items and trials do not need raid details.',
                         style: const TextStyle(
                           color: Colors.white60,
                           height: 1.35,

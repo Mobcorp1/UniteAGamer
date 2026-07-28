@@ -339,7 +339,7 @@ class _LaunchNotesCard extends StatelessWidget {
         borderColor: AppTheme.warningAmber.withValues(alpha: 0.24),
       ),
       child: const Text(
-        'Launch model: Free users get strict weekly limits and ads. Essential users get 5x weekly limits, reduced ads, 10% follower discounts and 10% recurring referral commission. Premium users get unlimited access, no ads, 20% follower discounts and 20% recurring referral commission. Referral payouts stay pending for 30 days and become withdrawable after refund risk has passed.',
+        'Launch model: Free users get strict weekly limits and ads. Essential users get 5x weekly limits, no ads, 10% follower discounts and 10% recurring referral commission. Premium users get unlimited access, no ads, 20% follower discounts and 20% recurring referral commission. Referral payouts stay pending for 30 days and become withdrawable after refund risk has passed.',
         style: TextStyle(color: Colors.white70, height: 1.4),
       ),
     );

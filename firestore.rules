@@ -544,6 +544,110 @@ service cloud.firestore {
       allow read, create, update: if isOwner(userId) || isAdminOrDev();
       allow delete: if isAdminOrDev();
     }
+
+    match /legal_policies/{policyId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /legal_acceptance_events/{eventId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.policyId is string &&
+        request.resource.data.version is int;
+      allow update, delete: if false;
+    }
+
+    match /data_rights_requests/{requestId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAdminOrDev();
+    }
+
+    match /copyright_takedown_requests/{requestId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /uag_conduct_reports/{reportId} {
+      allow read: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          (resource.data.reporterUid == request.auth.uid ||
+            resource.data.subjectUid == request.auth.uid)
+        );
+      allow create: if isSignedIn() &&
+        request.resource.data.id == reportId &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.subjectUid != request.auth.uid;
+      allow update, delete: if isAdminOrDev();
+    }
+
+    match /uag_community_contracts/{contractId} {
+      allow read: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          (resource.data.ownerUid == request.auth.uid ||
+            resource.data.assigneeUid == request.auth.uid)
+        );
+      allow create: if isSignedIn() &&
+        request.resource.data.id == contractId &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.assigneeUid != request.auth.uid;
+      allow update: if isAdminOrDev() ||
+        (
+          isSignedIn() &&
+          (resource.data.ownerUid == request.auth.uid ||
+            resource.data.assigneeUid == request.auth.uid) &&
+          request.resource.data.id == resource.data.id &&
+          request.resource.data.ownerUid == resource.data.ownerUid &&
+          request.resource.data.assigneeUid == resource.data.assigneeUid
+        );
+      allow delete: if isAdminOrDev();
+
+      match /evidence/{evidenceId} {
+        allow read: if isAdminOrDev() ||
+          (
+            isSignedIn() &&
+            (
+              get(/databases/$(database)/documents/uag_community_contracts/$(contractId)).data.ownerUid == request.auth.uid ||
+              get(/databases/$(database)/documents/uag_community_contracts/$(contractId)).data.assigneeUid == request.auth.uid
+            )
+          );
+        allow create: if isSignedIn() &&
+          request.resource.data.createdBy == request.auth.uid;
+        allow update, delete: if isAdminOrDev();
+      }
+    }
+
+    match /uag_image_import_sessions/{sessionId} {
+      allow read, update, delete: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.id == sessionId &&
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    match /uag_voice_preferences/{uid} {
+      allow read, create, update: if isOwner(uid) || isAdminOrDev();
+      allow delete: if isAdminOrDev();
+    }
+
+    match /supporter_programme_content/{docId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /supporter_entitlements/{uid} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow create, update, delete: if isAdminOrDev();
+    }
  match /config/{docId} {
       allow read: if isSignedIn();
       allow create, update: if isAdminOrDev();

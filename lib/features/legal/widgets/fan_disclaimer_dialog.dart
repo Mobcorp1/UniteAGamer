@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import '../repositories/legal_repository.dart';
 
@@ -19,10 +20,7 @@ class FanDisclaimerDialog extends StatelessWidget {
       ),
       content: const SingleChildScrollView(
         child: Text(
-          'This application is a fan-made companion tool for ARC Raiders.\n\n'
-          'ARC Raiders and all related game names, images, assets, trademarks, and rights belong to Embark Studios AB.\n\n'
-          'This app is not affiliated with, endorsed by, or supported by Embark Studios.\n\n'
-          'Game-related images and references are used only for informational and community purposes. If requested by the rights holder, assets will be removed.',
+          UagFanProjectNotice.text,
           style: TextStyle(color: Colors.white70, height: 1.45),
         ),
       ),
