@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 
 enum ArcAdminMapMarkerKind {
   poi,
@@ -10,12 +11,16 @@ enum ArcAdminMapMarkerKind {
   blueprint,
   questLocation,
   resourceNode,
+  weaponCase,
   weaponCache,
   lootContainer,
   lockedRoom,
+  securityRoom,
   highValueLoot,
   arcThreat,
   extractionDanger,
+  key,
+  keyRequiredLocation,
   customIntel,
 }
 
@@ -34,18 +39,26 @@ extension ArcAdminMapMarkerKindX on ArcAdminMapMarkerKind {
         return 'Quest Location';
       case ArcAdminMapMarkerKind.resourceNode:
         return 'Resource Node';
+      case ArcAdminMapMarkerKind.weaponCase:
+        return 'Weapon Case';
       case ArcAdminMapMarkerKind.weaponCache:
         return 'Weapon Cache';
       case ArcAdminMapMarkerKind.lootContainer:
         return 'Loot Container';
       case ArcAdminMapMarkerKind.lockedRoom:
         return 'Locked Room';
+      case ArcAdminMapMarkerKind.securityRoom:
+        return 'Security Room';
       case ArcAdminMapMarkerKind.highValueLoot:
         return 'High-Value Loot';
       case ArcAdminMapMarkerKind.arcThreat:
         return 'ARC Threat';
       case ArcAdminMapMarkerKind.extractionDanger:
         return 'Extraction Danger';
+      case ArcAdminMapMarkerKind.key:
+        return 'Key';
+      case ArcAdminMapMarkerKind.keyRequiredLocation:
+        return 'Key-Required Location';
       case ArcAdminMapMarkerKind.customIntel:
         return 'Custom Intel';
     }
@@ -132,6 +145,7 @@ class ArcAdminMapMarker {
     this.alignmentResidual,
     this.duplicateGroupId,
     this.evidenceCount = 1,
+    this.evidence = const <ArcWorldIntelEvidenceRecord>[],
     this.provisionalVisible = false,
     this.exceptionReason,
     this.createdByUid,
@@ -165,6 +179,7 @@ class ArcAdminMapMarker {
   final double? alignmentResidual;
   final String? duplicateGroupId;
   final int evidenceCount;
+  final List<ArcWorldIntelEvidenceRecord> evidence;
   final bool provisionalVisible;
   final String? exceptionReason;
   final String? createdByUid;
@@ -180,6 +195,9 @@ class ArcAdminMapMarker {
           state != ArcAdminMapMarkerState.archived);
 
   bool get hasImportException => exceptionReason?.trim().isNotEmpty == true;
+
+  int get resolvedEvidenceCount =>
+      evidence.isEmpty ? evidenceCount : evidence.length;
 
   ArcAdminMapMarker copyWith({
     String? id,
@@ -220,6 +238,7 @@ class ArcAdminMapMarker {
     String? duplicateGroupId,
     bool clearDuplicateGroupId = false,
     int? evidenceCount,
+    List<ArcWorldIntelEvidenceRecord>? evidence,
     bool? provisionalVisible,
     String? exceptionReason,
     bool clearExceptionReason = false,
@@ -272,6 +291,7 @@ class ArcAdminMapMarker {
           ? null
           : (duplicateGroupId ?? this.duplicateGroupId),
       evidenceCount: evidenceCount ?? this.evidenceCount,
+      evidence: evidence ?? this.evidence,
       provisionalVisible: provisionalVisible ?? this.provisionalVisible,
       exceptionReason: clearExceptionReason
           ? null
@@ -309,7 +329,8 @@ class ArcAdminMapMarker {
       'alignmentConfidence': alignmentConfidence,
       'alignmentResidual': alignmentResidual,
       'duplicateGroupId': duplicateGroupId,
-      'evidenceCount': evidenceCount,
+      'evidenceCount': resolvedEvidenceCount,
+      'evidence': evidence.map((item) => item.toMap()).toList(growable: false),
       'provisionalVisible': provisionalVisible,
       'exceptionReason': exceptionReason,
       'createdByUid': createdByUid,
@@ -322,6 +343,9 @@ class ArcAdminMapMarker {
     final map = toMap();
     map['createdAt'] = createdAt?.toIso8601String();
     map['updatedAt'] = updatedAt?.toIso8601String();
+    map['evidence'] = evidence
+        .map((item) => item.toJsonMap())
+        .toList(growable: false);
     return map;
   }
 
@@ -375,6 +399,7 @@ class ArcAdminMapMarker {
       alignmentResidual: _doubleFrom(map['alignmentResidual']),
       duplicateGroupId: map['duplicateGroupId']?.toString(),
       evidenceCount: _intFrom(map['evidenceCount'], fallback: 1),
+      evidence: _evidenceFrom(map['evidence']),
       provisionalVisible: map['provisionalVisible'] == true,
       exceptionReason: map['exceptionReason']?.toString(),
       createdByUid: map['createdByUid']?.toString(),
@@ -401,6 +426,18 @@ class ArcAdminMapMarker {
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value) ?? fallback;
     return fallback;
+  }
+
+  static List<ArcWorldIntelEvidenceRecord> _evidenceFrom(dynamic value) {
+    if (value is! List) return const <ArcWorldIntelEvidenceRecord>[];
+    return value
+        .whereType<Map>()
+        .map(
+          (item) => ArcWorldIntelEvidenceRecord.fromMap(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList(growable: false);
   }
 
   static ArcNormalizedPoint _pointFromMapUnclamped(Map<String, dynamic> map) {

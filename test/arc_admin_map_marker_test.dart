@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 
 void main() {
   test('Admin map marker round-trips normalized position and metadata', () {
@@ -23,6 +24,20 @@ void main() {
       alignmentConfidence: 0.93,
       duplicateGroupId: 'blue_gate:surface:weaponCache:hidden:42:71',
       provisionalVisible: true,
+      evidence: <ArcWorldIntelEvidenceRecord>[
+        ArcWorldIntelEvidenceRecord(
+          id: 'evidence-1',
+          type: ArcWorldIntelEvidenceType.mikeAdminReport,
+          sourceId: 'mike-admin',
+          sourceName: 'Mike / Admin Intel',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          coordinate: ArcNormalizedPoint(x: 0.42, y: 0.71),
+          landmarkText: 'Hidden Weapon Cache',
+          category: 'Weapon Cache',
+          permissionState: 'uag_internal',
+        ),
+      ],
     );
 
     final restored = ArcAdminMapMarker.fromMap(marker.toJsonMap());
@@ -40,6 +55,12 @@ void main() {
     expect(restored.alignmentConfidence, closeTo(0.93, 0.0001));
     expect(restored.provisionalVisible, isTrue);
     expect(restored.isLive, isTrue);
+    expect(restored.resolvedEvidenceCount, 1);
+    expect(
+      restored.evidence.single.type,
+      ArcWorldIntelEvidenceType.mikeAdminReport,
+    );
+    expect(restored.evidence.single.landmarkText, 'Hidden Weapon Cache');
   });
 
   test('copyWith clamps through normalized point helper', () {

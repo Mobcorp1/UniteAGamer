@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_cluster_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_world_intel_population_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
@@ -32,6 +33,12 @@ class ArcRaidIntelligenceEngine {
     ArcRaidRoutePlan? activeRoute,
   }) {
     final map = ArcRaidIntelligenceSeedData.mapById(mapId);
+    final worldIntel = const ArcWorldIntelPopulationEngine().build(
+      maps: <ArcRaidMap>[map],
+      dropReports: dropReports,
+      communityReports: communityReports,
+      adminMarkers: adminMarkers,
+    );
     final resolvedLayer = map.availableLayers.contains(activeLayer)
         ? activeLayer
         : (map.availableLayers.isEmpty
@@ -77,9 +84,14 @@ class ArcRaidIntelligenceEngine {
         .where((marker) => marker.mapId == map.id && marker.isLive)
         .map(_markerForAdminMarker)
         .toList(growable: false);
+    final worldMarkers = worldIntel.liveMarkers
+        .where((marker) => marker.mapId == map.id)
+        .map(_markerForAdminMarker)
+        .toList(growable: false);
     final rawVisibleMarkers =
         _dedupeMarkers([
               ...map.markers,
+              ...worldMarkers,
               ...importedMarkers,
               ...clusterMarkers,
               ...communityMarkers,
@@ -165,6 +177,8 @@ class ArcRaidIntelligenceEngine {
       marker.confidence.label,
       if (marker.sourceAttribution?.trim().isNotEmpty == true)
         marker.sourceAttribution!.trim(),
+      if (marker.evidence.isNotEmpty)
+        '${marker.evidence.length} evidence ${_plural(marker.evidence.length, 'record', 'records')}',
       if (marker.alignmentConfidence != null)
         'Alignment ${(marker.alignmentConfidence! * 100).round()}%',
       if (marker.provisionalVisible) 'Provisional',
@@ -184,7 +198,7 @@ class ArcRaidIntelligenceEngine {
       payloadId: marker.id,
       confidence: marker.confidence,
       approximate: !marker.adminVerified,
-      count: math.max(1, marker.evidenceCount),
+      count: math.max(1, marker.resolvedEvidenceCount),
       detail: detail,
       tags: tags,
       blueprintIds: marker.blueprintId == null
@@ -655,13 +669,6 @@ class ArcRaidIntelligenceEngine {
   static ArcRaidMapMarkerCategory _categoryForAdminMarker(
     ArcAdminMapMarker marker,
   ) {
-    if (marker.provisionalVisible) {
-      return ArcRaidMapMarkerCategory.researchedIntel;
-    }
-    if (marker.adminVerified ||
-        marker.confidence == ArcRaidIntelConfidence.confirmed) {
-      return ArcRaidMapMarkerCategory.confirmedIntel;
-    }
     switch (marker.kind) {
       case ArcAdminMapMarkerKind.poi:
         return ArcRaidMapMarkerCategory.poi;
@@ -675,20 +682,33 @@ class ArcRaidIntelligenceEngine {
         return ArcRaidMapMarkerCategory.questObjective;
       case ArcAdminMapMarkerKind.resourceNode:
         return ArcRaidMapMarkerCategory.tradePreparationRequirement;
-      case ArcAdminMapMarkerKind.weaponCache:
+      case ArcAdminMapMarkerKind.weaponCase:
         return ArcRaidMapMarkerCategory.weaponCase;
+      case ArcAdminMapMarkerKind.weaponCache:
+        return ArcRaidMapMarkerCategory.raiderCache;
       case ArcAdminMapMarkerKind.lootContainer:
         return ArcRaidMapMarkerCategory.fieldCrate;
       case ArcAdminMapMarkerKind.lockedRoom:
         return ArcRaidMapMarkerCategory.lockedRoom;
+      case ArcAdminMapMarkerKind.securityRoom:
+        return ArcRaidMapMarkerCategory.securityLocker;
       case ArcAdminMapMarkerKind.highValueLoot:
         return ArcRaidMapMarkerCategory.raiderCache;
+      case ArcAdminMapMarkerKind.key:
+      case ArcAdminMapMarkerKind.keyRequiredLocation:
+        return ArcRaidMapMarkerCategory.keyRoom;
       case ArcAdminMapMarkerKind.arcThreat:
         return ArcRaidMapMarkerCategory.arcThreat;
       case ArcAdminMapMarkerKind.extractionDanger:
         return ArcRaidMapMarkerCategory.configuredHazard;
       case ArcAdminMapMarkerKind.customIntel:
-        return ArcRaidMapMarkerCategory.researchedIntel;
+        if (marker.adminVerified ||
+            marker.confidence == ArcRaidIntelConfidence.confirmed) {
+          return ArcRaidMapMarkerCategory.confirmedIntel;
+        }
+        return marker.provisionalVisible
+            ? ArcRaidMapMarkerCategory.researchedIntel
+            : ArcRaidMapMarkerCategory.communityIntel;
     }
   }
 

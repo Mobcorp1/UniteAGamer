@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 
@@ -40,10 +43,30 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
   ) async {}
 
   @override
+  Future<List<ArcBlueprintDropReport>> loadRecentDropReports({
+    int limit = 500,
+  }) async {
+    return const <ArcBlueprintDropReport>[];
+  }
+
+  @override
+  Future<List<ArcCommunityIntelReport>> loadCommunityReports({
+    int limit = 500,
+  }) async {
+    return const <ArcCommunityIntelReport>[];
+  }
+
+  @override
   Future<void> publish(ArcAdminMapMarker marker) async {}
 
   @override
   Future<void> publishAll(Iterable<ArcAdminMapMarker> markers) async {}
+
+  @override
+  Future<void> archiveAll(Iterable<String> markerIds) async {}
+
+  @override
+  Future<void> saveCoverageReport(ArcWorldIntelCoverageReport report) async {}
 
   @override
   String exportJson(Iterable<ArcAdminMapMarker> markers) => '[]';
@@ -74,8 +97,12 @@ void main() {
     expect(find.text('Save Draft'), findsOneWidget);
     expect(find.text('Export JSON'), findsOneWidget);
     expect(find.text('Import JSON'), findsOneWidget);
+    expect(find.text('Populate UAG World'), findsOneWidget);
     expect(find.text('IMPORT PIPELINE'), findsOneWidget);
     expect(find.text('Publish Selected'), findsOneWidget);
+    expect(find.text('Confidence filter'), findsOneWidget);
+    expect(find.text('Source permission'), findsOneWidget);
+    expect(find.text('Evidence type'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();

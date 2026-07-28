@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_map_marker_import_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 
 void main() {
   group('Arc map marker import pipeline', () {
@@ -54,10 +55,43 @@ void main() {
       expect(summary.autoPublishedCount, 1);
       expect(summary.acceptedMarkers.single.isPublished, isTrue);
       expect(
+        summary.acceptedMarkers.single.evidence.single.type,
+        ArcWorldIntelEvidenceType.permittedExternalCoordinate,
+      );
+      expect(
         summary.acceptedMarkers.single.sourcePermission.canPublish,
         isTrue,
       );
       expect(summary.acceptedMarkers.single.point.x, closeTo(0.44, 0.0001));
+    });
+
+    test('preserves distinct new marker categories from source records', () {
+      final payload = adapter.parse(
+        '''
+        {
+          "source": {
+            "id": "uag-kind-fixture",
+            "name": "UAG kind fixture",
+            "permissionState": "permitted"
+          },
+          "mapId": "blue_gate",
+          "layer": "surface",
+          "records": [
+            {"id": "case", "kind": "weapon_case", "name": "Weapon case", "x": 0.1, "y": 0.2, "confidence": "strong"},
+            {"id": "security", "kind": "security_room", "name": "Security room", "x": 0.2, "y": 0.3, "confidence": "strong"},
+            {"id": "key", "kind": "key_required_location", "name": "Key room", "x": 0.3, "y": 0.4, "confidence": "strong"}
+          ]
+        }
+        ''',
+        defaultMapId: 'blue_gate',
+        defaultLayer: ArcRaidMapLayer.surface,
+      );
+
+      final kinds = payload.records.map((record) => record.kind);
+
+      expect(kinds, contains(ArcAdminMapMarkerKind.weaponCase));
+      expect(kinds, contains(ArcAdminMapMarkerKind.securityRoom));
+      expect(kinds, contains(ArcAdminMapMarkerKind.keyRequiredLocation));
     });
 
     test('keeps medium-confidence permitted records provisional', () {

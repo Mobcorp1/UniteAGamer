@@ -211,6 +211,42 @@ service cloud.firestore {
       allow create, update, delete: if isAdminOrDev();
     }
 
+    match /arc_map_marker_evidence/{evidenceId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_map_marker_import_runs/{runId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_map_marker_source_config/{sourceId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_map_marker_calibration_records/{recordId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_map_marker_exception_queue/{queueId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_map_marker_duplicate_groups/{groupId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_map_marker_proposed_matches/{matchId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_map_marker_coverage_reports/{reportId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
+    match /arc_blueprint_report_links/{linkId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
     match /arc_community_intel_reports/{reportId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() &&
@@ -617,4 +653,3 @@ service cloud.firestore {
     }
   }
 }
-

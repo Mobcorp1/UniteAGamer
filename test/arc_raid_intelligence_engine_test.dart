@@ -88,6 +88,38 @@ void main() {
       );
     });
 
+    test('injects UAG world population markers into live intelligence', () {
+      final intelligence = engine.build(
+        mapId: 'buried_city',
+        filters: ArcRaidMapFilterState.defaults.copyWith(
+          lootSources: true,
+          researchedIntel: true,
+        ),
+      );
+
+      final matches = intelligence.visibleMarkers
+          .where(
+            (item) =>
+                item.label.contains('Town Hall') ||
+                item.detail.contains('Town Hall') ||
+                item.tags.any((tag) => tag.contains('Town Hall')),
+          )
+          .toList(growable: false);
+
+      expect(
+        matches,
+        isNotEmpty,
+        reason: intelligence.visibleMarkers
+            .map((item) => '${item.label} :: ${item.detail}')
+            .join('\n'),
+      );
+      final marker = matches.first;
+
+      expect(marker.tags, contains('UAG POI Catalogue'));
+      expect(marker.tags.any((tag) => tag.contains('evidence')), isTrue);
+      expect(marker.detail, contains('Town Hall'));
+    });
+
     test(
       'supports new provisional maps in live marker and route pipelines',
       () {

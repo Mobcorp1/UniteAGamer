@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_map_marker_import_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 
 class ArcMapMarkerImportEngine {
   const ArcMapMarkerImportEngine({
@@ -106,6 +107,26 @@ class ArcMapMarkerImportEngine {
     final provisional =
         decision == ArcMapMarkerImportDecision.provisionalVisible;
     final exception = decision == ArcMapMarkerImportDecision.exception;
+    final evidence = ArcWorldIntelEvidenceRecord(
+      id: 'evidence_${source.id}_${record.id}',
+      type: ArcWorldIntelEvidenceType.permittedExternalCoordinate,
+      sourceId: source.id,
+      sourceName: source.name,
+      sourceRecordId: record.id,
+      sourceUrl: source.sourceUrl,
+      timestamp: importedAt,
+      mapId: record.mapId,
+      layer: record.layer,
+      coordinate: alignedPoint,
+      originalCoordinate: record.point,
+      landmarkText: record.name,
+      category: record.kind.label,
+      blueprintId: record.blueprintId,
+      trust: record.confidence.score / 100,
+      attribution: source.attribution,
+      permissionState: source.permission.name,
+      notes: record.description,
+    );
     return ArcAdminMapMarker(
       id: _markerId(record, source.id),
       mapId: record.mapId,
@@ -135,6 +156,7 @@ class ArcMapMarkerImportEngine {
       alignmentResidual: alignment.residual,
       duplicateGroupId: _duplicateGroupKey(record, alignedPoint),
       evidenceCount: math.max(1, record.tags.length),
+      evidence: <ArcWorldIntelEvidenceRecord>[evidence],
       provisionalVisible: provisional,
       exceptionReason: exception ? reason : null,
       createdAt: importedAt,

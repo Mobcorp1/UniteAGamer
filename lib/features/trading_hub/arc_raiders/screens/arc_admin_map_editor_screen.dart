@@ -11,10 +11,12 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_adapters.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_world_intel_population_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_map_marker_import_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -37,6 +39,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   final _importAdapter = const ArcPermittedJsonMapMarkerImportAdapter();
   final _importEngine = const ArcMapMarkerImportEngine();
   final _alignmentEngine = const ArcMapMarkerAlignmentEngine();
+  final _worldIntelEngine = const ArcWorldIntelPopulationEngine();
   final _transformationController = TransformationController();
   final _searchController = TextEditingController();
   final _undoStack = <List<ArcAdminMapMarker>>[];
@@ -51,7 +54,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _showCustomIntel = true;
   String _searchQuery = '';
   ArcAdminMapMarkerKind? _kindFilter;
+  ArcRaidIntelConfidence? _confidenceFilter;
+  ArcAdminMapMarkerSourcePermission? _permissionFilter;
+  ArcWorldIntelEvidenceType? _evidenceTypeFilter;
+  bool _showProvisionalOnly = false;
+  bool _showExceptionsOnly = false;
   ArcMapMarkerImportSummary? _lastImportSummary;
+  ArcWorldIntelPopulationResult? _lastWorldPopulation;
 
   ArcRaidMap get _map => ArcRaidIntelligenceSeedData.mapById(_mapId);
 
@@ -92,6 +101,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         ..sort((a, b) => a.name.compareTo(b.name));
       _selected = null;
       _lastImportSummary = null;
+      _lastWorldPopulation = null;
       _undoStack.clear();
       _loading = false;
       _transformationController.value = Matrix4.identity();
@@ -152,11 +162,43 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           if (_kindFilter != null && marker.kind != _kindFilter) {
             return false;
           }
+          if (_confidenceFilter != null &&
+              marker.confidence != _confidenceFilter) {
+            return false;
+          }
+          if (_permissionFilter != null &&
+              marker.sourcePermission != _permissionFilter) {
+            return false;
+          }
+          if (_evidenceTypeFilter != null &&
+              !marker.evidence.any(
+                (evidence) => evidence.type == _evidenceTypeFilter,
+              )) {
+            return false;
+          }
+          if (_showProvisionalOnly && !marker.provisionalVisible) {
+            return false;
+          }
+          if (_showExceptionsOnly && !marker.hasImportException) {
+            return false;
+          }
           if (query.isNotEmpty &&
               !marker.name.toLowerCase().contains(query) &&
               !marker.description.toLowerCase().contains(query) &&
               !marker.sourceLabel.toLowerCase().contains(query) &&
-              !(marker.sourceName?.toLowerCase().contains(query) ?? false)) {
+              !(marker.sourceName?.toLowerCase().contains(query) ?? false) &&
+              !(marker.sourceRecordId?.toLowerCase().contains(query) ??
+                  false) &&
+              !(marker.blueprintId?.toLowerCase().contains(query) ?? false) &&
+              !marker.evidence.any(
+                (evidence) =>
+                    (evidence.landmarkText?.toLowerCase().contains(query) ??
+                        false) ||
+                    (evidence.sourceRecordId?.toLowerCase().contains(query) ??
+                        false) ||
+                    (evidence.blueprintId?.toLowerCase().contains(query) ??
+                        false),
+              )) {
             return false;
           }
           return marker.mapId == _mapId && marker.layer == _layer;
@@ -393,6 +435,128 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       _selected = cached.isEmpty ? null : cached.first;
     });
     _message('${cached.length} cached imported markers reloaded.');
+  }
+
+  Future<void> _populateWorldIntel() async {
+    setState(() => _saving = true);
+    try {
+      final dropReports = await _repository.loadRecentDropReports();
+      final communityReports = await _repository.loadCommunityReports();
+      final result = _worldIntelEngine.build(
+        maps: ArcRaidIntelligenceSeedData.maps,
+        dropReports: dropReports,
+        communityReports: communityReports,
+        adminMarkers: _markers,
+        now: DateTime.now().toUtc(),
+      );
+      final autoPublish = result.autoPublishedMarkers
+          .where((marker) => marker.sourcePermission.canPublish)
+          .toList(growable: false);
+      _snapshotUndo();
+      setState(() {
+        _lastWorldPopulation = result;
+        _markers = _mergeMarkers(_markers, result.markers);
+        _showCustomIntel = true;
+        _selected = result.markers.firstWhere(
+          (marker) => marker.mapId == _mapId && marker.layer == _layer,
+          orElse: () => result.markers.first,
+        );
+      });
+      await _repository.saveImportCache(_mapId, _layer, _importedMarkers);
+      try {
+        await _repository.saveCoverageReport(result.coverageReport);
+        if (autoPublish.isNotEmpty) {
+          await _repository.publishAll(autoPublish);
+        }
+      } catch (error) {
+        if (mounted) {
+          _message(
+            'World Intel generated locally; Firestore publish needs admin sign-in: $error',
+          );
+        }
+        return;
+      }
+      if (mounted) {
+        _message(
+          'World Intel populated: ${result.coverageReport.autoPublishedCount} published, '
+          '${result.coverageReport.provisionalCount} provisional, '
+          '${result.coverageReport.exceptionCount} review.',
+        );
+      }
+    } catch (error) {
+      if (mounted) _message('Could not populate UAG World Intel: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _publishHighConfidence() async {
+    final eligible = _visibleMarkers
+        .where(
+          (marker) =>
+              marker.confidence.score >= ArcRaidIntelConfidence.strong.score &&
+              marker.sourcePermission.canPublish &&
+              !marker.hasImportException,
+        )
+        .toList(growable: false);
+    if (eligible.isEmpty) {
+      _message('No high-confidence visible markers are ready to publish.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _repository.publishAll(eligible);
+      if (!mounted) return;
+      setState(() {
+        _markers = [
+          for (final marker in _markers)
+            if (eligible.any((item) => item.id == marker.id))
+              marker.copyWith(
+                state: ArcAdminMapMarkerState.published,
+                provisionalVisible: false,
+                clearExceptionReason: true,
+              )
+            else
+              marker,
+        ];
+      });
+      _message('${eligible.length} high-confidence markers published.');
+    } catch (error) {
+      if (mounted) {
+        _message('Could not publish high-confidence markers: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _archiveVisibleExceptions() async {
+    final exceptions = _visibleMarkers
+        .where((marker) => marker.hasImportException)
+        .toList(growable: false);
+    if (exceptions.isEmpty) {
+      _message('No visible exception markers to archive.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _repository.archiveAll(exceptions.map((marker) => marker.id));
+      if (!mounted) return;
+      setState(() {
+        _markers = [
+          for (final marker in _markers)
+            if (exceptions.any((item) => item.id == marker.id))
+              marker.copyWith(state: ArcAdminMapMarkerState.archived)
+            else
+              marker,
+        ];
+      });
+      _message('${exceptions.length} exception markers archived.');
+    } catch (error) {
+      if (mounted) _message('Could not archive exceptions: $error');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   static List<ArcAdminMapMarker> _mergeMarkers(
@@ -755,6 +919,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   icon: const Icon(Icons.input_rounded),
                   label: const Text('Import JSON'),
                 ),
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _populateWorldIntel,
+                  icon: const Icon(Icons.auto_awesome_rounded),
+                  label: const Text('Populate UAG World'),
+                ),
               ],
             ),
           ),
@@ -827,6 +996,16 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   onPressed: _saving ? null : _publishEligibleImports,
                   icon: const Icon(Icons.verified_rounded),
                 ),
+                IconButton(
+                  tooltip: 'Publish high-confidence visible markers',
+                  onPressed: _saving ? null : _publishHighConfidence,
+                  icon: const Icon(Icons.published_with_changes_rounded),
+                ),
+                IconButton(
+                  tooltip: 'Archive visible exception markers',
+                  onPressed: _saving ? null : _archiveVisibleExceptions,
+                  icon: const Icon(Icons.archive_outlined),
+                ),
               ],
             ),
           ),
@@ -851,6 +1030,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         ? null
         : confidenceValues.reduce((a, b) => a + b) / confidenceValues.length;
     final last = _lastImportSummary;
+    final world = _lastWorldPopulation;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -888,6 +1068,22 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               style: const TextStyle(color: Colors.white60, fontSize: 12),
             ),
           ],
+          if (world != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'UAG World: ${world.coverageReport.autoPublishedCount} published • '
+              '${world.coverageReport.provisionalCount} provisional • '
+              '${world.coverageReport.exceptionCount} review • '
+              '${world.coverageReport.estimatedReviewPercentage.toStringAsFixed(1)}% manual',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            if (world.townHallBridgeCandidates.isNotEmpty)
+              Text(
+                'Town Hall bridge: ${world.townHallBridgeCandidates.first.label} '
+                '(${world.townHallBridgeCandidates.first.confidence.label})',
+                style: const TextStyle(color: AppTheme.neonCyan, fontSize: 12),
+              ),
+          ],
           const SizedBox(height: 8),
           Wrap(
             spacing: 7,
@@ -902,6 +1098,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                 onPressed: _reprocessImportCache,
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Reprocess Cache'),
+              ),
+              TextButton.icon(
+                onPressed: _saving ? null : _populateWorldIntel,
+                icon: const Icon(Icons.auto_awesome_rounded),
+                label: const Text('Reprocess World'),
               ),
             ],
           ),
@@ -943,6 +1144,75 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                 ),
             ],
             onChanged: (value) => setState(() => _kindFilter = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcRaidIntelConfidence?>(
+            isExpanded: true,
+            initialValue: _confidenceFilter,
+            decoration: const InputDecoration(labelText: 'Confidence filter'),
+            items: <DropdownMenuItem<ArcRaidIntelConfidence?>>[
+              const DropdownMenuItem<ArcRaidIntelConfidence?>(
+                value: null,
+                child: Text('All confidence levels'),
+              ),
+              for (final confidence in ArcRaidIntelConfidence.values)
+                DropdownMenuItem<ArcRaidIntelConfidence?>(
+                  value: confidence,
+                  child: Text(confidence.label),
+                ),
+            ],
+            onChanged: (value) => setState(() => _confidenceFilter = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcAdminMapMarkerSourcePermission?>(
+            isExpanded: true,
+            initialValue: _permissionFilter,
+            decoration: const InputDecoration(labelText: 'Source permission'),
+            items: <DropdownMenuItem<ArcAdminMapMarkerSourcePermission?>>[
+              const DropdownMenuItem<ArcAdminMapMarkerSourcePermission?>(
+                value: null,
+                child: Text('All source permissions'),
+              ),
+              for (final permission in ArcAdminMapMarkerSourcePermission.values)
+                DropdownMenuItem<ArcAdminMapMarkerSourcePermission?>(
+                  value: permission,
+                  child: Text(permission.label),
+                ),
+            ],
+            onChanged: (value) => setState(() => _permissionFilter = value),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<ArcWorldIntelEvidenceType?>(
+            isExpanded: true,
+            initialValue: _evidenceTypeFilter,
+            decoration: const InputDecoration(labelText: 'Evidence type'),
+            items: <DropdownMenuItem<ArcWorldIntelEvidenceType?>>[
+              const DropdownMenuItem<ArcWorldIntelEvidenceType?>(
+                value: null,
+                child: Text('All evidence types'),
+              ),
+              for (final evidenceType in ArcWorldIntelEvidenceType.values)
+                DropdownMenuItem<ArcWorldIntelEvidenceType?>(
+                  value: evidenceType,
+                  child: Text(evidenceType.label),
+                ),
+            ],
+            onChanged: (value) => setState(() => _evidenceTypeFilter = value),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Provisional only'),
+            value: _showProvisionalOnly,
+            onChanged: (value) => setState(() => _showProvisionalOnly = value),
+          ),
+          SwitchListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Exception queue only'),
+            value: _showExceptionsOnly,
+            onChanged: (value) => setState(() => _showExceptionsOnly = value),
           ),
         ],
       ),
@@ -1019,8 +1289,9 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           ),
           const SizedBox(height: 8),
           SelectableText(
-            'X ${marker.point.x.toStringAsFixed(6)}\n'
-            'Y ${marker.point.y.toStringAsFixed(6)}',
+            'Transformed X ${marker.point.x.toStringAsFixed(6)}\n'
+            'Transformed Y ${marker.point.y.toStringAsFixed(6)}'
+            '${marker.originalPoint == null ? '' : '\nOriginal X ${marker.originalPoint!.x.toStringAsFixed(6)}\nOriginal Y ${marker.originalPoint!.y.toStringAsFixed(6)}'}',
             style: const TextStyle(
               color: Colors.white70,
               fontFamily: 'monospace',
@@ -1057,6 +1328,26 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               Text(
                 'Review: ${marker.exceptionReason}',
                 style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              ),
+          ],
+          if (marker.evidence.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('Evidence set', style: _sectionLabelStyle()),
+            const SizedBox(height: 4),
+            for (final evidence in marker.evidence.take(4))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '${evidence.type.label}: ${evidence.sourceName}'
+                  '${evidence.sourceRecordId == null ? '' : ' / ${evidence.sourceRecordId}'}'
+                  '${evidence.landmarkText == null ? '' : ' / ${evidence.landmarkText}'}',
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+              ),
+            if (marker.evidence.length > 4)
+              Text(
+                '+${marker.evidence.length - 4} more evidence records',
+                style: const TextStyle(color: Colors.white38, fontSize: 12),
               ),
           ],
           const SizedBox(height: 9),
@@ -1103,12 +1394,16 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Colors.cyanAccent;
       case ArcAdminMapMarkerKind.resourceNode:
         return Colors.tealAccent;
+      case ArcAdminMapMarkerKind.weaponCase:
       case ArcAdminMapMarkerKind.weaponCache:
         return Colors.orangeAccent;
       case ArcAdminMapMarkerKind.lootContainer:
       case ArcAdminMapMarkerKind.highValueLoot:
         return Colors.yellowAccent;
       case ArcAdminMapMarkerKind.lockedRoom:
+      case ArcAdminMapMarkerKind.securityRoom:
+      case ArcAdminMapMarkerKind.key:
+      case ArcAdminMapMarkerKind.keyRequiredLocation:
         return Colors.deepPurpleAccent;
       case ArcAdminMapMarkerKind.arcThreat:
       case ArcAdminMapMarkerKind.extractionDanger:
@@ -1132,12 +1427,18 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Icons.assignment_turned_in_rounded;
       case ArcAdminMapMarkerKind.resourceNode:
         return Icons.construction_rounded;
+      case ArcAdminMapMarkerKind.weaponCase:
+        return Icons.inventory_rounded;
       case ArcAdminMapMarkerKind.weaponCache:
         return Icons.gps_fixed_rounded;
       case ArcAdminMapMarkerKind.lootContainer:
         return Icons.inventory_2_rounded;
       case ArcAdminMapMarkerKind.lockedRoom:
+      case ArcAdminMapMarkerKind.securityRoom:
         return Icons.lock_rounded;
+      case ArcAdminMapMarkerKind.key:
+      case ArcAdminMapMarkerKind.keyRequiredLocation:
+        return Icons.vpn_key_rounded;
       case ArcAdminMapMarkerKind.highValueLoot:
         return Icons.diamond_rounded;
       case ArcAdminMapMarkerKind.arcThreat:

@@ -6,7 +6,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 
 class ArcAdminMapEditorRepository {
   ArcAdminMapEditorRepository({
@@ -18,6 +21,9 @@ class ArcAdminMapEditorRepository {
   static const _draftKeyPrefix = 'arc_admin_map_editor_drafts_v1';
   static const _importCacheKeyPrefix = 'arc_admin_map_import_cache_v1';
   static const collectionName = 'arc_admin_map_markers';
+  static const blueprintReportCollectionName = 'arc_blueprint_drop_reports';
+  static const communityIntelCollectionName = 'arc_community_intel_reports';
+  static const coverageCollectionName = 'arc_map_marker_coverage_reports';
 
   final FirebaseFirestore? _providedFirestore;
   final FirebaseAuth? _providedAuth;
@@ -180,6 +186,42 @@ class ArcAdminMapEditorRepository {
         .toList(growable: false);
   }
 
+  Future<List<ArcBlueprintDropReport>> loadRecentDropReports({
+    int limit = 500,
+  }) async {
+    final snapshot = await _firestore
+        .collection(blueprintReportCollectionName)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs
+        .map(
+          (doc) => ArcBlueprintDropReport.fromMap(<String, dynamic>{
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<ArcCommunityIntelReport>> loadCommunityReports({
+    int limit = 500,
+  }) async {
+    final snapshot = await _firestore
+        .collection(communityIntelCollectionName)
+        .where('active', isEqualTo: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs
+        .map(
+          (doc) => ArcCommunityIntelReport.fromMap(<String, dynamic>{
+            ...doc.data(),
+            'id': doc.id,
+          }),
+        )
+        .toList(growable: false);
+  }
+
   Future<void> publish(ArcAdminMapMarker marker) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw StateError('Admin sign-in is required.');
@@ -230,6 +272,34 @@ class ArcAdminMapEditorRepository {
         .doc(markerId)
         .set(<String, dynamic>{
           'state': ArcAdminMapMarkerState.archived.name,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+  }
+
+  Future<void> archiveAll(Iterable<String> markerIds) async {
+    final batch = _firestore.batch();
+    for (final markerId in markerIds.where((id) => id.trim().isNotEmpty)) {
+      batch.set(
+        _firestore.collection(collectionName).doc(markerId),
+        <String, dynamic>{
+          'state': ArcAdminMapMarkerState.archived.name,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    }
+    await batch.commit();
+  }
+
+  Future<void> saveCoverageReport(ArcWorldIntelCoverageReport report) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('Admin sign-in is required.');
+    await _firestore
+        .collection(coverageCollectionName)
+        .doc(report.id)
+        .set(<String, dynamic>{
+          ...report.toMap(),
+          'createdByUid': uid,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
   }

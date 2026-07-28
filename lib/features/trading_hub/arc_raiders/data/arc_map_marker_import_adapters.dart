@@ -139,15 +139,25 @@ class ArcPermittedJsonMapMarkerImportAdapter {
       'resource' ||
       'resource_node' ||
       'material' => ArcAdminMapMarkerKind.resourceNode,
+      'weapon_case' || 'weapon_crate' => ArcAdminMapMarkerKind.weaponCase,
       'weapon_cache' ||
-      'weapon_case' ||
+      'raider_cache' ||
+      'cache' ||
       'weapon' => ArcAdminMapMarkerKind.weaponCache,
       'loot' ||
       'loot_container' ||
       'crate' ||
       'field_crate' => ArcAdminMapMarkerKind.lootContainer,
-      'locked_room' || 'key_room' => ArcAdminMapMarkerKind.lockedRoom,
+      'locked_room' => ArcAdminMapMarkerKind.lockedRoom,
+      'security_room' ||
+      'security' ||
+      'security_locker' => ArcAdminMapMarkerKind.securityRoom,
       'high_value_loot' || 'rare_loot' => ArcAdminMapMarkerKind.highValueLoot,
+      'key' || 'access_key' => ArcAdminMapMarkerKind.key,
+      'key_room' ||
+      'key_required' ||
+      'key_required_location' ||
+      'locked_key_room' => ArcAdminMapMarkerKind.keyRequiredLocation,
       'arc_threat' || 'threat' || 'hazard' => ArcAdminMapMarkerKind.arcThreat,
       'extraction_danger' ||
       'exit_danger' => ArcAdminMapMarkerKind.extractionDanger,
