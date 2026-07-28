@@ -203,6 +203,11 @@ service cloud.firestore {
       allow delete: if isAdminOrDev();
     }
 
+    match /arc_admin_map_markers/{markerId} {
+      allow read: if true;
+      allow create, update, delete: if isAdminOrDev();
+    }
+
     match /arc_community_intel_reports/{reportId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() &&
