@@ -97,6 +97,54 @@ void main() {
       expect(summary.acceptedMarkers.single.point.x, closeTo(0.42, 0.0001));
     });
 
+    test('imports permitted Spaceport Level 2 records through alignment', () {
+      final payload = adapter.parse(
+        '''
+        {
+          "source": {
+            "id": "spaceport-permitted-fixture",
+            "name": "Spaceport permitted fixture",
+            "permissionState": "permitted"
+          },
+          "mapId": "spaceport",
+          "layer": "underground",
+          "coordinateSpace": "source_percent",
+          "records": [
+            {
+              "id": "level-2-cache",
+              "kind": "loot_container",
+              "name": "Level 2 cache",
+              "x": 58,
+              "y": 44,
+              "confidence": "moderate"
+            }
+          ]
+        }
+        ''',
+        defaultMapId: 'blue_gate',
+        defaultLayer: ArcRaidMapLayer.surface,
+      );
+      final summary = importEngine.importRecords(
+        payload: payload,
+        mapId: 'spaceport',
+        layer: ArcRaidMapLayer.underground,
+        existingMarkers: const <ArcAdminMapMarker>[],
+        alignment: alignmentEngine.identity(
+          mapId: 'spaceport',
+          layer: ArcRaidMapLayer.underground,
+          sourceId: payload.source.id,
+        ),
+      );
+
+      expect(summary.mapId, 'spaceport');
+      expect(summary.layer, ArcRaidMapLayer.underground);
+      expect(summary.provisionalCount, 1);
+      expect(summary.acceptedMarkers.single.mapId, 'spaceport');
+      expect(summary.acceptedMarkers.single.layer, ArcRaidMapLayer.underground);
+      expect(summary.acceptedMarkers.single.point.x, closeTo(0.58, 0.0001));
+      expect(summary.acceptedMarkers.single.point.y, closeTo(0.44, 0.0001));
+    });
+
     test('rejects sources without explicit publication permission', () {
       const payload = ArcMapMarkerImportPayload(
         source: ArcMapMarkerSourceDescriptor(

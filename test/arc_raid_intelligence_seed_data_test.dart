@@ -43,6 +43,41 @@ void main() {
             expect(map.dataVersion, 'pass-294-riven-tides-provisional-v1');
           }
 
+          if (map.id == 'dam_battlegrounds') {
+            expect(map.hasRenderableMap, isTrue);
+            expect(
+              map.assetForLayer(ArcRaidMapLayer.surface)?.localAssetPath,
+              'assets/arc_raiders/maps/dam_battlegrounds/dam_battlegrounds_master.webp',
+            );
+            expect(
+              map.dataVersion,
+              'pass-294-dam-battlegrounds-provisional-v1',
+            );
+          }
+
+          if (map.id == 'spaceport') {
+            expect(map.hasRenderableMap, isTrue);
+            expect(
+              map.availableLayers,
+              containsAll(const [
+                ArcRaidMapLayer.surface,
+                ArcRaidMapLayer.underground,
+              ]),
+            );
+            expect(
+              map.assetForLayer(ArcRaidMapLayer.surface)?.localAssetPath,
+              'assets/arc_raiders/maps/spaceport/spaceport_master.webp',
+            );
+            expect(
+              map.assetForLayer(ArcRaidMapLayer.underground)?.localAssetPath,
+              'assets/arc_raiders/maps/spaceport/spaceport_level_2.webp',
+            );
+            expect(
+              map.dataVersion,
+              'pass-294-spaceport-two-layer-provisional-v1',
+            );
+          }
+
           expect(map.regions, isNotEmpty);
           expect(map.spawnRegions, isNotEmpty);
           expect(map.extractions, isNotEmpty);

@@ -70,7 +70,9 @@ flutter:
     - assets/arc_raiders/operations/badges/
     - assets/arc_raiders/maps/blue_gate/
     - assets/arc_raiders/maps/buried_city/
+    - assets/arc_raiders/maps/dam_battlegrounds/
     - assets/arc_raiders/maps/riven_tides/
+    - assets/arc_raiders/maps/spaceport/
     - assets/arc_raiders/maps/stella_montis/
 
     - assets/arc_raiders/hero_cards/
@@ -92,5 +94,4 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
-
 

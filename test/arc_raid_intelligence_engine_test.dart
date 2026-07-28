@@ -88,6 +88,58 @@ void main() {
       );
     });
 
+    test(
+      'supports new provisional maps in live marker and route pipelines',
+      () {
+        const spaceportMarker = ArcAdminMapMarker(
+          id: 'spaceport_level_2_cache',
+          mapId: 'spaceport',
+          layer: ArcRaidMapLayer.underground,
+          kind: ArcAdminMapMarkerKind.lootContainer,
+          name: 'Level 2 Cache',
+          point: ArcNormalizedPoint(x: 0.58, y: 0.44),
+          confidence: ArcRaidIntelConfidence.moderate,
+          state: ArcAdminMapMarkerState.published,
+          adminVerified: false,
+          sourceName: 'Permitted source',
+          sourceRecordId: 'level-2-cache',
+        );
+
+        final spaceport = engine.build(
+          mapId: 'spaceport',
+          activeLayer: ArcRaidMapLayer.underground,
+          adminMarkers: const [spaceportMarker],
+          filters: ArcRaidMapFilterState.defaults.copyWith(lootSources: true),
+        );
+
+        expect(
+          spaceport.map.hasRenderableLayer(ArcRaidMapLayer.surface),
+          isTrue,
+        );
+        expect(
+          spaceport.map.hasRenderableLayer(ArcRaidMapLayer.underground),
+          isTrue,
+        );
+        expect(spaceport.activeLayer, ArcRaidMapLayer.underground);
+        expect(
+          spaceport.visibleMarkers.map((marker) => marker.label),
+          contains('Level 2 Cache'),
+        );
+
+        final dam = ArcRaidIntelligenceSeedData.mapById('dam_battlegrounds');
+        final route = engine.generateRoute(
+          map: dam,
+          clusters: engine.opportunityClusters(map: dam),
+          spawn: engine.stopFromSpawn(dam.spawnRegions.first),
+          extraction: engine.stopFromExtraction(dam.extractions.first),
+        );
+
+        expect(dam.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
+        expect(route, isNotNull);
+        expect(route!.orderedStops.first.label, dam.spawnRegions.first.name);
+      },
+    );
+
     test('generates deterministic route limits by raid stage and style', () {
       final map = ArcRaidIntelligenceSeedData.mapById('The Blue Gate');
       final clusters = engine.opportunityClusters(map: map);

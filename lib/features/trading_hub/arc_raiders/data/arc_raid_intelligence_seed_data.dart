@@ -183,10 +183,14 @@ class ArcRaidIntelligenceSeedData {
           'pass-282-raid-intelligence-core-v1',
         ArcMapAssetRegistry.buriedCityMapId =>
           'pass-289-buried-city-provisional-v1',
+        ArcMapAssetRegistry.damBattlegroundsMapId =>
+          'pass-294-dam-battlegrounds-provisional-v1',
         ArcMapAssetRegistry.stellaMontisMapId =>
           'pass-292-stella-montis-two-layer-provisional-v1',
         ArcMapAssetRegistry.rivenTidesMapId =>
           'pass-294-riven-tides-provisional-v1',
+        ArcMapAssetRegistry.spaceportMapId =>
+          'pass-294-spaceport-two-layer-provisional-v1',
         _ => 'pass-275-local-schematic-v1',
       },
       lastReviewed: DateTime.utc(2026, 7, 23),

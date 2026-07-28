@@ -76,5 +76,18 @@ void main() {
     expect(find.text('Import JSON'), findsOneWidget);
     expect(find.text('IMPORT PIPELINE'), findsOneWidget);
     expect(find.text('Publish Selected'), findsOneWidget);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Dam Battlegrounds'), findsWidgets);
+    expect(find.text('Spaceport'), findsWidgets);
+
+    await tester.tap(find.text('Spaceport').last);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byType(DropdownButtonFormField<ArcRaidMapLayer>).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Level 2'), findsWidgets);
   });
 }

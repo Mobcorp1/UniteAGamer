@@ -34,7 +34,9 @@ class ArcMapAssetRegistry {
 
   static const String blueGateMapId = 'blue_gate';
   static const String buriedCityMapId = 'buried_city';
+  static const String damBattlegroundsMapId = 'dam_battlegrounds';
   static const String rivenTidesMapId = 'riven_tides';
+  static const String spaceportMapId = 'spaceport';
   static const String stellaMontisMapId = 'stella_montis';
 
   static const List<ArcRaidMapAnchor> _identityAnchors = [
@@ -167,6 +169,67 @@ class ArcMapAssetRegistry {
     ),
   };
 
+  static const Map<ArcRaidMapLayer, ArcRaidMapAsset> damBattlegroundsAssets = {
+    ArcRaidMapLayer.surface: ArcRaidMapAsset(
+      id: 'dam_battlegrounds_surface_master_v1',
+      mapId: damBattlegroundsMapId,
+      renderMode: ArcRaidMapRenderMode.calibratedGameMap,
+      layer: ArcRaidMapLayer.surface,
+      localAssetPath:
+          'assets/arc_raiders/maps/dam_battlegrounds/dam_battlegrounds_master.webp',
+      published: true,
+    ),
+  };
+
+  static const Map<ArcRaidMapLayer, ArcRaidMapCalibration>
+  damBattlegroundsCalibrations = {
+    ArcRaidMapLayer.surface: ArcRaidMapCalibration(
+      id: 'dam_battlegrounds_surface_provisional_v1',
+      mapId: damBattlegroundsMapId,
+      anchors: _identityAnchors,
+      residualError: 0,
+      published: false,
+    ),
+  };
+
+  static const Map<ArcRaidMapLayer, ArcRaidMapAsset> spaceportAssets = {
+    ArcRaidMapLayer.surface: ArcRaidMapAsset(
+      id: 'spaceport_surface_master_v1',
+      mapId: spaceportMapId,
+      renderMode: ArcRaidMapRenderMode.calibratedGameMap,
+      layer: ArcRaidMapLayer.surface,
+      localAssetPath: 'assets/arc_raiders/maps/spaceport/spaceport_master.webp',
+      published: true,
+    ),
+    ArcRaidMapLayer.underground: ArcRaidMapAsset(
+      id: 'spaceport_level_2_master_v1',
+      mapId: spaceportMapId,
+      renderMode: ArcRaidMapRenderMode.calibratedGameMap,
+      layer: ArcRaidMapLayer.underground,
+      localAssetPath:
+          'assets/arc_raiders/maps/spaceport/spaceport_level_2.webp',
+      published: true,
+    ),
+  };
+
+  static const Map<ArcRaidMapLayer, ArcRaidMapCalibration>
+  spaceportCalibrations = {
+    ArcRaidMapLayer.surface: ArcRaidMapCalibration(
+      id: 'spaceport_surface_provisional_v1',
+      mapId: spaceportMapId,
+      anchors: _identityAnchors,
+      residualError: 0,
+      published: false,
+    ),
+    ArcRaidMapLayer.underground: ArcRaidMapCalibration(
+      id: 'spaceport_level_2_provisional_v1',
+      mapId: spaceportMapId,
+      anchors: _identityAnchors,
+      residualError: 0,
+      published: false,
+    ),
+  };
+
   static const Map<ArcRaidMapLayer, ArcRaidMapAsset> rivenTidesAssets = {
     ArcRaidMapLayer.surface: ArcRaidMapAsset(
       id: 'riven_tides_surface_master_v1',
@@ -204,6 +267,20 @@ class ArcMapAssetRegistry {
       layerAssets: buriedCityAssets,
       layerCalibrations: buriedCityCalibrations,
       statusLabel: 'Provisional map image',
+    ),
+    ArcRegisteredMapAsset(
+      mapId: damBattlegroundsMapId,
+      displayName: 'Dam Battlegrounds',
+      layerAssets: damBattlegroundsAssets,
+      layerCalibrations: damBattlegroundsCalibrations,
+      statusLabel: 'Provisional Alignment',
+    ),
+    ArcRegisteredMapAsset(
+      mapId: spaceportMapId,
+      displayName: 'Spaceport',
+      layerAssets: spaceportAssets,
+      layerCalibrations: spaceportCalibrations,
+      statusLabel: 'Provisional Alignment',
     ),
     ArcRegisteredMapAsset(
       mapId: stellaMontisMapId,
