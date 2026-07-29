@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification
 import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_repository.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagAdminBroadcastPanel extends StatefulWidget {
@@ -34,6 +35,9 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
   int _expiryHours = 72;
   bool _busy = false;
   String _message = '';
+  String _lastInboxPath = '';
+  String _lastInboxTargetUid = '';
+  bool? _lastInboxReadable;
   UagNotificationAudienceEstimate? _estimate;
 
   @override
@@ -112,14 +116,23 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
   Future<void> _testSend() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    await _createBroadcast(testMode: true, targetUid: uid);
+    await _createInboxTest(
+      targetUidOverride: uid,
+      successPrefix: 'Admin test notification created for your inbox',
+    );
   }
 
-  Future<void> _createInboxTest() async {
+  Future<void> _createInboxTest({
+    String? targetUidOverride,
+    String successPrefix = 'Inbox test created',
+  }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final targetUid = _targetUidController.text.trim().isEmpty
+    final resolvedOverride = targetUidOverride?.trim() ?? '';
+    final targetUid = resolvedOverride.isNotEmpty
+        ? resolvedOverride
+        : _targetUidController.text.trim().isEmpty
         ? uid
         : _targetUidController.text.trim();
     final payload = _payload(
@@ -139,6 +152,9 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
     setState(() {
       _busy = true;
       _message = '';
+      _lastInboxPath = '';
+      _lastInboxTargetUid = targetUid;
+      _lastInboxReadable = null;
     });
     try {
       final notificationId = await _repository
@@ -149,11 +165,16 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
       final readable = await _repository.canReadDirectInAppNotification(
         notificationId,
       );
+      final path = UagNotificationRepository.directInAppNotificationPath(
+        notificationId,
+      );
       if (!mounted) return;
       setState(() {
+        _lastInboxPath = path;
+        _lastInboxReadable = readable;
         _message = readable
-            ? 'Inbox test created and readable: $notificationId'
-            : 'Inbox test created but could not be read back: $notificationId';
+            ? '$successPrefix and readable in Communications: $path'
+            : '$successPrefix but could not be read back: $path';
       });
     } catch (error) {
       if (!mounted) return;
@@ -161,6 +182,10 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _openCommunications() {
+    Navigator.of(context).pushNamed(TradingNotificationsScreen.routeName);
   }
 
   Future<void> _sendBroadcast() async {
@@ -451,8 +476,37 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
               OutlinedButton.icon(
                 onPressed: _busy ? null : _createInboxTest,
                 icon: const Icon(Icons.mark_email_unread_outlined),
-                label: const Text('Inbox Test'),
+                label: const Text('Inbox Test Target'),
               ),
+              if (_lastInboxPath.isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: _busy ? null : _openCommunications,
+                  icon: const Icon(Icons.inbox_outlined),
+                  label: const Text('Open Communications'),
+                ),
+              if (_lastInboxPath.isNotEmpty)
+                Chip(
+                  avatar: Icon(
+                    _lastInboxReadable == true
+                        ? Icons.check_circle_outline
+                        : Icons.info_outline,
+                    size: 16,
+                    color: _lastInboxReadable == true
+                        ? AppTheme.tradingSuccess
+                        : AppTheme.tradingWarning,
+                  ),
+                  label: Text(
+                    'Target: ${_lastInboxTargetUid.isEmpty ? 'current user' : _lastInboxTargetUid}',
+                  ),
+                  backgroundColor: Colors.black.withValues(alpha: 0.28),
+                  side: BorderSide(
+                    color:
+                        (_lastInboxReadable == true
+                                ? AppTheme.tradingSuccess
+                                : AppTheme.tradingWarning)
+                            .withValues(alpha: 0.42),
+                  ),
+                ),
               ElevatedButton.icon(
                 onPressed: _busy ? null : _sendBroadcast,
                 icon: const Icon(Icons.campaign_rounded),

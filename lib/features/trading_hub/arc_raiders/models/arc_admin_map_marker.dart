@@ -125,6 +125,7 @@ class ArcAdminMapMarker {
     required this.kind,
     required this.name,
     required this.point,
+    this.aliases = const <String>[],
     this.description = '',
     this.blueprintId,
     this.sourceLabel = 'Admin Intel',
@@ -149,6 +150,7 @@ class ArcAdminMapMarker {
     this.provisionalVisible = false,
     this.exceptionReason,
     this.createdByUid,
+    this.updatedByUid,
     this.createdAt,
     this.updatedAt,
   });
@@ -158,6 +160,7 @@ class ArcAdminMapMarker {
   final ArcRaidMapLayer layer;
   final ArcAdminMapMarkerKind kind;
   final String name;
+  final List<String> aliases;
   final String description;
   final ArcNormalizedPoint point;
   final String? blueprintId;
@@ -183,6 +186,7 @@ class ArcAdminMapMarker {
   final bool provisionalVisible;
   final String? exceptionReason;
   final String? createdByUid;
+  final String? updatedByUid;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -205,6 +209,7 @@ class ArcAdminMapMarker {
     ArcRaidMapLayer? layer,
     ArcAdminMapMarkerKind? kind,
     String? name,
+    List<String>? aliases,
     String? description,
     ArcNormalizedPoint? point,
     String? blueprintId,
@@ -243,6 +248,7 @@ class ArcAdminMapMarker {
     String? exceptionReason,
     bool clearExceptionReason = false,
     String? createdByUid,
+    String? updatedByUid,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -252,6 +258,7 @@ class ArcAdminMapMarker {
       layer: layer ?? this.layer,
       kind: kind ?? this.kind,
       name: name ?? this.name,
+      aliases: aliases ?? this.aliases,
       description: description ?? this.description,
       point: point ?? this.point,
       blueprintId: clearBlueprintId ? null : (blueprintId ?? this.blueprintId),
@@ -297,6 +304,7 @@ class ArcAdminMapMarker {
           ? null
           : (exceptionReason ?? this.exceptionReason),
       createdByUid: createdByUid ?? this.createdByUid,
+      updatedByUid: updatedByUid ?? this.updatedByUid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -309,6 +317,7 @@ class ArcAdminMapMarker {
       'layer': layer.name,
       'kind': kind.name,
       'name': name,
+      'aliases': aliases,
       'description': description,
       'point': point.toMap(),
       'blueprintId': blueprintId,
@@ -334,6 +343,7 @@ class ArcAdminMapMarker {
       'provisionalVisible': provisionalVisible,
       'exceptionReason': exceptionReason,
       'createdByUid': createdByUid,
+      'updatedByUid': updatedByUid,
       'createdAt': createdAt == null ? null : Timestamp.fromDate(createdAt!),
       'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
     };
@@ -362,6 +372,7 @@ class ArcAdminMapMarker {
         orElse: () => ArcAdminMapMarkerKind.customIntel,
       ),
       name: map['name']?.toString() ?? 'Unnamed marker',
+      aliases: _stringListFrom(map['aliases']),
       description: map['description']?.toString() ?? '',
       point: ArcNormalizedPoint.fromMap(
         map['point'] is Map
@@ -403,6 +414,7 @@ class ArcAdminMapMarker {
       provisionalVisible: map['provisionalVisible'] == true,
       exceptionReason: map['exceptionReason']?.toString(),
       createdByUid: map['createdByUid']?.toString(),
+      updatedByUid: map['updatedByUid']?.toString(),
       createdAt: _dateFrom(map['createdAt']),
       updatedAt: _dateFrom(map['updatedAt']),
     );
@@ -437,6 +449,15 @@ class ArcAdminMapMarker {
             Map<String, dynamic>.from(item),
           ),
         )
+        .toList(growable: false);
+  }
+
+  static List<String> _stringListFrom(dynamic value) {
+    if (value is! List) return const <String>[];
+    return value
+        .map((item) => item.toString().trim())
+        .where((item) => item.isNotEmpty)
+        .toSet()
         .toList(growable: false);
   }
 

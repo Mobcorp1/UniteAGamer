@@ -50,10 +50,15 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   ArcAdminMapMarker? _selected;
   bool _loading = true;
   bool _saving = false;
+  bool _dirty = false;
+  bool _placingNewPoi = false;
   bool _showSeedDefinitions = true;
   bool _showCustomIntel = true;
   bool _showReferenceGrid = true;
   String _searchQuery = '';
+  String _saveStatus = 'Saved';
+  String _saveError = '';
+  DateTime? _lastSavedAt;
   ArcAdminMapMarkerKind? _kindFilter;
   ArcRaidIntelConfidence? _confidenceFilter;
   ArcAdminMapMarkerSourcePermission? _permissionFilter;
@@ -87,26 +92,48 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
 
-    final drafts = await _repository.loadDrafts(_mapId, _layer);
-    final seedMarkers = _seedMarkers(_map, _layer);
-    final cachedImports = await _repository.loadImportCache(_mapId, _layer);
-    final merged = <String, ArcAdminMapMarker>{
-      for (final marker in seedMarkers) marker.id: marker,
-      for (final marker in drafts) marker.id: marker,
-      for (final marker in cachedImports) marker.id: marker,
-    };
+    try {
+      final drafts = await _repository.loadDrafts(_mapId, _layer);
+      final seedMarkers = _seedMarkers(_map, _layer);
+      final cachedImports = await _repository.loadImportCache(_mapId, _layer);
+      final merged = <String, ArcAdminMapMarker>{
+        for (final marker in seedMarkers) marker.id: marker,
+        for (final marker in drafts) marker.id: marker,
+        for (final marker in cachedImports) marker.id: marker,
+      };
 
-    if (!mounted) return;
-    setState(() {
-      _markers = merged.values.toList(growable: false)
-        ..sort((a, b) => a.name.compareTo(b.name));
-      _selected = null;
-      _lastImportSummary = null;
-      _lastWorldPopulation = null;
-      _undoStack.clear();
-      _loading = false;
-      _transformationController.value = Matrix4.identity();
-    });
+      if (!mounted) return;
+      final mergedMarkers =
+          merged.values
+              .where(
+                (marker) => marker.state != ArcAdminMapMarkerState.archived,
+              )
+              .toList(growable: false)
+            ..sort((a, b) => a.name.compareTo(b.name));
+      setState(() {
+        _markers = mergedMarkers;
+        _selected = null;
+        _lastImportSummary = null;
+        _lastWorldPopulation = null;
+        _undoStack.clear();
+        _dirty = false;
+        _placingNewPoi = false;
+        _saveStatus = 'Saved';
+        _saveError = '';
+        _loading = false;
+        _transformationController.value = Matrix4.identity();
+      });
+    } catch (error, stackTrace) {
+      debugPrint('Admin Map Editor load failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _saveStatus = 'Load failed';
+        _saveError = error.toString();
+      });
+      _message('Could not load map editor records: $error');
+    }
   }
 
   List<ArcAdminMapMarker> _seedMarkers(ArcRaidMap map, ArcRaidMapLayer layer) {
@@ -154,6 +181,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     final query = _searchQuery.trim().toLowerCase();
     return _markers
         .where((marker) {
+          if (marker.state == ArcAdminMapMarkerState.archived) return false;
           if (marker.kind.isSeedDefinition && !_showSeedDefinitions) {
             return false;
           }
@@ -225,6 +253,12 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     }
   }
 
+  void _markDirty() {
+    _dirty = true;
+    _saveStatus = 'Unsaved changes';
+    _saveError = '';
+  }
+
   void _undo() {
     if (_undoStack.isEmpty) return;
     final previous = _undoStack.removeLast();
@@ -246,19 +280,30 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           if (item.id == marker.id) updated else item,
       ];
       _selected = updated;
+      _markDirty();
     });
   }
 
-  void _placeSelected(Offset localPosition, Size size) {
+  ArcNormalizedPoint _pointFromLocalPosition(Offset localPosition, Size size) {
+    return ArcNormalizedPoint(
+      x: localPosition.dx / size.width,
+      y: localPosition.dy / size.height,
+    ).clamp();
+  }
+
+  void _handleMapTap(Offset localPosition, Size size) {
+    final point = _pointFromLocalPosition(localPosition, size);
+    if (_placingNewPoi) {
+      unawaited(_createMarkerAt(point));
+      return;
+    }
+    _placeSelected(point);
+  }
+
+  void _placeSelected(ArcNormalizedPoint point) {
     final selected = _selected;
-    if (selected == null || size.width <= 0 || size.height <= 0) return;
-    _updatePoint(
-      selected,
-      ArcNormalizedPoint(
-        x: localPosition.dx / size.width,
-        y: localPosition.dy / size.height,
-      ),
-    );
+    if (selected == null) return;
+    _updatePoint(selected, point);
   }
 
   Size _fittedMapSize(ArcRaidMapAsset asset, Size viewportSize) {
@@ -277,9 +322,30 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   Future<void> _saveDrafts() async {
     setState(() => _saving = true);
     try {
-      await _repository.saveDrafts(_mapId, _layer, _markers);
+      final result = await _repository.saveDraftMarkers(
+        _mapId,
+        _layer,
+        _markers,
+      );
       if (!mounted) return;
-      _message('Draft positions saved on this device.');
+      setState(() {
+        _dirty = false;
+        _lastSavedAt = result.savedAt;
+        _saveStatus = 'Saved';
+        _saveError = '';
+      });
+      _message(
+        'Draft saved successfully. ${result.savedCount} records written to ${result.collectionPath}.',
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Admin Map Editor Save Draft failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _saveStatus = 'Save failed';
+        _saveError = error.toString();
+      });
+      _message('Save Draft failed: $error');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -301,6 +367,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             if (item.id == selected.id) published else item,
         ];
         _selected = published;
+        _dirty = false;
+        _saveStatus = 'Published';
       });
       _message('Marker published to live Admin Intel.');
     } catch (error) {
@@ -323,6 +391,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             else
               marker,
         ];
+        _dirty = false;
+        _saveStatus = 'Published';
       });
       _message('${_visibleMarkers.length} markers published.');
     } catch (error) {
@@ -585,12 +655,42 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       ..sort((a, b) => a.name.compareTo(b.name));
   }
 
-  Future<void> _createMarker() async {
+  void _beginPoiPlacement() {
+    setState(() {
+      _placingNewPoi = true;
+      _saveStatus = 'Click the map to place the new POI';
+    });
+    _message('Click the map to place the new POI.');
+  }
+
+  Future<void> _createMarkerAt(ArcNormalizedPoint point) async {
     final result = await showDialog<_NewMarkerResult>(
       context: context,
-      builder: (context) => const _NewMarkerDialog(),
+      builder: (context) => const _NewMarkerDialog(
+        title: 'Create POI',
+        actionLabel: 'Create Draft',
+        initialKind: ArcAdminMapMarkerKind.poi,
+        includeSeedKinds: true,
+      ),
     );
-    if (result == null) return;
+    if (!mounted) return;
+    if (result == null) {
+      setState(() {
+        _placingNewPoi = false;
+        _saveStatus = _dirty ? 'Unsaved changes' : 'Saved';
+      });
+      return;
+    }
+
+    final duplicateName = _markers.any(
+      (marker) =>
+          marker.mapId == _mapId &&
+          marker.layer == _layer &&
+          marker.name.trim().toLowerCase() == result.name.toLowerCase(),
+    );
+    if (duplicateName) {
+      _message('A marker with this name already exists on this layer.');
+    }
 
     _snapshotUndo();
     const uuid = Uuid();
@@ -600,27 +700,161 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       layer: _layer,
       kind: result.kind,
       name: result.name,
+      aliases: result.aliases,
       description: result.description,
       blueprintId: result.blueprintId,
       sourceLabel: result.sourceLabel,
       confidence: result.confidence,
-      point: const ArcNormalizedPoint(x: 0.5, y: 0.5),
+      point: point,
+      state: ArcAdminMapMarkerState.draft,
     );
     setState(() {
-      _markers = [..._markers, marker];
+      _markers = [..._markers, marker]
+        ..sort((a, b) => a.name.compareTo(b.name));
       _selected = marker;
+      _placingNewPoi = false;
       _showCustomIntel = true;
+      _markDirty();
     });
   }
 
-  void _deleteSelected() {
+  Future<void> _editSelected() async {
     final selected = _selected;
     if (selected == null) return;
+
+    final result = await showDialog<_NewMarkerResult>(
+      context: context,
+      builder: (context) => _NewMarkerDialog(
+        title: 'Edit POI',
+        actionLabel: 'Apply Edit',
+        initialMarker: selected,
+        includeSeedKinds: true,
+      ),
+    );
+    if (result == null) return;
+
+    _snapshotUndo();
+    final edited = selected.copyWith(
+      kind: result.kind,
+      name: result.name,
+      aliases: result.aliases,
+      description: result.description,
+      blueprintId: result.blueprintId,
+      clearBlueprintId: result.blueprintId == null,
+      sourceLabel: result.sourceLabel,
+      confidence: result.confidence,
+    );
+    setState(() {
+      _markers = [
+        for (final marker in _markers)
+          if (marker.id == selected.id) edited else marker,
+      ]..sort((a, b) => a.name.compareTo(b.name));
+      _selected = edited;
+      _showCustomIntel = true;
+      _markDirty();
+    });
+  }
+
+  Future<void> _duplicateSelected() async {
+    final selected = _selected;
+    if (selected == null) return;
+
+    const uuid = Uuid();
+    final duplicate = ArcAdminMapMarker(
+      id: 'admin_${_mapId}_${_layer.name}_${uuid.v4()}',
+      mapId: selected.mapId,
+      layer: selected.layer,
+      kind: selected.kind,
+      name: '${selected.name} Copy',
+      aliases: selected.aliases,
+      description: selected.description,
+      sourceLabel: selected.sourceLabel,
+      confidence: selected.confidence,
+      point: ArcNormalizedPoint(
+        x: (selected.point.x + 0.018).clamp(0.0, 1.0),
+        y: (selected.point.y + 0.018).clamp(0.0, 1.0),
+      ),
+      state: ArcAdminMapMarkerState.draft,
+    );
+
     _snapshotUndo();
     setState(() {
-      _markers = _markers.where((item) => item.id != selected.id).toList();
-      _selected = null;
+      _markers = [..._markers, duplicate]
+        ..sort((a, b) => a.name.compareTo(b.name));
+      _selected = duplicate;
+      _markDirty();
     });
+    await _saveDrafts();
+  }
+
+  Future<void> _deleteSelected() async {
+    final selected = _selected;
+    if (selected == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackgroundDeep,
+        shape: AppTheme.tradingDialogShape(),
+        title: Text(
+          'Delete ${selected.name}?',
+          style: AppTheme.tradingHeading(
+            fontSize: 22,
+            color: AppTheme.tradingDanger,
+          ),
+        ),
+        content: Text(
+          'This archives the POI on ${_map.displayName} / ${_layer.label}. '
+          'Linked reports are not deleted.',
+          style: AppTheme.bodyTextStyle(
+            fontSize: 14,
+            color: AppTheme.tradingMutedText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.tradingDanger,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('Archive POI'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _saving = true);
+    try {
+      await _repository.archive(selected.id);
+      if (!mounted) return;
+      _snapshotUndo();
+      setState(() {
+        _markers = _markers.where((item) => item.id != selected.id).toList();
+        _selected = null;
+        _lastSavedAt = DateTime.now();
+        _saveStatus = 'Archived';
+        _saveError = '';
+      });
+      _message('POI archived. It will remain hidden after refresh.');
+    } catch (error, stackTrace) {
+      debugPrint('Admin Map Editor delete/archive failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        setState(() {
+          _saveStatus = 'Delete failed';
+          _saveError = error.toString();
+        });
+        _message('Delete failed: $error');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   void _resetSelected() {
@@ -721,7 +955,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTapUp: (details) =>
-                                _placeSelected(details.localPosition, mapSize),
+                                _handleMapTap(details.localPosition, mapSize),
                             child: SizedBox(
                               width: mapSize.width,
                               height: mapSize.height,
@@ -858,8 +1092,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
 
   Widget _markerWidget(ArcAdminMapMarker marker, Size size) {
     final selected = _selected?.id == marker.id;
-    final left = (marker.point.x * size.width) - 18;
-    final top = (marker.point.y * size.height) - 18;
+    final hitSize = selected ? 40.0 : 32.0;
+    final visibleSize = selected ? 24.0 : 18.0;
+    final left = (marker.point.x * size.width) - (hitSize / 2);
+    final top = (marker.point.y * size.height) - (hitSize / 2);
 
     return Positioned(
       left: left,
@@ -885,33 +1121,40 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                 if (item.id == marker.id) updated else item,
             ];
             _selected = updated;
+            _markDirty();
           });
         },
         child: Tooltip(
           message:
               '${marker.name}\nX ${marker.point.x.toStringAsFixed(4)} • Y ${marker.point.y.toStringAsFixed(4)}',
-          child: AnimatedContainer(
-            duration: AppTheme.fastAnimation,
-            width: selected ? 42 : 36,
-            height: selected ? 42 : 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black.withValues(alpha: 0.88),
-              border: Border.all(
-                color: selected ? Colors.white : _kindColor(marker.kind),
-                width: selected ? 3 : 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _kindColor(marker.kind).withValues(alpha: 0.45),
-                  blurRadius: selected ? 18 : 10,
+          child: SizedBox(
+            width: hitSize,
+            height: hitSize,
+            child: Center(
+              child: AnimatedContainer(
+                duration: AppTheme.fastAnimation,
+                width: visibleSize,
+                height: visibleSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.88),
+                  border: Border.all(
+                    color: selected ? Colors.white : _kindColor(marker.kind),
+                    width: selected ? 2.2 : 1.4,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _kindColor(marker.kind).withValues(alpha: 0.38),
+                      blurRadius: selected ? 14 : 7,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Icon(
-              _kindIcon(marker.kind),
-              size: selected ? 21 : 17,
-              color: _kindColor(marker.kind),
+                child: Icon(
+                  _kindIcon(marker.kind),
+                  size: selected ? 13 : 10,
+                  color: _kindColor(marker.kind),
+                ),
+              ),
             ),
           ),
         ),
@@ -931,9 +1174,9 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               runSpacing: 7,
               children: [
                 ElevatedButton.icon(
-                  onPressed: _createMarker,
+                  onPressed: _saving ? null : _beginPoiPlacement,
                   icon: const Icon(Icons.add_location_alt_rounded),
-                  label: const Text('New Intel'),
+                  label: const Text('Add POI'),
                 ),
                 OutlinedButton.icon(
                   onPressed: _saving ? null : _saveDrafts,
@@ -963,6 +1206,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             child: ListView(
               padding: const EdgeInsets.all(10),
               children: [
+                _saveStatusCard(),
+                const SizedBox(height: 10),
                 _importDashboardCard(),
                 const SizedBox(height: 10),
                 _markerFiltersCard(),
@@ -1137,6 +1382,68 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _saveStatusCard() {
+    final statusColor =
+        _saveStatus == 'Save failed' || _saveStatus == 'Delete failed'
+        ? AppTheme.tradingDanger
+        : _dirty || _placingNewPoi
+        ? AppTheme.warningAmber
+        : AppTheme.neonCyan;
+    final lastSaved = _lastSavedAt;
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: statusColor.withValues(alpha: 0.32),
+        backgroundColor: Colors.black.withValues(alpha: 0.20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _saving
+                    ? Icons.sync_rounded
+                    : _dirty || _placingNewPoi
+                    ? Icons.edit_note_rounded
+                    : Icons.cloud_done_rounded,
+                color: statusColor,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _saving ? 'Saving...' : _saveStatus,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: statusColor,
+                    isBold: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (lastSaved != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Last saved ${lastSaved.toLocal()}',
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
+          ],
+          if (_saveError.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              _saveError,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: AppTheme.tradingDanger, fontSize: 11),
+            ),
+          ],
         ],
       ),
     );
@@ -1335,6 +1642,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               style: const TextStyle(color: Colors.white60),
             ),
           ],
+          if (marker.aliases.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Aliases: ${marker.aliases.join(', ')}',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+          ],
           if (marker.blueprintId != null) ...[
             const SizedBox(height: 6),
             Text(
@@ -1386,6 +1700,16 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             spacing: 6,
             runSpacing: 6,
             children: [
+              TextButton.icon(
+                onPressed: _saving ? null : _editSelected,
+                icon: const Icon(Icons.edit_location_alt_rounded),
+                label: const Text('Edit'),
+              ),
+              TextButton.icon(
+                onPressed: _saving ? null : _duplicateSelected,
+                icon: const Icon(Icons.copy_all_rounded),
+                label: const Text('Duplicate'),
+              ),
               if (marker.kind.isSeedDefinition)
                 TextButton.icon(
                   onPressed: _resetSelected,
@@ -1393,16 +1717,16 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   label: const Text('Reset'),
                 ),
               TextButton.icon(
-                onPressed: _deleteSelected,
+                onPressed: _saving ? null : _deleteSelected,
                 icon: const Icon(Icons.delete_outline_rounded),
-                label: const Text('Remove'),
+                label: const Text('Delete'),
               ),
               TextButton.icon(
                 onPressed: () => Clipboard.setData(
                   ClipboardData(text: jsonEncode(marker.toJsonMap())),
                 ),
                 icon: const Icon(Icons.copy_rounded),
-                label: const Text('Copy'),
+                label: const Text('Copy JSON'),
               ),
             ],
           ),
@@ -1540,6 +1864,7 @@ class _NewMarkerResult {
   const _NewMarkerResult({
     required this.kind,
     required this.name,
+    required this.aliases,
     required this.description,
     required this.sourceLabel,
     required this.confidence,
@@ -1548,6 +1873,7 @@ class _NewMarkerResult {
 
   final ArcAdminMapMarkerKind kind;
   final String name;
+  final List<String> aliases;
   final String description;
   final String sourceLabel;
   final ArcRaidIntelConfidence confidence;
@@ -1555,7 +1881,19 @@ class _NewMarkerResult {
 }
 
 class _NewMarkerDialog extends StatefulWidget {
-  const _NewMarkerDialog();
+  const _NewMarkerDialog({
+    required this.title,
+    required this.actionLabel,
+    this.initialMarker,
+    this.initialKind = ArcAdminMapMarkerKind.customIntel,
+    this.includeSeedKinds = false,
+  });
+
+  final String title;
+  final String actionLabel;
+  final ArcAdminMapMarker? initialMarker;
+  final ArcAdminMapMarkerKind initialKind;
+  final bool includeSeedKinds;
 
   @override
   State<_NewMarkerDialog> createState() => _NewMarkerDialogState();
@@ -1563,6 +1901,7 @@ class _NewMarkerDialog extends StatefulWidget {
 
 class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   final _name = TextEditingController();
+  final _aliases = TextEditingController();
   final _description = TextEditingController();
   final _source = TextEditingController(text: 'Mike / Admin Intel');
   ArcAdminMapMarkerKind _kind = ArcAdminMapMarkerKind.customIntel;
@@ -1570,8 +1909,24 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   String? _blueprintId;
 
   @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialMarker;
+    _kind = initial?.kind ?? widget.initialKind;
+    if (initial != null) {
+      _name.text = initial.name;
+      _aliases.text = initial.aliases.join(', ');
+      _description.text = initial.description;
+      _source.text = initial.sourceLabel;
+      _confidence = initial.confidence;
+      _blueprintId = initial.blueprintId;
+    }
+  }
+
+  @override
   void dispose() {
     _name.dispose();
+    _aliases.dispose();
     _description.dispose();
     _source.dispose();
     super.dispose();
@@ -1582,7 +1937,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
     final blueprints = ArcBlueprintSeedData.blueprints;
 
     return AlertDialog(
-      title: const Text('Create Admin Intel Marker'),
+      title: Text(widget.title),
       content: SizedBox(
         width: 520,
         child: SingleChildScrollView(
@@ -1594,7 +1949,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                 decoration: const InputDecoration(labelText: 'Marker type'),
                 items: [
                   for (final kind in ArcAdminMapMarkerKind.values)
-                    if (!kind.isSeedDefinition)
+                    if (widget.includeSeedKinds || !kind.isSeedDefinition)
                       DropdownMenuItem(value: kind, child: Text(kind.label)),
                 ],
                 onChanged: (value) => setState(() => _kind = value ?? _kind),
@@ -1603,6 +1958,13 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
               TextField(
                 controller: _name,
                 decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _aliases,
+                decoration: const InputDecoration(
+                  labelText: 'Aliases (comma separated)',
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
@@ -1665,11 +2027,18 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
           onPressed: () {
             final name = _name.text.trim();
             if (name.isEmpty) return;
+            final aliases = _aliases.text
+                .split(',')
+                .map((item) => item.trim())
+                .where((item) => item.isNotEmpty)
+                .toSet()
+                .toList(growable: false);
             Navigator.pop(
               context,
               _NewMarkerResult(
                 kind: _kind,
                 name: name,
+                aliases: aliases,
                 description: _description.text.trim(),
                 sourceLabel: _source.text.trim().isEmpty
                     ? 'Admin Intel'
@@ -1679,7 +2048,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
               ),
             );
           },
-          child: const Text('Create at Map Centre'),
+          child: Text(widget.actionLabel),
         ),
       ],
     );

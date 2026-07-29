@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_delivery_engine.dart';
+import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_repository.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 
@@ -88,6 +90,61 @@ void main() {
       expect(
         tradingNotificationTypeFromWire('age_verification_required'),
         TradingNotificationType.ageVerificationRequired,
+      );
+    });
+
+    test('direct admin inbox test matches Communications query shape', () {
+      final createdAt = Timestamp.fromDate(DateTime.utc(2026, 7, 29, 12));
+      const payload = UagNotificationPayload(
+        id: 'preview',
+        type: UagNotificationType.openBeta,
+        title: 'Open Beta',
+        body: 'Doors are open.',
+        deepLink: '/my-hub',
+        route: '/my-hub',
+        entityId: 'open-beta',
+        audience: UagNotificationAudience.specificUser,
+        senderUid: 'admin-1',
+        priority: UagNotificationPriority.high,
+      );
+
+      final data = UagNotificationRepository.buildDirectInAppNotificationData(
+        notificationId: 'notification-1',
+        targetUid: 'admin-1',
+        actorUid: 'admin-1',
+        payload: payload,
+        createdAt: createdAt,
+        updatedAt: createdAt,
+      );
+      final inboxItem = TradingNotification.fromMap(data);
+
+      expect(
+        UagNotificationRepository.directInAppNotificationPath('notification-1'),
+        'trading_notifications/notification-1',
+      );
+      expect(data['id'], 'notification-1');
+      expect(data['targetUid'], 'admin-1');
+      expect(data['actorUid'], 'admin-1');
+      expect(data['type'], 'open_beta');
+      expect(data['read'], isFalse);
+      expect(data['archived'], isFalse);
+      expect(data['deleted'], isFalse);
+      expect(inboxItem.type, TradingNotificationType.openBeta);
+      expect(inboxItem.route, '/my-hub');
+      expect(inboxItem.createdAt?.toUtc(), DateTime.utc(2026, 7, 29, 12));
+      expect(
+        UagNotificationRepository.matchesCommunicationsInboxQuery(
+          data,
+          targetUid: 'admin-1',
+        ),
+        isTrue,
+      );
+      expect(
+        UagNotificationRepository.matchesCommunicationsInboxQuery(
+          data,
+          targetUid: 'someone-else',
+        ),
+        isFalse,
       );
     });
 

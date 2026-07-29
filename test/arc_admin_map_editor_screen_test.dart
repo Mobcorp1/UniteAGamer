@@ -12,6 +12,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
   _FakeAdminMapEditorRepository();
 
+  final List<ArcAdminMapMarker> savedMarkers = <ArcAdminMapMarker>[];
+
   @override
   Future<List<ArcAdminMapMarker>> loadDrafts(
     String mapId,
@@ -26,6 +28,26 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
     ArcRaidMapLayer layer,
     Iterable<ArcAdminMapMarker> markers,
   ) async {}
+
+  @override
+  Future<ArcAdminMapEditorSaveResult> saveDraftMarkers(
+    String mapId,
+    ArcRaidMapLayer layer,
+    Iterable<ArcAdminMapMarker> markers,
+  ) async {
+    savedMarkers
+      ..clear()
+      ..addAll(
+        markers.where(
+          (marker) => marker.mapId == mapId && marker.layer == layer,
+        ),
+      );
+    return ArcAdminMapEditorSaveResult(
+      collectionPath: ArcAdminMapEditorRepository.collectionName,
+      savedCount: savedMarkers.length,
+      savedAt: DateTime.utc(2026, 7, 29, 12),
+    );
+  }
 
   @override
   Future<List<ArcAdminMapMarker>> loadImportCache(
@@ -63,6 +85,9 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
   Future<void> publishAll(Iterable<ArcAdminMapMarker> markers) async {}
 
   @override
+  Future<void> archive(String markerId) async {}
+
+  @override
   Future<void> archiveAll(Iterable<String> markerIds) async {}
 
   @override
@@ -80,11 +105,12 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _FakeAdminMapEditorRepository();
 
     await tester.pumpWidget(
       MaterialApp(
         home: ArcAdminMapEditorScreen(
-          repository: _FakeAdminMapEditorRepository(),
+          repository: repository,
           appBar: AppBar(title: const Text('Admin Map & Intel Editor')),
         ),
       ),
@@ -93,7 +119,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Admin Map & Intel Editor'), findsOneWidget);
-    expect(find.text('New Intel'), findsOneWidget);
+    expect(find.text('Add POI'), findsOneWidget);
     expect(find.text('Save Draft'), findsOneWidget);
     expect(find.text('Export JSON'), findsOneWidget);
     expect(find.text('Import JSON'), findsOneWidget);
@@ -104,6 +130,11 @@ void main() {
     expect(find.text('Source permission'), findsOneWidget);
     expect(find.text('Evidence type'), findsOneWidget);
     expect(find.text('Grid'), findsOneWidget);
+
+    await tester.tap(find.text('Save Draft'));
+    await tester.pumpAndSettle();
+    expect(repository.savedMarkers, isNotEmpty);
+    expect(find.textContaining('Draft saved successfully'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();

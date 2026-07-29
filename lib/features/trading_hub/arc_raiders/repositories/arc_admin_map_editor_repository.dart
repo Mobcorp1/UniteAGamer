@@ -43,6 +43,20 @@ class ArcAdminMapEditorRepository {
     String mapId,
     ArcRaidMapLayer layer,
   ) async {
+    final snapshot = await _firestore
+        .collection(collectionName)
+        .where('mapId', isEqualTo: mapId)
+        .where('layer', isEqualTo: layer.name)
+        .get();
+    final firestoreMarkers = _markersFromSnapshot(snapshot);
+    if (firestoreMarkers.isNotEmpty) return firestoreMarkers;
+    return _loadLegacyLocalDrafts(mapId, layer);
+  }
+
+  Future<List<ArcAdminMapMarker>> _loadLegacyLocalDrafts(
+    String mapId,
+    ArcRaidMapLayer layer,
+  ) async {
     final preferences = await SharedPreferences.getInstance();
     final raw = preferences.getString(_draftKey(mapId, layer));
     if (raw == null || raw.trim().isEmpty) return const <ArcAdminMapMarker>[];
@@ -63,11 +77,83 @@ class ArcAdminMapEditorRepository {
     ArcRaidMapLayer layer,
     Iterable<ArcAdminMapMarker> markers,
   ) async {
-    final preferences = await SharedPreferences.getInstance();
-    final values = markers
-        .where((item) => item.mapId == mapId && item.layer == layer)
-        .map((item) => item.toJsonMap())
+    await saveDraftMarkers(mapId, layer, markers);
+  }
+
+  Future<ArcAdminMapEditorSaveResult> saveDraftMarkers(
+    String mapId,
+    ArcRaidMapLayer layer,
+    Iterable<ArcAdminMapMarker> markers,
+  ) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('Admin sign-in is required.');
+
+    final savedAt = DateTime.now();
+    final values = prepareDraftMarkersForSave(
+      mapId: mapId,
+      layer: layer,
+      markers: markers,
+      uid: uid,
+      savedAt: savedAt,
+    );
+    if (values.isEmpty) {
+      return ArcAdminMapEditorSaveResult(
+        collectionPath: collectionName,
+        savedCount: 0,
+        savedAt: savedAt,
+      );
+    }
+
+    final batch = _firestore.batch();
+    for (final marker in values) {
+      batch.set(
+        _firestore.collection(collectionName).doc(marker.id),
+        marker.toMap(),
+        SetOptions(merge: true),
+      );
+    }
+    await batch.commit();
+
+    await _saveLegacyLocalDrafts(mapId, layer, values);
+    return ArcAdminMapEditorSaveResult(
+      collectionPath: collectionName,
+      savedCount: values.length,
+      savedAt: savedAt,
+    );
+  }
+
+  static List<ArcAdminMapMarker> prepareDraftMarkersForSave({
+    required String mapId,
+    required ArcRaidMapLayer layer,
+    required Iterable<ArcAdminMapMarker> markers,
+    required String uid,
+    required DateTime savedAt,
+  }) {
+    return markers
+        .where(
+          (item) =>
+              item.mapId == mapId &&
+              item.layer == layer &&
+              item.state != ArcAdminMapMarkerState.archived,
+        )
+        .map(
+          (item) => item.copyWith(
+            createdByUid: item.createdByUid ?? uid,
+            updatedByUid: uid,
+            createdAt: item.createdAt ?? savedAt,
+            updatedAt: savedAt,
+          ),
+        )
         .toList(growable: false);
+  }
+
+  Future<void> _saveLegacyLocalDrafts(
+    String mapId,
+    ArcRaidMapLayer layer,
+    Iterable<ArcAdminMapMarker> markers,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    final values = markers.map((item) => item.toJsonMap()).toList();
     await preferences.setString(_draftKey(mapId, layer), jsonEncode(values));
   }
 
@@ -231,6 +317,7 @@ class ArcAdminMapEditorRepository {
       state: ArcAdminMapMarkerState.published,
       adminVerified: true,
       createdByUid: marker.createdByUid ?? uid,
+      updatedByUid: uid,
       createdAt: marker.createdAt ?? now,
       updatedAt: now,
     );
@@ -253,6 +340,7 @@ class ArcAdminMapEditorRepository {
         state: ArcAdminMapMarkerState.published,
         adminVerified: true,
         createdByUid: marker.createdByUid ?? uid,
+        updatedByUid: uid,
         createdAt: marker.createdAt ?? now,
         updatedAt: now,
       );
@@ -267,22 +355,28 @@ class ArcAdminMapEditorRepository {
   }
 
   Future<void> archive(String markerId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('Admin sign-in is required.');
     await _firestore
         .collection(collectionName)
         .doc(markerId)
         .set(<String, dynamic>{
           'state': ArcAdminMapMarkerState.archived.name,
+          'updatedByUid': uid,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
   }
 
   Future<void> archiveAll(Iterable<String> markerIds) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('Admin sign-in is required.');
     final batch = _firestore.batch();
     for (final markerId in markerIds.where((id) => id.trim().isNotEmpty)) {
       batch.set(
         _firestore.collection(collectionName).doc(markerId),
         <String, dynamic>{
           'state': ArcAdminMapMarkerState.archived.name,
+          'updatedByUid': uid,
           'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
@@ -308,4 +402,16 @@ class ArcAdminMapEditorRepository {
     final values = markers.map((item) => item.toJsonMap()).toList();
     return const JsonEncoder.withIndent('  ').convert(values);
   }
+}
+
+class ArcAdminMapEditorSaveResult {
+  const ArcAdminMapEditorSaveResult({
+    required this.collectionPath,
+    required this.savedCount,
+    required this.savedAt,
+  });
+
+  final String collectionPath;
+  final int savedCount;
+  final DateTime savedAt;
 }

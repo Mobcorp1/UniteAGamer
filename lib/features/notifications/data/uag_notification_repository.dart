@@ -9,6 +9,8 @@ class UagNotificationRepository {
     : _firestore = firestore ?? FirebaseFirestore.instance,
       _auth = auth ?? FirebaseAuth.instance;
 
+  static const directInAppNotificationCollection = 'trading_notifications';
+
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final UagNotificationDeliveryEngine _deliveryEngine =
@@ -250,25 +252,25 @@ class UagNotificationRepository {
     return doc.id;
   }
 
-  Future<String> createDirectInAppTestNotification({
-    required UagNotificationPayload payload,
-    String targetUid = '',
-  }) async {
-    final uid = currentUid;
-    if (uid == null) {
-      throw StateError('Sign in before creating a test notification.');
-    }
+  static String directInAppNotificationPath(String notificationId) {
+    return '$directInAppNotificationCollection/$notificationId';
+  }
 
-    final resolvedTargetUid = targetUid.trim().isEmpty ? uid : targetUid.trim();
+  static Map<String, dynamic> buildDirectInAppNotificationData({
+    required String notificationId,
+    required String targetUid,
+    required String actorUid,
+    required UagNotificationPayload payload,
+    Object? createdAt,
+    Object? updatedAt,
+  }) {
     final route = payload.route.trim().isNotEmpty
         ? payload.route.trim()
         : payload.deepLink.trim();
-    final doc = _firestore.collection('trading_notifications').doc();
-
-    await doc.set({
-      'id': doc.id,
-      'targetUid': resolvedTargetUid,
-      'actorUid': uid,
+    return {
+      'id': notificationId,
+      'targetUid': targetUid,
+      'actorUid': actorUid,
       'title': payload.title,
       'body': payload.body,
       'type': payload.type.wireName,
@@ -288,9 +290,42 @@ class UagNotificationRepository {
       'deliveryChannels': [UagNotificationDeliveryChannel.inApp.wireName],
       'source': 'admin_direct_inbox_test',
       'read': false,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+      'archived': false,
+      'deleted': false,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
+
+  static bool matchesCommunicationsInboxQuery(
+    Map<String, dynamic> data, {
+    required String targetUid,
+  }) {
+    return data['targetUid'] == targetUid && data['createdAt'] != null;
+  }
+
+  Future<String> createDirectInAppTestNotification({
+    required UagNotificationPayload payload,
+    String targetUid = '',
+  }) async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw StateError('Sign in before creating a test notification.');
+    }
+
+    final resolvedTargetUid = targetUid.trim().isEmpty ? uid : targetUid.trim();
+    final doc = _firestore.collection(directInAppNotificationCollection).doc();
+
+    await doc.set(
+      buildDirectInAppNotificationData(
+        notificationId: doc.id,
+        targetUid: resolvedTargetUid,
+        actorUid: uid,
+        payload: payload,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      ),
+    );
     return doc.id;
   }
 
@@ -298,7 +333,7 @@ class UagNotificationRepository {
     final id = notificationId.trim();
     if (id.isEmpty) return false;
     final snapshot = await _firestore
-        .collection('trading_notifications')
+        .collection(directInAppNotificationCollection)
         .doc(id)
         .get();
     return snapshot.exists;
