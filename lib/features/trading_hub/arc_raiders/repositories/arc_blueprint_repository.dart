@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_po
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state_recovery.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
@@ -24,21 +25,161 @@ class ArcBlueprintRepository {
   CollectionReference<Map<String, dynamic>> _stateCollection(String uid) =>
       _firestore.collection('users').doc(uid).collection('arc_blueprints');
 
+  static String canonicalStoragePathFor(String uid) =>
+      'users/$uid/arc_blueprints';
+
+  static List<String> legacyStoragePathCandidatesFor(String uid) => [
+    'users/$uid/arc_blueprint_states',
+    'users/$uid/blueprints',
+    'arc_blueprint_states/$uid/states',
+    'arc_blueprints/$uid/states',
+  ];
+
   CollectionReference<Map<String, dynamic>> get _reportsCollection =>
       _firestore.collection('arc_blueprint_drop_reports');
 
   Stream<Map<String, ArcBlueprintState>> watchMyBlueprintStates() {
-    final uid = currentUid;
-    if (uid == null) return Stream.value(<String, ArcBlueprintState>{});
+    return _auth
+        .authStateChanges()
+        .map((user) => user?.uid)
+        .distinct()
+        .asyncExpand((uid) {
+          if (uid == null) return Stream.value(<String, ArcBlueprintState>{});
+          return _stateCollection(uid).snapshots().asyncMap(
+            (snapshot) => _statesFromSnapshot(uid, snapshot),
+          );
+        });
+  }
 
-    return _stateCollection(uid).snapshots().map((snapshot) {
-      final out = <String, ArcBlueprintState>{};
-      for (final doc in snapshot.docs) {
-        final state = ArcBlueprintState.fromMap(doc.data());
-        out[state.blueprintId] = state;
+  Future<Map<String, ArcBlueprintState>> loadMyBlueprintStates() async {
+    final uid = currentUid;
+    if (uid == null) return const <String, ArcBlueprintState>{};
+    final snapshot = await _stateCollection(uid).get();
+    return _statesFromSnapshotDocs(snapshot.docs);
+  }
+
+  Future<ArcBlueprintStateRecoveryPreview>
+  previewMyBlueprintStateRecovery() async {
+    final uid = currentUid;
+    if (uid == null) {
+      return const ArcBlueprintStateRecoveryPreview(
+        canonicalPath: 'users/{uid}/arc_blueprints',
+        currentStates: <String, ArcBlueprintState>{},
+        legacySources: <ArcBlueprintStateRecoverySource>[],
+        mergedStates: <String, ArcBlueprintState>{},
+      );
+    }
+    return _buildRecoveryPreview(uid);
+  }
+
+  Future<ArcBlueprintStateRecoveryPreview>
+  recoverMyBlueprintStatesFromLegacyPaths() async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw Exception('You must be signed in.');
+    }
+
+    final preview = await _buildRecoveryPreview(uid);
+    if (!preview.requiresMigration) return preview;
+
+    final batch = _firestore.batch();
+    for (final state in preview.mergedStates.values) {
+      final docRef = _stateCollection(uid).doc(state.blueprintId);
+      batch.set(docRef, state.toMap(), SetOptions(merge: true));
+    }
+    await batch.commit();
+    return preview;
+  }
+
+  Future<Map<String, ArcBlueprintState>> _statesFromSnapshot(
+    String uid,
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    final currentStates = _statesFromSnapshotDocs(snapshot.docs);
+    if (currentStates.isNotEmpty) return currentStates;
+
+    try {
+      final recovery = await _buildRecoveryPreview(uid);
+      if (!recovery.requiresMigration) return currentStates;
+
+      final batch = _firestore.batch();
+      for (final state in recovery.mergedStates.values) {
+        final docRef = _stateCollection(uid).doc(state.blueprintId);
+        batch.set(docRef, state.toMap(), SetOptions(merge: true));
       }
-      return out;
-    });
+      await batch.commit();
+      return recovery.mergedStates;
+    } catch (error, stackTrace) {
+      debugPrint('Blueprint legacy recovery failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return currentStates;
+    }
+  }
+
+  Map<String, ArcBlueprintState> _statesFromSnapshotDocs(
+    Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    final out = <String, ArcBlueprintState>{};
+    for (final doc in docs) {
+      final rawData = doc.data();
+      final data = <String, dynamic>{
+        ...rawData,
+        'blueprintId':
+            (rawData['blueprintId'] as String?)?.trim().isNotEmpty == true
+            ? rawData['blueprintId']
+            : doc.id,
+      };
+      final state = ArcBlueprintState.fromMap(data);
+      final blueprintId = state.blueprintId.trim().isNotEmpty
+          ? state.blueprintId.trim()
+          : doc.id;
+      out[blueprintId] = state.copyWith(blueprintId: blueprintId);
+    }
+    return out;
+  }
+
+  Future<Map<String, ArcBlueprintState>> _statesFromCollectionPath(
+    String path,
+  ) async {
+    final snapshot = await _firestore.collection(path).get();
+    return _statesFromSnapshotDocs(snapshot.docs);
+  }
+
+  Future<ArcBlueprintStateRecoveryPreview> _buildRecoveryPreview(
+    String uid,
+  ) async {
+    final currentStates = await _statesFromCollectionPath(
+      canonicalStoragePathFor(uid),
+    );
+    final sources = <ArcBlueprintStateRecoverySource>[];
+    for (final path in legacyStoragePathCandidatesFor(uid)) {
+      try {
+        final states = await _statesFromCollectionPath(path);
+        sources.add(
+          ArcBlueprintStateRecoverySource(path: path, states: states),
+        );
+      } catch (error, stackTrace) {
+        debugPrint('Blueprint legacy path scan failed for $path: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        sources.add(
+          ArcBlueprintStateRecoverySource(
+            path: path,
+            states: const <String, ArcBlueprintState>{},
+          ),
+        );
+      }
+    }
+
+    final mergedStates = ArcBlueprintStateRecovery.merge(
+      currentStates: currentStates,
+      legacySources: sources,
+    );
+    return ArcBlueprintStateRecoveryPreview(
+      canonicalPath: canonicalStoragePathFor(uid),
+      currentStates: currentStates,
+      legacySources: sources,
+      mergedStates: mergedStates,
+    );
   }
 
   Future<void> saveBlueprintState(ArcBlueprintState state) async {

@@ -16,6 +16,7 @@ import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_sc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_availability_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_intel_explorer_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
@@ -450,6 +451,12 @@ class UAGTradersHubApp extends StatelessWidget {
       case AdminConsoleScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const AdminConsoleScreen(),
+          settings: settings,
+        );
+
+      case ArcAdminMapEditorScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcAdminMapEditorScreen(),
           settings: settings,
         );
 

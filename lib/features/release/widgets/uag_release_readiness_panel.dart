@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/release/models/uag_release_runtime_diagnostics.dart';
 import 'package:uag_arc_raiders_hub/features/release/models/uag_release_readiness_models.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -98,6 +99,8 @@ class UagReleaseReadinessPanel extends StatelessWidget {
                   );
                 },
               ),
+              const SizedBox(height: AppTheme.spaceM),
+              const _ReleaseRuntimeDiagnosticsCard(),
             ],
           ),
         );
@@ -126,6 +129,193 @@ class _MetricPill extends StatelessWidget {
         style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white),
       ),
     );
+  }
+}
+
+class _ReleaseRuntimeDiagnosticsCard extends StatelessWidget {
+  const _ReleaseRuntimeDiagnosticsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<UagReleaseRuntimeDiagnosticsSnapshot>(
+      future: UagReleaseRuntimeDiagnosticsSnapshot.load(),
+      builder: (context, snapshot) {
+        final diagnostics = snapshot.data;
+        if (diagnostics == null) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.black.withValues(alpha: 0.20),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.18),
+              ),
+            ),
+            child: Text(
+              'Loading runtime diagnostics...',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 12,
+                color: AppTheme.tradingMutedText,
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.black.withValues(alpha: 0.20),
+            border: Border.all(
+              color: diagnostics.hasBlocked
+                  ? AppTheme.tradingDanger.withValues(alpha: 0.34)
+                  : AppTheme.neonCyan.withValues(alpha: 0.20),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    diagnostics.hasBlocked
+                        ? Icons.report_problem_outlined
+                        : Icons.query_stats_rounded,
+                    color: diagnostics.hasBlocked
+                        ? AppTheme.tradingDanger
+                        : AppTheme.neonCyan,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Runtime Diagnostics',
+                      style: AppTheme.tradingHeading(fontSize: 16),
+                    ),
+                  ),
+                  Text(
+                    diagnostics.generatedAt.toLocal().toString(),
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 10,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceS),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 760;
+                  return Wrap(
+                    spacing: AppTheme.spaceS,
+                    runSpacing: AppTheme.spaceS,
+                    children: diagnostics.entries
+                        .map(
+                          (entry) => SizedBox(
+                            width: wide
+                                ? (constraints.maxWidth - AppTheme.spaceS) / 2
+                                : constraints.maxWidth,
+                            child: _ReleaseDiagnosticTile(entry: entry),
+                          ),
+                        )
+                        .toList(growable: false),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ReleaseDiagnosticTile extends StatelessWidget {
+  const _ReleaseDiagnosticTile({required this.entry});
+
+  final UagReleaseDiagnosticEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _levelColor(entry.level);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.black.withValues(alpha: 0.18),
+        border: Border.all(color: color.withValues(alpha: 0.26)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(_levelIcon(entry.level), color: color, size: 15),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  entry.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 11,
+                    color: Colors.white70,
+                    isBold: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            entry.value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white),
+          ),
+          if (entry.detail.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              entry.detail,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.bodyTextStyle(
+                fontSize: 10,
+                color: Colors.white54,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Color _levelColor(UagReleaseDiagnosticLevel level) {
+    switch (level) {
+      case UagReleaseDiagnosticLevel.ready:
+        return AppTheme.neonCyan;
+      case UagReleaseDiagnosticLevel.warning:
+        return AppTheme.warningAmber;
+      case UagReleaseDiagnosticLevel.blocked:
+        return AppTheme.tradingDanger;
+      case UagReleaseDiagnosticLevel.info:
+        return Colors.white54;
+    }
+  }
+
+  IconData _levelIcon(UagReleaseDiagnosticLevel level) {
+    switch (level) {
+      case UagReleaseDiagnosticLevel.ready:
+        return Icons.check_circle_outline_rounded;
+      case UagReleaseDiagnosticLevel.warning:
+        return Icons.info_outline_rounded;
+      case UagReleaseDiagnosticLevel.blocked:
+        return Icons.error_outline_rounded;
+      case UagReleaseDiagnosticLevel.info:
+        return Icons.circle_outlined;
+    }
   }
 }
 

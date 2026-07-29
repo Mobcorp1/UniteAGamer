@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_bro
 import 'package:uag_arc_raiders_hub/features/release/widgets/uag_release_readiness_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
@@ -262,6 +263,16 @@ class _AdminConsoleBody extends StatelessWidget {
                     ),
                     const SizedBox(height: AppTheme.spaceL),
                     const _ArcAdminControlPanel(),
+                    const SizedBox(height: AppTheme.spaceL),
+                    _AdminMapIntelEditorCard(
+                      onOpen: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const ArcAdminMapEditorScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: AppTheme.spaceXL),
                     _sectionHeader(
                       title: 'Closed Beta Tools',
@@ -461,6 +472,69 @@ class _AdminConsoleBody extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Feedback deleted.')));
+  }
+}
+
+class _AdminMapIntelEditorCard extends StatelessWidget {
+  const _AdminMapIntelEditorCard({required this.onOpen});
+
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: AppTheme.sectionCardPadding,
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.38),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.neonCyan.withValues(alpha: 0.10),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.32),
+              ),
+            ),
+            child: const Icon(
+              Icons.edit_location_alt_rounded,
+              color: AppTheme.neonCyan,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spaceM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Map & Intel Editor',
+                  style: AppTheme.tradingHeading(fontSize: 22),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Drag existing POIs into alignment or create verified '
+                  'Blueprint, weapon-cache, loot and custom Intel markers.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppTheme.spaceM),
+          ElevatedButton.icon(
+            onPressed: onOpen,
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: const Text('Open Editor'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

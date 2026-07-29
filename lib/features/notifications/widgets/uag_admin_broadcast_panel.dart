@@ -115,6 +115,54 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
     await _createBroadcast(testMode: true, targetUid: uid);
   }
 
+  Future<void> _createInboxTest() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final targetUid = _targetUidController.text.trim().isEmpty
+        ? uid
+        : _targetUidController.text.trim();
+    final payload = _payload(
+      uid,
+    ).copyForTarget(audience: UagNotificationAudience.specificUser);
+    final validation = _engine.validateBroadcast(
+      payload: payload,
+      senderIsAdmin: true,
+      sendPush: false,
+      createInApp: true,
+    );
+    if (!validation.isValid) {
+      setState(() => _message = validation.errors.join(' '));
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _message = '';
+    });
+    try {
+      final notificationId = await _repository
+          .createDirectInAppTestNotification(
+            payload: payload,
+            targetUid: targetUid,
+          );
+      final readable = await _repository.canReadDirectInAppNotification(
+        notificationId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _message = readable
+            ? 'Inbox test created and readable: $notificationId'
+            : 'Inbox test created but could not be read back: $notificationId';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _message = 'Could not create inbox test: $error');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _sendBroadcast() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -399,6 +447,11 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
                 onPressed: _busy ? null : _testSend,
                 icon: const Icon(Icons.send_to_mobile_outlined),
                 label: const Text('Test Send To Me'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _busy ? null : _createInboxTest,
+                icon: const Icon(Icons.mark_email_unread_outlined),
+                label: const Text('Inbox Test'),
               ),
               ElevatedButton.icon(
                 onPressed: _busy ? null : _sendBroadcast,

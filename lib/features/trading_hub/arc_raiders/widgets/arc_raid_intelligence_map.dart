@@ -370,16 +370,16 @@ class _ArcRaidSchematicPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    _drawGrid(canvas, size, showRadar: showSchematicGuides);
     if (showSchematicGuides) {
-      _drawGrid(canvas, size);
       _drawRegions(canvas, size);
     }
     _drawRoute(canvas, size);
   }
 
-  void _drawGrid(Canvas canvas, Size size) {
+  void _drawGrid(Canvas canvas, Size size, {required bool showRadar}) {
     final gridPaint = Paint()
-      ..color = AppTheme.neonCyan.withValues(alpha: 0.08)
+      ..color = AppTheme.neonCyan.withValues(alpha: showRadar ? 0.08 : 0.05)
       ..strokeWidth = 1;
     for (var index = 1; index < 10; index++) {
       final x = size.width * index / 10;
@@ -387,6 +387,26 @@ class _ArcRaidSchematicPainter extends CustomPainter {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
+    final labelStyle = AppTheme.bodyTextStyle(
+      fontSize: 9,
+      color: Colors.white.withValues(alpha: showRadar ? 0.48 : 0.34),
+      isBold: true,
+    );
+    for (var index = 0; index < 10; index++) {
+      _drawLabel(
+        canvas,
+        String.fromCharCode(65 + index),
+        Offset((size.width * index / 10) + 6, 6),
+        labelStyle,
+      );
+      _drawLabel(
+        canvas,
+        '${index + 1}',
+        Offset(6, (size.height * index / 10) + 20),
+        labelStyle,
+      );
+    }
+    if (!showRadar) return;
     final radarPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
@@ -399,6 +419,14 @@ class _ArcRaidSchematicPainter extends CustomPainter {
         radarPaint,
       );
     }
+  }
+
+  void _drawLabel(Canvas canvas, String value, Offset offset, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(canvas, offset);
   }
 
   void _drawRegions(Canvas canvas, Size size) {

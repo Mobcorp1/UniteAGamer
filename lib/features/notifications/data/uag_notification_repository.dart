@@ -16,6 +16,9 @@ class UagNotificationRepository {
 
   String? get currentUid => _auth.currentUser?.uid;
 
+  Stream<String?> _watchCurrentUid() =>
+      _auth.authStateChanges().map((user) => user?.uid).distinct();
+
   CollectionReference<Map<String, dynamic>> _deviceCollection(String uid) {
     return _firestore
         .collection('users')
@@ -38,14 +41,15 @@ class UagNotificationRepository {
       _firestore.collection('uag_notification_schedules');
 
   Stream<UagNotificationPreferences> watchPreferences() {
-    final uid = currentUid;
-    if (uid == null) {
-      return Stream.value(UagNotificationPreferences.defaults);
-    }
+    return _watchCurrentUid().asyncExpand((uid) {
+      if (uid == null) {
+        return Stream.value(UagNotificationPreferences.defaults);
+      }
 
-    return _preferencesDoc(uid).snapshots().map(
-      (snapshot) => UagNotificationPreferences.fromMap(snapshot.data()),
-    );
+      return _preferencesDoc(uid).snapshots().map(
+        (snapshot) => UagNotificationPreferences.fromMap(snapshot.data()),
+      );
+    });
   }
 
   Future<UagNotificationPreferences> loadPreferences({String? uid}) async {
@@ -151,16 +155,17 @@ class UagNotificationRepository {
   }
 
   Stream<List<UagNotificationDevice>> watchMyDevices() {
-    final uid = currentUid;
-    if (uid == null) return Stream.value(const <UagNotificationDevice>[]);
-    return _deviceCollection(uid)
-        .orderBy('lastSeenAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => UagNotificationDevice.fromMap(doc.data()))
-              .toList(growable: false),
-        );
+    return _watchCurrentUid().asyncExpand((uid) {
+      if (uid == null) return Stream.value(const <UagNotificationDevice>[]);
+      return _deviceCollection(uid)
+          .orderBy('lastSeenAt', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) => snapshot.docs
+                .map((doc) => UagNotificationDevice.fromMap(doc.data()))
+                .toList(growable: false),
+          );
+    });
   }
 
   Future<UagNotificationAudienceEstimate> estimateAudience({
@@ -243,6 +248,60 @@ class UagNotificationRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     });
     return doc.id;
+  }
+
+  Future<String> createDirectInAppTestNotification({
+    required UagNotificationPayload payload,
+    String targetUid = '',
+  }) async {
+    final uid = currentUid;
+    if (uid == null) {
+      throw StateError('Sign in before creating a test notification.');
+    }
+
+    final resolvedTargetUid = targetUid.trim().isEmpty ? uid : targetUid.trim();
+    final route = payload.route.trim().isNotEmpty
+        ? payload.route.trim()
+        : payload.deepLink.trim();
+    final doc = _firestore.collection('trading_notifications').doc();
+
+    await doc.set({
+      'id': doc.id,
+      'targetUid': resolvedTargetUid,
+      'actorUid': uid,
+      'title': payload.title,
+      'body': payload.body,
+      'type': payload.type.wireName,
+      'listingId': '',
+      'offerId': '',
+      'sessionId': '',
+      'watchId': '',
+      'queueId': '',
+      'preparationId': '',
+      'opportunityId': '',
+      'route': route,
+      'deepLink': payload.deepLink,
+      'imageUrl': payload.imageUrl,
+      'entityId': payload.entityId,
+      'audience': UagNotificationAudience.specificUser.wireName,
+      'priority': payload.priority.wireName,
+      'deliveryChannels': [UagNotificationDeliveryChannel.inApp.wireName],
+      'source': 'admin_direct_inbox_test',
+      'read': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return doc.id;
+  }
+
+  Future<bool> canReadDirectInAppNotification(String notificationId) async {
+    final id = notificationId.trim();
+    if (id.isEmpty) return false;
+    final snapshot = await _firestore
+        .collection('trading_notifications')
+        .doc(id)
+        .get();
+    return snapshot.exists;
   }
 
   Future<void> createSchedule(UagScheduledNotification schedule) async {

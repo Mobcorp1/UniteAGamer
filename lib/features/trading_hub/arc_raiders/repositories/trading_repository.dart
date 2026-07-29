@@ -34,6 +34,9 @@ class TradingRepository {
 
   String? get currentUid => _auth.currentUser?.uid;
 
+  Stream<String?> _watchCurrentUid() =>
+      _auth.authStateChanges().map((user) => user?.uid).distinct();
+
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) {
     return _firestore.collection('users').doc(uid);
   }
@@ -1141,34 +1144,34 @@ class TradingRepository {
   }
 
   Stream<Map<String, ArcBlueprintState>> watchBlueprintStates() {
-    final uid = currentUid;
-
-    if (uid == null) {
-      return Stream.value(const <String, ArcBlueprintState>{});
-    }
-
-    return _blueprintStatesCollection(uid).snapshots().map((snapshot) {
-      final states = <String, ArcBlueprintState>{};
-
-      for (final doc in snapshot.docs) {
-        final rawData = doc.data();
-        final data = <String, dynamic>{
-          ...rawData,
-          'blueprintId':
-              (rawData['blueprintId'] as String?)?.trim().isNotEmpty == true
-              ? rawData['blueprintId']
-              : doc.id,
-        };
-
-        final state = ArcBlueprintState.fromMap(data);
-        final blueprintId = state.blueprintId.trim().isNotEmpty
-            ? state.blueprintId.trim()
-            : doc.id;
-
-        states[blueprintId] = state.copyWith(blueprintId: blueprintId);
+    return _watchCurrentUid().asyncExpand((uid) {
+      if (uid == null) {
+        return Stream.value(const <String, ArcBlueprintState>{});
       }
 
-      return states;
+      return _blueprintStatesCollection(uid).snapshots().map((snapshot) {
+        final states = <String, ArcBlueprintState>{};
+
+        for (final doc in snapshot.docs) {
+          final rawData = doc.data();
+          final data = <String, dynamic>{
+            ...rawData,
+            'blueprintId':
+                (rawData['blueprintId'] as String?)?.trim().isNotEmpty == true
+                ? rawData['blueprintId']
+                : doc.id,
+          };
+
+          final state = ArcBlueprintState.fromMap(data);
+          final blueprintId = state.blueprintId.trim().isNotEmpty
+              ? state.blueprintId.trim()
+              : doc.id;
+
+          states[blueprintId] = state.copyWith(blueprintId: blueprintId);
+        }
+
+        return states;
+      });
     });
   }
 
@@ -1205,18 +1208,27 @@ class TradingRepository {
   }
 
   Stream<List<TradingNotification>> watchNotifications() {
-    final uid = currentUid;
-    if (uid == null) return Stream.value(const <TradingNotification>[]);
+    return _watchCurrentUid().asyncExpand((uid) {
+      if (uid == null) return Stream.value(const <TradingNotification>[]);
 
-    return _notificationsCollection
-        .where('targetUid', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => TradingNotification.fromMap(doc.data()))
-              .toList(growable: false),
-        );
+      return _notificationsCollection
+          .where('targetUid', isEqualTo: uid)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) => snapshot.docs
+                .map((doc) {
+                  final data = doc.data();
+                  return TradingNotification.fromMap({
+                    ...data,
+                    'id': (data['id'] as String?)?.trim().isNotEmpty == true
+                        ? data['id']
+                        : doc.id,
+                  });
+                })
+                .toList(growable: false),
+          );
+    });
   }
 
   Future<void> markNotificationRead(String notificationId) async {

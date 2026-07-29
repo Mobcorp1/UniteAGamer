@@ -103,6 +103,7 @@ void main() {
     expect(find.text('Confidence filter'), findsOneWidget);
     expect(find.text('Source permission'), findsOneWidget);
     expect(find.text('Evidence type'), findsOneWidget);
+    expect(find.text('Grid'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();

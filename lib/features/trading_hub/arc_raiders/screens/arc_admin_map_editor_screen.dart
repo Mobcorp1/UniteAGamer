@@ -52,6 +52,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _saving = false;
   bool _showSeedDefinitions = true;
   bool _showCustomIntel = true;
+  bool _showReferenceGrid = true;
   String _searchQuery = '';
   ArcAdminMapMarkerKind? _kindFilter;
   ArcRaidIntelConfidence? _confidenceFilter;
@@ -258,6 +259,19 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         y: localPosition.dy / size.height,
       ),
     );
+  }
+
+  Size _fittedMapSize(ArcRaidMapAsset asset, Size viewportSize) {
+    final width = asset.width?.toDouble();
+    final height = asset.height?.toDouble();
+    final aspectRatio = width != null && height != null && height > 0
+        ? width / height
+        : 1.25;
+    final viewportRatio = viewportSize.width / viewportSize.height;
+    if (viewportRatio > aspectRatio) {
+      return Size(viewportSize.height * aspectRatio, viewportSize.height);
+    }
+    return Size(viewportSize.width, viewportSize.width / aspectRatio);
   }
 
   Future<void> _saveDrafts() async {
@@ -684,7 +698,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         children: [
           _toolbar(),
           Expanded(
-            child: assetPath == null
+            child: asset == null || assetPath == null
                 ? const Center(
                     child: Text(
                       'No image registered for this map layer.',
@@ -698,37 +712,49 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                     boundaryMargin: const EdgeInsets.all(240),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final size = Size(
+                        final viewportSize = Size(
                           constraints.maxWidth,
                           constraints.maxHeight,
                         );
-                        return GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTapUp: (details) =>
-                              _placeSelected(details.localPosition, size),
-                          child: SizedBox(
-                            width: size.width,
-                            height: size.height,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Positioned.fill(
-                                  child: Image.asset(
-                                    assetPath,
-                                    fit: BoxFit.fill,
-                                    filterQuality: FilterQuality.high,
-                                    errorBuilder: (_, _, _) => const Center(
-                                      child: Icon(
-                                        Icons.broken_image_outlined,
-                                        color: Colors.white54,
-                                        size: 48,
+                        final mapSize = _fittedMapSize(asset, viewportSize);
+                        return Center(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTapUp: (details) =>
+                                _placeSelected(details.localPosition, mapSize),
+                            child: SizedBox(
+                              width: mapSize.width,
+                              height: mapSize.height,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned.fill(
+                                    child: Image.asset(
+                                      assetPath,
+                                      fit: BoxFit.fill,
+                                      filterQuality: FilterQuality.high,
+                                      errorBuilder: (_, _, _) => const Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          color: Colors.white54,
+                                          size: 48,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                for (final marker in _visibleMarkers)
-                                  _markerWidget(marker, size),
-                              ],
+                                  if (_showReferenceGrid)
+                                    const Positioned.fill(
+                                      child: IgnorePointer(
+                                        child: CustomPaint(
+                                          painter:
+                                              _ArcAdminMapReferenceGridPainter(),
+                                        ),
+                                      ),
+                                    ),
+                                  for (final marker in _visibleMarkers)
+                                    _markerWidget(marker, mapSize),
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -808,6 +834,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             selected: _showCustomIntel,
             label: const Text('Custom Intel'),
             onSelected: (value) => setState(() => _showCustomIntel = value),
+          ),
+          FilterChip(
+            selected: _showReferenceGrid,
+            label: const Text('Grid'),
+            onSelected: (value) => setState(() => _showReferenceGrid = value),
           ),
           IconButton(
             tooltip: 'Undo',
@@ -1448,6 +1479,60 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       case ArcAdminMapMarkerKind.customIntel:
         return Icons.push_pin_rounded;
     }
+  }
+}
+
+class _ArcAdminMapReferenceGridPainter extends CustomPainter {
+  const _ArcAdminMapReferenceGridPainter();
+
+  static const int divisions = 10;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = AppTheme.neonCyan.withValues(alpha: 0.22)
+      ..strokeWidth = 0.8;
+    final majorLinePaint = Paint()
+      ..color = AppTheme.neonPink.withValues(alpha: 0.28)
+      ..strokeWidth = 1.1;
+    final labelStyle = AppTheme.bodyTextStyle(
+      fontSize: 10,
+      color: Colors.white.withValues(alpha: 0.72),
+      isBold: true,
+    );
+
+    for (var index = 0; index <= divisions; index++) {
+      final x = size.width * (index / divisions);
+      final y = size.height * (index / divisions);
+      final paint = index == 0 || index == divisions || index == divisions ~/ 2
+          ? majorLinePaint
+          : linePaint;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+
+      if (index < divisions) {
+        _drawLabel(
+          canvas,
+          String.fromCharCode(65 + index),
+          Offset(x + 6, 6),
+          labelStyle,
+        );
+        _drawLabel(canvas, '${index + 1}', Offset(6, y + 20), labelStyle);
+      }
+    }
+  }
+
+  void _drawLabel(Canvas canvas, String value, Offset offset, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(canvas, offset);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArcAdminMapReferenceGridPainter oldDelegate) {
+    return false;
   }
 }
 
