@@ -52,6 +52,19 @@ void main() {
     sourceRecordId: 'seed_south_lift',
   );
 
+  const draftMarker = ArcAdminMapMarker(
+    id: 'draft_south_lift',
+    mapId: 'test_map',
+    layer: ArcRaidMapLayer.surface,
+    kind: ArcAdminMapMarkerKind.poi,
+    name: 'South Lift',
+    point: ArcNormalizedPoint(x: 0.91, y: 0.91),
+    confidence: ArcRaidIntelConfidence.confirmed,
+    state: ArcAdminMapMarkerState.draft,
+    adminVerified: true,
+    seedReferenceId: 'south_lift',
+  );
+
   test('canonical POI IDs resolve to current Admin marker coordinates', () {
     final resolution = const ArcIntelligenceLocationResolver().resolve(
       map: map,
@@ -81,6 +94,31 @@ void main() {
       ArcIntelligenceLocationResolutionSource.historicalAlias,
     );
     expect(resolution?.label, 'South Lift - Corrected');
+    expect(resolution?.point.x, closeTo(0.72, 0.0001));
+  });
+
+  test('historical labels can match current published marker names', () {
+    final resolution = const ArcIntelligenceLocationResolver().resolve(
+      map: map,
+      adminMarkers: const <ArcAdminMapMarker>[movedMarker],
+      historicalAlias: 'South Lift - Corrected',
+    );
+
+    expect(
+      resolution?.source,
+      ArcIntelligenceLocationResolutionSource.currentPoiName,
+    );
+    expect(resolution?.point.x, closeTo(0.72, 0.0001));
+  });
+
+  test('draft marker changes do not affect standard resolution', () {
+    final resolution = const ArcIntelligenceLocationResolver().resolve(
+      map: map,
+      adminMarkers: const <ArcAdminMapMarker>[draftMarker, movedMarker],
+      canonicalPoiId: 'south_lift',
+    );
+
+    expect(resolution?.canonicalMarker?.id, movedMarker.id);
     expect(resolution?.point.x, closeTo(0.72, 0.0001));
   });
 
@@ -122,4 +160,20 @@ void main() {
       expect(resolution?.canBackfillCanonicalReference, isFalse);
     },
   );
+
+  test('unresolved named locations do not snap to nearby coordinates', () {
+    final resolution = const ArcIntelligenceLocationResolver().resolve(
+      map: map,
+      currentPoiName: 'First Wave Cache',
+      legacyPoint: const ArcNormalizedPoint(x: 0.1, y: 0.1),
+    );
+
+    expect(
+      resolution?.source,
+      ArcIntelligenceLocationResolutionSource.unresolved,
+    );
+    expect(resolution?.needsAdminReview, isTrue);
+    expect(resolution?.legacyPoi, isNull);
+    expect(resolution?.label, 'First Wave Cache');
+  });
 }

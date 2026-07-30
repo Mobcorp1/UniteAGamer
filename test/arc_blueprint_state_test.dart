@@ -37,5 +37,29 @@ void main() {
       expect(state.dupesOwned, 0);
       expect(state.priorityRank, 0);
     });
+
+    test('hydration snapshot distinguishes loading from confirmed empty', () {
+      final loading = ArcBlueprintStateSnapshot.loading(userId: 'raider');
+      final loadedEmpty = ArcBlueprintStateSnapshot.loaded(
+        userId: 'raider',
+        states: const <String, ArcBlueprintState>{},
+      );
+      final cachedRefresh = ArcBlueprintStateSnapshot.loading(
+        userId: 'raider',
+        states: <String, ArcBlueprintState>{
+          'hairpin': ArcBlueprintState.empty(
+            'hairpin',
+          ).copyWith(owned: true, dupesOwned: 3),
+        },
+      );
+
+      expect(loading.isLoading, isTrue);
+      expect(loading.isConfirmedEmpty, isFalse);
+      expect(loading.hasUsableState, isFalse);
+      expect(loadedEmpty.isConfirmedEmpty, isTrue);
+      expect(cachedRefresh.isLoading, isTrue);
+      expect(cachedRefresh.hasUsableState, isTrue);
+      expect(cachedRefresh.states['hairpin']?.dupesOwned, 3);
+    });
   });
 }

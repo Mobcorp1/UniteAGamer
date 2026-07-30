@@ -305,8 +305,10 @@ class ArcWorldIntelPopulationEngine {
           map: map,
           adminMarkers: adminMarkers,
           poiId: report.intelligencePoiId,
+          markerId: report.markerId,
           poiName: report.intelligencePoiName,
           fallbackLabel: report.locationName,
+          legacyPoint: report.historicalPoint,
           preferredLayer: report.intelligenceLayer,
         );
     final hasPoint = resolution != null && !resolution.needsAdminReview;
@@ -317,7 +319,8 @@ class ArcWorldIntelPopulationEngine {
         : report.locationName.trim().isEmpty
         ? 'Unresolved report location'
         : report.locationName.trim();
-    final markerPoint = point ?? const ArcNormalizedPoint(x: 0.5, y: 0.5);
+    final markerPoint =
+        point ?? report.historicalPoint ?? _reviewPointForReport(report);
     final evidence = ArcWorldIntelEvidenceRecord(
       id: 'evidence_drop_${report.id}',
       type: ArcWorldIntelEvidenceType.uagDropReport,
@@ -934,6 +937,7 @@ class ArcWorldIntelPopulationEngine {
     if (a.blueprintId != null &&
         b.blueprintId != null &&
         a.blueprintId == b.blueprintId &&
+        _normalize(a.name) == _normalize(b.name) &&
         a.point.distanceTo(b.point) <= 0.055) {
       return true;
     }
@@ -1044,6 +1048,20 @@ class ArcWorldIntelPopulationEngine {
       (point.x * 100).round(),
       (point.y * 100).round(),
     ].join(':');
+  }
+
+  ArcNormalizedPoint _reviewPointForReport(ArcBlueprintDropReport report) {
+    final source = '${report.id}|${report.blueprintId}|${report.locationName}';
+    final hash = source.codeUnits.fold<int>(
+      0,
+      (total, unit) => ((total * 31) + unit) & 0x7fffffff,
+    );
+    final x = 0.18 + ((hash % 640) / 1000);
+    final y = 0.18 + (((hash ~/ 640) % 640) / 1000);
+    return ArcNormalizedPoint(
+      x: x.clamp(0.18, 0.82).toDouble(),
+      y: y.clamp(0.18, 0.82).toDouble(),
+    );
   }
 
   static String _normalizeMapName(String value) {

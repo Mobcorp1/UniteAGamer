@@ -180,8 +180,10 @@ class ArcBlueprintOpportunityEngine {
           map: map,
           adminMarkers: canonicalMarkers,
           poiId: report.intelligencePoiId,
+          markerId: report.markerId,
           poiName: report.intelligencePoiName,
           fallbackLabel: report.locationName,
+          legacyPoint: report.historicalPoint,
           preferredLayer: report.intelligenceLayer,
         );
     if (resolution == null || resolution.needsAdminReview) return null;

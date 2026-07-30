@@ -20,7 +20,9 @@ class ArcBlueprintDropReport {
     required this.confirmationCount,
     required this.confirmedByUserIds,
     this.poiId,
+    this.markerId,
     this.poiName,
+    this.historicalPoint,
     this.enemySourceId,
     this.enemySourceName,
     this.containerTypeId,
@@ -60,7 +62,9 @@ class ArcBlueprintDropReport {
   final String mapName;
   final ArcDropSourceType sourceType;
   final String? poiId;
+  final String? markerId;
   final String? poiName;
+  final ArcNormalizedPoint? historicalPoint;
   final String? enemySourceId;
   final String? enemySourceName;
   final String? containerTypeId;
@@ -252,7 +256,9 @@ class ArcBlueprintDropReport {
     String? mapName,
     ArcDropSourceType? sourceType,
     String? poiId,
+    String? markerId,
     String? poiName,
+    ArcNormalizedPoint? historicalPoint,
     String? enemySourceId,
     String? enemySourceName,
     String? containerTypeId,
@@ -299,7 +305,9 @@ class ArcBlueprintDropReport {
       mapName: mapName ?? this.mapName,
       sourceType: sourceType ?? this.sourceType,
       poiId: poiId ?? this.poiId,
+      markerId: markerId ?? this.markerId,
       poiName: poiName ?? this.poiName,
+      historicalPoint: historicalPoint ?? this.historicalPoint,
       enemySourceId: enemySourceId ?? this.enemySourceId,
       enemySourceName: enemySourceName ?? this.enemySourceName,
       containerTypeId: containerTypeId ?? this.containerTypeId,
@@ -355,7 +363,9 @@ class ArcBlueprintDropReport {
       'mapName': mapName,
       'sourceType': sourceType.name,
       'poiId': poiId,
+      'markerId': markerId,
       'poiName': poiName,
+      'historicalPoint': historicalPoint?.toMap(),
       'enemySourceId': enemySourceId,
       'enemySourceName': enemySourceName,
       'containerTypeId': containerTypeId,
@@ -409,8 +419,21 @@ class ArcBlueprintDropReport {
         _enumByName(ArcDropSourceType.values, map['sourceType'] as String?) ??
         ArcDropSourceType.poi;
 
-    final legacyLocation = (map['locationName'] as String?)?.trim();
-    final poiName = (map['poiName'] as String?)?.trim();
+    final locationFields = _locationFieldsFrom(map);
+    final legacyLocation = locationFields.namedLocation;
+    final poiName = locationFields.poiName;
+    final poiId = _firstTrimmedString(map, const <String>[
+      'poiId',
+      'canonicalPoiId',
+      'poiID',
+    ]);
+    final markerId = _firstTrimmedString(map, const <String>[
+      'markerId',
+      'mapMarkerId',
+      'publishedMarkerId',
+      'canonicalMarkerId',
+      'adminMarkerId',
+    ]);
     final enemySourceName = (map['enemySourceName'] as String?)?.trim();
     final weatherConditionId = (map['weatherConditionId'] as String?)?.trim();
     final weatherConditionLabel = (map['weatherConditionLabel'] as String?)
@@ -426,7 +449,17 @@ class ArcBlueprintDropReport {
         .where((item) => item.isNotEmpty)
         .toList(growable: false);
 
-    final mapName = (map['mapName'] as String?)?.trim() ?? 'Unknown Map';
+    final mapName = _canonicalMapName(
+      _firstTrimmedString(map, const <String>[
+            'mapName',
+            'map',
+            'mapId',
+            'mapID',
+            'mapLabel',
+            'mapDisplayName',
+          ]) ??
+          'Unknown Map',
+    );
     final rawPoiName = sourceType == ArcDropSourceType.poi
         ? (poiName ?? legacyLocation)
         : poiName;
@@ -441,11 +474,13 @@ class ArcBlueprintDropReport {
       userId: (map['userId'] as String?) ?? '',
       mapName: mapName,
       sourceType: sourceType,
-      poiId: (map['poiId'] as String?)?.trim(),
+      poiId: poiId,
+      markerId: markerId,
       poiName:
           canonicalPoiName ??
           poiName ??
           (sourceType == ArcDropSourceType.poi ? legacyLocation : null),
+      historicalPoint: _historicalPointFrom(map),
       enemySourceId: (map['enemySourceId'] as String?)?.trim(),
       enemySourceName:
           enemySourceName ??
@@ -545,6 +580,135 @@ class ArcBlueprintDropReport {
     );
   }
 
+  static _ReportLocationFields _locationFieldsFrom(Map<String, dynamic> map) {
+    final poiName = _firstTrimmedString(map, const <String>[
+      'poiName',
+      'poi_name',
+    ]);
+    final namedLocation = _firstTrimmedString(map, const <String>[
+      'locationName',
+      'locationLabel',
+      'reportedLocation',
+      'dropLocation',
+      'sourceLocation',
+      'landmark',
+    ]);
+    final nestedPoiName = _nestedLabelFrom(map['poi']);
+    final nestedMarkerName = _nestedLabelFrom(map['marker']);
+    final areaFallback = _firstTrimmedString(map, const <String>[
+      'areaName',
+      'area',
+      'zone',
+    ]);
+
+    return _ReportLocationFields(
+      poiName: poiName ?? nestedPoiName,
+      namedLocation: namedLocation ?? nestedMarkerName ?? areaFallback,
+    );
+  }
+
+  static String? _firstTrimmedString(
+    Map<String, dynamic> map,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final value = _trimmedString(map[key]);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  static String? _nestedLabelFrom(dynamic value) {
+    if (value is String) return _trimmedString(value);
+    if (value is! Map) return null;
+    final data = Map<String, dynamic>.from(value);
+    return _firstTrimmedString(data, const <String>[
+      'name',
+      'label',
+      'poiName',
+      'locationName',
+    ]);
+  }
+
+  static String? _trimmedString(dynamic value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  static String _canonicalMapName(String rawName) {
+    final normalized = rawName
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .trim();
+
+    return switch (normalized) {
+      'buried city' => ArcPoiDataStore.buriedCity,
+      'dam battlegrounds' || 'dam' => ArcPoiDataStore.damBattlegrounds,
+      'stella montis' => ArcPoiDataStore.stellaMontis,
+      'blue gate' || 'the blue gate' => 'Blue Gate',
+      'spaceport' => ArcPoiDataStore.spaceport,
+      'riven tides' => ArcPoiDataStore.rivenTides,
+      _ => rawName.trim(),
+    };
+  }
+
+  static ArcNormalizedPoint? _historicalPointFrom(Map<String, dynamic> map) {
+    final nestedPoint =
+        _pointFromDynamic(map['historicalPoint']) ??
+        _pointFromDynamic(map['normalizedPoint']) ??
+        _pointFromDynamic(map['coordinates']) ??
+        _pointFromDynamic(map['coordinate']) ??
+        _pointFromDynamic(map['position']) ??
+        _pointFromDynamic(map['point']);
+    if (nestedPoint != null) return nestedPoint;
+
+    final x =
+        _doubleFrom(map['normalizedX']) ??
+        _doubleFrom(map['x']) ??
+        _doubleFrom(map['dx']);
+    final y =
+        _doubleFrom(map['normalizedY']) ??
+        _doubleFrom(map['y']) ??
+        _doubleFrom(map['dy']);
+    return _normalizedPointOrNull(x, y);
+  }
+
+  static ArcNormalizedPoint? _pointFromDynamic(dynamic value) {
+    if (value is Map) {
+      final data = Map<String, dynamic>.from(value);
+      final x =
+          _doubleFrom(data['normalizedX']) ??
+          _doubleFrom(data['x']) ??
+          _doubleFrom(data['dx']);
+      final y =
+          _doubleFrom(data['normalizedY']) ??
+          _doubleFrom(data['y']) ??
+          _doubleFrom(data['dy']);
+      return _normalizedPointOrNull(x, y);
+    }
+    if (value is List && value.length >= 2) {
+      return _normalizedPointOrNull(
+        _doubleFrom(value[0]),
+        _doubleFrom(value[1]),
+      );
+    }
+    return null;
+  }
+
+  static ArcNormalizedPoint? _normalizedPointOrNull(double? x, double? y) {
+    if (x == null || y == null) return null;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return null;
+    return ArcNormalizedPoint(x: x, y: y);
+  }
+
+  static double? _doubleFrom(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.trim());
+    return null;
+  }
+
   static ArcRaidMapLayer? _layerFromStorage(String? rawName) {
     if (rawName == null || rawName.trim().isEmpty) return null;
     final normalized = rawName.trim().toLowerCase().replaceAll(
@@ -578,6 +742,13 @@ class ArcBlueprintDropReport {
 
     return null;
   }
+}
+
+class _ReportLocationFields {
+  const _ReportLocationFields({this.poiName, this.namedLocation});
+
+  final String? poiName;
+  final String? namedLocation;
 }
 
 enum ArcRaidMode { dayRaid, nightRaid }

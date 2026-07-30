@@ -231,7 +231,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                             communitySnapshot.data ??
                             const <ArcCommunityIntelReport>[];
                         return StreamBuilder<List<ArcAdminMapMarker>>(
-                          stream: _adminMapRepository.watchLiveMarkers(
+                          stream: _adminMapRepository.watchPublished(
                             _mapId,
                             _activeLayer,
                           ),

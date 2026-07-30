@@ -1247,6 +1247,69 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     );
   }
 
+  Widget _buildOwnershipSynchronizingState() {
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.pagePadding.left,
+        18,
+        AppTheme.pagePadding.right,
+        AppTheme.pagePadding.bottom + 82,
+      ),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: AppTheme.neonCyan.withValues(alpha: 0.28),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.neonCyan.withValues(alpha: 0.08),
+                blurRadius: 22,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonCyan),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Synchronising Blueprint ownership',
+                      style: AppTheme.tradingHeading(
+                        fontSize: 18,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Restoring your saved ownership and duplicate counts.',
+                      style: TextStyle(color: Colors.white70, height: 1.35),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   List<ArcBlueprintFilter> get _filterBarrelOrder => const [
     ArcBlueprintFilter.all,
     ArcBlueprintFilter.owned,
@@ -2692,10 +2755,16 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       body: Stack(
         children: [
           SafeArea(
-            child: StreamBuilder<Map<String, ArcBlueprintState>>(
-              stream: _repository.watchMyBlueprintStates(),
+            child: StreamBuilder<ArcBlueprintStateSnapshot>(
+              stream: _repository.watchMyBlueprintStateSnapshot(),
               builder: (context, snapshot) {
-                final states = snapshot.data ?? <String, ArcBlueprintState>{};
+                final hydration = snapshot.data;
+                final states =
+                    hydration?.states ?? const <String, ArcBlueprintState>{};
+                if (hydration == null ||
+                    (hydration.isLoading && states.isEmpty)) {
+                  return _buildOwnershipSynchronizingState();
+                }
                 final filtered = _applyFilter(allBlueprints, states);
                 final counts = _buildCounts(allBlueprints, states);
 

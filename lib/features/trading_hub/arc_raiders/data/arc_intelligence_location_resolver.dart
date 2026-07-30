@@ -11,6 +11,7 @@ enum ArcIntelligenceLocationResolutionSource {
   staticMarker,
   legacyPoi,
   legacyCoordinate,
+  unresolved,
 }
 
 class ArcIntelligenceLocationResolution {
@@ -76,9 +77,13 @@ class ArcIntelligenceLocationResolver {
     final normalizedSourceRecordId = _normalizedOrNull(sourceRecordId);
     final normalizedCurrentPoiName = _normalizedOrNull(currentPoiName);
     final normalizedHistoricalAlias = _normalizedOrNull(historicalAlias);
+    final normalizedLabels = <String>{
+      ?normalizedCurrentPoiName,
+      ?normalizedHistoricalAlias,
+    };
 
     final liveMarkers = adminMarkers
-        .where((marker) => marker.mapId == map.id && marker.isLive)
+        .where((marker) => marker.mapId == map.id && marker.isPublished)
         .toList(growable: false);
 
     final canonical = _firstCanonicalMarker(
@@ -122,8 +127,8 @@ class ArcIntelligenceLocationResolver {
       liveMarkers,
       source: ArcIntelligenceLocationResolutionSource.currentPoiName,
       matches: (marker) =>
-          normalizedCurrentPoiName != null &&
-          _normalize(marker.name) == normalizedCurrentPoiName,
+          normalizedLabels.isNotEmpty &&
+          normalizedLabels.contains(_normalize(marker.name)),
     );
     if (currentName != null) return currentName;
 
@@ -131,9 +136,9 @@ class ArcIntelligenceLocationResolver {
       liveMarkers,
       source: ArcIntelligenceLocationResolutionSource.historicalAlias,
       matches: (marker) =>
-          normalizedHistoricalAlias != null &&
+          normalizedLabels.isNotEmpty &&
           marker.aliases.any(
-            (value) => _normalize(value) == normalizedHistoricalAlias,
+            (value) => normalizedLabels.contains(_normalize(value)),
           ),
     );
     if (alias != null) return alias;
@@ -142,25 +147,38 @@ class ArcIntelligenceLocationResolver {
       map: map,
       canonicalPoiId: normalizedCanonicalPoiId,
       publishedMarkerId: normalizedPublishedMarkerId,
-      currentPoiName: normalizedCurrentPoiName,
-      historicalAlias: normalizedHistoricalAlias,
+      labels: normalizedLabels,
     );
     if (staticMarker != null) return staticMarker;
 
     final legacyPoi = _resolveLegacyPoi(
       map: map,
       canonicalPoiId: normalizedCanonicalPoiId,
-      currentPoiName: normalizedCurrentPoiName,
-      historicalAlias: normalizedHistoricalAlias,
+      labels: normalizedLabels,
       preferredLayer: preferredLayer,
     );
     if (legacyPoi != null) return legacyPoi;
 
-    if (legacyPoint != null) {
+    if (legacyPoint != null && normalizedLabels.isEmpty) {
       return _resolveLegacyCoordinate(
         map: map,
         point: legacyPoint.clamp(),
         preferredLayer: preferredLayer,
+      );
+    }
+
+    if (legacyPoint != null) {
+      return ArcIntelligenceLocationResolution(
+        point: legacyPoint.clamp(),
+        layer: preferredLayer,
+        label: currentPoiName?.trim().isNotEmpty == true
+            ? currentPoiName!.trim()
+            : historicalAlias?.trim().isNotEmpty == true
+            ? historicalAlias!.trim()
+            : 'Unresolved report location',
+        source: ArcIntelligenceLocationResolutionSource.unresolved,
+        confidence: 0.18,
+        needsAdminReview: true,
       );
     }
 
@@ -171,18 +189,22 @@ class ArcIntelligenceLocationResolver {
     required ArcRaidMap map,
     required List<ArcAdminMapMarker> adminMarkers,
     required String? poiId,
+    String? markerId,
     required String? poiName,
     required String fallbackLabel,
+    ArcNormalizedPoint? legacyPoint,
     required ArcRaidMapLayer preferredLayer,
   }) {
     return resolve(
       map: map,
       adminMarkers: adminMarkers,
       canonicalPoiId: poiId,
-      seedReferenceId: poiId,
-      sourceRecordId: poiId,
+      publishedMarkerId: markerId,
+      seedReferenceId: poiId ?? markerId,
+      sourceRecordId: poiId ?? markerId,
       currentPoiName: poiName,
       historicalAlias: fallbackLabel,
+      legacyPoint: legacyPoint,
       preferredLayer: preferredLayer,
     );
   }
@@ -212,8 +234,7 @@ class ArcIntelligenceLocationResolver {
     required ArcRaidMap map,
     required String? canonicalPoiId,
     required String? publishedMarkerId,
-    required String? currentPoiName,
-    required String? historicalAlias,
+    required Set<String> labels,
   }) {
     final candidates =
         map.markers
@@ -229,10 +250,7 @@ class ArcIntelligenceLocationResolver {
                       markerIds.contains(canonicalPoiId)) ||
                   (publishedMarkerId != null &&
                       markerIds.contains(publishedMarkerId)) ||
-                  (currentPoiName != null &&
-                      markerNames.contains(currentPoiName)) ||
-                  (historicalAlias != null &&
-                      markerNames.contains(historicalAlias));
+                  labels.any(markerNames.contains);
             })
             .toList(growable: false)
           ..sort(_compareStaticMarkerQuality);
@@ -252,8 +270,7 @@ class ArcIntelligenceLocationResolver {
   ArcIntelligenceLocationResolution? _resolveLegacyPoi({
     required ArcRaidMap map,
     required String? canonicalPoiId,
-    required String? currentPoiName,
-    required String? historicalAlias,
+    required Set<String> labels,
     required ArcRaidMapLayer preferredLayer,
   }) {
     final candidates =
@@ -263,10 +280,7 @@ class ArcIntelligenceLocationResolver {
               final poiNames = <String>{_normalize(poi.name)};
               return (canonicalPoiId != null &&
                       poiIds.contains(canonicalPoiId)) ||
-                  (currentPoiName != null &&
-                      poiNames.contains(currentPoiName)) ||
-                  (historicalAlias != null &&
-                      poiNames.contains(historicalAlias));
+                  labels.any(poiNames.contains);
             })
             .toList(growable: false)
           ..sort((a, b) {

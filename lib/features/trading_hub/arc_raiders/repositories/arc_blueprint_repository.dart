@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -38,6 +40,54 @@ class ArcBlueprintRepository {
   CollectionReference<Map<String, dynamic>> get _reportsCollection =>
       _firestore.collection('arc_blueprint_drop_reports');
 
+  Stream<ArcBlueprintStateSnapshot> watchMyBlueprintStateSnapshot() {
+    final lastLoadedByUid = <String, Map<String, ArcBlueprintState>>{};
+    return _authUserIdChanges().distinct().asyncExpand((uid) {
+      if (uid == null) {
+        return Stream<ArcBlueprintStateSnapshot>.value(
+          ArcBlueprintStateSnapshot.signedOut(),
+        );
+      }
+
+      final controller = StreamController<ArcBlueprintStateSnapshot>();
+      StreamSubscription<Map<String, ArcBlueprintState>>? subscription;
+
+      controller.onListen = () {
+        controller.add(
+          ArcBlueprintStateSnapshot.loading(
+            userId: uid,
+            states: lastLoadedByUid[uid] ?? const <String, ArcBlueprintState>{},
+          ),
+        );
+        subscription = _stateCollection(uid)
+            .snapshots()
+            .asyncMap((snapshot) => _statesFromSnapshot(uid, snapshot))
+            .listen(
+              (states) {
+                lastLoadedByUid[uid] = states;
+                controller.add(
+                  ArcBlueprintStateSnapshot.loaded(userId: uid, states: states),
+                );
+              },
+              onError: (Object error) {
+                controller.add(
+                  ArcBlueprintStateSnapshot.failed(
+                    userId: uid,
+                    states:
+                        lastLoadedByUid[uid] ??
+                        const <String, ArcBlueprintState>{},
+                    error: error,
+                  ),
+                );
+              },
+            );
+      };
+
+      controller.onCancel = () => subscription?.cancel();
+      return controller.stream;
+    });
+  }
+
   Stream<Map<String, ArcBlueprintState>> watchMyBlueprintStates() {
     return _auth
         .authStateChanges()
@@ -49,6 +99,13 @@ class ArcBlueprintRepository {
             (snapshot) => _statesFromSnapshot(uid, snapshot),
           );
         });
+  }
+
+  Stream<String?> _authUserIdChanges() async* {
+    yield _auth.currentUser?.uid;
+    await for (final user in _auth.authStateChanges()) {
+      yield user?.uid;
+    }
   }
 
   Future<Map<String, ArcBlueprintState>> loadMyBlueprintStates() async {

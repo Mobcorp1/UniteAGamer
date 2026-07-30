@@ -95,3 +95,72 @@ class ArcBlueprintState {
     );
   }
 }
+
+enum ArcBlueprintStateHydrationStatus { signedOut, loading, loaded, error }
+
+class ArcBlueprintStateSnapshot {
+  const ArcBlueprintStateSnapshot({
+    required this.status,
+    required this.states,
+    this.userId,
+    this.error,
+  });
+
+  final ArcBlueprintStateHydrationStatus status;
+  final Map<String, ArcBlueprintState> states;
+  final String? userId;
+  final Object? error;
+
+  bool get isLoading =>
+      status == ArcBlueprintStateHydrationStatus.loading ||
+      status == ArcBlueprintStateHydrationStatus.signedOut;
+
+  bool get hasConfirmedLoad =>
+      status == ArcBlueprintStateHydrationStatus.loaded;
+
+  bool get isConfirmedEmpty => hasConfirmedLoad && states.isEmpty;
+
+  bool get hasUsableState => states.isNotEmpty || hasConfirmedLoad;
+
+  factory ArcBlueprintStateSnapshot.signedOut() {
+    return const ArcBlueprintStateSnapshot(
+      status: ArcBlueprintStateHydrationStatus.signedOut,
+      states: <String, ArcBlueprintState>{},
+    );
+  }
+
+  factory ArcBlueprintStateSnapshot.loading({
+    required String userId,
+    Map<String, ArcBlueprintState> states = const <String, ArcBlueprintState>{},
+  }) {
+    return ArcBlueprintStateSnapshot(
+      status: ArcBlueprintStateHydrationStatus.loading,
+      userId: userId,
+      states: states,
+    );
+  }
+
+  factory ArcBlueprintStateSnapshot.loaded({
+    required String userId,
+    required Map<String, ArcBlueprintState> states,
+  }) {
+    return ArcBlueprintStateSnapshot(
+      status: ArcBlueprintStateHydrationStatus.loaded,
+      userId: userId,
+      states: states,
+    );
+  }
+
+  factory ArcBlueprintStateSnapshot.failed({
+    required String userId,
+    Map<String, ArcBlueprintState> states = const <String, ArcBlueprintState>{},
+    required Object error,
+  }) {
+    return ArcBlueprintStateSnapshot(
+      status: ArcBlueprintStateHydrationStatus.error,
+      userId: userId,
+      states: states,
+      error: error,
+    );
+  }
+}

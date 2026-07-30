@@ -102,4 +102,233 @@ void main() {
       expect(cluster.layer, movedAnchor.layer);
     },
   );
+
+  group('Buried City historical Blueprint report resolution', () {
+    final map = ArcRaidIntelligenceSeedData.mapById('buried_city');
+    const anchors = <ArcAdminMapMarker>[
+      ArcAdminMapMarker(
+        id: 'admin_buried_city_town_hall',
+        mapId: 'buried_city',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.poi,
+        name: 'Town Hall',
+        point: ArcNormalizedPoint(x: 0.41, y: 0.36),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        state: ArcAdminMapMarkerState.published,
+        adminVerified: true,
+        seedReferenceId: 'buried_city_town_hall',
+      ),
+      ArcAdminMapMarker(
+        id: 'admin_buried_city_hospital',
+        mapId: 'buried_city',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.poi,
+        name: 'Hospital',
+        point: ArcNormalizedPoint(x: 0.70, y: 0.29),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        state: ArcAdminMapMarkerState.published,
+        adminVerified: true,
+        seedReferenceId: 'buried_city_hospital',
+      ),
+      ArcAdminMapMarker(
+        id: 'admin_buried_city_main_street',
+        mapId: 'buried_city',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.poi,
+        name: 'Main Street',
+        point: ArcNormalizedPoint(x: 0.31, y: 0.56),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        state: ArcAdminMapMarkerState.published,
+        adminVerified: true,
+        seedReferenceId: 'buried_city_main_street',
+      ),
+      ArcAdminMapMarker(
+        id: 'admin_buried_city_gas_station',
+        mapId: 'buried_city',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.poi,
+        name: 'Gas Station',
+        point: ArcNormalizedPoint(x: 0.87, y: 0.13),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        state: ArcAdminMapMarkerState.published,
+        adminVerified: true,
+        seedReferenceId: 'buried_city_gas_station',
+      ),
+      ArcAdminMapMarker(
+        id: 'admin_buried_city_warehouse',
+        mapId: 'buried_city',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.poi,
+        name: 'Warehouse',
+        point: ArcNormalizedPoint(x: 0.52, y: 0.68),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        state: ArcAdminMapMarkerState.published,
+        adminVerified: true,
+        seedReferenceId: 'buried_city_warehouse',
+      ),
+      ArcAdminMapMarker(
+        id: 'admin_buried_city_abandoned_highway_camp',
+        mapId: 'buried_city',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.poi,
+        name: 'Abandoned Highway Camp',
+        point: ArcNormalizedPoint(x: 0.15, y: 0.42),
+        confidence: ArcRaidIntelConfidence.confirmed,
+        state: ArcAdminMapMarkerState.published,
+        adminVerified: true,
+        seedReferenceId: 'buried_city_abandoned_highway_camp',
+      ),
+    ];
+
+    ArcRaidIntelCluster? clusterForPayload(Map<String, dynamic> payload) {
+      final clusters = const ArcBlueprintOpportunityEngine().build(
+        map: map,
+        reports: <ArcBlueprintDropReport>[
+          ArcBlueprintDropReport.fromMap(payload),
+        ],
+        canonicalMarkers: anchors,
+        now: DateTime.utc(2026, 7, 30),
+      );
+      return clusters.isEmpty ? null : clusters.single;
+    }
+
+    test('reported location labels resolve to matching published anchors', () {
+      final cases = <String, ArcNormalizedPoint>{
+        'Town Hall': const ArcNormalizedPoint(x: 0.41, y: 0.36),
+        'Main Street': const ArcNormalizedPoint(x: 0.31, y: 0.56),
+        'Gas Station': const ArcNormalizedPoint(x: 0.87, y: 0.13),
+        'Abandoned Highway Camp': const ArcNormalizedPoint(x: 0.15, y: 0.42),
+      };
+
+      for (final entry in cases.entries) {
+        final cluster = clusterForPayload(<String, dynamic>{
+          'id': 'report_${entry.key}',
+          'blueprintId': 'patina',
+          'userId': 'raider',
+          'mapId': 'buried_city',
+          'reportedLocation': entry.key,
+          'coordinates': const <String, dynamic>{'x': 0.50, 'y': 0.50},
+        });
+
+        expect(cluster, isNotNull, reason: '${entry.key} should resolve.');
+        expect(cluster!.point.x, closeTo(entry.value.x, 0.0001));
+        expect(cluster.point.y, closeTo(entry.value.y, 0.0001));
+      }
+    });
+
+    test('reported locations do not cross-resolve to nearby wrong POIs', () {
+      final townHall = clusterForPayload(const <String, dynamic>{
+        'id': 'report_town_hall',
+        'blueprintId': 'patina',
+        'userId': 'raider',
+        'mapId': 'buried_city',
+        'locationName': 'Town Hall',
+      });
+      final gasStation = clusterForPayload(const <String, dynamic>{
+        'id': 'report_gas_station',
+        'blueprintId': 'extended_barrel_ii',
+        'userId': 'raider',
+        'mapId': 'buried_city',
+        'locationName': 'Gas Station',
+      });
+      final highwayCamp = clusterForPayload(const <String, dynamic>{
+        'id': 'report_highway_camp',
+        'blueprintId': 'bobcat',
+        'userId': 'raider',
+        'mapId': 'buried_city',
+        'locationName': 'Abandoned Highway Camp',
+      });
+
+      expect(townHall!.point.x, isNot(closeTo(0.70, 0.0001)));
+      expect(gasStation!.point.x, isNot(closeTo(0.41, 0.0001)));
+      expect(highwayCamp!.point.x, isNot(closeTo(0.52, 0.0001)));
+    });
+
+    test('First Wave Cache remains unresolved without explicit support', () {
+      final cluster = clusterForPayload(const <String, dynamic>{
+        'id': 'report_first_wave_cache',
+        'blueprintId': 'alto',
+        'userId': 'raider',
+        'mapId': 'buried_city',
+        'reportedLocation': 'First Wave Cache',
+        'coordinates': <String, dynamic>{'x': 0.52, 'y': 0.68},
+      });
+
+      expect(cluster, isNull);
+    });
+
+    test('one Blueprint reported at three POIs remains three clusters', () {
+      final clusters = const ArcRaidIntelligenceEngine().opportunityClusters(
+        map: map,
+        dropReports: <ArcBlueprintDropReport>[
+          ArcBlueprintDropReport.fromMap(<String, dynamic>{
+            'id': 'report_tempest_town_hall',
+            'blueprintId': 'tempest',
+            'userId': 'raider-a',
+            'mapId': 'buried_city',
+            'locationName': 'Town Hall',
+          }),
+          ArcBlueprintDropReport.fromMap(<String, dynamic>{
+            'id': 'report_tempest_main_street',
+            'blueprintId': 'tempest',
+            'userId': 'raider-b',
+            'mapId': 'buried_city',
+            'locationName': 'Main Street',
+          }),
+          ArcBlueprintDropReport.fromMap(<String, dynamic>{
+            'id': 'report_tempest_gas_station',
+            'blueprintId': 'tempest',
+            'userId': 'raider-c',
+            'mapId': 'buried_city',
+            'locationName': 'Gas Station',
+          }),
+        ],
+        canonicalMarkers: anchors,
+      );
+
+      final reportClusters = clusters
+          .where(
+            (cluster) => cluster.evidence.any(
+              (evidence) => evidence.sourceCategory == 'community_drop_report',
+            ),
+          )
+          .toList(growable: false);
+      final labels = reportClusters.map((cluster) => cluster.label).join('\n');
+      expect(reportClusters.length, 3);
+      expect(labels, contains('Town Hall'));
+      expect(labels, contains('Main Street'));
+      expect(labels, contains('Gas Station'));
+    });
+
+    test('published marker moves update historical report rendering', () {
+      final moved = anchors
+          .map(
+            (marker) => marker.name == 'Town Hall'
+                ? marker.copyWith(
+                    point: const ArcNormalizedPoint(x: 0.24, y: 0.24),
+                  )
+                : marker,
+          )
+          .toList(growable: false);
+      final cluster = const ArcBlueprintOpportunityEngine()
+          .build(
+            map: map,
+            reports: <ArcBlueprintDropReport>[
+              ArcBlueprintDropReport.fromMap(<String, dynamic>{
+                'id': 'report_moved_town_hall',
+                'blueprintId': 'patina',
+                'userId': 'raider',
+                'mapId': 'buried_city',
+                'locationName': 'Town Hall',
+              }),
+            ],
+            canonicalMarkers: moved,
+            now: DateTime.utc(2026, 7, 30),
+          )
+          .single;
+
+      expect(cluster.point.x, closeTo(0.24, 0.0001));
+      expect(cluster.point.y, closeTo(0.24, 0.0001));
+    });
+  });
 }

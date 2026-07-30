@@ -908,6 +908,7 @@ class ArcRaidIntelligenceEngine {
                 other.id != cluster.id &&
                 !used.contains(other.id) &&
                 other.layer == cluster.layer &&
+                _canMergeClusters(cluster, other) &&
                 other.point.distanceTo(cluster.point) < 0.055,
           )
           .toList(growable: false);
@@ -950,6 +951,36 @@ class ArcRaidIntelligenceEngine {
       );
     }
     return merged;
+  }
+
+  static bool _canMergeClusters(ArcRaidIntelCluster a, ArcRaidIntelCluster b) {
+    final aReportDriven = _reportDriven(a);
+    final bReportDriven = _reportDriven(b);
+    if (!aReportDriven && !bReportDriven) return true;
+    return _locationIdentity(a) == _locationIdentity(b);
+  }
+
+  static bool _reportDriven(ArcRaidIntelCluster cluster) {
+    return cluster.evidence.any(
+      (item) => item.sourceCategory == 'community_drop_report',
+    );
+  }
+
+  static String _locationIdentity(ArcRaidIntelCluster cluster) {
+    final poiId = cluster.poiId?.trim();
+    if (poiId != null && poiId.isNotEmpty) return 'poi:${_normalize(poiId)}';
+    final evidencePoiId = cluster.evidence
+        .map((item) => item.poiId?.trim())
+        .whereType<String>()
+        .firstWhere((item) => item.isNotEmpty, orElse: () => '');
+    if (evidencePoiId.isNotEmpty) {
+      return 'poi:${_normalize(evidencePoiId)}';
+    }
+    final label = cluster.evidence
+        .map((item) => item.approximateArea?.trim())
+        .whereType<String>()
+        .firstWhere((item) => item.isNotEmpty, orElse: () => cluster.label);
+    return 'label:${_normalize(label)}';
   }
 
   static double _routeStopScore({
@@ -1121,5 +1152,13 @@ class ArcRaidIntelligenceEngine {
 
   static String _plural(int count, String singular, String plural) {
     return count == 1 ? singular : plural;
+  }
+
+  static String _normalize(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .trim();
   }
 }

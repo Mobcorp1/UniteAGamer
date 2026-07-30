@@ -206,7 +206,19 @@ class ArcAdminMapEditorRepository {
     String mapId,
     ArcRaidMapLayer layer,
   ) {
-    return watchLiveMarkers(mapId, layer);
+    return _firestore
+        .collection(collectionName)
+        .where('mapId', isEqualTo: mapId)
+        .where('layer', isEqualTo: layer.name)
+        .where('state', isEqualTo: ArcAdminMapMarkerState.published.name)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              _markersFromSnapshot(
+                  snapshot,
+                ).where((marker) => marker.isPublished).toList(growable: false)
+                ..sort((a, b) => a.name.compareTo(b.name)),
+        );
   }
 
   Stream<List<ArcAdminMapMarker>> watchLiveMarkers(
