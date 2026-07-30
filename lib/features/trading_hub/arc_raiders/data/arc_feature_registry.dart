@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/fav
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 
@@ -102,6 +103,30 @@ class ArcFeatureRegistry {
       routeName: '/trading-hub/arc-raiders/progress-trackers',
     ),
     ArcFeatureRegistryEntry(
+      id: 'scrappy_tracker',
+      label: 'Scrappy Tracker',
+      personalisationFeature: ArcPersonalisationFeature.scrappyTracker,
+      lifecycle: ArcFeatureLifecycle.ready,
+      routeName: ScrappyGridScreen.routeName,
+      accessFlag: FeatureAccessFlag.scrappyTracker,
+    ),
+    ArcFeatureRegistryEntry(
+      id: 'bench_tracker',
+      label: 'Bench Tracker',
+      personalisationFeature: ArcPersonalisationFeature.benchTracker,
+      lifecycle: ArcFeatureLifecycle.ready,
+      routeName: ScrappyGridScreen.benchRouteName,
+      accessFlag: FeatureAccessFlag.benchTracker,
+    ),
+    ArcFeatureRegistryEntry(
+      id: 'quest_tracker',
+      label: 'Quest Tracker',
+      personalisationFeature: ArcPersonalisationFeature.questTracker,
+      lifecycle: ArcFeatureLifecycle.ready,
+      routeName: ScrappyGridScreen.questRouteName,
+      accessFlag: FeatureAccessFlag.questTracker,
+    ),
+    ArcFeatureRegistryEntry(
       id: 'trading_hub',
       label: 'Trading Hub',
       personalisationFeature: ArcPersonalisationFeature.trading,
@@ -139,6 +164,7 @@ class ArcFeatureRegistry {
       personalisationFeature: ArcPersonalisationFeature.huntTargets,
       lifecycle: ArcFeatureLifecycle.beta,
       routeName: RaidPlannerHuntTargetsScreen.routeName,
+      accessFlag: FeatureAccessFlag.raidPlanner,
     ),
     ArcFeatureRegistryEntry(
       id: 'raid_intelligence',
@@ -225,6 +251,46 @@ class ArcFeatureVisibilityDiagnostic {
   final FeatureAvailability availability;
 }
 
+class ArcClosedBetaJourneyStatus {
+  const ArcClosedBetaJourneyStatus({
+    required this.label,
+    required this.status,
+    this.warning = false,
+  });
+
+  final String label;
+  final String status;
+  final bool warning;
+}
+
+class ArcClosedBetaConfigurationSummary {
+  const ArcClosedBetaConfigurationSummary({
+    required this.liveCount,
+    required this.comingSoonCount,
+    required this.hiddenCount,
+    required this.coreJourney,
+    required this.warnings,
+  });
+
+  final int liveCount;
+  final int comingSoonCount;
+  final int hiddenCount;
+  final List<ArcClosedBetaJourneyStatus> coreJourney;
+  final List<String> warnings;
+
+  bool get hasWarnings => warnings.isNotEmpty;
+}
+
+class ArcFeatureVisibilityDiagnosticsSnapshot {
+  const ArcFeatureVisibilityDiagnosticsSnapshot({
+    required this.diagnostics,
+    required this.summary,
+  });
+
+  final List<ArcFeatureVisibilityDiagnostic> diagnostics;
+  final ArcClosedBetaConfigurationSummary summary;
+}
+
 class ArcFeatureVisibilityDiagnosticsEngine {
   const ArcFeatureVisibilityDiagnosticsEngine._();
 
@@ -247,6 +313,93 @@ class ArcFeatureVisibilityDiagnosticsEngine {
     ];
   }
 
+  static ArcFeatureVisibilityDiagnosticsSnapshot snapshot({
+    required ArcUserPersonalisationProfile personalisation,
+    Map<String, bool> featureAccess = const <String, bool>{},
+    Map<String, FeatureAvailability> featureAvailability =
+        const <String, FeatureAvailability>{},
+    Map<String, bool> adminControls = const <String, bool>{},
+  }) {
+    final diagnostics = build(
+      personalisation: personalisation,
+      featureAccess: featureAccess,
+      featureAvailability: featureAvailability,
+      adminControls: adminControls,
+    );
+    return ArcFeatureVisibilityDiagnosticsSnapshot(
+      diagnostics: diagnostics,
+      summary: summarize(diagnostics),
+    );
+  }
+
+  static ArcClosedBetaConfigurationSummary summarize(
+    List<ArcFeatureVisibilityDiagnostic> diagnostics,
+  ) {
+    final liveCount = diagnostics
+        .where((diagnostic) => diagnostic.availability.isLive)
+        .length;
+    final comingSoonCount = diagnostics
+        .where((diagnostic) => diagnostic.availability.isComingSoon)
+        .length;
+    final hiddenCount = diagnostics
+        .where((diagnostic) => diagnostic.availability.isHidden)
+        .length;
+    final coreJourney = <ArcClosedBetaJourneyStatus>[
+      const ArcClosedBetaJourneyStatus(
+        label: 'Authentication',
+        status: 'Available',
+      ),
+      const ArcClosedBetaJourneyStatus(
+        label: 'Onboarding',
+        status: 'Available',
+      ),
+      const ArcClosedBetaJourneyStatus(
+        label: 'Personalisation',
+        status: 'Available',
+      ),
+      const ArcClosedBetaJourneyStatus(label: 'Profile', status: 'Available'),
+      _coreStatus(diagnostics, 'command_centre', fallback: 'Available'),
+      _coreStatus(diagnostics, 'blueprint_tracker'),
+      _coreStatus(diagnostics, 'bench_tracker'),
+      _coreStatus(diagnostics, 'scrappy_tracker'),
+    ];
+    final warnings = <String>[
+      if (_isHidden(diagnostics, 'command_centre') ||
+          coreJourney
+              .where(
+                (status) =>
+                    status.label == 'Blueprint Tracker' ||
+                    status.label == 'Bench Tracker' ||
+                    status.label == 'Scrappy Tracker',
+              )
+              .every(
+                (status) => status.status == FeatureAvailability.hidden.label,
+              ))
+        'Command Centre is available but all supported beta tracker systems are hidden.',
+      if (coreJourney.any(
+        (status) => status.label == 'Blueprint Tracker' && status.warning,
+      ))
+        'Blueprint Tracker is not Live. Closed Beta 2 expects it to be available.',
+      if (coreJourney
+          .where(
+            (status) =>
+                status.label == 'Bench Tracker' ||
+                status.label == 'Scrappy Tracker',
+          )
+          .every((status) => status.warning))
+        'Bench and Scrappy trackers are both unavailable; progression setup may feel blocked.',
+      if (diagnostics.every((diagnostic) => !diagnostic.visible))
+        'Personalisation has zero visible feature destinations.',
+    ];
+    return ArcClosedBetaConfigurationSummary(
+      liveCount: liveCount,
+      comingSoonCount: comingSoonCount,
+      hiddenCount: hiddenCount,
+      coreJourney: coreJourney,
+      warnings: warnings,
+    );
+  }
+
   static ArcFeatureVisibilityDiagnostic _diagnosticFor({
     required ArcFeatureRegistryEntry entry,
     required ArcUserPersonalisationProfile personalisation,
@@ -258,9 +411,11 @@ class ArcFeatureVisibilityDiagnosticsEngine {
     final availability = entry.accessFlag == null
         ? FeatureAvailability.live
         : featureAvailability[entry.accessFlag] ??
-              (featureAccess[entry.accessFlag] == false
+              (featureAvailability.isNotEmpty
                   ? FeatureAvailability.hidden
-                  : FeatureAvailability.live);
+                  : (featureAccess[entry.accessFlag] == false
+                        ? FeatureAvailability.hidden
+                        : FeatureAvailability.live));
     if (entry.isDormant) {
       return ArcFeatureVisibilityDiagnostic(
         entry: entry,
@@ -308,5 +463,43 @@ class ArcFeatureVisibilityDiagnosticsEngine {
           : 'Visible through normal navigation.',
       availability: availability,
     );
+  }
+
+  static ArcClosedBetaJourneyStatus _coreStatus(
+    List<ArcFeatureVisibilityDiagnostic> diagnostics,
+    String id, {
+    String? fallback,
+  }) {
+    final diagnostic = diagnostics
+        .cast<ArcFeatureVisibilityDiagnostic?>()
+        .firstWhere(
+          (diagnostic) => diagnostic?.entry.id == id,
+          orElse: () => null,
+        );
+    if (diagnostic == null) {
+      return ArcClosedBetaJourneyStatus(
+        label: fallback ?? id,
+        status: fallback ?? 'Unavailable',
+        warning: fallback == null,
+      );
+    }
+    return ArcClosedBetaJourneyStatus(
+      label: diagnostic.entry.label,
+      status: diagnostic.availability.label,
+      warning: diagnostic.availability.isHidden,
+    );
+  }
+
+  static bool _isHidden(
+    List<ArcFeatureVisibilityDiagnostic> diagnostics,
+    String id,
+  ) {
+    final diagnostic = diagnostics
+        .cast<ArcFeatureVisibilityDiagnostic?>()
+        .firstWhere(
+          (diagnostic) => diagnostic?.entry.id == id,
+          orElse: () => null,
+        );
+    return diagnostic?.availability.isHidden ?? true;
   }
 }

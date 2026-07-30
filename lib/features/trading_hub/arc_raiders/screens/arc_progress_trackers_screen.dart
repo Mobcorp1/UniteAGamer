@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
@@ -40,62 +41,55 @@ class ArcProgressTrackersScreen extends StatelessWidget {
             ArcRaidersSectionCard(
               accent: AppTheme.neonCyan,
               padding: const EdgeInsets.all(12),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final twoColumn = constraints.maxWidth >= 720;
-                  final cardWidth = twoColumn
-                      ? (constraints.maxWidth - 12) / 2
-                      : constraints.maxWidth;
+              child: StreamBuilder<Map<String, FeatureAvailability>>(
+                stream: FeatureAccess.watchAvailabilityMap(
+                  _trackerLinks.map((link) => link.accessFlag),
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: LinearProgressIndicator(color: AppTheme.neonCyan),
+                    );
+                  }
+                  final availability =
+                      snapshot.data ?? const <String, FeatureAvailability>{};
+                  final visibleLinks = _trackerLinks
+                      .where(
+                        (link) =>
+                            (availability[link.accessFlag] ??
+                                    FeatureAvailability.hidden)
+                                .isVisibleToStandardUsers,
+                      )
+                      .toList(growable: false);
+                  if (visibleLinks.isEmpty) {
+                    return const _TrackerEmptyState();
+                  }
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final twoColumn = constraints.maxWidth >= 720;
+                      final cardWidth = twoColumn
+                          ? (constraints.maxWidth - 12) / 2
+                          : constraints.maxWidth;
 
-                  return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      SizedBox(
-                        width: cardWidth,
-                        child: _TrackerLinkCard(
-                          title: 'Scrappy Tracker',
-                          subtitle:
-                              'Track Scrappy upgrade materials and resource progress.',
-                          icon: Icons.egg_alt_rounded,
-                          accent: AppTheme.neonPink,
-                          routeName: ScrappyGridScreen.routeName,
-                        ),
-                      ),
-                      SizedBox(
-                        width: cardWidth,
-                        child: _TrackerLinkCard(
-                          title: 'Bench Tracker',
-                          subtitle:
-                              'Review bench tiers, material gaps and upgrade readiness.',
-                          icon: Icons.build_rounded,
-                          accent: AppTheme.neonCyan,
-                          routeName: ScrappyGridScreen.benchRouteName,
-                        ),
-                      ),
-                      SizedBox(
-                        width: cardWidth,
-                        child: _TrackerLinkCard(
-                          title: 'Quest Tracker',
-                          subtitle:
-                              'Track trader quest items, hand-ins and blocker items.',
-                          icon: Icons.assignment_rounded,
-                          accent: Colors.amberAccent,
-                          routeName: ScrappyGridScreen.questRouteName,
-                        ),
-                      ),
-                      SizedBox(
-                        width: cardWidth,
-                        child: _TrackerLinkCard(
-                          title: 'Hunt Targets',
-                          subtitle:
-                              'Open Raid Planner targets for focused collection routes.',
-                          icon: Icons.my_location_rounded,
-                          accent: Colors.lightGreenAccent,
-                          routeName: RaidPlannerHuntTargetsScreen.routeName,
-                        ),
-                      ),
-                    ],
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          for (final link in visibleLinks)
+                            SizedBox(
+                              width: cardWidth,
+                              child: _TrackerLinkCard(
+                                link: link,
+                                availability:
+                                    availability[link.accessFlag] ??
+                                    FeatureAvailability.hidden,
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -107,13 +101,14 @@ class ArcProgressTrackersScreen extends StatelessWidget {
   }
 }
 
-class _TrackerLinkCard extends StatelessWidget {
-  const _TrackerLinkCard({
+class _TrackerLinkDefinition {
+  const _TrackerLinkDefinition({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.accent,
     required this.routeName,
+    required this.accessFlag,
   });
 
   final String title;
@@ -121,12 +116,69 @@ class _TrackerLinkCard extends StatelessWidget {
   final IconData icon;
   final Color accent;
   final String routeName;
+  final String accessFlag;
+}
+
+const _trackerLinks = <_TrackerLinkDefinition>[
+  _TrackerLinkDefinition(
+    title: 'Scrappy Tracker',
+    subtitle: 'Track Scrappy upgrade materials and resource progress.',
+    icon: Icons.egg_alt_rounded,
+    accent: AppTheme.neonPink,
+    routeName: ScrappyGridScreen.routeName,
+    accessFlag: FeatureAccessFlag.scrappyTracker,
+  ),
+  _TrackerLinkDefinition(
+    title: 'Bench Tracker',
+    subtitle: 'Review bench tiers, material gaps and upgrade readiness.',
+    icon: Icons.build_rounded,
+    accent: AppTheme.neonCyan,
+    routeName: ScrappyGridScreen.benchRouteName,
+    accessFlag: FeatureAccessFlag.benchTracker,
+  ),
+  _TrackerLinkDefinition(
+    title: 'Quest Tracker',
+    subtitle: 'Track trader quest items, hand-ins and blocker items.',
+    icon: Icons.assignment_rounded,
+    accent: Colors.amberAccent,
+    routeName: ScrappyGridScreen.questRouteName,
+    accessFlag: FeatureAccessFlag.questTracker,
+  ),
+  _TrackerLinkDefinition(
+    title: 'Hunt Targets',
+    subtitle: 'Open Raid Planner targets for focused collection routes.',
+    icon: Icons.my_location_rounded,
+    accent: Colors.lightGreenAccent,
+    routeName: RaidPlannerHuntTargetsScreen.routeName,
+    accessFlag: FeatureAccessFlag.raidPlanner,
+  ),
+];
+
+class _TrackerLinkCard extends StatelessWidget {
+  const _TrackerLinkCard({required this.link, required this.availability});
+
+  final _TrackerLinkDefinition link;
+  final FeatureAvailability availability;
 
   @override
   Widget build(BuildContext context) {
+    final accent = link.accent;
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => Navigator.of(context).pushNamed(routeName),
+      onTap: () {
+        if (availability.canOpenFeature) {
+          Navigator.of(context).pushNamed(link.routeName);
+          return;
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => FeatureComingSoonScreen(
+              title: link.title,
+              description: link.subtitle,
+            ),
+          ),
+        );
+      },
       child: Container(
         constraints: const BoxConstraints(minHeight: 118),
         padding: const EdgeInsets.all(14),
@@ -146,7 +198,7 @@ class _TrackerLinkCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: accent.withValues(alpha: 0.42)),
               ),
-              child: Icon(icon, color: accent),
+              child: Icon(link.icon, color: accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -154,14 +206,14 @@ class _TrackerLinkCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    link.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.tradingHeading(fontSize: 17, color: accent),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    subtitle,
+                    link.subtitle,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
@@ -173,9 +225,69 @@ class _TrackerLinkCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded, color: accent),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (availability.isComingSoon)
+                  _StatusPill(label: availability.label, color: accent),
+                const SizedBox(height: 8),
+                Icon(Icons.chevron_right_rounded, color: accent),
+              ],
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Text(
+        label.toUpperCase(),
+        style: AppTheme.bodyTextStyle(fontSize: 9, color: color, isBold: true),
+      ),
+    );
+  }
+}
+
+class _TrackerEmptyState extends StatelessWidget {
+  const _TrackerEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonPink.withValues(alpha: 0.22),
+        backgroundColor: Colors.black.withValues(alpha: 0.18),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.visibility_off_rounded, color: AppTheme.neonPink),
+          const SizedBox(width: AppTheme.spaceS),
+          Expanded(
+            child: Text(
+              'Progress trackers are hidden for this beta configuration. Adjust Feature Access in Admin Console to reopen them.',
+              style: AppTheme.bodyTextStyle(
+                fontSize: 13,
+                color: AppTheme.tradingMutedText,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -376,6 +376,7 @@ class ArcCommandCentreEngine {
     required Map<String, FeatureAvailability> featureAvailability,
   }) {
     final recommendations = <ArcCommandRecommendation>[];
+    final surfacedFlags = <String>{};
     for (final entry in ArcFeatureRegistry.entries) {
       final flag = entry.accessFlag;
       if (flag == null) continue;
@@ -384,6 +385,7 @@ class ArcCommandCentreEngine {
         entry.personalisationFeature,
       );
       if (!interest.isHighSignal) continue;
+      if (!surfacedFlags.add(flag)) continue;
       recommendations.add(
         ArcCommandRecommendation(
           title: '${entry.label} Coming Soon',

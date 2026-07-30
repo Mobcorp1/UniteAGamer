@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ArcBetaFeedbackCategory {
   bug,
+  layoutDisplay,
+  confusing,
   userExperience,
   incorrectData,
   trade,
@@ -9,18 +11,22 @@ enum ArcBetaFeedbackCategory {
   matchmaking,
   performance,
   suggestion,
+  general,
 }
 
 extension ArcBetaFeedbackCategoryX on ArcBetaFeedbackCategory {
   String get label => switch (this) {
     ArcBetaFeedbackCategory.bug => 'Bug',
+    ArcBetaFeedbackCategory.layoutDisplay => 'Layout/display issue',
+    ArcBetaFeedbackCategory.confusing => 'Something confusing',
     ArcBetaFeedbackCategory.userExperience => 'UI / UX',
     ArcBetaFeedbackCategory.incorrectData => 'Incorrect data',
     ArcBetaFeedbackCategory.trade => 'Trade issue',
     ArcBetaFeedbackCategory.blueprint => 'Blueprint issue',
     ArcBetaFeedbackCategory.matchmaking => 'Matchmaking',
     ArcBetaFeedbackCategory.performance => 'Performance',
-    ArcBetaFeedbackCategory.suggestion => 'Suggestion',
+    ArcBetaFeedbackCategory.suggestion => 'Feature request',
+    ArcBetaFeedbackCategory.general => 'General feedback',
   };
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/data/uag_personalised_notification_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_relevance_mapper.dart';
@@ -135,6 +136,70 @@ void main() {
             .where((entry) => entry.isDormant)
             .every((entry) => !entry.isRoutable),
         isTrue,
+      );
+    });
+
+    test('summarises the closed beta tracker configuration', () {
+      const personalisation = ArcUserPersonalisationProfile(
+        featureInterests: {
+          ArcPersonalisationFeature.blueprintTracker:
+              ArcPersonalisationInterestLevel.primary,
+          ArcPersonalisationFeature.benchTracker:
+              ArcPersonalisationInterestLevel.high,
+          ArcPersonalisationFeature.scrappyTracker:
+              ArcPersonalisationInterestLevel.high,
+        },
+      );
+
+      final snapshot = ArcFeatureVisibilityDiagnosticsEngine.snapshot(
+        personalisation: personalisation,
+        featureAvailability: const {
+          'canAccessBlueprintTracker': FeatureAvailability.live,
+          'canAccessBenchTracker': FeatureAvailability.comingSoon,
+          'canAccessScrappyTracker': FeatureAvailability.hidden,
+        },
+      );
+
+      expect(snapshot.summary.liveCount, greaterThan(0));
+      expect(snapshot.summary.comingSoonCount, greaterThan(0));
+      expect(snapshot.summary.hiddenCount, greaterThan(0));
+      expect(
+        snapshot.summary.coreJourney.map((status) => status.label),
+        containsAll(<String>[
+          'Blueprint Tracker',
+          'Bench Tracker',
+          'Scrappy Tracker',
+        ]),
+      );
+      expect(
+        snapshot.summary.coreJourney
+            .firstWhere((status) => status.label == 'Bench Tracker')
+            .status,
+        'Coming Soon',
+      );
+    });
+
+    test('warns when all supported beta trackers are hidden', () {
+      final snapshot = ArcFeatureVisibilityDiagnosticsEngine.snapshot(
+        personalisation: ArcUserPersonalisationProfile.defaults,
+        featureAvailability: const {
+          'canAccessBlueprintTracker': FeatureAvailability.hidden,
+          'canAccessBenchTracker': FeatureAvailability.hidden,
+          'canAccessScrappyTracker': FeatureAvailability.hidden,
+        },
+      );
+
+      expect(
+        snapshot.summary.warnings,
+        contains(
+          'Command Centre is available but all supported beta tracker systems are hidden.',
+        ),
+      );
+      expect(
+        snapshot.summary.warnings,
+        contains(
+          'Blueprint Tracker is not Live. Closed Beta 2 expects it to be available.',
+        ),
       );
     });
   });

@@ -52,6 +52,8 @@ enum FeatureAvailability {
   bool get isLive => this == FeatureAvailability.live;
   bool get isComingSoon => this == FeatureAvailability.comingSoon;
   bool get isHidden => this == FeatureAvailability.hidden;
+  bool get isVisibleToStandardUsers => !isHidden;
+  bool get canOpenFeature => isLive;
 
   static FeatureAvailability? fromStorage(Object? value) {
     final normalized = value?.toString().trim().toLowerCase().replaceAll(
@@ -216,6 +218,17 @@ class FeatureAccess {
   ) {
     return <String, FeatureAvailability>{
       for (final flag in flags) flag: availabilityFromConfigData(data, flag),
+    };
+  }
+
+  static Map<String, FeatureAvailability> availabilityMapFromUserAndConfigData({
+    required Map<String, dynamic> userData,
+    required Map<String, dynamic> configData,
+    required Iterable<String> flags,
+  }) {
+    return <String, FeatureAvailability>{
+      for (final flag in flags)
+        flag: _availabilityFor(flag, userData, configData),
     };
   }
 
@@ -517,7 +530,7 @@ class FeatureComingSoonScreen extends StatelessWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Interest is tracked through Personalisation and Settings.',
+                                    'Use Personalisation in Settings to register interest. Feature-live notifications are queued only when supported.',
                                     style: AppTheme.bodyTextStyle(
                                       fontSize: 12,
                                       color: Colors.white70,
@@ -526,8 +539,8 @@ class FeatureComingSoonScreen extends StatelessWidget {
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.notifications_active),
-                            label: const Text('Notify Me'),
+                            icon: const Icon(Icons.bookmark_add_outlined),
+                            label: const Text('Register Interest'),
                           ),
                         ),
                       ],

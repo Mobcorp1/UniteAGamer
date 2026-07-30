@@ -169,7 +169,11 @@ class UAGTradersHubApp extends StatelessWidget {
 
       case BlueprintGridScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const BlueprintGridScreen(),
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.blueprintTracker,
+            title: 'Blueprint Tracker',
+            child: BlueprintGridScreen(),
+          ),
           settings: settings,
         );
 
@@ -234,7 +238,11 @@ class UAGTradersHubApp extends StatelessWidget {
 
       case ArcIntelExplorerScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const ArcIntelExplorerScreen(),
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.intelExplorer,
+            title: 'Intel Explorer',
+            child: ArcIntelExplorerScreen(),
+          ),
           settings: settings,
         );
 
@@ -261,7 +269,7 @@ class UAGTradersHubApp extends StatelessWidget {
       case ScrappyGridScreen.benchRouteName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
-            flag: FeatureAccessFlag.scrappyTracker,
+            flag: FeatureAccessFlag.benchTracker,
             title: 'Bench Tracker',
             child: ScrappyGridScreen.bench(),
           ),
@@ -271,7 +279,7 @@ class UAGTradersHubApp extends StatelessWidget {
       case ScrappyGridScreen.questRouteName:
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
-            flag: FeatureAccessFlag.scrappyTracker,
+            flag: FeatureAccessFlag.questTracker,
             title: 'Quest Tracker',
             child: ScrappyGridScreen.quest(),
           ),
@@ -290,13 +298,21 @@ class UAGTradersHubApp extends StatelessWidget {
 
       case RaidPlannerScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const RaidPlannerScreen(),
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.raidPlanner,
+            title: 'Raid Planner',
+            child: RaidPlannerScreen(),
+          ),
           settings: settings,
         );
 
       case ArcRaidIntelligenceScreen.routeName:
         return MaterialPageRoute(
-          builder: (_) => const ArcRaidIntelligenceScreen(),
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.intelExplorer,
+            title: 'Raid Intelligence',
+            child: ArcRaidIntelligenceScreen(),
+          ),
           settings: settings,
         );
 

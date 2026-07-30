@@ -10,15 +10,22 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
   const ArcFeatureVisibilityDiagnosticsPanel({super.key});
 
-  Future<List<ArcFeatureVisibilityDiagnostic>> _load() async {
+  Future<ArcFeatureVisibilityDiagnosticsSnapshot> _load() async {
     final repository = ArcUserPersonalisationRepository();
     final personalisation = await repository.loadProfile();
-    final featureAvailability = <String, FeatureAvailability>{};
-    for (final entry in ArcFeatureRegistry.entries) {
-      final flag = entry.accessFlag;
-      if (flag == null || featureAvailability.containsKey(flag)) continue;
-      featureAvailability[flag] = await FeatureAccess.getAvailability(flag);
-    }
+    final accessFlags = <String>{
+      for (final entry in ArcFeatureRegistry.entries)
+        if (entry.accessFlag != null) entry.accessFlag!,
+    };
+
+    final featureAccessSnapshot = await FirebaseFirestore.instance
+        .collection('config')
+        .doc('feature_access')
+        .get();
+    final featureAvailability = FeatureAccess.availabilityMapFromConfigData(
+      featureAccessSnapshot.data() ?? const <String, dynamic>{},
+      accessFlags,
+    );
 
     final adminSnapshot = await FirebaseFirestore.instance
         .collection('config')
@@ -33,7 +40,7 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
           entry.adminFlag!: adminConfig.isFeatureEnabled(entry.adminFlag!),
     };
 
-    return ArcFeatureVisibilityDiagnosticsEngine.build(
+    return ArcFeatureVisibilityDiagnosticsEngine.snapshot(
       personalisation: personalisation,
       featureAvailability: featureAvailability,
       adminControls: adminControls,
@@ -42,7 +49,7 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<ArcFeatureVisibilityDiagnostic>>(
+    return FutureBuilder<ArcFeatureVisibilityDiagnosticsSnapshot>(
       future: _load(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -55,7 +62,9 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
         }
 
         final diagnostics =
-            snapshot.data ?? const <ArcFeatureVisibilityDiagnostic>[];
+            snapshot.data?.diagnostics ??
+            const <ArcFeatureVisibilityDiagnostic>[];
+        final summary = snapshot.data?.summary;
         return Container(
           width: double.infinity,
           padding: AppTheme.sectionCardPadding,
@@ -89,6 +98,10 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppTheme.spaceM),
+              if (summary != null) ...[
+                _ConfigurationSummary(summary: summary),
+                const SizedBox(height: AppTheme.spaceM),
+              ],
               LayoutBuilder(
                 builder: (context, constraints) {
                   final cardWidth = constraints.maxWidth >= 900
@@ -111,6 +124,148 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _ConfigurationSummary extends StatelessWidget {
+  const _ConfigurationSummary({required this.summary});
+
+  final ArcClosedBetaConfigurationSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Closed Beta Configuration',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: Colors.white,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              _CountPill(
+                label: 'Live',
+                value: summary.liveCount,
+                color: AppTheme.neonCyan,
+              ),
+              _CountPill(
+                label: 'Coming Soon',
+                value: summary.comingSoonCount,
+                color: Colors.amberAccent,
+              ),
+              _CountPill(
+                label: 'Hidden',
+                value: summary.hiddenCount,
+                color: AppTheme.neonPink,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: AppTheme.spaceS,
+            runSpacing: AppTheme.spaceS,
+            children: [
+              for (final status in summary.coreJourney)
+                _CoreStatusPill(status: status),
+            ],
+          ),
+          if (summary.hasWarnings) ...[
+            const SizedBox(height: AppTheme.spaceM),
+            for (final warning in summary.warnings)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.amberAccent,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        warning,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CountPill extends StatelessWidget {
+  const _CountPill({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Text(
+        '$label: $value',
+        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
+      ),
+    );
+  }
+}
+
+class _CoreStatusPill extends StatelessWidget {
+  const _CoreStatusPill({required this.status});
+
+  final ArcClosedBetaJourneyStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = status.warning
+        ? AppTheme.neonPink
+        : status.status == FeatureAvailability.comingSoon.label
+        ? Colors.amberAccent
+        : AppTheme.neonCyan;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 34),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        '${status.label}: ${status.status}',
+        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
+      ),
     );
   }
 }

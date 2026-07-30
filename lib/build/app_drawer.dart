@@ -207,6 +207,8 @@ class _AppDrawerState extends State<AppDrawer>
           for (final group in navigationGroups)
             for (final item in group.items)
               if (item.accessFlag != null) item.accessFlag!,
+          for (final group in navigationGroups)
+            for (final item in group.items) ...item.visibilityAccessFlags,
         };
         return StreamBuilder<Map<String, FeatureAvailability>>(
           stream: FeatureAccess.watchAvailabilityMap(accessFlags),
@@ -333,7 +335,25 @@ class _AppDrawerState extends State<AppDrawer>
     Map<String, FeatureAvailability> availabilityByFlag,
   ) {
     final flag = item.accessFlag;
-    if (flag == null) return FeatureAvailability.live;
+    if (flag == null && item.visibilityAccessFlags.isEmpty) {
+      return FeatureAvailability.live;
+    }
+    if (flag == null) {
+      final visibleStates = item.visibilityAccessFlags
+          .map(
+            (visibilityFlag) =>
+                availabilityByFlag[visibilityFlag] ??
+                FeatureAvailability.hidden,
+          )
+          .toList(growable: false);
+      if (visibleStates.any((availability) => availability.isLive)) {
+        return FeatureAvailability.live;
+      }
+      if (visibleStates.any((availability) => availability.isComingSoon)) {
+        return FeatureAvailability.comingSoon;
+      }
+      return FeatureAvailability.hidden;
+    }
     return availabilityByFlag[flag] ?? FeatureAvailability.live;
   }
 

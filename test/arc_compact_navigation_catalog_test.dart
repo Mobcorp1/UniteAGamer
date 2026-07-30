@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_navigation_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
@@ -111,6 +112,28 @@ void main() {
       expect(routeNames, contains(ArcMatchRiderScreen.routeName));
       expect(routeNames, contains(MyHubScreen.toolDeckRouteName));
       expect(routeNames, contains(ProfileSettingsScreen.routeName));
+    });
+
+    test('declares feature gates for controlled drawer destinations', () {
+      expect(
+        _item('Blueprint Tracker').accessFlag,
+        FeatureAccessFlag.blueprintTracker,
+      );
+      expect(
+        _item('Raid Intelligence').accessFlag,
+        FeatureAccessFlag.intelExplorer,
+      );
+      expect(_item('Raid Planner').accessFlag, FeatureAccessFlag.raidPlanner);
+      expect(_item('Progress Trackers').accessFlag, isNull);
+      expect(
+        _item('Progress Trackers').visibilityAccessFlags,
+        containsAll(<String>[
+          FeatureAccessFlag.scrappyTracker,
+          FeatureAccessFlag.benchTracker,
+          FeatureAccessFlag.questTracker,
+          FeatureAccessFlag.raidPlanner,
+        ]),
+      );
     });
 
     test('badge engine counts only actionable primary badge sources', () {

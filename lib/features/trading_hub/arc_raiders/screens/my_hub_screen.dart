@@ -198,9 +198,6 @@ class _MyHubScreenState extends State<MyHubScreen> {
     }
 
     const betaOpenTitles = {
-      'Blueprint Tracker',
-      'Blueprint Tracker Beta',
-      'Blueprint Grid',
       'Nomadic Trader',
       'Operation Rewards',
       'Operations',
@@ -238,6 +235,10 @@ class _MyHubScreenState extends State<MyHubScreen> {
 
   String? _featureAccessFlagForTitle(String title) {
     switch (title) {
+      case 'Blueprint Tracker':
+      case 'Blueprint Tracker Beta':
+      case 'Blueprint Grid':
+        return FeatureAccessFlag.blueprintTracker;
       case 'Scrappy Tracker':
         return FeatureAccessFlag.scrappyTracker;
       case 'Bench Tracker':
@@ -1075,13 +1076,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       return;
     }
 
-    const betaOpenTitles = {
-      'Blueprint Tracker',
-      'Blueprint Tracker Beta',
-      'Blueprint Grid',
-      'Nomadic Trader',
-      'My Hub',
-    };
+    const betaOpenTitles = {'Nomadic Trader', 'My Hub'};
 
     if (betaOpenTitles.contains(feature.title)) {
       navigator.push(MaterialPageRoute(builder: feature.builder));
@@ -1114,6 +1109,10 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
 
   String? _featureAccessFlagForTitle(String title) {
     switch (title) {
+      case 'Blueprint Tracker':
+      case 'Blueprint Tracker Beta':
+      case 'Blueprint Grid':
+        return FeatureAccessFlag.blueprintTracker;
       case 'Scrappy Tracker':
         return FeatureAccessFlag.scrappyTracker;
       case 'Bench Tracker':

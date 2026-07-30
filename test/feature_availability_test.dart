@@ -59,5 +59,16 @@ void main() {
         'user-1_canAccessIntelExplorer_feature_live',
       );
     });
+
+    test('defines one standard-user interpretation for beta states', () {
+      expect(FeatureAvailability.live.isVisibleToStandardUsers, isTrue);
+      expect(FeatureAvailability.live.canOpenFeature, isTrue);
+
+      expect(FeatureAvailability.comingSoon.isVisibleToStandardUsers, isTrue);
+      expect(FeatureAvailability.comingSoon.canOpenFeature, isFalse);
+
+      expect(FeatureAvailability.hidden.isVisibleToStandardUsers, isFalse);
+      expect(FeatureAvailability.hidden.canOpenFeature, isFalse);
+    });
   });
 }

@@ -2,6 +2,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_beta_feedback.dart';
 
 void main() {
+  test('beta feedback exposes closed beta category labels', () {
+    final labels = ArcBetaFeedbackCategory.values
+        .map((category) => category.label)
+        .toSet();
+
+    expect(
+      labels,
+      containsAll(<String>[
+        'Bug',
+        'Layout/display issue',
+        'Something confusing',
+        'Feature request',
+        'General feedback',
+      ]),
+    );
+  });
+
   test('beta feedback submission includes diagnostic and workflow fields', () {
     const submission = ArcBetaFeedbackSubmission(
       uid: 'user-1',

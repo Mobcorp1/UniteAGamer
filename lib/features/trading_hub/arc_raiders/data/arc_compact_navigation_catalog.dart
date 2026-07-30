@@ -41,6 +41,7 @@ class ArcCompactNavigationItem {
     this.selectedRouteNames = const <String>[],
     this.badgeTarget = ArcDrawerBadgeTarget.none,
     this.accessFlag,
+    this.visibilityAccessFlags = const <String>[],
     this.comingSoonWhenLocked = false,
     this.personalisationFeature,
   });
@@ -51,6 +52,7 @@ class ArcCompactNavigationItem {
   final List<String> selectedRouteNames;
   final ArcDrawerBadgeTarget badgeTarget;
   final String? accessFlag;
+  final List<String> visibilityAccessFlags;
   final bool comingSoonWhenLocked;
   final ArcPersonalisationFeature? personalisationFeature;
 
@@ -91,6 +93,7 @@ class ArcCompactNavigationCatalog {
           label: 'Blueprint Tracker',
           icon: Icons.grid_on_rounded,
           routeName: BlueprintGridScreen.routeName,
+          accessFlag: FeatureAccessFlag.blueprintTracker,
           badgeTarget: ArcDrawerBadgeTarget.blueprintTracker,
           personalisationFeature: ArcPersonalisationFeature.blueprintTracker,
         ),
@@ -104,6 +107,12 @@ class ArcCompactNavigationCatalog {
             ScrappyGridScreen.questRouteName,
             RaidPlannerHuntTargetsScreen.routeName,
           ],
+          visibilityAccessFlags: <String>[
+            FeatureAccessFlag.scrappyTracker,
+            FeatureAccessFlag.benchTracker,
+            FeatureAccessFlag.questTracker,
+            FeatureAccessFlag.raidPlanner,
+          ],
           personalisationFeature: ArcPersonalisationFeature.scrappyTracker,
         ),
       ],
@@ -115,12 +124,14 @@ class ArcCompactNavigationCatalog {
           label: 'Raid Intelligence',
           icon: Icons.radar_rounded,
           routeName: ArcRaidIntelligenceScreen.routeName,
+          accessFlag: FeatureAccessFlag.intelExplorer,
           personalisationFeature: ArcPersonalisationFeature.raidIntelligence,
         ),
         ArcCompactNavigationItem(
           label: 'Raid Planner',
           icon: Icons.route_rounded,
           routeName: RaidPlannerScreen.routeName,
+          accessFlag: FeatureAccessFlag.raidPlanner,
           personalisationFeature: ArcPersonalisationFeature.raidPlanner,
         ),
         ArcCompactNavigationItem(
