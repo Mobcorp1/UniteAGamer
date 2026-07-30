@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
@@ -16,6 +18,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_season_reset_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_listing_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_offer.dart';
@@ -28,6 +31,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
@@ -56,6 +60,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       ArcSavedLoadoutRepository();
   final ArcTraderProfileRepository _profileRepository =
       ArcTraderProfileRepository();
+  final ArcUserPersonalisationRepository _personalisationRepository =
+      ArcUserPersonalisationRepository();
   final ArcOperationsRepository _operationsRepository =
       ArcOperationsRepository();
   final ArcProgressionRepository _progressionRepository =
@@ -96,6 +102,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       _tradingRepository.watchListingQueues();
   late final Stream<ArcProfileCompletionResult> _profileCompletionStream =
       _profileRepository.watchProfileCompletion();
+  late final Stream<ArcUserPersonalisationProfile> _personalisationStream =
+      _personalisationRepository.watchProfile();
   late Future<ArcNomadicTraderTrackerSnapshot> _nomadicTraderSnapshotFuture =
       _nomadicTraderRepository.loadTrackerSnapshot();
   final Map<String, bool> _checklistState = <String, bool>{};
@@ -121,12 +129,20 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       const <ArcTradeListingQueueItem>[];
   ArcProfileCompletionResult _cachedProfileCompletion =
       ArcProfileCompletionResult.completeResult;
+  ArcUserPersonalisationProfile _cachedPersonalisation =
+      ArcUserPersonalisationProfile.defaults;
   ArcExpeditionStateSnapshot _cachedExpeditionState =
       ArcExpeditionStateSnapshot.fromSeasonState(ArcSeasonState.initial());
   static ArcCommandCentreState? _lastCommandState;
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_personalisationRepository.migrateLegacyIfNeeded());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +230,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
       SnackBar(
         content: Text(
           action.placeholderMessage ??
-              '${action.label} will come online in a later Command Centre pass.',
+              '${action.label} is not available in this beta build.',
           style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
         ),
       ),
@@ -222,85 +238,96 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
   }
 
   Widget _buildLiveCommandCentre() {
-    return StreamBuilder<ArcExpeditionStateSnapshot>(
-      stream: _expeditionStateStream,
-      builder: (context, expeditionSnapshot) {
-        if (expeditionSnapshot.hasData) {
-          _cachedExpeditionState = expeditionSnapshot.data!;
+    return StreamBuilder<ArcUserPersonalisationProfile>(
+      stream: _personalisationStream,
+      builder: (context, personalisationSnapshot) {
+        if (personalisationSnapshot.hasData) {
+          _cachedPersonalisation = personalisationSnapshot.data!;
         }
-        final expeditionState = _cachedExpeditionState;
-        return StreamBuilder<ArcProfileCompletionResult>(
-          stream: _profileCompletionStream,
-          builder: (context, profileSnapshot) {
-            if (profileSnapshot.hasData) {
-              _cachedProfileCompletion = profileSnapshot.data!;
+        final personalisation = _cachedPersonalisation;
+        return StreamBuilder<ArcExpeditionStateSnapshot>(
+          stream: _expeditionStateStream,
+          builder: (context, expeditionSnapshot) {
+            if (expeditionSnapshot.hasData) {
+              _cachedExpeditionState = expeditionSnapshot.data!;
             }
-            final profileCompletion = _cachedProfileCompletion;
-            return StreamBuilder<Map<String, ArcBlueprintState>>(
-              stream: _blueprintStatesStream,
-              builder: (context, blueprintSnapshot) {
-                if (blueprintSnapshot.hasData) {
-                  _cachedBlueprintStates = blueprintSnapshot.data!;
+            final expeditionState = _cachedExpeditionState;
+            return StreamBuilder<ArcProfileCompletionResult>(
+              stream: _profileCompletionStream,
+              builder: (context, profileSnapshot) {
+                if (profileSnapshot.hasData) {
+                  _cachedProfileCompletion = profileSnapshot.data!;
                 }
-                final blueprintStates = _cachedBlueprintStates;
-                return StreamBuilder<List<ArcSavedLoadout>>(
-                  stream: _loadoutsStream,
-                  builder: (context, loadoutSnapshot) {
-                    if (loadoutSnapshot.hasData) {
-                      _cachedLoadouts = loadoutSnapshot.data!;
+                final profileCompletion = _cachedProfileCompletion;
+                return StreamBuilder<Map<String, ArcBlueprintState>>(
+                  stream: _blueprintStatesStream,
+                  builder: (context, blueprintSnapshot) {
+                    if (blueprintSnapshot.hasData) {
+                      _cachedBlueprintStates = blueprintSnapshot.data!;
                     }
-                    final loadouts = _cachedLoadouts;
-                    return StreamBuilder<ArcOperationsUserState>(
-                      stream: _operationsStateStream,
-                      builder: (context, operationsSnapshot) {
-                        if (operationsSnapshot.hasData) {
-                          _cachedOperationsState = operationsSnapshot.data!;
+                    final blueprintStates = _cachedBlueprintStates;
+                    return StreamBuilder<List<ArcSavedLoadout>>(
+                      stream: _loadoutsStream,
+                      builder: (context, loadoutSnapshot) {
+                        if (loadoutSnapshot.hasData) {
+                          _cachedLoadouts = loadoutSnapshot.data!;
                         }
-                        final operationsState = _cachedOperationsState;
-                        return StreamBuilder<
-                          ArcScrappyRepositoryState<
-                            Map<String, ArcScrappyState>
-                          >
-                        >(
-                          stream: _scrappyStatesStream,
-                          builder: (context, scrappySnapshot) {
-                            if (scrappySnapshot.hasData) {
-                              _cachedScrappyState = scrappySnapshot.data!;
+                        final loadouts = _cachedLoadouts;
+                        return StreamBuilder<ArcOperationsUserState>(
+                          stream: _operationsStateStream,
+                          builder: (context, operationsSnapshot) {
+                            if (operationsSnapshot.hasData) {
+                              _cachedOperationsState = operationsSnapshot.data!;
                             }
-                            final scrappyState = _cachedScrappyState;
-                            final scrappyStates =
-                                scrappyState.data ??
-                                const <String, ArcScrappyState>{};
-                            return StreamBuilder<ArcProgressionRecords>(
-                              stream: _progressionRecordsStream,
-                              builder: (context, progressionSnapshot) {
-                                if (progressionSnapshot.hasData) {
-                                  _cachedProgressionRecords =
-                                      progressionSnapshot.data!;
+                            final operationsState = _cachedOperationsState;
+                            return StreamBuilder<
+                              ArcScrappyRepositoryState<
+                                Map<String, ArcScrappyState>
+                              >
+                            >(
+                              stream: _scrappyStatesStream,
+                              builder: (context, scrappySnapshot) {
+                                if (scrappySnapshot.hasData) {
+                                  _cachedScrappyState = scrappySnapshot.data!;
                                 }
-                                final progressionRecords =
-                                    _cachedProgressionRecords;
-                                return FutureBuilder<
-                                  ArcNomadicTraderTrackerSnapshot
-                                >(
-                                  future: _nomadicTraderSnapshotFuture,
-                                  builder: (context, traderSnapshot) {
-                                    if (traderSnapshot.hasData) {
-                                      _cachedNomadicTraderTracker =
-                                          traderSnapshot.data!;
+                                final scrappyState = _cachedScrappyState;
+                                final scrappyStates =
+                                    scrappyState.data ??
+                                    const <String, ArcScrappyState>{};
+                                return StreamBuilder<ArcProgressionRecords>(
+                                  stream: _progressionRecordsStream,
+                                  builder: (context, progressionSnapshot) {
+                                    if (progressionSnapshot.hasData) {
+                                      _cachedProgressionRecords =
+                                          progressionSnapshot.data!;
                                     }
-                                    final nomadicTraderTracker =
-                                        _cachedNomadicTraderTracker;
-                                    return _buildWithTradeActivity(
-                                      expeditionState: expeditionState,
-                                      blueprintStates: blueprintStates,
-                                      loadouts: loadouts,
-                                      operationsState: operationsState,
-                                      scrappyStates: scrappyStates,
-                                      progressionRecords: progressionRecords,
-                                      nomadicTraderTracker:
-                                          nomadicTraderTracker,
-                                      profileCompletion: profileCompletion,
+                                    final progressionRecords =
+                                        _cachedProgressionRecords;
+                                    return FutureBuilder<
+                                      ArcNomadicTraderTrackerSnapshot
+                                    >(
+                                      future: _nomadicTraderSnapshotFuture,
+                                      builder: (context, traderSnapshot) {
+                                        if (traderSnapshot.hasData) {
+                                          _cachedNomadicTraderTracker =
+                                              traderSnapshot.data!;
+                                        }
+                                        final nomadicTraderTracker =
+                                            _cachedNomadicTraderTracker;
+                                        return _buildWithTradeActivity(
+                                          expeditionState: expeditionState,
+                                          blueprintStates: blueprintStates,
+                                          loadouts: loadouts,
+                                          operationsState: operationsState,
+                                          scrappyStates: scrappyStates,
+                                          progressionRecords:
+                                              progressionRecords,
+                                          nomadicTraderTracker:
+                                              nomadicTraderTracker,
+                                          profileCompletion: profileCompletion,
+                                          personalisation: personalisation,
+                                        );
+                                      },
                                     );
                                   },
                                 );
@@ -329,6 +356,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required ArcProgressionRecords progressionRecords,
     required ArcNomadicTraderTrackerSnapshot nomadicTraderTracker,
     required ArcProfileCompletionResult profileCompletion,
+    required ArcUserPersonalisationProfile personalisation,
   }) {
     return StreamBuilder<List<TradingListing>>(
       stream: _activeListingsStream,
@@ -402,6 +430,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                                       tradeActivity: tradeActivity,
                                       profileCompletion: profileCompletion,
                                       progressionRecords: progressionRecords,
+                                      personalisation: personalisation,
                                     );
                                 _lastCommandState = commandState;
                                 return _buildResilientContent(

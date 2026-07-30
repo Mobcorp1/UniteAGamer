@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_delivery_engine.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_repository.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 
 void main() {
@@ -281,6 +282,35 @@ void main() {
 
       expect(androidOnly.single.deviceId, 'a');
       expect(specific.single.deviceId, 'b');
+    });
+
+    test('applies canonical personalisation only when provided', () {
+      final devices = [_device('a', 'token-a', permissionStatus: 'authorized')];
+      const tradePayload = UagNotificationPayload(
+        id: 'broadcast-4',
+        type: UagNotificationType.tradeOffer,
+        title: 'Offer',
+        body: 'New offer',
+        audience: UagNotificationAudience.allEligible,
+        senderUid: 'admin-1',
+      );
+
+      final withoutPersonalisation = engine.eligibleDevices(
+        payload: tradePayload,
+        devices: devices,
+      );
+      final withPersonalisation = engine.eligibleDevices(
+        payload: tradePayload,
+        devices: devices,
+        personalisation: const ArcUserPersonalisationProfile(
+          notificationCategories: {
+            ArcPersonalisationNotificationCategory.systemAnnouncements,
+          },
+        ),
+      );
+
+      expect(withoutPersonalisation.map((device) => device.deviceId), ['a']);
+      expect(withPersonalisation, isEmpty);
     });
 
     test('protects broadcast validation and idempotency', () {

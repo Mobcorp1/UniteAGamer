@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_view_mapper.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_relevance_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_decision_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
@@ -24,6 +25,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_resource_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
@@ -51,6 +53,8 @@ class ArcCommandCentreEngine {
     ArcProfileCompletionResult profileCompletion =
         ArcProfileCompletionResult.completeResult,
     ArcProgressionRecords progressionRecords = ArcProgressionRecords.empty,
+    ArcUserPersonalisationProfile personalisation =
+        ArcUserPersonalisationProfile.defaults,
   }) {
     final totalBlueprints = ArcBlueprintSeedData.blueprints.length;
     final blueprintStateKnown = blueprintStates.isNotEmpty;
@@ -252,7 +256,7 @@ class ArcCommandCentreEngine {
       ];
     }
 
-    return ArcCommandCentreState(
+    final state = ArcCommandCentreState(
       priority: priority,
       snapshots: snapshots,
       objectives: objectives,
@@ -303,6 +307,10 @@ class ArcCommandCentreEngine {
         resourceIntel: resourceIntel,
         decisionState: decisionState,
       ),
+    );
+    return ArcCommandCentreRelevanceMapper.apply(
+      state: state,
+      personalisation: personalisation,
     );
   }
 

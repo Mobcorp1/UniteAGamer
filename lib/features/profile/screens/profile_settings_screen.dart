@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_notification_preferences_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_personalisation_preferences_panel.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
@@ -306,6 +307,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 18),
+                          const ArcPersonalisationPreferencesPanel(),
                           const SizedBox(height: 18),
                           const UagNotificationPreferencesPanel(),
                           const SizedBox(height: 18),

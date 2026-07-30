@@ -8,9 +8,11 @@ import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_navigation_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
@@ -32,6 +34,8 @@ class _AppDrawerState extends State<AppDrawer>
   final TradingRepository _tradingRepository = TradingRepository();
   final ArcMatchRiderRepository _matchRiderRepository =
       ArcMatchRiderRepository();
+  final ArcUserPersonalisationRepository _personalisationRepository =
+      ArcUserPersonalisationRepository();
 
   late final AnimationController _controller;
   late final Animation<Color?> _colorAnimation;
@@ -41,9 +45,13 @@ class _AppDrawerState extends State<AppDrawer>
       _tradingRepository.watchNotifications();
   late final Stream<List<ArcMatchRiderInvite>> _incomingInvitesStream =
       _matchRiderRepository.watchIncomingInvites();
+  late final Stream<ArcUserPersonalisationProfile> _personalisationStream =
+      _personalisationRepository.watchProfile();
   StreamSubscription<User?>? _authSubscription;
   bool _isAdmin = false;
   bool _isAdminResolved = false;
+  ArcUserPersonalisationProfile _cachedPersonalisation =
+      ArcUserPersonalisationProfile.defaults;
 
   @override
   void initState() {
@@ -56,6 +64,7 @@ class _AppDrawerState extends State<AppDrawer>
       begin: AppTheme.neonCyan,
       end: AppTheme.neonPink,
     ).animate(_controller);
+    unawaited(_personalisationRepository.migrateLegacyIfNeeded());
 
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (!mounted) return;
@@ -214,89 +223,104 @@ class _AppDrawerState extends State<AppDrawer>
   }
 
   Widget _buildNavigationList(String? currentRoute) {
-    return StreamBuilder<Map<String, ArcBlueprintState>>(
-      stream: _blueprintStatesStream,
-      builder: (context, blueprintSnapshot) {
-        return StreamBuilder<List<TradingNotification>>(
-          stream: _notificationsStream,
-          builder: (context, notificationSnapshot) {
-            return StreamBuilder<List<ArcMatchRiderInvite>>(
-              stream: _incomingInvitesStream,
-              builder: (context, inviteSnapshot) {
-                final counts = ArcDrawerBadgeEngine.fromLiveData(
-                  blueprintStates:
-                      blueprintSnapshot.data?.values ??
-                      const <ArcBlueprintState>[],
-                  notifications:
-                      notificationSnapshot.data ??
-                      const <TradingNotification>[],
-                  incomingInvites:
-                      inviteSnapshot.data ?? const <ArcMatchRiderInvite>[],
-                );
+    return StreamBuilder<ArcUserPersonalisationProfile>(
+      stream: _personalisationStream,
+      builder: (context, personalisationSnapshot) {
+        if (personalisationSnapshot.hasData) {
+          _cachedPersonalisation = personalisationSnapshot.data!;
+        }
+        final navigationGroups =
+            ArcCompactNavigationCatalog.groupsForPersonalisation(
+              _cachedPersonalisation,
+            );
+        return StreamBuilder<Map<String, ArcBlueprintState>>(
+          stream: _blueprintStatesStream,
+          builder: (context, blueprintSnapshot) {
+            return StreamBuilder<List<TradingNotification>>(
+              stream: _notificationsStream,
+              builder: (context, notificationSnapshot) {
+                return StreamBuilder<List<ArcMatchRiderInvite>>(
+                  stream: _incomingInvitesStream,
+                  builder: (context, inviteSnapshot) {
+                    final counts = ArcDrawerBadgeEngine.fromLiveData(
+                      blueprintStates:
+                          blueprintSnapshot.data?.values ??
+                          const <ArcBlueprintState>[],
+                      notifications:
+                          notificationSnapshot.data ??
+                          const <TradingNotification>[],
+                      incomingInvites:
+                          inviteSnapshot.data ?? const <ArcMatchRiderInvite>[],
+                    );
 
-                return ListView(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.paddingOf(context).bottom + 12,
-                  ),
-                  children: [
-                    _DrawerGroupLabel(label: 'COMMUNICATIONS'),
-                    UagDrawerNavTile(
-                      title: 'Communications Centre',
-                      icon: Icons.notifications_active_outlined,
-                      selected:
-                          currentRoute == TradingNotificationsScreen.routeName,
-                      badgeCount: counts.tradingHub,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        if (currentRoute ==
-                            TradingNotificationsScreen.routeName) {
-                          return;
-                        }
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          TradingNotificationsScreen.routeName,
-                          (route) => route.isFirst,
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 6),
-                    for (final group in ArcCompactNavigationCatalog.groups) ...[
-                      if (group.label == 'PROFILE') ...[
-                        _DrawerGroupLabel(label: group.label),
-                        for (final item in group.items)
-                          UagDrawerNavTile(
-                            title: item.label,
-                            icon: item.icon,
-                            selected: item.isSelected(currentRoute),
-                            badgeCount: counts.countFor(item.badgeTarget),
-                            onTap: () => _openItem(context, item),
-                          ),
-                        if (_isAdminResolved && _isAdmin) ...[
-                          _DrawerGroupLabel(label: 'ADMIN'),
-                          UagDrawerNavTile(
-                            title: 'Admin Console',
-                            icon: Icons.admin_panel_settings_outlined,
-                            selected: currentRoute == '/admin-console',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              Navigator.of(context).pushNamed('/admin-console');
-                            },
-                          ),
+                    return ListView(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.paddingOf(context).bottom + 12,
+                      ),
+                      children: [
+                        _DrawerGroupLabel(label: 'COMMUNICATIONS'),
+                        UagDrawerNavTile(
+                          title: 'Communications Centre',
+                          icon: Icons.notifications_active_outlined,
+                          selected:
+                              currentRoute ==
+                              TradingNotificationsScreen.routeName,
+                          badgeCount: counts.tradingHub,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            if (currentRoute ==
+                                TradingNotificationsScreen.routeName) {
+                              return;
+                            }
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              TradingNotificationsScreen.routeName,
+                              (route) => route.isFirst,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 6),
+                        for (final group in navigationGroups) ...[
+                          if (group.label == 'PROFILE') ...[
+                            _DrawerGroupLabel(label: group.label),
+                            for (final item in group.items)
+                              UagDrawerNavTile(
+                                title: item.label,
+                                icon: item.icon,
+                                selected: item.isSelected(currentRoute),
+                                badgeCount: counts.countFor(item.badgeTarget),
+                                onTap: () => _openItem(context, item),
+                              ),
+                            if (_isAdminResolved && _isAdmin) ...[
+                              _DrawerGroupLabel(label: 'ADMIN'),
+                              UagDrawerNavTile(
+                                title: 'Admin Console',
+                                icon: Icons.admin_panel_settings_outlined,
+                                selected: currentRoute == '/admin-console',
+                                onTap: () {
+                                  Navigator.of(context).pop();
+                                  Navigator.of(
+                                    context,
+                                  ).pushNamed('/admin-console');
+                                },
+                              ),
+                            ],
+                            const SizedBox(height: 6),
+                          ] else ...[
+                            _DrawerGroupLabel(label: group.label),
+                            for (final item in group.items)
+                              UagDrawerNavTile(
+                                title: item.label,
+                                icon: item.icon,
+                                selected: item.isSelected(currentRoute),
+                                badgeCount: counts.countFor(item.badgeTarget),
+                                onTap: () => _openItem(context, item),
+                              ),
+                            const SizedBox(height: 6),
+                          ],
                         ],
-                        const SizedBox(height: 6),
-                      ] else ...[
-                        _DrawerGroupLabel(label: group.label),
-                        for (final item in group.items)
-                          UagDrawerNavTile(
-                            title: item.label,
-                            icon: item.icon,
-                            selected: item.isSelected(currentRoute),
-                            badgeCount: counts.countFor(item.badgeTarget),
-                            onTap: () => _openItem(context, item),
-                          ),
-                        const SizedBox(height: 6),
                       ],
-                    ],
-                  ],
+                    );
+                  },
                 );
               },
             );

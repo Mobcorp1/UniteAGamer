@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_visibility_diagnostics_panel.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -283,6 +284,8 @@ class _AdminConsoleBody extends StatelessWidget {
                     const ArcBetaDeveloperToolsCard(),
                     const SizedBox(height: AppTheme.spaceL),
                     _ClosedBetaDiagnosticsCard(uid: uid),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const ArcFeatureVisibilityDiagnosticsPanel(),
                     const SizedBox(height: AppTheme.spaceL),
                     const UagReleaseReadinessPanel(),
                     const SizedBox(height: AppTheme.spaceL),

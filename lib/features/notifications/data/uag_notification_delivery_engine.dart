@@ -1,4 +1,6 @@
+import 'package:uag_arc_raiders_hub/features/notifications/data/uag_personalised_notification_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 
 class UagNotificationDeliveryEngine {
   const UagNotificationDeliveryEngine();
@@ -7,6 +9,7 @@ class UagNotificationDeliveryEngine {
     required UagNotificationPayload payload,
     required Iterable<UagNotificationDevice> devices,
     String specificTargetUid = '',
+    ArcUserPersonalisationProfile? personalisation,
   }) {
     final seenTokens = <String>{};
     final output = <UagNotificationDevice>[];
@@ -18,6 +21,7 @@ class UagNotificationDeliveryEngine {
         payload: payload,
         device: device,
         specificTargetUid: specificTargetUid,
+        personalisation: personalisation,
       )) {
         continue;
       }
@@ -31,6 +35,7 @@ class UagNotificationDeliveryEngine {
     required UagNotificationPayload payload,
     required UagNotificationDevice device,
     String specificTargetUid = '',
+    ArcUserPersonalisationProfile? personalisation,
   }) {
     if (!device.enabled || !device.hasUsableToken) return false;
     if (!_hasNotificationPermission(device.permissionStatus)) return false;
@@ -55,7 +60,12 @@ class UagNotificationDeliveryEngine {
         break;
     }
 
-    return device.preferences.allowsType(payload.type);
+    if (!device.preferences.allowsType(payload.type)) return false;
+    if (personalisation == null) return true;
+    return UagPersonalisedNotificationMapper.allowsType(
+      type: payload.type,
+      personalisation: personalisation,
+    );
   }
 
   UagBroadcastValidationResult validateBroadcast({

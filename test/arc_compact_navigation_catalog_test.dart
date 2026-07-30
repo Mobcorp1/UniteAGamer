@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_sc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_navigation_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
@@ -135,6 +136,27 @@ void main() {
       expect(counts.tradingHub, 2);
       expect(counts.matchRider, 2);
       expect(counts.countFor(ArcDrawerBadgeTarget.none), 0);
+    });
+
+    test('sorts drawer groups by personalisation without removing routes', () {
+      const personalisation = ArcUserPersonalisationProfile(
+        featureInterests: {
+          ArcPersonalisationFeature.favouriteLoadout:
+              ArcPersonalisationInterestLevel.primary,
+        },
+      );
+
+      final groups = ArcCompactNavigationCatalog.groupsForPersonalisation(
+        personalisation,
+      );
+      final plan = groups.firstWhere((group) => group.label == 'PLAN');
+      final labels = groups
+          .expand((group) => group.items)
+          .map((item) => item.label)
+          .toList(growable: false);
+
+      expect(plan.items.first.label, 'Favourite Loadout');
+      expect(labels, containsAll(['Trading Hub', 'Match Rider', 'Settings']));
     });
   });
 

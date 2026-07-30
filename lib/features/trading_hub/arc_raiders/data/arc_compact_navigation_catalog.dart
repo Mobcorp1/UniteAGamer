@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
@@ -41,6 +42,7 @@ class ArcCompactNavigationItem {
     this.badgeTarget = ArcDrawerBadgeTarget.none,
     this.accessFlag,
     this.comingSoonWhenLocked = false,
+    this.personalisationFeature,
   });
 
   final String label;
@@ -50,6 +52,7 @@ class ArcCompactNavigationItem {
   final ArcDrawerBadgeTarget badgeTarget;
   final String? accessFlag;
   final bool comingSoonWhenLocked;
+  final ArcPersonalisationFeature? personalisationFeature;
 
   bool isSelected(String? currentRoute) {
     if (currentRoute == null || currentRoute.isEmpty) return false;
@@ -77,6 +80,7 @@ class ArcCompactNavigationCatalog {
           icon: Icons.dashboard_customize_outlined,
           routeName: ArcCommandCentreScreen.routeName,
           selectedRouteNames: <String>[MyHubScreen.routeName],
+          personalisationFeature: ArcPersonalisationFeature.profile,
         ),
       ],
     ),
@@ -88,6 +92,7 @@ class ArcCompactNavigationCatalog {
           icon: Icons.grid_on_rounded,
           routeName: BlueprintGridScreen.routeName,
           badgeTarget: ArcDrawerBadgeTarget.blueprintTracker,
+          personalisationFeature: ArcPersonalisationFeature.blueprintTracker,
         ),
         ArcCompactNavigationItem(
           label: 'Progress Trackers',
@@ -99,6 +104,7 @@ class ArcCompactNavigationCatalog {
             ScrappyGridScreen.questRouteName,
             RaidPlannerHuntTargetsScreen.routeName,
           ],
+          personalisationFeature: ArcPersonalisationFeature.scrappyTracker,
         ),
       ],
     ),
@@ -109,16 +115,19 @@ class ArcCompactNavigationCatalog {
           label: 'Raid Intelligence',
           icon: Icons.radar_rounded,
           routeName: ArcRaidIntelligenceScreen.routeName,
+          personalisationFeature: ArcPersonalisationFeature.raidIntelligence,
         ),
         ArcCompactNavigationItem(
           label: 'Raid Planner',
           icon: Icons.route_rounded,
           routeName: RaidPlannerScreen.routeName,
+          personalisationFeature: ArcPersonalisationFeature.raidPlanner,
         ),
         ArcCompactNavigationItem(
           label: 'Favourite Loadout',
           icon: Icons.inventory_2_outlined,
           routeName: FavouriteLoadoutScreen.routeName,
+          personalisationFeature: ArcPersonalisationFeature.favouriteLoadout,
         ),
       ],
     ),
@@ -131,6 +140,7 @@ class ArcCompactNavigationCatalog {
           routeName: TraderHubScreen.routeName,
           accessFlag: FeatureAccessFlag.traderHub,
           badgeTarget: ArcDrawerBadgeTarget.tradingHub,
+          personalisationFeature: ArcPersonalisationFeature.trading,
           selectedRouteNames: <String>[
             TradingListingsScreen.routeName,
             TradingCreateListingScreen.routeName,
@@ -151,6 +161,7 @@ class ArcCompactNavigationCatalog {
           accessFlag: FeatureAccessFlag.matchRaider,
           badgeTarget: ArcDrawerBadgeTarget.matchRider,
           comingSoonWhenLocked: true,
+          personalisationFeature: ArcPersonalisationFeature.matchRider,
         ),
       ],
     ),
@@ -168,15 +179,56 @@ class ArcCompactNavigationCatalog {
             WallOfLegendsScreen.routeName,
             OperationsCommandScreen.routeName,
           ],
+          personalisationFeature: ArcPersonalisationFeature.profile,
         ),
         ArcCompactNavigationItem(
           label: 'Settings',
           icon: Icons.settings_outlined,
           routeName: ProfileSettingsScreen.routeName,
+          personalisationFeature: ArcPersonalisationFeature.settings,
         ),
       ],
     ),
   ];
+
+  static List<ArcCompactNavigationGroup> groupsForPersonalisation(
+    ArcUserPersonalisationProfile personalisation,
+  ) {
+    return [
+      for (final group in groups)
+        ArcCompactNavigationGroup(
+          label: group.label,
+          items: group.label == 'COMMAND CENTRE'
+              ? group.items
+              : _sortItems(group.items, personalisation),
+        ),
+    ];
+  }
+
+  static List<ArcCompactNavigationItem> _sortItems(
+    List<ArcCompactNavigationItem> items,
+    ArcUserPersonalisationProfile personalisation,
+  ) {
+    final indexed = <({ArcCompactNavigationItem item, int index, int score})>[
+      for (var i = 0; i < items.length; i++)
+        (
+          item: items[i],
+          index: i,
+          score: personalisation
+              .interestFor(
+                items[i].personalisationFeature ??
+                    ArcPersonalisationFeature.profile,
+              )
+              .weight,
+        ),
+    ];
+    indexed.sort((left, right) {
+      final scoreCompare = right.score.compareTo(left.score);
+      if (scoreCompare != 0) return scoreCompare;
+      return left.index.compareTo(right.index);
+    });
+    return indexed.map((entry) => entry.item).toList(growable: false);
+  }
 
   static Iterable<ArcCompactNavigationItem> get items sync* {
     for (final group in groups) {
