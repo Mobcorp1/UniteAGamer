@@ -111,42 +111,6 @@ class _AppDrawerState extends State<AppDrawer>
     ).pushNamedAndRemoveUntil(AuthLandingScreen.routeName, (_) => false);
   }
 
-  Future<void> _showComingSoon(BuildContext context, String title) async {
-    await showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: AppTheme.tradingDialogShape(),
-          title: Text(
-            '$title Coming Soon',
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
-          ),
-          content: Text(
-            'This feature is not available in the current beta build yet.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 14,
-              color: AppTheme.tradingMutedText,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                'OK',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 14,
-                  color: AppTheme.neonCyan,
-                  isBold: true,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _openItem(
     BuildContext context,
     ArcCompactNavigationItem item,
@@ -155,14 +119,20 @@ class _AppDrawerState extends State<AppDrawer>
     Navigator.of(context).pop();
 
     if (item.accessFlag != null) {
-      final hasAccess = await FeatureAccess.hasAccess(item.accessFlag!);
+      final availability = await FeatureAccess.getAvailability(
+        item.accessFlag!,
+      );
       if (!context.mounted) return;
-      if (!hasAccess) {
-        if (item.comingSoonWhenLocked) {
-          await _showComingSoon(context, item.label);
-        } else {
-          await FeatureAccess.showLockedDialog(context, title: item.label);
-        }
+      if (availability.isComingSoon) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => FeatureComingSoonScreen(title: item.label),
+          ),
+        );
+        return;
+      }
+      if (!availability.isLive) {
+        await FeatureAccess.showLockedDialog(context, title: item.label);
         return;
       }
     }
@@ -233,92 +203,120 @@ class _AppDrawerState extends State<AppDrawer>
             ArcCompactNavigationCatalog.groupsForPersonalisation(
               _cachedPersonalisation,
             );
-        return StreamBuilder<Map<String, ArcBlueprintState>>(
-          stream: _blueprintStatesStream,
-          builder: (context, blueprintSnapshot) {
-            return StreamBuilder<List<TradingNotification>>(
-              stream: _notificationsStream,
-              builder: (context, notificationSnapshot) {
-                return StreamBuilder<List<ArcMatchRiderInvite>>(
-                  stream: _incomingInvitesStream,
-                  builder: (context, inviteSnapshot) {
-                    final counts = ArcDrawerBadgeEngine.fromLiveData(
-                      blueprintStates:
-                          blueprintSnapshot.data?.values ??
-                          const <ArcBlueprintState>[],
-                      notifications:
-                          notificationSnapshot.data ??
-                          const <TradingNotification>[],
-                      incomingInvites:
-                          inviteSnapshot.data ?? const <ArcMatchRiderInvite>[],
-                    );
+        final accessFlags = <String>{
+          for (final group in navigationGroups)
+            for (final item in group.items)
+              if (item.accessFlag != null) item.accessFlag!,
+        };
+        return StreamBuilder<Map<String, FeatureAvailability>>(
+          stream: FeatureAccess.watchAvailabilityMap(accessFlags),
+          builder: (context, availabilitySnapshot) {
+            final availabilityByFlag =
+                availabilitySnapshot.data ??
+                const <String, FeatureAvailability>{};
+            return StreamBuilder<Map<String, ArcBlueprintState>>(
+              stream: _blueprintStatesStream,
+              builder: (context, blueprintSnapshot) {
+                return StreamBuilder<List<TradingNotification>>(
+                  stream: _notificationsStream,
+                  builder: (context, notificationSnapshot) {
+                    return StreamBuilder<List<ArcMatchRiderInvite>>(
+                      stream: _incomingInvitesStream,
+                      builder: (context, inviteSnapshot) {
+                        final counts = ArcDrawerBadgeEngine.fromLiveData(
+                          blueprintStates:
+                              blueprintSnapshot.data?.values ??
+                              const <ArcBlueprintState>[],
+                          notifications:
+                              notificationSnapshot.data ??
+                              const <TradingNotification>[],
+                          incomingInvites:
+                              inviteSnapshot.data ??
+                              const <ArcMatchRiderInvite>[],
+                        );
 
-                    return ListView(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.paddingOf(context).bottom + 12,
-                      ),
-                      children: [
-                        _DrawerGroupLabel(label: 'COMMUNICATIONS'),
-                        UagDrawerNavTile(
-                          title: 'Communications Centre',
-                          icon: Icons.notifications_active_outlined,
-                          selected:
-                              currentRoute ==
-                              TradingNotificationsScreen.routeName,
-                          badgeCount: counts.tradingHub,
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            if (currentRoute ==
-                                TradingNotificationsScreen.routeName) {
-                              return;
-                            }
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                              TradingNotificationsScreen.routeName,
-                              (route) => route.isFirst,
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 6),
-                        for (final group in navigationGroups) ...[
-                          if (group.label == 'PROFILE') ...[
-                            _DrawerGroupLabel(label: group.label),
-                            for (final item in group.items)
-                              UagDrawerNavTile(
-                                title: item.label,
-                                icon: item.icon,
-                                selected: item.isSelected(currentRoute),
-                                badgeCount: counts.countFor(item.badgeTarget),
-                                onTap: () => _openItem(context, item),
-                              ),
-                            if (_isAdminResolved && _isAdmin) ...[
-                              _DrawerGroupLabel(label: 'ADMIN'),
-                              UagDrawerNavTile(
-                                title: 'Admin Console',
-                                icon: Icons.admin_panel_settings_outlined,
-                                selected: currentRoute == '/admin-console',
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                  Navigator.of(
-                                    context,
-                                  ).pushNamed('/admin-console');
-                                },
-                              ),
+                        return ListView(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.paddingOf(context).bottom + 12,
+                          ),
+                          children: [
+                            _DrawerGroupLabel(label: 'COMMUNICATIONS'),
+                            UagDrawerNavTile(
+                              title: 'Communications Centre',
+                              icon: Icons.notifications_active_outlined,
+                              selected:
+                                  currentRoute ==
+                                  TradingNotificationsScreen.routeName,
+                              badgeCount: counts.tradingHub,
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                if (currentRoute ==
+                                    TradingNotificationsScreen.routeName) {
+                                  return;
+                                }
+                                Navigator.of(context).pushNamedAndRemoveUntil(
+                                  TradingNotificationsScreen.routeName,
+                                  (route) => route.isFirst,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 6),
+                            for (final group in navigationGroups) ...[
+                              if (group.label == 'PROFILE') ...[
+                                _DrawerGroupLabel(label: group.label),
+                                for (final item in group.items.where(
+                                  (item) => !_availabilityForItem(
+                                    item,
+                                    availabilityByFlag,
+                                  ).isHidden,
+                                ))
+                                  UagDrawerNavTile(
+                                    title: item.label,
+                                    icon: item.icon,
+                                    selected: item.isSelected(currentRoute),
+                                    badgeCount: counts.countFor(
+                                      item.badgeTarget,
+                                    ),
+                                    onTap: () => _openItem(context, item),
+                                  ),
+                                if (_isAdminResolved && _isAdmin) ...[
+                                  _DrawerGroupLabel(label: 'ADMIN'),
+                                  UagDrawerNavTile(
+                                    title: 'Admin Console',
+                                    icon: Icons.admin_panel_settings_outlined,
+                                    selected: currentRoute == '/admin-console',
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      Navigator.of(
+                                        context,
+                                      ).pushNamed('/admin-console');
+                                    },
+                                  ),
+                                ],
+                                const SizedBox(height: 6),
+                              ] else ...[
+                                _DrawerGroupLabel(label: group.label),
+                                for (final item in group.items.where(
+                                  (item) => !_availabilityForItem(
+                                    item,
+                                    availabilityByFlag,
+                                  ).isHidden,
+                                ))
+                                  UagDrawerNavTile(
+                                    title: item.label,
+                                    icon: item.icon,
+                                    selected: item.isSelected(currentRoute),
+                                    badgeCount: counts.countFor(
+                                      item.badgeTarget,
+                                    ),
+                                    onTap: () => _openItem(context, item),
+                                  ),
+                                const SizedBox(height: 6),
+                              ],
                             ],
-                            const SizedBox(height: 6),
-                          ] else ...[
-                            _DrawerGroupLabel(label: group.label),
-                            for (final item in group.items)
-                              UagDrawerNavTile(
-                                title: item.label,
-                                icon: item.icon,
-                                selected: item.isSelected(currentRoute),
-                                badgeCount: counts.countFor(item.badgeTarget),
-                                onTap: () => _openItem(context, item),
-                              ),
-                            const SizedBox(height: 6),
                           ],
-                        ],
-                      ],
+                        );
+                      },
                     );
                   },
                 );
@@ -328,6 +326,15 @@ class _AppDrawerState extends State<AppDrawer>
         );
       },
     );
+  }
+
+  FeatureAvailability _availabilityForItem(
+    ArcCompactNavigationItem item,
+    Map<String, FeatureAvailability> availabilityByFlag,
+  ) {
+    final flag = item.accessFlag;
+    if (flag == null) return FeatureAvailability.live;
+    return availabilityByFlag[flag] ?? FeatureAvailability.live;
   }
 
   @override

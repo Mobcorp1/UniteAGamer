@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_intelligence_location_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
@@ -15,6 +17,7 @@ class ArcBlueprintOpportunityEngine {
     required List<ArcBlueprintDropReport> reports,
     Map<String, ArcBlueprintState> blueprintStates =
         const <String, ArcBlueprintState>{},
+    List<ArcAdminMapMarker> canonicalMarkers = const <ArcAdminMapMarker>[],
     DateTime? now,
   }) {
     final utcNow = (now ?? DateTime.now()).toUtc();
@@ -48,7 +51,11 @@ class ArcBlueprintOpportunityEngine {
       final group = entry.value;
       if (group.isEmpty) continue;
       final first = group.first;
-      final pointResolution = _resolvePoint(map, first);
+      final pointResolution = _resolvePoint(
+        map,
+        first,
+        canonicalMarkers: canonicalMarkers,
+      );
       if (pointResolution == null) continue;
 
       final reporterIds = <String>{
@@ -165,78 +172,25 @@ class ArcBlueprintOpportunityEngine {
 
   _ResolvedReportPoint? _resolvePoint(
     ArcRaidMap map,
-    ArcBlueprintDropReport report,
-  ) {
-    final poiId = report.intelligencePoiId?.trim();
-    final poiName = report.intelligencePoiName?.trim();
-
-    if (poiId != null && poiId.isNotEmpty) {
-      final matches =
-          map.markers
-              .where(
-                (marker) => _markerMatchesPoiId(marker: marker, poiId: poiId),
-              )
-              .toList(growable: false)
-            ..sort(_compareMarkerQuality);
-
-      if (matches.isNotEmpty) {
-        final marker = matches.first;
-        return _ResolvedReportPoint(
-          point: marker.point,
-          layer: marker.layer,
-          label: marker.label,
-          approximate: marker.approximate,
+    ArcBlueprintDropReport report, {
+    required List<ArcAdminMapMarker> canonicalMarkers,
+  }) {
+    final resolution = const ArcIntelligenceLocationResolver()
+        .resolveBlueprintReport(
+          map: map,
+          adminMarkers: canonicalMarkers,
+          poiId: report.intelligencePoiId,
+          poiName: report.intelligencePoiName,
+          fallbackLabel: report.locationName,
+          preferredLayer: report.intelligenceLayer,
         );
-      }
-    }
-
-    if (poiName != null && poiName.isNotEmpty) {
-      final matches =
-          map.markers
-              .where(
-                (marker) => _normalize(marker.label) == _normalize(poiName),
-              )
-              .toList(growable: false)
-            ..sort(_compareMarkerQuality);
-
-      if (matches.isNotEmpty) {
-        final marker = matches.first;
-        return _ResolvedReportPoint(
-          point: marker.point,
-          layer: marker.layer,
-          label: marker.label,
-          approximate: marker.approximate,
-        );
-      }
-    }
-
-    if (poiId != null && poiId.isNotEmpty) {
-      for (final poi in map.pois) {
-        if (poi.id == poiId) {
-          return _ResolvedReportPoint(
-            point: poi.point,
-            layer: report.intelligenceLayer,
-            label: poi.name,
-            approximate: poi.approximate,
-          );
-        }
-      }
-    }
-
-    if (poiName != null && poiName.isNotEmpty) {
-      for (final poi in map.pois) {
-        if (_normalize(poi.name) == _normalize(poiName)) {
-          return _ResolvedReportPoint(
-            point: poi.point,
-            layer: report.intelligenceLayer,
-            label: poi.name,
-            approximate: poi.approximate,
-          );
-        }
-      }
-    }
-
-    return null;
+    if (resolution == null || resolution.needsAdminReview) return null;
+    return _ResolvedReportPoint(
+      point: resolution.point,
+      layer: resolution.layer,
+      label: resolution.label,
+      approximate: resolution.approximate,
+    );
   }
 
   int _compareMarkerQuality(ArcRaidMapMarker a, ArcRaidMapMarker b) {

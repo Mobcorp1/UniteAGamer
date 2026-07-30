@@ -50,6 +50,7 @@ class ArcRaidIntelligenceEngine {
       favouriteLoadout: favouriteLoadout,
       operationsState: operationsState,
       dropReports: dropReports,
+      canonicalMarkers: adminMarkers,
     );
     final clusterMarkers = clusters
         .map((cluster) => _markerForCluster(cluster, blueprintStates))
@@ -217,6 +218,7 @@ class ArcRaidIntelligenceEngine {
     ArcSavedLoadout? favouriteLoadout,
     ArcOperationsUserState operationsState = ArcOperationsUserState.empty,
     List<ArcBlueprintDropReport> dropReports = const <ArcBlueprintDropReport>[],
+    List<ArcAdminMapMarker> canonicalMarkers = const <ArcAdminMapMarker>[],
   }) {
     final loadoutNames = _loadoutItemNames(favouriteLoadout);
     final mapClusters = <ArcRaidIntelCluster>[];
@@ -225,6 +227,7 @@ class ArcRaidIntelligenceEngine {
       map: map,
       reports: dropReports,
       blueprintStates: blueprintStates,
+      canonicalMarkers: canonicalMarkers,
     );
     final reportBlueprintIds = reportClusters
         .expand((cluster) => cluster.blueprintIds)

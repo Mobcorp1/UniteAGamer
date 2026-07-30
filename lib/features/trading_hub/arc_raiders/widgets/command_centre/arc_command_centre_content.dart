@@ -1545,6 +1545,8 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         return _operationAsset('check_nomadic_trader_card.webp');
       case ArcCommandActionIntent.operations:
         return _operationAsset('claim_operations_card.webp');
+      case ArcCommandActionIntent.comingSoon:
+        return _operationAsset('arc_command_centre_background.webp');
       case ArcCommandActionIntent.toolDeck:
         return _operationAsset('arc_tool_deck_background.webp');
       case ArcCommandActionIntent.route:

@@ -13,11 +13,11 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
   Future<List<ArcFeatureVisibilityDiagnostic>> _load() async {
     final repository = ArcUserPersonalisationRepository();
     final personalisation = await repository.loadProfile();
-    final featureAccess = <String, bool>{};
+    final featureAvailability = <String, FeatureAvailability>{};
     for (final entry in ArcFeatureRegistry.entries) {
       final flag = entry.accessFlag;
-      if (flag == null || featureAccess.containsKey(flag)) continue;
-      featureAccess[flag] = await FeatureAccess.hasAccess(flag);
+      if (flag == null || featureAvailability.containsKey(flag)) continue;
+      featureAvailability[flag] = await FeatureAccess.getAvailability(flag);
     }
 
     final adminSnapshot = await FirebaseFirestore.instance
@@ -35,7 +35,7 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
 
     return ArcFeatureVisibilityDiagnosticsEngine.build(
       personalisation: personalisation,
-      featureAccess: featureAccess,
+      featureAvailability: featureAvailability,
       adminControls: adminControls,
     );
   }
@@ -161,7 +161,7 @@ class _DiagnosticTile extends StatelessWidget {
               _textPill('Interest: ${diagnostic.personalisationLevel.name}'),
               _textPill('Lifecycle: ${entry.lifecycle.name}'),
               if (entry.accessFlag != null)
-                _textPill('Access: ${entry.accessFlag}'),
+                _textPill('Access: ${diagnostic.availability.label}'),
               if (entry.adminFlag != null)
                 _textPill('Admin: ${entry.adminFlag}'),
             ],

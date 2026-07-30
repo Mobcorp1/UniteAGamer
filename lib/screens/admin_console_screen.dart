@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
 import 'package:uag_arc_raiders_hub/features/release/widgets/uag_release_readiness_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
@@ -242,12 +243,47 @@ class _AdminConsoleBody extends StatelessWidget {
                                 width: 520,
                                 child: _FeatureToggleCard(
                                   feature: feature,
-                                  value: data[feature.key] == true,
+                                  value:
+                                      FeatureAccess.availabilityFromConfigData(
+                                        data,
+                                        feature.key,
+                                      ),
                                   onChanged: (value) async {
-                                    await configRef.set({
-                                      feature.key: value,
-                                      'updatedAt': FieldValue.serverTimestamp(),
-                                    }, SetOptions(merge: true));
+                                    final previous =
+                                        FeatureAccess.availabilityFromConfigData(
+                                          data,
+                                          feature.key,
+                                        );
+                                    await configRef.set(
+                                      FeatureAccess.updatePayloadForAvailability(
+                                        globalField: feature.key,
+                                        availability: value,
+                                      ),
+                                      SetOptions(merge: true),
+                                    );
+                                    if (FeatureAccess.shouldNotifyComingSoonToLive(
+                                      previous: previous,
+                                      next: value,
+                                    )) {
+                                      await FirebaseFirestore.instance
+                                          .collection(
+                                            'feature_live_notification_intents',
+                                          )
+                                          .doc(feature.key)
+                                          .set({
+                                            'featureKey': feature.key,
+                                            'featureTitle': feature.title,
+                                            'message':
+                                                '${feature.title} is now available.',
+                                            'dedupeKey':
+                                                '${feature.key}_coming_soon_live',
+                                            'status': 'pending',
+                                            'createdAt':
+                                                FieldValue.serverTimestamp(),
+                                            'updatedAt':
+                                                FieldValue.serverTimestamp(),
+                                          }, SetOptions(merge: true));
+                                    }
                                   },
                                 ),
                               ),
@@ -1673,17 +1709,21 @@ class _FeatureToggleCard extends StatelessWidget {
   });
 
   final _AdminFeature feature;
-  final bool value;
-  final ValueChanged<bool> onChanged;
+  final FeatureAvailability value;
+  final ValueChanged<FeatureAvailability> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final color = value ? AppTheme.neonPink : AppTheme.neonCyan;
+    final color = value.isLive
+        ? AppTheme.neonPink
+        : value.isComingSoon
+        ? AppTheme.neonCyan
+        : Colors.white54;
     return Container(
       width: double.infinity,
       padding: AppTheme.sectionCardPadding,
       decoration: AppTheme.tradingCardDecoration(
-        borderColor: color.withValues(alpha: value ? 0.42 : 0.18),
+        borderColor: color.withValues(alpha: value.isLive ? 0.42 : 0.18),
       ),
       child: Row(
         children: [
@@ -1709,10 +1749,25 @@ class _FeatureToggleCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppTheme.spaceM),
-          Switch.adaptive(
+          DropdownButton<FeatureAvailability>(
             value: value,
-            activeTrackColor: AppTheme.neonPink,
-            onChanged: onChanged,
+            dropdownColor: AppTheme.cardBackgroundDeep,
+            underline: const SizedBox.shrink(),
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: Colors.white,
+              isBold: true,
+            ),
+            items: [
+              for (final availability in FeatureAvailability.values)
+                DropdownMenuItem<FeatureAvailability>(
+                  value: availability,
+                  child: Text(availability.label),
+                ),
+            ],
+            onChanged: (availability) {
+              if (availability != null) onChanged(availability);
+            },
           ),
         ],
       ),

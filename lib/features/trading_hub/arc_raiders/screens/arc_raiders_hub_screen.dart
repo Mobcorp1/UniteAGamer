@@ -163,18 +163,25 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     }
 
     final flag = _featureAccessFlagForTitle(feature.title);
-    final hasAccess = flag != null && await FeatureAccess.hasAccess(flag);
+    final availability = flag == null
+        ? FeatureAvailability.hidden
+        : await FeatureAccess.getAvailability(flag);
 
     if (!mounted) return;
 
-    if (hasAccess) {
+    if (availability.isLive) {
       navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
     navigator.push(
       MaterialPageRoute(
-        builder: (_) => FeatureLockedScreen(title: feature.title),
+        builder: (_) => availability.isComingSoon
+            ? FeatureComingSoonScreen(title: feature.title)
+            : FeatureLockedScreen(
+                title: feature.title,
+                availability: FeatureAvailability.hidden,
+              ),
       ),
     );
   }
@@ -1002,18 +1009,25 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
     }
 
     final flag = _featureAccessFlagForTitle(feature.title);
-    final hasAccess = flag != null && await FeatureAccess.hasAccess(flag);
+    final availability = flag == null
+        ? FeatureAvailability.hidden
+        : await FeatureAccess.getAvailability(flag);
 
     if (!mounted) return;
 
-    if (hasAccess) {
+    if (availability.isLive) {
       navigator.push(MaterialPageRoute(builder: feature.builder));
       return;
     }
 
     navigator.push(
       MaterialPageRoute(
-        builder: (_) => FeatureLockedScreen(title: feature.title),
+        builder: (_) => availability.isComingSoon
+            ? FeatureComingSoonScreen(title: feature.title)
+            : FeatureLockedScreen(
+                title: feature.title,
+                availability: FeatureAvailability.hidden,
+              ),
       ),
     );
   }

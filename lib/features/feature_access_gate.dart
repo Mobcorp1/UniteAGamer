@@ -22,6 +22,60 @@ class FeatureAccessFlag {
   static const smartTradeAssist = 'canAccessSmartTradeAssist';
 }
 
+enum FeatureAvailability {
+  live,
+  comingSoon,
+  hidden;
+
+  String get storageValue {
+    switch (this) {
+      case FeatureAvailability.live:
+        return 'live';
+      case FeatureAvailability.comingSoon:
+        return 'comingSoon';
+      case FeatureAvailability.hidden:
+        return 'hidden';
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case FeatureAvailability.live:
+        return 'Live';
+      case FeatureAvailability.comingSoon:
+        return 'Coming Soon';
+      case FeatureAvailability.hidden:
+        return 'Hidden';
+    }
+  }
+
+  bool get isLive => this == FeatureAvailability.live;
+  bool get isComingSoon => this == FeatureAvailability.comingSoon;
+  bool get isHidden => this == FeatureAvailability.hidden;
+
+  static FeatureAvailability? fromStorage(Object? value) {
+    final normalized = value?.toString().trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]+'),
+      '',
+    );
+    switch (normalized) {
+      case 'live':
+      case 'enabled':
+      case 'true':
+        return FeatureAvailability.live;
+      case 'comingsoon':
+      case 'soon':
+      case 'beta':
+        return FeatureAvailability.comingSoon;
+      case 'hidden':
+      case 'disabled':
+      case 'false':
+        return FeatureAvailability.hidden;
+    }
+    return null;
+  }
+}
+
 class FeatureAccess {
   const FeatureAccess._();
 
@@ -40,10 +94,37 @@ class FeatureAccess {
     FeatureAccessFlag.smartTradeAssist: 'smartTradeAssistEnabled',
   };
 
+  static String availabilityFieldForGlobalField(String globalField) {
+    if (globalField.endsWith('Enabled')) {
+      return '${globalField.substring(0, globalField.length - 7)}Availability';
+    }
+    return '${globalField}Availability';
+  }
+
+  static String? globalFieldForFlag(String flag) => _globalFieldMap[flag];
+
+  static FeatureAvailability availabilityFromConfigData(
+    Map<String, dynamic> data,
+    String globalFieldOrFlag,
+  ) {
+    final globalField = _globalFieldMap[globalFieldOrFlag] ?? globalFieldOrFlag;
+    final availabilityField = availabilityFieldForGlobalField(globalField);
+    final explicit = FeatureAvailability.fromStorage(data[availabilityField]);
+    if (explicit != null) return explicit;
+    final legacy = data[globalField];
+    if (legacy == true) return FeatureAvailability.live;
+    if (legacy == false) return FeatureAvailability.hidden;
+    return FeatureAvailability.hidden;
+  }
+
   static Stream<bool> watchFlag(String flag) {
+    return watchAvailability(flag).map((availability) => availability.isLive);
+  }
+
+  static Stream<FeatureAvailability> watchAvailability(String flag) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return Stream.value(false);
+      return Stream.value(FeatureAvailability.hidden);
     }
 
     return FirebaseFirestore.instance
@@ -55,24 +136,57 @@ class FeatureAccess {
           if (data['isAdmin'] == true ||
               data['isDev'] == true ||
               data[flag] == true) {
-            return true;
+            return FeatureAvailability.live;
           }
 
           final globalField = _globalFieldMap[flag];
-          if (globalField == null) return false;
+          if (globalField == null) return FeatureAvailability.hidden;
 
           final configSnapshot = await FirebaseFirestore.instance
               .collection('config')
               .doc('feature_access')
               .get();
           final configData = configSnapshot.data() ?? {};
-          return configData[globalField] == true;
+          return availabilityFromConfigData(configData, globalField);
+        });
+  }
+
+  static Stream<Map<String, FeatureAvailability>> watchAvailabilityMap(
+    Iterable<String> flags,
+  ) {
+    final resolvedFlags = flags.toSet().toList(growable: false)..sort();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return Stream.value(<String, FeatureAvailability>{
+        for (final flag in resolvedFlags) flag: FeatureAvailability.hidden,
+      });
+    }
+
+    return FirebaseFirestore.instance
+        .collection('config')
+        .doc('feature_access')
+        .snapshots()
+        .asyncMap((configSnapshot) async {
+          final userSnapshot = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+          final userData = userSnapshot.data() ?? const <String, dynamic>{};
+          final configData = configSnapshot.data() ?? const <String, dynamic>{};
+          return <String, FeatureAvailability>{
+            for (final flag in resolvedFlags)
+              flag: _availabilityFor(flag, userData, configData),
+          };
         });
   }
 
   static Future<bool> hasAccess(String flag) async {
+    return (await getAvailability(flag)).isLive;
+  }
+
+  static Future<FeatureAvailability> getAvailability(String flag) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
+    if (user == null) return FeatureAvailability.hidden;
 
     final snapshot = await FirebaseFirestore.instance
         .collection('users')
@@ -82,18 +196,67 @@ class FeatureAccess {
     if (data['isAdmin'] == true ||
         data['isDev'] == true ||
         data[flag] == true) {
-      return true;
+      return FeatureAvailability.live;
     }
 
     final globalField = _globalFieldMap[flag];
-    if (globalField == null) return false;
+    if (globalField == null) return FeatureAvailability.hidden;
 
     final configSnapshot = await FirebaseFirestore.instance
         .collection('config')
         .doc('feature_access')
         .get();
     final configData = configSnapshot.data() ?? {};
-    return configData[globalField] == true;
+    return availabilityFromConfigData(configData, globalField);
+  }
+
+  static Map<String, FeatureAvailability> availabilityMapFromConfigData(
+    Map<String, dynamic> data,
+    Iterable<String> flags,
+  ) {
+    return <String, FeatureAvailability>{
+      for (final flag in flags) flag: availabilityFromConfigData(data, flag),
+    };
+  }
+
+  static Map<String, dynamic> updatePayloadForAvailability({
+    required String globalField,
+    required FeatureAvailability availability,
+  }) {
+    return <String, dynamic>{
+      globalField: availability.isLive,
+      availabilityFieldForGlobalField(globalField): availability.storageValue,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  static String featureLiveNotificationKey({
+    required String uid,
+    required String flag,
+  }) {
+    return '${uid.trim()}_${flag.trim()}_feature_live';
+  }
+
+  static bool shouldNotifyComingSoonToLive({
+    required FeatureAvailability previous,
+    required FeatureAvailability next,
+  }) {
+    return previous.isComingSoon && next.isLive;
+  }
+
+  static FeatureAvailability _availabilityFor(
+    String flag,
+    Map<String, dynamic> userData,
+    Map<String, dynamic> configData,
+  ) {
+    if (userData['isAdmin'] == true ||
+        userData['isDev'] == true ||
+        userData[flag] == true) {
+      return FeatureAvailability.live;
+    }
+    final globalField = _globalFieldMap[flag];
+    if (globalField == null) return FeatureAvailability.hidden;
+    return availabilityFromConfigData(configData, globalField);
   }
 
   static Future<bool> isAdminOrDev() async {
@@ -146,15 +309,23 @@ class FeatureAccess {
 }
 
 class FeatureLockedScreen extends StatelessWidget {
-  const FeatureLockedScreen({super.key, required this.title});
+  const FeatureLockedScreen({
+    super.key,
+    required this.title,
+    this.availability = FeatureAvailability.comingSoon,
+  });
 
   final String title;
+  final FeatureAvailability availability;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: UagAppBar(title: title, subtitle: 'Coming soon.'),
+      appBar: UagAppBar(
+        title: title,
+        subtitle: availability.isHidden ? 'Unavailable.' : 'Coming soon.',
+      ),
       drawer: const AppDrawer(),
       body: Stack(
         children: [
@@ -173,20 +344,26 @@ class FeatureLockedScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.lock_outline_rounded,
+                      Icon(
+                        availability.isHidden
+                            ? Icons.visibility_off_outlined
+                            : Icons.lock_outline_rounded,
                         size: 38,
-                        color: AppTheme.neonPink,
+                        color: availability.isHidden
+                            ? Colors.white60
+                            : AppTheme.neonPink,
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       Text(
-                        'Coming Soon',
+                        availability.isHidden ? 'Unavailable' : 'Coming Soon',
                         textAlign: TextAlign.center,
                         style: AppTheme.tradingHeading(fontSize: 26),
                       ),
                       const SizedBox(height: AppTheme.spaceS),
                       Text(
-                        '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
+                        availability.isHidden
+                            ? '$title is currently hidden from closed beta users.'
+                            : '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white70,
@@ -194,6 +371,167 @@ class FeatureLockedScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FeatureComingSoonScreen extends StatelessWidget {
+  const FeatureComingSoonScreen({
+    super.key,
+    required this.title,
+    this.description,
+    this.purpose,
+    this.benefits = const <String>[],
+  });
+
+  final String title;
+  final String? description;
+  final String? purpose;
+  final List<String> benefits;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedBenefits = benefits.isEmpty
+        ? const <String>[
+            'Visible in closed beta so you can plan ahead.',
+            'Selectable as an interest for future personalisation.',
+            'Launch is blocked until the feature is marked Live.',
+          ]
+        : benefits;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: UagAppBar(title: title, subtitle: 'Coming soon.'),
+      drawer: const AppDrawer(),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: StaticWatermark()),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: AppTheme.pagePadding,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: Container(
+                    width: double.infinity,
+                    padding: AppTheme.sectionCardPadding,
+                    decoration: AppTheme.tradingCardDecoration(
+                      borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Image.asset(
+                                'assets/icon/uag_traders_icon_transparent.webp',
+                                width: 72,
+                                height: 72,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spaceM),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: AppTheme.tradingHeading(
+                                      fontSize: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppTheme.spaceS),
+                                  Text(
+                                    'Closed Beta Status: Coming Soon',
+                                    style: AppTheme.bodyTextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.neonCyan,
+                                      isBold: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spaceL),
+                        Text(
+                          description?.trim().isNotEmpty == true
+                              ? description!.trim()
+                              : '$title is visible during closed beta, but it is not ready to launch yet.',
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 15,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        if (purpose?.trim().isNotEmpty == true) ...[
+                          const SizedBox(height: AppTheme.spaceM),
+                          Text(
+                            purpose!.trim(),
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 14,
+                              color: AppTheme.tradingMutedText,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppTheme.spaceM),
+                        for (final benefit in resolvedBenefits)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.bolt_rounded,
+                                  size: 16,
+                                  color: AppTheme.neonPink,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    benefit,
+                                    style: AppTheme.bodyTextStyle(
+                                      fontSize: 13,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Interest is tracked through Personalisation and Settings.',
+                                    style: AppTheme.bodyTextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.notifications_active),
+                            label: const Text('Notify Me'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -219,8 +557,8 @@ class FeatureAccessRouteGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<bool>(
-      stream: FeatureAccess.watchFlag(flag),
+    return StreamBuilder<FeatureAvailability>(
+      stream: FeatureAccess.watchAvailability(flag),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -231,11 +569,19 @@ class FeatureAccessRouteGate extends StatelessWidget {
           );
         }
 
-        if (snapshot.data == true) {
+        final availability = snapshot.data ?? FeatureAvailability.hidden;
+        if (availability.isLive) {
           return child;
         }
 
-        return FeatureLockedScreen(title: title);
+        if (availability.isComingSoon) {
+          return FeatureComingSoonScreen(title: title);
+        }
+
+        return FeatureLockedScreen(
+          title: title,
+          availability: FeatureAvailability.hidden,
+        );
       },
     );
   }

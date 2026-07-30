@@ -7,6 +7,7 @@ enum ArcCommandActionIntent {
   smartTrade,
   nomadicTrader,
   operations,
+  comingSoon,
   placeholder,
 }
 
@@ -16,12 +17,14 @@ class ArcCommandAction {
     this.routeName,
     this.intent = ArcCommandActionIntent.route,
     this.placeholderMessage,
+    this.featureTitle,
   });
 
   final String label;
   final String? routeName;
   final ArcCommandActionIntent intent;
   final String? placeholderMessage;
+  final String? featureTitle;
 }
 
 class ArcCommandPriority {

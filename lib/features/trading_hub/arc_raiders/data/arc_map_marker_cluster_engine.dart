@@ -64,6 +64,11 @@ class ArcMapMarkerClusterEngine {
           .where((label) => label.isNotEmpty)
           .toSet()
           .toList(growable: false);
+      final clusterLabel =
+          marker.category == ArcRaidMapMarkerCategory.blueprintOpportunity &&
+              labels.isNotEmpty
+          ? labels.take(3).join(' + ')
+          : '$totalCount nearby ${marker.category.label}s';
       final ids = nearby
           .expand(
             (item) => item.clusterMemberIds.isEmpty
@@ -96,7 +101,7 @@ class ArcMapMarkerClusterEngine {
           id: 'cluster_${marker.mapId}_${marker.layer.storageValue}_${marker.category.id}_${ids.join('_')}',
           mapId: marker.mapId,
           category: marker.category,
-          label: '$totalCount nearby ${marker.category.label}s',
+          label: clusterLabel,
           point: ArcNormalizedPoint(x: averageX, y: averageY),
           layer: marker.layer,
           payloadId: marker.payloadId,

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_intelligence_location_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
@@ -71,7 +72,12 @@ class ArcWorldIntelPopulationEngine {
         unmatchedBlueprintReports += 1;
         continue;
       }
-      final marker = _markerForDropReport(map, report, generatedAt);
+      final marker = _markerForDropReport(
+        map,
+        report,
+        generatedAt,
+        adminMarkers: adminMarkers,
+      );
       if (marker == null) {
         unmatchedBlueprintReports += 1;
         continue;
@@ -291,15 +297,26 @@ class ArcWorldIntelPopulationEngine {
   ArcAdminMapMarker? _markerForDropReport(
     ArcRaidMap map,
     ArcBlueprintDropReport report,
-    DateTime generatedAt,
-  ) {
-    final resolution = _pointForReport(map, report);
-    final point = resolution?.point;
-    final layer = resolution?.layer ?? ArcRaidMapLayer.surface;
-    final locationLabel = report.locationName.trim().isEmpty
+    DateTime generatedAt, {
+    required List<ArcAdminMapMarker> adminMarkers,
+  }) {
+    final resolution = const ArcIntelligenceLocationResolver()
+        .resolveBlueprintReport(
+          map: map,
+          adminMarkers: adminMarkers,
+          poiId: report.intelligencePoiId,
+          poiName: report.intelligencePoiName,
+          fallbackLabel: report.locationName,
+          preferredLayer: report.intelligenceLayer,
+        );
+    final hasPoint = resolution != null && !resolution.needsAdminReview;
+    final point = hasPoint ? resolution.point : null;
+    final layer = hasPoint ? resolution.layer : ArcRaidMapLayer.surface;
+    final locationLabel = resolution?.label.trim().isNotEmpty == true
+        ? resolution!.label.trim()
+        : report.locationName.trim().isEmpty
         ? 'Unresolved report location'
         : report.locationName.trim();
-    final hasPoint = point != null;
     final markerPoint = point ?? const ArcNormalizedPoint(x: 0.5, y: 0.5);
     final evidence = ArcWorldIntelEvidenceRecord(
       id: 'evidence_drop_${report.id}',
@@ -341,7 +358,9 @@ class ArcWorldIntelPopulationEngine {
       sourceRecordId: report.id,
       sourcePermission: ArcAdminMapMarkerSourcePermission.permitted,
       originalPoint: hasPoint ? markerPoint : null,
-      coordinateSpace: hasPoint ? 'uag_poi_anchor' : 'unresolved_landmark',
+      coordinateSpace: hasPoint
+          ? 'uag_${resolution.source.name}'
+          : 'unresolved_landmark',
       alignmentConfidence: hasPoint ? _alignmentConfidence(map, layer) : 0,
       duplicateGroupId: _duplicateKey(
         mapId: map.id,
@@ -748,40 +767,6 @@ class ArcWorldIntelPopulationEngine {
     return null;
   }
 
-  _ReportPointResolution? _pointForReport(
-    ArcRaidMap map,
-    ArcBlueprintDropReport report,
-  ) {
-    final poiId = report.poiId?.trim();
-    if (poiId != null && poiId.isNotEmpty) {
-      final match = map.pois.cast<ArcRaidMapPoi?>().firstWhere(
-        (poi) => poi?.id == poiId,
-        orElse: () => null,
-      );
-      if (match != null) {
-        return _ReportPointResolution(
-          point: match.point,
-          layer: _layerForText(map, '${match.id} ${match.name}'),
-        );
-      }
-    }
-    final poiName = report.poiName?.trim();
-    if (poiName != null && poiName.isNotEmpty) {
-      final normalized = _normalize(poiName);
-      final match = map.pois.cast<ArcRaidMapPoi?>().firstWhere(
-        (poi) => poi != null && _normalize(poi.name) == normalized,
-        orElse: () => null,
-      );
-      if (match != null) {
-        return _ReportPointResolution(
-          point: match.point,
-          layer: _layerForText(map, '${match.id} ${match.name}'),
-        );
-      }
-    }
-    return null;
-  }
-
   ArcNormalizedPoint? _pointForPoi(
     ArcRaidMap map,
     ArcPoiData poi,
@@ -1083,13 +1068,6 @@ class ArcWorldIntelPopulationEngine {
     final slug = _normalize(value).replaceAll(' ', '_');
     return slug.isEmpty ? 'item' : slug;
   }
-}
-
-class _ReportPointResolution {
-  const _ReportPointResolution({required this.point, required this.layer});
-
-  final ArcNormalizedPoint point;
-  final ArcRaidMapLayer layer;
 }
 
 class _MergeResult {

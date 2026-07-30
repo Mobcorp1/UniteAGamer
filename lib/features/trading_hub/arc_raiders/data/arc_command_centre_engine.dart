@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
+import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_view_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_relevance_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_decision_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_feature_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
@@ -55,6 +57,8 @@ class ArcCommandCentreEngine {
     ArcProgressionRecords progressionRecords = ArcProgressionRecords.empty,
     ArcUserPersonalisationProfile personalisation =
         ArcUserPersonalisationProfile.defaults,
+    Map<String, FeatureAvailability> featureAvailability =
+        const <String, FeatureAvailability>{},
   }) {
     final totalBlueprints = ArcBlueprintSeedData.blueprints.length;
     final blueprintStateKnown = blueprintStates.isNotEmpty;
@@ -159,6 +163,13 @@ class ArcCommandCentreEngine {
     alerts = _mergeAlerts(_progressionAlerts(progression), alerts);
     recommendations = _mergeRecommendations(
       _progressionRecommendations(progression),
+      recommendations,
+    );
+    recommendations = _mergeRecommendations(
+      _comingSoonRecommendations(
+        personalisation: personalisation,
+        featureAvailability: featureAvailability,
+      ),
       recommendations,
     );
     objectives = objectives
@@ -358,6 +369,37 @@ class ArcCommandCentreEngine {
         status: progression.bench.status,
       ),
     ];
+  }
+
+  static List<ArcCommandRecommendation> _comingSoonRecommendations({
+    required ArcUserPersonalisationProfile personalisation,
+    required Map<String, FeatureAvailability> featureAvailability,
+  }) {
+    final recommendations = <ArcCommandRecommendation>[];
+    for (final entry in ArcFeatureRegistry.entries) {
+      final flag = entry.accessFlag;
+      if (flag == null) continue;
+      if (featureAvailability[flag]?.isComingSoon != true) continue;
+      final interest = personalisation.interestFor(
+        entry.personalisationFeature,
+      );
+      if (!interest.isHighSignal) continue;
+      recommendations.add(
+        ArcCommandRecommendation(
+          title: '${entry.label} Coming Soon',
+          body:
+              'You have shown interest in ${entry.label}. It is visible during closed beta and will become launchable when admins mark it Live.',
+          action: ArcCommandAction(
+            label: 'View Status',
+            intent: ArcCommandActionIntent.comingSoon,
+            featureTitle: entry.label,
+            placeholderMessage:
+                '${entry.label} is visible in closed beta because you expressed interest, but it cannot be launched until it is marked Live.',
+          ),
+        ),
+      );
+    }
+    return recommendations.take(3).toList(growable: false);
   }
 
   static List<ArcCommandObjective> _progressionObjectives(

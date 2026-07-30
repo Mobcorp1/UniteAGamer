@@ -215,12 +215,14 @@ class ArcFeatureVisibilityDiagnostic {
     required this.personalisationLevel,
     required this.visible,
     required this.reason,
+    this.availability = FeatureAvailability.live,
   });
 
   final ArcFeatureRegistryEntry entry;
   final ArcPersonalisationInterestLevel personalisationLevel;
   final bool visible;
   final String reason;
+  final FeatureAvailability availability;
 }
 
 class ArcFeatureVisibilityDiagnosticsEngine {
@@ -229,6 +231,8 @@ class ArcFeatureVisibilityDiagnosticsEngine {
   static List<ArcFeatureVisibilityDiagnostic> build({
     required ArcUserPersonalisationProfile personalisation,
     Map<String, bool> featureAccess = const <String, bool>{},
+    Map<String, FeatureAvailability> featureAvailability =
+        const <String, FeatureAvailability>{},
     Map<String, bool> adminControls = const <String, bool>{},
   }) {
     return [
@@ -237,6 +241,7 @@ class ArcFeatureVisibilityDiagnosticsEngine {
           entry: entry,
           personalisation: personalisation,
           featureAccess: featureAccess,
+          featureAvailability: featureAvailability,
           adminControls: adminControls,
         ),
     ];
@@ -246,23 +251,32 @@ class ArcFeatureVisibilityDiagnosticsEngine {
     required ArcFeatureRegistryEntry entry,
     required ArcUserPersonalisationProfile personalisation,
     required Map<String, bool> featureAccess,
+    required Map<String, FeatureAvailability> featureAvailability,
     required Map<String, bool> adminControls,
   }) {
     final level = personalisation.interestFor(entry.personalisationFeature);
+    final availability = entry.accessFlag == null
+        ? FeatureAvailability.live
+        : featureAvailability[entry.accessFlag] ??
+              (featureAccess[entry.accessFlag] == false
+                  ? FeatureAvailability.hidden
+                  : FeatureAvailability.live);
     if (entry.isDormant) {
       return ArcFeatureVisibilityDiagnostic(
         entry: entry,
         personalisationLevel: level,
         visible: false,
         reason: 'Dormant future identifier; no beta route exposed.',
+        availability: FeatureAvailability.hidden,
       );
     }
-    if (entry.accessFlag != null && featureAccess[entry.accessFlag] == false) {
+    if (entry.accessFlag != null && availability.isHidden) {
       return ArcFeatureVisibilityDiagnostic(
         entry: entry,
         personalisationLevel: level,
         visible: false,
         reason: 'Hidden by FeatureAccess flag ${entry.accessFlag}.',
+        availability: availability,
       );
     }
     if (entry.adminFlag != null && adminControls[entry.adminFlag] == false) {
@@ -271,6 +285,7 @@ class ArcFeatureVisibilityDiagnosticsEngine {
         personalisationLevel: level,
         visible: false,
         reason: 'Hidden by admin control ${entry.adminFlag}.',
+        availability: availability,
       );
     }
     if (!entry.isRoutable) {
@@ -279,15 +294,19 @@ class ArcFeatureVisibilityDiagnosticsEngine {
         personalisationLevel: level,
         visible: false,
         reason: 'Foundational system with no direct beta route.',
+        availability: availability,
       );
     }
     return ArcFeatureVisibilityDiagnostic(
       entry: entry,
       personalisationLevel: level,
       visible: true,
-      reason: level.isHighSignal
+      reason: availability.isComingSoon
+          ? 'Visible as Coming Soon because the user can express interest before launch.'
+          : level.isHighSignal
           ? 'Visible and promoted by personalisation.'
           : 'Visible through normal navigation.',
+      availability: availability,
     );
   }
 }
