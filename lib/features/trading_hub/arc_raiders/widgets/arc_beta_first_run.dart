@@ -525,7 +525,10 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
               'reachedRaiderLevel25': reachedRaiderLevel25,
             },
           ),
-          builder: (_) => const ArcMandatoryOnboardingScreen(adminPreview: true),
+          builder: (_) => const ArcMandatoryOnboardingScreen(
+            adminPreview: true,
+            previewAccountCreation: true,
+          ),
         ),
       );
     } catch (error) {

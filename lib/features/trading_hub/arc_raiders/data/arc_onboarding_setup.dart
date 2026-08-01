@@ -59,6 +59,17 @@ String? validateArcRiderName(String value) {
   return null;
 }
 
+bool shouldShowArcOnboardingAccountCreation({
+  required bool adminPreview,
+  required bool previewAccountCreation,
+  required bool accountCreatedDuringOnboarding,
+  required bool hasCurrentUser,
+}) {
+  if (accountCreatedDuringOnboarding) return false;
+  if (adminPreview) return previewAccountCreation;
+  return !hasCurrentUser;
+}
+
 Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
   required String email,
   required String riderName,

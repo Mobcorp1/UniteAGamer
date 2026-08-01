@@ -75,6 +75,57 @@ void main() {
       expect(validateArcRiderName('x' * 25), isNotNull);
     });
 
+    test(
+      'selects account creation for new users and admin registration previews',
+      () {
+        expect(
+          shouldShowArcOnboardingAccountCreation(
+            adminPreview: false,
+            previewAccountCreation: false,
+            accountCreatedDuringOnboarding: false,
+            hasCurrentUser: false,
+          ),
+          isTrue,
+        );
+        expect(
+          shouldShowArcOnboardingAccountCreation(
+            adminPreview: false,
+            previewAccountCreation: false,
+            accountCreatedDuringOnboarding: false,
+            hasCurrentUser: true,
+          ),
+          isFalse,
+        );
+        expect(
+          shouldShowArcOnboardingAccountCreation(
+            adminPreview: true,
+            previewAccountCreation: false,
+            accountCreatedDuringOnboarding: false,
+            hasCurrentUser: true,
+          ),
+          isFalse,
+        );
+        expect(
+          shouldShowArcOnboardingAccountCreation(
+            adminPreview: true,
+            previewAccountCreation: true,
+            accountCreatedDuringOnboarding: false,
+            hasCurrentUser: true,
+          ),
+          isTrue,
+        );
+        expect(
+          shouldShowArcOnboardingAccountCreation(
+            adminPreview: true,
+            previewAccountCreation: true,
+            accountCreatedDuringOnboarding: true,
+            hasCurrentUser: false,
+          ),
+          isFalse,
+        );
+      },
+    );
+
     test('builds the essential version 4 completion payload', () {
       final payload = buildArcOnboardingCompletionPayload(
         riderName: '  Mike  ',

@@ -26,9 +26,14 @@ enum _BlueprintSetupChoice { importScreenshots, manual, later }
 class ArcMandatoryOnboardingScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/onboarding';
 
-  const ArcMandatoryOnboardingScreen({super.key, this.adminPreview = false});
+  const ArcMandatoryOnboardingScreen({
+    super.key,
+    this.adminPreview = false,
+    this.previewAccountCreation = false,
+  });
 
   final bool adminPreview;
+  final bool previewAccountCreation;
 
   @override
   State<ArcMandatoryOnboardingScreen> createState() =>
@@ -110,10 +115,12 @@ class _ArcMandatoryOnboardingScreenState
     super.dispose();
   }
 
-  bool get _needsAccountCreation =>
-      !widget.adminPreview &&
-      !_accountCreatedDuringOnboarding &&
-      FirebaseAuth.instance.currentUser == null;
+  bool get _showsAccountCreationStep => shouldShowArcOnboardingAccountCreation(
+    adminPreview: widget.adminPreview,
+    previewAccountCreation: widget.previewAccountCreation,
+    accountCreatedDuringOnboarding: _accountCreatedDuringOnboarding,
+    hasCurrentUser: FirebaseAuth.instance.currentUser != null,
+  );
 
   bool get _legalComplete =>
       _acceptedTraderCode && _acceptedTermsOfService && _acceptedDataSecurity;
@@ -121,7 +128,9 @@ class _ArcMandatoryOnboardingScreenState
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
     if (_step == 0) {
-      if (_needsAccountCreation) {
+      if (widget.adminPreview && widget.previewAccountCreation) {
+        if (!_validateAccountStep()) return;
+      } else if (_showsAccountCreationStep) {
         final created = await _createOnboardingAccount();
         if (!created || !mounted) return;
       } else {
@@ -420,7 +429,7 @@ class _ArcMandatoryOnboardingScreenState
 
   @override
   Widget build(BuildContext context) {
-    final needsAccountCreation = _needsAccountCreation;
+    final showsAccountCreationStep = _showsAccountCreationStep;
     final email =
         FirebaseAuth.instance.currentUser?.email ?? 'Signed-in account';
     return Scaffold(
@@ -444,7 +453,7 @@ class _ArcMandatoryOnboardingScreenState
                           controller: _pageController,
                           physics: const NeverScrollableScrollPhysics(),
                           children: [
-                            needsAccountCreation
+                            showsAccountCreationStep
                                 ? _AccountCreationStep(
                                     emailController: _emailController,
                                     confirmEmailController:
@@ -549,7 +558,7 @@ class _ArcMandatoryOnboardingScreenState
                                 ),
                           label: Text(
                             _saving
-                                ? (_step == 0 && needsAccountCreation
+                                ? (_step == 0 && showsAccountCreationStep
                                       ? 'CREATING ACCOUNT...'
                                       : 'INITIALISING COMMAND CENTRE...')
                                 : _step == 3
