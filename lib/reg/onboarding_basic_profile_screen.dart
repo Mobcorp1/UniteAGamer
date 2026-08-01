@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_legal_acceptance.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
@@ -13,36 +14,6 @@ import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_adaptive_card_deck.dart';
-
-Map<String, dynamic> buildOnboardingLegalAcceptedMap({
-  required bool traderCodeAccepted,
-  required bool termsOfServiceAccepted,
-  required bool dataSecurityAccepted,
-}) {
-  final accepted = <String, dynamic>{
-    'traderCodeAccepted': traderCodeAccepted,
-    'termsOfServiceAccepted': termsOfServiceAccepted,
-    'dataSecurityAccepted': dataSecurityAccepted,
-  };
-
-  if (traderCodeAccepted) {
-    accepted
-      ..['traderCodeVersion'] = 1
-      ..['traderCodeAcceptedAt'] = FieldValue.serverTimestamp();
-  }
-  if (termsOfServiceAccepted) {
-    accepted
-      ..['termsOfServiceVersion'] = 1
-      ..['termsOfServiceAcceptedAt'] = FieldValue.serverTimestamp();
-  }
-  if (dataSecurityAccepted) {
-    accepted
-      ..['dataSecurityVersion'] = 1
-      ..['dataSecurityAcceptedAt'] = FieldValue.serverTimestamp();
-  }
-
-  return accepted;
-}
 
 class OnboardingBasicProfileScreen extends StatefulWidget {
   static const routeName = '/onboarding-basic-profile';

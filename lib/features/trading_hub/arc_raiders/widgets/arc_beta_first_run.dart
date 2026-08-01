@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -65,6 +65,7 @@ class ArcBetaFirstRun {
     await prefs.setBool(ArcBetaFirstRunKeys.hasCompletedProfileSetup, false);
     await _mergeCurrentUser({
       'onboardingComplete': false,
+      'arcMandatoryOnboardingComplete': false,
       'arcOnboarding': {
         'adminForcedOnboarding': true,
         'adminToolUpdatedAt': FieldValue.serverTimestamp(),
@@ -80,7 +81,9 @@ class ArcBetaFirstRun {
     await prefs.setBool(ArcBetaFirstRunKeys.hasCompletedProfileSetup, true);
     await _mergeCurrentUser({
       'onboardingComplete': true,
+      'arcMandatoryOnboardingComplete': true,
       'arcOnboarding': {
+        'version': 3,
         'completedFromAdminTools': true,
         'completedAt': FieldValue.serverTimestamp(),
         'adminToolUpdatedAt': FieldValue.serverTimestamp(),
@@ -112,6 +115,7 @@ class ArcBetaFirstRun {
     await prefs.setBool(ArcBetaFirstRunKeys.hasSeenTradingTutorial, false);
     await _mergeCurrentUser({
       'onboardingComplete': false,
+      'arcMandatoryOnboardingComplete': false,
       'arcOnboarding': {
         'adminForcedOnboarding': true,
         'adminBetaProgressReset': true,
@@ -512,7 +516,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           settings: RouteSettings(
-            name: OnboardingBasicProfileScreen.routeName,
+            name: ArcMandatoryOnboardingScreen.routeName,
             arguments: {
               'adminPreview': true,
               'step': step,
@@ -521,7 +525,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
               'reachedRaiderLevel25': reachedRaiderLevel25,
             },
           ),
-          builder: (_) => const OnboardingBasicProfileScreen(),
+          builder: (_) => const ArcMandatoryOnboardingScreen(adminPreview: true),
         ),
       );
     } catch (error) {

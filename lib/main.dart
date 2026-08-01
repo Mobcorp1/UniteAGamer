@@ -52,7 +52,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wal
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/trading_hub_screen.dart';
-import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/admin_console_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
@@ -118,9 +118,10 @@ class UAGTradersHubApp extends StatelessWidget {
           settings: settings,
         );
 
-      case OnboardingBasicProfileScreen.routeName:
+      case ArcMandatoryOnboardingScreen.routeName:
+      case '/onboarding-basic-profile':
         return MaterialPageRoute(
-          builder: (_) => const OnboardingBasicProfileScreen(),
+          builder: (_) => const ArcMandatoryOnboardingScreen(),
           settings: settings,
         );
 

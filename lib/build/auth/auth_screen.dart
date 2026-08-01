@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/build/auth/uag_auth_autofill.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
@@ -334,6 +335,12 @@ class _AuthScreenState extends State<AuthScreen> {
   void _previousSignupStep() {
     if (_isLoading || _signupStep == 0) return;
     setState(() => _signupStep--);
+  }
+
+  void _openOnboardingAccountCreation() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const ArcMandatoryOnboardingScreen()),
+    );
   }
 
   Future<void> _submit() async {
@@ -1359,6 +1366,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       onPressed: _isLoading
                           ? null
                           : () {
+                              if (_isLogin) {
+                                _openOnboardingAccountCreation();
+                                return;
+                              }
                               setState(() {
                                 _isLogin = !_isLogin;
                                 _signupStep = 0;

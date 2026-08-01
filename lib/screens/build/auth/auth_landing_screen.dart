@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -118,6 +119,12 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
     );
   }
 
+  void _openCreateAccount() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const ArcMandatoryOnboardingScreen()),
+    );
+  }
+
   Widget _background() {
     return Stack(
       fit: StackFit.expand,
@@ -203,7 +210,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
             SizedBox(
               height: 44,
               child: ElevatedButton(
-                onPressed: () => _openAuth(login: false),
+                onPressed: _openCreateAccount,
                 child: const Text('Create Account'),
               ),
             ),
@@ -286,7 +293,7 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
                   child: SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () => _openAuth(login: false),
+                      onPressed: _openCreateAccount,
                       child: const Text('Create Account'),
                     ),
                   ),

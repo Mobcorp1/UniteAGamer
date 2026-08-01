@@ -3,10 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
-import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+
+bool arcNeedsProgressiveOnboarding(Map<String, dynamic> data) =>
+    data['onboardingComplete'] != true;
 
 class AppEntryGate extends StatefulWidget {
   static const routeName = '/app-entry-gate';
@@ -26,7 +29,7 @@ class _AppEntryGateState extends State<AppEntryGate> {
         .doc(uid)
         .get();
     final data = doc.data() ?? <String, dynamic>{};
-    return !(data['onboardingComplete'] == true);
+    return arcNeedsProgressiveOnboarding(data);
   }
 
   Future<void> _runLegalGateOnce() async {
@@ -66,7 +69,7 @@ class _AppEntryGateState extends State<AppEntryGate> {
             final needsOnboarding = onboardingSnapshot.data ?? true;
             if (needsOnboarding) {
               _fanDisclaimerChecked = false;
-              return const OnboardingBasicProfileScreen();
+              return const ArcMandatoryOnboardingScreen();
             }
 
             WidgetsBinding.instance.addPostFrameCallback((_) {
