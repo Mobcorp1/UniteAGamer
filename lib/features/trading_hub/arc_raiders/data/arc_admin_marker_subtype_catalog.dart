@@ -386,9 +386,54 @@ class ArcAdminMapMarkerSubtypeCatalog {
         ),
   ];
 
-  static List<ArcAdminMapMarkerSubtype> forKind(ArcAdminMapMarkerKind kind) {
+  static const Map<String, List<String>> _eventIdsByMap = {
+    'dam_battlegrounds': [
+      'prospecting_probes',
+      'harvester',
+      'uncovered_caches',
+      'husk_graveyard',
+      'lush_blooms',
+      'matriarch',
+      'night_raid',
+    ],
+    'spaceport': [
+      'prospecting_probes',
+      'harvester',
+      'uncovered_caches',
+      'husk_graveyard',
+      'launch_tower_loot',
+      'lush_blooms',
+      'matriarch',
+      'hidden_bunker',
+      'night_raid',
+    ],
+    'buried_city': [
+      'prospecting_probes',
+      'uncovered_caches',
+      'husk_graveyard',
+      'lush_blooms',
+      'night_raid',
+    ],
+    'blue_gate': [
+      'prospecting_probes',
+      'harvester',
+      'uncovered_caches',
+      'husk_graveyard',
+      'lush_blooms',
+      'matriarch',
+      'locked_gate',
+      'night_raid',
+    ],
+    'stella_montis': ['night_raid'],
+    'riven_tides': ['beachcombing', 'night_raid'],
+  };
+
+  static List<ArcAdminMapMarkerSubtype> forKind(
+    ArcAdminMapMarkerKind kind, {
+    String? mapName,
+  }) {
     return switch (kind) {
-      ArcAdminMapMarkerKind.mapEvent => events,
+      ArcAdminMapMarkerKind.mapEvent => eventsForMap(mapName),
       ArcAdminMapMarkerKind.questLocation => quest,
       ArcAdminMapMarkerKind.resourceNode ||
       ArcAdminMapMarkerKind.naturalResource => nature,
@@ -419,12 +464,13 @@ class ArcAdminMapMarkerSubtypeCatalog {
 
   static ArcAdminMapMarkerSubtype? resolve(
     ArcAdminMapMarkerKind kind,
-    String? value,
-  ) {
+    String? value, {
+    String? mapName,
+  }) {
     final raw = value?.trim();
     if (raw == null || raw.isEmpty) return null;
     final normalized = slug(raw);
-    final options = forKind(kind);
+    final options = forKind(kind, mapName: mapName);
     for (final option in options) {
       if (option.id == normalized || slug(option.label) == normalized) {
         return option;
@@ -438,6 +484,19 @@ class ArcAdminMapMarkerSubtypeCatalog {
     );
   }
 
+  static List<ArcAdminMapMarkerSubtype> eventsForMap(String? mapName) {
+    final key = _mapKey(mapName);
+    final ids = _eventIdsByMap[key];
+    if (ids == null) return events;
+    final byId = <String, ArcAdminMapMarkerSubtype>{
+      for (final event in events) event.id: event,
+    };
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ];
+  }
+
   static String slug(String value) {
     return value
         .trim()
@@ -445,6 +504,23 @@ class ArcAdminMapMarkerSubtypeCatalog {
         .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
         .replaceAll(RegExp(r'_+'), '_')
         .replaceAll(RegExp(r'^_|_$'), '');
+  }
+
+  static String _mapKey(String? value) {
+    final normalized = slug(value ?? '');
+    return switch (normalized) {
+      'dam' ||
+      'the_dam' ||
+      'dam_battleground' ||
+      'dam_battlegrounds' ||
+      'the_dam_battlegrounds' => 'dam_battlegrounds',
+      'spaceport' || 'the_spaceport' || 'acerra_spaceport' => 'spaceport',
+      'buried_city' => 'buried_city',
+      'blue_gate' || 'the_blue_gate' => 'blue_gate',
+      'stella_montis' => 'stella_montis',
+      'riven_tides' => 'riven_tides',
+      _ => normalized,
+    };
   }
 
   static ArcAdminMapMarkerKind _kindForContainer(String id) {

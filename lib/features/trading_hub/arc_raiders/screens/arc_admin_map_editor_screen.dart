@@ -844,6 +844,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       builder: (context) => _NewMarkerDialog(
         title: dialogTitle,
         actionLabel: 'Create Draft',
+        mapName: _map.displayName,
         initialKind: initialKind,
         includeSeedKinds: true,
         requireBlueprint: requireBlueprint,
@@ -906,6 +907,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       builder: (context) => _NewMarkerDialog(
         title: 'Edit POI',
         actionLabel: 'Apply Edit',
+        mapName: _map.displayName,
         initialMarker: selected,
         includeSeedKinds: true,
       ),
@@ -2179,6 +2181,7 @@ class _NewMarkerDialog extends StatefulWidget {
     required this.title,
     required this.actionLabel,
     this.initialMarker,
+    this.mapName,
     this.initialKind = ArcAdminMapMarkerKind.customIntel,
     this.includeSeedKinds = false,
     this.requireBlueprint = false,
@@ -2188,6 +2191,7 @@ class _NewMarkerDialog extends StatefulWidget {
   final String title;
   final String actionLabel;
   final ArcAdminMapMarker? initialMarker;
+  final String? mapName;
   final ArcAdminMapMarkerKind initialKind;
   final bool includeSeedKinds;
   final bool requireBlueprint;
@@ -2236,7 +2240,10 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   @override
   Widget build(BuildContext context) {
     final blueprints = ArcBlueprintSeedData.blueprints;
-    final subtypeOptions = ArcAdminMapMarkerSubtypeCatalog.forKind(_kind);
+    final subtypeOptions = ArcAdminMapMarkerSubtypeCatalog.forKind(
+      _kind,
+      mapName: widget.mapName,
+    );
     final selectedSubtype = _subtypeForId(subtypeOptions, _subtypeId);
 
     return AlertDialog(
@@ -2388,6 +2395,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
             final subtype = ArcAdminMapMarkerSubtypeCatalog.resolve(
               _kind,
               _subtypeId,
+              mapName: widget.mapName,
             );
             Navigator.pop(
               context,

@@ -23,5 +23,32 @@ void main() {
       expect(subtype?.id, 'great_mullein');
       expect(subtype?.label, 'Great Mullein');
     });
+
+    test('filters event subsections by selected map', () {
+      final spaceport = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.mapEvent,
+        mapName: 'Spaceport',
+      ).map((item) => item.label);
+      final buriedCity = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.mapEvent,
+        mapName: 'Buried City',
+      ).map((item) => item.label);
+      final stellaMontis = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.mapEvent,
+        mapName: 'Stella Montis',
+      ).map((item) => item.label);
+      final rivenTides = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.mapEvent,
+        mapName: 'Riven Tides',
+      ).map((item) => item.label);
+
+      expect(spaceport, contains('Launch Tower Loot'));
+      expect(spaceport, contains('Hidden Bunker'));
+      expect(buriedCity, contains('Lush Blooms'));
+      expect(buriedCity, isNot(contains('Launch Tower Loot')));
+      expect(stellaMontis, ['Night Raid']);
+      expect(rivenTides, contains('Beachcombing'));
+      expect(rivenTides, isNot(contains('Launch Tower Loot')));
+    });
   });
 }
