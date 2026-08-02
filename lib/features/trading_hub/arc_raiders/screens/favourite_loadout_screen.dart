@@ -744,15 +744,21 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 });
               }
 
-              return StreamBuilder<Map<String, ArcBlueprintState>>(
-                stream: _blueprintRepository.watchMyBlueprintStates(),
+              return StreamBuilder<ArcBlueprintStateSnapshot>(
+                stream: _blueprintRepository.watchMyBlueprintStateSnapshot(),
                 builder: (context, stateSnapshot) {
+                  final hydration = stateSnapshot.data;
                   final blueprintStates =
-                      stateSnapshot.data ?? <String, ArcBlueprintState>{};
+                      hydration?.states ?? const <String, ArcBlueprintState>{};
                   return ArcRaidersPageList(
                     maxWidth: 1180,
                     bottomPadding: 100,
                     children: [
+                      if ((hydration?.isLoading ?? false) &&
+                          blueprintStates.isEmpty) ...[
+                        _buildBlueprintStateNotice(),
+                        const SizedBox(height: 10),
+                      ],
                       _buildHero(blueprintStates),
                       const SizedBox(height: 10),
                       _buildLoadoutBoard(blueprintStates),
@@ -765,6 +771,29 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBlueprintStateNotice() {
+    return _arcPanel(
+      accent: Colors.amberAccent,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: const [
+          SizedBox(
+            height: 18,
+            width: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Syncing Blueprint Grid ownership before checking this loadout.',
+              style: TextStyle(color: Colors.white70, height: 1.3),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -125,12 +125,17 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Admin Map & Intel Editor'), findsOneWidget);
     expect(find.text('Add POI'), findsOneWidget);
+    expect(find.text('Add Historical Blueprint'), findsOneWidget);
     expect(find.text('Save Draft'), findsOneWidget);
     expect(find.text('Export JSON'), findsOneWidget);
     expect(find.text('Import JSON'), findsOneWidget);
     expect(find.text('Populate UAG World'), findsOneWidget);
     expect(find.text('IMPORT PIPELINE'), findsOneWidget);
     expect(find.text('Publish Selected'), findsOneWidget);
+
+    await tester.drag(find.text('IMPORT PIPELINE'), const Offset(0, -320));
+    await tester.pumpAndSettle();
+
     expect(find.text('Confidence filter'), findsOneWidget);
     expect(find.text('Source permission'), findsOneWidget);
     expect(find.text('Evidence type'), findsOneWidget);

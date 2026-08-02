@@ -9,6 +9,7 @@ void main() {
         traderCodeAccepted: true,
         termsOfServiceAccepted: true,
         dataSecurityAccepted: true,
+        ageConfirmationAccepted: true,
         userId: 'user-1',
         platform: 'web',
         appVersion: 'closed-beta',
@@ -29,12 +30,16 @@ void main() {
       expect(map['dataSecurityAccepted'], isTrue);
       expect(map['dataSecurityVersion'], 1);
       expect(map['dataSecurityAcceptedAt'], isA<FieldValue>());
+      expect(map['ageConfirmationAccepted'], isTrue);
+      expect(map['ageRestrictionVersion'], 1);
+      expect(map['ageConfirmationAcceptedAt'], isA<FieldValue>());
 
       final policies = map['policies'] as Map<String, dynamic>;
       expect(policies.keys, {
         'trader_code_of_conduct',
         'terms_of_use',
         'privacy_policy',
+        'age_restriction_policy',
       });
       expect(policies['trader_code_of_conduct']['accepted'], isTrue);
       expect(
@@ -43,6 +48,7 @@ void main() {
       );
       expect(policies['terms_of_use']['accepted'], isTrue);
       expect(policies['privacy_policy']['accepted'], isTrue);
+      expect(policies['age_restriction_policy']['accepted'], isTrue);
     });
 
     test('does not stamp acknowledgements that were not accepted', () {
@@ -58,6 +64,8 @@ void main() {
       expect(map.containsKey('termsOfServiceAcceptedAt'), isTrue);
       expect(map['dataSecurityAccepted'], isFalse);
       expect(map.containsKey('dataSecurityAcceptedAt'), isFalse);
+      expect(map['ageConfirmationAccepted'], isFalse);
+      expect(map.containsKey('ageConfirmationAcceptedAt'), isFalse);
 
       final policies = map['policies'] as Map<String, dynamic>;
       expect(policies['trader_code_of_conduct']['accepted'], isFalse);
@@ -67,6 +75,7 @@ void main() {
       );
       expect(policies['terms_of_use']['accepted'], isTrue);
       expect(policies['privacy_policy']['accepted'], isFalse);
+      expect(policies['age_restriction_policy']['accepted'], isFalse);
     });
   });
 }

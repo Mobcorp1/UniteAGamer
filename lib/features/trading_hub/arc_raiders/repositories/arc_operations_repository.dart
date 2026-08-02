@@ -682,6 +682,51 @@ class ArcOperationsRepository {
     source: 'availability',
   );
 
+  Future<void> recordSessionStarted({String? sessionId}) async {
+    final uid = _uid;
+    if (uid == null) return;
+
+    final now = DateTime.now().toIso8601String();
+    final batch = _firestore.batch();
+    batch.set(_telemetrySummaryRef(uid), {
+      'sessionsStarted': FieldValue.increment(1),
+      'lastSessionId': sessionId,
+      'lastSessionStartedAt': now,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(_userRef(uid), {
+      'lastActiveAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+  }
+
+  Future<void> recordSessionDuration(
+    Duration duration, {
+    String? sessionId,
+  }) async {
+    final uid = _uid;
+    if (uid == null) return;
+    final seconds = duration.inSeconds;
+    if (seconds <= 0) return;
+
+    final now = DateTime.now().toIso8601String();
+    final batch = _firestore.batch();
+    batch.set(_telemetrySummaryRef(uid), {
+      'totalSessionSeconds': FieldValue.increment(seconds),
+      'sessionDurationSamples': FieldValue.increment(1),
+      'lastSessionId': sessionId,
+      'lastSessionSeconds': seconds,
+      'lastSessionEndedAt': now,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(_userRef(uid), {
+      'lastActiveAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+  }
+
   Future<void> recordIntelConfirmed({int amount = 1, String? confirmationId}) =>
       recordTelemetry(
         ArcOperationTelemetryType.intelConfirmed,

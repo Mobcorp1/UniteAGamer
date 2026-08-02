@@ -133,4 +133,51 @@ void main() {
     expect(routePressed, isTrue);
     expect(plannerPressed, isTrue);
   });
+
+  testWidgets('premium Blueprint Intel card lists every stacked blueprint', (
+    tester,
+  ) async {
+    final cluster = ArcRaidIntelCluster(
+      id: 'cluster',
+      mapId: 'blue_gate',
+      label: 'Warehouse Complex',
+      point: const ArcNormalizedPoint(x: 0.313, y: 0.476),
+      blueprintIds: const <String>['tempest', 'wolfpack'],
+      evidence: const <ArcRaidIntelEvidence>[],
+    );
+    const marker = ArcRaidMapMarker(
+      id: 'marker',
+      mapId: 'blue_gate',
+      category: ArcRaidMapMarkerCategory.blueprintOpportunity,
+      label: 'Stacked opportunity',
+      point: ArcNormalizedPoint(x: 0.313, y: 0.476),
+      blueprintIds: <String>['tempest', 'wolfpack'],
+      blueprintFindCounts: <String, int>{'tempest': 7, 'wolfpack': 3},
+      prioritizedBlueprintIds: <String>['tempest'],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ArcBlueprintIntelCard(
+              marker: marker,
+              cluster: cluster,
+              map: ArcRaidIntelligenceSeedData.mapById('blue_gate'),
+              onCentreMap: () {},
+              onAddStop: () {},
+              onOpenBlueprint: () {},
+              onOpenRaidPlanner: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('BLUEPRINTS AT THIS LOCATION'), findsOneWidget);
+    expect(find.text('Tempest'), findsWidgets);
+    expect(find.text('Wolfpack'), findsWidgets);
+    expect(find.text('7 finds'), findsWidgets);
+    expect(find.text('3 finds'), findsWidgets);
+  });
 }

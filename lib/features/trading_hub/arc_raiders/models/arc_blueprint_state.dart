@@ -77,12 +77,18 @@ class ArcBlueprintState {
             : 0);
 
     final explicitOwned = map['owned'] as bool?;
-    final legacyWanted = (map['wanted'] as bool?) ?? false;
+    final explicitWanted = map['wanted'] as bool?;
+    final explicitAvailable = map['availableToTrade'] as bool?;
+    final hasOwnershipSignal =
+        explicitOwned != null ||
+        legacyOwnedCount != null ||
+        explicitAvailable == true ||
+        dupesOwned > 0;
     final owned =
         explicitOwned ??
         (legacyOwnedCount != null
             ? legacyOwnedCount > 0
-            : (!legacyWanted || dupesOwned > 0));
+            : hasOwnershipSignal && explicitWanted != true);
 
     final rawPriority = (map['priorityRank'] as num?)?.toInt() ?? 0;
 

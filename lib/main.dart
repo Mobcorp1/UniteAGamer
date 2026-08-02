@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'features/monetisation/ads/uag_ad_consent_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -49,6 +51,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/trading_hub_screen.dart';
@@ -92,10 +95,13 @@ Future<void> main() async {
   });
 }
 
-class UAGTradersHubApp extends StatelessWidget {
+class UAGTradersHubApp extends StatefulWidget {
   const UAGTradersHubApp({super.key, this.testMode = false});
 
   final bool testMode;
+
+  @override
+  State<UAGTradersHubApp> createState() => _UAGTradersHubAppState();
 
   Route<dynamic> _buildRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -485,6 +491,98 @@ class UAGTradersHubApp extends StatelessWidget {
         );
     }
   }
+}
+
+class _UAGTradersHubAppState extends State<UAGTradersHubApp>
+    with WidgetsBindingObserver {
+  final ArcOperationsRepository _operationsRepository =
+      ArcOperationsRepository();
+  StreamSubscription<User?>? _authSubscription;
+  Timer? _sessionHeartbeat;
+  String? _sessionUid;
+  String? _sessionId;
+  DateTime? _lastSessionDurationRecordedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.testMode) {
+      WidgetsBinding.instance.addObserver(this);
+      _authSubscription = FirebaseAuth.instance.authStateChanges().listen(
+        _handleSessionUser,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _authSubscription?.cancel();
+    _sessionHeartbeat?.cancel();
+    unawaited(_flushSessionDuration());
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (widget.testMode) return;
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      unawaited(_flushSessionDuration());
+      return;
+    }
+    if (state == AppLifecycleState.resumed && _sessionUid != null) {
+      _lastSessionDurationRecordedAt = DateTime.now();
+    }
+  }
+
+  void _handleSessionUser(User? user) {
+    if (user == null) {
+      _stopSessionTracking();
+      return;
+    }
+    if (_sessionUid == user.uid) return;
+
+    _stopSessionTracking();
+    final now = DateTime.now();
+    _sessionUid = user.uid;
+    _sessionId = '${user.uid}-${now.toUtc().millisecondsSinceEpoch}';
+    _lastSessionDurationRecordedAt = now;
+    unawaited(
+      _operationsRepository.recordSessionStarted(sessionId: _sessionId),
+    );
+    _sessionHeartbeat = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => unawaited(_flushSessionDuration()),
+    );
+  }
+
+  void _stopSessionTracking() {
+    _sessionHeartbeat?.cancel();
+    _sessionHeartbeat = null;
+    unawaited(_flushSessionDuration());
+    _sessionUid = null;
+    _sessionId = null;
+    _lastSessionDurationRecordedAt = null;
+  }
+
+  Future<void> _flushSessionDuration() async {
+    final uid = _sessionUid;
+    final lastRecordedAt = _lastSessionDurationRecordedAt;
+    if (uid == null || lastRecordedAt == null) return;
+
+    final now = DateTime.now();
+    final duration = now.difference(lastRecordedAt);
+    if (duration.inSeconds < 5) return;
+
+    _lastSessionDurationRecordedAt = now;
+    await _operationsRepository.recordSessionDuration(
+      duration,
+      sessionId: _sessionId,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -495,10 +593,12 @@ class UAGTradersHubApp extends StatelessWidget {
       builder: (context, child) =>
           ArcGlobalVisualSystem(child: child ?? const SizedBox.shrink()),
       scrollBehavior: const ArcAppScrollBehavior(),
-      navigatorKey: testMode ? null : TradingPushService.instance.navigatorKey,
-      onGenerateRoute: _buildRoute,
+      navigatorKey: widget.testMode
+          ? null
+          : TradingPushService.instance.navigatorKey,
+      onGenerateRoute: widget._buildRoute,
       home: StreamBuilder<User?>(
-        stream: testMode
+        stream: widget.testMode
             ? Stream<User?>.value(null)
             : FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {

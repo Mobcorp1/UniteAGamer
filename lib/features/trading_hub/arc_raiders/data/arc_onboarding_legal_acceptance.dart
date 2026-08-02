@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 
-const arcOnboardingLegalAcceptanceVersion = 2;
+const arcOnboardingLegalAcceptanceVersion = 3;
 
 Map<String, dynamic> buildOnboardingLegalAcceptedMap({
   required bool traderCodeAccepted,
   required bool termsOfServiceAccepted,
   required bool dataSecurityAccepted,
+  bool ageConfirmationAccepted = false,
   String flow = 'arcMandatoryOnboarding',
   String? userId,
   String? platform,
@@ -19,6 +20,7 @@ Map<String, dynamic> buildOnboardingLegalAcceptedMap({
     'traderCodeAccepted': traderCodeAccepted,
     'termsOfServiceAccepted': termsOfServiceAccepted,
     'dataSecurityAccepted': dataSecurityAccepted,
+    'ageConfirmationAccepted': ageConfirmationAccepted,
     'policies': <String, dynamic>{
       'trader_code_of_conduct': _policyAcceptance(
         policyId: 'trader_code_of_conduct',
@@ -31,6 +33,10 @@ Map<String, dynamic> buildOnboardingLegalAcceptedMap({
       'privacy_policy': _policyAcceptance(
         policyId: 'privacy_policy',
         accepted: dataSecurityAccepted,
+      ),
+      'age_restriction_policy': _policyAcceptance(
+        policyId: 'age_restriction_policy',
+        accepted: ageConfirmationAccepted,
       ),
     },
   };
@@ -59,6 +65,11 @@ Map<String, dynamic> buildOnboardingLegalAcceptedMap({
     accepted
       ..['dataSecurityVersion'] = 1
       ..['dataSecurityAcceptedAt'] = FieldValue.serverTimestamp();
+  }
+  if (ageConfirmationAccepted) {
+    accepted
+      ..['ageRestrictionVersion'] = 1
+      ..['ageConfirmationAcceptedAt'] = FieldValue.serverTimestamp();
   }
 
   return accepted;

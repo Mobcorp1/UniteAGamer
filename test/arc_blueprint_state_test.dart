@@ -28,6 +28,24 @@ void main() {
       expect(state.isPrioritized, isTrue);
     });
 
+    test('empty placeholder records do not become owned blueprints', () {
+      final state = ArcBlueprintState.fromMap(const {'blueprintId': 'anvil'});
+
+      expect(state.blueprintId, 'anvil');
+      expect(state.owned, isFalse);
+      expect(state.wanted, isTrue);
+      expect(state.availableToTrade, isFalse);
+    });
+
+    test('available-to-trade legacy records still imply ownership', () {
+      final state = ArcBlueprintState.fromMap(const {
+        'blueprintId': 'tempest',
+        'availableToTrade': true,
+      });
+
+      expect(state.owned, isTrue);
+    });
+
     test('copyWith clamps invalid duplicate and priority counts', () {
       final state = ArcBlueprintState.empty(
         'bobcat',

@@ -54,6 +54,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _saving = false;
   bool _dirty = false;
   bool _placingNewPoi = false;
+  bool _placingHistoricalBlueprint = false;
   bool _showSeedDefinitions = true;
   bool _showCustomIntel = true;
   bool _showReferenceGrid = true;
@@ -123,6 +124,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         _undoStack.clear();
         _dirty = false;
         _placingNewPoi = false;
+        _placingHistoricalBlueprint = false;
         _saveStatus = 'Saved';
         _saveError = '';
         _loading = false;
@@ -299,7 +301,12 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   void _handleMapTap(Offset localPosition, Size size) {
     final point = _pointFromLocalPosition(localPosition, size);
     if (_placingNewPoi) {
-      unawaited(_createMarkerAt(point));
+      unawaited(
+        _createMarkerAt(
+          point,
+          historicalBlueprint: _placingHistoricalBlueprint,
+        ),
+      );
       return;
     }
     _placeSelected(point);
@@ -663,25 +670,47 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   void _beginPoiPlacement() {
     setState(() {
       _placingNewPoi = true;
+      _placingHistoricalBlueprint = false;
       _saveStatus = 'Click the map to place the new POI';
     });
     _message('Click the map to place the new POI.');
   }
 
-  Future<void> _createMarkerAt(ArcNormalizedPoint point) async {
+  void _beginHistoricalBlueprintPlacement() {
+    setState(() {
+      _placingNewPoi = true;
+      _placingHistoricalBlueprint = true;
+      _saveStatus = 'Click the map to place the historical Blueprint find';
+    });
+    _message('Click the map to place the historical Blueprint find.');
+  }
+
+  Future<void> _createMarkerAt(
+    ArcNormalizedPoint point, {
+    bool historicalBlueprint = false,
+  }) async {
     final result = await showDialog<_NewMarkerResult>(
       context: context,
-      builder: (context) => const _NewMarkerDialog(
-        title: 'Create POI',
+      builder: (context) => _NewMarkerDialog(
+        title: historicalBlueprint
+            ? 'Create Historical Blueprint'
+            : 'Create POI',
         actionLabel: 'Create Draft',
-        initialKind: ArcAdminMapMarkerKind.poi,
+        initialKind: historicalBlueprint
+            ? ArcAdminMapMarkerKind.blueprint
+            : ArcAdminMapMarkerKind.poi,
         includeSeedKinds: true,
+        requireBlueprint: historicalBlueprint,
+        initialSourceLabel: historicalBlueprint
+            ? 'Historical Blueprint Intel'
+            : 'Mike / Admin Intel',
       ),
     );
     if (!mounted) return;
     if (result == null) {
       setState(() {
         _placingNewPoi = false;
+        _placingHistoricalBlueprint = false;
         _saveStatus = _dirty ? 'Unsaved changes' : 'Saved';
       });
       return;
@@ -718,6 +747,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         ..sort((a, b) => a.name.compareTo(b.name));
       _selected = marker;
       _placingNewPoi = false;
+      _placingHistoricalBlueprint = false;
       _showCustomIntel = true;
       _markDirty();
     });
@@ -773,6 +803,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       name: '${selected.name} Copy',
       aliases: selected.aliases,
       description: selected.description,
+      blueprintId: selected.blueprintId,
       sourceLabel: selected.sourceLabel,
       confidence: selected.confidence,
       point: ArcNormalizedPoint(
@@ -1199,6 +1230,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   onPressed: _saving ? null : _beginPoiPlacement,
                   icon: const Icon(Icons.add_location_alt_rounded),
                   label: const Text('Add POI'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : _beginHistoricalBlueprintPlacement,
+                  icon: const Icon(Icons.extension_rounded),
+                  label: const Text('Add Historical Blueprint'),
                 ),
                 OutlinedButton.icon(
                   onPressed: _saving ? null : _saveDrafts,
@@ -1631,7 +1669,16 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     );
   }
 
+  String _blueprintNameFor(String? blueprintId) {
+    if (blueprintId == null || blueprintId.trim().isEmpty) return '';
+    for (final blueprint in ArcBlueprintSeedData.blueprints) {
+      if (blueprint.id == blueprintId) return blueprint.name;
+    }
+    return blueprintId;
+  }
+
   Widget _selectedCard(ArcAdminMapMarker marker) {
+    final blueprintName = _blueprintNameFor(marker.blueprintId);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: AppTheme.tradingCardDecoration(
@@ -1674,7 +1721,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           if (marker.blueprintId != null) ...[
             const SizedBox(height: 6),
             Text(
-              'Blueprint: ${marker.blueprintId}',
+              'Blueprint: $blueprintName',
               style: const TextStyle(color: AppTheme.neonCyan),
             ),
           ],
@@ -1909,6 +1956,8 @@ class _NewMarkerDialog extends StatefulWidget {
     this.initialMarker,
     this.initialKind = ArcAdminMapMarkerKind.customIntel,
     this.includeSeedKinds = false,
+    this.requireBlueprint = false,
+    this.initialSourceLabel = 'Mike / Admin Intel',
   });
 
   final String title;
@@ -1916,6 +1965,8 @@ class _NewMarkerDialog extends StatefulWidget {
   final ArcAdminMapMarker? initialMarker;
   final ArcAdminMapMarkerKind initialKind;
   final bool includeSeedKinds;
+  final bool requireBlueprint;
+  final String initialSourceLabel;
 
   @override
   State<_NewMarkerDialog> createState() => _NewMarkerDialogState();
@@ -1925,7 +1976,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   final _name = TextEditingController();
   final _aliases = TextEditingController();
   final _description = TextEditingController();
-  final _source = TextEditingController(text: 'Mike / Admin Intel');
+  late final TextEditingController _source;
   ArcAdminMapMarkerKind _kind = ArcAdminMapMarkerKind.customIntel;
   ArcRaidIntelConfidence _confidence = ArcRaidIntelConfidence.confirmed;
   String? _blueprintId;
@@ -1933,6 +1984,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   @override
   void initState() {
     super.initState();
+    _source = TextEditingController(text: widget.initialSourceLabel);
     final initial = widget.initialMarker;
     _kind = initial?.kind ?? widget.initialKind;
     if (initial != null) {
@@ -2005,8 +2057,13 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
               DropdownButtonFormField<String?>(
                 isExpanded: true,
                 initialValue: _blueprintId,
-                decoration: const InputDecoration(
-                  labelText: 'Linked Blueprint (optional)',
+                decoration: InputDecoration(
+                  labelText: widget.requireBlueprint
+                      ? 'Linked Blueprint (required)'
+                      : 'Linked Blueprint (optional)',
+                  helperText: widget.requireBlueprint
+                      ? 'Choose the historical blueprint found here.'
+                      : null,
                 ),
                 items: <DropdownMenuItem<String?>>[
                   const DropdownMenuItem<String?>(
@@ -2019,7 +2076,17 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                       child: Text(blueprint.name),
                     ),
                 ],
-                onChanged: (value) => setState(() => _blueprintId = value),
+                onChanged: (value) => setState(() {
+                  _blueprintId = value;
+                  if (_kind == ArcAdminMapMarkerKind.blueprint &&
+                      value != null &&
+                      _name.text.trim().isEmpty) {
+                    final blueprint = blueprints.firstWhere(
+                      (item) => item.id == value,
+                    );
+                    _name.text = '${blueprint.name} historical find';
+                  }
+                }),
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<ArcRaidIntelConfidence>(
@@ -2049,6 +2116,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
           onPressed: () {
             final name = _name.text.trim();
             if (name.isEmpty) return;
+            if (widget.requireBlueprint && _blueprintId == null) return;
             final aliases = _aliases.text
                 .split(',')
                 .map((item) => item.trim())

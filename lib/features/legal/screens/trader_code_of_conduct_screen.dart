@@ -12,13 +12,13 @@ class TraderCodeOfConductScreen extends StatelessWidget {
       _ConductSection(
         title: 'Honour agreed trades',
         body:
-            'Only confirm a trade when you intend to complete it. Bring the agreed items, communicate changes early and do not deliberately waste another player’s time.',
+            'Only confirm a trade when you intend to complete it. Bring the agreed items, communicate changes early and do not deliberately waste another player\'s time.',
         icon: Icons.handshake_outlined,
       ),
       _ConductSection(
-        title: 'Keep trades in-game and fair',
+        title: 'No real-money item sales',
         body:
-            'Do not request real-world money, account access, passwords or anything outside the agreed in-game exchange. Do not exploit duplication bugs, scams or misleading listings.',
+            'Do not buy, sell, broker or pressure anyone for real-world money, gift cards, payment links, account access or anything outside the agreed in-game exchange.',
         icon: Icons.balance_rounded,
       ),
       _ConductSection(
@@ -34,16 +34,28 @@ class TraderCodeOfConductScreen extends StatelessWidget {
         icon: Icons.groups_2_outlined,
       ),
       _ConductSection(
-        title: 'Protect personal information',
+        title: 'Protect accounts and personal information',
         body:
-            'Use Embark ID and the Hub’s coordination tools only for arranging play. Never ask for login credentials, private account information or unnecessary personal details.',
+            'Use Embark ID and the Hub coordination tools only for arranging play. Never ask for login credentials, private account information, recovery codes or unnecessary personal details.',
         icon: Icons.shield_outlined,
+      ),
+      _ConductSection(
+        title: '18+ community use',
+        body:
+            'UAG account, trading, messaging, referral, subscription and community features are for adults only. Do not create an account if you are under 18.',
+        icon: Icons.verified_user_outlined,
       ),
       _ConductSection(
         title: 'Report problems honestly',
         body:
             'Report no-shows, scams, abusive conduct and inaccurate listings truthfully. False or retaliatory reports can damage trust and may restrict access to community features.',
         icon: Icons.flag_outlined,
+      ),
+      _ConductSection(
+        title: 'Accept moderation action',
+        body:
+            'Admins may hide listings, remove intel, restrict messaging, pause referrals or limit account access when reports, abuse signals or policy breaches require review.',
+        icon: Icons.admin_panel_settings_outlined,
       ),
       _ConductSection(
         title: 'Beta responsibility',

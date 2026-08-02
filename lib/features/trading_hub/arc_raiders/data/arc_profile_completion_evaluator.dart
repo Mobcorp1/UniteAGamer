@@ -233,9 +233,16 @@ class ArcProfileCompletionEvaluator {
         _stringList(userData['availabilityDayKeys']).isNotEmpty) {
       return true;
     }
+    final userTraderProfile = _map(userData['traderProfile']);
+    final profileTraderProfile = _map(profileData['traderProfile']);
+    if (profileData['availabilityCompleted'] == true ||
+        userData['availabilityCompleted'] == true ||
+        userTraderProfile['availabilityCompleted'] == true ||
+        profileTraderProfile['availabilityCompleted'] == true) {
+      return true;
+    }
     final completedSteps = _map(arcOnboarding['completedSteps']);
-    return completedSteps['availability'] == true ||
-        userData['availabilityCompleted'] == true;
+    return completedSteps['availability'] == true;
   }
 
   static bool _onboardingComplete(
@@ -258,13 +265,25 @@ class ArcProfileCompletionEvaluator {
 
     final onboardingLegal = _map(arcOnboarding['legalAccepted']);
     final completedSteps = _map(arcOnboarding['completedSteps']);
+    final policies = _map(onboardingLegal['policies']);
+    final agePolicy = _map(policies['age_restriction_policy']);
+    final ageRequired =
+        onboardingLegal.containsKey('ageConfirmationAccepted') ||
+        policies.containsKey('age_restriction_policy') ||
+        completedSteps.containsKey('ageConfirmation');
+    final ageComplete =
+        !ageRequired ||
+        onboardingLegal['ageConfirmationAccepted'] == true ||
+        agePolicy['accepted'] == true ||
+        completedSteps['ageConfirmation'] == true;
     final onboardingLegalComplete =
         (onboardingLegal['traderCodeAccepted'] == true ||
             completedSteps['traderCode'] == true) &&
         (onboardingLegal['termsOfServiceAccepted'] == true ||
             completedSteps['termsOfService'] == true) &&
         (onboardingLegal['dataSecurityAccepted'] == true ||
-            completedSteps['dataSecurity'] == true);
+            completedSteps['dataSecurity'] == true) &&
+        ageComplete;
 
     return appLegalComplete || onboardingLegalComplete;
   }

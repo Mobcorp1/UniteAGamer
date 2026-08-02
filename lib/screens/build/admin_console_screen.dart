@@ -12,6 +12,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_visibility_diagnostics_panel.dart';
+import 'package:uag_arc_raiders_hub/screens/build/admin_business_metrics_panel.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -292,6 +293,14 @@ class _AdminConsoleBody extends StatelessWidget {
                       },
                     ),
 
+                    const SizedBox(height: AppTheme.spaceXL),
+                    _sectionHeader(
+                      title: 'Business Metrics',
+                      subtitle:
+                          'Monthly active users, revenue and session health from live user, monetisation and operations telemetry.',
+                    ),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const AdminBusinessMetricsPanel(),
                     const SizedBox(height: AppTheme.spaceXL),
                     _sectionHeader(
                       title: 'ARC Rollout Controls',

@@ -15,18 +15,23 @@ class PrivacyPolicyScreen extends StatelessWidget {
       sections: [
         _LegalSection(
           'Account data',
-          'We may store your email, display name, region, platform, timezone, account tier, referral code, affiliate status and onboarding choices so the hub works properly.',
+          'We may store your email, display name, Raider name, region, platform, timezone, account tier, referral code, affiliate status, age confirmation and onboarding choices so the hub works properly.',
           Icons.person_outline_rounded,
         ),
         _LegalSection(
           'Trading and reputation data',
-          'Listings, offers, sessions, completed trades, cancellations, no-shows, reputation signals and marketplace behaviour may be stored to support safer trading.',
+          'Listings, offers, sessions, completed trades, cancellations, no-shows, reports, reputation signals and marketplace behaviour may be stored to support safer trading and moderation.',
           Icons.handshake_outlined,
         ),
         _LegalSection(
           'Intel reports',
-          'Drop sightings, map/event data, confirmations and trust weighting may be stored so community intelligence can improve over time.',
+          'Drop sightings, blueprint locations, map/event data, confirmations, source notes and trust weighting may be stored so community intelligence can improve over time.',
           Icons.radar_rounded,
+        ),
+        _LegalSection(
+          'Admin metrics and usage analytics',
+          'We may calculate monthly active users, sessions per user, average session time, ad revenue, revenue per active user and lifetime value from account, telemetry and monetisation records.',
+          Icons.query_stats_rounded,
         ),
         _LegalSection(
           'Referrals and rewards',
@@ -34,23 +39,33 @@ class PrivacyPolicyScreen extends StatelessWidget {
           Icons.auto_graph_rounded,
         ),
         _LegalSection(
-          'Device preferences',
-          'The app may remember your email locally if you choose that option. Biometric settings are device-level preferences used for login convenience.',
-          Icons.fingerprint_rounded,
-        ),
-        _LegalSection(
-          'Safety and abuse prevention',
-          'Data may be used to detect spam, fake intel, suspicious referrals, marketplace manipulation, repeated no-shows and behaviour that harms the community.',
-          Icons.health_and_safety_outlined,
-        ),
-        _LegalSection(
-          'Payments later',
-          'Subscription and payment handling will be integrated later through providers such as Stripe. Sensitive payment details should be handled by the provider, not directly stored by UAG.',
+          'Ads, subscriptions and payment providers',
+          'Ad events, entitlement status, subscription tier and provider-confirmed revenue events may be stored. Sensitive card or bank details should be handled by payment providers, not directly stored by UAG.',
           Icons.payments_outlined,
         ),
         _LegalSection(
+          'Device preferences',
+          'The app may remember your email locally if you choose that option. Biometric settings and keep-signed-in preferences are device-level choices used for login convenience.',
+          Icons.fingerprint_rounded,
+        ),
+        _LegalSection(
+          'Firebase and service providers',
+          'Firebase Authentication, Firestore, Hosting, analytics, ad services, payment providers and future operational tools may process the data needed to run, secure and improve the hub.',
+          Icons.cloud_done_outlined,
+        ),
+        _LegalSection(
+          'Safety and abuse prevention',
+          'Data may be used to detect spam, fake intel, suspicious referrals, marketplace manipulation, repeated no-shows, under-age use and behaviour that harms the community.',
+          Icons.health_and_safety_outlined,
+        ),
+        _LegalSection(
+          'Retention, deletion and corrections',
+          'Operational records may be kept while your account, safety reviews, disputes, legal duties or product analytics require them. You may request correction or deletion where it is operationally and legally available.',
+          Icons.manage_accounts_outlined,
+        ),
+        _LegalSection(
           'Beta changes',
-          'Because the product is still developing, data models, features and reward systems may change as the app improves.',
+          'Because the product is still developing, data models, features, providers, reward systems and legal wording may change as the app improves and receives legal review.',
           Icons.science_outlined,
         ),
       ],

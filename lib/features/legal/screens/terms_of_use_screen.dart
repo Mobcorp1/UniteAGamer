@@ -15,17 +15,22 @@ class TermsOfUseScreen extends StatelessWidget {
       sections: [
         _LegalSection(
           'What this hub is',
-          'UAG Traders Hub helps players track blueprints, coordinate trades, share intel, build reputation and manage progression. It is not an official ARC Raiders product and does not sell in-game items for real-world money.',
+          'UAG Traders Hub helps players track blueprints, coordinate trades, share intel, build reputation and manage progression. It is an independent, unofficial ARC Raiders companion and is not affiliated with or endorsed by Embark Studios.',
           Icons.hub_outlined,
         ),
         _LegalSection(
+          '18+ account requirement',
+          'Account creation, messaging, trading, referrals, creator features, subscriptions and community tools are intended for users aged 18 or older. Do not create or use an account if you do not meet that requirement.',
+          Icons.verified_user_outlined,
+        ),
+        _LegalSection(
           'Fair use',
-          'Do not abuse listings, offers, matchmaking, referrals, intel reports, rewards or reputation systems. False information, spam, harassment, impersonation and manipulation can restrict your account.',
+          'Do not abuse listings, offers, matchmaking, referrals, intel reports, rewards or reputation systems. False information, spam, harassment, impersonation, manipulation, botting or exploit use can restrict your account.',
           Icons.balance_rounded,
         ),
         _LegalSection(
-          'Trading responsibility',
-          'Trades are coordinated between users. UAG provides structure, reputation signals and safer coordination tools, but users remain responsible for their own in-game choices.',
+          'Trading responsibility and no real-money sales',
+          'Trades are coordinated between users inside the game. UAG does not escrow items, does not guarantee outcomes, and does not allow real-money sale, purchase or brokering of in-game items, accounts or access.',
           Icons.handshake_outlined,
         ),
         _LegalSection(
@@ -35,18 +40,38 @@ class TermsOfUseScreen extends StatelessWidget {
         ),
         _LegalSection(
           'Intel quality',
-          'Intel should be submitted honestly. Rewards tied to intel should only count when reports are verified, confirmed, correlated or trusted by the system.',
+          'Intel should be submitted honestly and with the best available location context. Rewards tied to intel should only count when reports are verified, confirmed, correlated or trusted by the system.',
           Icons.radar_rounded,
         ),
         _LegalSection(
+          'User content',
+          'Profile text, listings, reports, screenshots, notes and feedback you submit must be lawful, accurate where required, and yours to share. UAG may hide, correct or remove content that creates safety, rights or reliability issues.',
+          Icons.edit_note_rounded,
+        ),
+        _LegalSection(
+          'Moderation and account restrictions',
+          'Admins may limit account access, pause features, hide listings, remove reports, block referrals or preserve evidence when policy breaches, abuse reports, payment risk or safety concerns require review.',
+          Icons.admin_panel_settings_outlined,
+        ),
+        _LegalSection(
           'Referrals and rewards',
-          'Referral discounts, commissions, boosts, monthly operations and progression may change during beta. Rewards are for quality contribution, not spam volume.',
+          'Referral discounts, commissions, boosts, monthly operations and progression may change during beta. Rewards are for quality contribution, not spam volume, fake accounts or misleading promotion.',
           Icons.auto_graph_rounded,
         ),
         _LegalSection(
+          'Subscriptions, ads and payments',
+          'Free tiers may include ads and paid tiers may remove or reduce them. Paid access, refunds, taxes and billing status depend on provider-confirmed events before entitlements or revenue are treated as final.',
+          Icons.workspace_premium_rounded,
+        ),
+        _LegalSection(
           'Beta notice',
-          'Features, limits, tiers, rewards, marketplace tools and terms may change while UAG Traders Hub is tested and improved.',
+          'Features, limits, tiers, rewards, marketplace tools, legal wording and data structures may change while UAG Traders Hub is tested and improved. Availability is not guaranteed during beta.',
           Icons.science_outlined,
+        ),
+        _LegalSection(
+          'Legal review and operator details',
+          'This beta wording is operational guidance and still needs qualified legal review, final operator details and final launch terms before wider public release.',
+          Icons.gavel_rounded,
         ),
       ],
     );

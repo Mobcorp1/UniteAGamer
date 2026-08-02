@@ -33,6 +33,7 @@ class ArcBlueprintIntelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final leadBlueprint = _leadBlueprint;
+    final allBlueprints = _allBlueprints;
     final nearestPoi = _nearestPoi;
     final nearestExtraction = _nearestExtraction;
     final nearestHatch = _nearestHatch;
@@ -77,6 +78,10 @@ class ArcBlueprintIntelCard extends StatelessWidget {
                   cluster: cluster,
                   onOpenBlueprint: (_) => onOpenBlueprint(),
                 ),
+                if (allBlueprints.length > 1) ...[
+                  const SizedBox(height: 14),
+                  _allBlueprintsList(allBlueprints),
+                ],
                 const SizedBox(height: 14),
                 ArcBlueprintSightingActivity(activity: sightingActivity),
                 const SizedBox(height: 14),
@@ -329,6 +334,52 @@ class ArcBlueprintIntelCard extends StatelessWidget {
     );
   }
 
+  Widget _allBlueprintsList(List<ArcBlueprint> blueprints) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.035),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('BLUEPRINTS AT THIS LOCATION'),
+          const SizedBox(height: 9),
+          for (final blueprint in blueprints) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    blueprint.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _pill(
+                  '${marker.findsForBlueprint(blueprint.id)} finds',
+                  AppTheme.neonCyan,
+                ),
+              ],
+            ),
+            if (blueprint != blueprints.last)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 7),
+                child: Divider(height: 1, color: Colors.white10),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _navigationRow({
     required IconData icon,
     required String label,
@@ -462,6 +513,26 @@ class ArcBlueprintIntelCard extends StatelessWidget {
       }
     }
     return null;
+  }
+
+  List<ArcBlueprint> get _allBlueprints {
+    final orderedIds = <String>[
+      ...marker.prioritizedBlueprintIds,
+      ...marker.blueprintIds,
+      ...cluster.blueprintIds,
+    ];
+    final seen = <String>{};
+    final blueprints = <ArcBlueprint>[];
+    for (final id in orderedIds) {
+      if (!seen.add(id)) continue;
+      for (final blueprint in ArcBlueprintSeedData.blueprints) {
+        if (blueprint.id == id) {
+          blueprints.add(blueprint);
+          break;
+        }
+      }
+    }
+    return blueprints;
   }
 
   ArcRaidMapPoi? get _nearestPoi {

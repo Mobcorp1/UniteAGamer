@@ -760,9 +760,25 @@ class ArcTraderProfileRepository {
   Future<void> saveAvailability(ArcAvailability availability) async {
     final uid = currentUid;
     if (uid == null) throw StateError('No authenticated user found.');
-    await availabilityDoc(
-      uid,
-    ).set(availability.toMap(), SetOptions(merge: true));
+    final now = FieldValue.serverTimestamp();
+    final batch = _firestore.batch();
+    batch.set(availabilityDoc(uid), {
+      ...availability.toMap(),
+      'completed': true,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(profileDoc(uid), {
+      'availabilityCompleted': true,
+      'traderProfile': {'availabilityCompleted': true},
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+    batch.set(_userDoc(uid), {
+      'availabilityCompleted': true,
+      'traderProfile': {'availabilityCompleted': true},
+      'updatedAt': now,
+      'lastActiveAt': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
     await _evaluateAndPersistProfileCompletion(
       uid,
       availabilityOverride: availability,

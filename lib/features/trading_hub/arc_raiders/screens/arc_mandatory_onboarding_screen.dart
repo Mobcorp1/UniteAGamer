@@ -19,6 +19,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -80,6 +81,7 @@ class _ArcMandatoryOnboardingScreenState
   bool _acceptedTraderCode = false;
   bool _acceptedTermsOfService = false;
   bool _acceptedDataSecurity = false;
+  bool _acceptedAgeConfirmation = false;
   bool _accountCreatedDuringOnboarding = false;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
@@ -142,7 +144,17 @@ class _ArcMandatoryOnboardingScreenState
   );
 
   bool get _legalComplete =>
-      _acceptedTraderCode && _acceptedTermsOfService && _acceptedDataSecurity;
+      _acceptedTraderCode &&
+      _acceptedTermsOfService &&
+      _acceptedDataSecurity &&
+      _acceptedAgeConfirmation;
+
+  String get _completionRouteName {
+    return switch (_blueprintSetupChoice) {
+      _BlueprintSetupChoice.manual => BlueprintGridScreen.routeName,
+      _ => ArcCommandCentreScreen.routeName,
+    };
+  }
 
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
@@ -159,7 +171,7 @@ class _ArcMandatoryOnboardingScreenState
       }
     }
     if (_step == 1 && !_legalComplete) {
-      _showMessage('Accept all three agreements to continue.');
+      _showMessage('Accept all required agreements to continue.');
       return;
     }
     if (_step == 2 && _primaryGoal == null) {
@@ -322,13 +334,16 @@ class _ArcMandatoryOnboardingScreenState
           keepSignedIn: _keepSignedIn,
         ),
         _persistOnboardingDevicePrefs(email: email, riderName: riderName),
-        FirebaseFirestore.instance.collection('users').doc(user.uid).set(
-          buildArcOnboardingAccountProfilePayload(
-            email: email,
-            riderName: riderName,
-          ),
-          SetOptions(merge: true),
-        ),
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set(
+              buildArcOnboardingAccountProfilePayload(
+                email: email,
+                riderName: riderName,
+              ),
+              SetOptions(merge: true),
+            ),
         if (user.displayName != riderName) user.updateDisplayName(riderName),
         user.sendEmailVerification().catchError((Object error, StackTrace st) {
           debugPrint('Onboarding verification email failed safely: $error');
@@ -409,6 +424,7 @@ class _ArcMandatoryOnboardingScreenState
       traderCodeAccepted: _acceptedTraderCode,
       termsOfServiceAccepted: _acceptedTermsOfService,
       dataSecurityAccepted: _acceptedDataSecurity,
+      ageConfirmationAccepted: _acceptedAgeConfirmation,
       userId: user.uid,
       platform: kIsWeb ? 'web' : defaultTargetPlatform.name,
       appVersion: 'closed-beta',
@@ -431,13 +447,10 @@ class _ArcMandatoryOnboardingScreenState
         : const <String, dynamic>{};
 
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set({
-            ...accountProfilePayload,
-            ...payload,
-          }, SetOptions(merge: true));
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        ...accountProfilePayload,
+        ...payload,
+      }, SetOptions(merge: true));
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasCompletedOnboarding', true);
@@ -458,7 +471,7 @@ class _ArcMandatoryOnboardingScreenState
       if (!mounted) return;
       Navigator.of(
         context,
-      ).pushNamedAndRemoveUntil(ArcCommandCentreScreen.routeName, (_) => false);
+      ).pushNamedAndRemoveUntil(_completionRouteName, (_) => false);
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -569,6 +582,7 @@ class _ArcMandatoryOnboardingScreenState
                               traderCode: _acceptedTraderCode,
                               terms: _acceptedTermsOfService,
                               dataSecurity: _acceptedDataSecurity,
+                              ageConfirmation: _acceptedAgeConfirmation,
                               onTraderCodeChanged: (value) =>
                                   setState(() => _acceptedTraderCode = value),
                               onTermsChanged: (value) => setState(
@@ -576,6 +590,9 @@ class _ArcMandatoryOnboardingScreenState
                               ),
                               onDataChanged: (value) =>
                                   setState(() => _acceptedDataSecurity = value),
+                              onAgeConfirmationChanged: (value) => setState(
+                                () => _acceptedAgeConfirmation = value,
+                              ),
                               openTraderCode: () => _openLegalDocument(
                                 const TraderCodeOfConductScreen(),
                               ),
@@ -969,9 +986,11 @@ class _LegalStep extends StatelessWidget {
     required this.traderCode,
     required this.terms,
     required this.dataSecurity,
+    required this.ageConfirmation,
     required this.onTraderCodeChanged,
     required this.onTermsChanged,
     required this.onDataChanged,
+    required this.onAgeConfirmationChanged,
     required this.openTraderCode,
     required this.openTerms,
     required this.openPrivacy,
@@ -979,9 +998,11 @@ class _LegalStep extends StatelessWidget {
   final bool traderCode;
   final bool terms;
   final bool dataSecurity;
+  final bool ageConfirmation;
   final ValueChanged<bool> onTraderCodeChanged;
   final ValueChanged<bool> onTermsChanged;
   final ValueChanged<bool> onDataChanged;
+  final ValueChanged<bool> onAgeConfirmationChanged;
   final VoidCallback openTraderCode;
   final VoidCallback openTerms;
   final VoidCallback openPrivacy;
@@ -991,26 +1012,40 @@ class _LegalStep extends StatelessWidget {
     return _StepFrame(
       icon: Icons.verified_user_outlined,
       title: 'COMMAND PROTOCOLS',
-      subtitle: 'Three required agreements. Read them at any time.',
+      subtitle: 'Required account, legal and age confirmations.',
       child: Column(
         children: [
           _AgreementTile(
             title: 'Community Code',
+            description:
+                'I will use fair listings, honour agreed trades, avoid scams, harassment, real-money item sales and account-access requests.',
             value: traderCode,
             onChanged: onTraderCodeChanged,
             onOpen: openTraderCode,
           ),
           _AgreementTile(
             title: 'Terms of Service',
+            description:
+                'I understand this is an unofficial beta companion, account access can be restricted for misuse, and trades remain player responsibility.',
             value: terms,
             onChanged: onTermsChanged,
             onOpen: openTerms,
           ),
           _AgreementTile(
             title: 'Privacy & Data',
+            description:
+                'I understand UAG stores account, profile, trading, blueprint, intel, referral, ads, subscription and safety data to run the hub.',
             value: dataSecurity,
             onChanged: onDataChanged,
             onOpen: openPrivacy,
+          ),
+          _AgreementTile(
+            title: '18+ Age Confirmation',
+            description:
+                'I confirm I am 18 or older and allowed to create a UAG account for trading, messaging, referrals, subscriptions and community features.',
+            value: ageConfirmation,
+            onChanged: onAgeConfirmationChanged,
+            onOpen: openTerms,
           ),
         ],
       ),
@@ -1021,11 +1056,13 @@ class _LegalStep extends StatelessWidget {
 class _AgreementTile extends StatelessWidget {
   const _AgreementTile({
     required this.title,
+    required this.description,
     required this.value,
     required this.onChanged,
     required this.onOpen,
   });
   final String title;
+  final String description;
   final bool value;
   final ValueChanged<bool> onChanged;
   final VoidCallback onOpen;
@@ -1038,6 +1075,13 @@ class _AgreementTile extends StatelessWidget {
         value: value,
         onChanged: (next) => onChanged(next ?? false),
         title: Text(title),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            description,
+            style: const TextStyle(color: Colors.white60, height: 1.28),
+          ),
+        ),
         secondary: IconButton(
           tooltip: 'Read document',
           onPressed: onOpen,
