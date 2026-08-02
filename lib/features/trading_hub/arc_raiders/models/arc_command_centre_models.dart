@@ -125,6 +125,24 @@ class ArcCommandChecklistItem {
   final bool doneByDefault;
 }
 
+class ArcCommandOnboardingFocus {
+  const ArcCommandOnboardingFocus({
+    required this.title,
+    required this.subtitle,
+    required this.detail,
+    required this.goalLabel,
+    required this.systemLabel,
+    required this.action,
+  });
+
+  final String title;
+  final String subtitle;
+  final String detail;
+  final String goalLabel;
+  final String systemLabel;
+  final ArcCommandAction action;
+}
+
 class ArcCommandResourceStatus {
   const ArcCommandResourceStatus({
     required this.name,
@@ -261,6 +279,7 @@ class ArcCommandCentreState {
     required this.decisionSummary,
     required this.communitySummary,
     required this.statisticsSummary,
+    this.onboardingFocus,
   });
 
   final ArcCommandPriority priority;
@@ -281,4 +300,5 @@ class ArcCommandCentreState {
   final ArcCommandSummaryPanel decisionSummary;
   final ArcCommandSummaryPanel communitySummary;
   final ArcCommandSummaryPanel statisticsSummary;
+  final ArcCommandOnboardingFocus? onboardingFocus;
 }

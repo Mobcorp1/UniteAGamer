@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_co
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_decision_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_feature_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_nomadic_trader_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_personalisation_builder.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_operations_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_progression_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
@@ -30,6 +31,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
@@ -318,11 +321,183 @@ class ArcCommandCentreEngine {
         resourceIntel: resourceIntel,
         decisionState: decisionState,
       ),
+      onboardingFocus: _onboardingFocus(personalisation),
     );
     return ArcCommandCentreRelevanceMapper.apply(
       state: state,
       personalisation: personalisation,
     );
+  }
+
+  static ArcCommandOnboardingFocus? _onboardingFocus(
+    ArcUserPersonalisationProfile personalisation,
+  ) {
+    if (!personalisation.completed && !personalisation.hasExplicitPreferences) {
+      return null;
+    }
+    final goal = _strongestGoal(personalisation);
+    if (goal == null) return null;
+    final systemId = arcOnboardingRecommendedSystem(goal);
+    final systemLabel = _onboardingSystemLabel(systemId);
+    return ArcCommandOnboardingFocus(
+      title: 'Your Raider setup is tuned',
+      subtitle: '${goal.label} is your saved first priority.',
+      detail: _onboardingFocusDetail(goal, systemLabel),
+      goalLabel: goal.label,
+      systemLabel: systemLabel,
+      action: _onboardingActionForSystem(systemId),
+    );
+  }
+
+  static ArcPersonalisationGoal? _strongestGoal(
+    ArcUserPersonalisationProfile personalisation,
+  ) {
+    ArcPersonalisationGoal? bestGoal;
+    var bestScore = -1000000;
+    for (final goal in personalisation.goals) {
+      var score = goal == ArcPersonalisationGoal.exploreEverything ? 5 : 10;
+      for (final feature in arcOnboardingFeaturesForGoal(goal)) {
+        score += personalisation.interestFor(feature).weight;
+      }
+      if (score > bestScore) {
+        bestGoal = goal;
+        bestScore = score;
+      }
+    }
+    return bestGoal ?? ArcPersonalisationGoal.exploreEverything;
+  }
+
+  static String _onboardingFocusDetail(
+    ArcPersonalisationGoal goal,
+    String systemLabel,
+  ) {
+    switch (goal) {
+      case ArcPersonalisationGoal.completeBlueprints:
+        return 'Start in $systemLabel, then use Raid Intelligence for missing Blueprint runs.';
+      case ArcPersonalisationGoal.tradeBlueprints:
+        return 'Start in $systemLabel so watch matches, queue releases and offers are visible first.';
+      case ArcPersonalisationGoal.buildFavouriteLoadout:
+        return 'Start in $systemLabel to lock in your kit before route planning.';
+      case ArcPersonalisationGoal.progressQuests:
+        return 'Start in $systemLabel so active quest blockers stay at the top.';
+      case ArcPersonalisationGoal.upgradeBench:
+        return 'Start in $systemLabel to track upgrade blockers and resource pressure.';
+      case ArcPersonalisationGoal.trackResources:
+        return 'Start in $systemLabel so farm targets and protected resources are clear.';
+      case ArcPersonalisationGoal.planRaids:
+        return 'Start in $systemLabel to generate Blueprint runs on calibrated maps.';
+      case ArcPersonalisationGoal.findSquads:
+        return 'Start in $systemLabel to tune availability and squad fit.';
+      case ArcPersonalisationGoal.followOperations:
+        return 'Start in $systemLabel to claim live rewards and track season progress.';
+      case ArcPersonalisationGoal.manageCosmetics:
+        return 'Start in $systemLabel to review unlocks, rewards and equipped cosmetics.';
+      case ArcPersonalisationGoal.receiveCommunityIntel:
+        return 'Start in $systemLabel to review live route and community signals.';
+      case ArcPersonalisationGoal.improveReputation:
+        return 'Start in $systemLabel to finish public identity and reputation basics.';
+      case ArcPersonalisationGoal.exploreEverything:
+        return 'Start in $systemLabel and jump into the tool with the strongest live signal.';
+    }
+  }
+
+  static String _onboardingSystemLabel(String systemId) {
+    switch (systemId) {
+      case 'blueprintTracker':
+        return 'Blueprint Tracker';
+      case 'trading':
+        return 'Smart Trade';
+      case 'favouriteLoadout':
+        return 'Favourite Loadout';
+      case 'questTracker':
+        return 'Quest Tracker';
+      case 'benchTracker':
+        return 'Bench Tracker';
+      case 'scrappyTracker':
+        return 'Resource Tracker';
+      case 'raidIntelligence':
+        return 'Raid Intelligence';
+      case 'matchRider':
+        return 'Raider Match';
+      case 'operations':
+        return 'Operations';
+      case 'rewardVault':
+        return 'Reward Vault';
+      case 'communityIntel':
+        return 'Community Intel';
+      case 'profile':
+        return 'Profile';
+      case 'commandCentre':
+      default:
+        return 'Command Centre';
+    }
+  }
+
+  static ArcCommandAction _onboardingActionForSystem(String systemId) {
+    switch (systemId) {
+      case 'blueprintTracker':
+        return const ArcCommandAction(
+          label: 'Open Blueprint Tracker',
+          routeName: BlueprintGridScreen.routeName,
+        );
+      case 'trading':
+        return const ArcCommandAction(
+          label: 'Open Smart Trade',
+          intent: ArcCommandActionIntent.smartTrade,
+        );
+      case 'favouriteLoadout':
+        return const ArcCommandAction(
+          label: 'Open Favourite Loadout',
+          intent: ArcCommandActionIntent.favouriteLoadout,
+        );
+      case 'questTracker':
+        return const ArcCommandAction(
+          label: 'Open Quest Tracker',
+          routeName: ScrappyGridScreen.questRouteName,
+        );
+      case 'benchTracker':
+        return const ArcCommandAction(
+          label: 'Open Bench Tracker',
+          routeName: ScrappyGridScreen.benchRouteName,
+        );
+      case 'scrappyTracker':
+        return const ArcCommandAction(
+          label: 'Open Resource Tracker',
+          routeName: ScrappyGridScreen.routeName,
+        );
+      case 'raidIntelligence':
+        return const ArcCommandAction(
+          label: 'Open Raid Intelligence',
+          routeName: ArcRaidIntelligenceScreen.routeName,
+        );
+      case 'matchRider':
+        return const ArcCommandAction(
+          label: 'Open Raider Match',
+          routeName: ArcMatchRiderScreen.routeName,
+        );
+      case 'operations':
+      case 'rewardVault':
+        return const ArcCommandAction(
+          label: 'Open Operations',
+          intent: ArcCommandActionIntent.operations,
+        );
+      case 'communityIntel':
+        return const ArcCommandAction(
+          label: 'Open Community Intel',
+          routeName: ArcMarketIntelligenceScreen.routeName,
+        );
+      case 'profile':
+        return const ArcCommandAction(
+          label: 'Open Profile',
+          routeName: ArcProfileSetupScreen.routeName,
+        );
+      case 'commandCentre':
+      default:
+        return const ArcCommandAction(
+          label: 'Open Tool Deck',
+          intent: ArcCommandActionIntent.toolDeck,
+        );
+    }
   }
 
   static List<ArcCommandSnapshotMetric> _progressionSnapshots(

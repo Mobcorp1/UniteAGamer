@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_personalisation_builder.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
@@ -132,6 +133,41 @@ void main() {
       expect(recommendation.action.intent, ArcCommandActionIntent.comingSoon);
       expect(recommendation.action.featureTitle, 'Raid Intelligence');
       expect(recommendation.action.placeholderMessage, contains('cannot be'));
+    });
+
+    test('completed onboarding surfaces the saved first system', () {
+      final state = ArcCommandCentreEngine.build(
+        blueprintStates: const {},
+        savedLoadouts: const [],
+        personalisation: buildArcOnboardingPersonalisation(
+          primaryGoal: ArcPersonalisationGoal.planRaids,
+          completedAt: DateTime.utc(2026, 8, 2),
+        ),
+      );
+
+      expect(state.onboardingFocus, isNotNull);
+      expect(state.onboardingFocus!.goalLabel, 'Plan Raids');
+      expect(state.onboardingFocus!.systemLabel, 'Raid Intelligence');
+      expect(
+        state.onboardingFocus!.detail,
+        contains('calibrated maps'),
+      );
+    });
+
+    test('squad onboarding uses Raider-facing wording', () {
+      final state = ArcCommandCentreEngine.build(
+        blueprintStates: const {},
+        savedLoadouts: const [],
+        personalisation: buildArcOnboardingPersonalisation(
+          primaryGoal: ArcPersonalisationGoal.findSquads,
+          completedAt: DateTime.utc(2026, 8, 2),
+        ),
+      );
+
+      expect(state.onboardingFocus, isNotNull);
+      expect(state.onboardingFocus!.systemLabel, 'Raider Match');
+      expect(state.onboardingFocus!.action.label, 'Open Raider Match');
+      expect(state.onboardingFocus!.systemLabel, isNot(contains('Rider')));
     });
   });
 }

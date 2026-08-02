@@ -92,6 +92,10 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           ),
           const SizedBox(height: 8),
         ],
+        if (commandState.onboardingFocus != null) ...[
+          _onboardingFocusStrip(commandState.onboardingFocus!),
+          const SizedBox(height: 8),
+        ],
         _topCommandDeck(commandState, commandMoves, liveTiles),
         const SizedBox(height: 8),
         _systemCarousel(carouselTiles),
@@ -237,6 +241,75 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
             ),
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right_rounded, color: AppTheme.neonPink),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _onboardingFocusStrip(ArcCommandOnboardingFocus focus) {
+    return _tapSurface(
+      action: focus.action,
+      child: ArcCommandCentreCard(
+        accent: AppTheme.neonCyan,
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppTheme.neonCyan.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.34),
+                ),
+              ),
+              child: const Icon(
+                Icons.person_pin_circle_rounded,
+                color: AppTheme.neonCyan,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    focus.title.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.tradingHeading(
+                      fontSize: 15,
+                      color: AppTheme.neonCyan,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${focus.subtitle} Start with ${focus.systemLabel}.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 11,
+                      color: Colors.white70,
+                      isBold: true,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    focus.detail,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 10,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded, color: AppTheme.neonCyan),
           ],
         ),
       ),

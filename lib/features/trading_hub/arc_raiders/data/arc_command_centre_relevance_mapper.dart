@@ -69,6 +69,7 @@ class ArcCommandCentreRelevanceMapper {
       decisionSummary: state.decisionSummary,
       communitySummary: state.communitySummary,
       statisticsSummary: state.statisticsSummary,
+      onboardingFocus: state.onboardingFocus,
     );
   }
 
