@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
@@ -122,5 +123,23 @@ void main() {
     expect(prepared.single.updatedAt, savedAt);
     expect(prepared.single.toMap()['aliases'], <String>['Tower']);
     expect(prepared.single.toMap()['state'], ArcAdminMapMarkerState.draft.name);
+  });
+
+  test('legacy map and layer values resolve to canonical identity on load', () {
+    final restored = ArcAdminMapMarker.fromMap(<String, dynamic>{
+      'id': 'legacy_marker',
+      'mapId': 'The Blue Gate',
+      'layer': 'Level 2',
+      'kind': ArcAdminMapMarkerKind.poi.name,
+      'name': 'Legacy POI',
+      'point': <String, dynamic>{'x': 0.4, 'y': 0.6},
+      'aliases': <String>['Old Name'],
+      'state': ArcAdminMapMarkerState.draft.name,
+      'confidence': ArcRaidIntelConfidence.confirmed.name,
+      'sourcePermission': ArcAdminMapMarkerSourcePermission.permitted.name,
+    });
+
+    expect(restored.mapId, ArcMapAssetRegistry.blueGateMapId);
+    expect(restored.layer, ArcRaidMapLayer.underground);
   });
 }

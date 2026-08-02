@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_drop_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
@@ -129,15 +130,22 @@ class ArcAdminMapEditorRepository {
     required String uid,
     required DateTime savedAt,
   }) {
+    final canonicalMapId =
+        ArcMapAssetRegistry.canonicalMapIdFor(mapId) ?? mapId;
+    final canonicalLayer = ArcMapAssetRegistry.resolveLayer(layer.name);
     return markers
         .where(
           (item) =>
-              item.mapId == mapId &&
-              item.layer == layer &&
+              (ArcMapAssetRegistry.canonicalMapIdFor(item.mapId) ??
+                      item.mapId) ==
+                  canonicalMapId &&
+              (item.layer == canonicalLayer || item.layer == layer) &&
               item.state != ArcAdminMapMarkerState.archived,
         )
         .map(
           (item) => item.copyWith(
+            mapId: canonicalMapId,
+            layer: canonicalLayer,
             createdByUid: item.createdByUid ?? uid,
             updatedByUid: uid,
             createdAt: item.createdAt ?? savedAt,
@@ -210,6 +218,21 @@ class ArcAdminMapEditorRepository {
         .collection(collectionName)
         .where('mapId', isEqualTo: mapId)
         .where('layer', isEqualTo: layer.name)
+        .where('state', isEqualTo: ArcAdminMapMarkerState.published.name)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              _markersFromSnapshot(
+                  snapshot,
+                ).where((marker) => marker.isPublished).toList(growable: false)
+                ..sort((a, b) => a.name.compareTo(b.name)),
+        );
+  }
+
+  Stream<List<ArcAdminMapMarker>> watchPublishedMap(String mapId) {
+    return _firestore
+        .collection(collectionName)
+        .where('mapId', isEqualTo: mapId)
         .where('state', isEqualTo: ArcAdminMapMarkerState.published.name)
         .snapshots()
         .map(

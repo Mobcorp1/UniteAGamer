@@ -254,7 +254,7 @@ class ArcWorldIntelPopulationEngine {
       trust: 0.62,
       permissionState: 'uag_internal',
       notes:
-          'Layer anchor generated from the registered Level 2 map asset. Coordinate remains provisional until UAG calibration improves.',
+          'Layer anchor generated from the registered final Level 2 map asset.',
     );
     return <ArcAdminMapMarker>[
       ArcAdminMapMarker(
@@ -264,7 +264,7 @@ class ArcWorldIntelPopulationEngine {
         kind: ArcAdminMapMarkerKind.raiderHatch,
         name: '${map.displayName} Level 2 Access',
         description:
-            'UAG provisional Level 2 anchor. Use this for layer selection and review; final coordinate calibration is still required.',
+            'UAG Level 2 access anchor for layer selection and map navigation.',
         point: anchor,
         confidence: ArcRaidIntelConfidence.limited,
         state: ArcAdminMapMarkerState.draft,
@@ -311,7 +311,10 @@ class ArcWorldIntelPopulationEngine {
           legacyPoint: report.historicalPoint,
           preferredLayer: report.intelligenceLayer,
         );
-    final hasPoint = resolution != null && !resolution.needsAdminReview;
+    final hasCanonicalMarker = resolution?.canonicalMarker != null;
+    final hasPoint =
+        resolution != null &&
+        (hasCanonicalMarker || !resolution.needsAdminReview);
     final point = hasPoint ? resolution.point : null;
     final layer = hasPoint ? resolution.layer : ArcRaidMapLayer.surface;
     final locationLabel = resolution?.label.trim().isNotEmpty == true
@@ -902,7 +905,7 @@ class ArcWorldIntelPopulationEngine {
   }) {
     final precision = map.hasCalibratedLayer(layer)
         ? 'calibrated UAG map layer'
-        : 'provisional UAG alignment';
+        : 'registered UAG map alignment';
     final source = evidenceType == ArcWorldIntelEvidenceType.writtenGuide
         ? 'curated public research lead rewritten as UAG Intel'
         : evidenceType == ArcWorldIntelEvidenceType.mikeAdminReport

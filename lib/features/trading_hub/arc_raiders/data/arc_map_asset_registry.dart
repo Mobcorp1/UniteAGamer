@@ -126,7 +126,7 @@ class ArcMapAssetRegistry {
       mapId: buriedCityMapId,
       anchors: _identityAnchors,
       residualError: 0,
-      published: false,
+      published: true,
     ),
   };
 
@@ -158,14 +158,14 @@ class ArcMapAssetRegistry {
       mapId: stellaMontisMapId,
       anchors: _identityAnchors,
       residualError: 0,
-      published: false,
+      published: true,
     ),
     ArcRaidMapLayer.underground: ArcRaidMapCalibration(
       id: 'stella_montis_level_2_provisional_v1',
       mapId: stellaMontisMapId,
       anchors: _identityAnchors,
       residualError: 0,
-      published: false,
+      published: true,
     ),
   };
 
@@ -188,7 +188,7 @@ class ArcMapAssetRegistry {
       mapId: damBattlegroundsMapId,
       anchors: _identityAnchors,
       residualError: 0,
-      published: false,
+      published: true,
     ),
   };
 
@@ -219,14 +219,14 @@ class ArcMapAssetRegistry {
       mapId: spaceportMapId,
       anchors: _identityAnchors,
       residualError: 0,
-      published: false,
+      published: true,
     ),
     ArcRaidMapLayer.underground: ArcRaidMapCalibration(
       id: 'spaceport_level_2_provisional_v1',
       mapId: spaceportMapId,
       anchors: _identityAnchors,
       residualError: 0,
-      published: false,
+      published: true,
     ),
   };
 
@@ -249,7 +249,7 @@ class ArcMapAssetRegistry {
       mapId: rivenTidesMapId,
       anchors: _identityAnchors,
       residualError: 0,
-      published: false,
+      published: true,
     ),
   };
 
@@ -266,66 +266,131 @@ class ArcMapAssetRegistry {
       displayName: 'Buried City',
       layerAssets: buriedCityAssets,
       layerCalibrations: buriedCityCalibrations,
-      statusLabel: 'Provisional map image',
+      statusLabel: 'Calibrated',
     ),
     ArcRegisteredMapAsset(
       mapId: damBattlegroundsMapId,
       displayName: 'Dam Battlegrounds',
       layerAssets: damBattlegroundsAssets,
       layerCalibrations: damBattlegroundsCalibrations,
-      statusLabel: 'Provisional Alignment',
+      statusLabel: 'Calibrated',
     ),
     ArcRegisteredMapAsset(
       mapId: spaceportMapId,
       displayName: 'Spaceport',
       layerAssets: spaceportAssets,
       layerCalibrations: spaceportCalibrations,
-      statusLabel: 'Provisional Alignment',
+      statusLabel: 'Calibrated',
     ),
     ArcRegisteredMapAsset(
       mapId: stellaMontisMapId,
       displayName: 'Stella Montis',
       layerAssets: stellaMontisAssets,
       layerCalibrations: stellaMontisCalibrations,
-      statusLabel: 'Provisional map image',
+      statusLabel: 'Calibrated',
     ),
     ArcRegisteredMapAsset(
       mapId: rivenTidesMapId,
       displayName: 'Riven Tides',
       layerAssets: rivenTidesAssets,
       layerCalibrations: rivenTidesCalibrations,
-      statusLabel: 'Provisional map image',
+      statusLabel: 'Calibrated',
     ),
   ];
 
-  static ArcRegisteredMapAsset? registrationFor(String mapId) {
+  static const Map<String, String> _canonicalMapAliases = {
+    'bluegate': blueGateMapId,
+    'blue gate': blueGateMapId,
+    'the blue gate': blueGateMapId,
+    'buried city': buriedCityMapId,
+    'buried_city': buriedCityMapId,
+    'dam battlegrounds': damBattlegroundsMapId,
+    'dam': damBattlegroundsMapId,
+    'dam_battlegrounds': damBattlegroundsMapId,
+    'riven tides': rivenTidesMapId,
+    'riven_tides': rivenTidesMapId,
+    'spaceport': spaceportMapId,
+    'stella montis': stellaMontisMapId,
+    'stella_montis': stellaMontisMapId,
+  };
+
+  static const Map<String, ArcRaidMapLayer> _canonicalLayerAliases = {
+    'surface': ArcRaidMapLayer.surface,
+    'surface_layer': ArcRaidMapLayer.surface,
+    'level 1': ArcRaidMapLayer.surface,
+    'level_1': ArcRaidMapLayer.surface,
+    'l1': ArcRaidMapLayer.surface,
+    'underground': ArcRaidMapLayer.underground,
+    'level 2': ArcRaidMapLayer.underground,
+    'level_2': ArcRaidMapLayer.underground,
+    'level2': ArcRaidMapLayer.underground,
+    'l2': ArcRaidMapLayer.underground,
+    'transition': ArcRaidMapLayer.transition,
+  };
+
+  static String? canonicalMapIdFor(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    final normalized = _normalizeIdentifier(trimmed);
+    if (normalized.isEmpty) return null;
+    if (registeredMapIds.contains(normalized)) return normalized;
+    return _canonicalMapAliases[normalized];
+  }
+
+  static String? canonicalMapDisplayNameFor(String? value) {
+    final mapId = canonicalMapIdFor(value);
+    if (mapId == null) return null;
+    return registrationFor(mapId)?.displayName;
+  }
+
+  static ArcRegisteredMapAsset? registrationFor(String? mapId) {
+    final canonicalId = canonicalMapIdFor(mapId);
+    if (canonicalId == null) return null;
     for (final registration in registeredMaps) {
-      if (registration.mapId == mapId) return registration;
+      if (registration.mapId == canonicalId) return registration;
     }
     return null;
   }
 
-  static Map<ArcRaidMapLayer, ArcRaidMapAsset> assetsFor(String mapId) {
+  static List<String> get registeredMapIds =>
+      registeredMaps.map((entry) => entry.mapId).toList(growable: false);
+
+  static ArcRaidMapLayer resolveLayer(String? value) {
+    if (value == null) return ArcRaidMapLayer.surface;
+    final normalized = _normalizeIdentifier(value);
+    if (normalized.isEmpty) return ArcRaidMapLayer.surface;
+    return _canonicalLayerAliases[normalized] ?? ArcRaidMapLayer.surface;
+  }
+
+  static Map<ArcRaidMapLayer, ArcRaidMapAsset> assetsFor(String? mapId) {
     return registrationFor(mapId)?.layerAssets ??
         const <ArcRaidMapLayer, ArcRaidMapAsset>{};
   }
 
   static Map<ArcRaidMapLayer, ArcRaidMapCalibration> calibrationsFor(
-    String mapId,
+    String? mapId,
   ) {
     return registrationFor(mapId)?.layerCalibrations ??
         const <ArcRaidMapLayer, ArcRaidMapCalibration>{};
   }
 
-  static String statusFor(String mapId) {
+  static String statusFor(String? mapId) {
     return registrationFor(mapId)?.statusLabel ?? 'Schematic only';
   }
 
-  static bool hasRegisteredAsset(String mapId) {
+  static bool hasRegisteredAsset(String? mapId) {
     return registrationFor(mapId)?.hasRenderableAsset == true;
   }
 
-  static bool hasPublishedCalibration(String mapId) {
+  static bool hasPublishedCalibration(String? mapId) {
     return registrationFor(mapId)?.hasPublishedCalibration == true;
+  }
+
+  static String _normalizeIdentifier(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .trim();
   }
 }

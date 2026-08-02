@@ -349,13 +349,28 @@ class ArcIntelligenceLocationResolver {
   }
 
   Set<String> _markerCanonicalIds(ArcAdminMapMarker marker) {
+    final rawId = _normalize(marker.id);
+    final strippedLayerId = _normalize(
+      marker.id.replaceAll(RegExp(r'^(world|marker)_[a-z0-9]+_[a-z0-9]+_'), ''),
+    );
+    final strippedPoiId = _normalize(
+      marker.id.replaceAll(
+        RegExp(r'^(world|marker)_[a-z0-9]+_[a-z0-9]+_poi_'),
+        '',
+      ),
+    );
+    final nameNorm = _normalize(marker.name);
     return <String>{
-      _normalize(marker.id),
+      rawId,
+      strippedLayerId,
+      strippedPoiId,
+      nameNorm,
       _normalize(marker.id.replaceFirst('_poi_', '_')),
       if (marker.seedReferenceId?.trim().isNotEmpty == true)
         _normalize(marker.seedReferenceId!),
       if (marker.sourceRecordId?.trim().isNotEmpty == true)
         _normalize(marker.sourceRecordId!),
+      for (final alias in marker.aliases) _normalize(alias),
     };
   }
 

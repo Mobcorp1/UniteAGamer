@@ -10,8 +10,11 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
 
 class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
-  _FakeAdminMapEditorRepository();
+  _FakeAdminMapEditorRepository({
+    this.initialMarkers = const <ArcAdminMapMarker>[],
+  });
 
+  final List<ArcAdminMapMarker> initialMarkers;
   final List<ArcAdminMapMarker> savedMarkers = <ArcAdminMapMarker>[];
 
   @override
@@ -19,7 +22,9 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
     String mapId,
     ArcRaidMapLayer layer,
   ) async {
-    return const <ArcAdminMapMarker>[];
+    return initialMarkers
+        .where((marker) => marker.mapId == mapId && marker.layer == layer)
+        .toList(growable: false);
   }
 
   @override
@@ -148,5 +153,56 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Level 2'), findsWidgets);
+  });
+
+  testWidgets('dragging a marker persists changed normalized coordinates', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const marker = ArcAdminMapMarker(
+      id: 'coordinate_test_marker',
+      mapId: 'buried_city',
+      layer: ArcRaidMapLayer.surface,
+      kind: ArcAdminMapMarkerKind.poi,
+      name: 'Coordinate Test Hospital',
+      point: ArcNormalizedPoint(x: 0.25, y: 0.25),
+    );
+    final repository = _FakeAdminMapEditorRepository(
+      initialMarkers: const <ArcAdminMapMarker>[marker],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ArcAdminMapEditorScreen(
+          repository: repository,
+          appBar: AppBar(title: const Text('Admin Map & Intel Editor')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final markerFinder = find.byKey(
+      const ValueKey<String>('admin-map-marker-coordinate_test_marker'),
+    );
+    expect(markerFinder, findsOneWidget);
+
+    await tester.drag(markerFinder, const Offset(120, 80));
+    await tester.pumpAndSettle();
+    expect(find.text('Unsaved changes'), findsOneWidget);
+
+    await tester.tap(find.text('Save Draft'));
+    await tester.pumpAndSettle();
+
+    final saved = repository.savedMarkers.firstWhere(
+      (item) => item.id == marker.id,
+    );
+    expect(saved.point.x, isNot(closeTo(marker.point.x, 0.001)));
+    expect(saved.point.y, isNot(closeTo(marker.point.y, 0.001)));
+    expect(saved.point.x, inInclusiveRange(0.0, 1.0));
+    expect(saved.point.y, inInclusiveRange(0.0, 1.0));
   });
 }

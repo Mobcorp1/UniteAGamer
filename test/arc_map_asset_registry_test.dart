@@ -24,12 +24,12 @@ void main() {
     expect(ArcMapAssetRegistry.blueGateAssets.length, 2);
   });
 
-  test('Dam and Spaceport publish provisional renderable map assets', () {
+  test('Dam and Spaceport publish final calibrated map assets', () {
     final dam = ArcRaidIntelligenceSeedData.mapById('dam_battlegrounds');
     final spaceport = ArcRaidIntelligenceSeedData.mapById('spaceport');
 
     expect(dam.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
-    expect(dam.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
+    expect(dam.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
     expect(
       dam.assetForLayer(ArcRaidMapLayer.surface)?.localAssetPath,
       'assets/arc_raiders/maps/dam_battlegrounds/dam_battlegrounds_master.webp',
@@ -37,8 +37,8 @@ void main() {
 
     expect(spaceport.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
     expect(spaceport.hasRenderableLayer(ArcRaidMapLayer.underground), isTrue);
-    expect(spaceport.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
-    expect(spaceport.hasCalibratedLayer(ArcRaidMapLayer.underground), isFalse);
+    expect(spaceport.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
+    expect(spaceport.hasCalibratedLayer(ArcRaidMapLayer.underground), isTrue);
     expect(
       spaceport.assetForLayer(ArcRaidMapLayer.surface)?.localAssetPath,
       'assets/arc_raiders/maps/spaceport/spaceport_master.webp',
@@ -46,6 +46,30 @@ void main() {
     expect(
       spaceport.assetForLayer(ArcRaidMapLayer.underground)?.localAssetPath,
       'assets/arc_raiders/maps/spaceport/spaceport_level_2.webp',
+    );
+  });
+
+  test('registry resolves canonical map and layer identities from aliases', () {
+    expect(
+      ArcMapAssetRegistry.canonicalMapIdFor('The Blue Gate'),
+      ArcMapAssetRegistry.blueGateMapId,
+    );
+    expect(
+      ArcMapAssetRegistry.canonicalMapIdFor('bluegate'),
+      ArcMapAssetRegistry.blueGateMapId,
+    );
+    expect(
+      ArcMapAssetRegistry.canonicalMapIdFor('stella_montis'),
+      ArcMapAssetRegistry.stellaMontisMapId,
+    );
+    expect(ArcMapAssetRegistry.canonicalMapIdFor('unknown_map'), isNull);
+    expect(
+      ArcMapAssetRegistry.resolveLayer('Level 2'),
+      ArcRaidMapLayer.underground,
+    );
+    expect(
+      ArcMapAssetRegistry.resolveLayer('surface'),
+      ArcRaidMapLayer.surface,
     );
   });
 }

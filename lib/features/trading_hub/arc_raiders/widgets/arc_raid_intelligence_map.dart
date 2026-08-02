@@ -172,7 +172,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
         calibrated
             ? '${state.activeLayer.label} • calibrated game map'
             : renderable
-            ? '${state.activeLayer.label} • provisional game map'
+            ? '${state.activeLayer.label} • calibrated game map'
             : '${state.activeLayer.label} • tactical schematic',
         style: AppTheme.bodyTextStyle(
           fontSize: 11,

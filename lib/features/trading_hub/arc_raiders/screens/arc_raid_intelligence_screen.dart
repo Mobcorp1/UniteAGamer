@@ -53,7 +53,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final TransformationController _mapController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
 
-  String _mapId = 'blue_gate';
+  String _mapId = ArcMapAssetRegistry.blueGateMapId;
   ArcRaidMapLayer _activeLayer = ArcRaidMapLayer.surface;
   ArcRaidMapFilterState _filters = ArcRaidMapFilterState.defaults;
   ArcRaidSquadMode _squadMode = ArcRaidSquadMode.solo;
@@ -69,6 +69,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   ArcRaidMapMarker? _selectedMarker;
   Timer? _mapViewSaveTimer;
   bool _restoringMapView = false;
+  bool _controlPanelCollapsed = false;
 
   @override
   void initState() {
@@ -91,8 +92,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     final route = await _routeRepository.loadActiveRoute();
     if (!mounted || route == null) return;
     setState(() {
-      if (ArcRaidIntelligenceSeedData.supportedMapIds.contains(route.mapId)) {
-        _mapId = route.mapId;
+      final canonicalRouteMapId =
+          ArcMapAssetRegistry.canonicalMapIdFor(route.mapId) ?? route.mapId;
+      if (ArcRaidIntelligenceSeedData.supportedMapIds.contains(
+        canonicalRouteMapId,
+      )) {
+        _mapId = canonicalRouteMapId;
       }
       _squadMode = route.squadMode;
       _routeStyle = route.routeStyle;
@@ -114,15 +119,19 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Future<void> _restoreLastMapView() async {
     final snapshot = await _mapViewRepository.loadLast();
     if (!mounted || snapshot == null) return;
-    if (!ArcRaidIntelligenceSeedData.supportedMapIds.contains(snapshot.mapId)) {
+    final canonicalSnapshotMapId =
+        ArcMapAssetRegistry.canonicalMapIdFor(snapshot.mapId) ?? snapshot.mapId;
+    if (!ArcRaidIntelligenceSeedData.supportedMapIds.contains(
+      canonicalSnapshotMapId,
+    )) {
       return;
     }
-    final map = ArcRaidIntelligenceSeedData.mapById(snapshot.mapId);
+    final map = ArcRaidIntelligenceSeedData.mapById(canonicalSnapshotMapId);
     if (!map.availableLayers.contains(snapshot.layer)) return;
 
     _restoringMapView = true;
     setState(() {
-      _mapId = snapshot.mapId;
+      _mapId = canonicalSnapshotMapId;
       _activeLayer = snapshot.layer;
       _selectedMarker = null;
     });
@@ -169,21 +178,23 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   }
 
   Future<void> _changeMap(String mapId) async {
-    final nextMap = ArcRaidIntelligenceSeedData.mapById(mapId);
+    final canonicalMapId =
+        ArcMapAssetRegistry.canonicalMapIdFor(mapId) ?? mapId;
+    final nextMap = ArcRaidIntelligenceSeedData.mapById(canonicalMapId);
     final nextLayer = nextMap.availableLayers.contains(ArcRaidMapLayer.surface)
         ? ArcRaidMapLayer.surface
         : (nextMap.availableLayers.isEmpty
               ? ArcRaidMapLayer.surface
               : nextMap.availableLayers.first);
     setState(() {
-      _mapId = mapId;
+      _mapId = canonicalMapId;
       _activeLayer = nextLayer;
       _spawn = null;
       _extraction = null;
       _routePlan = null;
       _selectedMarker = null;
     });
-    await _restoreLayerView(mapId: mapId, layer: nextLayer);
+    await _restoreLayerView(mapId: canonicalMapId, layer: nextLayer);
   }
 
   @override
@@ -231,10 +242,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                             communitySnapshot.data ??
                             const <ArcCommunityIntelReport>[];
                         return StreamBuilder<List<ArcAdminMapMarker>>(
-                          stream: _adminMapRepository.watchPublished(
-                            _mapId,
-                            _activeLayer,
-                          ),
+                          stream: _adminMapRepository.watchPublishedMap(_mapId),
                           builder: (context, adminSnapshot) {
                             final adminMarkers =
                                 adminSnapshot.data ??
@@ -288,7 +296,14 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               children: [
                 Expanded(flex: 7, child: map),
                 const SizedBox(width: 14),
-                SizedBox(width: 390, child: panel),
+                AnimatedContainer(
+                  duration: AppTheme.fastAnimation,
+                  curve: Curves.easeOutCubic,
+                  width: _controlPanelCollapsed ? 52 : 390,
+                  child: _controlPanelCollapsed
+                      ? _collapsedControlRail()
+                      : panel,
+                ),
               ],
             ),
           );
@@ -490,6 +505,22 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       child: ListView(
         padding: const EdgeInsets.all(14),
         children: [
+          if (desktop) ...[
+            Align(
+              alignment: Alignment.centerRight,
+              child: Tooltip(
+                message: 'Collapse map controls',
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () =>
+                      setState(() => _controlPanelCollapsed = true),
+                  icon: const Icon(Icons.chevron_right_rounded),
+                  color: AppTheme.neonCyan,
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+          ],
           _hero(intelligence),
           const SizedBox(height: 12),
           _setupSection(intelligence),
@@ -502,6 +533,26 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           const SizedBox(height: 12),
           _routeSection(intelligence),
         ],
+      ),
+    );
+  }
+
+  Widget _collapsedControlRail() {
+    return Container(
+      decoration: AppTheme.tradingCardDecoration(
+        radius: 18,
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+      ),
+      child: Center(
+        child: Tooltip(
+          message: 'Expand map controls',
+          child: IconButton(
+            onPressed: () => setState(() => _controlPanelCollapsed = false),
+            icon: const Icon(Icons.chevron_left_rounded),
+            color: AppTheme.neonCyan,
+          ),
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 
@@ -360,12 +361,17 @@ class ArcAdminMapMarker {
   }
 
   factory ArcAdminMapMarker.fromMap(Map<String, dynamic> map) {
+    final rawMapId = map['mapId']?.toString();
+    final rawLayer = map['layer']?.toString();
+    final canonicalMapId =
+        ArcMapAssetRegistry.canonicalMapIdFor(rawMapId) ?? '';
+    final canonicalLayer = ArcMapAssetRegistry.resolveLayer(rawLayer);
     return ArcAdminMapMarker(
       id: map['id']?.toString() ?? '',
-      mapId: map['mapId']?.toString() ?? '',
+      mapId: canonicalMapId,
       layer: ArcRaidMapLayer.values.firstWhere(
-        (value) => value.name == map['layer'],
-        orElse: () => ArcRaidMapLayer.surface,
+        (value) => value.name == rawLayer,
+        orElse: () => canonicalLayer,
       ),
       kind: ArcAdminMapMarkerKind.values.firstWhere(
         (value) => value.name == map['kind'],

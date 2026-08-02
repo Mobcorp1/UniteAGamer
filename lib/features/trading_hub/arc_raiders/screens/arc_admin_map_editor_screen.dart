@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_alignment_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_adapters.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_engine.dart';
@@ -41,6 +42,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   final _alignmentEngine = const ArcMapMarkerAlignmentEngine();
   final _worldIntelEngine = const ArcWorldIntelPopulationEngine();
   final _transformationController = TransformationController();
+  final _mapCanvasKey = GlobalKey();
   final _searchController = TextEditingController();
   final _undoStack = <List<ArcAdminMapMarker>>[];
 
@@ -77,8 +79,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     final maps = ArcRaidIntelligenceSeedData.maps
         .where((item) => item.availableLayers.isNotEmpty)
         .toList(growable: false);
-    _mapId = maps.first.id;
-    _layer = maps.first.availableLayers.first;
+    _mapId =
+        ArcMapAssetRegistry.canonicalMapIdFor(maps.first.id) ?? maps.first.id;
+    _layer = ArcMapAssetRegistry.resolveLayer(
+      maps.first.availableLayers.first.name,
+    );
     unawaited(_load());
   }
 
@@ -957,6 +962,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                             onTapUp: (details) =>
                                 _handleMapTap(details.localPosition, mapSize),
                             child: SizedBox(
+                              key: _mapCanvasKey,
                               width: mapSize.width,
                               height: mapSize.height,
                               child: Stack(
@@ -1023,7 +1029,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               items: [
                 for (final map in maps)
                   DropdownMenuItem(
-                    value: map.id,
+                    value:
+                        ArcMapAssetRegistry.canonicalMapIdFor(map.id) ?? map.id,
                     child: Text(
                       map.displayName,
                       maxLines: 1,
@@ -1034,9 +1041,15 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               onChanged: (value) {
                 if (value == null || value == _mapId) return;
                 final next = ArcRaidIntelligenceSeedData.mapById(value);
+                final nextLayer = next.availableLayers.isEmpty
+                    ? ArcRaidMapLayer.surface
+                    : ArcMapAssetRegistry.resolveLayer(
+                        next.availableLayers.first.name,
+                      );
                 setState(() {
-                  _mapId = value;
-                  _layer = next.availableLayers.first;
+                  _mapId =
+                      ArcMapAssetRegistry.canonicalMapIdFor(value) ?? value;
+                  _layer = nextLayer;
                 });
                 unawaited(_load());
               },
@@ -1050,7 +1063,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               decoration: const InputDecoration(labelText: 'Layer'),
               items: [
                 for (final layer in _map.availableLayers)
-                  DropdownMenuItem(value: layer, child: Text(layer.label)),
+                  DropdownMenuItem(
+                    value: ArcMapAssetRegistry.resolveLayer(layer.name),
+                    child: Text(layer.label),
+                  ),
               ],
               onChanged: (value) {
                 if (value == null || value == _layer) return;
@@ -1101,6 +1117,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       left: left,
       top: top,
       child: GestureDetector(
+        key: ValueKey<String>('admin-map-marker-${marker.id}'),
         onTap: () => setState(() => _selected = marker),
         onPanStart: (_) {
           if (_selected?.id != marker.id) {
@@ -1109,11 +1126,16 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           _snapshotUndo();
         },
         onPanUpdate: (details) {
-          final current = _markers.firstWhere((item) => item.id == marker.id);
+          final mapBox = _mapCanvasKey.currentContext?.findRenderObject();
+          if (mapBox is! RenderBox || size.width <= 0 || size.height <= 0) {
+            return;
+          }
+          final localPosition = mapBox.globalToLocal(details.globalPosition);
           final next = ArcNormalizedPoint(
-            x: current.point.x + (details.delta.dx / size.width),
-            y: current.point.y + (details.delta.dy / size.height),
+            x: localPosition.dx / size.width,
+            y: localPosition.dy / size.height,
           ).clamp();
+          final current = _markers.firstWhere((item) => item.id == marker.id);
           final updated = current.copyWith(point: next);
           setState(() {
             _markers = [
