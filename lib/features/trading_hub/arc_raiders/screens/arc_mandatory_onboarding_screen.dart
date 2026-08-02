@@ -35,6 +35,22 @@ class ArcMandatoryOnboardingScreen extends StatefulWidget {
   final bool adminPreview;
   final bool previewAccountCreation;
 
+  static ArcMandatoryOnboardingScreen fromRouteSettings(
+    RouteSettings settings,
+  ) {
+    final args = settings.arguments;
+    final adminPreview = args is Map && args['adminPreview'] == true;
+    final explicitPreview =
+        args is Map && args['previewAccountCreation'] == true;
+    final freshPreview =
+        args is Map && args['playerState']?.toString() == 'fresh';
+
+    return ArcMandatoryOnboardingScreen(
+      adminPreview: adminPreview,
+      previewAccountCreation: adminPreview && (explicitPreview || freshPreview),
+    );
+  }
+
   @override
   State<ArcMandatoryOnboardingScreen> createState() =>
       _ArcMandatoryOnboardingScreenState();
@@ -601,7 +617,7 @@ class _TopBar extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                'RIDER INITIALISATION',
+                'RAIDER INITIALIZATION',
                 style: AppTheme.tradingHeading(
                   fontSize: 20,
                   color: AppTheme.neonCyan,
@@ -712,8 +728,8 @@ class _AccountCreationStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepFrame(
       icon: Icons.person_add_alt_1_rounded,
-      title: 'CREATE YOUR RIDER ACCOUNT',
-      subtitle: 'Set the account and Rider name used for Command Centre.',
+      title: 'CREATE YOUR RAIDER ACCOUNT',
+      subtitle: 'Set the account and Raider name used for Command Centre.',
       child: AutofillGroup(
         child: Column(
           children: [
@@ -804,7 +820,7 @@ class _AccountCreationStep extends StatelessWidget {
               maxLength: 24,
               onChanged: (_) => onChanged(),
               decoration: InputDecoration(
-                labelText: 'Rider name',
+                labelText: 'Raider name',
                 hintText: 'Enter your display name',
                 prefixIcon: const Icon(Icons.person_outline_rounded),
                 errorText: riderNameError,
@@ -833,7 +849,7 @@ class _IdentityStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepFrame(
       icon: Icons.badge_outlined,
-      title: 'IDENTIFY YOUR RIDER',
+      title: 'IDENTIFY YOUR RAIDER',
       subtitle:
           'Your account is ready. Choose the name other Raiders will see.',
       child: Column(
@@ -853,7 +869,7 @@ class _IdentityStep extends StatelessWidget {
             textInputAction: TextInputAction.done,
             maxLength: 24,
             decoration: InputDecoration(
-              labelText: 'Rider name',
+              labelText: 'Raider name',
               hintText: 'Enter your display name',
               prefixIcon: const Icon(Icons.person_outline_rounded),
               errorText: errorText,

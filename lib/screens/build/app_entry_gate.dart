@@ -11,6 +11,12 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+@visibleForTesting
+bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) {
+  if (data['isAdmin'] == true || data['isDev'] == true) return false;
+  return data['arcMandatoryOnboardingComplete'] != true;
+}
+
 class AppEntryGate extends StatefulWidget {
   static const routeName = '/app-entry-gate';
 
@@ -132,7 +138,7 @@ class _AppEntryGateState extends State<AppEntryGate>
 
       // Closed beta v2 onboarding is mandatory because profile, availability,
       // blueprints, goals and trade intent drive matchmaking and smart trading.
-      return !(data['arcMandatoryOnboardingComplete'] == true);
+      return arcNeedsMandatoryOnboarding(data);
     } on FirebaseException catch (error, stackTrace) {
       debugPrint('AppEntryGate prepare user failed: ${error.code}');
       debugPrintStack(stackTrace: stackTrace);

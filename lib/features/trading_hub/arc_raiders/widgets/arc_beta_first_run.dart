@@ -509,6 +509,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
     int step = 0,
   }) async {
     if (_busy) return;
+    final previewAccountCreation = playerState == 'fresh';
     setState(() => _busy = true);
     try {
       if (!mounted) return;
@@ -521,13 +522,14 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
               'adminPreview': true,
               'step': step,
               'playerState': playerState,
+              'previewAccountCreation': previewAccountCreation,
               'blueprintSetup': blueprintSetup,
               'reachedRaiderLevel25': reachedRaiderLevel25,
             },
           ),
-          builder: (_) => const ArcMandatoryOnboardingScreen(
+          builder: (_) => ArcMandatoryOnboardingScreen(
             adminPreview: true,
-            previewAccountCreation: true,
+            previewAccountCreation: previewAccountCreation,
           ),
         ),
       );

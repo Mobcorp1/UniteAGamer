@@ -1,21 +1,45 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uag_arc_raiders_hub/build/app_entry_gate.dart';
+import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 
 void main() {
-  group('progressive onboarding entry decision', () {
+  group('mandatory onboarding entry decision', () {
     test('new or reset users require onboarding', () {
-      expect(arcNeedsProgressiveOnboarding(const {}), isTrue);
+      expect(arcNeedsMandatoryOnboarding(const {}), isTrue);
       expect(
-        arcNeedsProgressiveOnboarding(const {'onboardingComplete': false}),
+        arcNeedsMandatoryOnboarding(const {
+          'arcMandatoryOnboardingComplete': false,
+        }),
         isTrue,
       );
     });
 
     test('completed existing users continue into the app', () {
       expect(
-        arcNeedsProgressiveOnboarding(const {'onboardingComplete': true}),
+        arcNeedsMandatoryOnboarding(const {
+          'arcMandatoryOnboardingComplete': true,
+        }),
         isFalse,
       );
     });
+
+    test(
+      'admin and dev accounts are not trapped by onboarding preview work',
+      () {
+        expect(
+          arcNeedsMandatoryOnboarding(const {
+            'isAdmin': true,
+            'arcMandatoryOnboardingComplete': false,
+          }),
+          isFalse,
+        );
+        expect(
+          arcNeedsMandatoryOnboarding(const {
+            'isDev': true,
+            'arcMandatoryOnboardingComplete': false,
+          }),
+          isFalse,
+        );
+      },
+    );
   });
 }

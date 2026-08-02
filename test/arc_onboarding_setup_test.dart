@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 
 void main() {
@@ -66,13 +68,47 @@ void main() {
       ]);
     });
 
-    test('validates Rider names', () {
+    test('validates Raider names', () {
       expect(validateArcRiderName('Mike'), isNull);
       expect(validateArcRiderName('Arc-Rider.01'), isNull);
       expect(validateArcRiderName(''), isNotNull);
       expect(validateArcRiderName('ab'), isNotNull);
       expect(validateArcRiderName('name@invalid'), isNotNull);
       expect(validateArcRiderName('x' * 25), isNotNull);
+    });
+
+    test('routes fresh admin previews to account creation', () {
+      final freshPreview = ArcMandatoryOnboardingScreen.fromRouteSettings(
+        const RouteSettings(
+          arguments: <String, Object>{
+            'adminPreview': true,
+            'playerState': 'fresh',
+          },
+        ),
+      );
+      final activePreview = ArcMandatoryOnboardingScreen.fromRouteSettings(
+        const RouteSettings(
+          arguments: <String, Object>{
+            'adminPreview': true,
+            'playerState': 'active',
+          },
+        ),
+      );
+      final normalRoute = ArcMandatoryOnboardingScreen.fromRouteSettings(
+        const RouteSettings(
+          arguments: <String, Object>{
+            'adminPreview': false,
+            'playerState': 'fresh',
+          },
+        ),
+      );
+
+      expect(freshPreview.adminPreview, isTrue);
+      expect(freshPreview.previewAccountCreation, isTrue);
+      expect(activePreview.adminPreview, isTrue);
+      expect(activePreview.previewAccountCreation, isFalse);
+      expect(normalRoute.adminPreview, isFalse);
+      expect(normalRoute.previewAccountCreation, isFalse);
     });
 
     test(

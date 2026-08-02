@@ -50,7 +50,7 @@ String? validateArcOnboardingConfirmPassword({
 
 String? validateArcRiderName(String value) {
   final trimmed = value.trim();
-  if (trimmed.isEmpty) return 'Enter a Rider name.';
+  if (trimmed.isEmpty) return 'Enter a Raider name.';
   if (trimmed.length < 3) return 'Use at least 3 characters.';
   if (trimmed.length > 24) return 'Use no more than 24 characters.';
   if (!RegExp(r"^[A-Za-z0-9 _.'-]+$").hasMatch(trimmed)) {
@@ -81,7 +81,7 @@ Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
     throw ArgumentError.value(email, 'email', 'Invalid email address');
   }
   if (validateArcRiderName(normalizedName) != null) {
-    throw ArgumentError.value(riderName, 'riderName', 'Invalid Rider name');
+    throw ArgumentError.value(riderName, 'riderName', 'Invalid Raider name');
   }
 
   return <String, dynamic>{
@@ -125,7 +125,7 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
 }) {
   final normalizedName = riderName.trim();
   if (validateArcRiderName(normalizedName) != null) {
-    throw ArgumentError.value(riderName, 'riderName', 'Invalid Rider name');
+    throw ArgumentError.value(riderName, 'riderName', 'Invalid Raider name');
   }
 
   return <String, dynamic>{

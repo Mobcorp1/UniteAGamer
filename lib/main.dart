@@ -121,7 +121,8 @@ class UAGTradersHubApp extends StatelessWidget {
       case ArcMandatoryOnboardingScreen.routeName:
       case '/onboarding-basic-profile':
         return MaterialPageRoute(
-          builder: (_) => const ArcMandatoryOnboardingScreen(),
+          builder: (_) =>
+              ArcMandatoryOnboardingScreen.fromRouteSettings(settings),
           settings: settings,
         );
 
