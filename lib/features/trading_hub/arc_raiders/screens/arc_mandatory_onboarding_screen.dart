@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -388,6 +389,9 @@ class _ArcMandatoryOnboardingScreenState
       traderCodeAccepted: _acceptedTraderCode,
       termsOfServiceAccepted: _acceptedTermsOfService,
       dataSecurityAccepted: _acceptedDataSecurity,
+      userId: user.uid,
+      platform: kIsWeb ? 'web' : defaultTargetPlatform.name,
+      appVersion: 'closed-beta',
     );
     final payload = buildArcOnboardingCompletionPayload(
       riderName: riderName,
