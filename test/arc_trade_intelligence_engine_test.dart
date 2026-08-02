@@ -39,6 +39,11 @@ void main() {
         summary.directMatches.first.currentUserReceives.first.id,
         'wolfpack',
       );
+      expect(
+        summary.nextAction?.kind,
+        ArcTradeNetworkNextActionKind.directOffer,
+      );
+      expect(summary.nextAction?.title, 'Send Direct Offer');
     });
 
     test('detects valid three-player circular trade', () {
@@ -232,6 +237,37 @@ void main() {
       expect(opportunity.ownedItems.first.quantity, 1);
       expect(opportunity.remainingItems.first.quantity, 2);
       expect(opportunity.actionLabel, 'Prepare for this trade');
+      expect(
+        summary.nextAction?.kind,
+        ArcTradeNetworkNextActionKind.preparationWatch,
+      );
+      expect(summary.nextAction?.requiresPreparationWatch, isTrue);
+    });
+
+    test('surfaces fallback demand when no clean match exists', () {
+      final summary = engine.buildNetworkSummary(
+        blueprintStates: _states(
+          duplicates: const <String, int>{'tempest': 1},
+          wantedPriority: const <String, int>{},
+        ),
+        activeListings: <TradingListing>[
+          _listing(
+            id: 'b-listing',
+            ownerUid: 'raider-b',
+            offered: 'Bobcat',
+            wanted: 'Tempest',
+          ),
+        ],
+        currentUid: currentUid,
+      );
+
+      expect(summary.hasActionableOpportunities, isFalse);
+      expect(summary.playersNeedingMyItems, hasLength(1));
+      expect(
+        summary.nextAction?.kind,
+        ArcTradeNetworkNextActionKind.demandInspect,
+      );
+      expect(summary.nextAction?.title, 'Inspect Player Demand');
     });
 
     test('transitions preparation readiness to ready', () {

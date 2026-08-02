@@ -192,6 +192,23 @@ class _ArcTradeNetworkPanelState extends State<ArcTradeNetworkPanel> {
             ],
           ),
           const SizedBox(height: AppTheme.spaceM),
+          if (summary.nextAction != null) ...[
+            _NextActionCard(
+              nextAction: summary.nextAction!,
+              creatingWatch: _creatingWatch,
+              onPrimaryAction: () {
+                final nextAction = summary.nextAction!;
+                if (nextAction.requiresPreparationWatch) {
+                  _prepareForTrade(nextAction.opportunity);
+                } else {
+                  _openListing(nextAction.opportunity.targetListingId);
+                }
+              },
+              onOpenListing: () =>
+                  _openListing(summary.nextAction!.opportunity.targetListingId),
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+          ],
           if (!summary.hasActionableOpportunities)
             _EmptyNetworkState(summary: summary)
           else ...[
@@ -236,6 +253,122 @@ class _ArcTradeNetworkPanelState extends State<ArcTradeNetworkPanel> {
             intelRepository: _intelRepository,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NextActionCard extends StatelessWidget {
+  const _NextActionCard({
+    required this.nextAction,
+    required this.creatingWatch,
+    required this.onPrimaryAction,
+    required this.onOpenListing,
+  });
+
+  final ArcTradeNetworkNextAction nextAction;
+  final bool creatingWatch;
+  final VoidCallback onPrimaryAction;
+  final VoidCallback onOpenListing;
+
+  @override
+  Widget build(BuildContext context) {
+    final opportunity = nextAction.opportunity;
+    final primaryLabel = creatingWatch && nextAction.requiresPreparationWatch
+        ? 'Watching...'
+        : nextAction.actionLabel;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceM),
+      decoration: AppTheme.tradingCardDecoration(
+        radius: 16,
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.44),
+        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.assistant_direction, color: AppTheme.neonCyan),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: Text(
+                  'Smart Trade Next Action',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 18,
+                    color: AppTheme.neonCyan,
+                  ),
+                ),
+              ),
+              _pill('${nextAction.confidence}% confidence', AppTheme.neonPink),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Text(
+            nextAction.title,
+            style: AppTheme.tradingHeading(fontSize: 16, color: Colors.white),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            nextAction.detail,
+            style: TextStyle(color: AppTheme.tradingMutedText, height: 1.3),
+          ),
+          if (opportunity.progressionHint.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              opportunity.progressionHint,
+              style: TextStyle(color: AppTheme.tradingFaintText, height: 1.3),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ElevatedButton.icon(
+                onPressed: creatingWatch && nextAction.requiresPreparationWatch
+                    ? null
+                    : onPrimaryAction,
+                icon: Icon(
+                  nextAction.requiresPreparationWatch
+                      ? Icons.visibility_rounded
+                      : Icons.open_in_new_rounded,
+                ),
+                label: Text(primaryLabel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.neonPink,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              if (nextAction.requiresPreparationWatch)
+                OutlinedButton.icon(
+                  onPressed: onOpenListing,
+                  icon: const Icon(Icons.open_in_new_rounded),
+                  label: const Text('Open listing'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.neonCyan,
+                    side: const BorderSide(color: AppTheme.neonCyan),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pill(String label, Color color) {
+    return Container(
+      padding: AppTheme.pillPadding,
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w800,
+          fontSize: 11,
+        ),
       ),
     );
   }

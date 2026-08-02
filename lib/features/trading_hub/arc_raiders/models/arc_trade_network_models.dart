@@ -170,6 +170,36 @@ class ArcTradeOpportunity {
       type == ArcTradeOpportunityType.prepare && remainingItems.isNotEmpty;
 }
 
+enum ArcTradeNetworkNextActionKind {
+  directOffer,
+  chainReview,
+  preparationWatch,
+  demandInspect,
+  wantedInspect,
+}
+
+@immutable
+class ArcTradeNetworkNextAction {
+  const ArcTradeNetworkNextAction({
+    required this.kind,
+    required this.title,
+    required this.detail,
+    required this.actionLabel,
+    required this.opportunity,
+  });
+
+  final ArcTradeNetworkNextActionKind kind;
+  final String title;
+  final String detail;
+  final String actionLabel;
+  final ArcTradeOpportunity opportunity;
+
+  int get confidence => opportunity.confidence;
+  bool get requiresPreparationWatch =>
+      kind == ArcTradeNetworkNextActionKind.preparationWatch &&
+      opportunity.requiresPreparation;
+}
+
 @immutable
 class ArcTradeNetworkSummary {
   const ArcTradeNetworkSummary({
@@ -211,6 +241,60 @@ class ArcTradeNetworkSummary {
   }
 
   bool get hasActionableOpportunities => rankedOpportunities.isNotEmpty;
+
+  ArcTradeNetworkNextAction? get nextAction {
+    if (directMatches.isNotEmpty) {
+      final opportunity = directMatches.first;
+      return ArcTradeNetworkNextAction(
+        kind: ArcTradeNetworkNextActionKind.directOffer,
+        title: 'Send Direct Offer',
+        detail: opportunity.reason,
+        actionLabel: opportunity.actionLabel,
+        opportunity: opportunity,
+      );
+    }
+    if (threeRaiderChains.isNotEmpty) {
+      final opportunity = threeRaiderChains.first;
+      return ArcTradeNetworkNextAction(
+        kind: ArcTradeNetworkNextActionKind.chainReview,
+        title: 'Review Three-Raider Chain',
+        detail: opportunity.reason,
+        actionLabel: opportunity.actionLabel,
+        opportunity: opportunity,
+      );
+    }
+    if (preparationOpportunities.isNotEmpty) {
+      final opportunity = preparationOpportunities.first;
+      return ArcTradeNetworkNextAction(
+        kind: ArcTradeNetworkNextActionKind.preparationWatch,
+        title: 'Watch Trade Preparation',
+        detail: opportunity.reason,
+        actionLabel: opportunity.actionLabel,
+        opportunity: opportunity,
+      );
+    }
+    if (playersNeedingMyItems.isNotEmpty) {
+      final opportunity = playersNeedingMyItems.first;
+      return ArcTradeNetworkNextAction(
+        kind: ArcTradeNetworkNextActionKind.demandInspect,
+        title: 'Inspect Player Demand',
+        detail: opportunity.reason,
+        actionLabel: opportunity.actionLabel,
+        opportunity: opportunity,
+      );
+    }
+    if (playersOfferingWantedItems.isNotEmpty) {
+      final opportunity = playersOfferingWantedItems.first;
+      return ArcTradeNetworkNextAction(
+        kind: ArcTradeNetworkNextActionKind.wantedInspect,
+        title: 'Inspect Wanted Item',
+        detail: opportunity.reason,
+        actionLabel: opportunity.actionLabel,
+        opportunity: opportunity,
+      );
+    }
+    return null;
+  }
 }
 
 @immutable
