@@ -81,7 +81,7 @@ void main() {
             {"id": "security", "kind": "security_room", "name": "Security room", "x": 0.2, "y": 0.3, "confidence": "strong"},
             {"id": "key", "kind": "key_required_location", "name": "Key room", "x": 0.3, "y": 0.4, "confidence": "strong"},
             {"id": "event", "kind": "map_event", "name": "Event", "x": 0.4, "y": 0.5, "confidence": "strong"},
-            {"id": "resource", "kind": "natural_resource", "name": "Resource", "x": 0.5, "y": 0.6, "confidence": "strong"},
+            {"id": "resource", "kind": "natural_resource", "subcategory": "great_mullein", "name": "Resource", "x": 0.5, "y": 0.6, "confidence": "strong"},
             {"id": "arc", "kind": "arc_spawn", "name": "ARC spawn", "x": 0.6, "y": 0.7, "confidence": "strong"},
             {"id": "first", "kind": "first_wave_cache", "name": "First Wave", "x": 0.7, "y": 0.8, "confidence": "strong"},
             {"id": "raider", "kind": "raider_cache", "name": "Raider cache", "x": 0.8, "y": 0.2, "confidence": "strong"},
@@ -112,6 +112,11 @@ void main() {
       expect(kinds, contains(ArcAdminMapMarkerKind.surfaceTransition));
       expect(kinds, contains(ArcAdminMapMarkerKind.undergroundTransition));
       expect(kinds, contains(ArcAdminMapMarkerKind.hazard));
+      final resourceRecord = payload.records.firstWhere(
+        (record) => record.id == 'resource',
+      );
+      expect(resourceRecord.subtypeId, 'great_mullein');
+      expect(resourceRecord.subtypeLabel, 'Great Mullein');
     });
 
     test('keeps medium-confidence permitted records provisional', () {

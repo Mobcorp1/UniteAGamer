@@ -175,6 +175,8 @@ class ArcRaidIntelligenceEngine {
     final tags = <String>[
       sourceLabel,
       marker.kind.label,
+      if (marker.subtypeLabel?.trim().isNotEmpty == true)
+        marker.subtypeLabel!.trim(),
       marker.confidence.label,
       if (marker.sourceAttribution?.trim().isNotEmpty == true)
         marker.sourceAttribution!.trim(),

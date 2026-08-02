@@ -16,6 +16,8 @@ void main() {
       name: 'Hidden Weapon Cache',
       aliases: <String>['Cache Room', 'Weapon Stash'],
       description: 'Behind the broken wall.',
+      subtypeId: 'raider_cache',
+      subtypeLabel: 'Raider Cache',
       point: ArcNormalizedPoint(x: 0.42, y: 0.71),
       sourceLabel: 'Admin Intel',
       confidence: ArcRaidIntelConfidence.confirmed,
@@ -48,6 +50,8 @@ void main() {
     expect(restored.id, marker.id);
     expect(restored.kind, ArcAdminMapMarkerKind.weaponCache);
     expect(restored.aliases, <String>['Cache Room', 'Weapon Stash']);
+    expect(restored.subtypeId, 'raider_cache');
+    expect(restored.subtypeLabel, 'Raider Cache');
     expect(restored.point.x, closeTo(0.42, 0.0001));
     expect(restored.point.y, closeTo(0.71, 0.0001));
     expect(restored.adminVerified, isTrue);

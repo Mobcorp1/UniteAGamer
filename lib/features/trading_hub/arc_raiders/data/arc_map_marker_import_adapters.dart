@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_subtype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_map_marker_import_models.dart';
@@ -43,18 +44,25 @@ class ArcPermittedJsonMapMarkerImportAdapter {
       final name = (map['name'] ?? map['label'] ?? 'Imported marker')
           .toString()
           .trim();
+      final kind = _kindFrom(map['kind'] ?? map['category'] ?? map['type']);
+      final subtype = ArcAdminMapMarkerSubtypeCatalog.resolve(
+        kind,
+        _subtypeTextFrom(map),
+      );
       records.add(
         ArcExternalMapMarkerRecord(
           id: _recordId(map, index),
           mapId: _mapId(map['mapId']?.toString(), rootMapId),
           layer: _layerFrom(map['layer']?.toString(), rootLayer),
-          kind: _kindFrom(map['kind'] ?? map['category'] ?? map['type']),
+          kind: kind,
           name: name.isEmpty ? 'Imported marker' : name,
           description:
               (map['description'] ?? map['detail'] ?? map['notes'])
                   ?.toString()
                   .trim() ??
               '',
+          subtypeId: subtype?.id,
+          subtypeLabel: subtype?.label,
           point: point,
           blueprintId: map['blueprintId']?.toString(),
           confidence: ArcRaidIntelConfidenceX.fromStorage(
@@ -183,6 +191,28 @@ class ArcPermittedJsonMapMarkerImportAdapter {
       'hazard' || 'danger' || 'danger_zone' => ArcAdminMapMarkerKind.hazard,
       _ => ArcAdminMapMarkerKind.customIntel,
     };
+  }
+
+  static String? _subtypeTextFrom(Map<String, dynamic> map) {
+    for (final key in const <String>[
+      'subtype',
+      'subtypeLabel',
+      'subtypeId',
+      'subcategory',
+      'subCategory',
+      'subCategoryId',
+      'item',
+      'itemName',
+      'resource',
+      'event',
+      'eventName',
+      'quest',
+      'questName',
+    ]) {
+      final value = map[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
   }
 
   static ArcNormalizedPoint? _pointFrom(Map<String, dynamic> map) {

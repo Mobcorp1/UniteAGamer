@@ -105,6 +105,8 @@ void main() {
           layer: ArcRaidMapLayer.surface,
           kind: ArcAdminMapMarkerKind.naturalResource,
           name: 'Admin Resource',
+          subtypeId: 'great_mullein',
+          subtypeLabel: 'Great Mullein',
           point: ArcNormalizedPoint(x: 0.21, y: 0.32),
           state: ArcAdminMapMarkerState.published,
         ),
@@ -202,6 +204,12 @@ void main() {
       expect(
         categoriesByLabel['Admin Resource'],
         ArcRaidMapMarkerCategory.generalLoot,
+      );
+      expect(
+        intelligence.visibleMarkers
+            .firstWhere((marker) => marker.label == 'Admin Resource')
+            .tags,
+        contains('Great Mullein'),
       );
       expect(
         categoriesByLabel['Admin ARC Spawn'],

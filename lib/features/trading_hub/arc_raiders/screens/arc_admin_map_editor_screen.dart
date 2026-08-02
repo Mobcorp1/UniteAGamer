@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_subtype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_alignment_engine.dart';
@@ -336,6 +337,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
           if (query.isNotEmpty &&
               !marker.name.toLowerCase().contains(query) &&
               !marker.description.toLowerCase().contains(query) &&
+              !(marker.subtypeLabel?.toLowerCase().contains(query) ?? false) &&
               !marker.sourceLabel.toLowerCase().contains(query) &&
               !(marker.sourceName?.toLowerCase().contains(query) ?? false) &&
               !(marker.sourceRecordId?.toLowerCase().contains(query) ??
@@ -877,6 +879,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       name: result.name,
       aliases: result.aliases,
       description: result.description,
+      subtypeId: result.subtypeId,
+      subtypeLabel: result.subtypeLabel,
       blueprintId: result.blueprintId,
       sourceLabel: result.sourceLabel,
       confidence: result.confidence,
@@ -914,6 +918,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       name: result.name,
       aliases: result.aliases,
       description: result.description,
+      subtypeId: result.subtypeId,
+      clearSubtypeId: result.subtypeId == null,
+      subtypeLabel: result.subtypeLabel,
+      clearSubtypeLabel: result.subtypeLabel == null,
       blueprintId: result.blueprintId,
       clearBlueprintId: result.blueprintId == null,
       sourceLabel: result.sourceLabel,
@@ -943,6 +951,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       name: '${selected.name} Copy',
       aliases: selected.aliases,
       description: selected.description,
+      subtypeId: selected.subtypeId,
+      subtypeLabel: selected.subtypeLabel,
       blueprintId: selected.blueprintId,
       sourceLabel: selected.sourceLabel,
       confidence: selected.confidence,
@@ -1439,7 +1449,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     subtitle: Text(
-                      '${marker.kind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
+                      '${marker.subtypeLabel?.trim().isNotEmpty == true ? '${marker.kind.label} / ${marker.subtypeLabel!.trim()}' : marker.kind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
                     ),
                     trailing: _markerStateIcon(marker),
                     onTap: () => setState(() => _selected = marker),
@@ -1867,6 +1877,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             marker.kind.label,
             style: TextStyle(color: _kindColor(marker.kind)),
           ),
+          if (marker.subtypeLabel?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 4),
+            Text(
+              marker.subtypeLabel!.trim(),
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+          ],
           const SizedBox(height: 8),
           SelectableText(
             'Transformed X ${marker.point.x.toStringAsFixed(6)}\n'
@@ -2141,6 +2158,8 @@ class _NewMarkerResult {
     required this.description,
     required this.sourceLabel,
     required this.confidence,
+    this.subtypeId,
+    this.subtypeLabel,
     this.blueprintId,
   });
 
@@ -2150,6 +2169,8 @@ class _NewMarkerResult {
   final String description;
   final String sourceLabel;
   final ArcRaidIntelConfidence confidence;
+  final String? subtypeId;
+  final String? subtypeLabel;
   final String? blueprintId;
 }
 
@@ -2182,6 +2203,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   final _description = TextEditingController();
   late final TextEditingController _source;
   ArcAdminMapMarkerKind _kind = ArcAdminMapMarkerKind.customIntel;
+  String? _subtypeId;
   ArcRaidIntelConfidence _confidence = ArcRaidIntelConfidence.confirmed;
   String? _blueprintId;
 
@@ -2196,6 +2218,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
       _aliases.text = initial.aliases.join(', ');
       _description.text = initial.description;
       _source.text = initial.sourceLabel;
+      _subtypeId = initial.subtypeId;
       _confidence = initial.confidence;
       _blueprintId = initial.blueprintId;
     }
@@ -2213,6 +2236,8 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   @override
   Widget build(BuildContext context) {
     final blueprints = ArcBlueprintSeedData.blueprints;
+    final subtypeOptions = ArcAdminMapMarkerSubtypeCatalog.forKind(_kind);
+    final selectedSubtype = _subtypeForId(subtypeOptions, _subtypeId);
 
     return AlertDialog(
       title: Text(widget.title),
@@ -2230,8 +2255,41 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                     if (widget.includeSeedKinds || !kind.isSeedDefinition)
                       DropdownMenuItem(value: kind, child: Text(kind.label)),
                 ],
-                onChanged: (value) => setState(() => _kind = value ?? _kind),
+                onChanged: (value) => setState(() {
+                  _kind = value ?? _kind;
+                  _subtypeId = null;
+                }),
               ),
+              if (subtypeOptions.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String?>(
+                  key: ValueKey<ArcAdminMapMarkerKind>(_kind),
+                  isExpanded: true,
+                  initialValue: selectedSubtype?.id,
+                  decoration: InputDecoration(
+                    labelText:
+                        '${selectedSubtype?.groupLabel ?? 'Marker'} subsection',
+                  ),
+                  items: <DropdownMenuItem<String?>>[
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('No subsection'),
+                    ),
+                    for (final subtype in subtypeOptions)
+                      DropdownMenuItem<String?>(
+                        value: subtype.id,
+                        child: Text(subtype.label),
+                      ),
+                  ],
+                  onChanged: (value) => setState(() {
+                    _subtypeId = value;
+                    final subtype = _subtypeForId(subtypeOptions, value);
+                    if (subtype != null && _name.text.trim().isEmpty) {
+                      _name.text = subtype.label;
+                    }
+                  }),
+                ),
+              ],
               const SizedBox(height: 10),
               TextField(
                 controller: _name,
@@ -2327,6 +2385,10 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                 .where((item) => item.isNotEmpty)
                 .toSet()
                 .toList(growable: false);
+            final subtype = ArcAdminMapMarkerSubtypeCatalog.resolve(
+              _kind,
+              _subtypeId,
+            );
             Navigator.pop(
               context,
               _NewMarkerResult(
@@ -2334,6 +2396,8 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                 name: name,
                 aliases: aliases,
                 description: _description.text.trim(),
+                subtypeId: subtype?.id,
+                subtypeLabel: subtype?.label,
                 sourceLabel: _source.text.trim().isEmpty
                     ? 'Admin Intel'
                     : _source.text.trim(),
@@ -2346,5 +2410,16 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
         ),
       ],
     );
+  }
+
+  ArcAdminMapMarkerSubtype? _subtypeForId(
+    List<ArcAdminMapMarkerSubtype> options,
+    String? id,
+  ) {
+    if (id == null) return null;
+    for (final option in options) {
+      if (option.id == id) return option;
+    }
+    return null;
   }
 }

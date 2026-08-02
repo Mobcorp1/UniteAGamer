@@ -134,6 +134,8 @@ class ArcMapMarkerImportEngine {
       kind: record.kind,
       name: record.name,
       description: record.description,
+      subtypeId: record.subtypeId,
+      subtypeLabel: record.subtypeLabel,
       point: alignedPoint,
       blueprintId: record.blueprintId,
       sourceLabel: source.name,

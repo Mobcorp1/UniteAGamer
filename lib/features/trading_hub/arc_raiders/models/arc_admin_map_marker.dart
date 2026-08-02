@@ -158,6 +158,8 @@ class ArcAdminMapMarker {
     required this.point,
     this.aliases = const <String>[],
     this.description = '',
+    this.subtypeId,
+    this.subtypeLabel,
     this.blueprintId,
     this.sourceLabel = 'Admin Intel',
     this.confidence = ArcRaidIntelConfidence.confirmed,
@@ -193,6 +195,8 @@ class ArcAdminMapMarker {
   final String name;
   final List<String> aliases;
   final String description;
+  final String? subtypeId;
+  final String? subtypeLabel;
   final ArcNormalizedPoint point;
   final String? blueprintId;
   final String sourceLabel;
@@ -242,6 +246,10 @@ class ArcAdminMapMarker {
     String? name,
     List<String>? aliases,
     String? description,
+    String? subtypeId,
+    bool clearSubtypeId = false,
+    String? subtypeLabel,
+    bool clearSubtypeLabel = false,
     ArcNormalizedPoint? point,
     String? blueprintId,
     bool clearBlueprintId = false,
@@ -291,6 +299,10 @@ class ArcAdminMapMarker {
       name: name ?? this.name,
       aliases: aliases ?? this.aliases,
       description: description ?? this.description,
+      subtypeId: clearSubtypeId ? null : (subtypeId ?? this.subtypeId),
+      subtypeLabel: clearSubtypeLabel
+          ? null
+          : (subtypeLabel ?? this.subtypeLabel),
       point: point ?? this.point,
       blueprintId: clearBlueprintId ? null : (blueprintId ?? this.blueprintId),
       sourceLabel: sourceLabel ?? this.sourceLabel,
@@ -350,6 +362,8 @@ class ArcAdminMapMarker {
       'name': name,
       'aliases': aliases,
       'description': description,
+      'subtypeId': subtypeId,
+      'subtypeLabel': subtypeLabel,
       'point': point.toMap(),
       'blueprintId': blueprintId,
       'sourceLabel': sourceLabel,
@@ -410,6 +424,8 @@ class ArcAdminMapMarker {
       name: map['name']?.toString() ?? 'Unnamed marker',
       aliases: _stringListFrom(map['aliases']),
       description: map['description']?.toString() ?? '',
+      subtypeId: map['subtypeId']?.toString(),
+      subtypeLabel: map['subtypeLabel']?.toString(),
       point: ArcNormalizedPoint.fromMap(
         map['point'] is Map
             ? Map<String, dynamic>.from(map['point'] as Map)
