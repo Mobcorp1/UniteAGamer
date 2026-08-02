@@ -82,6 +82,8 @@ class _ArcMandatoryOnboardingScreenState
   bool _accountCreatedDuringOnboarding = false;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _rememberEmail = true;
+  bool _keepSignedIn = true;
   bool _saving = false;
 
   static const _goalOptions = <_GoalOption>[
@@ -295,12 +297,16 @@ class _ArcMandatoryOnboardingScreenState
 
       await UagSessionGateController.markAuthenticated(
         uid: user.uid,
-        keepSignedIn: true,
+        keepSignedIn: _keepSignedIn,
       );
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('uag_last_login_email', email);
-      await prefs.setBool('uag_remember_email', true);
+      await prefs.setBool('uag_remember_email', _rememberEmail);
+      if (_rememberEmail) {
+        await prefs.setString('uag_last_login_email', email);
+      } else {
+        await prefs.remove('uag_last_login_email');
+      }
       await prefs.setBool('hasCompletedOnboarding', false);
       await prefs.setBool('hasCompletedProfileSetup', false);
       await prefs.setBool('forceOnboarding', false);
@@ -406,7 +412,7 @@ class _ArcMandatoryOnboardingScreenState
 
       await UagSessionGateController.markAuthenticated(
         uid: user.uid,
-        keepSignedIn: true,
+        keepSignedIn: _accountCreatedDuringOnboarding ? _keepSignedIn : true,
       );
 
       final personalisation = buildArcOnboardingPersonalisation(
@@ -485,6 +491,8 @@ class _ArcMandatoryOnboardingScreenState
                                     riderNameError: _riderNameError,
                                     showPassword: _showPassword,
                                     showConfirmPassword: _showConfirmPassword,
+                                    rememberEmail: _rememberEmail,
+                                    keepSignedIn: _keepSignedIn,
                                     onChanged: () {
                                       if (_emailError != null ||
                                           _confirmEmailError != null ||
@@ -507,6 +515,10 @@ class _ArcMandatoryOnboardingScreenState
                                       () => _showConfirmPassword =
                                           !_showConfirmPassword,
                                     ),
+                                    onRememberEmailChanged: (value) =>
+                                        setState(() => _rememberEmail = value),
+                                    onKeepSignedInChanged: (value) =>
+                                        setState(() => _keepSignedIn = value),
                                   )
                                 : _IdentityStep(
                                     email: email,
@@ -703,9 +715,13 @@ class _AccountCreationStep extends StatelessWidget {
     required this.riderNameError,
     required this.showPassword,
     required this.showConfirmPassword,
+    required this.rememberEmail,
+    required this.keepSignedIn,
     required this.onChanged,
     required this.onTogglePassword,
     required this.onToggleConfirmPassword,
+    required this.onRememberEmailChanged,
+    required this.onKeepSignedInChanged,
   });
 
   final TextEditingController emailController;
@@ -720,16 +736,21 @@ class _AccountCreationStep extends StatelessWidget {
   final String? riderNameError;
   final bool showPassword;
   final bool showConfirmPassword;
+  final bool rememberEmail;
+  final bool keepSignedIn;
   final VoidCallback onChanged;
   final VoidCallback onTogglePassword;
   final VoidCallback onToggleConfirmPassword;
+  final ValueChanged<bool> onRememberEmailChanged;
+  final ValueChanged<bool> onKeepSignedInChanged;
 
   @override
   Widget build(BuildContext context) {
     return _StepFrame(
       icon: Icons.person_add_alt_1_rounded,
       title: 'CREATE YOUR RAIDER ACCOUNT',
-      subtitle: 'Set the account and Raider name used for Command Centre.',
+      subtitle:
+          'Email, confirm email, password, confirm password and Raider name.',
       child: AutofillGroup(
         child: Column(
           children: [
@@ -824,6 +845,33 @@ class _AccountCreationStep extends StatelessWidget {
                 hintText: 'Enter your display name',
                 prefixIcon: const Icon(Icons.person_outline_rounded),
                 errorText: riderNameError,
+              ),
+            ),
+            CheckboxListTile(
+              value: rememberEmail,
+              onChanged: (value) => onRememberEmailChanged(value ?? true),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              activeColor: AppTheme.neonCyan,
+              title: const Text(
+                'Remember email on this device',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            SwitchListTile(
+              value: keepSignedIn,
+              onChanged: onKeepSignedInChanged,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              activeThumbColor: AppTheme.neonCyan,
+              title: const Text(
+                'Keep me signed in on this device',
+                style: TextStyle(color: Colors.white70),
+              ),
+              subtitle: const Text(
+                'Turn off on shared devices. You will still enter Command Centre after setup.',
+                style: TextStyle(color: Colors.white38, fontSize: 11),
               ),
             ),
           ],
