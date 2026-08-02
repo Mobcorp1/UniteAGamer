@@ -68,6 +68,25 @@ void main() {
       ]);
     });
 
+    test('builds a safe account profile sync payload', () {
+      final payload = buildArcOnboardingAccountProfilePayload(
+        email: '  MIKE@Example.com ',
+        riderName: '  Mike  ',
+      );
+
+      expect(payload['email'], 'mike@example.com');
+      expect(payload['displayName'], 'Mike');
+      expect(payload['uagName'], 'Mike');
+      expect(payload['updatedAt'], isA<FieldValue>());
+      expect(payload.containsKey('onboardingComplete'), isFalse);
+      expect(payload.containsKey('arcMandatoryOnboardingComplete'), isFalse);
+      expect(payload.containsKey('createdAt'), isFalse);
+
+      final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
+      expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
+      expect(onboarding.containsKey('accountCreatedAt'), isFalse);
+    });
+
     test('validates Raider names', () {
       expect(validateArcRiderName('Mike'), isNull);
       expect(validateArcRiderName('Arc-Rider.01'), isNull);

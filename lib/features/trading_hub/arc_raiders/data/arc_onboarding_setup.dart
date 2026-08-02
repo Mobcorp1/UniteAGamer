@@ -74,6 +74,30 @@ Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
   required String email,
   required String riderName,
 }) {
+  final profilePayload = buildArcOnboardingAccountProfilePayload(
+    email: email,
+    riderName: riderName,
+  );
+  final onboarding = Map<String, dynamic>.from(
+    profilePayload['arcOnboarding'] as Map<String, dynamic>,
+  );
+
+  return <String, dynamic>{
+    ...profilePayload,
+    'createdAt': FieldValue.serverTimestamp(),
+    'onboardingComplete': false,
+    'arcMandatoryOnboardingComplete': false,
+    'arcOnboarding': <String, dynamic>{
+      ...onboarding,
+      'accountCreatedAt': FieldValue.serverTimestamp(),
+    },
+  };
+}
+
+Map<String, dynamic> buildArcOnboardingAccountProfilePayload({
+  required String email,
+  required String riderName,
+}) {
   final normalizedEmail = normalizeArcOnboardingEmail(email);
   final normalizedName = riderName.trim();
 
@@ -88,10 +112,7 @@ Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
     'email': normalizedEmail,
     'displayName': normalizedName,
     'uagName': normalizedName,
-    'createdAt': FieldValue.serverTimestamp(),
     'updatedAt': FieldValue.serverTimestamp(),
-    'onboardingComplete': false,
-    'arcMandatoryOnboardingComplete': false,
     'modules': <String, dynamic>{'trader': true},
     'visibleInSearch': true,
     'basicProfile': <String, dynamic>{
@@ -109,7 +130,6 @@ Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
     'arcOnboarding': <String, dynamic>{
       'version': 4,
       'accountCreatedDuringOnboarding': true,
-      'accountCreatedAt': FieldValue.serverTimestamp(),
       'flow': <String>['account', 'legal', 'primaryGoal', 'blueprintSetup'],
     },
   };

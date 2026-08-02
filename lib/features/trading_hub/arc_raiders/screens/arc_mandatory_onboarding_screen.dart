@@ -267,6 +267,7 @@ class _ArcMandatoryOnboardingScreenState
     final riderName = _riderNameController.text.trim();
 
     TextInput.finishAutofillContext();
+    UagSessionGateController.markOnboardingAuthHandshakeStarted();
     setState(() => _saving = true);
 
     try {
@@ -274,44 +275,13 @@ class _ArcMandatoryOnboardingScreenState
           .createUserWithEmailAndPassword(email: email, password: password);
       final user = await _waitForSignedInUser(credential);
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set(
-            buildArcOnboardingAccountCreationPayload(
-              email: email,
-              riderName: riderName,
-            ),
-            SetOptions(merge: true),
-          );
-
-      if (user.displayName != riderName) {
-        await user.updateDisplayName(riderName);
-      }
-
       unawaited(
-        user.sendEmailVerification().catchError((Object error, StackTrace st) {
-          debugPrint('Onboarding verification email failed safely: $error');
-          debugPrintStack(stackTrace: st);
-        }),
+        _runNonBlockingAccountCreationSync(
+          user: user,
+          email: email,
+          riderName: riderName,
+        ),
       );
-
-      await UagSessionGateController.markAuthenticated(
-        uid: user.uid,
-        keepSignedIn: _keepSignedIn,
-      );
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('uag_remember_email', _rememberEmail);
-      if (_rememberEmail) {
-        await prefs.setString('uag_last_login_email', email);
-      } else {
-        await prefs.remove('uag_last_login_email');
-      }
-      await prefs.setBool('hasCompletedOnboarding', false);
-      await prefs.setBool('hasCompletedProfileSetup', false);
-      await prefs.setBool('forceOnboarding', false);
-      await prefs.setString('displayName', riderName);
 
       if (!mounted) return false;
       setState(() {
@@ -325,17 +295,67 @@ class _ArcMandatoryOnboardingScreenState
       });
       return true;
     } on FirebaseAuthException catch (error) {
+      UagSessionGateController.clearOnboardingAuthHandshake();
       if (!mounted) return false;
       setState(() => _saving = false);
       _showMessage(_accountCreationErrorMessage(error));
       return false;
     } catch (error) {
+      UagSessionGateController.clearOnboardingAuthHandshake();
       if (!mounted) return false;
       setState(() => _saving = false);
       _showMessage('Could not create your account. Try again.');
       debugPrint('Onboarding account creation failed: $error');
       return false;
     }
+  }
+
+  Future<void> _runNonBlockingAccountCreationSync({
+    required User user,
+    required String email,
+    required String riderName,
+  }) async {
+    try {
+      await Future.wait<void>([
+        UagSessionGateController.markAuthenticated(
+          uid: user.uid,
+          keepSignedIn: _keepSignedIn,
+        ),
+        _persistOnboardingDevicePrefs(email: email, riderName: riderName),
+        FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+          buildArcOnboardingAccountProfilePayload(
+            email: email,
+            riderName: riderName,
+          ),
+          SetOptions(merge: true),
+        ),
+        if (user.displayName != riderName) user.updateDisplayName(riderName),
+        user.sendEmailVerification().catchError((Object error, StackTrace st) {
+          debugPrint('Onboarding verification email failed safely: $error');
+          debugPrintStack(stackTrace: st);
+        }),
+      ]).timeout(const Duration(seconds: 12));
+    } catch (error, stackTrace) {
+      debugPrint('Onboarding account sync continued in background: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _persistOnboardingDevicePrefs({
+    required String email,
+    required String riderName,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('uag_remember_email', _rememberEmail);
+    if (_rememberEmail) {
+      await prefs.setString('uag_last_login_email', email);
+    } else {
+      await prefs.remove('uag_last_login_email');
+    }
+    await prefs.setBool('hasCompletedOnboarding', false);
+    await prefs.setBool('hasCompletedProfileSetup', false);
+    await prefs.setBool('forceOnboarding', false);
+    await prefs.setString('displayName', riderName);
   }
 
   void _back() {
@@ -401,12 +421,23 @@ class _ArcMandatoryOnboardingScreenState
       legalAccepted: legalAccepted,
       accountCreatedDuringOnboarding: _accountCreatedDuringOnboarding,
     );
+    final accountProfilePayload = _accountCreatedDuringOnboarding
+        ? buildArcOnboardingAccountProfilePayload(
+            email: normalizeArcOnboardingEmail(
+              user.email ?? _emailController.text,
+            ),
+            riderName: riderName,
+          )
+        : const <String, dynamic>{};
 
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .set(payload, SetOptions(merge: true));
+          .set({
+            ...accountProfilePayload,
+            ...payload,
+          }, SetOptions(merge: true));
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasCompletedOnboarding', true);

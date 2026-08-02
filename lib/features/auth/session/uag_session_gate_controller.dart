@@ -8,10 +8,22 @@ class UagSessionGateController {
 
   static String? _runtimeAuthenticatedUid;
   static String? _runtimeBiometricUnlockedUid;
+  static DateTime? _onboardingAuthHandshakeUntil;
   static DateTime? _lastBackgroundedAt;
   static const Duration _gracePeriod = Duration(minutes: 5);
+  static const Duration _onboardingAuthHandshakeWindow = Duration(minutes: 2);
 
   const UagSessionGateController._();
+
+  static void markOnboardingAuthHandshakeStarted({
+    Duration window = _onboardingAuthHandshakeWindow,
+  }) {
+    _onboardingAuthHandshakeUntil = DateTime.now().add(window);
+  }
+
+  static void clearOnboardingAuthHandshake() {
+    _onboardingAuthHandshakeUntil = null;
+  }
 
   static Future<void> markAuthenticated({
     required String uid,
@@ -19,6 +31,7 @@ class UagSessionGateController {
   }) async {
     _runtimeAuthenticatedUid = uid;
     _runtimeBiometricUnlockedUid = uid;
+    _onboardingAuthHandshakeUntil = null;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keepSignedInKey, keepSignedIn);
@@ -71,6 +84,7 @@ class UagSessionGateController {
 
   static Future<bool> isSessionAllowed(String uid) async {
     if (_runtimeAuthenticatedUid == uid) return true;
+    if (_onboardingAuthHandshakeActive) return true;
 
     final prefs = await SharedPreferences.getInstance();
     final keepSignedIn = prefs.getBool(_keepSignedInKey) ?? false;
@@ -106,10 +120,19 @@ class UagSessionGateController {
   static Future<void> clearSession() async {
     _runtimeAuthenticatedUid = null;
     _runtimeBiometricUnlockedUid = null;
+    _onboardingAuthHandshakeUntil = null;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_sessionAllowedUidKey);
     await prefs.remove(_biometricAllowedUidKey);
     await prefs.setBool(_keepSignedInKey, false);
+  }
+
+  static bool get _onboardingAuthHandshakeActive {
+    final until = _onboardingAuthHandshakeUntil;
+    if (until == null) return false;
+    if (DateTime.now().isBefore(until)) return true;
+    _onboardingAuthHandshakeUntil = null;
+    return false;
   }
 }
