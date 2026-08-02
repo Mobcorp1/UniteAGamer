@@ -25,7 +25,7 @@ class ArcMapMarkerFilterPanel extends StatelessWidget {
           controller: searchController,
           style: const TextStyle(color: Colors.white),
           decoration: AppTheme.tradingInputDecoration(
-            label: 'Search Blueprint, POI or marker',
+            label: 'Search blueprint, POI, event, resource or marker',
           ),
           onChanged: (value) => onChanged(filters.copyWith(searchQuery: value)),
         ),

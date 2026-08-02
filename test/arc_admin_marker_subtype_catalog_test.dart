@@ -50,5 +50,62 @@ void main() {
       expect(rivenTides, contains('Beachcombing'));
       expect(rivenTides, isNot(contains('Launch Tower Loot')));
     });
+
+    test('builds location subsections from UAG map seed data', () {
+      final spaceportPois = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.poi,
+        mapName: 'Spaceport',
+      );
+      final spaceportExtractions = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.extraction,
+        mapName: 'Spaceport',
+      );
+
+      expect(
+        spaceportPois.map((item) => item.label),
+        contains('East Container Yard'),
+      );
+      expect(
+        spaceportPois.map((item) => item.label),
+        contains('West Container Yard'),
+      );
+      expect(
+        spaceportPois.every((item) => item.kind == ArcAdminMapMarkerKind.poi),
+        isTrue,
+      );
+      expect(spaceportExtractions, isNotEmpty);
+      expect(
+        spaceportExtractions.every(
+          (item) => item.kind == ArcAdminMapMarkerKind.extraction,
+        ),
+        isTrue,
+      );
+    });
+
+    test('keeps layer transition subsections matched to marker type', () {
+      final surface = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.surfaceTransition,
+        mapName: 'Blue Gate',
+      );
+      final underground = ArcAdminMapMarkerSubtypeCatalog.forKind(
+        ArcAdminMapMarkerKind.undergroundTransition,
+        mapName: 'Blue Gate',
+      );
+
+      expect(surface.map((item) => item.label), contains('Surface Access'));
+      expect(underground.map((item) => item.label), contains('Level 2 Access'));
+      expect(
+        surface.every(
+          (item) => item.kind == ArcAdminMapMarkerKind.surfaceTransition,
+        ),
+        isTrue,
+      );
+      expect(
+        underground.every(
+          (item) => item.kind == ArcAdminMapMarkerKind.undergroundTransition,
+        ),
+        isTrue,
+      );
+    });
   });
 }

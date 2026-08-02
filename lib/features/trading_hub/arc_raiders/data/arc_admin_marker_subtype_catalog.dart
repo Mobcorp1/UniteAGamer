@@ -1,6 +1,8 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
 class ArcAdminMapMarkerSubtype {
   const ArcAdminMapMarkerSubtype({
@@ -449,11 +451,17 @@ class ArcAdminMapMarkerSubtypeCatalog {
       ArcAdminMapMarkerKind.securityRoom ||
       ArcAdminMapMarkerKind.highValueLoot ||
       ArcAdminMapMarkerKind.keyRequiredLocation => containers,
-      ArcAdminMapMarkerKind.poi ||
-      ArcAdminMapMarkerKind.extraction ||
-      ArcAdminMapMarkerKind.raiderHatch ||
-      ArcAdminMapMarkerKind.surfaceTransition ||
-      ArcAdminMapMarkerKind.undergroundTransition ||
+      ArcAdminMapMarkerKind.poi => locationsForMap(mapName),
+      ArcAdminMapMarkerKind.extraction => extractionsForMap(mapName),
+      ArcAdminMapMarkerKind.raiderHatch => hatchesForMap(mapName),
+      ArcAdminMapMarkerKind.surfaceTransition => layerTransitionsForMap(
+        ArcAdminMapMarkerKind.surfaceTransition,
+        mapName,
+      ),
+      ArcAdminMapMarkerKind.undergroundTransition => layerTransitionsForMap(
+        ArcAdminMapMarkerKind.undergroundTransition,
+        mapName,
+      ),
       ArcAdminMapMarkerKind.key => location,
       ArcAdminMapMarkerKind.hazard ||
       ArcAdminMapMarkerKind.extractionDanger => hazard,
@@ -497,6 +505,116 @@ class ArcAdminMapMarkerSubtypeCatalog {
     ];
   }
 
+  static List<ArcAdminMapMarkerSubtype> locationsForMap(String? mapName) {
+    final map = _mapForName(mapName);
+    if (map == null) return location;
+    return _dedupe([
+      ...location.where((item) => item.kind == ArcAdminMapMarkerKind.poi),
+      for (final region in map.regions)
+        ArcAdminMapMarkerSubtype(
+          id: 'region_${region.id}',
+          label: region.name,
+          kind: ArcAdminMapMarkerKind.poi,
+          groupLabel: '${map.displayName} Regions',
+        ),
+      for (final poi in map.pois)
+        ArcAdminMapMarkerSubtype(
+          id: 'poi_${poi.id}',
+          label: poi.name,
+          kind: ArcAdminMapMarkerKind.poi,
+          groupLabel: '${map.displayName} POIs',
+        ),
+      for (final spawn in map.spawnRegions)
+        ArcAdminMapMarkerSubtype(
+          id: 'spawn_${spawn.id}',
+          label: spawn.name,
+          kind: ArcAdminMapMarkerKind.poi,
+          groupLabel: '${map.displayName} Spawns',
+        ),
+    ]);
+  }
+
+  static List<ArcAdminMapMarkerSubtype> extractionsForMap(String? mapName) {
+    final map = _mapForName(mapName);
+    if (map == null) {
+      return const [
+        ArcAdminMapMarkerSubtype(
+          id: 'extraction',
+          label: 'Extraction',
+          kind: ArcAdminMapMarkerKind.extraction,
+          groupLabel: 'Locations',
+        ),
+      ];
+    }
+    return _dedupe([
+      for (final extraction in map.extractions)
+        ArcAdminMapMarkerSubtype(
+          id: 'extraction_${extraction.id}',
+          label: extraction.name,
+          kind: ArcAdminMapMarkerKind.extraction,
+          groupLabel: '${map.displayName} Extractions',
+        ),
+    ]);
+  }
+
+  static List<ArcAdminMapMarkerSubtype> hatchesForMap(String? mapName) {
+    final map = _mapForName(mapName);
+    if (map == null) {
+      return const [
+        ArcAdminMapMarkerSubtype(
+          id: 'raider_hatch',
+          label: 'Raider Hatch',
+          kind: ArcAdminMapMarkerKind.raiderHatch,
+          groupLabel: 'Locations',
+        ),
+      ];
+    }
+    return _dedupe([
+      for (final hatch in map.hatches)
+        ArcAdminMapMarkerSubtype(
+          id: 'hatch_${hatch.id}',
+          label: hatch.name,
+          kind: ArcAdminMapMarkerKind.raiderHatch,
+          groupLabel: '${map.displayName} Raider Hatches',
+        ),
+    ]);
+  }
+
+  static List<ArcAdminMapMarkerSubtype> layerTransitionsForMap(
+    ArcAdminMapMarkerKind kind,
+    String? mapName,
+  ) {
+    final map = _mapForName(mapName);
+    final fallbackLabel = kind == ArcAdminMapMarkerKind.surfaceTransition
+        ? 'Surface Transition'
+        : 'Underground Transition';
+    final fallbackId = kind == ArcAdminMapMarkerKind.surfaceTransition
+        ? 'surface_transition'
+        : 'underground_transition';
+    if (map == null) {
+      return [
+        ArcAdminMapMarkerSubtype(
+          id: fallbackId,
+          label: fallbackLabel,
+          kind: kind,
+          groupLabel: 'Locations',
+        ),
+      ];
+    }
+    final layers = kind == ArcAdminMapMarkerKind.surfaceTransition
+        ? const [ArcRaidMapLayer.surface]
+        : const [ArcRaidMapLayer.underground, ArcRaidMapLayer.transition];
+    return _dedupe([
+      for (final layer in map.availableLayers.where(layers.contains))
+        ArcAdminMapMarkerSubtype(
+          id: '${layer.name}_access',
+          label: '${layer.label} Access',
+          kind: kind,
+          groupLabel: '${map.displayName} Levels',
+        ),
+    ]);
+  }
+
   static String slug(String value) {
     return value
         .trim()
@@ -521,6 +639,24 @@ class ArcAdminMapMarkerSubtypeCatalog {
       'riven_tides' => 'riven_tides',
       _ => normalized,
     };
+  }
+
+  static ArcRaidMap? _mapForName(String? value) {
+    final raw = value?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    return ArcRaidIntelligenceSeedData.mapById(raw);
+  }
+
+  static List<ArcAdminMapMarkerSubtype> _dedupe(
+    Iterable<ArcAdminMapMarkerSubtype> values,
+  ) {
+    final seen = <String>{};
+    final result = <ArcAdminMapMarkerSubtype>[];
+    for (final value in values) {
+      if (!seen.add('${value.kind.name}:${value.id}')) continue;
+      result.add(value);
+    }
+    return result;
   }
 
   static ArcAdminMapMarkerKind _kindForContainer(String id) {

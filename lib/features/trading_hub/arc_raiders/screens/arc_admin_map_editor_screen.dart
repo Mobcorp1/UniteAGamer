@@ -149,6 +149,13 @@ class _MarkerPaletteItem {
   final String sourceLabel;
 }
 
+class _SubtypeFilterOption {
+  const _SubtypeFilterOption({required this.id, required this.label});
+
+  final String? id;
+  final String label;
+}
+
 class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   late final ArcAdminMapEditorRepository _repository;
   final _importAdapter = const ArcPermittedJsonMapMarkerImportAdapter();
@@ -180,6 +187,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   String _saveError = '';
   DateTime? _lastSavedAt;
   ArcAdminMapMarkerKind? _kindFilter;
+  String? _subtypeFilterId;
   ArcRaidIntelConfidence? _confidenceFilter;
   ArcAdminMapMarkerSourcePermission? _permissionFilter;
   ArcWorldIntelEvidenceType? _evidenceTypeFilter;
@@ -241,6 +249,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         _undoStack.clear();
         _dirty = false;
         _resetPlacementFields();
+        _subtypeFilterId = null;
         _saveStatus = 'Saved';
         _saveError = '';
         _loading = false;
@@ -312,6 +321,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             return false;
           }
           if (_kindFilter != null && marker.kind != _kindFilter) {
+            return false;
+          }
+          if (_subtypeFilterId != null &&
+              marker.subtypeId != _subtypeFilterId) {
             return false;
           }
           if (_confidenceFilter != null &&
@@ -1726,7 +1739,26 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   child: Text(kind.label),
                 ),
             ],
-            onChanged: (value) => setState(() => _kindFilter = value),
+            onChanged: (value) => setState(() {
+              _kindFilter = value;
+              _subtypeFilterId = null;
+            }),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String?>(
+            key: ValueKey<ArcAdminMapMarkerKind?>(_kindFilter),
+            isExpanded: true,
+            initialValue: _currentSubtypeFilterValue(),
+            decoration: const InputDecoration(labelText: 'Subsection filter'),
+            items: _subtypeFilterOptions()
+                .map(
+                  (option) => DropdownMenuItem<String?>(
+                    value: option.id,
+                    child: Text(option.label),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (value) => setState(() => _subtypeFilterId = value),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<ArcRaidIntelConfidence?>(
@@ -1800,6 +1832,42 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         ],
       ),
     );
+  }
+
+  List<_SubtypeFilterOption> _subtypeFilterOptions() {
+    final options = <_SubtypeFilterOption>[
+      const _SubtypeFilterOption(id: null, label: 'All subsections'),
+    ];
+    final seen = <String>{};
+    void add(String? id, String? label) {
+      final cleanId = id?.trim();
+      final cleanLabel = label?.trim();
+      if (cleanId == null || cleanId.isEmpty) return;
+      if (cleanLabel == null || cleanLabel.isEmpty) return;
+      if (!seen.add(cleanId)) return;
+      options.add(_SubtypeFilterOption(id: cleanId, label: cleanLabel));
+    }
+
+    if (_kindFilter != null) {
+      for (final subtype in ArcAdminMapMarkerSubtypeCatalog.forKind(
+        _kindFilter!,
+        mapName: _map.displayName,
+      )) {
+        add(subtype.id, subtype.label);
+      }
+    }
+    for (final marker in _markers) {
+      if (_kindFilter != null && marker.kind != _kindFilter) continue;
+      add(marker.subtypeId, marker.subtypeLabel);
+    }
+    return options;
+  }
+
+  String? _currentSubtypeFilterValue() {
+    for (final option in _subtypeFilterOptions()) {
+      if (option.id == _subtypeFilterId) return _subtypeFilterId;
+    }
+    return null;
   }
 
   Widget _metricPill(String label, String value) {

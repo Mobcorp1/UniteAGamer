@@ -211,6 +211,21 @@ void main() {
             .tags,
         contains('Great Mullein'),
       );
+
+      final searched = engine.build(
+        mapId: 'blue_gate',
+        adminMarkers: markers,
+        filters: ArcRaidMapFilterState.defaults.copyWith(
+          lootSources: true,
+          mapBasics: true,
+          searchQuery: 'Great Mullein',
+        ),
+      );
+
+      expect(
+        searched.visibleMarkers.map((marker) => marker.label),
+        contains('Admin Resource'),
+      );
       expect(
         categoriesByLabel['Admin ARC Spawn'],
         ArcRaidMapMarkerCategory.arcThreat,

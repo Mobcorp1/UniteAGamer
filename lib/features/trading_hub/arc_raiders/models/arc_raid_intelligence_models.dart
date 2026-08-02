@@ -790,7 +790,7 @@ class ArcRaidMapFilterState {
       return false;
     }
     final query = searchQuery.trim().toLowerCase();
-    if (query.isNotEmpty && !marker.label.toLowerCase().contains(query)) {
+    if (query.isNotEmpty && !_markerMatchesQuery(marker, query)) {
       return false;
     }
     if (highConfidence && marker.confidence.score < 70) return false;
@@ -836,6 +836,14 @@ class ArcRaidMapFilterState {
       default:
         return mapBasics;
     }
+  }
+
+  static bool _markerMatchesQuery(ArcRaidMapMarker marker, String query) {
+    return marker.label.toLowerCase().contains(query) ||
+        marker.detail.toLowerCase().contains(query) ||
+        marker.category.label.toLowerCase().contains(query) ||
+        marker.tags.any((tag) => tag.toLowerCase().contains(query)) ||
+        marker.blueprintIds.any((id) => id.toLowerCase().contains(query));
   }
 
   ArcRaidMapFilterState copyWith({
