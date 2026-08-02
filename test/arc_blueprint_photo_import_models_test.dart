@@ -34,6 +34,60 @@ void main() {
 
       expect(session.providerConfigurationRequired, isTrue);
       expect(session.canWriteBlueprintState, isFalse);
+      expect(
+        session.writeBlockReason,
+        'Configure the image/OCR provider before scanning.',
+      );
+    });
+
+    test('guides the two-image capture workflow', () {
+      const empty = ArcBlueprintPhotoImportSession(
+        id: 'import-capture',
+        uid: 'user-1',
+        status: ArcBlueprintPhotoImportStatus.draft,
+      );
+      const firstCapture = ArcBlueprintPhotoImportSession(
+        id: 'import-capture',
+        uid: 'user-1',
+        status: ArcBlueprintPhotoImportStatus.uploaded,
+        captures: <ArcBlueprintPhotoCapture>[
+          ArcBlueprintPhotoCapture(
+            id: 'capture-top',
+            imagePath: 'local://top.webp',
+            sequenceIndex: 0,
+          ),
+        ],
+      );
+      const complete = ArcBlueprintPhotoImportSession(
+        id: 'import-capture',
+        uid: 'user-1',
+        status: ArcBlueprintPhotoImportStatus.uploaded,
+        captures: <ArcBlueprintPhotoCapture>[
+          ArcBlueprintPhotoCapture(
+            id: 'capture-top',
+            imagePath: 'local://top.webp',
+            sequenceIndex: 0,
+          ),
+          ArcBlueprintPhotoCapture(
+            id: 'capture-bottom',
+            imagePath: 'local://bottom.webp',
+            sequenceIndex: 1,
+            overlapSignature: 'row-overlap',
+          ),
+        ],
+      );
+
+      expect(empty.nextCaptureStep, ArcBlueprintPhotoCaptureStep.captureTop);
+      expect(empty.writeBlockReason, contains('top half'));
+      expect(
+        firstCapture.nextCaptureStep,
+        ArcBlueprintPhotoCaptureStep.captureBottomWithOverlap,
+      );
+      expect(firstCapture.needsSecondCapture, isTrue);
+      expect(firstCapture.writeBlockReason, contains('overlapping row'));
+      expect(complete.captureSetComplete, isTrue);
+      expect(complete.canRunLocalStitching, isTrue);
+      expect(complete.nextCaptureStep, ArcBlueprintPhotoCaptureStep.review);
     });
 
     test('serializes confirmed high-confidence import sessions', () {
@@ -60,6 +114,14 @@ void main() {
             detectedCells: 20,
             overlapSignature: 'row-a',
           ),
+          ArcBlueprintPhotoCapture(
+            id: 'capture-2',
+            imagePath: 'gs://bucket/user/import-2/capture-2.webp',
+            sequenceIndex: 1,
+            detectedRows: 4,
+            detectedCells: 20,
+            overlapSignature: 'row-a',
+          ),
         ],
         reviewChanges: <ArcBlueprintPhotoReviewChange>[
           ArcBlueprintPhotoReviewChange(
@@ -75,8 +137,10 @@ void main() {
 
       expect(restored.hasProviderConfigured, isTrue);
       expect(restored.canWriteBlueprintState, isTrue);
+      expect(restored.writeBlockReason, isEmpty);
       expect(restored.candidates.single.blueprintId, 'anvil');
-      expect(restored.captures.single.overlapSignature, 'row-a');
+      expect(restored.captures, hasLength(2));
+      expect(restored.captures.last.overlapSignature, 'row-a');
       expect(restored.reviewChanges.single.needsReview, isFalse);
     });
 
@@ -88,6 +152,18 @@ void main() {
           uid: 'user-1',
           status: ArcBlueprintPhotoImportStatus.confirmed,
           provider: 'configured_provider',
+          captures: <ArcBlueprintPhotoCapture>[
+            ArcBlueprintPhotoCapture(
+              id: 'capture-1',
+              imagePath: 'local://top.webp',
+              sequenceIndex: 0,
+            ),
+            ArcBlueprintPhotoCapture(
+              id: 'capture-2',
+              imagePath: 'local://bottom.webp',
+              sequenceIndex: 1,
+            ),
+          ],
           candidates: <ArcBlueprintPhotoCandidate>[
             ArcBlueprintPhotoCandidate(
               blueprintId: 'anvil',
@@ -99,6 +175,10 @@ void main() {
 
         expect(session.canWriteBlueprintState, isFalse);
         expect(session.writePreviewOnly, isTrue);
+        expect(
+          session.writeBlockReason,
+          'Confirm the reviewed Blueprint matches before saving.',
+        );
       },
     );
   });

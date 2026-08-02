@@ -11,6 +11,12 @@ enum ArcBlueprintPhotoImportStatus {
   failed,
 }
 
+enum ArcBlueprintPhotoCaptureStep {
+  captureTop,
+  captureBottomWithOverlap,
+  review,
+}
+
 extension ArcBlueprintPhotoImportStatusX on ArcBlueprintPhotoImportStatus {
   String get wireName => name;
 
@@ -177,6 +183,30 @@ class ArcBlueprintPhotoImportSession {
   final DateTime? updatedAt;
 
   bool get hasProviderConfigured => provider.trim().isNotEmpty;
+  int get requiredCaptureCount => 2;
+  int get captureCount => captures.length;
+  bool get captureSetComplete => captureCount >= requiredCaptureCount;
+  bool get needsSecondCapture => captureCount == 1;
+  bool get canRunLocalStitching => captureSetComplete;
+  ArcBlueprintPhotoCaptureStep get nextCaptureStep {
+    if (captureCount <= 0) return ArcBlueprintPhotoCaptureStep.captureTop;
+    if (captureCount == 1) {
+      return ArcBlueprintPhotoCaptureStep.captureBottomWithOverlap;
+    }
+    return ArcBlueprintPhotoCaptureStep.review;
+  }
+
+  String get nextCaptureInstruction {
+    return switch (nextCaptureStep) {
+      ArcBlueprintPhotoCaptureStep.captureTop =>
+        'Capture the top half of your Blueprint grid.',
+      ArcBlueprintPhotoCaptureStep.captureBottomWithOverlap =>
+        'Capture the lower half with one overlapping row visible.',
+      ArcBlueprintPhotoCaptureStep.review =>
+        'Review the stitched Blueprint matches before saving.',
+    };
+  }
+
   bool get canWriteBlueprintState =>
       status == ArcBlueprintPhotoImportStatus.confirmed &&
       confirmedByUser &&
@@ -189,6 +219,26 @@ class ArcBlueprintPhotoImportSession {
       status == ArcBlueprintPhotoImportStatus.providerConfigurationRequired ||
       (status == ArcBlueprintPhotoImportStatus.awaitingProvider &&
           !hasProviderConfigured);
+
+  String get writeBlockReason {
+    if (canWriteBlueprintState) return '';
+    if (providerConfigurationRequired) {
+      return 'Configure the image/OCR provider before scanning.';
+    }
+    if (!captureSetComplete) return nextCaptureInstruction;
+    if (status == ArcBlueprintPhotoImportStatus.needsUserReview ||
+        candidates.any((candidate) => candidate.needsReview) ||
+        reviewChanges.any((change) => change.needsReview)) {
+      return 'Review uncertain Blueprint matches before saving.';
+    }
+    if (!confirmedByUser) {
+      return 'Confirm the reviewed Blueprint matches before saving.';
+    }
+    if (writePreviewOnly) {
+      return 'Preview-only sessions cannot write Blueprint ownership.';
+    }
+    return 'Blueprint import is not ready to save.';
+  }
 
   Map<String, dynamic> toMap() {
     return {
