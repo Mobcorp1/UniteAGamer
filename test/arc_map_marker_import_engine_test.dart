@@ -79,7 +79,17 @@ void main() {
           "records": [
             {"id": "case", "kind": "weapon_case", "name": "Weapon case", "x": 0.1, "y": 0.2, "confidence": "strong"},
             {"id": "security", "kind": "security_room", "name": "Security room", "x": 0.2, "y": 0.3, "confidence": "strong"},
-            {"id": "key", "kind": "key_required_location", "name": "Key room", "x": 0.3, "y": 0.4, "confidence": "strong"}
+            {"id": "key", "kind": "key_required_location", "name": "Key room", "x": 0.3, "y": 0.4, "confidence": "strong"},
+            {"id": "event", "kind": "map_event", "name": "Event", "x": 0.4, "y": 0.5, "confidence": "strong"},
+            {"id": "resource", "kind": "natural_resource", "name": "Resource", "x": 0.5, "y": 0.6, "confidence": "strong"},
+            {"id": "arc", "kind": "arc_spawn", "name": "ARC spawn", "x": 0.6, "y": 0.7, "confidence": "strong"},
+            {"id": "first", "kind": "first_wave_cache", "name": "First Wave", "x": 0.7, "y": 0.8, "confidence": "strong"},
+            {"id": "raider", "kind": "raider_cache", "name": "Raider cache", "x": 0.8, "y": 0.2, "confidence": "strong"},
+            {"id": "field", "kind": "field_crate", "name": "Field crate", "x": 0.2, "y": 0.8, "confidence": "strong"},
+            {"id": "cluster", "kind": "container_cluster", "name": "Containers", "x": 0.3, "y": 0.8, "confidence": "strong"},
+            {"id": "surface", "kind": "surface_transition", "name": "Surface access", "x": 0.4, "y": 0.8, "confidence": "strong"},
+            {"id": "underground", "kind": "level_2_access", "name": "Level 2 access", "x": 0.5, "y": 0.8, "confidence": "strong"},
+            {"id": "hazard", "kind": "danger_zone", "name": "Hazard", "x": 0.6, "y": 0.8, "confidence": "strong"}
           ]
         }
         ''',
@@ -92,6 +102,16 @@ void main() {
       expect(kinds, contains(ArcAdminMapMarkerKind.weaponCase));
       expect(kinds, contains(ArcAdminMapMarkerKind.securityRoom));
       expect(kinds, contains(ArcAdminMapMarkerKind.keyRequiredLocation));
+      expect(kinds, contains(ArcAdminMapMarkerKind.mapEvent));
+      expect(kinds, contains(ArcAdminMapMarkerKind.naturalResource));
+      expect(kinds, contains(ArcAdminMapMarkerKind.arcSpawn));
+      expect(kinds, contains(ArcAdminMapMarkerKind.firstWaveCache));
+      expect(kinds, contains(ArcAdminMapMarkerKind.raiderCache));
+      expect(kinds, contains(ArcAdminMapMarkerKind.fieldCrate));
+      expect(kinds, contains(ArcAdminMapMarkerKind.containerCluster));
+      expect(kinds, contains(ArcAdminMapMarkerKind.surfaceTransition));
+      expect(kinds, contains(ArcAdminMapMarkerKind.undergroundTransition));
+      expect(kinds, contains(ArcAdminMapMarkerKind.hazard));
     });
 
     test('keeps medium-confidence permitted records provisional', () {

@@ -88,6 +88,155 @@ void main() {
       );
     });
 
+    test('maps UAG admin marker palette types into live map categories', () {
+      const markers = <ArcAdminMapMarker>[
+        ArcAdminMapMarker(
+          id: 'admin_event',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.mapEvent,
+          name: 'Admin Event',
+          point: ArcNormalizedPoint(x: 0.11, y: 0.22),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_resource',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.naturalResource,
+          name: 'Admin Resource',
+          point: ArcNormalizedPoint(x: 0.21, y: 0.32),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_arc_spawn',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.arcSpawn,
+          name: 'Admin ARC Spawn',
+          point: ArcNormalizedPoint(x: 0.31, y: 0.42),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_first_wave',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.firstWaveCache,
+          name: 'Admin First Wave',
+          point: ArcNormalizedPoint(x: 0.41, y: 0.52),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_raider_cache',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.raiderCache,
+          name: 'Admin Raider Cache',
+          point: ArcNormalizedPoint(x: 0.51, y: 0.62),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_field_crate',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.fieldCrate,
+          name: 'Admin Field Crate',
+          point: ArcNormalizedPoint(x: 0.61, y: 0.72),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_container_cluster',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.containerCluster,
+          name: 'Admin Containers',
+          point: ArcNormalizedPoint(x: 0.71, y: 0.22),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_surface_transition',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.surfaceTransition,
+          name: 'Admin Surface Access',
+          point: ArcNormalizedPoint(x: 0.81, y: 0.32),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_underground_transition',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.undergroundTransition,
+          name: 'Admin Underground Access',
+          point: ArcNormalizedPoint(x: 0.18, y: 0.82),
+          state: ArcAdminMapMarkerState.published,
+        ),
+        ArcAdminMapMarker(
+          id: 'admin_hazard',
+          mapId: 'blue_gate',
+          layer: ArcRaidMapLayer.surface,
+          kind: ArcAdminMapMarkerKind.hazard,
+          name: 'Admin Hazard',
+          point: ArcNormalizedPoint(x: 0.28, y: 0.82),
+          state: ArcAdminMapMarkerState.published,
+        ),
+      ];
+
+      final intelligence = engine.build(
+        mapId: 'blue_gate',
+        adminMarkers: markers,
+        filters: ArcRaidMapFilterState.defaults.copyWith(
+          lootSources: true,
+          mapBasics: true,
+        ),
+      );
+      final categoriesByLabel = <String, ArcRaidMapMarkerCategory>{
+        for (final marker in intelligence.visibleMarkers)
+          if (marker.label.startsWith('Admin ')) marker.label: marker.category,
+      };
+
+      expect(
+        categoriesByLabel['Admin Event'],
+        ArcRaidMapMarkerCategory.mapEvent,
+      );
+      expect(
+        categoriesByLabel['Admin Resource'],
+        ArcRaidMapMarkerCategory.generalLoot,
+      );
+      expect(
+        categoriesByLabel['Admin ARC Spawn'],
+        ArcRaidMapMarkerCategory.arcThreat,
+      );
+      expect(
+        categoriesByLabel['Admin First Wave'],
+        ArcRaidMapMarkerCategory.firstWaveCache,
+      );
+      expect(
+        categoriesByLabel['Admin Raider Cache'],
+        ArcRaidMapMarkerCategory.raiderCache,
+      );
+      expect(
+        categoriesByLabel['Admin Field Crate'],
+        ArcRaidMapMarkerCategory.fieldCrate,
+      );
+      expect(
+        categoriesByLabel['Admin Containers'],
+        ArcRaidMapMarkerCategory.containerCluster,
+      );
+      expect(
+        categoriesByLabel['Admin Surface Access'],
+        ArcRaidMapMarkerCategory.surfaceTransition,
+      );
+      expect(
+        categoriesByLabel['Admin Underground Access'],
+        ArcRaidMapMarkerCategory.undergroundTransition,
+      );
+      expect(
+        categoriesByLabel['Admin Hazard'],
+        ArcRaidMapMarkerCategory.configuredHazard,
+      );
+    });
+
     test('injects UAG world population markers into live intelligence', () {
       final intelligence = engine.build(
         mapId: 'buried_city',

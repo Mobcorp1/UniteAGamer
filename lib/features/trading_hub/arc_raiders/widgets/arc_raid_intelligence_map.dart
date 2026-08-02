@@ -341,16 +341,29 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
       case ArcRaidMapMarkerCategory.routeWaypoint:
         return Icons.route_rounded;
       case ArcRaidMapMarkerCategory.weaponCase:
+        return Icons.inventory_rounded;
       case ArcRaidMapMarkerCategory.securityLocker:
+        return Icons.lock_rounded;
       case ArcRaidMapMarkerCategory.firstWaveCache:
       case ArcRaidMapMarkerCategory.raiderCache:
       case ArcRaidMapMarkerCategory.fieldCrate:
       case ArcRaidMapMarkerCategory.containerCluster:
         return Icons.inventory_2_rounded;
+      case ArcRaidMapMarkerCategory.lockedRoom:
+        return Icons.lock_rounded;
+      case ArcRaidMapMarkerCategory.keyRoom:
+        return Icons.vpn_key_rounded;
+      case ArcRaidMapMarkerCategory.generalLoot:
+        return Icons.all_inbox_rounded;
       case ArcRaidMapMarkerCategory.mapEvent:
         return Icons.bolt_rounded;
       case ArcRaidMapMarkerCategory.arcThreat:
         return Icons.warning_rounded;
+      case ArcRaidMapMarkerCategory.surfaceTransition:
+      case ArcRaidMapMarkerCategory.undergroundTransition:
+        return Icons.stairs_rounded;
+      case ArcRaidMapMarkerCategory.configuredHazard:
+        return Icons.crisis_alert_rounded;
       default:
         return Icons.place_rounded;
     }

@@ -683,14 +683,28 @@ class ArcRaidIntelligenceEngine {
         return ArcRaidMapMarkerCategory.blueprintOpportunity;
       case ArcAdminMapMarkerKind.questLocation:
         return ArcRaidMapMarkerCategory.questObjective;
+      case ArcAdminMapMarkerKind.mapEvent:
+        return ArcRaidMapMarkerCategory.mapEvent;
       case ArcAdminMapMarkerKind.resourceNode:
         return ArcRaidMapMarkerCategory.tradePreparationRequirement;
+      case ArcAdminMapMarkerKind.naturalResource:
+        return ArcRaidMapMarkerCategory.generalLoot;
+      case ArcAdminMapMarkerKind.arcSpawn:
+        return ArcRaidMapMarkerCategory.arcThreat;
       case ArcAdminMapMarkerKind.weaponCase:
         return ArcRaidMapMarkerCategory.weaponCase;
       case ArcAdminMapMarkerKind.weaponCache:
         return ArcRaidMapMarkerCategory.raiderCache;
+      case ArcAdminMapMarkerKind.firstWaveCache:
+        return ArcRaidMapMarkerCategory.firstWaveCache;
+      case ArcAdminMapMarkerKind.raiderCache:
+        return ArcRaidMapMarkerCategory.raiderCache;
+      case ArcAdminMapMarkerKind.fieldCrate:
+        return ArcRaidMapMarkerCategory.fieldCrate;
       case ArcAdminMapMarkerKind.lootContainer:
         return ArcRaidMapMarkerCategory.fieldCrate;
+      case ArcAdminMapMarkerKind.containerCluster:
+        return ArcRaidMapMarkerCategory.containerCluster;
       case ArcAdminMapMarkerKind.lockedRoom:
         return ArcRaidMapMarkerCategory.lockedRoom;
       case ArcAdminMapMarkerKind.securityRoom:
@@ -703,7 +717,12 @@ class ArcRaidIntelligenceEngine {
       case ArcAdminMapMarkerKind.arcThreat:
         return ArcRaidMapMarkerCategory.arcThreat;
       case ArcAdminMapMarkerKind.extractionDanger:
+      case ArcAdminMapMarkerKind.hazard:
         return ArcRaidMapMarkerCategory.configuredHazard;
+      case ArcAdminMapMarkerKind.surfaceTransition:
+        return ArcRaidMapMarkerCategory.surfaceTransition;
+      case ArcAdminMapMarkerKind.undergroundTransition:
+        return ArcRaidMapMarkerCategory.undergroundTransition;
       case ArcAdminMapMarkerKind.customIntel:
         if (marker.adminVerified ||
             marker.confidence == ArcRaidIntelConfidence.confirmed) {

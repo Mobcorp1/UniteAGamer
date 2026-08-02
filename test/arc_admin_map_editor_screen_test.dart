@@ -130,10 +130,27 @@ void main() {
     expect(find.text('Export JSON'), findsOneWidget);
     expect(find.text('Import JSON'), findsOneWidget);
     expect(find.text('Populate UAG World'), findsOneWidget);
-    expect(find.text('IMPORT PIPELINE'), findsOneWidget);
+    expect(find.text('UAG MARKER PALETTE'), findsOneWidget);
+    expect(find.text('Event'), findsOneWidget);
+    expect(find.text('Resource'), findsOneWidget);
+    expect(find.text('ARC Spawn'), findsOneWidget);
+    expect(find.text('Containers'), findsOneWidget);
+    expect(find.text('Hazard'), findsOneWidget);
     expect(find.text('Publish Selected'), findsOneWidget);
 
-    await tester.drag(find.text('IMPORT PIPELINE'), const Offset(0, -320));
+    await tester.scrollUntilVisible(
+      find.text('IMPORT PIPELINE'),
+      220,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('IMPORT PIPELINE'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Confidence filter'),
+      220,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Confidence filter'), findsOneWidget);

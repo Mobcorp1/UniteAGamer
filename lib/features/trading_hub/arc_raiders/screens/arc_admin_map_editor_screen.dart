@@ -35,6 +35,119 @@ class ArcAdminMapEditorScreen extends StatefulWidget {
       _ArcAdminMapEditorScreenState();
 }
 
+const List<_MarkerPaletteItem> _uagMarkerPaletteItems = [
+  _MarkerPaletteItem(
+    label: 'Location',
+    kind: ArcAdminMapMarkerKind.poi,
+    icon: Icons.location_city_rounded,
+    sourceLabel: 'UAG Manual Location',
+  ),
+  _MarkerPaletteItem(
+    label: 'Quest',
+    kind: ArcAdminMapMarkerKind.questLocation,
+    icon: Icons.assignment_turned_in_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Event',
+    kind: ArcAdminMapMarkerKind.mapEvent,
+    icon: Icons.bolt_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Resource',
+    kind: ArcAdminMapMarkerKind.naturalResource,
+    icon: Icons.eco_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'ARC Spawn',
+    kind: ArcAdminMapMarkerKind.arcSpawn,
+    icon: Icons.my_location_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'ARC Threat',
+    kind: ArcAdminMapMarkerKind.arcThreat,
+    icon: Icons.warning_amber_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Weapon Case',
+    kind: ArcAdminMapMarkerKind.weaponCase,
+    icon: Icons.inventory_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'First Wave',
+    kind: ArcAdminMapMarkerKind.firstWaveCache,
+    icon: Icons.inventory_2_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Raider Cache',
+    kind: ArcAdminMapMarkerKind.raiderCache,
+    icon: Icons.gps_fixed_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Field Crate',
+    kind: ArcAdminMapMarkerKind.fieldCrate,
+    icon: Icons.inventory_2_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Containers',
+    kind: ArcAdminMapMarkerKind.containerCluster,
+    icon: Icons.all_inbox_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Locked Room',
+    kind: ArcAdminMapMarkerKind.lockedRoom,
+    icon: Icons.lock_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Key Room',
+    kind: ArcAdminMapMarkerKind.keyRequiredLocation,
+    icon: Icons.vpn_key_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Blueprint',
+    kind: ArcAdminMapMarkerKind.blueprint,
+    icon: Icons.extension_rounded,
+    requireBlueprint: true,
+    dialogTitle: 'Create Historical Blueprint',
+    statusLabel: 'historical Blueprint find',
+    sourceLabel: 'Historical Blueprint Intel',
+  ),
+  _MarkerPaletteItem(
+    label: 'Hazard',
+    kind: ArcAdminMapMarkerKind.hazard,
+    icon: Icons.crisis_alert_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Surface',
+    kind: ArcAdminMapMarkerKind.surfaceTransition,
+    icon: Icons.stairs_rounded,
+  ),
+  _MarkerPaletteItem(
+    label: 'Underground',
+    kind: ArcAdminMapMarkerKind.undergroundTransition,
+    icon: Icons.stairs_rounded,
+  ),
+];
+
+class _MarkerPaletteItem {
+  const _MarkerPaletteItem({
+    required this.label,
+    required this.kind,
+    required this.icon,
+    this.requireBlueprint = false,
+    this.dialogTitle,
+    this.statusLabel,
+    this.sourceLabel = 'UAG Manual Marker',
+  });
+
+  final String label;
+  final ArcAdminMapMarkerKind kind;
+  final IconData icon;
+  final bool requireBlueprint;
+  final String? dialogTitle;
+  final String? statusLabel;
+  final String sourceLabel;
+}
+
 class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   late final ArcAdminMapEditorRepository _repository;
   final _importAdapter = const ArcPermittedJsonMapMarkerImportAdapter();
@@ -54,7 +167,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   bool _saving = false;
   bool _dirty = false;
   bool _placingNewPoi = false;
-  bool _placingHistoricalBlueprint = false;
+  ArcAdminMapMarkerKind _placementKind = ArcAdminMapMarkerKind.poi;
+  bool _placementRequiresBlueprint = false;
+  String _placementDialogTitle = 'Create POI';
+  String _placementSourceLabel = 'UAG Manual Location';
   bool _showSeedDefinitions = true;
   bool _showCustomIntel = true;
   bool _showReferenceGrid = true;
@@ -123,8 +239,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         _lastWorldPopulation = null;
         _undoStack.clear();
         _dirty = false;
-        _placingNewPoi = false;
-        _placingHistoricalBlueprint = false;
+        _resetPlacementFields();
         _saveStatus = 'Saved';
         _saveError = '';
         _loading = false;
@@ -301,12 +416,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   void _handleMapTap(Offset localPosition, Size size) {
     final point = _pointFromLocalPosition(localPosition, size);
     if (_placingNewPoi) {
-      unawaited(
-        _createMarkerAt(
-          point,
-          historicalBlueprint: _placingHistoricalBlueprint,
-        ),
-      );
+      unawaited(_createMarkerAt(point));
       return;
     }
     _placeSelected(point);
@@ -668,49 +778,80 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   }
 
   void _beginPoiPlacement() {
-    setState(() {
-      _placingNewPoi = true;
-      _placingHistoricalBlueprint = false;
-      _saveStatus = 'Click the map to place the new POI';
-    });
-    _message('Click the map to place the new POI.');
+    _beginMarkerPlacement(
+      kind: ArcAdminMapMarkerKind.poi,
+      label: 'POI',
+      sourceLabel: 'UAG Manual Location',
+      dialogTitle: 'Create POI',
+    );
   }
 
   void _beginHistoricalBlueprintPlacement() {
-    setState(() {
-      _placingNewPoi = true;
-      _placingHistoricalBlueprint = true;
-      _saveStatus = 'Click the map to place the historical Blueprint find';
-    });
-    _message('Click the map to place the historical Blueprint find.');
+    _beginMarkerPlacement(
+      kind: ArcAdminMapMarkerKind.blueprint,
+      label: 'historical Blueprint find',
+      requireBlueprint: true,
+      sourceLabel: 'Historical Blueprint Intel',
+      dialogTitle: 'Create Historical Blueprint',
+    );
   }
 
-  Future<void> _createMarkerAt(
-    ArcNormalizedPoint point, {
-    bool historicalBlueprint = false,
-  }) async {
+  void _beginPaletteMarkerPlacement(_MarkerPaletteItem item) {
+    _beginMarkerPlacement(
+      kind: item.kind,
+      label: item.statusLabel ?? item.label,
+      requireBlueprint: item.requireBlueprint,
+      sourceLabel: item.sourceLabel,
+      dialogTitle: item.dialogTitle ?? 'Create ${item.label}',
+    );
+  }
+
+  void _beginMarkerPlacement({
+    required ArcAdminMapMarkerKind kind,
+    required String label,
+    required String sourceLabel,
+    required String dialogTitle,
+    bool requireBlueprint = false,
+  }) {
+    setState(() {
+      _placingNewPoi = true;
+      _placementKind = kind;
+      _placementRequiresBlueprint = requireBlueprint;
+      _placementDialogTitle = dialogTitle;
+      _placementSourceLabel = sourceLabel;
+      _saveStatus = 'Click the map to place $label';
+    });
+    _message('Click the map to place $label.');
+  }
+
+  void _resetPlacementFields() {
+    _placingNewPoi = false;
+    _placementKind = ArcAdminMapMarkerKind.poi;
+    _placementRequiresBlueprint = false;
+    _placementDialogTitle = 'Create POI';
+    _placementSourceLabel = 'UAG Manual Location';
+  }
+
+  Future<void> _createMarkerAt(ArcNormalizedPoint point) async {
+    final dialogTitle = _placementDialogTitle;
+    final initialKind = _placementKind;
+    final requireBlueprint = _placementRequiresBlueprint;
+    final sourceLabel = _placementSourceLabel;
     final result = await showDialog<_NewMarkerResult>(
       context: context,
       builder: (context) => _NewMarkerDialog(
-        title: historicalBlueprint
-            ? 'Create Historical Blueprint'
-            : 'Create POI',
+        title: dialogTitle,
         actionLabel: 'Create Draft',
-        initialKind: historicalBlueprint
-            ? ArcAdminMapMarkerKind.blueprint
-            : ArcAdminMapMarkerKind.poi,
+        initialKind: initialKind,
         includeSeedKinds: true,
-        requireBlueprint: historicalBlueprint,
-        initialSourceLabel: historicalBlueprint
-            ? 'Historical Blueprint Intel'
-            : 'Mike / Admin Intel',
+        requireBlueprint: requireBlueprint,
+        initialSourceLabel: sourceLabel,
       ),
     );
     if (!mounted) return;
     if (result == null) {
       setState(() {
-        _placingNewPoi = false;
-        _placingHistoricalBlueprint = false;
+        _resetPlacementFields();
         _saveStatus = _dirty ? 'Unsaved changes' : 'Saved';
       });
       return;
@@ -746,8 +887,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       _markers = [..._markers, marker]
         ..sort((a, b) => a.name.compareTo(b.name));
       _selected = marker;
-      _placingNewPoi = false;
-      _placingHistoricalBlueprint = false;
+      _resetPlacementFields();
       _showCustomIntel = true;
       _markDirty();
     });
@@ -1268,6 +1408,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               children: [
                 _saveStatusCard(),
                 const SizedBox(height: 10),
+                _markerPaletteCard(),
+                const SizedBox(height: 10),
                 _importDashboardCard(),
                 const SizedBox(height: 10),
                 _markerFiltersCard(),
@@ -1504,6 +1646,37 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
               style: TextStyle(color: AppTheme.tradingDanger, fontSize: 11),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _markerPaletteCard() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.35),
+        backgroundColor: Colors.black.withValues(alpha: 0.24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('UAG MARKER PALETTE', style: _sectionLabelStyle()),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (final item in _uagMarkerPaletteItems)
+                OutlinedButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : () => _beginPaletteMarkerPlacement(item),
+                  icon: Icon(item.icon, size: 16, color: _kindColor(item.kind)),
+                  label: Text(item.label),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -1816,12 +1989,21 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return AppTheme.neonPink;
       case ArcAdminMapMarkerKind.questLocation:
         return Colors.cyanAccent;
+      case ArcAdminMapMarkerKind.mapEvent:
+        return Colors.lightBlueAccent;
       case ArcAdminMapMarkerKind.resourceNode:
+      case ArcAdminMapMarkerKind.naturalResource:
         return Colors.tealAccent;
+      case ArcAdminMapMarkerKind.arcSpawn:
+        return Colors.redAccent;
       case ArcAdminMapMarkerKind.weaponCase:
       case ArcAdminMapMarkerKind.weaponCache:
+      case ArcAdminMapMarkerKind.firstWaveCache:
+      case ArcAdminMapMarkerKind.raiderCache:
         return Colors.orangeAccent;
       case ArcAdminMapMarkerKind.lootContainer:
+      case ArcAdminMapMarkerKind.fieldCrate:
+      case ArcAdminMapMarkerKind.containerCluster:
       case ArcAdminMapMarkerKind.highValueLoot:
         return Colors.yellowAccent;
       case ArcAdminMapMarkerKind.lockedRoom:
@@ -1831,7 +2013,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Colors.deepPurpleAccent;
       case ArcAdminMapMarkerKind.arcThreat:
       case ArcAdminMapMarkerKind.extractionDanger:
+      case ArcAdminMapMarkerKind.hazard:
         return Colors.redAccent;
+      case ArcAdminMapMarkerKind.surfaceTransition:
+      case ArcAdminMapMarkerKind.undergroundTransition:
+        return Colors.lightGreenAccent;
       case ArcAdminMapMarkerKind.customIntel:
         return Colors.white70;
     }
@@ -1849,14 +2035,28 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         return Icons.extension_rounded;
       case ArcAdminMapMarkerKind.questLocation:
         return Icons.assignment_turned_in_rounded;
+      case ArcAdminMapMarkerKind.mapEvent:
+        return Icons.bolt_rounded;
       case ArcAdminMapMarkerKind.resourceNode:
         return Icons.construction_rounded;
+      case ArcAdminMapMarkerKind.naturalResource:
+        return Icons.eco_rounded;
+      case ArcAdminMapMarkerKind.arcSpawn:
+        return Icons.my_location_rounded;
       case ArcAdminMapMarkerKind.weaponCase:
         return Icons.inventory_rounded;
       case ArcAdminMapMarkerKind.weaponCache:
         return Icons.gps_fixed_rounded;
+      case ArcAdminMapMarkerKind.firstWaveCache:
+        return Icons.inventory_2_rounded;
+      case ArcAdminMapMarkerKind.raiderCache:
+        return Icons.gps_fixed_rounded;
+      case ArcAdminMapMarkerKind.fieldCrate:
+        return Icons.inventory_2_rounded;
       case ArcAdminMapMarkerKind.lootContainer:
         return Icons.inventory_2_rounded;
+      case ArcAdminMapMarkerKind.containerCluster:
+        return Icons.all_inbox_rounded;
       case ArcAdminMapMarkerKind.lockedRoom:
       case ArcAdminMapMarkerKind.securityRoom:
         return Icons.lock_rounded;
@@ -1868,7 +2068,11 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       case ArcAdminMapMarkerKind.arcThreat:
         return Icons.warning_amber_rounded;
       case ArcAdminMapMarkerKind.extractionDanger:
+      case ArcAdminMapMarkerKind.hazard:
         return Icons.crisis_alert_rounded;
+      case ArcAdminMapMarkerKind.surfaceTransition:
+      case ArcAdminMapMarkerKind.undergroundTransition:
+        return Icons.stairs_rounded;
       case ArcAdminMapMarkerKind.customIntel:
         return Icons.push_pin_rounded;
     }

@@ -136,18 +136,32 @@ class ArcPermittedJsonMapMarkerImportAdapter {
       'quest' ||
       'quest_location' ||
       'quest_objective' => ArcAdminMapMarkerKind.questLocation,
-      'resource' ||
-      'resource_node' ||
-      'material' => ArcAdminMapMarkerKind.resourceNode,
+      'event' ||
+      'map_event' ||
+      'world_event' ||
+      'hurricane' => ArcAdminMapMarkerKind.mapEvent,
+      'resource' || 'resource_node' => ArcAdminMapMarkerKind.resourceNode,
+      'natural_resource' ||
+      'natural_resources' ||
+      'material' ||
+      'materials' => ArcAdminMapMarkerKind.naturalResource,
+      'arc' ||
+      'arc_spawn' ||
+      'machine_spawn' ||
+      'enemy_spawn' => ArcAdminMapMarkerKind.arcSpawn,
       'weapon_case' || 'weapon_crate' => ArcAdminMapMarkerKind.weaponCase,
-      'weapon_cache' ||
-      'raider_cache' ||
-      'cache' ||
-      'weapon' => ArcAdminMapMarkerKind.weaponCache,
+      'weapon_cache' || 'weapon' => ArcAdminMapMarkerKind.weaponCache,
+      'first_wave_cache' ||
+      'first_wave' ||
+      'hurricane_cache' => ArcAdminMapMarkerKind.firstWaveCache,
+      'raider_cache' || 'cache' => ArcAdminMapMarkerKind.raiderCache,
+      'field_crate' || 'field_crates' => ArcAdminMapMarkerKind.fieldCrate,
       'loot' ||
       'loot_container' ||
-      'crate' ||
-      'field_crate' => ArcAdminMapMarkerKind.lootContainer,
+      'crate' => ArcAdminMapMarkerKind.lootContainer,
+      'container' ||
+      'containers' ||
+      'container_cluster' => ArcAdminMapMarkerKind.containerCluster,
       'locked_room' => ArcAdminMapMarkerKind.lockedRoom,
       'security_room' ||
       'security' ||
@@ -158,9 +172,15 @@ class ArcPermittedJsonMapMarkerImportAdapter {
       'key_required' ||
       'key_required_location' ||
       'locked_key_room' => ArcAdminMapMarkerKind.keyRequiredLocation,
-      'arc_threat' || 'threat' || 'hazard' => ArcAdminMapMarkerKind.arcThreat,
+      'arc_threat' || 'threat' => ArcAdminMapMarkerKind.arcThreat,
       'extraction_danger' ||
       'exit_danger' => ArcAdminMapMarkerKind.extractionDanger,
+      'surface_transition' ||
+      'surface_access' => ArcAdminMapMarkerKind.surfaceTransition,
+      'underground_transition' ||
+      'underground_access' ||
+      'level_2_access' => ArcAdminMapMarkerKind.undergroundTransition,
+      'hazard' || 'danger' || 'danger_zone' => ArcAdminMapMarkerKind.hazard,
       _ => ArcAdminMapMarkerKind.customIntel,
     };
   }

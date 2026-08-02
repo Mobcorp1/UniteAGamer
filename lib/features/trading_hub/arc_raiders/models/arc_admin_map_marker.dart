@@ -11,15 +11,25 @@ enum ArcAdminMapMarkerKind {
   raiderHatch,
   blueprint,
   questLocation,
+  mapEvent,
   resourceNode,
+  naturalResource,
+  arcSpawn,
   weaponCase,
   weaponCache,
+  firstWaveCache,
+  raiderCache,
+  fieldCrate,
   lootContainer,
+  containerCluster,
   lockedRoom,
   securityRoom,
   highValueLoot,
   arcThreat,
   extractionDanger,
+  surfaceTransition,
+  undergroundTransition,
+  hazard,
   key,
   keyRequiredLocation,
   customIntel,
@@ -38,14 +48,28 @@ extension ArcAdminMapMarkerKindX on ArcAdminMapMarkerKind {
         return 'Blueprint Find';
       case ArcAdminMapMarkerKind.questLocation:
         return 'Quest Location';
+      case ArcAdminMapMarkerKind.mapEvent:
+        return 'Map Event';
       case ArcAdminMapMarkerKind.resourceNode:
         return 'Resource Node';
+      case ArcAdminMapMarkerKind.naturalResource:
+        return 'Natural Resource';
+      case ArcAdminMapMarkerKind.arcSpawn:
+        return 'ARC Spawn';
       case ArcAdminMapMarkerKind.weaponCase:
         return 'Weapon Case';
       case ArcAdminMapMarkerKind.weaponCache:
         return 'Weapon Cache';
+      case ArcAdminMapMarkerKind.firstWaveCache:
+        return 'First Wave Cache';
+      case ArcAdminMapMarkerKind.raiderCache:
+        return 'Raider Cache';
+      case ArcAdminMapMarkerKind.fieldCrate:
+        return 'Field Crate';
       case ArcAdminMapMarkerKind.lootContainer:
         return 'Loot Container';
+      case ArcAdminMapMarkerKind.containerCluster:
+        return 'Container Cluster';
       case ArcAdminMapMarkerKind.lockedRoom:
         return 'Locked Room';
       case ArcAdminMapMarkerKind.securityRoom:
@@ -56,6 +80,12 @@ extension ArcAdminMapMarkerKindX on ArcAdminMapMarkerKind {
         return 'ARC Threat';
       case ArcAdminMapMarkerKind.extractionDanger:
         return 'Extraction Danger';
+      case ArcAdminMapMarkerKind.surfaceTransition:
+        return 'Surface Transition';
+      case ArcAdminMapMarkerKind.undergroundTransition:
+        return 'Underground Transition';
+      case ArcAdminMapMarkerKind.hazard:
+        return 'Hazard';
       case ArcAdminMapMarkerKind.key:
         return 'Key';
       case ArcAdminMapMarkerKind.keyRequiredLocation:
