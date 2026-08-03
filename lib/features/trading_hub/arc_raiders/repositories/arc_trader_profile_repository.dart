@@ -761,20 +761,28 @@ class ArcTraderProfileRepository {
     final uid = currentUid;
     if (uid == null) throw StateError('No authenticated user found.');
     final now = FieldValue.serverTimestamp();
+    final dayKeys = _activeAvailabilityDayKeys(availability);
     final batch = _firestore.batch();
     batch.set(availabilityDoc(uid), {
       ...availability.toMap(),
       'completed': true,
+      'availabilityCompleted': true,
+      'availabilityDayKeys': dayKeys,
       'updatedAt': now,
     }, SetOptions(merge: true));
     batch.set(profileDoc(uid), {
       'availabilityCompleted': true,
+      'availabilityDayKeys': dayKeys,
       'traderProfile': {'availabilityCompleted': true},
       'updatedAt': now,
     }, SetOptions(merge: true));
     batch.set(_userDoc(uid), {
       'availabilityCompleted': true,
-      'traderProfile': {'availabilityCompleted': true},
+      'availabilityDayKeys': dayKeys,
+      'traderProfile': {
+        'availabilityCompleted': true,
+        'availabilityDayKeys': dayKeys,
+      },
       'updatedAt': now,
       'lastActiveAt': now,
     }, SetOptions(merge: true));
@@ -782,6 +790,12 @@ class ArcTraderProfileRepository {
     await _evaluateAndPersistProfileCompletion(
       uid,
       availabilityOverride: availability,
+      availabilityDataOverride: <String, dynamic>{
+        ...availability.toMap(),
+        'completed': true,
+        'availabilityCompleted': true,
+        'availabilityDayKeys': dayKeys,
+      },
     );
     await ArcOperationsRepository(
       firestore: _firestore,
@@ -832,6 +846,7 @@ class ArcTraderProfileRepository {
         final result = const ArcProfileCompletionEvaluator().evaluate(
           userData: latestUser,
           profileData: latestProfile,
+          availabilityData: latestAvailability,
           availability: availability,
         );
         if (!disposed && !controller.isClosed && version == loadVersion) {
@@ -881,12 +896,14 @@ class ArcTraderProfileRepository {
     String uid, {
     Map<String, dynamic>? profileDataOverride,
     ArcAvailability? availabilityOverride,
+    Map<String, dynamic>? availabilityDataOverride,
   }) async {
     final userSnapshot = await _userDoc(uid).get();
     final profileSnapshot = profileDataOverride == null
         ? await profileDoc(uid).get()
         : null;
-    final availabilitySnapshot = availabilityOverride == null
+    final availabilitySnapshot =
+        availabilityOverride == null && availabilityDataOverride == null
         ? await availabilityDoc(uid).get()
         : null;
 
@@ -895,15 +912,18 @@ class ArcTraderProfileRepository {
         profileDataOverride ??
         profileSnapshot?.data() ??
         const <String, dynamic>{};
+    final availabilityData =
+        availabilityDataOverride ??
+        availabilitySnapshot?.data() ??
+        const <String, dynamic>{};
     final availability =
         availabilityOverride ??
-        ArcAvailability.fromMap(
-          availabilitySnapshot?.data() ?? const <String, dynamic>{},
-        );
+        ArcAvailability.fromMap(availabilityData);
 
     final result = const ArcProfileCompletionEvaluator().evaluate(
       userData: userData,
       profileData: profileData,
+      availabilityData: availabilityData,
       availability: availability,
     );
     final now = FieldValue.serverTimestamp();
@@ -937,6 +957,18 @@ class ArcTraderProfileRepository {
     }
 
     return result;
+  }
+
+  List<String> _activeAvailabilityDayKeys(ArcAvailability availability) {
+    final dayKeys = <String>{};
+    for (final week in availability.weeks) {
+      for (final slot in week.slots) {
+        if (!slot.enabled) continue;
+        final key = slot.dayKey.trim().toLowerCase();
+        if (key.isNotEmpty) dayKeys.add(key);
+      }
+    }
+    return dayKeys.toList(growable: false)..sort();
   }
 
   Future<ArcAwayStatus> getAwayStatus() async {

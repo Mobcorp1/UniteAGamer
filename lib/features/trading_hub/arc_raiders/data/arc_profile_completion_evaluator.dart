@@ -66,6 +66,7 @@ class ArcProfileCompletionEvaluator {
   ArcProfileCompletionResult evaluate({
     Map<String, dynamic> userData = const <String, dynamic>{},
     Map<String, dynamic> profileData = const <String, dynamic>{},
+    Map<String, dynamic> availabilityData = const <String, dynamic>{},
     ArcAvailability? availability,
   }) {
     final basicProfile = _map(userData['basicProfile']);
@@ -172,6 +173,7 @@ class ArcProfileCompletionEvaluator {
 
     if (!_availabilityComplete(
       availability: availability,
+      availabilityData: availabilityData,
       userData: userData,
       profileData: profileData,
       arcOnboarding: arcOnboarding,
@@ -222,11 +224,19 @@ class ArcProfileCompletionEvaluator {
 
   static bool _availabilityComplete({
     required ArcAvailability? availability,
+    required Map<String, dynamic> availabilityData,
     required Map<String, dynamic> userData,
     required Map<String, dynamic> profileData,
     required Map<String, dynamic> arcOnboarding,
   }) {
     if (availability != null && hasActiveAvailability(availability)) {
+      return true;
+    }
+    if (availabilityData['completed'] == true ||
+        availabilityData['availabilityCompleted'] == true) {
+      return true;
+    }
+    if (_stringList(availabilityData['availabilityDayKeys']).isNotEmpty) {
       return true;
     }
     if (_stringList(profileData['availabilityDayKeys']).isNotEmpty ||

@@ -62,5 +62,21 @@ void main() {
       expect(acceptance.hasAcceptedPolicy('terms_of_use', 1), isTrue);
       expect(acceptance.hasAcceptedPolicy('terms_of_use', 3), isFalse);
     });
+
+    test('onboarding policies cover age, privacy, trade and moderation scope', () {
+      final terms = UagPolicyCatalog.byId('terms_of_use').body;
+      final privacy = UagPolicyCatalog.byId('privacy_policy').body;
+      final code = UagPolicyCatalog.byId('trader_code_of_conduct').body;
+      final age = UagPolicyCatalog.byId('age_restriction_policy').body;
+
+      expect(terms, contains('real-money sale'));
+      expect(terms, contains('does not escrow'));
+      expect(privacy, contains('monthly active users'));
+      expect(privacy, contains('ad revenue'));
+      expect(code, contains('honour agreed trades'));
+      expect(code, contains('restrict messaging'));
+      expect(age, contains('18 or older'));
+      expect(age, contains('under-age use'));
+    });
   });
 }

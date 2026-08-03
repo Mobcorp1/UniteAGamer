@@ -55,6 +55,7 @@ void main() {
       expect(payload['arcMandatoryOnboardingComplete'], isFalse);
       expect(payload['createdAt'], isA<FieldValue>());
       expect(payload['updatedAt'], isA<FieldValue>());
+      expect(payload.containsKey('ageVerification'), isFalse);
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
       expect(onboarding['version'], 4);
@@ -187,7 +188,10 @@ void main() {
         primaryGoal: 'completeBlueprints',
         blueprintSetupMode: 'importScreenshots',
         recommendedFirstSystem: 'blueprintTracker',
-        legalAccepted: const <String, dynamic>{'termsOfServiceAccepted': true},
+        legalAccepted: const <String, dynamic>{
+          'termsOfServiceAccepted': true,
+          'ageConfirmationAccepted': true,
+        },
         accountCreatedDuringOnboarding: true,
       );
 
@@ -195,6 +199,12 @@ void main() {
       expect(payload['onboardingComplete'], isTrue);
       expect(payload['arcMandatoryOnboardingComplete'], isTrue);
       expect(payload['updatedAt'], isA<FieldValue>());
+
+      final ageVerification =
+          payload['ageVerification'] as Map<String, dynamic>;
+      expect(ageVerification['verifiedOver18'], isTrue);
+      expect(ageVerification['source'], 'arcMandatoryOnboarding');
+      expect(ageVerification['verifiedAt'], isA<FieldValue>());
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
       expect(onboarding['version'], 4);

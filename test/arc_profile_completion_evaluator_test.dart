@@ -146,5 +146,30 @@ void main() {
       expect(result.complete, isTrue);
       expect(result.missingFieldIds, isEmpty);
     });
+
+    test('saved availability document clears availability field directly', () {
+      final result = evaluator.evaluate(
+        userData: const {
+          'arcMandatoryOnboardingComplete': true,
+          'legalAccepted': {'termsAccepted': true, 'privacyAccepted': true},
+        },
+        profileData: const {
+          'embarkId': 'Raider#1234',
+          'archetypes': ['Trader', 'Explorer'],
+          'communicationStyle': 'Voice',
+          'squadIntent': 'Squad up',
+          'socialEnergy': 'Focused',
+          'sessionIntent': 'Progression',
+        },
+        availabilityData: const {
+          'completed': true,
+          'availabilityDayKeys': <String>[],
+        },
+        availability: ArcAvailability.initial(),
+      );
+
+      expect(result.complete, isTrue);
+      expect(result.missingFieldIds, isEmpty);
+    });
   });
 }

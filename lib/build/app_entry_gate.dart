@@ -8,8 +8,13 @@ import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart'
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) {
+  if (data['isAdmin'] == true || data['isDev'] == true) return false;
+  return data['arcMandatoryOnboardingComplete'] != true;
+}
+
 bool arcNeedsProgressiveOnboarding(Map<String, dynamic> data) =>
-    data['onboardingComplete'] != true;
+    arcNeedsMandatoryOnboarding(data);
 
 class AppEntryGate extends StatefulWidget {
   static const routeName = '/app-entry-gate';
@@ -29,7 +34,7 @@ class _AppEntryGateState extends State<AppEntryGate> {
         .doc(uid)
         .get();
     final data = doc.data() ?? <String, dynamic>{};
-    return arcNeedsProgressiveOnboarding(data);
+    return arcNeedsMandatoryOnboarding(data);
   }
 
   Future<void> _runLegalGateOnce() async {

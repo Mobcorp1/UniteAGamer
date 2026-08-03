@@ -6,6 +6,10 @@ void main() {
     test('new or reset users require onboarding', () {
       expect(arcNeedsMandatoryOnboarding(const {}), isTrue);
       expect(
+        arcNeedsMandatoryOnboarding(const {'onboardingComplete': true}),
+        isTrue,
+      );
+      expect(
         arcNeedsMandatoryOnboarding(const {
           'arcMandatoryOnboardingComplete': false,
         }),
@@ -16,6 +20,21 @@ void main() {
     test('completed existing users continue into the app', () {
       expect(
         arcNeedsMandatoryOnboarding(const {
+          'arcMandatoryOnboardingComplete': true,
+        }),
+        isFalse,
+      );
+    });
+
+    test('progressive helper remains a compatibility alias', () {
+      expect(
+        arcNeedsProgressiveOnboarding(const {
+          'arcMandatoryOnboardingComplete': false,
+        }),
+        isTrue,
+      );
+      expect(
+        arcNeedsProgressiveOnboarding(const {
           'arcMandatoryOnboardingComplete': true,
         }),
         isFalse,

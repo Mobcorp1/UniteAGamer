@@ -158,6 +158,35 @@ void main() {
         isTrue,
       );
     });
+
+    test('lists every assigned loadout item backed by a blueprint grid record', () {
+      final silencer = _blueprint('Silencer II');
+      final loadout = ArcBlueprintLoadoutBridge.applyDestination(
+        blueprint: silencer,
+        loadout: ArcBlueprintLoadoutBridge.baseLoadout(null),
+        destination: ArcBlueprintLoadoutBridge.destinationsFor(
+          blueprint: silencer,
+          loadout: ArcBlueprintLoadoutBridge.baseLoadout(null),
+        ).firstWhere(
+          (destination) =>
+              destination.type ==
+              ArcBlueprintLoadoutDestinationType.primaryAttachment,
+        ),
+      );
+
+      final requirements = ArcBlueprintLoadoutBridge.blueprintRequirementsFor(
+        loadout,
+      );
+
+      expect(
+        requirements.map((requirement) => requirement.blueprintId),
+        containsAll(<String>['anvil', 'silencer-ii']),
+      );
+      expect(
+        requirements.map((requirement) => requirement.itemName),
+        isNot(contains('Stitcher')),
+      );
+    });
   });
 }
 

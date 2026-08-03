@@ -127,8 +127,7 @@ class UAGTradersHubApp extends StatefulWidget {
       case ArcMandatoryOnboardingScreen.routeName:
       case '/onboarding-basic-profile':
         return MaterialPageRoute(
-          builder: (_) =>
-              ArcMandatoryOnboardingScreen.fromRouteSettings(settings),
+          builder: (_) => _DirectOnboardingRouteGate(settings: settings),
           settings: settings,
         );
 
@@ -490,6 +489,33 @@ class UAGTradersHubApp extends StatefulWidget {
           settings: settings,
         );
     }
+  }
+}
+
+class _DirectOnboardingRouteGate extends StatelessWidget {
+  const _DirectOnboardingRouteGate({required this.settings});
+
+  final RouteSettings settings;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return const AuthScreen(initialIsLogin: false);
+        }
+
+        return ArcMandatoryOnboardingScreen.fromRouteSettings(settings);
+      },
+    );
   }
 }
 

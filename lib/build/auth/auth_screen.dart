@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import 'package:uag_arc_raiders_hub/build/auth/uag_auth_autofill.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
@@ -417,68 +420,67 @@ class _AuthScreenState extends State<AuthScreen> {
           );
         }
 
-        await user.sendEmailVerification();
+        final riderName = _nameController.text.trim();
 
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'email': email,
-          'displayName': _nameController.text.trim(),
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-          'onboardingComplete': true,
-          'modules': {'trader': true},
-          'region': _selectedCountry == 'United Kingdom'
-              ? 'UK'
-              : _selectedCountry,
-          'uagName': _nameController.text.trim(),
-          'visibleInSearch': true,
-          'affiliateApplied': _applyForAffiliate,
-          'preferredPayoutMethod': _selectedPayoutMethod,
-          'referredByCode': _referralCodeController.text.trim(),
-          'subscriptionStatus': _selectedAccountTier == 'Raider'
-              ? 'free'
-              : 'pending',
-          'subscriptionTier': _selectedAccountTier,
-          'referralCommissionRate': _selectedAccountTier == 'Overseer'
-              ? 10
-              : _selectedAccountTier == 'Operator'
-              ? 5
-              : 0,
-          'referralCommissionCap': _selectedAccountTier == 'Overseer'
-              ? 25
-              : _selectedAccountTier == 'Operator'
-              ? 15
-              : 0,
-          'basicProfile': {
-            'displayName': _nameController.text.trim(),
-            'email': email,
-            'country': _selectedCountry,
-            'platform': _selectedPlatform,
-            'timeZone': _selectedTimeZone,
-            'bio': '',
-            'games': <String>[],
-            'platforms': <String>[_selectedPlatform],
-          },
-          'traderProfile': {
-            'uagName': _nameController.text.trim(),
+        await Future.wait<void>([
+          if (user.displayName != riderName) user.updateDisplayName(riderName),
+          FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            ...buildArcOnboardingAccountCreationPayload(
+              email: email,
+              riderName: riderName,
+            ),
             'region': _selectedCountry == 'United Kingdom'
                 ? 'UK'
                 : _selectedCountry,
-            'platform': _selectedPlatform,
-            'timeZone': _selectedTimeZone,
-            'embarkId': '',
-            'uagId': '',
-          },
-          'legalAccepted': {
-            'termsAccepted': true,
-            'termsVersion': 1,
-            'termsAcceptedAt': FieldValue.serverTimestamp(),
-            'privacyAccepted': true,
-            'privacyVersion': 1,
-            'privacyAcceptedAt': FieldValue.serverTimestamp(),
-            'fanDisclaimerAccepted': false,
-            'fanDisclaimerVersion': 1,
-          },
-        }, SetOptions(merge: true));
+            'affiliateApplied': _applyForAffiliate,
+            'preferredPayoutMethod': _selectedPayoutMethod,
+            'referredByCode': _referralCodeController.text.trim(),
+            'subscriptionStatus': _selectedAccountTier == 'Raider'
+                ? 'free'
+                : 'pending',
+            'subscriptionTier': _selectedAccountTier,
+            'referralCommissionRate': _selectedAccountTier == 'Overseer'
+                ? 10
+                : _selectedAccountTier == 'Operator'
+                ? 5
+                : 0,
+            'referralCommissionCap': _selectedAccountTier == 'Overseer'
+                ? 25
+                : _selectedAccountTier == 'Operator'
+                ? 15
+                : 0,
+            'basicProfile': {
+              'displayName': riderName,
+              'email': email,
+              'country': _selectedCountry,
+              'platform': _selectedPlatform,
+              'timeZone': _selectedTimeZone,
+              'bio': '',
+              'games': <String>[],
+              'platforms': <String>[_selectedPlatform],
+            },
+            'traderProfile': {
+              'uagName': riderName,
+              'region': _selectedCountry == 'United Kingdom'
+                  ? 'UK'
+                  : _selectedCountry,
+              'platform': _selectedPlatform,
+              'timeZone': _selectedTimeZone,
+              'embarkId': '',
+              'uagId': '',
+            },
+          }, SetOptions(merge: true)),
+        ]).timeout(const Duration(seconds: 12));
+
+        unawaited(
+          user.sendEmailVerification().catchError((
+            Object error,
+            StackTrace stackTrace,
+          ) {
+            debugPrint('Verification email failed safely: $error');
+            debugPrintStack(stackTrace: stackTrace);
+          }),
+        );
 
         await _persistLoginPreferences(email, user.uid);
 

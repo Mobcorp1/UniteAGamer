@@ -70,6 +70,16 @@ bool shouldShowArcOnboardingAccountCreation({
   return !hasCurrentUser;
 }
 
+bool shouldOpenBlueprintGridAfterArcOnboarding(String blueprintSetupMode) {
+  final normalized = blueprintSetupMode.trim().toLowerCase();
+  return normalized == 'manual' ||
+      normalized == 'setupnow' ||
+      normalized == 'setup_now' ||
+      normalized == 'set_up_manually' ||
+      normalized == 'manualsetup' ||
+      normalized == 'manual_setup';
+}
+
 Map<String, dynamic> buildArcOnboardingAccountCreationPayload({
   required String email,
   required String riderName,
@@ -153,6 +163,12 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
     'onboardingComplete': true,
     'arcMandatoryOnboardingComplete': true,
     'updatedAt': FieldValue.serverTimestamp(),
+    if (legalAccepted['ageConfirmationAccepted'] == true)
+      'ageVerification': <String, dynamic>{
+        'verifiedOver18': true,
+        'source': 'arcMandatoryOnboarding',
+        'verifiedAt': FieldValue.serverTimestamp(),
+      },
     'arcOnboarding': <String, dynamic>{
       'version': 4,
       'completedAt': FieldValue.serverTimestamp(),

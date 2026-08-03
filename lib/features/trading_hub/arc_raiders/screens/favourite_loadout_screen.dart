@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
@@ -215,6 +218,64 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     _augment = migration.augment;
   }
 
+  ArcSavedLoadout _draftLoadout({DateTime? now}) {
+    final timestamp = now ?? DateTime.now();
+    final quickUse = ArcLoadoutLayoutEngine.normaliseQuickUseSlots(
+      savedItems: _quickSlots,
+      legacyAugment: _augment,
+    ).quickUse;
+    final equipment = quickUse
+        .where((slot) {
+          final option = ArcLoadoutLayoutEngine.quickUseOptionForName(slot);
+          return option?.type == ArcLoadoutSlotType.equipment;
+        })
+        .where((slot) => slot != ArcLoadoutLayoutEngine.emptySlot)
+        .toList(growable: false);
+    final consumables = quickUse
+        .where((slot) {
+          final option = ArcLoadoutLayoutEngine.quickUseOptionForName(slot);
+          return option?.type == ArcLoadoutSlotType.consumables;
+        })
+        .where((slot) => slot != ArcLoadoutLayoutEngine.emptySlot)
+        .toList(growable: false);
+    final augment = quickUse
+        .map(ArcLoadoutLayoutEngine.quickUseOptionForName)
+        .whereType<ArcLoadoutOption>()
+        .firstWhere(
+          (option) => option.type == ArcLoadoutSlotType.augment,
+          orElse: () => const ArcLoadoutOption(
+            name: '',
+            type: ArcLoadoutSlotType.augment,
+            description: '',
+          ),
+        )
+        .name;
+
+    return ArcSavedLoadout(
+      id: 'favourite-loadout',
+      name: _buildName,
+      category: ArcLoadoutCategory.saved,
+      playStyle: _playStyle,
+      augment: augment,
+      shield: _shield,
+      primaryWeapon: _primaryWeapon,
+      primaryAttachments: _normalisedAttachmentList(
+        weaponName: _primaryWeapon,
+        savedAttachments: _primaryAttachments,
+      ),
+      secondaryWeapon: _secondaryWeapon,
+      secondaryAttachments: _normalisedAttachmentList(
+        weaponName: _secondaryWeapon,
+        savedAttachments: _secondaryAttachments,
+      ),
+      equipment: equipment,
+      consumables: consumables,
+      quickUse: List<String>.unmodifiable(quickUse),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    );
+  }
+
   void _applySavedLoadout(ArcSavedLoadout loadout) {
     setState(() {
       _buildName = loadout.name;
@@ -256,58 +317,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   Future<void> _saveLoadout() async {
     final now = DateTime.now();
     _normaliseQuickSlots();
-    final equipment = _quickSlots
-        .where((slot) {
-          final option = ArcLoadoutLayoutEngine.quickUseOptionForName(slot);
-          return option?.type == ArcLoadoutSlotType.equipment;
-        })
-        .where((slot) => slot != ArcLoadoutLayoutEngine.emptySlot)
-        .toList(growable: false);
-    final consumables = _quickSlots
-        .where((slot) {
-          final option = ArcLoadoutLayoutEngine.quickUseOptionForName(slot);
-          return option?.type == ArcLoadoutSlotType.consumables;
-        })
-        .where((slot) => slot != ArcLoadoutLayoutEngine.emptySlot)
-        .toList(growable: false);
-    final augment = _quickSlots
-        .map(ArcLoadoutLayoutEngine.quickUseOptionForName)
-        .whereType<ArcLoadoutOption>()
-        .firstWhere(
-          (option) => option.type == ArcLoadoutSlotType.augment,
-          orElse: () => const ArcLoadoutOption(
-            name: '',
-            type: ArcLoadoutSlotType.augment,
-            description: '',
-          ),
-        )
-        .name;
-    final primaryAttachments = _normalisedAttachmentList(
-      weaponName: _primaryWeapon,
-      savedAttachments: _primaryAttachments,
-    );
-    final secondaryAttachments = _normalisedAttachmentList(
-      weaponName: _secondaryWeapon,
-      savedAttachments: _secondaryAttachments,
-    );
-
-    final loadout = ArcSavedLoadout(
-      id: 'favourite-loadout',
-      name: _buildName,
-      category: ArcLoadoutCategory.saved,
-      playStyle: _playStyle,
-      augment: augment,
-      shield: _shield,
-      primaryWeapon: _primaryWeapon,
-      primaryAttachments: primaryAttachments,
-      secondaryWeapon: _secondaryWeapon,
-      secondaryAttachments: secondaryAttachments,
-      equipment: equipment,
-      consumables: consumables,
-      quickUse: List<String>.unmodifiable(_quickSlots),
-      createdAt: now,
-      updatedAt: now,
-    );
+    final loadout = _draftLoadout(now: now);
 
     try {
       await _savedLoadoutRepository.saveLoadout(loadout);
@@ -321,6 +331,161 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Could not save loadout: $error')));
     }
+  }
+
+  Future<void> _showSmartBuildGenerator() async {
+    var weaponName = _primaryWeapon;
+    var focus = switch (_playStyle) {
+      ArcPlayerPlayStyle.pvp => ArcLoadoutCombatFocus.pvp,
+      ArcPlayerPlayStyle.pve => ArcLoadoutCombatFocus.pve,
+      _ => ArcLoadoutCombatFocus.balanced,
+    };
+    var tier = ArcLoadoutBuildTier.value;
+
+    final plan = await showModalBottomSheet<ArcGeneratedLoadoutPlan>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF091116),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  18,
+                  18,
+                  18 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SMART LOADOUT BUILDER',
+                        style: AppTheme.tradingHeading(
+                          fontSize: 24,
+                          color: AppTheme.neonCyan,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Choose a weapon, combat focus and build level. UAG will select compatible attachments, recommend a secondary and calculate the attachment resources.',
+                        style: TextStyle(color: Colors.white70, height: 1.35),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: weaponName,
+                        decoration: const InputDecoration(
+                          labelText: 'Primary weapon',
+                        ),
+                        items: ArcLoadoutSeedData.weapons
+                            .map(
+                              (weapon) => DropdownMenuItem<String>(
+                                value: weapon.name,
+                                child: Text(weapon.name),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setSheetState(() => weaponName = value);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<ArcLoadoutCombatFocus>(
+                        initialValue: focus,
+                        decoration: const InputDecoration(
+                          labelText: 'Combat focus',
+                        ),
+                        items: ArcLoadoutCombatFocus.values
+                            .map(
+                              (value) =>
+                                  DropdownMenuItem<ArcLoadoutCombatFocus>(
+                                    value: value,
+                                    child: Text(value.label),
+                                  ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value != null) setSheetState(() => focus = value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<ArcLoadoutBuildTier>(
+                        initialValue: tier,
+                        decoration: const InputDecoration(
+                          labelText: 'Build level',
+                        ),
+                        items: ArcLoadoutBuildTier.values
+                            .map(
+                              (value) => DropdownMenuItem<ArcLoadoutBuildTier>(
+                                value: value,
+                                child: Text(value.label),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value != null) setSheetState(() => tier = value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            Navigator.of(sheetContext).pop(
+                              ArcLoadoutIntelligenceEngine.generate(
+                                primaryWeapon: weaponName,
+                                focus: focus,
+                                tier: tier,
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.auto_awesome_rounded),
+                          label: const Text('Generate Loadout'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (plan == null || !mounted) return;
+
+    setState(() {
+      _buildName = plan.displayName;
+      _playStyle = plan.focus.playStyle;
+      _primaryWeapon = plan.primaryWeapon;
+      _secondaryWeapon = plan.secondaryWeapon;
+      _primaryAttachments
+        ..clear()
+        ..addAll(plan.primaryAttachments);
+      _secondaryAttachments
+        ..clear()
+        ..addAll(plan.secondaryAttachments);
+    });
+
+    final resourceSummary = plan.resourceNeeds.isEmpty
+        ? 'No mapped attachment materials required.'
+        : plan.resourceNeeds
+              .take(3)
+              .map((entry) => '${entry.quantity}x ${entry.itemName}')
+              .join(', ');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${plan.displayName} generated with ${plan.secondaryWeapon}. $resourceSummary',
+        ),
+      ),
+    );
   }
 
   Future<void> _pickWeapon({
@@ -834,6 +999,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             children: [
               _pill('Balanced PvP/PvE', AppTheme.neonPink),
               _pill('${missing.length} missing', Colors.amberAccent),
+              _smallAction(
+                label: 'Smart Build',
+                icon: Icons.auto_awesome_rounded,
+                color: Colors.amberAccent,
+                onTap: _showSmartBuildGenerator,
+              ),
               _smallAction(
                 label: 'Save',
                 icon: Icons.save_rounded,
@@ -1474,38 +1645,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   }
 
   List<String> _missingBlueprintItems(Map<String, ArcBlueprintState> states) {
-    final items = <String>[];
-    void checkWeapon(String name) {
-      final weapon = _weaponSpec(name);
-      if (weapon.blueprintBased &&
-          !_isOwnedOrNotBlueprint(
-            itemName: name,
-            blueprintBased: true,
-            states: states,
-          )) {
-        items.add(name);
-      }
-    }
-
-    void checkOption(String name) {
-      final option = _optionForName(name);
-      if ((option?.blueprintBased ?? false) &&
-          !_isOwnedOrNotBlueprint(
-            itemName: name,
-            blueprintBased: true,
-            states: states,
-          )) {
-        items.add(name);
-      }
-    }
-
-    checkWeapon(_primaryWeapon);
-    checkWeapon(_secondaryWeapon);
-    checkOption(_shield);
-    for (final item in _quickSlots) {
-      if (item != 'Empty Slot') checkOption(item);
-    }
-    return items.toSet().toList(growable: false);
+    return ArcBlueprintLoadoutBridge.blueprintRequirementsFor(_draftLoadout())
+        .where((item) => states[item.blueprintId]?.owned != true)
+        .map((item) => item.itemName)
+        .toSet()
+        .toList(growable: false);
   }
 
   String _weaponSubtitle(ArcLoadoutWeaponSpec weapon) {

@@ -54,9 +54,19 @@ class UagPolicyCatalog {
       effectiveDate: effectiveDate,
       summary: 'Account rules, acceptable use and platform limitations.',
       body:
-          '$legalReviewNotice Users must follow platform rules, keep account '
-          'details accurate, avoid abuse, and understand that game data may '
-          'change during beta.',
+          '$legalReviewNotice UAG ARC Raiders Hub is an independent beta '
+          'companion for account profiles, blueprint tracking, community intel, '
+          'matchmaking and player-coordinated trades. Users must provide '
+          'accurate account information, keep control of their own login, obey '
+          'game and platform rules, and avoid harassment, impersonation, spam, '
+          'market manipulation, fake reports, referral abuse and exploit use. '
+          'UAG does not escrow in-game items, does not guarantee a trade '
+          'outcome, and does not permit real-money sale, purchase or brokering '
+          'of in-game items, accounts, carries, access or credentials. Admins '
+          'may hide content, pause features, restrict accounts or preserve '
+          'evidence where safety, payment, conduct or legal issues require '
+          'review. Features, rewards, tiers, maps and data models may change '
+          'during beta.',
     ),
     UagPolicyDocument(
       id: 'privacy_policy',
@@ -65,8 +75,21 @@ class UagPolicyCatalog {
       effectiveDate: effectiveDate,
       summary: 'Personal data, account data and Firebase storage usage.',
       body:
-          '$legalReviewNotice The app stores profile, progression, trading, '
-          'notification and consent data needed to operate the companion.',
+          '$legalReviewNotice UAG may store and process email, display name, '
+          'Raider name, region, platform, timezone, age confirmation, consent '
+          'records, profile settings, availability, blueprint ownership, '
+          'duplicates, wanted items, loadouts, listings, offers, trade session '
+          'history, no-shows, reports, community intel, moderation decisions, '
+          'referral activity, creator programme state, ad events, entitlement '
+          'state, subscription tier and provider-confirmed revenue events. '
+          'This data is used to operate the hub, personalise Command Centre, '
+          'support safer trading, detect abuse, calculate admin metrics such '
+          'as monthly active users, sessions per user, average session time, '
+          'ad revenue, revenue per active user and lifetime value, and improve '
+          'the beta. Sensitive card or bank details should be handled by the '
+          'payment provider rather than stored directly by UAG. Users need '
+          'clear correction, deletion and account closure routes before public '
+          'launch.',
     ),
     UagPolicyDocument(
       id: 'fan_project_notice',
@@ -93,8 +116,16 @@ class UagPolicyCatalog {
       effectiveDate: effectiveDate,
       summary: 'Fair trading, session behaviour and trust expectations.',
       body:
-          '$legalReviewNotice Users must avoid scams, harassment, impersonation '
-          'and pressure tactics during trades or group sessions.',
+          '$legalReviewNotice Users must honour agreed trades, communicate '
+          'changes early, list only items they genuinely control, avoid scams, '
+          'harassment, discrimination, threats, impersonation, pressure '
+          'tactics, account-access requests and real-money item sales. Reports '
+          'for no-shows, scams, abuse and inaccurate listings must be honest '
+          'and may affect reputation, visibility, rewards and feature access. '
+          'Users must not create fake accounts, farm referrals, manipulate '
+          'trust signals or submit misleading intel for rewards. Admins may '
+          'hide listings, restrict messaging, remove intel, pause referrals or '
+          'limit account access while reviewing safety or conduct issues.',
     ),
     UagPolicyDocument(
       id: 'community_intel_policy',
@@ -203,10 +234,14 @@ class UagPolicyCatalog {
       summary: 'UAG ARC Raiders Hub accounts are restricted to adults.',
       body:
           '$legalReviewNotice UAG ARC Raiders Hub is an 18+ account service. '
-          'Users must complete the age gate before messaging, trading, '
-          'creator, subscription or community features are made available. '
-          'Rejected users may request human review where operationally '
-          'available.',
+          'Users must confirm they are 18 or older before account creation, '
+          'messaging, trading, referrals, creator tools, subscriptions, '
+          'community reports or other interactive features are made available. '
+          'Users who cannot confirm adult status must not create or use an '
+          'account. UAG may restrict, suspend or delete accounts where age '
+          'misrepresentation, under-age use or safeguarding concerns are '
+          'reported. Rejected users may request human review where an '
+          'operational review route exists.',
     ),
     UagPolicyDocument(
       id: 'notifications_policy',

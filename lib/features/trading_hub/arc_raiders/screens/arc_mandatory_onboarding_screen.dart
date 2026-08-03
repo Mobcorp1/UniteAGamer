@@ -150,10 +150,9 @@ class _ArcMandatoryOnboardingScreenState
       _acceptedAgeConfirmation;
 
   String get _completionRouteName {
-    return switch (_blueprintSetupChoice) {
-      _BlueprintSetupChoice.manual => BlueprintGridScreen.routeName,
-      _ => ArcCommandCentreScreen.routeName,
-    };
+    return shouldOpenBlueprintGridAfterArcOnboarding(_blueprintSetupChoice.name)
+        ? BlueprintGridScreen.routeName
+        : ArcCommandCentreScreen.routeName;
   }
 
   Future<void> _next() async {
@@ -287,12 +286,10 @@ class _ArcMandatoryOnboardingScreenState
           .createUserWithEmailAndPassword(email: email, password: password);
       final user = await _waitForSignedInUser(credential);
 
-      unawaited(
-        _runNonBlockingAccountCreationSync(
-          user: user,
-          email: email,
-          riderName: riderName,
-        ),
+      await _completeAccountCreationHandoff(
+        user: user,
+        email: email,
+        riderName: riderName,
       );
 
       if (!mounted) return false;
@@ -322,38 +319,36 @@ class _ArcMandatoryOnboardingScreenState
     }
   }
 
-  Future<void> _runNonBlockingAccountCreationSync({
+  Future<void> _completeAccountCreationHandoff({
     required User user,
     required String email,
     required String riderName,
   }) async {
-    try {
-      await Future.wait<void>([
-        UagSessionGateController.markAuthenticated(
-          uid: user.uid,
-          keepSignedIn: _keepSignedIn,
-        ),
-        _persistOnboardingDevicePrefs(email: email, riderName: riderName),
-        FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set(
-              buildArcOnboardingAccountProfilePayload(
-                email: email,
-                riderName: riderName,
-              ),
-              SetOptions(merge: true),
+    await Future.wait<void>([
+      UagSessionGateController.markAuthenticated(
+        uid: user.uid,
+        keepSignedIn: _keepSignedIn,
+      ),
+      _persistOnboardingDevicePrefs(email: email, riderName: riderName),
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+            buildArcOnboardingAccountCreationPayload(
+              email: email,
+              riderName: riderName,
             ),
-        if (user.displayName != riderName) user.updateDisplayName(riderName),
-        user.sendEmailVerification().catchError((Object error, StackTrace st) {
-          debugPrint('Onboarding verification email failed safely: $error');
-          debugPrintStack(stackTrace: st);
-        }),
-      ]).timeout(const Duration(seconds: 12));
-    } catch (error, stackTrace) {
-      debugPrint('Onboarding account sync continued in background: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
+            SetOptions(merge: true),
+          ),
+      if (user.displayName != riderName) user.updateDisplayName(riderName),
+    ]).timeout(const Duration(seconds: 12));
+
+    unawaited(
+      user.sendEmailVerification().catchError((Object error, StackTrace st) {
+        debugPrint('Onboarding verification email failed safely: $error');
+        debugPrintStack(stackTrace: st);
+      }),
+    );
   }
 
   Future<void> _persistOnboardingDevicePrefs({
@@ -1015,10 +1010,26 @@ class _LegalStep extends StatelessWidget {
       subtitle: 'Required account, legal and age confirmations.',
       child: Column(
         children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.neonPink.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppTheme.neonPink.withValues(alpha: 0.24),
+              ),
+            ),
+            child: const Text(
+              'UAG accounts are for adults only. These confirmations cover fair trading, unofficial fan-project status, privacy, community safety, ads, subscriptions, referrals, moderation and account restrictions during beta.',
+              style: TextStyle(color: Colors.white70, height: 1.35),
+            ),
+          ),
           _AgreementTile(
             title: 'Community Code',
             description:
-                'I will use fair listings, honour agreed trades, avoid scams, harassment, real-money item sales and account-access requests.',
+                'I will use accurate listings, honour agreed trades, report problems honestly, avoid scams, harassment, impersonation, pressure tactics, fake accounts, referral abuse, real-money item sales and account-access requests.',
             value: traderCode,
             onChanged: onTraderCodeChanged,
             onOpen: openTraderCode,
@@ -1026,7 +1037,7 @@ class _LegalStep extends StatelessWidget {
           _AgreementTile(
             title: 'Terms of Service',
             description:
-                'I understand this is an unofficial beta companion, account access can be restricted for misuse, and trades remain player responsibility.',
+                'I understand this is an unofficial beta companion, features may change, UAG does not escrow or guarantee trades, and account access can be restricted for misuse, safety, payment or legal review.',
             value: terms,
             onChanged: onTermsChanged,
             onOpen: openTerms,
@@ -1034,7 +1045,7 @@ class _LegalStep extends StatelessWidget {
           _AgreementTile(
             title: 'Privacy & Data',
             description:
-                'I understand UAG stores account, profile, trading, blueprint, intel, referral, ads, subscription and safety data to run the hub.',
+                'I understand UAG stores account, profile, availability, trading, blueprint, loadout, intel, referral, ads, subscription, telemetry, moderation and safety data to run and improve the hub.',
             value: dataSecurity,
             onChanged: onDataChanged,
             onOpen: openPrivacy,

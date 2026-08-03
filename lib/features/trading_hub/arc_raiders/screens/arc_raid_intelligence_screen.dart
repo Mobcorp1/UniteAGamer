@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_stack_resolver.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_view_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
@@ -40,6 +41,8 @@ class ArcRaidIntelligenceScreen extends StatefulWidget {
 
 class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   final ArcRaidIntelligenceEngine _engine = const ArcRaidIntelligenceEngine();
+  final ArcMapMarkerStackResolver _stackResolver =
+      const ArcMapMarkerStackResolver();
   final ArcBlueprintRepository _blueprintRepository = ArcBlueprintRepository();
   final ArcSavedLoadoutRepository _loadoutRepository =
       ArcSavedLoadoutRepository();
@@ -901,6 +904,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _selectedMarkerSection(ArcRaidIntelligenceState intelligence) {
     final marker = _selectedMarker;
+    final stack = marker == null
+        ? const <ArcRaidMapMarker>[]
+        : _stackResolver.stackFor(
+            selected: marker,
+            markers: intelligence.visibleMarkers,
+          );
     ArcRaidIntelCluster? cluster;
     if (marker != null) {
       for (final item in intelligence.opportunityClusters) {
@@ -918,40 +927,107 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               'Select a marker or Blueprint Opportunity cluster.',
               style: TextStyle(color: Colors.white60),
             )
-          : cluster != null && marker.isBlueprintOpportunity
-          ? ArcBlueprintIntelCard(
-              marker: marker,
-              cluster: cluster,
-              map: intelligence.map,
-              onCentreMap: () => _jumpTo(marker.point),
-              onAddStop: () => _addClusterStop(cluster!),
-              onOpenBlueprint: () => Navigator.of(
-                context,
-              ).pushNamed(BlueprintGridScreen.routeName),
-              onOpenRaidPlanner: () =>
-                  Navigator.of(context).pushNamed(RaidPlannerScreen.routeName),
-            )
-          : ArcMapMarkerDetailCard(
-              marker: marker,
-              footer: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _smallButton(
-                    'Centre Map',
-                    Icons.center_focus_strong_rounded,
-                    () => _jumpTo(marker.point),
-                  ),
-                  _smallButton(
-                    'Add to Raid Planner',
-                    Icons.playlist_add_rounded,
-                    () => Navigator.of(
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (cluster != null && marker.isBlueprintOpportunity)
+                  ArcBlueprintIntelCard(
+                    marker: marker,
+                    cluster: cluster,
+                    map: intelligence.map,
+                    onCentreMap: () => _jumpTo(marker.point),
+                    onAddStop: () => _addClusterStop(cluster!),
+                    onOpenBlueprint: () => Navigator.of(
+                      context,
+                    ).pushNamed(BlueprintGridScreen.routeName),
+                    onOpenRaidPlanner: () => Navigator.of(
                       context,
                     ).pushNamed(RaidPlannerScreen.routeName),
+                  )
+                else
+                  ArcMapMarkerDetailCard(
+                    marker: marker,
+                    footer: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _smallButton(
+                          'Centre Map',
+                          Icons.center_focus_strong_rounded,
+                          () => _jumpTo(marker.point),
+                        ),
+                        _smallButton(
+                          'Add to Raid Planner',
+                          Icons.playlist_add_rounded,
+                          () => Navigator.of(
+                            context,
+                          ).pushNamed(RaidPlannerScreen.routeName),
+                        ),
+                      ],
+                    ),
                   ),
+                if (stack.length > 1) ...[
+                  const SizedBox(height: 10),
+                  _stackedMarkerList(stack),
                 ],
-              ),
+              ],
             ),
+    );
+  }
+
+  Widget _stackedMarkerList(List<ArcRaidMapMarker> stack) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${stack.length} MARKERS AT THIS LOCATION',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final marker in stack)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                marker.id == _selectedMarker?.id
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: marker.id == _selectedMarker?.id
+                    ? AppTheme.neonCyan
+                    : Colors.white54,
+              ),
+              title: Text(
+                marker.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              subtitle: Text(
+                marker.category.label,
+                style: const TextStyle(color: Colors.white54),
+              ),
+              trailing: IconButton(
+                tooltip: 'View this marker',
+                onPressed: () => setState(() => _selectedMarker = marker),
+                icon: const Icon(Icons.chevron_right_rounded),
+              ),
+              onTap: () => setState(() => _selectedMarker = marker),
+            ),
+        ],
+      ),
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
@@ -62,6 +63,19 @@ class ArcBlueprintLoadoutDestination {
   bool get replacesOccupiedSlot =>
       currentItem.trim().isNotEmpty &&
       currentItem != ArcLoadoutLayoutEngine.emptySlot;
+}
+
+@immutable
+class ArcBlueprintLoadoutRequirement {
+  const ArcBlueprintLoadoutRequirement({
+    required this.blueprintId,
+    required this.itemName,
+    required this.slotLabel,
+  });
+
+  final String blueprintId;
+  final String itemName;
+  final String slotLabel;
 }
 
 class ArcBlueprintLoadoutBridge {
@@ -163,6 +177,53 @@ class ArcBlueprintLoadoutBridge {
       createdAt: now,
       updatedAt: now,
     );
+  }
+
+  static List<ArcBlueprintLoadoutRequirement> blueprintRequirementsFor(
+    ArcSavedLoadout loadout,
+  ) {
+    final requirements = <ArcBlueprintLoadoutRequirement>[];
+    final seenBlueprintIds = <String>{};
+
+    void add(String itemName, String slotLabel) {
+      final trimmed = itemName.trim();
+      if (trimmed.isEmpty || trimmed == ArcLoadoutLayoutEngine.emptySlot) {
+        return;
+      }
+      final blueprint = _blueprintForName(trimmed);
+      if (blueprint == null) return;
+      final candidate = candidateFor(blueprint);
+      if (candidate == null) return;
+      if (!seenBlueprintIds.add(blueprint.id)) return;
+      requirements.add(
+        ArcBlueprintLoadoutRequirement(
+          blueprintId: blueprint.id,
+          itemName: candidate.itemName,
+          slotLabel: slotLabel,
+        ),
+      );
+    }
+
+    add(loadout.primaryWeapon, 'Primary Weapon');
+    add(loadout.secondaryWeapon, 'Secondary Weapon');
+    for (var index = 0; index < loadout.primaryAttachments.length; index++) {
+      add(loadout.primaryAttachments[index], 'Primary Attachment ${index + 1}');
+    }
+    for (var index = 0; index < loadout.secondaryAttachments.length; index++) {
+      add(
+        loadout.secondaryAttachments[index],
+        'Secondary Attachment ${index + 1}',
+      );
+    }
+    if (loadout.shield != null) add(loadout.shield!, 'Shield');
+    final quickUse = _normalisedQuickUse(loadout.quickUse.isNotEmpty
+        ? loadout.quickUse
+        : <String>[...loadout.equipment, ...loadout.consumables]);
+    for (var index = 0; index < quickUse.length; index++) {
+      add(quickUse[index], 'Quick Use ${index + 1}');
+    }
+
+    return List<ArcBlueprintLoadoutRequirement>.unmodifiable(requirements);
   }
 
   static List<ArcBlueprintLoadoutDestination> destinationsFor({
@@ -338,6 +399,14 @@ class ArcBlueprintLoadoutBridge {
     final target = normalise(name);
     for (final weapon in ArcLoadoutSeedData.weapons) {
       if (normalise(weapon.name) == target) return weapon;
+    }
+    return null;
+  }
+
+  static ArcBlueprint? _blueprintForName(String name) {
+    final target = normalise(name);
+    for (final blueprint in ArcBlueprintSeedData.blueprints) {
+      if (normalise(blueprint.name) == target) return blueprint;
     }
     return null;
   }
