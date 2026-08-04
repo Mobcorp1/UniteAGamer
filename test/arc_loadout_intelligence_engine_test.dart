@@ -51,4 +51,74 @@ void main() {
     expect(names, isNotEmpty);
     expect(plan.resourceNeeds.every((entry) => entry.quantity > 0), isTrue);
   });
+
+  test('generated Smart Build plan round-trips for persistence', () {
+    final plan = ArcLoadoutIntelligenceEngine.generate(
+      primaryWeapon: 'Anvil',
+      focus: ArcLoadoutCombatFocus.pvp,
+      tier: ArcLoadoutBuildTier.meta,
+    );
+
+    final restored = ArcGeneratedLoadoutPlan.fromMap(plan.toMap());
+
+    expect(restored, isNotNull);
+    expect(restored!.primaryWeapon, plan.primaryWeapon);
+    expect(restored.secondaryWeapon, plan.secondaryWeapon);
+    expect(restored.focus, plan.focus);
+    expect(restored.tier, plan.tier);
+    expect(restored.primaryAttachments, plan.primaryAttachments);
+    expect(restored.resourceNeeds.length, plan.resourceNeeds.length);
+  });
+
+  test('secondary options exclude primary and remain valid weapons', () {
+    final options = ArcLoadoutIntelligenceEngine.secondaryOptionsFor(
+      primaryWeapon: 'Anvil',
+      focus: ArcLoadoutCombatFocus.balanced,
+      tier: ArcLoadoutBuildTier.meta,
+    );
+    final weaponNames = ArcLoadoutSeedData.weapons
+        .map((weapon) => weapon.name)
+        .toSet();
+
+    expect(options, isNotEmpty);
+    expect(options, isNot(contains('Anvil')));
+    expect(options.every(weaponNames.contains), isTrue);
+  });
+
+  test('selected recommended secondary is honoured by generated plan', () {
+    final options = ArcLoadoutIntelligenceEngine.secondaryOptionsFor(
+      primaryWeapon: 'Venator',
+      focus: ArcLoadoutCombatFocus.pvp,
+      tier: ArcLoadoutBuildTier.meta,
+    );
+    final selected = options.last;
+    final plan = ArcLoadoutIntelligenceEngine.generate(
+      primaryWeapon: 'Venator',
+      focus: ArcLoadoutCombatFocus.pvp,
+      tier: ArcLoadoutBuildTier.meta,
+      secondaryWeaponOverride: selected,
+    );
+    final secondary = ArcLoadoutSeedData.weapons.firstWhere(
+      (weapon) => weapon.name == selected,
+    );
+
+    expect(plan.secondaryWeapon, selected);
+    expect(plan.secondaryAttachments.length, secondary.slots.length);
+  });
+
+  test('invalid secondary override falls back to a recommended option', () {
+    final options = ArcLoadoutIntelligenceEngine.secondaryOptionsFor(
+      primaryWeapon: 'Kettle',
+      focus: ArcLoadoutCombatFocus.pve,
+      tier: ArcLoadoutBuildTier.value,
+    );
+    final plan = ArcLoadoutIntelligenceEngine.generate(
+      primaryWeapon: 'Kettle',
+      focus: ArcLoadoutCombatFocus.pve,
+      tier: ArcLoadoutBuildTier.value,
+      secondaryWeaponOverride: 'Not A Weapon',
+    );
+
+    expect(options, contains(plan.secondaryWeapon));
+  });
 }

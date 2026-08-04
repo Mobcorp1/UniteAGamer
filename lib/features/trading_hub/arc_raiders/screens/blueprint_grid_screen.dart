@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_capture_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 
@@ -10,11 +11,14 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_view_preferences.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_loadout_bridge.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_hunt_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_filter.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_hunt_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_drop_report_sheet.dart';
@@ -82,6 +86,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   bool _viewModeLoaded = false;
   final Set<String> _selectedBlueprintIds = <String>{};
   String _searchQuery = '';
+  bool _smartBuildHuntMode = false;
 
   static const int _gridColumns = 10;
   static const double _landscapeSpacing = 6;
@@ -134,12 +139,18 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
 
   List<ArcBlueprint> _applyFilter(
     List<ArcBlueprint> blueprints,
-    Map<String, ArcBlueprintState> states,
-  ) {
+    Map<String, ArcBlueprintState> states, {
+    ArcSmartBuildHuntSnapshot? smartBuildHunt,
+  }) {
     final normalizedQuery = _searchQuery.trim().toLowerCase();
 
     return blueprints
         .where((blueprint) {
+          if (_smartBuildHuntMode &&
+              (smartBuildHunt == null ||
+                  !smartBuildHunt.contains(blueprint.id, missingOnly: true))) {
+            return false;
+          }
           final state =
               states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
 
@@ -879,6 +890,129 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             borderSide: BorderSide(
               color: AppTheme.neonPink.withValues(alpha: 0.55),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmartBuildHuntPanel(ArcSmartBuildHuntSnapshot hunt) {
+    final accent = hunt.complete ? Colors.lightGreenAccent : Colors.amberAccent;
+    final subtitle = hunt.complete
+        ? 'Every Blueprint required for this build is owned.'
+        : '${hunt.missingCount} of ${hunt.requiredCount} required Blueprints still missing';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: ElectricChargeBorder(
+        active: _smartBuildHuntMode,
+        radius: 18,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: accent.withValues(alpha: 0.38)),
+          ),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 46,
+                height: 46,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: hunt.completionPercent / 100,
+                      strokeWidth: 5,
+                      color: accent,
+                      backgroundColor: Colors.white12,
+                    ),
+                    Text(
+                      '${hunt.completionPercent}%',
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 360,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hunt.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        isBold: true,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
+                    if (hunt.nextTargetName != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        'Next target: ${hunt.nextTargetName}',
+                        style: TextStyle(
+                          color: accent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              FilledButton.icon(
+                key: const ValueKey('smart-build-hunt-toggle'),
+                onPressed: hunt.complete
+                    ? null
+                    : () {
+                        setState(() {
+                          _smartBuildHuntMode = !_smartBuildHuntMode;
+                          if (_smartBuildHuntMode) {
+                            _selectedFilter = ArcBlueprintFilter.missing;
+                            _searchQuery = '';
+                            _searchController.clear();
+                          }
+                        });
+                      },
+                icon: Icon(
+                  _smartBuildHuntMode
+                      ? Icons.grid_view_rounded
+                      : Icons.my_location_rounded,
+                ),
+                label: Text(
+                  _smartBuildHuntMode ? 'Show Full Grid' : 'Hunt Build Gaps',
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const FavouriteLoadoutScreen(),
+                  ),
+                ),
+                icon: const Icon(Icons.tune_rounded),
+                label: const Text('Edit Smart Build'),
+              ),
+            ],
           ),
         ),
       ),
@@ -2713,6 +2847,21 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         shadowColor: Colors.transparent,
         title: _buildBlueprintHeaderTitle(context),
         actions: [
+          IconButton(
+            key: const Key('blueprint-import-from-game'),
+            tooltip: 'Import from game',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ArcBlueprintPhotoCaptureScreen(),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.camera_alt_outlined,
+              color: AppTheme.neonCyan,
+            ),
+          ),
           PopupMenuButton<String>(
             tooltip: 'Blueprint menu',
             icon: const Icon(Icons.menu_rounded, color: AppTheme.neonPink),
@@ -2765,13 +2914,24 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                     (hydration.isLoading && states.isEmpty)) {
                   return _buildOwnershipSynchronizingState();
                 }
-                final filtered = _applyFilter(allBlueprints, states);
                 final counts = _buildCounts(allBlueprints, states);
 
                 return StreamBuilder<ArcSavedLoadout?>(
                   stream: _loadoutRepository.watchFavouriteLoadout(),
                   builder: (context, loadoutSnapshot) {
                     final loadout = loadoutSnapshot.data;
+                    final plan = ArcGeneratedLoadoutPlan.fromMap(
+                      loadout?.smartBuildData,
+                    );
+                    final smartBuildHunt = ArcSmartBuildHuntEngine.build(
+                      plan: plan,
+                      blueprintStates: states,
+                    );
+                    final filtered = _applyFilter(
+                      allBlueprints,
+                      states,
+                      smartBuildHunt: smartBuildHunt,
+                    );
                     return ListView(
                       padding: EdgeInsets.fromLTRB(
                         AppTheme.pagePadding.left,
@@ -2780,6 +2940,8 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                         AppTheme.pagePadding.bottom + 82,
                       ),
                       children: [
+                        if (smartBuildHunt != null)
+                          _buildSmartBuildHuntPanel(smartBuildHunt),
                         _buildOverviewGrid(context, filtered, states, loadout),
                         const SizedBox(height: 18),
                         _buildBottomControls(

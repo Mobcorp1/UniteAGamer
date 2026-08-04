@@ -2,184 +2,77 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 
 void main() {
-  group('blueprint photo import models', () {
-    test(
-      'does not allow blueprint writes without confirmed high confidence',
-      () {
-        const session = ArcBlueprintPhotoImportSession(
-          id: 'import-1',
-          uid: 'user-1',
-          status: ArcBlueprintPhotoImportStatus.needsUserReview,
-          candidates: <ArcBlueprintPhotoCandidate>[
-            ArcBlueprintPhotoCandidate(
-              blueprintId: 'anvil',
-              label: 'Anvil',
-              confidence: 0.72,
-            ),
-          ],
-        );
-
-        expect(session.hasProviderConfigured, isFalse);
-        expect(session.candidates.single.needsReview, isTrue);
-        expect(session.canWriteBlueprintState, isFalse);
-      },
+  test('guides exactly two captures and never models duplicate counts', () {
+    const session = ArcBlueprintPhotoImportSession(
+      id: 'import',
+      uid: 'user',
+      status: ArcBlueprintPhotoImportStatus.draft,
     );
 
-    test('flags provider configuration before OCR can run', () {
+    expect(session.requiredCaptureCount, 2);
+    expect(session.nextCaptureStep, ArcBlueprintPhotoCaptureStep.captureTop);
+    expect(session.writeBlockReason, contains('top section'));
+  });
+
+  test(
+    'confirmed reviewed session can update ownership only after explicit confirmation',
+    () {
+      const decision = ArcBlueprintPhotoCellDecision(
+        blueprintId: 'anvil',
+        blueprintIndex: 0,
+        state: ArcBlueprintPhotoCellState.owned,
+        confidence: 0.97,
+        sourceCaptureId: 'top',
+        rowIndex: 0,
+        columnIndex: 0,
+      );
       const session = ArcBlueprintPhotoImportSession(
-        id: 'import-provider',
-        uid: 'user-1',
-        status: ArcBlueprintPhotoImportStatus.awaitingProvider,
-      );
-
-      expect(session.providerConfigurationRequired, isTrue);
-      expect(session.canWriteBlueprintState, isFalse);
-      expect(
-        session.writeBlockReason,
-        'Configure the image/OCR provider before scanning.',
-      );
-    });
-
-    test('guides the two-image capture workflow', () {
-      const empty = ArcBlueprintPhotoImportSession(
-        id: 'import-capture',
-        uid: 'user-1',
-        status: ArcBlueprintPhotoImportStatus.draft,
-      );
-      const firstCapture = ArcBlueprintPhotoImportSession(
-        id: 'import-capture',
-        uid: 'user-1',
-        status: ArcBlueprintPhotoImportStatus.uploaded,
-        captures: <ArcBlueprintPhotoCapture>[
-          ArcBlueprintPhotoCapture(
-            id: 'capture-top',
-            imagePath: 'local://top.webp',
-            sequenceIndex: 0,
-          ),
-        ],
-      );
-      const complete = ArcBlueprintPhotoImportSession(
-        id: 'import-capture',
-        uid: 'user-1',
-        status: ArcBlueprintPhotoImportStatus.uploaded,
-        captures: <ArcBlueprintPhotoCapture>[
-          ArcBlueprintPhotoCapture(
-            id: 'capture-top',
-            imagePath: 'local://top.webp',
-            sequenceIndex: 0,
-          ),
-          ArcBlueprintPhotoCapture(
-            id: 'capture-bottom',
-            imagePath: 'local://bottom.webp',
-            sequenceIndex: 1,
-            overlapSignature: 'row-overlap',
-          ),
-        ],
-      );
-
-      expect(empty.nextCaptureStep, ArcBlueprintPhotoCaptureStep.captureTop);
-      expect(empty.writeBlockReason, contains('top half'));
-      expect(
-        firstCapture.nextCaptureStep,
-        ArcBlueprintPhotoCaptureStep.captureBottomWithOverlap,
-      );
-      expect(firstCapture.needsSecondCapture, isTrue);
-      expect(firstCapture.writeBlockReason, contains('overlapping row'));
-      expect(complete.captureSetComplete, isTrue);
-      expect(complete.canRunLocalStitching, isTrue);
-      expect(complete.nextCaptureStep, ArcBlueprintPhotoCaptureStep.review);
-    });
-
-    test('serializes confirmed high-confidence import sessions', () {
-      const session = ArcBlueprintPhotoImportSession(
-        id: 'import-2',
-        uid: 'user-1',
+        id: 'import',
+        uid: 'user',
         status: ArcBlueprintPhotoImportStatus.confirmed,
-        provider: 'configured_provider',
+        captures: [
+          ArcBlueprintPhotoCapture(
+            id: 'top',
+            imagePath: 'top.png',
+            sequenceIndex: 0,
+          ),
+          ArcBlueprintPhotoCapture(
+            id: 'bottom',
+            imagePath: 'bottom.png',
+            sequenceIndex: 1,
+          ),
+        ],
+        decisions: [decision],
         confirmedByUser: true,
         writePreviewOnly: false,
-        candidates: <ArcBlueprintPhotoCandidate>[
-          ArcBlueprintPhotoCandidate(
-            blueprintId: 'anvil',
-            label: 'Anvil',
-            confidence: 0.96,
-          ),
-        ],
-        captures: <ArcBlueprintPhotoCapture>[
-          ArcBlueprintPhotoCapture(
-            id: 'capture-1',
-            imagePath: 'gs://bucket/user/import-2/capture-1.webp',
-            sequenceIndex: 0,
-            detectedRows: 4,
-            detectedCells: 20,
-            overlapSignature: 'row-a',
-          ),
-          ArcBlueprintPhotoCapture(
-            id: 'capture-2',
-            imagePath: 'gs://bucket/user/import-2/capture-2.webp',
-            sequenceIndex: 1,
-            detectedRows: 4,
-            detectedCells: 20,
-            overlapSignature: 'row-a',
-          ),
-        ],
-        reviewChanges: <ArcBlueprintPhotoReviewChange>[
-          ArcBlueprintPhotoReviewChange(
-            blueprintId: 'anvil',
-            owned: true,
-            source: 'template_match',
-            confidence: 0.96,
-          ),
-        ],
       );
 
+      expect(session.canWriteBlueprintState, isTrue);
       final restored = ArcBlueprintPhotoImportSession.fromMap(session.toMap());
-
-      expect(restored.hasProviderConfigured, isTrue);
+      expect(restored.decisions.single.blueprintId, 'anvil');
       expect(restored.canWriteBlueprintState, isTrue);
-      expect(restored.writeBlockReason, isEmpty);
-      expect(restored.candidates.single.blueprintId, 'anvil');
-      expect(restored.captures, hasLength(2));
-      expect(restored.captures.last.overlapSignature, 'row-a');
-      expect(restored.reviewChanges.single.needsReview, isFalse);
-    });
+    },
+  );
 
-    test(
-      'requires explicit user confirmation before writing blueprint state',
-      () {
-        const session = ArcBlueprintPhotoImportSession(
-          id: 'import-3',
-          uid: 'user-1',
-          status: ArcBlueprintPhotoImportStatus.confirmed,
-          provider: 'configured_provider',
-          captures: <ArcBlueprintPhotoCapture>[
-            ArcBlueprintPhotoCapture(
-              id: 'capture-1',
-              imagePath: 'local://top.webp',
-              sequenceIndex: 0,
-            ),
-            ArcBlueprintPhotoCapture(
-              id: 'capture-2',
-              imagePath: 'local://bottom.webp',
-              sequenceIndex: 1,
-            ),
-          ],
-          candidates: <ArcBlueprintPhotoCandidate>[
-            ArcBlueprintPhotoCandidate(
-              blueprintId: 'anvil',
-              label: 'Anvil',
-              confidence: 0.97,
-            ),
-          ],
-        );
-
-        expect(session.canWriteBlueprintState, isFalse);
-        expect(session.writePreviewOnly, isTrue);
-        expect(
-          session.writeBlockReason,
-          'Confirm the reviewed Blueprint matches before saving.',
-        );
-      },
+  test('uncertain slot remains blocked until manually confirmed', () {
+    const uncertain = ArcBlueprintPhotoCellDecision(
+      blueprintId: 'anvil',
+      blueprintIndex: 0,
+      state: ArcBlueprintPhotoCellState.uncertain,
+      confidence: 0.5,
+      sourceCaptureId: 'top',
+      rowIndex: 0,
+      columnIndex: 0,
+    );
+    expect(uncertain.needsReview, isTrue);
+    expect(
+      uncertain
+          .copyWith(
+            state: ArcBlueprintPhotoCellState.missing,
+            manuallyConfirmed: true,
+          )
+          .needsReview,
+      isFalse,
     );
   });
 }

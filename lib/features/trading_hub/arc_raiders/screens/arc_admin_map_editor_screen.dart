@@ -1404,6 +1404,27 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   label: const Text('Add Historical Blueprint'),
                 ),
                 OutlinedButton.icon(
+                  onPressed: _selected == null || _saving
+                      ? null
+                      : _editSelected,
+                  icon: const Icon(Icons.edit_location_alt_rounded),
+                  label: const Text('Edit Selected'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _selected == null || _saving
+                      ? null
+                      : _duplicateSelected,
+                  icon: const Icon(Icons.copy_all_rounded),
+                  label: const Text('Duplicate Selected'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _selected == null || _saving
+                      ? null
+                      : _deleteSelected,
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: const Text('Delete Selected'),
+                ),
+                OutlinedButton.icon(
                   onPressed: _saving ? null : _saveDrafts,
                   icon: const Icon(Icons.save_outlined),
                   label: const Text('Save Draft'),

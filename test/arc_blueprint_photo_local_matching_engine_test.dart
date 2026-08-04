@@ -46,6 +46,7 @@ void main() {
       expect(session.status, ArcBlueprintPhotoImportStatus.needsUserReview);
       expect(session.canWriteBlueprintState, isFalse);
       expect(session.writePreviewOnly, isTrue);
+      expect(result.candidates.first.blueprintId, 'anvil-splitter');
     });
 
     test('flags overlap conflicts for manual review', () {

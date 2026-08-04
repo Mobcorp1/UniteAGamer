@@ -80,6 +80,18 @@ class ArcLoadoutResourceNeed {
 
   final String itemName;
   final int quantity;
+
+  Map<String, dynamic> toMap() => <String, dynamic>{
+    'itemName': itemName,
+    'quantity': quantity,
+  };
+
+  static ArcLoadoutResourceNeed fromMap(Map<String, dynamic> data) {
+    return ArcLoadoutResourceNeed(
+      itemName: (data['itemName'] ?? '').toString(),
+      quantity: (data['quantity'] as num?)?.toInt() ?? 0,
+    );
+  }
 }
 
 class ArcGeneratedLoadoutPlan {
@@ -112,4 +124,66 @@ class ArcGeneratedLoadoutPlan {
   final String confidence;
 
   String get displayName => '${focus.label} $primaryWeapon ${tier.label}';
+
+  Map<String, dynamic> toMap() => <String, dynamic>{
+    'version': version,
+    'researchedAt': researchedAt.toIso8601String(),
+    'primaryWeapon': primaryWeapon,
+    'primaryAttachments': primaryAttachments,
+    'secondaryWeapon': secondaryWeapon,
+    'secondaryAttachments': secondaryAttachments,
+    'focus': focus.name,
+    'tier': tier.name,
+    'blueprintPriorities': blueprintPriorities,
+    'resourceNeeds': resourceNeeds.map((item) => item.toMap()).toList(),
+    'rationale': rationale,
+    'confidence': confidence,
+  };
+
+  static ArcGeneratedLoadoutPlan? fromMap(dynamic value) {
+    if (value is! Map) return null;
+    final data = Map<String, dynamic>.from(value);
+    final primaryWeapon = (data['primaryWeapon'] ?? '').toString().trim();
+    final secondaryWeapon = (data['secondaryWeapon'] ?? '').toString().trim();
+    if (primaryWeapon.isEmpty || secondaryWeapon.isEmpty) return null;
+
+    List<String> strings(dynamic raw) => raw is List
+        ? raw.map((item) => item.toString()).toList(growable: false)
+        : const <String>[];
+
+    final resources = <ArcLoadoutResourceNeed>[];
+    final rawResources = data['resourceNeeds'];
+    if (rawResources is List) {
+      for (final item in rawResources) {
+        if (item is Map) {
+          resources.add(
+            ArcLoadoutResourceNeed.fromMap(Map<String, dynamic>.from(item)),
+          );
+        }
+      }
+    }
+
+    return ArcGeneratedLoadoutPlan(
+      version: (data['version'] ?? 'legacy').toString(),
+      researchedAt:
+          DateTime.tryParse((data['researchedAt'] ?? '').toString()) ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      primaryWeapon: primaryWeapon,
+      primaryAttachments: strings(data['primaryAttachments']),
+      secondaryWeapon: secondaryWeapon,
+      secondaryAttachments: strings(data['secondaryAttachments']),
+      focus: ArcLoadoutCombatFocus.values.firstWhere(
+        (item) => item.name == data['focus']?.toString(),
+        orElse: () => ArcLoadoutCombatFocus.balanced,
+      ),
+      tier: ArcLoadoutBuildTier.values.firstWhere(
+        (item) => item.name == data['tier']?.toString(),
+        orElse: () => ArcLoadoutBuildTier.value,
+      ),
+      blueprintPriorities: strings(data['blueprintPriorities']),
+      resourceNeeds: List<ArcLoadoutResourceNeed>.unmodifiable(resources),
+      rationale: strings(data['rationale']),
+      confidence: (data['confidence'] ?? 'Unspecified').toString(),
+    );
+  }
 }

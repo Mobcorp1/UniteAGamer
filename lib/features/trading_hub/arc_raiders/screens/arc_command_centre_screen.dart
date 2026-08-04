@@ -1,18 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_command_centre_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_expedition_state_manager.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_feature_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_integration_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_profile_completion_evaluator.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_mission_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_watch.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_mission_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_nomadic_trader_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_progression_models.dart';
@@ -36,6 +41,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
@@ -506,37 +512,215 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     required ArcCommandTradeActivity tradeActivity,
   }) {
     if (scrappyState.status == ArcScrappyRepositoryStateStatus.error) {
-      return ArcCommandCentreContent(
-        expeditionState: expeditionState,
-        commandState: commandState,
-        checklistState: _checklistState,
-        onAction: _handleAction,
-        onChecklistChanged: _handleChecklistChanged,
-        fallbackNotice:
-            'Scrappy tracking is temporarily unavailable. Your Command Centre remains usable and will retry automatically.',
+      return _withSmartBuildStatus(
+        blueprintStates: blueprintStates,
+        loadouts: loadouts,
+        child: ArcCommandCentreContent(
+          expeditionState: expeditionState,
+          commandState: commandState,
+          checklistState: _checklistState,
+          onAction: _handleAction,
+          onChecklistChanged: _handleChecklistChanged,
+          fallbackNotice:
+              'Scrappy tracking is temporarily unavailable. Your Command Centre remains usable and will retry automatically.',
+        ),
       );
     }
 
     if (scrappyState.status ==
             ArcScrappyRepositoryStateStatus.unauthenticated ||
         scrappyState.status == ArcScrappyRepositoryStateStatus.restoring) {
-      return ArcCommandCentreContent(
+      return _withSmartBuildStatus(
+        blueprintStates: blueprintStates,
+        loadouts: loadouts,
+        child: ArcCommandCentreContent(
+          expeditionState: expeditionState,
+          commandState: commandState,
+          checklistState: _checklistState,
+          onAction: _handleAction,
+          onChecklistChanged: _handleChecklistChanged,
+          fallbackNotice:
+              'Restoring your account state… the Command Centre will appear as soon as your tracker data is ready.',
+        ),
+      );
+    }
+
+    return _withSmartBuildStatus(
+      blueprintStates: blueprintStates,
+      loadouts: loadouts,
+      child: ArcCommandCentreContent(
         expeditionState: expeditionState,
         commandState: commandState,
         checklistState: _checklistState,
         onAction: _handleAction,
         onChecklistChanged: _handleChecklistChanged,
-        fallbackNotice:
-            'Restoring your account state… the Command Centre will appear as soon as your tracker data is ready.',
-      );
-    }
+      ),
+    );
+  }
 
-    return ArcCommandCentreContent(
-      expeditionState: expeditionState,
-      commandState: commandState,
-      checklistState: _checklistState,
-      onAction: _handleAction,
-      onChecklistChanged: _handleChecklistChanged,
+  Widget _withSmartBuildStatus({
+    required Map<String, ArcBlueprintState> blueprintStates,
+    required List<ArcSavedLoadout> loadouts,
+    required Widget child,
+  }) {
+    ArcSavedLoadout? favourite;
+    for (final loadout in loadouts) {
+      if (loadout.id == 'favourite-loadout') {
+        favourite = loadout;
+        break;
+      }
+    }
+    final plan = ArcGeneratedLoadoutPlan.fromMap(favourite?.smartBuildData);
+    if (plan == null) return child;
+
+    final integration = ArcLoadoutIntegrationEngine.evaluate(
+      plan: plan,
+      blueprintStates: blueprintStates,
+    );
+    final missionSnapshot = ArcSmartBuildMissionEngine.build(
+      plan: plan,
+      blueprintStates: blueprintStates,
+    )!;
+    final nextMission = missionSnapshot.nextMission;
+    final accent = integration.complete
+        ? Colors.lightGreenAccent
+        : Colors.amberAccent;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          child: Material(
+            color: const Color(0xFF091116).withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const FavouriteLoadoutScreen(),
+                ),
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: accent.withValues(alpha: 0.45)),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: missionSnapshot.completionPercent / 100,
+                            color: accent,
+                            backgroundColor: Colors.white12,
+                            strokeWidth: 5,
+                          ),
+                          Text(
+                            '${missionSnapshot.completionPercent}%',
+                            style: TextStyle(
+                              color: accent,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            plan.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.bodyTextStyle(
+                              fontSize: 13,
+                              color: Colors.white,
+                              isBold: true,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            nextMission?.detail ?? integration.nextMove,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (nextMission != null)
+                      IconButton(
+                        tooltip: nextMission.title,
+                        onPressed: () {
+                          switch (nextMission.type) {
+                            case ArcSmartBuildMissionType.blueprintHunt:
+                              Navigator.of(
+                                context,
+                              ).pushNamed(BlueprintGridScreen.routeName);
+                              break;
+                            case ArcSmartBuildMissionType.resourceGather:
+                            case ArcSmartBuildMissionType.tradeBundle:
+                              Navigator.of(context).pushNamed(
+                                ArcSmartBuildTradeDraftScreen.routeName,
+                              );
+                              break;
+                            case ArcSmartBuildMissionType.craftAndEquip:
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const FavouriteLoadoutScreen(),
+                                ),
+                              );
+                              break;
+                          }
+                        },
+                        icon: Icon(switch (nextMission.type) {
+                          ArcSmartBuildMissionType.blueprintHunt =>
+                            Icons.my_location_rounded,
+                          ArcSmartBuildMissionType.resourceGather =>
+                            Icons.inventory_2_rounded,
+                          ArcSmartBuildMissionType.tradeBundle =>
+                            Icons.swap_horiz_rounded,
+                          ArcSmartBuildMissionType.craftAndEquip =>
+                            Icons.construction_rounded,
+                        }, color: accent),
+                      )
+                    else
+                      Icon(Icons.check_circle_rounded, color: accent),
+                    IconButton(
+                      tooltip: 'Open Favourite Loadout',
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const FavouriteLoadoutScreen(),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.tune_rounded,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: child),
+      ],
     );
   }
 

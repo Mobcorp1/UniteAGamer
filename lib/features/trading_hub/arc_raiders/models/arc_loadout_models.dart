@@ -321,6 +321,7 @@ class ArcSavedLoadout {
     required this.equipment,
     required this.consumables,
     this.quickUse = const <String>[],
+    this.smartBuildData,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -338,6 +339,7 @@ class ArcSavedLoadout {
   final List<String> equipment;
   final List<String> consumables;
   final List<String> quickUse;
+  final Map<String, dynamic>? smartBuildData;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -355,6 +357,7 @@ class ArcSavedLoadout {
       'equipment': equipment,
       'consumables': consumables,
       'quickUse': quickUse,
+      if (smartBuildData != null) 'smartBuild': smartBuildData,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -402,6 +405,9 @@ class ArcSavedLoadout {
       equipment: parseList(data['equipment']),
       consumables: parseList(data['consumables']),
       quickUse: parseList(data['quickUse']),
+      smartBuildData: data['smartBuild'] is Map
+          ? Map<String, dynamic>.from(data['smartBuild'] as Map)
+          : null,
       createdAt: parseDate(data['createdAt']),
       updatedAt: parseDate(data['updatedAt']),
     );

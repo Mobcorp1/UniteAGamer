@@ -137,6 +137,9 @@ void main() {
     expect(find.text('Containers'), findsOneWidget);
     expect(find.text('Hazard'), findsOneWidget);
     expect(find.text('Publish Selected'), findsOneWidget);
+    expect(find.text('Edit Selected'), findsOneWidget);
+    expect(find.text('Duplicate Selected'), findsOneWidget);
+    expect(find.text('Delete Selected'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('IMPORT PIPELINE'),

@@ -29,6 +29,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
@@ -329,6 +330,16 @@ class UAGTradersHubApp extends StatefulWidget {
             flag: FeatureAccessFlag.raidPlanner,
             title: 'Raid Planner',
             child: RaidPlannerHuntTargetsScreen(),
+          ),
+          settings: settings,
+        );
+
+      case ArcSmartBuildTradeDraftScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.smartTradeAssist,
+            title: 'Smart Build Trade Draft',
+            child: ArcSmartBuildTradeDraftScreen(),
           ),
           settings: settings,
         );

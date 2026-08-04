@@ -6,18 +6,21 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_compatibility_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_intelligence_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_integration_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_layout_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_smart_build_mission_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_loadout_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_loadout_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_smart_build_mission_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
@@ -81,6 +84,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   ];
 
   bool _loadedSavedState = false;
+  ArcGeneratedLoadoutPlan? _activeSmartPlan;
 
   String _normalise(String value) => value.trim().toLowerCase();
 
@@ -271,6 +275,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       equipment: equipment,
       consumables: consumables,
       quickUse: List<String>.unmodifiable(quickUse),
+      smartBuildData: _activeSmartPlan?.toMap(),
       createdAt: timestamp,
       updatedAt: timestamp,
     );
@@ -311,6 +316,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         ..clear()
         ..addAll(migration.quickUse);
       _augment = migration.augment;
+      _activeSmartPlan = ArcGeneratedLoadoutPlan.fromMap(
+        loadout.smartBuildData,
+      );
     });
   }
 
@@ -333,14 +341,19 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     }
   }
 
-  Future<void> _showSmartBuildGenerator() async {
+  Future<void> _showSmartBuildGenerator(
+    Map<String, ArcBlueprintState> states,
+  ) async {
     var weaponName = _primaryWeapon;
-    var focus = switch (_playStyle) {
-      ArcPlayerPlayStyle.pvp => ArcLoadoutCombatFocus.pvp,
-      ArcPlayerPlayStyle.pve => ArcLoadoutCombatFocus.pve,
-      _ => ArcLoadoutCombatFocus.balanced,
-    };
-    var tier = ArcLoadoutBuildTier.value;
+    var focus =
+        _activeSmartPlan?.focus ??
+        switch (_playStyle) {
+          ArcPlayerPlayStyle.pvp => ArcLoadoutCombatFocus.pvp,
+          ArcPlayerPlayStyle.pve => ArcLoadoutCombatFocus.pve,
+          _ => ArcLoadoutCombatFocus.balanced,
+        };
+    var tier = _activeSmartPlan?.tier ?? ArcLoadoutBuildTier.value;
+    String? selectedSecondary = _activeSmartPlan?.secondaryWeapon;
 
     final plan = await showModalBottomSheet<ArcGeneratedLoadoutPlan>(
       context: context,
@@ -349,103 +362,369 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  18,
-                  18,
-                  18,
-                  18 + MediaQuery.viewInsetsOf(context).bottom,
+            final secondaryOptions =
+                ArcLoadoutIntelligenceEngine.secondaryOptionsFor(
+                  primaryWeapon: weaponName,
+                  focus: focus,
+                  tier: tier,
+                );
+            if (!secondaryOptions.contains(selectedSecondary)) {
+              selectedSecondary = secondaryOptions.first;
+            }
+            final preview = ArcLoadoutIntelligenceEngine.generate(
+              primaryWeapon: weaponName,
+              focus: focus,
+              tier: tier,
+              secondaryWeaponOverride: selectedSecondary,
+            );
+            final previewIntegration = ArcLoadoutIntegrationEngine.evaluate(
+              plan: preview,
+              blueprintStates: states,
+            );
+            final missingBlueprints =
+                previewIntegration.missingBlueprints.length;
+            final totalBlueprints = previewIntegration.blueprints.length;
+            final resourceUnits = preview.resourceNeeds.fold<int>(
+              0,
+              (total, item) => total + item.quantity,
+            );
+
+            Widget sectionLabel(String label) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  label.toUpperCase(),
+                  style: AppTheme.tradingHeading(
+                    fontSize: 15,
+                    color: Colors.white70,
+                  ),
                 ),
-                child: SingleChildScrollView(
+              );
+            }
+
+            Widget selectionChip({
+              required String label,
+              required bool selected,
+              required VoidCallback onSelected,
+              IconData? icon,
+            }) {
+              return ChoiceChip(
+                selected: selected,
+                onSelected: (_) => onSelected(),
+                avatar: icon == null ? null : Icon(icon, size: 17),
+                label: Text(label),
+                selectedColor: AppTheme.neonCyan.withValues(alpha: 0.22),
+                side: BorderSide(
+                  color: selected
+                      ? AppTheme.neonCyan
+                      : Colors.white.withValues(alpha: 0.18),
+                ),
+                labelStyle: TextStyle(
+                  color: selected ? AppTheme.neonCyan : Colors.white70,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              );
+            }
+
+            Widget previewMetric(String value, String label) {
+              return Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'SMART LOADOUT BUILDER',
+                        value,
                         style: AppTheme.tradingHeading(
-                          fontSize: 24,
+                          fontSize: 20,
                           color: AppTheme.neonCyan,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Choose a weapon, combat focus and build level. UAG will select compatible attachments, recommend a secondary and calculate the attachment resources.',
-                        style: TextStyle(color: Colors.white70, height: 1.35),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: weaponName,
-                        decoration: const InputDecoration(
-                          labelText: 'Primary weapon',
+                      const SizedBox(height: 3),
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
                         ),
-                        items: ArcLoadoutSeedData.weapons
-                            .map(
-                              (weapon) => DropdownMenuItem<String>(
-                                value: weapon.name,
-                                child: Text(weapon.name),
-                              ),
-                            )
-                            .toList(growable: false),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setSheetState(() => weaponName = value);
-                          }
-                        },
                       ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<ArcLoadoutCombatFocus>(
-                        initialValue: focus,
-                        decoration: const InputDecoration(
-                          labelText: 'Combat focus',
-                        ),
-                        items: ArcLoadoutCombatFocus.values
-                            .map(
-                              (value) =>
-                                  DropdownMenuItem<ArcLoadoutCombatFocus>(
-                                    value: value,
-                                    child: Text(value.label),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return SafeArea(
+              child: FractionallySizedBox(
+                heightFactor: 0.94,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    18,
+                    18,
+                    18,
+                    18 + MediaQuery.viewInsetsOf(context).bottom,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'SMART LOADOUT BUILDER',
+                                  style: AppTheme.tradingHeading(
+                                    fontSize: 24,
+                                    color: AppTheme.neonCyan,
                                   ),
-                            )
-                            .toList(growable: false),
-                        onChanged: (value) {
-                          if (value != null) setSheetState(() => focus = value);
-                        },
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Pick your weapon and intent. Preview the complete pairing before applying it.',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Close',
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<ArcLoadoutBuildTier>(
-                        initialValue: tier,
-                        decoration: const InputDecoration(
-                          labelText: 'Build level',
-                        ),
-                        items: ArcLoadoutBuildTier.values
-                            .map(
-                              (value) => DropdownMenuItem<ArcLoadoutBuildTier>(
-                                value: value,
-                                child: Text(value.label),
+                      const SizedBox(height: 14),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              sectionLabel('Primary weapon'),
+                              DropdownButtonFormField<String>(
+                                initialValue: weaponName,
+                                decoration: const InputDecoration(
+                                  prefixIcon: Icon(Icons.gps_fixed_rounded),
+                                  labelText: 'Build around',
+                                ),
+                                items: ArcLoadoutSeedData.weapons
+                                    .map(
+                                      (weapon) => DropdownMenuItem<String>(
+                                        value: weapon.name,
+                                        child: Text(weapon.name),
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                                onChanged: (value) {
+                                  if (value == null) return;
+                                  setSheetState(() {
+                                    weaponName = value;
+                                    selectedSecondary = null;
+                                  });
+                                },
                               ),
-                            )
-                            .toList(growable: false),
-                        onChanged: (value) {
-                          if (value != null) setSheetState(() => tier = value);
-                        },
+                              const SizedBox(height: 18),
+                              sectionLabel('Combat focus'),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: ArcLoadoutCombatFocus.values
+                                    .map(
+                                      (value) => selectionChip(
+                                        label: value.label,
+                                        icon: switch (value) {
+                                          ArcLoadoutCombatFocus.pvp =>
+                                            Icons.flash_on_rounded,
+                                          ArcLoadoutCombatFocus.balanced =>
+                                            Icons.balance_rounded,
+                                          ArcLoadoutCombatFocus.pve =>
+                                            Icons.smart_toy_rounded,
+                                        },
+                                        selected: focus == value,
+                                        onSelected: () {
+                                          setSheetState(() {
+                                            focus = value;
+                                            selectedSecondary = null;
+                                          });
+                                        },
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                              ),
+                              const SizedBox(height: 18),
+                              sectionLabel('Build level'),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: ArcLoadoutBuildTier.values
+                                    .map(
+                                      (value) => selectionChip(
+                                        label: value.label,
+                                        icon: value == ArcLoadoutBuildTier.meta
+                                            ? Icons.military_tech_rounded
+                                            : Icons.savings_outlined,
+                                        selected: tier == value,
+                                        onSelected: () {
+                                          setSheetState(() {
+                                            tier = value;
+                                            selectedSecondary = null;
+                                          });
+                                        },
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                              ),
+                              const SizedBox(height: 18),
+                              sectionLabel('Recommended secondary'),
+                              const Text(
+                                'UAG ranks these weapons to cover the primary weapon’s range, sustain or target weakness.',
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                  height: 1.3,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: secondaryOptions
+                                    .map(
+                                      (weapon) => selectionChip(
+                                        label: weapon,
+                                        selected: selectedSecondary == weapon,
+                                        onSelected: () => setSheetState(
+                                          () => selectedSecondary = weapon,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(growable: false),
+                              ),
+                              const SizedBox(height: 20),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.neonCyan.withValues(alpha: 0.10),
+                                      AppTheme.neonPink.withValues(alpha: 0.05),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: AppTheme.neonCyan.withValues(
+                                      alpha: 0.28,
+                                    ),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.auto_awesome_rounded,
+                                          color: AppTheme.neonCyan,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            preview.displayName,
+                                            style: AppTheme.tradingHeading(
+                                              fontSize: 19,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${preview.primaryWeapon} + ${preview.secondaryWeapon}',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        previewMetric(
+                                          '${previewIntegration.completionPercent}%',
+                                          'Ready now',
+                                        ),
+                                        const SizedBox(width: 8),
+                                        previewMetric(
+                                          '$missingBlueprints/$totalBlueprints',
+                                          'Blueprints missing',
+                                        ),
+                                        const SizedBox(width: 8),
+                                        previewMetric(
+                                          '$resourceUnits',
+                                          'Material units',
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Primary: ${preview.primaryAttachments.where((item) => item != 'Empty Slot').join(' • ')}',
+                                      style: const TextStyle(
+                                        color: Colors.white60,
+                                        fontSize: 12,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      'Secondary: ${preview.secondaryAttachments.where((item) => item != 'Empty Slot').join(' • ')}',
+                                      style: const TextStyle(
+                                        color: Colors.white60,
+                                        fontSize: 12,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                    if (preview.rationale.isNotEmpty) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        preview.rationale.first,
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton.icon(
-                          onPressed: () {
-                            Navigator.of(sheetContext).pop(
-                              ArcLoadoutIntelligenceEngine.generate(
-                                primaryWeapon: weaponName,
-                                focus: focus,
-                                tier: tier,
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.auto_awesome_rounded),
-                          label: const Text('Generate Loadout'),
+                          onPressed: () =>
+                              Navigator.of(sheetContext).pop(preview),
+                          icon: const Icon(Icons.check_circle_outline_rounded),
+                          label: const Text('Apply Smart Build'),
                         ),
                       ),
                     ],
@@ -461,6 +740,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     if (plan == null || !mounted) return;
 
     setState(() {
+      _activeSmartPlan = plan;
       _buildName = plan.displayName;
       _playStyle = plan.focus.playStyle;
       _primaryWeapon = plan.primaryWeapon;
@@ -472,6 +752,50 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
         ..clear()
         ..addAll(plan.secondaryAttachments);
     });
+
+    final integration = ArcLoadoutIntegrationEngine.evaluate(
+      plan: plan,
+      blueprintStates: states,
+    );
+    try {
+      await _blueprintRepository.saveBlueprintStates(
+        integration.blueprints.map((need) {
+          final current =
+              states[need.blueprintId] ??
+              ArcBlueprintState.empty(need.blueprintId);
+          final priority = current.priorityRank > need.priorityRank
+              ? current.priorityRank
+              : need.priorityRank;
+          return current.copyWith(priorityRank: priority);
+        }),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Loadout generated, but priorities could not sync: $error',
+            ),
+          ),
+        );
+      }
+    }
+
+    try {
+      await _savedLoadoutRepository.saveLoadout(_draftLoadout());
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Smart Build is active, but could not be saved: $error',
+            ),
+          ),
+        );
+      }
+    }
+
+    if (!mounted) return;
 
     final resourceSummary = plan.resourceNeeds.isEmpty
         ? 'No mapped attachment materials required.'
@@ -1003,7 +1327,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 label: 'Smart Build',
                 icon: Icons.auto_awesome_rounded,
                 color: Colors.amberAccent,
-                onTap: _showSmartBuildGenerator,
+                onTap: () => _showSmartBuildGenerator(states),
               ),
               _smallAction(
                 label: 'Save',
@@ -1151,6 +1475,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           ),
           children: [
             const SizedBox(height: 10),
+            if (_activeSmartPlan != null) ...[
+              _buildSmartBuildIntegrationPanel(states),
+              const SizedBox(height: 10),
+            ],
             _buildMissingBlueprints(states),
             const SizedBox(height: 10),
             _buildTradeBenchPanel(states),
@@ -1404,6 +1732,188 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  Widget _buildSmartBuildIntegrationPanel(
+    Map<String, ArcBlueprintState> states,
+  ) {
+    final plan = _activeSmartPlan!;
+    final integration = ArcLoadoutIntegrationEngine.evaluate(
+      plan: plan,
+      blueprintStates: states,
+    );
+    final missionSnapshot = ArcSmartBuildMissionEngine.build(
+      plan: plan,
+      blueprintStates: states,
+    )!;
+    final accent = integration.complete
+        ? Colors.lightGreenAccent
+        : Colors.amberAccent;
+
+    return _arcPanel(
+      accent: accent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader('SMART BUILD PROGRESS', accent),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              SizedBox(
+                width: 54,
+                height: 54,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: integration.completionPercent / 100,
+                      strokeWidth: 6,
+                      color: accent,
+                      backgroundColor: Colors.white12,
+                    ),
+                    Text(
+                      '${integration.completionPercent}%',
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      plan.displayName,
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        isBold: true,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      integration.nextMove,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _pill(
+                '${integration.missingBlueprints.length} Blueprint priorities',
+                integration.missingBlueprints.isEmpty
+                    ? Colors.lightGreenAccent
+                    : AppTheme.neonPink,
+              ),
+              _pill(
+                '${integration.missingResources.length} resource gaps',
+                integration.missingResources.isEmpty
+                    ? Colors.lightGreenAccent
+                    : Colors.amberAccent,
+              ),
+              _pill(
+                '${integration.tradeTemplate.components.length} trade requirements',
+                AppTheme.neonCyan,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _sectionHeader('MISSION BOARD', AppTheme.neonCyan),
+          const SizedBox(height: 8),
+          for (
+            var index = 0;
+            index < missionSnapshot.missions.take(5).length;
+            index++
+          )
+            Builder(
+              builder: (context) {
+                final mission = missionSnapshot.missions[index];
+                final missionColor = mission.completed
+                    ? Colors.lightGreenAccent
+                    : switch (mission.type) {
+                        ArcSmartBuildMissionType.blueprintHunt =>
+                          AppTheme.neonPink,
+                        ArcSmartBuildMissionType.resourceGather =>
+                          Colors.amberAccent,
+                        ArcSmartBuildMissionType.tradeBundle =>
+                          AppTheme.neonCyan,
+                        ArcSmartBuildMissionType.craftAndEquip =>
+                          Colors.lightGreenAccent,
+                      };
+                final missionIcon = switch (mission.type) {
+                  ArcSmartBuildMissionType.blueprintHunt =>
+                    Icons.my_location_rounded,
+                  ArcSmartBuildMissionType.resourceGather =>
+                    Icons.inventory_2_rounded,
+                  ArcSmartBuildMissionType.tradeBundle =>
+                    Icons.swap_horiz_rounded,
+                  ArcSmartBuildMissionType.craftAndEquip =>
+                    Icons.construction_rounded,
+                };
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 7),
+                  child: _statusLine(
+                    icon: mission.completed
+                        ? Icons.check_circle_rounded
+                        : missionIcon,
+                    label: '${index + 1}. ${mission.title}',
+                    value: mission.detail,
+                    color: missionColor,
+                  ),
+                );
+              },
+            ),
+          if (missionSnapshot.missions.length > 5)
+            Text(
+              '+${missionSnapshot.missions.length - 5} more mission steps',
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _smallAction(
+                label: 'Regenerate',
+                icon: Icons.refresh_rounded,
+                color: Colors.amberAccent,
+                onTap: () => _showSmartBuildGenerator(states),
+              ),
+              _smallAction(
+                label: 'Blueprint Priorities',
+                icon: Icons.grid_view_rounded,
+                color: AppTheme.neonPink,
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(BlueprintGridScreen.routeName),
+              ),
+              _smallAction(
+                label: 'Open Trading',
+                icon: Icons.swap_horiz_rounded,
+                color: AppTheme.neonCyan,
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed(ArcSmartBuildTradeDraftScreen.routeName),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMissingBlueprints(Map<String, ArcBlueprintState> states) {
     final missing = _missingBlueprintItems(states);
     return _arcPanel(
@@ -1510,8 +2020,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
             label: 'Open Trading',
             icon: Icons.storefront_rounded,
             color: AppTheme.neonCyan,
-            onTap: () =>
-                Navigator.of(context).pushNamed(TraderHubScreen.routeName),
+            onTap: () => Navigator.of(
+              context,
+            ).pushNamed(ArcSmartBuildTradeDraftScreen.routeName),
           ),
         ],
       ),

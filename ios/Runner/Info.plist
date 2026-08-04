@@ -70,5 +70,10 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
-	</dict>
+	
+\t<key>NSCameraUsageDescription</key>
+\t<string>UAG uses the camera only to capture your ARC Raiders Blueprint grid for local ownership matching.</string>
+\t<key>NSPhotoLibraryUsageDescription</key>
+\t<string>UAG uses selected screenshots only to import your ARC Raiders Blueprint ownership.</string>
+</dict>
 </plist>

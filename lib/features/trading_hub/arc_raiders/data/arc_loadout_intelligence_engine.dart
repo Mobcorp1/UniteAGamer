@@ -13,11 +13,22 @@ class ArcLoadoutIntelligenceEngine {
     required String primaryWeapon,
     required ArcLoadoutCombatFocus focus,
     required ArcLoadoutBuildTier tier,
+    String? secondaryWeaponOverride,
   }) {
     final primaryProfile = ArcLoadoutIntelligenceCatalog.profileFor(
       primaryWeapon,
     );
-    final secondaryWeapon = _pickSecondary(primaryProfile, focus, tier);
+    final secondaryOptions = secondaryOptionsFor(
+      primaryWeapon: primaryWeapon,
+      focus: focus,
+      tier: tier,
+    );
+    final requestedSecondary = secondaryWeaponOverride?.trim();
+    final secondaryWeapon =
+        requestedSecondary != null &&
+            secondaryOptions.contains(requestedSecondary)
+        ? requestedSecondary
+        : secondaryOptions.first;
     final primaryAttachments = _attachmentsFor(
       weaponName: primaryWeapon,
       focus: focus,
@@ -61,19 +72,39 @@ class ArcLoadoutIntelligenceEngine {
     );
   }
 
-  static String _pickSecondary(
-    ArcLoadoutWeaponIntelligenceProfile profile,
-    ArcLoadoutCombatFocus focus,
-    ArcLoadoutBuildTier tier,
-  ) {
-    final candidates = profile.secondariesFor(focus);
-    if (candidates.isEmpty) return 'Stitcher';
-    if (tier == ArcLoadoutBuildTier.meta) return candidates.first;
+  static List<String> secondaryOptionsFor({
+    required String primaryWeapon,
+    required ArcLoadoutCombatFocus focus,
+    required ArcLoadoutBuildTier tier,
+  }) {
+    final profile = ArcLoadoutIntelligenceCatalog.profileFor(primaryWeapon);
+    final knownWeapons = ArcLoadoutSeedData.weapons
+        .map((weapon) => weapon.name)
+        .toSet();
+    final candidates = profile
+        .secondariesFor(focus)
+        .where(
+          (weapon) => weapon != primaryWeapon && knownWeapons.contains(weapon),
+        )
+        .toSet()
+        .toList(growable: true);
 
-    return candidates
-        .map(ArcLoadoutIntelligenceCatalog.profileFor)
-        .reduce((best, next) => next.valueScore > best.valueScore ? next : best)
-        .weaponName;
+    if (candidates.isEmpty) {
+      final fallback = knownWeapons.firstWhere(
+        (weapon) => weapon != primaryWeapon,
+        orElse: () => primaryWeapon,
+      );
+      return <String>[fallback];
+    }
+
+    if (tier == ArcLoadoutBuildTier.value) {
+      candidates.sort((a, b) {
+        final aProfile = ArcLoadoutIntelligenceCatalog.profileFor(a);
+        final bProfile = ArcLoadoutIntelligenceCatalog.profileFor(b);
+        return bProfile.valueScore.compareTo(aProfile.valueScore);
+      });
+    }
+    return List<String>.unmodifiable(candidates);
   }
 
   static List<String> _attachmentsFor({
