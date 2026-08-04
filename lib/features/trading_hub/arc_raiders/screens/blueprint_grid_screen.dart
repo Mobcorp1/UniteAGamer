@@ -137,6 +137,21 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     super.dispose();
   }
 
+  Future<void> _openBlueprintPhotoImport() async {
+    final imported = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const ArcBlueprintPhotoCaptureScreen()),
+    );
+    if (imported == true && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Blueprint ownership imported successfully.'),
+          ),
+        );
+    }
+  }
+
   List<ArcBlueprint> _applyFilter(
     List<ArcBlueprint> blueprints,
     Map<String, ArcBlueprintState> states, {
@@ -2322,6 +2337,54 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             ArcBlueprintGridViewMode.fullOverview,
             Icons.grid_view_rounded,
           ),
+          const SizedBox(height: 8),
+          Semantics(
+            button: true,
+            label: 'Import blueprint grid from game',
+            child: Tooltip(
+              message: 'IMPORT FROM GAME',
+              child: InkWell(
+                key: const Key('blueprint-import-from-game'),
+                borderRadius: BorderRadius.circular(16),
+                onTap: _openBlueprintPhotoImport,
+                child: Container(
+                  width: compact ? 42 : 78,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 7 : 9,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.neonPink.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppTheme.neonPink.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.camera_alt_outlined,
+                        size: 18,
+                        color: AppTheme.neonPink,
+                      ),
+                      if (!compact) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          'IMPORT',
+                          textAlign: TextAlign.center,
+                          style: AppTheme.buttonTextStyle(
+                            color: AppTheme.neonPink,
+                            fontSize: 9,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
           if (!_viewModeLoaded) ...[
             const SizedBox(height: 8),
             const SizedBox(
@@ -2847,21 +2910,6 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         shadowColor: Colors.transparent,
         title: _buildBlueprintHeaderTitle(context),
         actions: [
-          IconButton(
-            key: const Key('blueprint-import-from-game'),
-            tooltip: 'Import from game',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ArcBlueprintPhotoCaptureScreen(),
-                ),
-              );
-            },
-            icon: const Icon(
-              Icons.camera_alt_outlined,
-              color: AppTheme.neonCyan,
-            ),
-          ),
           PopupMenuButton<String>(
             tooltip: 'Blueprint menu',
             icon: const Icon(Icons.menu_rounded, color: AppTheme.neonPink),

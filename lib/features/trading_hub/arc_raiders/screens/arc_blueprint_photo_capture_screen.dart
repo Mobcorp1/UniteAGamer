@@ -1,6 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_pixel_analyzer.dart';
@@ -38,6 +40,7 @@ class _ArcBlueprintPhotoCaptureScreenState
   void initState() {
     super.initState();
     _restore();
+    unawaited(_recoverLostPickerData());
   }
 
   Future<void> _restore() async {
@@ -51,30 +54,115 @@ class _ArcBlueprintPhotoCaptureScreenState
     });
   }
 
+  void _showMessage(String message, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: error ? Colors.red.shade800 : null,
+        ),
+      );
+  }
+
+  String _pickerErrorMessage(Object error, ImageSource source) {
+    if (error is PlatformException) {
+      final code = error.code.toLowerCase();
+      if (code.contains('camera_access_denied') ||
+          code.contains('photo_access_denied') ||
+          code.contains('permission')) {
+        return source == ImageSource.camera
+            ? 'Camera access was denied. Enable camera permission in your device or browser settings, then try again.'
+            : 'Photo access was denied. Enable photo/file permission in your device or browser settings, then try again.';
+      }
+      if (code.contains('camera_unavailable') ||
+          code.contains('no_available_camera')) {
+        return 'No usable camera is available on this device. Choose a screenshot instead.';
+      }
+      return error.message?.trim().isNotEmpty == true
+          ? error.message!.trim()
+          : 'The image picker could not open (${error.code}).';
+    }
+    return 'The image picker could not open. Choose a screenshot or check this device/browser permission settings.';
+  }
+
+  Future<void> _storePickedImage(XFile image) async {
+    final capturedSection = _activeSection;
+    final bytes = await image.readAsBytes();
+    if (bytes.isEmpty) {
+      throw const FormatException('The selected image was empty.');
+    }
+    await _repository.saveSection(
+      section: _activeSection,
+      bytes: bytes,
+      fileName: image.name,
+    );
+    if (!mounted) return;
+    setState(() {
+      _draft = _repository.current;
+      if (_activeSection == ArcBlueprintCaptureSection.top) {
+        _activeSection = ArcBlueprintCaptureSection.bottom;
+      }
+    });
+    _showMessage(
+      capturedSection == ArcBlueprintCaptureSection.top
+          ? 'Top grid image captured. Now add the bottom grid image.'
+          : 'Bottom grid image captured. Both images are ready for review.',
+    );
+  }
+
+  Future<void> _recoverLostPickerData() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      final response = await _picker.retrieveLostData();
+      if (response.isEmpty ||
+          response.files == null ||
+          response.files!.isEmpty) {
+        return;
+      }
+      await _storePickedImage(response.files!.first);
+    } catch (error) {
+      _showMessage(
+        'An interrupted camera selection could not be recovered. Please choose the image again.',
+        error: true,
+      );
+    }
+  }
+
   Future<void> _pick(ImageSource source) async {
     if (_busy) return;
+    if (source == ImageSource.camera && !_cameraSupported) {
+      _showMessage(
+        'Direct camera capture is not available on this device. Choose a screenshot instead.',
+        error: true,
+      );
+      return;
+    }
+
     setState(() => _busy = true);
     try {
       final image = await _picker.pickImage(
         source: source,
         imageQuality: 92,
         maxWidth: 2400,
+        requestFullMetadata: false,
       );
-      if (image == null) return;
-      final bytes = await image.readAsBytes();
-      if (bytes.isEmpty) return;
-      await _repository.saveSection(
-        section: _activeSection,
-        bytes: bytes,
-        fileName: image.name,
-      );
-      if (!mounted) return;
-      setState(() {
-        _draft = _repository.current;
-        if (_activeSection == ArcBlueprintCaptureSection.top) {
-          _activeSection = ArcBlueprintCaptureSection.bottom;
-        }
-      });
+      if (image == null) {
+        _showMessage(
+          source == ImageSource.camera
+              ? 'No photo was captured.'
+              : 'No screenshot was selected.',
+        );
+        return;
+      }
+      await _storePickedImage(image);
+    } on PlatformException catch (error) {
+      _showMessage(_pickerErrorMessage(error, source), error: true);
+    } on FormatException catch (error) {
+      _showMessage(error.message, error: true);
+    } catch (error) {
+      _showMessage(_pickerErrorMessage(error, source), error: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -163,6 +251,10 @@ class _ArcBlueprintPhotoCaptureScreenState
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (_busy) ...[
+              const LinearProgressIndicator(minHeight: 3),
+              const SizedBox(height: 12),
+            ],
             _ProgressHeader(
               completed: _draft.completedSections,
               activeSection: _activeSection,
@@ -245,7 +337,13 @@ class _ArcBlueprintPhotoCaptureScreenState
             const SizedBox(height: 18),
             _CaptureSummary(
               draft: _draft,
+              busy: _busy,
+              cameraSupported: _cameraSupported,
               onSelect: (section) => setState(() => _activeSection = section),
+              onCapture: (section, source) {
+                setState(() => _activeSection = section);
+                unawaited(_pick(source));
+              },
               onRetake: _retake,
             ),
             const SizedBox(height: 18),
@@ -333,12 +431,18 @@ class _SectionBadge extends StatelessWidget {
 class _CaptureSummary extends StatelessWidget {
   const _CaptureSummary({
     required this.draft,
+    required this.busy,
+    required this.cameraSupported,
     required this.onSelect,
+    required this.onCapture,
     required this.onRetake,
   });
 
   final ArcBlueprintPhotoCaptureDraft draft;
+  final bool busy;
+  final bool cameraSupported;
   final ValueChanged<ArcBlueprintCaptureSection> onSelect;
+  final void Function(ArcBlueprintCaptureSection, ImageSource) onCapture;
   final ValueChanged<ArcBlueprintCaptureSection> onRetake;
 
   @override
@@ -352,7 +456,14 @@ class _CaptureSummary extends StatelessWidget {
             return Card(
               color: AppTheme.cardBackgroundDeep,
               child: ListTile(
-                onTap: () => onSelect(section),
+                onTap: busy
+                    ? null
+                    : () {
+                        onSelect(section);
+                        if (!captured) {
+                          onCapture(section, ImageSource.gallery);
+                        }
+                      },
                 leading: Icon(
                   captured ? Icons.check_circle : Icons.radio_button_unchecked,
                   color: captured ? Colors.lightGreenAccent : Colors.white38,
@@ -366,10 +477,40 @@ class _CaptureSummary extends StatelessWidget {
                 trailing: captured
                     ? IconButton(
                         tooltip: 'Retake',
-                        onPressed: () => onRetake(section),
+                        onPressed: busy ? null : () => onRetake(section),
                         icon: const Icon(Icons.refresh),
                       )
-                    : const Icon(Icons.chevron_right),
+                    : Wrap(
+                        spacing: 2,
+                        children: [
+                          if (cameraSupported)
+                            IconButton(
+                              key: Key(
+                                section == ArcBlueprintCaptureSection.top
+                                    ? 'blueprint-import-top-camera'
+                                    : 'blueprint-import-bottom-camera',
+                              ),
+                              tooltip: 'Take photo',
+                              onPressed: busy
+                                  ? null
+                                  : () =>
+                                        onCapture(section, ImageSource.camera),
+                              icon: const Icon(Icons.photo_camera_outlined),
+                            ),
+                          IconButton(
+                            key: Key(
+                              section == ArcBlueprintCaptureSection.top
+                                  ? 'blueprint-import-top-gallery'
+                                  : 'blueprint-import-bottom-gallery',
+                            ),
+                            tooltip: 'Choose screenshot',
+                            onPressed: busy
+                                ? null
+                                : () => onCapture(section, ImageSource.gallery),
+                            icon: const Icon(Icons.image_outlined),
+                          ),
+                        ],
+                      ),
               ),
             );
           })
