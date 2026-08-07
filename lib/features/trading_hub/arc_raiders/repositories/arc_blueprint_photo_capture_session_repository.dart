@@ -14,7 +14,14 @@ class ArcBlueprintPhotoCaptureSessionRepository {
 
   ArcBlueprintPhotoCaptureDraft _draft = const ArcBlueprintPhotoCaptureDraft();
 
-  ArcBlueprintPhotoCaptureDraft get current => _draft;
+  ArcBlueprintPhotoCaptureDraft get current => _draft.copyWith(
+    topImageBytes: _draft.topImageBytes == null
+        ? null
+        : Uint8List.fromList(_draft.topImageBytes!),
+    bottomImageBytes: _draft.bottomImageBytes == null
+        ? null
+        : Uint8List.fromList(_draft.bottomImageBytes!),
+  );
 
   Future<ArcBlueprintPhotoCaptureDraft> restore() async {
     final preferences = await SharedPreferences.getInstance();
@@ -43,16 +50,33 @@ class ArcBlueprintPhotoCaptureSessionRepository {
     final now = DateTime.now();
     _draft = switch (section) {
       ArcBlueprintCaptureSection.top => _draft.copyWith(
-        topImageBytes: bytes,
+        topImageBytes: Uint8List.fromList(bytes),
         topFileName: fileName,
         updatedAt: now,
       ),
       ArcBlueprintCaptureSection.bottom => _draft.copyWith(
-        bottomImageBytes: bytes,
+        bottomImageBytes: Uint8List.fromList(bytes),
         bottomFileName: fileName,
         updatedAt: now,
       ),
     };
+    await _saveMetadata();
+  }
+
+  Future<void> saveDualCapture({
+    required Uint8List topBytes,
+    required Uint8List bottomBytes,
+    required String topFileName,
+    required String bottomFileName,
+  }) async {
+    final now = DateTime.now();
+    _draft = ArcBlueprintPhotoCaptureDraft(
+      topImageBytes: Uint8List.fromList(topBytes),
+      bottomImageBytes: Uint8List.fromList(bottomBytes),
+      topFileName: topFileName,
+      bottomFileName: bottomFileName,
+      updatedAt: now,
+    );
     await _saveMetadata();
   }
 

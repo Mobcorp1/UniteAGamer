@@ -4,13 +4,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_dual_capture_merge_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_import_quality_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_import_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_pixel_analyzer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_uploaded_image_processor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_capture_draft.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_photo_capture_session_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_review_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_grid_alignment_overlay.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_live_scanner_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcBlueprintPhotoCaptureScreen extends StatefulWidget {
@@ -25,6 +29,8 @@ class _ArcBlueprintPhotoCaptureScreenState
     extends State<ArcBlueprintPhotoCaptureScreen> {
   final _picker = ImagePicker();
   final _repository = ArcBlueprintPhotoCaptureSessionRepository.instance;
+
+  final _uploadedImageProcessor = const ArcBlueprintUploadedImageProcessor();
 
   ArcBlueprintPhotoCaptureDraft _draft = const ArcBlueprintPhotoCaptureDraft();
   ArcBlueprintCaptureSection _activeSection = ArcBlueprintCaptureSection.top;
@@ -89,26 +95,32 @@ class _ArcBlueprintPhotoCaptureScreenState
 
   Future<void> _storePickedImage(XFile image) async {
     final capturedSection = _activeSection;
-    final bytes = await image.readAsBytes();
-    if (bytes.isEmpty) {
-      throw const FormatException('The selected image was empty.');
-    }
+    final originalBytes = await image.readAsBytes();
+    final processed = _uploadedImageProcessor.process(
+      originalBytes,
+      section: capturedSection == ArcBlueprintCaptureSection.top
+          ? ArcBlueprintGridSection.top
+          : ArcBlueprintGridSection.bottom,
+    );
+
     await _repository.saveSection(
-      section: _activeSection,
-      bytes: bytes,
+      section: capturedSection,
+      bytes: processed.imageBytes,
       fileName: image.name,
     );
     if (!mounted) return;
+
     setState(() {
       _draft = _repository.current;
-      if (_activeSection == ArcBlueprintCaptureSection.top) {
+      if (capturedSection == ArcBlueprintCaptureSection.top) {
         _activeSection = ArcBlueprintCaptureSection.bottom;
       }
     });
+
     _showMessage(
       capturedSection == ArcBlueprintCaptureSection.top
-          ? 'Top grid image captured. Now add the bottom grid image.'
-          : 'Bottom grid image captured. Both images are ready for review.',
+          ? '${processed.message} Top grid accepted. Now choose the bottom grid image.'
+          : '${processed.message} Bottom grid accepted. Both images are ready to scan.',
     );
   }
 
@@ -130,7 +142,61 @@ class _ArcBlueprintPhotoCaptureScreenState
     }
   }
 
+  Future<void> _openLiveScanner() async {
+    if (_busy) return;
+    if (!_cameraSupported) {
+      _showMessage(
+        'Live camera scanning is not available on this device. Choose a screenshot instead.',
+        error: true,
+      );
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      final result = await Navigator.of(context)
+          .push<ArcBlueprintScannerResult>(
+            MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (_) => const ArcBlueprintLiveScannerScreen(),
+            ),
+          );
+      if (result == null) {
+        _showMessage('No Blueprint grid was captured.');
+        return;
+      }
+      final topSnapshot = Uint8List.fromList(result.topImageBytes);
+      final bottomSnapshot = Uint8List.fromList(result.bottomImageBytes);
+
+      await _repository.saveDualCapture(
+        topBytes: topSnapshot,
+        bottomBytes: bottomSnapshot,
+        topFileName: 'blueprint_grid_top.jpg',
+        bottomFileName: 'blueprint_grid_bottom.jpg',
+      );
+      if (!mounted) return;
+      setState(() {
+        _draft = _repository.current;
+        _activeSection = ArcBlueprintCaptureSection.bottom;
+      });
+      await _scanAndImport();
+    } on PlatformException catch (error) {
+      _showMessage(_pickerErrorMessage(error, ImageSource.camera), error: true);
+    } catch (error) {
+      _showMessage(
+        'The live Blueprint scanner could not complete the capture. Choose a screenshot or try again.',
+        error: true,
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _pick(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      await _openLiveScanner();
+      return;
+    }
     if (_busy) return;
     if (source == ImageSource.camera && !_cameraSupported) {
       _showMessage(
@@ -183,7 +249,7 @@ class _ArcBlueprintPhotoCaptureScreenState
         : _draft.bottomImageBytes;
   }
 
-  Future<void> _continueToReview() async {
+  Future<void> _scanAndImport() async {
     if (!_draft.isComplete || _busy) return;
     final topBytes = _draft.topImageBytes;
     final bottomBytes = _draft.bottomImageBytes;
@@ -191,18 +257,44 @@ class _ArcBlueprintPhotoCaptureScreenState
 
     setState(() => _busy = true);
     try {
-      const analyzer = ArcBlueprintPhotoPixelAnalyzer(columns: 10, rows: 5);
-      final top = analyzer.analyze(bytes: topBytes, captureId: 'top');
-      final bottom = analyzer.analyze(bytes: bottomBytes, captureId: 'bottom');
+      const topAnalyzer = ArcBlueprintPhotoPixelAnalyzer(columns: 10, rows: 5);
+      const bottomAnalyzer = ArcBlueprintPhotoPixelAnalyzer(
+        columns: 10,
+        rows: 4,
+      );
+      final top = topAnalyzer.analyze(bytes: topBytes, captureId: 'top');
+      final bottom = bottomAnalyzer.analyze(
+        bytes: bottomBytes,
+        captureId: 'bottom',
+      );
+
       if (!top.succeeded || !bottom.succeeded) {
         final message = [
           top.error,
           bottom.error,
         ].where((item) => item.isNotEmpty).join(' ');
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        _showMessage(
+          message.isEmpty
+              ? 'The Blueprint grid could not be recognised. Retake both images closer to the screen.'
+              : message,
+          error: true,
+        );
+        return;
+      }
+
+      const mergeEngine = ArcBlueprintDualCaptureMergeEngine(
+        columns: 10,
+        topRows: 5,
+        bottomRows: 4,
+        finalRowCount: 3,
+      );
+      final merged = mergeEngine.merge(
+        topSamples: top.samples,
+        bottomSamples: bottom.samples,
+      );
+
+      if (!merged.succeeded) {
+        _showMessage(merged.error, error: true);
         return;
       }
 
@@ -211,23 +303,56 @@ class _ArcBlueprintPhotoCaptureScreenState
         orderedBlueprintIds: ArcBlueprintSeedData.blueprints
             .map((blueprint) => blueprint.id)
             .toList(growable: false),
-        topCapture: top.samples,
-        bottomCapture: bottom.samples,
-        bottomStartRow: 4,
-        overlapRows: 1,
+        topCapture: merged.samples,
+        bottomCapture: const <ArcBlueprintPhotoOccupancySample>[],
+        bottomStartRow: 9,
+        overlapRows: 0,
       );
-      if (!mounted) return;
-      final imported = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(
-          builder: (_) => ArcBlueprintPhotoReviewScreen(
-            initialDecisions: result.decisions,
-            analysisWarnings: result.errors,
-          ),
-        ),
-      );
-      if (imported == true && mounted) {
-        Navigator.of(context).pop(true);
+
+      if (result.errors.isNotEmpty) {
+        _showMessage(result.errors.join(' '), error: true);
+        return;
       }
+
+      const qualityGate = ArcBlueprintImportQualityGate();
+      final quality = qualityGate.evaluate(
+        decisions: result.decisions,
+        topCaptureConfidence: top.confidence,
+        bottomCaptureConfidence: bottom.confidence,
+        overlapConfidence: merged.overlapConfidence,
+      );
+
+      if (!quality.accepted) {
+        _showMessage(quality.message, error: true);
+        return;
+      }
+
+      final confident = result.decisions
+          .where((decision) => !decision.needsReview)
+          .toList(growable: false);
+      final uncertainCount = result.decisions.length - confident.length;
+
+      if (confident.isEmpty) {
+        _showMessage(
+          'No Blueprint slots were recognised confidently. Retake the images closer to the screen and keep the full grid edges inside the boundary.',
+          error: true,
+        );
+        return;
+      }
+
+      final summary = await ArcBlueprintPhotoImportService().apply(confident);
+      await _repository.clear();
+
+      if (!mounted) return;
+      final unchangedText = uncertainCount == 0
+          ? ''
+          : ' $uncertainCount uncertain slots were left unchanged.';
+      _showMessage(
+        '${quality.message} ${summary.ownedCount} owned and ${summary.missingCount} missing Blueprint slots were updated.$unchangedText',
+      );
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      _showMessage('Blueprint import failed: $error', error: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -235,7 +360,7 @@ class _ArcBlueprintPhotoCaptureScreenState
 
   String get _stepTitle => _activeSection == ArcBlueprintCaptureSection.top
       ? 'Capture the top of your grid'
-      : 'Capture the bottom of your grid';
+      : 'Capture rows 6–8 and the final three slots';
 
   @override
   Widget build(BuildContext context) {
@@ -270,13 +395,15 @@ class _ArcBlueprintPhotoCaptureScreenState
             const SizedBox(height: 6),
             Text(
               _activeSection == ArcBlueprintCaptureSection.top
-                  ? 'Align the first five rows of the in-game grid with the frame. The importer only checks whether each fixed slot is filled or empty.'
-                  : 'Scroll down so the first visible row matches the final row from your top capture, then align the final five rows.',
+                  ? 'Fit the outer edges of the first five Blueprint rows inside the boundary. Keep the full left, right, top and bottom edges visible.'
+                  : 'Start at row 6. Do not include row 5 again. Keep rows 6–8 fully visible and include the final three Blueprint slots beneath them.',
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 14),
             AspectRatio(
-              aspectRatio: 10 / 5,
+              aspectRatio: _activeSection == ArcBlueprintCaptureSection.top
+                  ? 10 / 5
+                  : 10 / 4,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Stack(
@@ -294,10 +421,20 @@ class _ArcBlueprintPhotoCaptureScreenState
                             )
                           : Image.memory(bytes, fit: BoxFit.cover),
                     ),
-                    ArcBlueprintGridAlignmentOverlay(
-                      columns: 10,
-                      rows: 5,
-                      isAligned: bytes != null,
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: bytes == null
+                                  ? AppTheme.neonCyan.withValues(alpha: 0.45)
+                                  : Colors.greenAccent,
+                              width: 2,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                     Positioned(
                       left: 10,
@@ -316,7 +453,7 @@ class _ArcBlueprintPhotoCaptureScreenState
                 if (_cameraSupported)
                   FilledButton.icon(
                     key: const Key('blueprint-import-take-photo'),
-                    onPressed: _busy ? null : () => _pick(ImageSource.camera),
+                    onPressed: _busy ? null : _openLiveScanner,
                     icon: const Icon(Icons.photo_camera_outlined),
                     label: Text(bytes == null ? 'Take Photo' : 'Retake Photo'),
                   ),
@@ -358,17 +495,17 @@ class _ArcBlueprintPhotoCaptureScreenState
               ),
               child: Text(
                 _cameraSupported
-                    ? 'Privacy: photos are held only for this import session and are analysed locally. Review every uncertain result before applying. Duplicate counts are never read or changed.'
-                    : 'This device uses screenshot upload rather than direct camera capture. Images are analysed locally and cleared after a confirmed import. Duplicate counts are never changed.',
+                    ? 'Privacy: photos are held only for this import session and are analysed locally. Confident matches import automatically. Uncertain slots are left unchanged. Duplicate counts are never read or changed.'
+                    : 'This device uses screenshot upload rather than direct camera capture. Images are analysed locally. Confident matches import automatically and uncertain slots are left unchanged. Duplicate counts are never changed.',
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
               key: const Key('blueprint-import-continue'),
-              onPressed: complete && !_busy ? _continueToReview : null,
-              icon: const Icon(Icons.arrow_forward_rounded),
-              label: const Text('Continue to Review'),
+              onPressed: complete && !_busy ? _scanAndImport : null,
+              icon: const Icon(Icons.auto_awesome_rounded),
+              label: const Text('Scan and Import Blueprints'),
             ),
           ],
         ),

@@ -86,22 +86,46 @@ class ArcBlueprintPhotoOccupancyEngine {
       }
     }
 
-    var removed = 0;
+    // The top capture's final row and the bottom capture's first row are the
+    // same in-game row. The bottom copy is authoritative. This creates four
+    // unique top rows plus all five bottom rows: nine unique rows in total.
+    final comparedOverlapRows = <int>{};
+    final mismatchCellsByRow = <int, int>{};
+    final comparedCellsByRow = <int, int>{};
+
     for (final sample in bottomCapture) {
       final globalRow = bottomStartRow + sample.rowIndex;
       final index = (globalRow * columns) + sample.columnIndex;
       if (index < 0 || index >= orderedBlueprintIds.length) continue;
 
+      final isOverlap = sample.rowIndex >= 0 && sample.rowIndex < overlapRows;
       final existing = samplesByIndex[index];
-      if (existing != null && globalRow < bottomStartRow + overlapRows) {
-        removed += 1;
-        if ((existing.occupancyScore - sample.occupancyScore).abs() > 0.35) {
+
+      if (isOverlap) {
+        comparedOverlapRows.add(globalRow);
+        if (existing == null) {
           errors.add(
-            'Overlap mismatch at row $globalRow, column ${sample.columnIndex}.',
+            'The shared overlap row is incomplete at column '
+            '${sample.columnIndex + 1}.',
           );
+        } else {
+          comparedCellsByRow.update(
+            globalRow,
+            (value) => value + 1,
+            ifAbsent: () => 1,
+          );
+          if ((existing.occupancyScore - sample.occupancyScore).abs() > 0.35) {
+            mismatchCellsByRow.update(
+              globalRow,
+              (value) => value + 1,
+              ifAbsent: () => 1,
+            );
+          }
         }
-        continue;
       }
+
+      // Always replace the overlap with the bottom capture. Top row 5 is
+      // deliberately discarded; bottom row 1 becomes global row 5.
       samplesByIndex[index] = ArcBlueprintPhotoOccupancySample(
         captureId: sample.captureId,
         rowIndex: globalRow,
@@ -109,6 +133,25 @@ class ArcBlueprintPhotoOccupancyEngine {
         occupancyScore: sample.occupancyScore,
       );
     }
+
+    for (final row in comparedOverlapRows) {
+      final compared = comparedCellsByRow[row] ?? 0;
+      final mismatches = mismatchCellsByRow[row] ?? 0;
+      if (compared < columns) {
+        errors.add(
+          'The two photos do not contain a complete shared overlap row.',
+        );
+        continue;
+      }
+      if (mismatches > (columns / 3).floor()) {
+        errors.add(
+          'The two photos do not overlap correctly. Retake the bottom image '
+          'with its first row matching the top image final row.',
+        );
+      }
+    }
+
+    final removed = comparedOverlapRows.length;
 
     final decisions = <ArcBlueprintPhotoCellDecision>[];
     for (var index = 0; index < orderedBlueprintIds.length; index++) {

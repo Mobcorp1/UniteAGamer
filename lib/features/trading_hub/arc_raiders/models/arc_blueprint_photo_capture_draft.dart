@@ -33,10 +33,20 @@ class ArcBlueprintPhotoCaptureDraft {
     DateTime? updatedAt,
   }) {
     return ArcBlueprintPhotoCaptureDraft(
-      topImageBytes: clearTop ? null : topImageBytes ?? this.topImageBytes,
+      topImageBytes: clearTop
+          ? null
+          : topImageBytes != null
+          ? Uint8List.fromList(topImageBytes)
+          : this.topImageBytes == null
+          ? null
+          : Uint8List.fromList(this.topImageBytes!),
       bottomImageBytes: clearBottom
           ? null
-          : bottomImageBytes ?? this.bottomImageBytes,
+          : bottomImageBytes != null
+          ? Uint8List.fromList(bottomImageBytes)
+          : this.bottomImageBytes == null
+          ? null
+          : Uint8List.fromList(this.bottomImageBytes!),
       topFileName: clearTop ? '' : topFileName ?? this.topFileName,
       bottomFileName: clearBottom ? '' : bottomFileName ?? this.bottomFileName,
       updatedAt: updatedAt ?? this.updatedAt,
