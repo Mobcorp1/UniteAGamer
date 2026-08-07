@@ -8,7 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 class ArcBlueprintGridDetector {
   const ArcBlueprintGridDetector({
     this.analysisWidth = 720,
-    this.minimumConfidence = 0.62,
+    this.minimumConfidence = 0.58,
     this.columns = 10,
     this.rows = 5,
   });
@@ -21,8 +21,10 @@ class ArcBlueprintGridDetector {
   ArcBlueprintGridDetection detect(Uint8List bytes) {
     final decoded = _decode(bytes);
     if (decoded == null) {
-      return const ArcBlueprintGridDetection.notFound(
+      return ArcBlueprintGridDetection.notFound(
         message: 'Captured image could not be decoded.',
+        columns: columns,
+        rows: rows,
       );
     }
 
@@ -38,40 +40,39 @@ class ArcBlueprintGridDetector {
           )
         : oriented;
 
-    if (image.width < 220 || image.height < 130) {
-      return const ArcBlueprintGridDetection.notFound(
+    if (image.width < 220 || image.height < 120) {
+      return ArcBlueprintGridDetection.notFound(
         message: 'Captured image is too small for grid detection.',
+        columns: columns,
+        rows: rows,
       );
     }
 
-    final verticalProfile = _verticalEdgeProfile(image);
-    final horizontalProfile = _horizontalEdgeProfile(image);
-
-    final vertical = _segmentAxis(
-      profile: verticalProfile,
+    final vertical = _findRegularGrid(
+      profile: _verticalEdgeProfile(image),
       expectedLines: columns + 1,
-      minimumSpanFraction: 0.48,
-      outerSearchFraction: 0.34,
+      minimumSpanFraction: 0.44,
     );
-    final horizontal = _segmentAxis(
-      profile: horizontalProfile,
+    final horizontal = _findRegularGrid(
+      profile: _horizontalEdgeProfile(image),
       expectedLines: rows + 1,
-      minimumSpanFraction: 0.38,
-      outerSearchFraction: 0.38,
+      minimumSpanFraction: rows >= 5 ? 0.32 : 0.20,
     );
 
     if (vertical == null || horizontal == null) {
-      return const ArcBlueprintGridDetection.notFound(
+      return ArcBlueprintGridDetection.notFound(
         message: 'The Blueprint grid divider lines could not be isolated.',
+        columns: columns,
+        rows: rows,
       );
     }
 
     final width = image.width.toDouble();
     final height = image.height.toDouble();
-    final normalizedVertical = vertical.positions
+    final verticalDividers = vertical.positions
         .map((position) => position / width)
         .toList(growable: false);
-    final normalizedHorizontal = horizontal.positions
+    final horizontalDividers = horizontal.positions
         .map((position) => position / height)
         .toList(growable: false);
 
@@ -79,24 +80,30 @@ class ArcBlueprintGridDetector {
       vertical.confidence,
       horizontal.confidence,
     );
+
     final detection = ArcBlueprintGridDetection(
-      topLeft: Offset(normalizedVertical.first, normalizedHorizontal.first),
-      topRight: Offset(normalizedVertical.last, normalizedHorizontal.first),
-      bottomLeft: Offset(normalizedVertical.first, normalizedHorizontal.last),
-      bottomRight: Offset(normalizedVertical.last, normalizedHorizontal.last),
+      topLeft: Offset(verticalDividers.first, horizontalDividers.first),
+      topRight: Offset(verticalDividers.last, horizontalDividers.first),
+      bottomLeft: Offset(verticalDividers.first, horizontalDividers.last),
+      bottomRight: Offset(verticalDividers.last, horizontalDividers.last),
       confidence: confidence,
       message: confidence >= minimumConfidence
           ? 'Grid locked'
           : 'Grid detected with low confidence',
-      verticalDividers: normalizedVertical,
-      horizontalDividers: normalizedHorizontal,
+      columns: columns,
+      rows: rows,
+      verticalDividers: verticalDividers,
+      horizontalDividers: horizontalDividers,
     );
 
-    if (!detection.isValid) {
-      return const ArcBlueprintGridDetection.notFound(
-        message: 'The detected Blueprint panel is not a valid rectangle.',
+    if (!detection.isValid || !detection.hasSegmentedGrid) {
+      return ArcBlueprintGridDetection.notFound(
+        message: 'The detected Blueprint panel is not a valid grid.',
+        columns: columns,
+        rows: rows,
       );
     }
+
     return detection;
   }
 
@@ -109,98 +116,133 @@ class ArcBlueprintGridDetector {
   }
 
   List<double> _verticalEdgeProfile(img.Image image) {
-    final startY = (image.height * 0.08).round();
-    final endY = (image.height * 0.92).round();
+    final startY = (image.height * 0.05).round();
+    final endY = (image.height * 0.95).round();
     final profile = List<double>.filled(image.width, 0);
 
     for (var x = 1; x < image.width - 1; x++) {
-      var value = 0.0;
+      var gradient = 0.0;
+      var contrast = 0.0;
       var count = 0;
+
       for (var y = startY; y < endY; y += 2) {
-        value +=
-            (_luma(image.getPixelSafe(x + 1, y)) -
-                    _luma(image.getPixelSafe(x - 1, y)))
-                .abs();
+        final left = _luma(image.getPixelSafe(x - 1, y));
+        final right = _luma(image.getPixelSafe(x + 1, y));
+        final centre = _luma(image.getPixelSafe(x, y));
+
+        gradient += (right - left).abs();
+        contrast += ((centre - left).abs() + (centre - right).abs()) * 0.5;
         count++;
       }
-      profile[x] = count == 0 ? 0 : value / count;
+
+      profile[x] = count == 0
+          ? 0
+          : ((gradient * 0.72) + (contrast * 0.28)) / count;
     }
+
     return _smooth(profile, radius: 2);
   }
 
   List<double> _horizontalEdgeProfile(img.Image image) {
-    final startX = (image.width * 0.06).round();
-    final endX = (image.width * 0.94).round();
+    final startX = (image.width * 0.04).round();
+    final endX = (image.width * 0.96).round();
     final profile = List<double>.filled(image.height, 0);
 
     for (var y = 1; y < image.height - 1; y++) {
-      var value = 0.0;
+      var gradient = 0.0;
+      var contrast = 0.0;
       var count = 0;
+
       for (var x = startX; x < endX; x += 2) {
-        value +=
-            (_luma(image.getPixelSafe(x, y + 1)) -
-                    _luma(image.getPixelSafe(x, y - 1)))
-                .abs();
+        final above = _luma(image.getPixelSafe(x, y - 1));
+        final below = _luma(image.getPixelSafe(x, y + 1));
+        final centre = _luma(image.getPixelSafe(x, y));
+
+        gradient += (below - above).abs();
+        contrast += ((centre - above).abs() + (centre - below).abs()) * 0.5;
         count++;
       }
-      profile[y] = count == 0 ? 0 : value / count;
+
+      profile[y] = count == 0
+          ? 0
+          : ((gradient * 0.72) + (contrast * 0.28)) / count;
     }
+
     return _smooth(profile, radius: 2);
   }
 
-  _AxisSegmentation? _segmentAxis({
+  _AxisSegmentation? _findRegularGrid({
     required List<double> profile,
     required int expectedLines,
     required double minimumSpanFraction,
-    required double outerSearchFraction,
   }) {
-    if (profile.length < expectedLines * 8) return null;
+    if (expectedLines < 2 || profile.length < expectedLines * 7) {
+      return null;
+    }
 
-    final leftEnd = (profile.length * outerSearchFraction).round();
-    final rightStart = (profile.length * (1 - outerSearchFraction)).round();
-    final leftCandidates = _strongestPeaks(profile, 1, leftEnd, maximum: 12);
-    final rightCandidates = _strongestPeaks(
-      profile,
-      rightStart,
-      profile.length - 1,
-      maximum: 12,
-    );
+    final peaks = _candidatePeaks(profile);
+    if (peaks.length < expectedLines) return null;
+
+    final strongest = List<int>.from(peaks)
+      ..sort((a, b) => profile[b].compareTo(profile[a]));
+    final anchors = strongest.take(math.min(30, strongest.length)).toList();
+
+    final minimumStep = math.max(6.0, profile.length * 0.025);
+    final maximumStep = profile.length / (expectedLines - 1);
 
     _AxisSegmentation? best;
-    for (final first in leftCandidates) {
-      for (final last in rightCandidates) {
+
+    for (final first in anchors) {
+      for (final last in anchors) {
+        if (last <= first) continue;
+
         final span = last - first;
         if (span < profile.length * minimumSpanFraction) continue;
 
         final step = span / (expectedLines - 1);
-        final radius = math.max(2, (step * 0.18).round());
+        if (step < minimumStep || step > maximumStep) continue;
+
+        final radius = math.max(2, (step * 0.22).round());
         final positions = <int>[];
         final strengths = <double>[];
 
         var previous = -1;
         var valid = true;
+
         for (var line = 0; line < expectedLines; line++) {
-          final expected = first + (step * line);
-          final candidate = _localPeak(profile, expected.round(), radius);
-          if (candidate <= previous) {
+          final expected = (first + (step * line)).round();
+          final snapped = _nearestStrongPeak(profile, expected, radius);
+
+          if (snapped == null || snapped <= previous) {
             valid = false;
             break;
           }
-          positions.add(candidate);
-          strengths.add(profile[candidate]);
-          previous = candidate;
+
+          positions.add(snapped);
+          strengths.add(profile[snapped]);
+          previous = snapped;
         }
-        if (!valid) continue;
+
+        if (!valid || positions.toSet().length != expectedLines) continue;
 
         final spacingScore = _spacingRegularity(positions);
         final strengthScore = _relativeStrength(profile, strengths);
-        final boundaryScore =
-            (_normalizedPeak(profile, first) + _normalizedPeak(profile, last)) /
-            2;
+        final alignmentScore = _expectedAlignmentScore(
+          positions,
+          first: first,
+          last: last,
+        );
+        final coverageScore =
+            ((positions.last - positions.first) / profile.length).clamp(
+              0.0,
+              1.0,
+            );
+
         final score =
-            (spacingScore * 0.46) +
+            (spacingScore * 0.38) +
             (strengthScore * 0.34) +
-            (boundaryScore * 0.20);
+            (alignmentScore * 0.20) +
+            (coverageScore * 0.08);
 
         if (best == null || score > best.confidence) {
           best = _AxisSegmentation(
@@ -210,97 +252,144 @@ class ArcBlueprintGridDetector {
         }
       }
     }
+
+    if (best == null || best.confidence < 0.42) return null;
     return best;
   }
 
-  List<int> _strongestPeaks(
-    List<double> profile,
-    int start,
-    int end, {
-    required int maximum,
-  }) {
+  List<int> _candidatePeaks(List<double> profile) {
+    final sorted = List<double>.from(profile)..sort();
+    final median = sorted[sorted.length ~/ 2];
+    final high = sorted[(sorted.length * 0.82).floor()];
+    final threshold = median + ((high - median) * 0.42);
+
     final candidates = <int>[];
-    final safeStart = start.clamp(1, profile.length - 2);
-    final safeEnd = end.clamp(safeStart + 1, profile.length - 1);
-    for (var index = safeStart; index < safeEnd; index++) {
+
+    for (var index = 2; index < profile.length - 2; index++) {
       final value = profile[index];
-      if (value >= profile[index - 1] && value >= profile[index + 1]) {
+      if (value < threshold) continue;
+
+      if (value >= profile[index - 1] &&
+          value >= profile[index + 1] &&
+          value >= profile[index - 2] &&
+          value >= profile[index + 2]) {
         candidates.add(index);
       }
     }
-    candidates.sort((a, b) => profile[b].compareTo(profile[a]));
-    return candidates.take(maximum).toList(growable: false);
+
+    final collapsed = <int>[];
+    for (final candidate in candidates) {
+      if (collapsed.isEmpty || candidate - collapsed.last > 4) {
+        collapsed.add(candidate);
+      } else if (profile[candidate] > profile[collapsed.last]) {
+        collapsed[collapsed.length - 1] = candidate;
+      }
+    }
+
+    return collapsed;
   }
 
-  int _localPeak(List<double> profile, int centre, int radius) {
+  int? _nearestStrongPeak(List<double> profile, int centre, int radius) {
     final start = (centre - radius).clamp(1, profile.length - 2);
     final end = (centre + radius).clamp(start + 1, profile.length - 1);
-    var bestIndex = start;
-    var bestValue = profile[start];
-    for (var index = start + 1; index < end; index++) {
+
+    var bestIndex = -1;
+    var bestValue = -1.0;
+
+    for (var index = start; index < end; index++) {
       if (profile[index] > bestValue) {
         bestValue = profile[index];
         bestIndex = index;
       }
     }
-    return bestIndex;
+
+    if (bestIndex < 0) return null;
+
+    final sorted = List<double>.from(profile)..sort();
+    final median = sorted[sorted.length ~/ 2];
+    final high = sorted[(sorted.length * 0.82).floor()];
+    final minimum = median + ((high - median) * 0.28);
+
+    return bestValue >= minimum ? bestIndex : null;
   }
 
   double _spacingRegularity(List<int> positions) {
     if (positions.length < 3) return 0;
-    final gaps = <double>[];
-    for (var index = 1; index < positions.length; index++) {
-      gaps.add((positions[index] - positions[index - 1]).toDouble());
-    }
+
+    final gaps = <double>[
+      for (var index = 1; index < positions.length; index++)
+        (positions[index] - positions[index - 1]).toDouble(),
+    ];
+
     final mean = gaps.reduce((a, b) => a + b) / gaps.length;
     if (mean <= 0) return 0;
+
     final variance =
         gaps
             .map((gap) => math.pow(gap - mean, 2).toDouble())
             .reduce((a, b) => a + b) /
         gaps.length;
+
     final coefficient = math.sqrt(variance) / mean;
-    return (1 - (coefficient / 0.28)).clamp(0.0, 1.0);
+    return (1 - (coefficient / 0.22)).clamp(0.0, 1.0);
+  }
+
+  double _expectedAlignmentScore(
+    List<int> positions, {
+    required int first,
+    required int last,
+  }) {
+    final step = (last - first) / (positions.length - 1);
+    if (step <= 0) return 0;
+
+    var error = 0.0;
+    for (var index = 0; index < positions.length; index++) {
+      final expected = first + (step * index);
+      error += (positions[index] - expected).abs() / step;
+    }
+
+    return (1 - ((error / positions.length) / 0.20)).clamp(0.0, 1.0);
   }
 
   double _relativeStrength(List<double> profile, List<double> strengths) {
-    if (strengths.isEmpty) return 0;
     final sorted = List<double>.from(profile)..sort();
-    final baseline = sorted[(sorted.length * 0.70).floor()];
-    final peak = sorted.last;
-    if (peak <= baseline) return 0;
-    final average = strengths.reduce((a, b) => a + b) / strengths.length;
-    return ((average - baseline) / (peak - baseline)).clamp(0.0, 1.0);
-  }
+    final baseline = sorted[(sorted.length * 0.60).floor()];
+    final upper = sorted[(sorted.length * 0.95).floor()];
 
-  double _normalizedPeak(List<double> profile, int index) {
-    final sorted = List<double>.from(profile)..sort();
-    final low = sorted[(sorted.length * 0.55).floor()];
-    final high = sorted.last;
-    if (high <= low) return 0;
-    return ((profile[index] - low) / (high - low)).clamp(0.0, 1.0);
+    if (upper <= baseline) return 0;
+
+    final average = strengths.reduce((a, b) => a + b) / strengths.length;
+
+    return ((average - baseline) / (upper - baseline)).clamp(0.0, 1.0);
   }
 
   List<double> _smooth(List<double> source, {required int radius}) {
     final result = List<double>.filled(source.length, 0);
+
     for (var index = 0; index < source.length; index++) {
-      var sum = 0.0;
-      var count = 0;
+      var weighted = 0.0;
+      var weights = 0.0;
+
       final start = math.max(0, index - radius);
       final end = math.min(source.length - 1, index + radius);
+
       for (var sample = start; sample <= end; sample++) {
-        sum += source[sample];
-        count++;
+        final distance = (sample - index).abs();
+        final weight = (radius + 1 - distance).toDouble();
+        weighted += source[sample] * weight;
+        weights += weight;
       }
-      result[index] = count == 0 ? source[index] : sum / count;
+
+      result[index] = weights == 0 ? source[index] : weighted / weights;
     }
+
     return result;
   }
 
   double _combinedConfidence(double vertical, double horizontal) {
-    final lower = math.min(vertical, horizontal);
-    final upper = math.max(vertical, horizontal);
-    return ((lower * 0.70) + (upper * 0.30)).clamp(0.0, 1.0);
+    final weaker = math.min(vertical, horizontal);
+    final stronger = math.max(vertical, horizontal);
+    return ((weaker * 0.76) + (stronger * 0.24)).clamp(0.0, 1.0);
   }
 
   double _luma(img.Pixel pixel) =>

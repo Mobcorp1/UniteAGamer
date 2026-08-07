@@ -1,21 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 
 @immutable
 class ArcBlueprintDualCaptureMergeResult {
   const ArcBlueprintDualCaptureMergeResult({
     required this.samples,
-    required this.overlapConfidence,
-    required this.overlapMatched,
     required this.error,
   });
 
   final List<ArcBlueprintPhotoOccupancySample> samples;
-
-  // Retained for compatibility with the existing quality-gate interface.
-  // PASS 328 deliberately has no duplicated overlap row.
-  final double overlapConfidence;
-  final bool overlapMatched;
   final String error;
 
   bool get succeeded => error.isEmpty;
@@ -23,10 +17,10 @@ class ArcBlueprintDualCaptureMergeResult {
 
 class ArcBlueprintDualCaptureMergeEngine {
   const ArcBlueprintDualCaptureMergeEngine({
-    this.columns = 10,
-    this.topRows = 5,
-    this.bottomRows = 4,
-    this.finalRowCount = 3,
+    this.columns = ArcBlueprintCanonicalGrid.columns,
+    this.topRows = ArcBlueprintCanonicalGrid.topRows,
+    this.bottomRows = ArcBlueprintCanonicalGrid.bottomRows,
+    this.finalRowCount = ArcBlueprintCanonicalGrid.finalRowColumns,
   });
 
   final int columns;
@@ -39,13 +33,11 @@ class ArcBlueprintDualCaptureMergeEngine {
     required List<ArcBlueprintPhotoOccupancySample> bottomSamples,
   }) {
     final expectedTop = columns * topRows;
-    final expectedBottom = columns * bottomRows;
+    final expectedBottom = (columns * (bottomRows - 1)) + finalRowCount;
 
     if (topSamples.length != expectedTop) {
       return ArcBlueprintDualCaptureMergeResult(
         samples: const <ArcBlueprintPhotoOccupancySample>[],
-        overlapConfidence: 1,
-        overlapMatched: true,
         error: 'The top capture must contain exactly $expectedTop positions.',
       );
     }
@@ -53,10 +45,8 @@ class ArcBlueprintDualCaptureMergeEngine {
     if (bottomSamples.length != expectedBottom) {
       return ArcBlueprintDualCaptureMergeResult(
         samples: const <ArcBlueprintPhotoOccupancySample>[],
-        overlapConfidence: 1,
-        overlapMatched: true,
         error:
-            'The bottom capture must contain three complete rows plus the inferred final row.',
+            'The bottom capture must contain exactly $expectedBottom real positions.',
       );
     }
 
@@ -77,10 +67,13 @@ class ArcBlueprintDualCaptureMergeEngine {
     ];
 
     for (final sample in orderedBottom) {
-      final isFinalPartialRow = sample.rowIndex == bottomRows - 1;
-
-      if (isFinalPartialRow && sample.columnIndex >= finalRowCount) {
-        continue;
+      final allowedColumns = _bottomColumnsForRow(sample.rowIndex);
+      if (allowedColumns <= 0 || sample.columnIndex >= allowedColumns) {
+        return ArcBlueprintDualCaptureMergeResult(
+          samples: const <ArcBlueprintPhotoOccupancySample>[],
+          error:
+              'The bottom capture produced a non-existent Blueprint slot at row ${sample.rowIndex + 1}, column ${sample.columnIndex + 1}.',
+        );
       }
 
       merged.add(
@@ -98,8 +91,6 @@ class ArcBlueprintDualCaptureMergeEngine {
     if (merged.length != 83) {
       return ArcBlueprintDualCaptureMergeResult(
         samples: const <ArcBlueprintPhotoOccupancySample>[],
-        overlapConfidence: 1,
-        overlapMatched: true,
         error:
             'The automatic two-photo merge produced ${merged.length} of 83 positions.',
       );
@@ -107,10 +98,13 @@ class ArcBlueprintDualCaptureMergeEngine {
 
     return ArcBlueprintDualCaptureMergeResult(
       samples: List<ArcBlueprintPhotoOccupancySample>.unmodifiable(merged),
-      overlapConfidence: 1,
-      overlapMatched: true,
       error: '',
     );
+  }
+
+  int _bottomColumnsForRow(int rowIndex) {
+    if (rowIndex < 0 || rowIndex >= bottomRows) return 0;
+    return rowIndex == bottomRows - 1 ? finalRowCount : columns;
   }
 
   int _compare(

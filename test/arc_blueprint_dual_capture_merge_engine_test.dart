@@ -19,9 +19,10 @@ void main() {
     ];
 
     final bottom = <ArcBlueprintPhotoOccupancySample>[
-      for (var row = 0; row < 4; row++)
+      for (var row = 0; row < 3; row++)
         for (var column = 0; column < 10; column++)
           sample('bottom', row, column),
+      for (var column = 0; column < 3; column++) sample('bottom', 3, column),
     ];
 
     final result = const ArcBlueprintDualCaptureMergeEngine().merge(
@@ -33,5 +34,28 @@ void main() {
     expect(result.samples, hasLength(83));
     expect(result.samples.last.rowIndex, 8);
     expect(result.samples.last.columnIndex, 2);
+  });
+
+  test('rejects non-existent final-row columns', () {
+    final top = <ArcBlueprintPhotoOccupancySample>[
+      for (var row = 0; row < 5; row++)
+        for (var column = 0; column < 10; column++) sample('top', row, column),
+    ];
+
+    final bottom = <ArcBlueprintPhotoOccupancySample>[
+      for (var row = 0; row < 3; row++)
+        for (var column = 0; column < 10; column++)
+          sample('bottom', row, column),
+      for (var column = 0; column < 2; column++) sample('bottom', 3, column),
+      sample('bottom', 3, 9),
+    ];
+
+    final result = const ArcBlueprintDualCaptureMergeEngine().merge(
+      topSamples: top,
+      bottomSamples: bottom,
+    );
+
+    expect(result.succeeded, isFalse);
+    expect(result.error, contains('non-existent Blueprint slot'));
   });
 }

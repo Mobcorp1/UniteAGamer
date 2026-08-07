@@ -16,6 +16,8 @@ void main() {
       bottomRight: Offset(0.9, 0.9),
       confidence: 0.9,
       message: 'Grid locked',
+      columns: 10,
+      rows: 5,
       verticalDividers: <double>[
         0.1,
         0.18,

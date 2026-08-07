@@ -24,10 +24,15 @@ class ArcBlueprintHybridRecognitionResult {
 }
 
 class ArcBlueprintHybridRecognitionEngine {
-  const ArcBlueprintHybridRecognitionEngine({this.columns = 10, this.rows = 5});
+  const ArcBlueprintHybridRecognitionEngine({
+    this.columns = 10,
+    this.rows = 5,
+    this.validColumnCountsByRow = const <int>[],
+  });
 
   final int columns;
   final int rows;
+  final List<int> validColumnCountsByRow;
 
   ArcBlueprintHybridRecognitionResult analyze({
     required Uint8List bytes,
@@ -51,26 +56,41 @@ class ArcBlueprintHybridRecognitionEngine {
       );
     }
 
-    final normalized = decoded.width == 1000 && decoded.height == 500
+    final expectedWidth = columns * 100;
+    final expectedHeight = rows * 100;
+    final normalized =
+        decoded.width == expectedWidth && decoded.height == expectedHeight
         ? decoded
         : img.copyResize(
             decoded,
-            width: 1000,
-            height: 500,
+            width: expectedWidth,
+            height: expectedHeight,
             interpolation: img.Interpolation.cubic,
           );
 
     final primary = ArcBlueprintCellAnalyzer(
       columns: columns,
       rows: rows,
+      validColumnCountsByRow: validColumnCountsByRow,
     ).analyze(normalized);
+    final positions = _positions();
+
+    if (primary.length != positions.length) {
+      return const ArcBlueprintHybridRecognitionResult(
+        samples: <ArcBlueprintPhotoOccupancySample>[],
+        diagnostics: <ArcBlueprintCellDiagnostic>[],
+        captureConfidence: 0,
+        error: 'The Blueprint grid section geometry could not be analysed.',
+      );
+    }
 
     final samples = <ArcBlueprintPhotoOccupancySample>[];
     final diagnostics = <ArcBlueprintCellDiagnostic>[];
 
     for (var index = 0; index < primary.length; index++) {
-      final row = index ~/ columns;
-      final column = index % columns;
+      final position = positions[index];
+      final row = position.rowIndex;
+      final column = position.columnIndex;
       final base = primary[index];
 
       var score = base.occupancyScore;
@@ -166,6 +186,23 @@ class ArcBlueprintHybridRecognitionEngine {
       decisive: consensus <= 0.28 || consensus >= 0.72,
       attempts: scores.length,
     );
+  }
+
+  List<_CellPosition> _positions() {
+    return <_CellPosition>[
+      for (var row = 0; row < rows; row++)
+        for (var column = 0; column < _validColumnsForRow(row); column++)
+          _CellPosition(rowIndex: row, columnIndex: column),
+    ];
+  }
+
+  int _validColumnsForRow(int row) {
+    if (validColumnCountsByRow.isEmpty ||
+        row < 0 ||
+        row >= validColumnCountsByRow.length) {
+      return columns;
+    }
+    return validColumnCountsByRow[row].clamp(0, columns);
   }
 
   double _scoreWindow(
@@ -294,6 +331,14 @@ class ArcBlueprintHybridRecognitionEngine {
     final position = ((sorted.length - 1) * percentile).round();
     return sorted[position.clamp(0, sorted.length - 1)];
   }
+}
+
+@immutable
+class _CellPosition {
+  const _CellPosition({required this.rowIndex, required this.columnIndex});
+
+  final int rowIndex;
+  final int columnIndex;
 }
 
 @immutable

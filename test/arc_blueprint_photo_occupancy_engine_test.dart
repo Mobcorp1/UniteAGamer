@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 
 ArcBlueprintPhotoOccupancySample sample(
@@ -16,122 +17,130 @@ ArcBlueprintPhotoOccupancySample sample(
   );
 }
 
+List<String> get ids => List<String>.generate(
+  ArcBlueprintCanonicalGrid.totalPositions,
+  (index) => 'bp_$index',
+);
+
+List<ArcBlueprintPhotoOccupancySample> samplesWithOwnedCount(int ownedCount) {
+  return <ArcBlueprintPhotoOccupancySample>[
+    for (final position in ArcBlueprintCanonicalGrid.topCapturePositions())
+      sample(
+        'top',
+        position.globalRowIndex,
+        position.columnIndex,
+        position.canonicalIndex < ownedCount ? 0.92 : 0.08,
+      ),
+    for (final position in ArcBlueprintCanonicalGrid.bottomCapturePositions())
+      sample(
+        'bottom',
+        position.globalRowIndex,
+        position.columnIndex,
+        position.canonicalIndex < ownedCount ? 0.92 : 0.08,
+      ),
+  ];
+}
+
 void main() {
-  group('ArcBlueprintPhotoOccupancyEngine overlap merge', () {
+  group('ArcBlueprintPhotoOccupancyEngine canonical grid', () {
     const engine = ArcBlueprintPhotoOccupancyEngine(columns: 10);
 
-    test('creates exactly nine unique rows from two five-row captures', () {
-      final ids = List<String>.generate(90, (index) => 'bp_$index');
-      final top = <ArcBlueprintPhotoOccupancySample>[
-        for (var row = 0; row < 5; row++)
-          for (var column = 0; column < 10; column++)
-            sample('top', row, column, row == 4 ? 0.85 : 0.90),
-      ];
-      final bottom = <ArcBlueprintPhotoOccupancySample>[
-        for (var row = 0; row < 5; row++)
-          for (var column = 0; column < 10; column++)
-            sample('bottom', row, column, row == 0 ? 0.85 : 0.80),
-      ];
-
+    test('classifies exactly 83 canonical physical positions', () {
       final result = engine.classify(
         orderedBlueprintIds: ids,
-        topCapture: top,
-        bottomCapture: bottom,
-        bottomStartRow: 4,
-        overlapRows: 1,
+        samples: samplesWithOwnedCount(10),
       );
 
       expect(result.errors, isEmpty);
-      expect(result.overlapRowsRemoved, 1);
-      expect(result.decisions, hasLength(90));
-      expect(result.decisions.map((item) => item.rowIndex).toSet(), {
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-      });
+      expect(result.decisions, hasLength(83));
+      expect(result.decisions.where((item) => item.owned), hasLength(10));
     });
 
-    test('bottom row one is authoritative over top row five', () {
-      final ids = List<String>.generate(90, (index) => 'bp_$index');
-      final top = <ArcBlueprintPhotoOccupancySample>[
-        for (var row = 0; row < 5; row++)
-          for (var column = 0; column < 10; column++)
-            sample('top', row, column, row == 4 ? 0.74 : 0.90),
-      ];
-      final bottom = <ArcBlueprintPhotoOccupancySample>[
-        for (var row = 0; row < 5; row++)
-          for (var column = 0; column < 10; column++)
-            sample('bottom', row, column, row == 0 ? 0.76 : 0.80),
-      ];
+    test('final row only contains canonical columns 0, 1 and 2', () {
+      final result = engine.classify(
+        orderedBlueprintIds: ids,
+        samples: samplesWithOwnedCount(0),
+      );
+
+      final finalRow = result.decisions
+          .where((decision) => decision.rowIndex == 8)
+          .toList(growable: false);
+
+      expect(finalRow, hasLength(3));
+      expect(finalRow.map((item) => item.columnIndex), [0, 1, 2]);
+    });
+
+    test(
+      'rejects non-existent final-row columns instead of creating slots',
+      () {
+        final invalid = <ArcBlueprintPhotoOccupancySample>[
+          ...samplesWithOwnedCount(0),
+          sample('bottom', 8, 3, 0.02),
+        ];
+
+        final result = engine.classify(
+          orderedBlueprintIds: ids,
+          samples: invalid,
+        );
+
+        expect(
+          result.errors.join(' '),
+          contains('non-existent Blueprint slot'),
+        );
+        expect(result.decisions, hasLength(83));
+      },
+    );
+
+    test('physical count is independent of ownership recognition', () {
+      for (final ownedCount in <int>[0, 10, 40]) {
+        final result = engine.classify(
+          orderedBlueprintIds: ids,
+          samples: samplesWithOwnedCount(ownedCount),
+        );
+
+        expect(result.decisions, hasLength(83));
+        expect(
+          result.decisions.where((item) => item.owned),
+          hasLength(ownedCount),
+        );
+      }
+    });
+
+    test('uncertain samples remain as canonical physical positions', () {
+      final uncertain = samplesWithOwnedCount(0)
+          .map((cell) {
+            if (cell.rowIndex == 2 && cell.columnIndex == 4) {
+              return sample(
+                cell.captureId,
+                cell.rowIndex,
+                cell.columnIndex,
+                0.5,
+              );
+            }
+            return cell;
+          })
+          .toList(growable: false);
 
       final result = engine.classify(
         orderedBlueprintIds: ids,
-        topCapture: top,
-        bottomCapture: bottom,
-        bottomStartRow: 4,
-        overlapRows: 1,
+        samples: uncertain,
       );
 
-      final overlapDecision = result.decisions[40];
-      expect(result.errors, isEmpty);
-      expect(overlapDecision.rowIndex, 4);
-      expect(overlapDecision.sourceCaptureId, 'bottom');
-      expect(overlapDecision.state, ArcBlueprintPhotoCellState.owned);
+      expect(result.decisions, hasLength(83));
+      final decision = result.decisions.firstWhere(
+        (item) => item.rowIndex == 2 && item.columnIndex == 4,
+      );
+      expect(decision.state, ArcBlueprintPhotoCellState.uncertain);
+      expect(decision.needsReview, isTrue);
     });
 
-    test('rejects a bottom image whose first row does not match overlap', () {
-      final ids = List<String>.generate(90, (index) => 'bp_$index');
-      final top = <ArcBlueprintPhotoOccupancySample>[
-        for (var row = 0; row < 5; row++)
-          for (var column = 0; column < 10; column++)
-            sample('top', row, column, 0.90),
-      ];
-      final bottom = <ArcBlueprintPhotoOccupancySample>[
-        for (var row = 0; row < 5; row++)
-          for (var column = 0; column < 10; column++)
-            sample('bottom', row, column, row == 0 ? 0.05 : 0.80),
-      ];
-
+    test('blank-like samples do not invent owned Blueprints', () {
       final result = engine.classify(
         orderedBlueprintIds: ids,
-        topCapture: top,
-        bottomCapture: bottom,
-        bottomStartRow: 4,
-        overlapRows: 1,
+        samples: samplesWithOwnedCount(0),
       );
 
-      expect(result.errors.join(' '), contains('do not overlap correctly'));
-      expect(result.needsReview, isTrue);
-    });
-
-    test('still classifies owned, missing and uncertain cells', () {
-      const smallEngine = ArcBlueprintPhotoOccupancyEngine(columns: 3);
-      final result = smallEngine.classify(
-        orderedBlueprintIds: const ['a', 'b', 'c', 'd', 'e', 'f'],
-        topCapture: [
-          sample('top', 0, 0, 0.95),
-          sample('top', 0, 1, 0.05),
-          sample('top', 0, 2, 0.50),
-        ],
-        bottomCapture: [
-          sample('bottom', 0, 0, 0.90),
-          sample('bottom', 0, 1, 0.10),
-          sample('bottom', 0, 2, 0.80),
-        ],
-        bottomStartRow: 1,
-        overlapRows: 0,
-      );
-
-      expect(result.decisions[0].state, ArcBlueprintPhotoCellState.owned);
-      expect(result.decisions[1].state, ArcBlueprintPhotoCellState.missing);
-      expect(result.decisions[2].state, ArcBlueprintPhotoCellState.uncertain);
-      expect(result.decisions[3].sourceCaptureId, 'bottom');
+      expect(result.decisions.where((item) => item.owned), isEmpty);
     });
   });
 }

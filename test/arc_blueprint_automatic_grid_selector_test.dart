@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_automatic_grid_selector.dart';
@@ -84,6 +86,7 @@ void main() {
     expect(decoded, isNotNull);
     expect(decoded!.width, 1000);
     expect(decoded.height, 500);
+    expect(result.canonicalPositions, hasLength(50));
   });
 
   test('bottom selector detects three full rows and infers final row', () {
@@ -99,5 +102,8 @@ void main() {
     expect(decoded!.width, 1000);
     expect(decoded.height, 400);
     expect(result.detection.horizontalDividers, hasLength(4));
+    expect(result.canonicalPositions, hasLength(33));
+    expect(result.canonicalPositions.last.globalRowIndex, 8);
+    expect(result.canonicalPositions.last.columnIndex, 2);
   });
 }

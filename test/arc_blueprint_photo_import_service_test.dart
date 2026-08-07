@@ -58,4 +58,57 @@ void main() {
     expect(b.dupesOwned, 0);
     expect(b.priorityRank, 42);
   });
+
+  test('uncertain import decisions preserve previous ownership state', () {
+    final existing = {
+      'owned': ArcBlueprintState(
+        blueprintId: 'owned',
+        owned: true,
+        dupesOwned: 0,
+        priorityRank: 7,
+        updatedAt: DateTime(2026),
+      ),
+      'missing': ArcBlueprintState(
+        blueprintId: 'missing',
+        owned: false,
+        dupesOwned: 0,
+        priorityRank: 4,
+        updatedAt: DateTime(2026),
+      ),
+    };
+    const decisions = [
+      ArcBlueprintPhotoCellDecision(
+        blueprintId: 'owned',
+        blueprintIndex: 0,
+        state: ArcBlueprintPhotoCellState.uncertain,
+        confidence: 0.5,
+        sourceCaptureId: 'top',
+        rowIndex: 0,
+        columnIndex: 0,
+      ),
+      ArcBlueprintPhotoCellDecision(
+        blueprintId: 'missing',
+        blueprintIndex: 1,
+        state: ArcBlueprintPhotoCellState.uncertain,
+        confidence: 0.5,
+        sourceCaptureId: 'top',
+        rowIndex: 0,
+        columnIndex: 1,
+      ),
+    ];
+
+    final updates = ArcBlueprintPhotoImportService.buildUpdates(
+      decisions: decisions,
+      existing: existing,
+    );
+
+    expect(
+      updates.firstWhere((state) => state.blueprintId == 'owned').owned,
+      isTrue,
+    );
+    expect(
+      updates.firstWhere((state) => state.blueprintId == 'missing').owned,
+      isFalse,
+    );
+  });
 }

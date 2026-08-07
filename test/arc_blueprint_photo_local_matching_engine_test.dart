@@ -6,20 +6,20 @@ void main() {
   group('ArcBlueprintPhotoLocalMatchingEngine', () {
     const engine = ArcBlueprintPhotoLocalMatchingEngine();
 
-    test('deduplicates overlapping rows while preserving blank cells', () {
+    test('scores supplied rows without discarding duplicated-looking rows', () {
       final result = engine.stitchAndScore([
         [
           _row('capture-1', 0, ['a', '']),
-          _row('capture-1', 1, ['b', 'c'], signature: 'overlap-b-c'),
+          _row('capture-1', 1, ['b', 'c'], signature: 'row-b-c'),
         ],
         [
-          _row('capture-2', 0, ['b', 'c'], signature: 'overlap-b-c'),
+          _row('capture-2', 0, ['b', 'c'], signature: 'row-b-c'),
           _row('capture-2', 1, ['d', '']),
         ],
       ]);
 
-      expect(result.removedOverlapRows, 1);
-      expect(result.rows, hasLength(3));
+      expect(result.discardedRows, 0);
+      expect(result.rows, hasLength(4));
       expect(result.rows.first.cells.last.blank, isTrue);
       expect(
         result.candidates.map((candidate) => candidate.blueprintId),
@@ -49,19 +49,19 @@ void main() {
       expect(result.candidates.first.blueprintId, 'anvil-splitter');
     });
 
-    test('flags overlap conflicts for manual review', () {
+    test('does not infer row conflicts without a shared capture row', () {
       final result = engine.stitchAndScore([
         [
-          _row('capture-1', 0, ['a'], signature: 'overlap'),
+          _row('capture-1', 0, ['a'], signature: 'row-a'),
         ],
         [
-          _row('capture-2', 0, ['b'], signature: 'overlap'),
+          _row('capture-2', 0, ['b'], signature: 'row-a'),
         ],
       ]);
 
-      expect(result.removedOverlapRows, 1);
-      expect(result.conflictMessages, isNotEmpty);
-      expect(result.needsUserReview, isTrue);
+      expect(result.discardedRows, 0);
+      expect(result.conflictMessages, isEmpty);
+      expect(result.needsUserReview, isFalse);
     });
   });
 }
@@ -76,7 +76,7 @@ ArcBlueprintPhotoDetectedRow _row(
   return ArcBlueprintPhotoDetectedRow(
     captureId: captureId,
     rowIndex: rowIndex,
-    overlapSignature: signature,
+    rowSignature: signature,
     cells: [
       for (var column = 0; column < blueprints.length; column++)
         ArcBlueprintPhotoDetectedCell(

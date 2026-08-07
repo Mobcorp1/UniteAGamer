@@ -37,16 +37,16 @@ class ArcBlueprintPhotoDetectedRow {
     required this.captureId,
     required this.rowIndex,
     required this.cells,
-    this.overlapSignature = '',
+    this.rowSignature = '',
   });
 
   final String captureId;
   final int rowIndex;
   final List<ArcBlueprintPhotoDetectedCell> cells;
-  final String overlapSignature;
+  final String rowSignature;
 
   String get signature {
-    final explicit = overlapSignature.trim();
+    final explicit = rowSignature.trim();
     if (explicit.isNotEmpty) return explicit;
     return cells.map((cell) => cell.stableSignature).join('|');
   }
@@ -76,7 +76,7 @@ class ArcBlueprintPhotoLocalMatchResult {
     required this.candidates,
     required this.reviewChanges,
     required this.conflictMessages,
-    required this.removedOverlapRows,
+    required this.discardedRows,
     required this.providerCapabilitiesUnavailable,
   });
 
@@ -84,7 +84,7 @@ class ArcBlueprintPhotoLocalMatchResult {
   final List<ArcBlueprintPhotoCandidate> candidates;
   final List<ArcBlueprintPhotoReviewChange> reviewChanges;
   final List<String> conflictMessages;
-  final int removedOverlapRows;
+  final int discardedRows;
   final List<String> providerCapabilitiesUnavailable;
 
   bool get needsUserReview =>
@@ -128,22 +128,10 @@ class ArcBlueprintPhotoLocalMatchingEngine {
   ) {
     final rows = <ArcBlueprintPhotoDetectedRow>[];
     final conflicts = <String>[];
-    var removed = 0;
 
     for (final captureRows in captures) {
       if (captureRows.isEmpty) continue;
-      var startIndex = 0;
-      if (rows.isNotEmpty &&
-          rows.last.signature == captureRows.first.signature) {
-        if (rows.last.conflictsWith(captureRows.first)) {
-          conflicts.add(
-            'Overlap row conflict between ${rows.last.captureId} and ${captureRows.first.captureId}.',
-          );
-        }
-        startIndex = 1;
-        removed += 1;
-      }
-      rows.addAll(captureRows.skip(startIndex));
+      rows.addAll(captureRows);
     }
 
     final candidates = <ArcBlueprintPhotoCandidate>[];
@@ -179,7 +167,7 @@ class ArcBlueprintPhotoLocalMatchingEngine {
       candidates: candidates,
       reviewChanges: changes,
       conflictMessages: conflicts,
-      removedOverlapRows: removed,
+      discardedRows: 0,
       providerCapabilitiesUnavailable: const <String>[
         'cloud_ocr',
         'remote_template_matching',

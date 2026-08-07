@@ -12,6 +12,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_pixel_analyzer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_uploaded_image_processor.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_capture_draft.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_photo_capture_session_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_live_scanner_screen.dart';
@@ -261,6 +262,7 @@ class _ArcBlueprintPhotoCaptureScreenState
       const bottomAnalyzer = ArcBlueprintPhotoPixelAnalyzer(
         columns: 10,
         rows: 4,
+        validColumnCountsByRow: ArcBlueprintCanonicalGrid.bottomRowColumnCounts,
       );
       final top = topAnalyzer.analyze(bytes: topBytes, captureId: 'top');
       final bottom = bottomAnalyzer.analyze(
@@ -303,10 +305,7 @@ class _ArcBlueprintPhotoCaptureScreenState
         orderedBlueprintIds: ArcBlueprintSeedData.blueprints
             .map((blueprint) => blueprint.id)
             .toList(growable: false),
-        topCapture: merged.samples,
-        bottomCapture: const <ArcBlueprintPhotoOccupancySample>[],
-        bottomStartRow: 9,
-        overlapRows: 0,
+        samples: merged.samples,
       );
 
       if (result.errors.isNotEmpty) {
@@ -319,7 +318,6 @@ class _ArcBlueprintPhotoCaptureScreenState
         decisions: result.decisions,
         topCaptureConfidence: top.confidence,
         bottomCaptureConfidence: bottom.confidence,
-        overlapConfidence: merged.overlapConfidence,
       );
 
       if (!quality.accepted) {

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_hybrid_recognition_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 
 void main() {
   test('blank grid never creates owned Blueprints', () {
@@ -83,6 +84,31 @@ void main() {
 
     expect(result.samples[10].occupancyScore, greaterThanOrEqualTo(0.72));
     expect(result.samples[11].occupancyScore, lessThanOrEqualTo(0.28));
+  });
+
+  test('bottom layout returns 33 samples without final-row filler cells', () {
+    final image = img.Image(width: 1000, height: 400);
+    img.fill(image, color: img.ColorRgb8(18, 19, 21));
+
+    final result =
+        const ArcBlueprintHybridRecognitionEngine(
+          columns: 10,
+          rows: 4,
+          validColumnCountsByRow:
+              ArcBlueprintCanonicalGrid.bottomRowColumnCounts,
+        ).analyze(
+          bytes: Uint8List.fromList(img.encodePng(image)),
+          captureId: 'bottom',
+        );
+
+    expect(result.succeeded, isTrue);
+    expect(result.samples, hasLength(33));
+    expect(
+      result.samples.where(
+        (sample) => sample.rowIndex == 3 && sample.columnIndex > 2,
+      ),
+      isEmpty,
+    );
   });
 
   test('rejects undecodable bytes', () {

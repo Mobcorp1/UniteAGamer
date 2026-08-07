@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -36,6 +36,8 @@ void main() {
       bottomRight: const Offset((left + 1000) / 1100, (top + 300) / 520),
       confidence: 0.95,
       message: 'Grid locked',
+      columns: 10,
+      rows: 3,
       verticalDividers: List<double>.generate(
         11,
         (index) => (left + index * cellWidth) / 1100,

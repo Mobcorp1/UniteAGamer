@@ -37,20 +37,44 @@ class ArcBlueprintCellEvidence {
 }
 
 class ArcBlueprintCellAnalyzer {
-  const ArcBlueprintCellAnalyzer({required this.columns, required this.rows});
+  const ArcBlueprintCellAnalyzer({
+    required this.columns,
+    required this.rows,
+    this.validColumnCountsByRow = const <int>[],
+  });
 
   final int columns;
   final int rows;
+  final List<int> validColumnCountsByRow;
 
   List<ArcBlueprintCellEvidence> analyze(img.Image image) {
     return <ArcBlueprintCellEvidence>[
       for (var row = 0; row < rows; row++)
-        for (var column = 0; column < columns; column++)
-          _analyzeCell(image, row, column),
+        for (var column = 0; column < _validColumnsForRow(row); column++)
+          _analyzeCell(
+            image,
+            row,
+            column,
+            rowColumnCount: _validColumnsForRow(row),
+          ),
     ];
   }
 
-  ArcBlueprintCellEvidence _analyzeCell(img.Image image, int row, int column) {
+  int _validColumnsForRow(int row) {
+    if (validColumnCountsByRow.isEmpty ||
+        row < 0 ||
+        row >= validColumnCountsByRow.length) {
+      return columns;
+    }
+    return validColumnCountsByRow[row].clamp(0, columns);
+  }
+
+  ArcBlueprintCellEvidence _analyzeCell(
+    img.Image image,
+    int row,
+    int column, {
+    required int rowColumnCount,
+  }) {
     final cellWidth = image.width / columns;
     final cellHeight = image.height / rows;
 
@@ -66,7 +90,7 @@ class ArcBlueprintCellAnalyzer {
       windows.add(
         const _Window(left: 0.00, top: 0.09, right: 0.94, bottom: 0.91),
       );
-    } else if (column == columns - 1) {
+    } else if (column == rowColumnCount - 1) {
       windows.add(
         const _Window(left: 0.06, top: 0.09, right: 1.00, bottom: 0.91),
       );

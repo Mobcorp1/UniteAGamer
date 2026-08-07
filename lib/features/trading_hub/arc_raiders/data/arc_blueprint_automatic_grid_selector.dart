@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_detector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
 
 @immutable
@@ -10,12 +11,14 @@ class ArcBlueprintAutomaticGridSelection {
     required this.detection,
     required this.message,
     required this.rows,
+    required this.canonicalPositions,
   });
 
   final Uint8List imageBytes;
   final ArcBlueprintGridDetection detection;
   final String message;
   final int rows;
+  final List<ArcBlueprintCanonicalPosition> canonicalPositions;
 }
 
 class ArcBlueprintAutomaticGridSelector {
@@ -48,7 +51,7 @@ class ArcBlueprintAutomaticGridSelector {
 
     if (!detection.isValid ||
         !detection.hasSegmentedGrid ||
-        detection.verticalDividers.length != 11 ||
+        detection.verticalDividers.length != detection.columns + 1 ||
         detection.horizontalDividers.length != expectedHorizontalDividers ||
         detection.confidence < minimumConfidence) {
       final label = section == ArcBlueprintGridSection.top
@@ -70,6 +73,9 @@ class ArcBlueprintAutomaticGridSelector {
       imageBytes: Uint8List.fromList(normalized),
       detection: detection,
       rows: section == ArcBlueprintGridSection.top ? 5 : 4,
+      canonicalPositions: section == ArcBlueprintGridSection.top
+          ? ArcBlueprintCanonicalGrid.topCapturePositions()
+          : ArcBlueprintCanonicalGrid.bottomCapturePositions(),
       message: section == ArcBlueprintGridSection.top
           ? 'Rows 1–5 locked automatically.'
           : 'Rows 6–8 and the final three slots locked automatically.',

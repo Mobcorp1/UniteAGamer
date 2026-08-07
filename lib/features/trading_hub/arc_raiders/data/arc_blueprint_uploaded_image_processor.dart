@@ -33,7 +33,9 @@ class ArcBlueprintUploadedImageProcessor {
     return ArcBlueprintUploadedImageResult(
       imageBytes: Uint8List.fromList(selection.imageBytes),
       confidence: selection.detection.confidence,
-      message: selection.message,
+      message: section == ArcBlueprintGridSection.top
+          ? 'Rows 1–5 automatically detected and perspective-corrected.'
+          : 'Rows 6–8 and the final three slots automatically detected.',
       rows: selection.rows,
     );
   }

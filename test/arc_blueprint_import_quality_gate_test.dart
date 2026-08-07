@@ -25,7 +25,6 @@ void main() {
       decisions: decisions(83),
       topCaptureConfidence: 0.90,
       bottomCaptureConfidence: 0.90,
-      overlapConfidence: 1,
     );
 
     expect(result.accepted, isTrue);
@@ -36,7 +35,6 @@ void main() {
       decisions: decisions(82),
       topCaptureConfidence: 0.90,
       bottomCaptureConfidence: 0.90,
-      overlapConfidence: 1,
     );
 
     expect(result.accepted, isFalse);

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 
 @immutable
@@ -18,12 +19,12 @@ class ArcBlueprintImportQualityResult {
 
 class ArcBlueprintImportQualityGate {
   const ArcBlueprintImportQualityGate({
-    this.expectedPositions = 83,
+    this.expectedCanonicalPositions = ArcBlueprintCanonicalGrid.totalPositions,
     this.minimumCaptureConfidence = 0.50,
     this.maximumUncertainCells = 20,
   });
 
-  final int expectedPositions;
+  final int expectedCanonicalPositions;
   final double minimumCaptureConfidence;
   final int maximumUncertainCells;
 
@@ -31,9 +32,8 @@ class ArcBlueprintImportQualityGate {
     required List<ArcBlueprintPhotoCellDecision> decisions,
     required double topCaptureConfidence,
     required double bottomCaptureConfidence,
-    required double overlapConfidence,
   }) {
-    if (decisions.length != expectedPositions) {
+    if (decisions.length != expectedCanonicalPositions) {
       return ArcBlueprintImportQualityResult(
         accepted: false,
         score: 0,
@@ -41,7 +41,7 @@ class ArcBlueprintImportQualityGate {
             .where((decision) => decision.needsReview)
             .length,
         message:
-            'The automatic scanner produced ${decisions.length} of $expectedPositions positions.',
+            'The automatic scanner produced ${decisions.length} of $expectedCanonicalPositions positions.',
       );
     }
 

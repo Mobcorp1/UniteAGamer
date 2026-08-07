@@ -18,10 +18,15 @@ class ArcBlueprintPhotoPixelAnalysis {
 }
 
 class ArcBlueprintPhotoPixelAnalyzer {
-  const ArcBlueprintPhotoPixelAnalyzer({this.columns = 10, this.rows = 5});
+  const ArcBlueprintPhotoPixelAnalyzer({
+    this.columns = 10,
+    this.rows = 5,
+    this.validColumnCountsByRow = const <int>[],
+  });
 
   final int columns;
   final int rows;
+  final List<int> validColumnCountsByRow;
 
   ArcBlueprintPhotoPixelAnalysis analyze({
     required Uint8List bytes,
@@ -30,6 +35,7 @@ class ArcBlueprintPhotoPixelAnalyzer {
     final result = ArcBlueprintHybridRecognitionEngine(
       columns: columns,
       rows: rows,
+      validColumnCountsByRow: validColumnCountsByRow,
     ).analyze(bytes: bytes, captureId: captureId);
 
     return ArcBlueprintPhotoPixelAnalysis(

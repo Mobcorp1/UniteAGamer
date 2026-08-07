@@ -39,6 +39,8 @@ void main() {
       bottomRight: const Offset((left + 1000) / 1100, (top + 500) / 600),
       confidence: 0.95,
       message: 'Grid locked',
+      columns: 10,
+      rows: 5,
       verticalDividers: List<double>.generate(
         11,
         (index) => (left + index * cellWidth) / 1100,
@@ -77,6 +79,8 @@ void main() {
           bottomRight: Offset(0.9, 0.9),
           confidence: 0.9,
           message: 'Incomplete',
+          columns: 10,
+          rows: 5,
         ),
       ),
       throwsFormatException,

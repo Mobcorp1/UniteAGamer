@@ -23,15 +23,6 @@ class ArcBlueprintPhotoImportService {
   Future<ArcBlueprintPhotoImportSummary> apply(
     Iterable<ArcBlueprintPhotoCellDecision> decisions,
   ) async {
-    final unresolved = decisions
-        .where((decision) => decision.needsReview)
-        .toList();
-    if (unresolved.isNotEmpty) {
-      throw StateError(
-        'Review every uncertain Blueprint slot before importing.',
-      );
-    }
-
     final existing = await _repository.loadMyBlueprintStates();
     final updates = ArcBlueprintPhotoImportService.buildUpdates(
       decisions: decisions,
@@ -66,8 +57,11 @@ class ArcBlueprintPhotoImportService {
           final current =
               existing[decision.blueprintId] ??
               ArcBlueprintState.empty(decision.blueprintId);
-          final requestedOwned =
-              decision.state == ArcBlueprintPhotoCellState.owned;
+          final requestedOwned = switch (decision.state) {
+            ArcBlueprintPhotoCellState.owned => true,
+            ArcBlueprintPhotoCellState.missing => false,
+            ArcBlueprintPhotoCellState.uncertain => current.owned,
+          };
           return current.copyWith(
             owned: requestedOwned,
             dupesOwned: current.dupesOwned,

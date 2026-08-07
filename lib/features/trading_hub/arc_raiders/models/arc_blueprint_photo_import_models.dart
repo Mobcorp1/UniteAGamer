@@ -11,11 +11,7 @@ enum ArcBlueprintPhotoImportStatus {
   failed,
 }
 
-enum ArcBlueprintPhotoCaptureStep {
-  captureTop,
-  captureBottomWithOverlap,
-  review,
-}
+enum ArcBlueprintPhotoCaptureStep { captureTop, captureBottom, review }
 
 enum ArcBlueprintPhotoCellState { owned, missing, uncertain }
 
@@ -178,8 +174,6 @@ class ArcBlueprintPhotoCapture {
     this.orientation = '',
     this.detectedRows = 0,
     this.detectedCells = 0,
-    this.overlapRows = 0,
-    this.overlapSignature = '',
     this.createdAt,
   });
 
@@ -190,8 +184,6 @@ class ArcBlueprintPhotoCapture {
   final String orientation;
   final int detectedRows;
   final int detectedCells;
-  final int overlapRows;
-  final String overlapSignature;
   final DateTime? createdAt;
 
   Map<String, dynamic> toMap() => {
@@ -202,8 +194,6 @@ class ArcBlueprintPhotoCapture {
     'orientation': orientation,
     'detectedRows': detectedRows,
     'detectedCells': detectedCells,
-    'overlapRows': overlapRows,
-    'overlapSignature': overlapSignature,
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
   };
 
@@ -216,8 +206,6 @@ class ArcBlueprintPhotoCapture {
       orientation: _readString(map['orientation']),
       detectedRows: _readInt(map['detectedRows']),
       detectedCells: _readInt(map['detectedCells']),
-      overlapRows: _readInt(map['overlapRows']),
-      overlapSignature: _readString(map['overlapSignature']),
       createdAt: _readDate(map['createdAt']),
     );
   }
@@ -270,7 +258,7 @@ class ArcBlueprintPhotoImportSession {
   ArcBlueprintPhotoCaptureStep get nextCaptureStep {
     if (captureCount <= 0) return ArcBlueprintPhotoCaptureStep.captureTop;
     if (captureCount == 1) {
-      return ArcBlueprintPhotoCaptureStep.captureBottomWithOverlap;
+      return ArcBlueprintPhotoCaptureStep.captureBottom;
     }
     return ArcBlueprintPhotoCaptureStep.review;
   }
@@ -279,8 +267,8 @@ class ArcBlueprintPhotoImportSession {
     return switch (nextCaptureStep) {
       ArcBlueprintPhotoCaptureStep.captureTop =>
         'Capture the top section of your Blueprint grid.',
-      ArcBlueprintPhotoCaptureStep.captureBottomWithOverlap =>
-        'Capture the lower section with one overlapping row visible.',
+      ArcBlueprintPhotoCaptureStep.captureBottom =>
+        'Capture the lower section starting at row 6. Do not include row 5 again.',
       ArcBlueprintPhotoCaptureStep.review =>
         'Review uncertain slots before updating Blueprint ownership.',
     };
