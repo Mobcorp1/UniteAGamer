@@ -28,11 +28,15 @@ class ArcBlueprintGridDetector {
       );
     }
 
-    final oriented = img.bakeOrientation(decoded);
+    return detectImage(img.bakeOrientation(decoded));
+  }
+
+  ArcBlueprintGridDetection detectImage(img.Image image) {
+    final oriented = img.bakeOrientation(image);
     final scale = oriented.width > analysisWidth
         ? analysisWidth / oriented.width
         : 1.0;
-    final image = scale < 1
+    final resized = scale < 1
         ? img.copyResize(
             oriented,
             width: analysisWidth,
@@ -40,7 +44,7 @@ class ArcBlueprintGridDetector {
           )
         : oriented;
 
-    if (image.width < 220 || image.height < 120) {
+    if (resized.width < 220 || resized.height < 120) {
       return ArcBlueprintGridDetection.notFound(
         message: 'Captured image is too small for grid detection.',
         columns: columns,
@@ -49,12 +53,12 @@ class ArcBlueprintGridDetector {
     }
 
     final vertical = _findRegularGrid(
-      profile: _verticalEdgeProfile(image),
+      profile: _verticalEdgeProfile(resized),
       expectedLines: columns + 1,
       minimumSpanFraction: 0.44,
     );
     final horizontal = _findRegularGrid(
-      profile: _horizontalEdgeProfile(image),
+      profile: _horizontalEdgeProfile(resized),
       expectedLines: rows + 1,
       minimumSpanFraction: rows >= 5 ? 0.32 : 0.20,
     );
@@ -67,8 +71,8 @@ class ArcBlueprintGridDetector {
       );
     }
 
-    final width = image.width.toDouble();
-    final height = image.height.toDouble();
+    final width = resized.width.toDouble();
+    final height = resized.height.toDouble();
     final verticalDividers = vertical.positions
         .map((position) => position / width)
         .toList(growable: false);

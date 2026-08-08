@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_automatic_grid_selector.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_detector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_dual_capture_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
@@ -28,6 +33,8 @@ class ArcBlueprintLiveScannerScreen extends StatefulWidget {
       _ArcBlueprintLiveScannerScreenState();
 }
 
+enum _BlueprintLockState { searching, detected, locked }
+
 class _ArcBlueprintLiveScannerScreenState
     extends State<ArcBlueprintLiveScannerScreen>
     with WidgetsBindingObserver {
@@ -39,9 +46,12 @@ class _ArcBlueprintLiveScannerScreenState
   bool _initializing = true;
   bool _capturing = false;
   bool _debugDetection = false;
+  bool _analyzingPreview = false;
   String? _error;
-  String _lockMessage = 'AUTO GRID READY';
-  double _lastConfidence = 0;
+  _BlueprintLockState _lockState = _BlueprintLockState.searching;
+  DateTime? _potentialLockTime;
+  ArcBlueprintGridDetection _latestDetection =
+      const ArcBlueprintGridDetection.notFound();
   FlashMode _flashMode = FlashMode.off;
   double _zoom = 1;
   double _baseZoom = 1;
@@ -52,17 +62,25 @@ class _ArcBlueprintLiveScannerScreenState
 
   bool get _capturingBottom => _captureSession.hasTop;
 
+  bool get _gridLocked => _lockState == _BlueprintLockState.locked;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     unawaited(_initialize());
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(_stopPreviewStream());
     unawaited(_controller?.dispose());
+    unawaited(SystemChrome.setPreferredOrientations(DeviceOrientation.values));
     super.dispose();
   }
 
@@ -118,6 +136,7 @@ class _ArcBlueprintLiveScannerScreenState
         _zoom = minZoom;
         _baseZoom = minZoom;
       });
+      await _startPreviewStream();
     } on CameraException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -135,6 +154,150 @@ class _ArcBlueprintLiveScannerScreenState
       setState(() {
         _initializing = false;
         _error = 'No usable camera could be started.';
+      });
+    }
+  }
+
+  Future<void> _startPreviewStream() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (controller.value.isStreamingImages) return;
+
+    try {
+      await controller.startImageStream(_processPreviewFrame);
+    } on CameraException {
+      // Ignore preview streaming errors and continue with capture-only mode.
+    }
+  }
+
+  Future<void> _stopPreviewStream() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (!controller.value.isStreamingImages) return;
+
+    try {
+      await controller.stopImageStream();
+    } on CameraException {
+      // Ignore if the stream is already stopped.
+    }
+  }
+
+  void _processPreviewFrame(CameraImage image) {
+    if (_capturing || _analyzingPreview || !mounted) return;
+    _analyzingPreview = true;
+
+    try {
+      final detectionRows = _capturingBottom ? 3 : 5;
+      final frameImage = _convertCameraImage(image);
+      if (frameImage == null) return;
+
+      final detection = ArcBlueprintGridDetector(
+        columns: 10,
+        rows: detectionRows,
+        analysisWidth: 640,
+      ).detectImage(frameImage);
+
+      _updateLockState(detection);
+    } finally {
+      _analyzingPreview = false;
+    }
+  }
+
+  img.Image? _convertCameraImage(CameraImage image) {
+    const maxPreviewWidth = 720;
+    final srcWidth = image.width;
+    final srcHeight = image.height;
+    final targetWidth = srcWidth > maxPreviewWidth ? maxPreviewWidth : srcWidth;
+    final scale = srcWidth / targetWidth;
+    final targetHeight = (srcHeight / scale).round();
+
+    if (image.format.group == ImageFormatGroup.yuv420) {
+      final yPlane = image.planes[0];
+      final uPlane = image.planes[1];
+      final vPlane = image.planes[2];
+      final result = img.Image(width: targetWidth, height: targetHeight);
+
+      for (var y = 0; y < targetHeight; y++) {
+        final sourceY = (y * scale).floor().clamp(0, srcHeight - 1);
+        final yRow = sourceY * yPlane.bytesPerRow;
+        final uvRow = (sourceY / 2).floor();
+
+        for (var x = 0; x < targetWidth; x++) {
+          final sourceX = (x * scale).floor().clamp(0, srcWidth - 1);
+          final yIndex = yRow + sourceX;
+          final uvCol = (sourceX / 2).floor();
+          final uIndex =
+              uvRow * uPlane.bytesPerRow + uvCol * (uPlane.bytesPerPixel ?? 1);
+          final vIndex =
+              uvRow * vPlane.bytesPerRow + uvCol * (vPlane.bytesPerPixel ?? 1);
+
+          final yValue = yPlane.bytes[yIndex];
+          final uValue = uPlane.bytes[uIndex];
+          final vValue = vPlane.bytes[vIndex];
+          final yPrime = yValue.toInt();
+          final uPrime = uValue.toInt() - 128;
+          final vPrime = vValue.toInt() - 128;
+
+          final r = (yPrime + 1.402 * vPrime).round().clamp(0, 255);
+          final g = (yPrime - 0.344136 * uPrime - 0.714136 * vPrime)
+              .round()
+              .clamp(0, 255);
+          final b = (yPrime + 1.772 * uPrime).round().clamp(0, 255);
+          result.setPixelRgba(x, y, r, g, b, 255);
+        }
+      }
+
+      return result;
+    }
+
+    if (image.format.group == ImageFormatGroup.bgra8888) {
+      final plane = image.planes[0];
+      final result = img.Image(width: targetWidth, height: targetHeight);
+
+      for (var y = 0; y < targetHeight; y++) {
+        final sourceY = (y * scale).floor().clamp(0, srcHeight - 1);
+        final rowOffset = sourceY * plane.bytesPerRow;
+
+        for (var x = 0; x < targetWidth; x++) {
+          final sourceX = (x * scale).floor().clamp(0, srcWidth - 1);
+          final index = rowOffset + sourceX * 4;
+          final b = plane.bytes[index];
+          final g = plane.bytes[index + 1];
+          final r = plane.bytes[index + 2];
+          final a = plane.bytes[index + 3];
+          result.setPixelRgba(x, y, r, g, b, a);
+        }
+      }
+
+      return result;
+    }
+
+    return null;
+  }
+
+  void _updateLockState(ArcBlueprintGridDetection detection) {
+    final now = DateTime.now();
+    final isLocked = detection.isLocked;
+    final isDetected = detection.isValid;
+
+    if (isLocked) {
+      _potentialLockTime ??= now;
+      if (now.difference(_potentialLockTime!).inMilliseconds >= 1000) {
+        _lockState = _BlueprintLockState.locked;
+      } else {
+        _lockState = _BlueprintLockState.detected;
+      }
+    } else if (isDetected) {
+      _potentialLockTime = null;
+      _lockState = _BlueprintLockState.detected;
+    } else {
+      _potentialLockTime = null;
+      _lockState = _BlueprintLockState.searching;
+    }
+
+    if (mounted) {
+      setState(() {
+        _latestDetection = detection;
       });
     }
   }
@@ -209,10 +372,10 @@ class _ArcBlueprintLiveScannerScreenState
 
     setState(() {
       _capturing = true;
-      _lockMessage = 'ANALYSING GRID…';
     });
 
     try {
+      await _stopPreviewStream();
       final photo = await controller.takePicture();
       final bytes = await photo.readAsBytes();
       final section = _capturingBottom
@@ -223,18 +386,21 @@ class _ArcBlueprintLiveScannerScreenState
       await _showDetectionDebug(imageBytes: bytes, detection: detection);
       final corrected = selection.imageBytes;
       if (!mounted) return;
-      setState(() {
-        _lastConfidence = detection.confidence;
-        _lockMessage = 'GRID LOCKED ${(detection.confidence * 100).round()}%';
-      });
 
       if (!_capturingBottom) {
+        final nextSession = _captureSession.captureTop(corrected);
         setState(() {
-          _captureSession = _captureSession.captureTop(corrected);
+          _captureSession = nextSession;
+          _lockState = _BlueprintLockState.searching;
+          _potentialLockTime = null;
+          _latestDetection = const ArcBlueprintGridDetection.notFound();
         });
         _showMessage(
           'Rows 1–5 captured. Scroll to row 6 for the second capture.',
         );
+        if (mounted) {
+          await _startPreviewStream();
+        }
         return;
       }
 
@@ -280,6 +446,23 @@ class _ArcBlueprintLiveScannerScreenState
             )
           : LayoutBuilder(
               builder: (context, constraints) {
+                final media = MediaQuery.of(context);
+                final isPortrait = media.size.width < media.size.height;
+                final captureStep = _capturingBottom
+                    ? 'Capture 2 of 2'
+                    : 'Capture 1 of 2';
+                final captureInstructions = _capturingBottom
+                    ? 'Scroll until Row 6 is at the top. Capture Rows 6–9. Duplicate rows are ignored automatically.'
+                    : 'Fit the complete 10×5 blueprint grid inside the guides. Do not crop any edge.';
+                final lockStatusText =
+                    _lockState == _BlueprintLockState.searching
+                    ? 'Searching for blueprint grid...'
+                    : _lockState == _BlueprintLockState.detected
+                    ? 'Blueprint grid detected'
+                    : 'Grid locked ✓';
+                final statusColor = _gridLocked
+                    ? Colors.greenAccent
+                    : Colors.white;
                 return GestureDetector(
                   onScaleStart: (_) => _baseZoom = _zoom,
                   onScaleUpdate: _onScaleUpdate,
@@ -287,116 +470,114 @@ class _ArcBlueprintLiveScannerScreenState
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      _CoverCameraPreview(controller: controller),
-                      Positioned(
-                        left: 12,
-                        right: 12,
-                        top: MediaQuery.paddingOf(context).top + 6,
-                        child: Row(
-                          children: [
-                            IconButton.filledTonal(
-                              onPressed: _capturing
-                                  ? null
-                                  : () => Navigator.of(context).pop(),
-                              icon: const Icon(Icons.close),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _capturingBottom
-                                        ? 'CAPTURE ROWS 6–8 + FINAL 3'
-                                        : 'AUTO GRID SCANNER',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'VT323',
-                                      fontSize: 22,
-                                    ),
-                                  ),
-                                  Text(
-                                    _capturingBottom
-                                        ? 'Start at row 6. Include rows 6–8 and the final three slots only.'
-                                        : 'The scanner automatically locks rows 1–5.',
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            IconButton.filledTonal(
-                              tooltip: _debugDetection
-                                  ? 'Grid debug overlay on'
-                                  : 'Grid debug overlay off',
-                              onPressed: _capturing
-                                  ? null
-                                  : () => setState(
-                                      () => _debugDetection = !_debugDetection,
-                                    ),
-                              icon: Icon(
-                                _debugDetection
-                                    ? Icons.bug_report_rounded
-                                    : Icons.bug_report_outlined,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-
-                            IconButton.filledTonal(
-                              onPressed: _capturing ? null : _toggleFlash,
-                              icon: Icon(
-                                _flashMode == FlashMode.off
-                                    ? Icons.flash_off
-                                    : Icons.flash_on,
-                              ),
-                            ),
-                          ],
+                      if (!isPortrait)
+                        _CoverCameraPreview(controller: controller),
+                      if (!isPortrait)
+                        Positioned.fill(
+                          child: _BlueprintScannerOverlay(
+                            locked: _gridLocked,
+                            detection: _latestDetection,
+                          ),
                         ),
-                      ),
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        top: MediaQuery.paddingOf(context).top + 78,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.72),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: _lastConfidence >= 0.62
-                                    ? Colors.greenAccent
-                                    : AppTheme.neonCyan,
+                      if (!isPortrait)
+                        Positioned(
+                          left: 12,
+                          right: 12,
+                          top: media.padding.top + 6,
+                          child: Row(
+                            children: [
+                              IconButton.filledTonal(
+                                onPressed: _capturing
+                                    ? null
+                                    : () => Navigator.of(context).pop(),
+                                icon: const Icon(Icons.close),
                               ),
-                            ),
-                            child: Text(
-                              _lockMessage,
-                              style: TextStyle(
-                                color: _lastConfidence >= 0.62
-                                    ? Colors.greenAccent
-                                    : Colors.white,
-                                fontFamily: 'VT323',
-                                fontSize: 18,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      captureStep,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: 'VT323',
+                                        fontSize: 22,
+                                      ),
+                                    ),
+                                    Text(
+                                      captureInstructions,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton.filledTonal(
+                                tooltip: _debugDetection
+                                    ? 'Grid debug overlay on'
+                                    : 'Grid debug overlay off',
+                                onPressed: _capturing
+                                    ? null
+                                    : () => setState(
+                                        () =>
+                                            _debugDetection = !_debugDetection,
+                                      ),
+                                icon: Icon(
+                                  _debugDetection
+                                      ? Icons.bug_report_rounded
+                                      : Icons.bug_report_outlined,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              IconButton.filledTonal(
+                                onPressed: _capturing ? null : _toggleFlash,
+                                icon: Icon(
+                                  _flashMode == FlashMode.off
+                                      ? Icons.flash_off
+                                      : Icons.flash_on,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (!isPortrait)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          top: media.padding.top + 88,
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 184.0),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Text(
+                                lockStatusText,
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontFamily: 'VT323',
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      if (_capturingBottom)
+                      if (!isPortrait && _capturingBottom)
                         Positioned(
                           left: 16,
                           right: 16,
-                          bottom: MediaQuery.paddingOf(context).bottom + 102,
+                          bottom: media.padding.bottom + 102,
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.72),
+                              color: Colors.black.withValues(alpha: 184.0),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppTheme.neonCyan),
                             ),
@@ -411,59 +592,85 @@ class _ArcBlueprintLiveScannerScreenState
                             ),
                           ),
                         ),
-                      Positioned(
-                        left: 24,
-                        right: 24,
-                        bottom: MediaQuery.paddingOf(context).bottom + 12,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_capturingBottom)
-                              IconButton.filledTonal(
-                                tooltip: 'Restart top capture',
-                                onPressed: _capturing
-                                    ? null
-                                    : () => setState(
-                                        () => _captureSession =
-                                            const ArcBlueprintDualCaptureSession(),
-                                      ),
-                                icon: const Icon(Icons.restart_alt),
-                              ),
-                            if (_capturingBottom) const SizedBox(width: 16),
-                            InkResponse(
-                              key: const Key('blueprint-live-scanner-capture'),
-                              onTap: _capturing ? null : _capture,
-                              radius: 44,
-                              child: Container(
-                                width: 76,
-                                height: 76,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _capturing
-                                      ? Colors.white38
-                                      : Colors.white,
-                                  border: Border.all(
-                                    color: AppTheme.neonCyan,
-                                    width: 5,
-                                  ),
+                      if (!isPortrait)
+                        Positioned(
+                          left: 24,
+                          right: 24,
+                          bottom: media.padding.bottom + 12,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_capturingBottom)
+                                IconButton.filledTonal(
+                                  tooltip: 'Restart top capture',
+                                  onPressed: _capturing
+                                      ? null
+                                      : () => setState(() {
+                                          _captureSession =
+                                              const ArcBlueprintDualCaptureSession();
+                                          _lockState =
+                                              _BlueprintLockState.searching;
+                                          _potentialLockTime = null;
+                                          _latestDetection =
+                                              const ArcBlueprintGridDetection.notFound();
+                                        }),
+                                  icon: const Icon(Icons.restart_alt),
                                 ),
-                                child: _capturing
-                                    ? const Padding(
-                                        padding: EdgeInsets.all(22),
-                                        child: CircularProgressIndicator(),
-                                      )
-                                    : Icon(
-                                        _capturingBottom
-                                            ? Icons.check_rounded
-                                            : Icons.camera_alt_rounded,
-                                        color: Colors.black,
-                                        size: 34,
-                                      ),
+                              if (_capturingBottom) const SizedBox(width: 16),
+                              InkResponse(
+                                key: const Key(
+                                  'blueprint-live-scanner-capture',
+                                ),
+                                onTap: !_gridLocked || _capturing
+                                    ? null
+                                    : _capture,
+                                radius: 44,
+                                child: Container(
+                                  width: 76,
+                                  height: 76,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _capturing
+                                        ? Colors.white38
+                                        : (_gridLocked
+                                              ? Colors.white
+                                              : Colors.white12),
+                                    border: Border.all(
+                                      color: _gridLocked
+                                          ? Colors.greenAccent
+                                          : AppTheme.neonCyan,
+                                      width: 5,
+                                    ),
+                                  ),
+                                  child: _capturing
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(22),
+                                          child: CircularProgressIndicator(),
+                                        )
+                                      : Icon(
+                                          _capturingBottom
+                                              ? Icons.check_rounded
+                                              : Icons.camera_alt_rounded,
+                                          color: _gridLocked
+                                              ? Colors.black
+                                              : Colors.white54,
+                                          size: 34,
+                                        ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                      if (!isPortrait && kDebugMode)
+                        Positioned(
+                          left: 18,
+                          bottom: media.padding.bottom + 100,
+                          child: _DebugGridMetrics(
+                            detection: _latestDetection,
+                            locked: _gridLocked,
+                          ),
+                        ),
+                      if (isPortrait) const _RotateToLandscapePage(),
                     ],
                   ),
                 );
@@ -517,6 +724,226 @@ class _CoverCameraPreview extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _BlueprintScannerOverlay extends StatelessWidget {
+  const _BlueprintScannerOverlay({
+    required this.locked,
+    required this.detection,
+  });
+
+  final bool locked;
+  final ArcBlueprintGridDetection detection;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _BlueprintGuidePainter(locked: locked, detection: detection),
+      size: Size.infinite,
+    );
+  }
+}
+
+class _BlueprintGuidePainter extends CustomPainter {
+  const _BlueprintGuidePainter({required this.locked, required this.detection});
+
+  final bool locked;
+  final ArcBlueprintGridDetection detection;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final width = size.width * 0.72;
+    final height = width / 2;
+    final left = (size.width - width) / 2;
+    final top = (size.height - height) / 2;
+    final rect = Rect.fromLTWH(left, top, width, height);
+    final outer = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final cutout = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(20)));
+    final overlay = Path.combine(PathOperation.difference, outer, cutout);
+
+    canvas.drawPath(
+      overlay,
+      Paint()..color = Colors.black.withValues(alpha: 132.6),
+    );
+
+    final borderPaint = Paint()
+      ..color = locked ? Colors.greenAccent : Colors.white70
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(20)),
+      borderPaint,
+    );
+
+    final bracketPaint = Paint()
+      ..color = locked ? Colors.greenAccent : Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    const bracketLength = 28.0;
+
+    void drawCorner(Offset corner, double dx, double dy, double ax, double ay) {
+      canvas.drawLine(corner, corner.translate(dx, 0), bracketPaint);
+      canvas.drawLine(corner, corner.translate(0, dy), bracketPaint);
+    }
+
+    drawCorner(rect.topLeft, bracketLength, 0, 0, bracketLength);
+    drawCorner(rect.topRight, -bracketLength, 0, 0, bracketLength);
+    drawCorner(rect.bottomLeft, bracketLength, 0, 0, -bracketLength);
+    drawCorner(rect.bottomRight, -bracketLength, 0, 0, -bracketLength);
+
+    final guidePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 51.0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    for (var column = 1; column < 10; column++) {
+      final x = rect.left + (rect.width * column / 10);
+      canvas.drawLine(Offset(x, rect.top), Offset(x, rect.bottom), guidePaint);
+    }
+    for (var row = 1; row < 5; row++) {
+      final y = rect.top + (rect.height * row / 5);
+      canvas.drawLine(Offset(rect.left, y), Offset(rect.right, y), guidePaint);
+    }
+
+    final center = rect.center;
+    final crossPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 166.0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    const crossSize = 16.0;
+    canvas.drawLine(
+      Offset(center.dx - crossSize, center.dy),
+      Offset(center.dx + crossSize, center.dy),
+      crossPaint,
+    );
+    canvas.drawLine(
+      Offset(center.dx, center.dy - crossSize),
+      Offset(center.dx, center.dy + crossSize),
+      crossPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BlueprintGuidePainter oldDelegate) {
+    return oldDelegate.locked != locked || oldDelegate.detection != detection;
+  }
+}
+
+class _DebugGridMetrics extends StatelessWidget {
+  const _DebugGridMetrics({required this.detection, required this.locked});
+
+  final ArcBlueprintGridDetection detection;
+  final bool locked;
+
+  String get _confidence => '${(detection.confidence * 100).round()}%';
+
+  String get _coverage {
+    if (!detection.isValid) return '0%';
+    final area =
+        (detection.bottomRight.dx - detection.topLeft.dx) *
+        (detection.bottomRight.dy - detection.topLeft.dy);
+    return '${(area * 100).round()}%';
+  }
+
+  String get _angle {
+    if (!detection.isValid) return '0.0°';
+    final deltaX = detection.topRight.dx - detection.topLeft.dx;
+    final deltaY = detection.topRight.dy - detection.topLeft.dy;
+    return '${(math.atan2(deltaY, deltaX) * 180 / math.pi).abs().toStringAsFixed(1)}°';
+  }
+
+  String get _perspective {
+    if (!detection.isValid) return '0.0%';
+    final topWidth = (detection.topRight.dx - detection.topLeft.dx).abs();
+    final bottomWidth = (detection.bottomRight.dx - detection.bottomLeft.dx)
+        .abs();
+    final widthDiff = (topWidth - bottomWidth).abs();
+    final widthRatio = widthDiff / math.max(topWidth, bottomWidth);
+    final leftHeight = (detection.bottomLeft.dy - detection.topLeft.dy).abs();
+    final rightHeight = (detection.bottomRight.dy - detection.topRight.dy)
+        .abs();
+    final heightDiff = (leftHeight - rightHeight).abs();
+    final heightRatio = heightDiff / math.max(leftHeight, rightHeight);
+    final result = ((widthRatio + heightRatio) / 2 * 100).clamp(0, 100);
+    return '${result.round()}%';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 158.0),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: locked ? Colors.greenAccent : Colors.white24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Grid angle: $_angle',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Perspective: $_perspective',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Lock confidence: $_confidence',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Coverage: $_coverage',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RotateToLandscapePage extends StatelessWidget {
+  const _RotateToLandscapePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.screen_rotation_rounded,
+            color: Colors.white,
+            size: 68,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Rotate your phone to landscape',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'The Blueprint Scanner is designed for landscape mode.\nRotate your phone and continue.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -83,6 +83,16 @@ void main() {
     expect(result.horizontalDividers, hasLength(6));
   });
 
+  test('supports direct image detection without PNG bytes', () {
+    final result = const ArcBlueprintGridDetector(
+      columns: 10,
+      rows: 5,
+    ).detectImage(buildGrid(rows: 5));
+
+    expect(result.isValid, isTrue);
+    expect(result.hasSegmentedGrid, isTrue);
+  });
+
   test('automatically segments the 10 by 3 lower full-row section', () {
     final result =
         const ArcBlueprintGridDetector(
