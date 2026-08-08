@@ -917,8 +917,7 @@ class ArcTraderProfileRepository {
         availabilitySnapshot?.data() ??
         const <String, dynamic>{};
     final availability =
-        availabilityOverride ??
-        ArcAvailability.fromMap(availabilityData);
+        availabilityOverride ?? ArcAvailability.fromMap(availabilityData);
 
     final result = const ArcProfileCompletionEvaluator().evaluate(
       userData: userData,

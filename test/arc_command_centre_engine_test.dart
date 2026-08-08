@@ -148,10 +148,7 @@ void main() {
       expect(state.onboardingFocus, isNotNull);
       expect(state.onboardingFocus!.goalLabel, 'Plan Raids');
       expect(state.onboardingFocus!.systemLabel, 'Raid Intelligence');
-      expect(
-        state.onboardingFocus!.detail,
-        contains('calibrated maps'),
-      );
+      expect(state.onboardingFocus!.detail, contains('calibrated maps'));
     });
 
     test('squad onboarding uses Raider-facing wording', () {

@@ -11,8 +11,18 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_dual_capture_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_grid_detection_overlay.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/manual_alignment_controller.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_perspective_cropper.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_edge_calibration.dart';
+
+bool canStartCapture({
+  required bool controllerInitialized,
+  required bool capturing,
+  required bool isPortrait,
+}) {
+  return controllerInitialized && !capturing && !isPortrait;
+}
 
 class ArcBlueprintScannerResult {
   ArcBlueprintScannerResult({
@@ -63,6 +73,15 @@ class _ArcBlueprintLiveScannerScreenState
   bool get _capturingBottom => _captureSession.hasTop;
 
   bool get _gridLocked => _lockState == _BlueprintLockState.locked;
+
+  // Manual alignment controllers for top and bottom captures.
+  final ManualAlignmentController _topAlignmentController =
+      ManualAlignmentController()..resetToTopDefault();
+  final ManualAlignmentController _bottomAlignmentController =
+      ManualAlignmentController()..resetToBottomDefault();
+
+  // Last known viewport size used for normalized->source coordinate mapping.
+  Size? _viewportSize;
 
   @override
   void initState() {
@@ -326,43 +345,6 @@ class _ArcBlueprintLiveScannerScreenState
     _baseZoom = _zoom;
   }
 
-  Future<void> _showDetectionDebug({
-    required Uint8List imageBytes,
-    required ArcBlueprintGridDetection detection,
-  }) async {
-    if (!_debugDetection || !mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: Colors.black,
-          title: Text(
-            detection.isLocked
-                ? 'GRID LOCKED ${(detection.confidence * 100).round()}%'
-                : 'GRID NOT LOCKED',
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'VT323',
-              fontSize: 24,
-            ),
-          ),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ArcBlueprintGridDetectionOverlay(
-              imageBytes: imageBytes,
-              detection: detection,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Continue'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Future<void> _capture() async {
     final controller = _controller;
@@ -381,10 +363,30 @@ class _ArcBlueprintLiveScannerScreenState
       final section = _capturingBottom
           ? ArcBlueprintGridSection.bottom
           : ArcBlueprintGridSection.top;
-      final selection = _selector.select(bytes, section: section);
-      final detection = selection.detection;
-      await _showDetectionDebug(imageBytes: bytes, detection: detection);
-      final corrected = selection.imageBytes;
+
+      // Use manual alignment calibration where possible as the authoritative crop.
+      Uint8List? corrected;
+      try {
+        final controller = _capturingBottom
+            ? _bottomAlignmentController
+            : _topAlignmentController;
+        if (_viewportSize != null && controller.calibration.isValid) {
+          corrected = ArcBlueprintPerspectiveCropper().rectify(
+            imageBytes: bytes,
+            viewportSize: _viewportSize!,
+            calibration: controller.calibration,
+          );
+        } else {
+          // Fallback to automatic selector when viewport not available
+          final selection = _selector.select(bytes, section: section);
+          corrected = selection.imageBytes;
+        }
+      } catch (e) {
+        // If cropper fails, fallback to automatic selection
+        final selection = _selector.select(bytes, section: section);
+        corrected = selection.imageBytes;
+      }
+
       if (!mounted) return;
 
       if (!_capturingBottom) {
@@ -463,6 +465,12 @@ class _ArcBlueprintLiveScannerScreenState
                 final statusColor = _gridLocked
                     ? Colors.greenAccent
                     : Colors.white;
+                // record viewport size for coordinate mapping
+                _viewportSize = Size(
+                  constraints.maxWidth,
+                  constraints.maxHeight,
+                );
+
                 return GestureDetector(
                   onScaleStart: (_) => _baseZoom = _zoom,
                   onScaleUpdate: _onScaleUpdate,
@@ -475,6 +483,9 @@ class _ArcBlueprintLiveScannerScreenState
                       if (!isPortrait)
                         Positioned.fill(
                           child: _BlueprintScannerOverlay(
+                            controller: _capturingBottom
+                                ? _bottomAlignmentController
+                                : _topAlignmentController,
                             locked: _gridLocked,
                             detection: _latestDetection,
                           ),
@@ -616,14 +627,56 @@ class _ArcBlueprintLiveScannerScreenState
                                         }),
                                   icon: const Icon(Icons.restart_alt),
                                 ),
-                              if (_capturingBottom) const SizedBox(width: 16),
+                              if (_capturingBottom) const SizedBox(width: 12),
+
+                              // Auto align uses the detector result to initialise manual frame
+                              IconButton.filledTonal(
+                                tooltip: 'Auto align',
+                                onPressed: _capturing
+                                    ? null
+                                    : () {
+                                        final controller = _capturingBottom
+                                            ? _bottomAlignmentController
+                                            : _topAlignmentController;
+                                        controller.autoAlignFromDetection(
+                                          _latestDetection,
+                                        );
+                                        setState(() {});
+                                      },
+                                icon: const Icon(Icons.auto_fix_high_rounded),
+                              ),
+                              const SizedBox(width: 8),
+
+                              IconButton.filledTonal(
+                                tooltip: 'Reset frame',
+                                onPressed: _capturing
+                                    ? null
+                                    : () {
+                                        final controller = _capturingBottom
+                                            ? _bottomAlignmentController
+                                            : _topAlignmentController;
+                                        controller.resetToDefaults(
+                                          bottomCapture: _capturingBottom,
+                                        );
+                                        setState(() {});
+                                      },
+                                icon: const Icon(Icons.crop_rounded),
+                              ),
+                              const SizedBox(width: 12),
+
                               InkResponse(
                                 key: const Key(
                                   'blueprint-live-scanner-capture',
                                 ),
-                                onTap: !_gridLocked || _capturing
-                                    ? null
-                                    : _capture,
+                                onTap:
+                                    (canStartCapture(
+                                      controllerInitialized:
+                                          controller.value.isInitialized,
+                                      capturing: _capturing,
+                                      isPortrait: isPortrait,
+                                    ))
+                                    ? _capture
+                                    : null,
                                 radius: 44,
                                 child: Container(
                                   width: 76,
@@ -728,37 +781,123 @@ class _CoverCameraPreview extends StatelessWidget {
   }
 }
 
-class _BlueprintScannerOverlay extends StatelessWidget {
+class _BlueprintScannerOverlay extends StatefulWidget {
   const _BlueprintScannerOverlay({
+    required this.controller,
     required this.locked,
     required this.detection,
   });
 
+  final ManualAlignmentController controller;
   final bool locked;
   final ArcBlueprintGridDetection detection;
 
   @override
+  State<_BlueprintScannerOverlay> createState() =>
+      _BlueprintScannerOverlayState();
+}
+
+class _BlueprintScannerOverlayState extends State<_BlueprintScannerOverlay> {
+  // drag target enum
+  _DragTarget _dragTarget = _DragTarget.none;
+
+  @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _BlueprintGuidePainter(locked: locked, detection: detection),
-      size: Size.infinite,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        return GestureDetector(
+          onPanStart: (details) {
+            final local = details.localPosition;
+            final norm = Offset(local.dx / size.width, local.dy / size.height);
+            final rect = widget.controller.calibration.normalizedRect;
+            const handleThreshold = 0.04; // normalized units threshold
+
+            if ((norm.dx - rect.left).abs() < handleThreshold) {
+              _dragTarget = _DragTarget.left;
+            } else if ((norm.dx - rect.right).abs() < handleThreshold) {
+              _dragTarget = _DragTarget.right;
+            } else if ((norm.dy - rect.top).abs() < handleThreshold) {
+              _dragTarget = _DragTarget.top;
+            } else if ((norm.dy - rect.bottom).abs() < handleThreshold) {
+              _dragTarget = _DragTarget.bottom;
+            } else if (rect.contains(norm)) {
+              _dragTarget = _DragTarget.center;
+            } else {
+              _dragTarget = _DragTarget.none;
+            }
+          },
+          onPanUpdate: (details) {
+            final local = details.localPosition;
+            final dx = details.delta.dx / size.width;
+            final dy = details.delta.dy / size.height;
+            final normX = (local.dx / size.width).clamp(0.0, 1.0);
+            final normY = (local.dy / size.height).clamp(0.0, 1.0);
+
+            setState(() {
+              switch (_dragTarget) {
+                case _DragTarget.left:
+                  widget.controller.moveEdge(ArcBlueprintCropEdge.left, normX);
+                  break;
+                case _DragTarget.right:
+                  widget.controller.moveEdge(ArcBlueprintCropEdge.right, normX);
+                  break;
+                case _DragTarget.top:
+                  widget.controller.moveEdge(ArcBlueprintCropEdge.top, normY);
+                  break;
+                case _DragTarget.bottom:
+                  widget.controller.moveEdge(
+                    ArcBlueprintCropEdge.bottom,
+                    normY,
+                  );
+                  break;
+                case _DragTarget.center:
+                  widget.controller.translate(dx, dy);
+                  break;
+                case _DragTarget.none:
+                  break;
+              }
+            });
+          },
+          onPanEnd: (_) {
+            _dragTarget = _DragTarget.none;
+          },
+          child: CustomPaint(
+            painter: _BlueprintGuidePainter2(
+              calibration: widget.controller.calibration,
+              locked: widget.locked,
+              detection: widget.detection,
+            ),
+            size: Size.infinite,
+          ),
+        );
+      },
     );
   }
 }
 
-class _BlueprintGuidePainter extends CustomPainter {
-  const _BlueprintGuidePainter({required this.locked, required this.detection});
+enum _DragTarget { left, right, top, bottom, center, none }
 
+class _BlueprintGuidePainter2 extends CustomPainter {
+  const _BlueprintGuidePainter2({
+    required this.calibration,
+    required this.locked,
+    required this.detection,
+  });
+
+  final ArcBlueprintEdgeCalibration calibration;
   final bool locked;
   final ArcBlueprintGridDetection detection;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final width = size.width * 0.72;
-    final height = width / 2;
-    final left = (size.width - width) / 2;
-    final top = (size.height - height) / 2;
-    final rect = Rect.fromLTWH(left, top, width, height);
+    final rect = Rect.fromLTWH(
+      calibration.left * size.width,
+      calibration.top * size.height,
+      (calibration.right - calibration.left) * size.width,
+      (calibration.bottom - calibration.top) * size.height,
+    );
+
     final outer = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
     final cutout = Path()
       ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(20)));
@@ -785,15 +924,15 @@ class _BlueprintGuidePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     const bracketLength = 28.0;
 
-    void drawCorner(Offset corner, double dx, double dy, double ax, double ay) {
+    void drawCorner(Offset corner, double dx, double dy) {
       canvas.drawLine(corner, corner.translate(dx, 0), bracketPaint);
       canvas.drawLine(corner, corner.translate(0, dy), bracketPaint);
     }
 
-    drawCorner(rect.topLeft, bracketLength, 0, 0, bracketLength);
-    drawCorner(rect.topRight, -bracketLength, 0, 0, bracketLength);
-    drawCorner(rect.bottomLeft, bracketLength, 0, 0, -bracketLength);
-    drawCorner(rect.bottomRight, -bracketLength, 0, 0, -bracketLength);
+    drawCorner(rect.topLeft, bracketLength, 0);
+    drawCorner(rect.topRight, -bracketLength, 0);
+    drawCorner(rect.bottomLeft, bracketLength, 0);
+    drawCorner(rect.bottomRight, -bracketLength, 0);
 
     final guidePaint = Paint()
       ..color = Colors.white.withValues(alpha: 51.0)
@@ -825,11 +964,49 @@ class _BlueprintGuidePainter extends CustomPainter {
       Offset(center.dx, center.dy + crossSize),
       crossPaint,
     );
+
+    // Draw subtle edge handles
+    final handlePaint = Paint()..color = AppTheme.neonCyan.withValues(alpha: 229.5);
+    const handleSize = 10.0;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.topLeft,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.topRight,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.bottomLeft,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.bottomRight,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _BlueprintGuidePainter oldDelegate) {
-    return oldDelegate.locked != locked || oldDelegate.detection != detection;
+  bool shouldRepaint(covariant _BlueprintGuidePainter2 oldDelegate) {
+    return oldDelegate.locked != locked ||
+        oldDelegate.calibration != calibration ||
+        oldDelegate.detection != detection;
   }
 }
 

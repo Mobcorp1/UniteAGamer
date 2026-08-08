@@ -9,14 +9,17 @@ void main() {
       await UagSessionGateController.clearSession();
     });
 
-    test('allows a new onboarding auth handoff before prefs are stored', () async {
-      UagSessionGateController.markOnboardingAuthHandshakeStarted();
+    test(
+      'allows a new onboarding auth handoff before prefs are stored',
+      () async {
+        UagSessionGateController.markOnboardingAuthHandshakeStarted();
 
-      expect(
-        await UagSessionGateController.isSessionAllowed('new-raider'),
-        isTrue,
-      );
-    });
+        expect(
+          await UagSessionGateController.isSessionAllowed('new-raider'),
+          isTrue,
+        );
+      },
+    );
 
     test('does not allow an expired onboarding auth handoff', () async {
       UagSessionGateController.markOnboardingAuthHandshakeStarted(
@@ -29,16 +32,19 @@ void main() {
       );
     });
 
-    test('keeps the current runtime session allowed without remember me', () async {
-      await UagSessionGateController.markAuthenticated(
-        uid: 'new-raider',
-        keepSignedIn: false,
-      );
+    test(
+      'keeps the current runtime session allowed without remember me',
+      () async {
+        await UagSessionGateController.markAuthenticated(
+          uid: 'new-raider',
+          keepSignedIn: false,
+        );
 
-      expect(
-        await UagSessionGateController.isSessionAllowed('new-raider'),
-        isTrue,
-      );
-    });
+        expect(
+          await UagSessionGateController.isSessionAllowed('new-raider'),
+          isTrue,
+        );
+      },
+    );
   });
 }

@@ -216,9 +216,11 @@ class ArcBlueprintLoadoutBridge {
       );
     }
     if (loadout.shield != null) add(loadout.shield!, 'Shield');
-    final quickUse = _normalisedQuickUse(loadout.quickUse.isNotEmpty
-        ? loadout.quickUse
-        : <String>[...loadout.equipment, ...loadout.consumables]);
+    final quickUse = _normalisedQuickUse(
+      loadout.quickUse.isNotEmpty
+          ? loadout.quickUse
+          : <String>[...loadout.equipment, ...loadout.consumables],
+    );
     for (var index = 0; index < quickUse.length; index++) {
       add(quickUse[index], 'Quick Use ${index + 1}');
     }
