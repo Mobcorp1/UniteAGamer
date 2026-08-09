@@ -83,6 +83,21 @@ class _ArcBlueprintLiveScannerScreenState
   // Last known viewport size used for normalized->source coordinate mapping.
   Size? _viewportSize;
 
+  bool _cameraInitializing = false;
+  int _cameraRecoveryAttempts = 0;
+  bool _previewStreamPending = false;
+
+  void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint('ARC SCANNER: $message');
+    }
+  }
+
+  bool _isCameraDeviceError(CameraException error) {
+    return error.code == 'ERROR_CAMERA_DEVICE' ||
+        error.description?.contains('ERROR_CAMERA_DEVICE') == true;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -105,24 +120,61 @@ class _ArcBlueprintLiveScannerScreenState
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _debugLog('Lifecycle $state');
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
     if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
-      unawaited(controller.dispose());
-      _controller = null;
-    } else if (state == AppLifecycleState.resumed && _description != null) {
-      unawaited(_initialize(description: _description));
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      if (controller != null) {
+        _debugLog('Lifecycle pause/dispose controller');
+        unawaited(_disposeController(controller));
+        _controller = null;
+      }
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed && _description != null) {
+      if (_controller == null && !_cameraInitializing) {
+        unawaited(_initialize(description: _description));
+      }
+    }
+  }
+
+  Future<void> _disposeController(CameraController? controller) async {
+    if (controller == null) return;
+    if (controller.value.isStreamingImages) {
+      try {
+        _debugLog('Image stream stopping before dispose');
+        await controller.stopImageStream();
+        _debugLog('Image stream stopped before dispose');
+      } on CameraException catch (_) {
+        _debugLog('Image stream stop failed during dispose');
+      }
+    }
+
+    try {
+      await controller.dispose();
+      _debugLog('Controller disposed');
+    } on CameraException catch (_) {
+      _debugLog('Controller dispose failed');
     }
   }
 
   Future<void> _initialize({CameraDescription? description}) async {
+    if (_cameraInitializing) {
+      _debugLog('Camera initialization already in progress; skipping');
+      return;
+    }
+
+    _cameraInitializing = true;
     if (mounted) {
       setState(() {
         _initializing = true;
         _error = null;
       });
     }
+
     try {
       final cameras = description == null ? await availableCameras() : null;
       final selected =
@@ -131,20 +183,29 @@ class _ArcBlueprintLiveScannerScreenState
             (camera) => camera.lensDirection == CameraLensDirection.back,
             orElse: () => cameras.first,
           );
-      await _controller?.dispose();
+
+      if (_controller != null) {
+        _debugLog('Disposing previous controller during initialization');
+        await _disposeController(_controller);
+        _controller = null;
+      }
+
+      _debugLog('Controller created');
       final controller = CameraController(
         selected,
         ResolutionPreset.high,
         enableAudio: false,
       );
       await controller.initialize();
+      _debugLog('Controller initialised');
       await controller.setFlashMode(FlashMode.off);
       final minZoom = await controller.getMinZoomLevel();
       final maxZoom = await controller.getMaxZoomLevel();
       if (!mounted) {
-        await controller.dispose();
+        await _disposeController(controller);
         return;
       }
+
       setState(() {
         _description = selected;
         _controller = controller;
@@ -155,13 +216,11 @@ class _ArcBlueprintLiveScannerScreenState
         _zoom = minZoom;
         _baseZoom = minZoom;
       });
-      await _startPreviewStream();
+
+      _schedulePreviewStreamStart(controller);
     } on CameraException catch (error) {
       if (!mounted) return;
-      setState(() {
-        _initializing = false;
-        _error = error.description ?? error.code;
-      });
+      _handleCameraException(error);
     } on PlatformException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -174,17 +233,76 @@ class _ArcBlueprintLiveScannerScreenState
         _initializing = false;
         _error = 'No usable camera could be started.';
       });
+    } finally {
+      _cameraInitializing = false;
     }
+  }
+
+  void _handleCameraException(CameraException error) {
+    if (!mounted) return;
+    final errorMessage = error.description ?? error.code;
+    _debugLog('Camera exception: $errorMessage');
+
+    if (_isCameraDeviceError(error) && _cameraRecoveryAttempts == 0) {
+      _cameraRecoveryAttempts += 1;
+      _debugLog('CameraX recovery');
+      unawaited(_recoverCameraSession());
+    }
+
+    setState(() {
+      _initializing = false;
+      _error = errorMessage;
+    });
+  }
+
+  Future<void> _schedulePreviewStreamStart(CameraController controller) async {
+    if (_previewStreamPending) return;
+    _previewStreamPending = true;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (!mounted) {
+      _previewStreamPending = false;
+      return;
+    }
+    if (_controller != controller) {
+      _previewStreamPending = false;
+      return;
+    }
+    _debugLog('Preview attached; starting image stream after delay');
+    await _startPreviewStream();
+    _previewStreamPending = false;
+  }
+
+  Future<void> _recoverCameraSession() async {
+    if (!mounted) return;
+    _debugLog('Recovering camera session');
+    final description = _description;
+    if (_controller != null) {
+      await _disposeController(_controller);
+      _controller = null;
+    }
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    await _initialize(description: description);
   }
 
   Future<void> _startPreviewStream() async {
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
     if (controller.value.isStreamingImages) return;
+    if (_previewStreamPending) return;
 
     try {
+      _debugLog('Image stream starting');
       await controller.startImageStream(_processPreviewFrame);
-    } on CameraException {
+      _debugLog('Image stream started');
+    } on CameraException catch (error) {
+      _debugLog('Image stream failed: ${error.description ?? error.code}');
+      if (_isCameraDeviceError(error) && _cameraRecoveryAttempts == 0) {
+        _cameraRecoveryAttempts += 1;
+        _debugLog('CameraX recovery from stream failure');
+        unawaited(_recoverCameraSession());
+      }
       // Ignore preview streaming errors and continue with capture-only mode.
     }
   }
@@ -195,8 +313,11 @@ class _ArcBlueprintLiveScannerScreenState
     if (!controller.value.isStreamingImages) return;
 
     try {
+      _debugLog('Image stream stopping');
       await controller.stopImageStream();
-    } on CameraException {
+      _debugLog('Image stream stopped');
+    } on CameraException catch (error) {
+      _debugLog('Image stream stop failed: ${error.description ?? error.code}');
       // Ignore if the stream is already stopped.
     }
   }
@@ -345,7 +466,6 @@ class _ArcBlueprintLiveScannerScreenState
     _baseZoom = _zoom;
   }
 
-
   Future<void> _capture() async {
     final controller = _controller;
     if (_capturing || controller == null || !controller.value.isInitialized) {
@@ -356,7 +476,10 @@ class _ArcBlueprintLiveScannerScreenState
       _capturing = true;
     });
 
+    var didNavigateAway = false;
+
     try {
+      _debugLog('Capture started');
       await _stopPreviewStream();
       final photo = await controller.takePicture();
       final bytes = await photo.readAsBytes();
@@ -365,23 +488,23 @@ class _ArcBlueprintLiveScannerScreenState
           : ArcBlueprintGridSection.top;
 
       // Use manual alignment calibration where possible as the authoritative crop.
-      Uint8List? corrected;
+      Uint8List corrected;
       try {
-        final controller = _capturingBottom
+        final alignmentController = _capturingBottom
             ? _bottomAlignmentController
             : _topAlignmentController;
-        if (_viewportSize != null && controller.calibration.isValid) {
+        if (_viewportSize != null && alignmentController.calibration.isValid) {
           corrected = ArcBlueprintPerspectiveCropper().rectify(
             imageBytes: bytes,
             viewportSize: _viewportSize!,
-            calibration: controller.calibration,
+            calibration: alignmentController.calibration,
           );
         } else {
           // Fallback to automatic selector when viewport not available
           final selection = _selector.select(bytes, section: section);
           corrected = selection.imageBytes;
         }
-      } catch (e) {
+      } catch (_) {
         // If cropper fails, fallback to automatic selection
         final selection = _selector.select(bytes, section: section);
         corrected = selection.imageBytes;
@@ -412,6 +535,7 @@ class _ArcBlueprintLiveScannerScreenState
       if (top == null || bottom == null || !mounted) return;
 
       setState(() => _captureSession = completed);
+      didNavigateAway = true;
       Navigator.of(context).pop(
         ArcBlueprintScannerResult(topImageBytes: top, bottomImageBytes: bottom),
       );
@@ -419,10 +543,23 @@ class _ArcBlueprintLiveScannerScreenState
       _showMessage(error.message);
     } on CameraException catch (error) {
       _showMessage(error.description ?? error.code);
+      if (_isCameraDeviceError(error) && _cameraRecoveryAttempts == 0) {
+        _cameraRecoveryAttempts += 1;
+        _debugLog('CameraX recovery from capture failure');
+        unawaited(_recoverCameraSession());
+      }
     } catch (_) {
       _showMessage('The Blueprint grid could not be captured. Please retry.');
     } finally {
       if (mounted) setState(() => _capturing = false);
+      if (!didNavigateAway &&
+          mounted &&
+          controller == _controller &&
+          controller.value.isInitialized &&
+          !controller.value.isStreamingImages) {
+        await _startPreviewStream();
+      }
+      _debugLog('Capture finished');
     }
   }
 
@@ -966,7 +1103,8 @@ class _BlueprintGuidePainter2 extends CustomPainter {
     );
 
     // Draw subtle edge handles
-    final handlePaint = Paint()..color = AppTheme.neonCyan.withValues(alpha: 229.5);
+    final handlePaint = Paint()
+      ..color = AppTheme.neonCyan.withValues(alpha: 229.5);
     const handleSize = 10.0;
     canvas.drawRect(
       Rect.fromCenter(
