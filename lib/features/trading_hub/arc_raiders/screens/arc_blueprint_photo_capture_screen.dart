@@ -8,13 +8,17 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_dual_capture_merge_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_import_quality_gate.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_import_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_pixel_analyzer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_personal_calibration_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_template_verification_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_uploaded_image_processor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_capture_draft.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_photo_capture_session_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_delta_review_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_live_scanner_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -300,20 +304,92 @@ class _ArcBlueprintPhotoCaptureScreenState
         return;
       }
 
+      final orderedBlueprintIds = ArcBlueprintSeedData.blueprints
+          .map((blueprint) => blueprint.id)
+          .toList(growable: false);
+
+      // PASS 339: load the recovered/canonical tracker state before
+      // classification so confirmed owned positions can calibrate this scan.
+      // Missing positions are never treated as negative anchors.
+      final existing = await ArcBlueprintRepository().loadMyBlueprintStates();
+      const personalCalibration = ArcBlueprintPersonalCalibrationEngine();
+      final calibrated = personalCalibration.calibrate(
+        orderedBlueprintIds: orderedBlueprintIds,
+        samples: merged.samples,
+        existing: existing,
+      );
+
+      // PASS 340: verify only visually strong owned candidates against the
+      // artwork expected at their exact canonical Blueprint position.
+      // Template verification is suppression-only: it cannot promote a weak
+      // or missing cell into ownership.
+      const templateVerifier = ArcBlueprintTemplateVerificationEngine();
+      final templateVerification = await templateVerifier.verify(
+        topBytes: topBytes,
+        bottomBytes: bottomBytes,
+        samples: calibrated.samples,
+      );
+
+      if (kDebugMode) {
+        for (final diagnostic in templateVerification.diagnostics) {
+          debugPrint(
+            'ARC TEMPLATE VERIFY: '
+            'expected=${diagnostic.blueprintName} '
+            'id=${diagnostic.blueprintId} '
+            'index=${diagnostic.canonicalIndex} '
+            'cell=${diagnostic.rowIndex + 1}:${diagnostic.columnIndex + 1} '
+            'template=${diagnostic.templateSimilarity.toStringAsFixed(3)} '
+            'multiSignal=${diagnostic.multiSignalEvidence.toStringAsFixed(3)} '
+            'final=${diagnostic.finalScore.toStringAsFixed(3)} '
+            'available=${diagnostic.templateAvailable} '
+            'suppressed=${diagnostic.suppressed}',
+          );
+        }
+        debugPrint(
+          'ARC TEMPLATE VERIFY: summary '
+          'anchors=${calibrated.knownOwnedAnchors} '
+          'personalSuppressed=${calibrated.suppressedCandidateCount} '
+          'templateSuppressed=${templateVerification.suppressedCandidateCount}',
+        );
+      }
+
       const engine = ArcBlueprintPhotoOccupancyEngine(columns: 10);
       final result = engine.classify(
-        orderedBlueprintIds: ArcBlueprintSeedData.blueprints
-            .map((blueprint) => blueprint.id)
-            .toList(growable: false),
-        samples: merged.samples,
+        orderedBlueprintIds: orderedBlueprintIds,
+        samples: templateVerification.samples,
       );
+
+      if (kDebugMode) {
+        final ownedCount = result.decisions
+            .where(
+              (decision) => decision.state == ArcBlueprintPhotoCellState.owned,
+            )
+            .length;
+        final missingCount = result.decisions
+            .where(
+              (decision) =>
+                  decision.state == ArcBlueprintPhotoCellState.missing,
+            )
+            .length;
+        final uncertainCount =
+            result.decisions.length - ownedCount - missingCount;
+        debugPrint(
+          'ARC RECOGNITION: merged summary '
+          'owned=$ownedCount missing=$missingCount uncertain=$uncertainCount',
+        );
+      }
 
       if (result.errors.isNotEmpty) {
         _showMessage(result.errors.join(' '), error: true);
         return;
       }
 
-      const qualityGate = ArcBlueprintImportQualityGate();
+      // Structural/capture quality must still be good, but uncertainty no
+      // longer blocks the entire import. Uncertain cells are ignored and only
+      // confidently detected NEW ownership is offered for explicit review.
+      const qualityGate = ArcBlueprintImportQualityGate(
+        maximumUncertainCells: ArcBlueprintCanonicalGrid.totalPositions,
+      );
       final quality = qualityGate.evaluate(
         decisions: result.decisions,
         topCaptureConfidence: top.confidence,
@@ -325,30 +401,54 @@ class _ArcBlueprintPhotoCaptureScreenState
         return;
       }
 
-      final confident = result.decisions
-          .where((decision) => !decision.needsReview)
-          .toList(growable: false);
-      final uncertainCount = result.decisions.length - confident.length;
+      final uncertainCount = result.decisions
+          .where((decision) => decision.needsReview)
+          .length;
 
-      if (confident.isEmpty) {
+      final proposedAdditions = result.decisions
+          .where(
+            (decision) =>
+                decision.state == ArcBlueprintPhotoCellState.owned &&
+                existing[decision.blueprintId]?.owned != true,
+          )
+          .toList(growable: false);
+
+      if (kDebugMode) {
+        debugPrint(
+          'ARC RECOGNITION: delta review '
+          'existingOwned=${existing.values.where((state) => state.owned).length} '
+          'proposedAdditions=${proposedAdditions.length} '
+          'uncertainIgnored=$uncertainCount',
+        );
+      }
+
+      if (proposedAdditions.isEmpty) {
         _showMessage(
-          'No Blueprint slots were recognised confidently. Retake the images closer to the screen and keep the full grid edges inside the boundary.',
-          error: true,
+          uncertainCount == 0
+              ? 'No new Blueprint ownership was detected.'
+              : 'No new Blueprint ownership was detected confidently. '
+                    '$uncertainCount uncertain slots were left unchanged.',
         );
         return;
       }
 
-      final summary = await ArcBlueprintPhotoImportService().apply(confident);
-      await _repository.clear();
-
       if (!mounted) return;
-      final unchangedText = uncertainCount == 0
-          ? ''
-          : ' $uncertainCount uncertain slots were left unchanged.';
-      _showMessage(
-        '${quality.message} ${summary.ownedCount} owned and ${summary.missingCount} missing Blueprint slots were updated.$unchangedText',
+      final applied = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (context) => ArcBlueprintPhotoDeltaReviewScreen(
+            proposedAdditions: proposedAdditions,
+            uncertainIgnoredCount: uncertainCount,
+          ),
+        ),
       );
+
+      if (applied != true) return;
+
+      await _repository.clear();
+      if (!mounted) return;
       Navigator.of(context).pop(true);
+    } on FormatException catch (error) {
+      _showMessage(error.message, error: true);
     } catch (error) {
       _showMessage('Blueprint import failed: $error', error: true);
     } finally {

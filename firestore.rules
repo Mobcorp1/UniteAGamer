@@ -33,6 +33,11 @@ service cloud.firestore {
         (currentUserData().isAdmin == true || currentUserData().isDev == true);
     }
 
+    function isTrustModerator() {
+      return userDocExists() &&
+        (currentUserData().isAdmin == true || currentUserData().isDev == true || currentUserData().isModerator == true);
+    }
+
     function ownsExistingDocByOwnerUid() {
       return isSignedIn() && resource.data.ownerUid == request.auth.uid;
     }
@@ -237,6 +242,20 @@ service cloud.firestore {
       match /{document=**} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
       }
+    }
+
+    match /arc_raider_reports/{reportId} {
+      allow create: if isSignedIn() && request.resource.data.reporterUid == request.auth.uid && request.resource.data.status == 'submitted';
+      allow read: if isTrustModerator() || (isSignedIn() && resource.data.reporterUid == request.auth.uid);
+      allow update: if isTrustModerator() || (isSignedIn() && resource.data.reporterUid == request.auth.uid && request.resource.data.reporterUid == resource.data.reporterUid && request.resource.data.status == 'withdrawn' && (resource.data.status == 'draft' || resource.data.status == 'submitted' || resource.data.status == 'pendingReview'));
+      allow delete: if false;
+    }
+
+    match /arc_raider_contracts/{contractId} {
+      allow read: if isSignedIn() && (resource.data.status == 'available' || resource.data.reporterUid == request.auth.uid || resource.data.hunterUid == request.auth.uid || isTrustModerator());
+      allow create: if isTrustModerator();
+      allow update: if isTrustModerator() || (isSignedIn() && ((resource.data.status == 'available' && request.resource.data.status == 'accepted' && request.resource.data.hunterUid == request.auth.uid && request.auth.uid != resource.data.reporterUid && request.auth.uid != resource.data.targetUid) || (resource.data.hunterUid == request.auth.uid && request.resource.data.hunterUid == resource.data.hunterUid && request.resource.data.reportId == resource.data.reportId) || (resource.data.reporterUid == request.auth.uid && request.resource.data.status == 'disputed')));
+      allow delete: if false;
     }
 
     match /arc_blueprint_drop_reports/{reportId} {

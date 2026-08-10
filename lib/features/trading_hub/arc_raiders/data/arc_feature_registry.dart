@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blu
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
@@ -182,6 +183,15 @@ class ArcFeatureRegistry {
       lifecycle: ArcFeatureLifecycle.ready,
       routeName: OperationsCommandScreen.routeName,
       adminFlag: 'operations',
+    ),
+    ArcFeatureRegistryEntry(
+      id: 'play_like_a_pro',
+      label: 'Play Like A Pro',
+      personalisationFeature: ArcPersonalisationFeature.playLikeAPro,
+      lifecycle: ArcFeatureLifecycle.beta,
+      routeName: PlayLikeAProScreen.routeName,
+      accessFlag: FeatureAccessFlag.playLockerPro,
+      notes: 'Expert ARC guidance with preserved session-performance coaching.',
     ),
     ArcFeatureRegistryEntry(
       id: 'player_locker_pro',

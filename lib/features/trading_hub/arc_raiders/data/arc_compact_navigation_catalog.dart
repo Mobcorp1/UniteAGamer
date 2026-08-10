@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trust/screens/arc_raider_contracts_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
@@ -179,6 +180,13 @@ class ArcCompactNavigationCatalog {
     ArcCompactNavigationGroup(
       label: 'PROFILE',
       items: <ArcCompactNavigationItem>[
+        ArcCompactNavigationItem(
+          label: 'Report a Raider',
+          icon: Icons.gavel_rounded,
+          routeName: ArcRaiderContractsScreen.routeName,
+          accessFlag: FeatureAccessFlag.raiderContracts,
+          personalisationFeature: ArcPersonalisationFeature.profile,
+        ),
         ArcCompactNavigationItem(
           label: 'My Hub',
           icon: Icons.person_pin_circle_outlined,

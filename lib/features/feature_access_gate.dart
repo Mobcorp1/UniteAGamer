@@ -20,6 +20,7 @@ class FeatureAccessFlag {
   static const voiceAssistant = 'canAccessVoiceAssistant';
   static const monetisation = 'canAccessMonetisation';
   static const smartTradeAssist = 'canAccessSmartTradeAssist';
+  static const raiderContracts = 'canAccessRaiderContracts';
 }
 
 enum FeatureAvailability {
@@ -94,6 +95,7 @@ class FeatureAccess {
     FeatureAccessFlag.voiceAssistant: 'voiceAssistantEnabled',
     FeatureAccessFlag.monetisation: 'monetisationEnabled',
     FeatureAccessFlag.smartTradeAssist: 'smartTradeAssistEnabled',
+    FeatureAccessFlag.raiderContracts: 'raiderContractsEnabled',
   };
 
   static String availabilityFieldForGlobalField(String globalField) {

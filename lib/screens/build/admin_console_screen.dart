@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
 import 'package:uag_arc_raiders_hub/features/release/widgets/uag_release_readiness_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trust/widgets/arc_raider_contracts_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
@@ -124,6 +125,12 @@ class _AdminFeature {
 }
 
 const List<_AdminFeature> _featureToggles = [
+  _AdminFeature(
+    key: 'raiderContractsEnabled',
+    title: 'Report a Raider / Contracts',
+    subtitle: 'Moderated community reports and Raider Contract lifecycle.',
+    icon: Icons.gavel_rounded,
+  ),
   _AdminFeature(
     key: 'blueprintTrackerEnabled',
     title: 'Blueprint Tracker',
@@ -335,6 +342,8 @@ class _AdminConsoleBody extends StatelessWidget {
                     const UagReleaseReadinessPanel(),
                     const SizedBox(height: AppTheme.spaceL),
                     const _OperationsTuningAdminCard(),
+                    const SizedBox(height: AppTheme.spaceL),
+                    const ArcRaiderContractsAdminPanel(),
                     const SizedBox(height: AppTheme.spaceL),
                     const UagAdminBroadcastPanel(),
                     const SizedBox(height: AppTheme.spaceXL),

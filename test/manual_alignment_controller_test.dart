@@ -63,8 +63,8 @@ void main() {
       final c = ManualAlignmentController();
       c.resetToTopDefault();
       final before = c.calibration;
-      final dx = 0.03;
-      final dy = -0.02;
+      const dx = 0.03;
+      const dy = -0.02;
       c.translate(dx, dy);
       expect((c.calibration.left - before.left), closeTo(dx, 1e-6));
       expect((c.calibration.top - before.top), closeTo(dy, 1e-6));

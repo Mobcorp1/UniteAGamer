@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_cell_analyzer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_recognition_evidence_policy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_recognition_diagnostics.dart';
 
 @immutable
@@ -104,8 +105,10 @@ class ArcBlueprintHybridRecognitionEngine {
         retryCount = retry.attempts;
 
         if (retry.decisive && retry.confidence >= 0.66) {
-          score = retry.score;
-          confidence = math.max(confidence, retry.confidence);
+          if (retry.score <= 0.28 || base.occupancyScore >= 0.68) {
+            score = retry.score;
+            confidence = math.max(confidence, retry.confidence);
+          }
         }
       }
 
@@ -119,6 +122,14 @@ class ArcBlueprintHybridRecognitionEngine {
         confidence = math.max(confidence, 0.88);
       }
 
+      final calibrated = const ArcBlueprintRecognitionEvidencePolicy()
+          .calibrate(base);
+      if (calibrated.promoted || calibrated.suppressed) {
+        score = calibrated.score;
+      } else if (score >= 0.84 && calibrated.score < 0.84) {
+        score = calibrated.score;
+      }
+
       samples.add(
         ArcBlueprintPhotoOccupancySample(
           captureId: captureId,
@@ -127,6 +138,21 @@ class ArcBlueprintHybridRecognitionEngine {
           occupancyScore: score.clamp(0.0, 1.0).toDouble(),
         ),
       );
+      if (kDebugMode) {
+        debugPrint(
+          'ARC RECOGNITION: $captureId '
+          'R${row + 1}C${column + 1} '
+          'score=${score.toStringAsFixed(3)} '
+          'confidence=${confidence.toStringAsFixed(3)} '
+          'blue=${base.blueprintBlueCoverage.toStringAsFixed(3)} '
+          'bright=${base.brightFeatureCoverage.toStringAsFixed(3)} '
+          'texture=${base.texture.toStringAsFixed(3)} '
+          'edge=${base.edgeDensity.toStringAsFixed(3)} '
+          'agreement=${base.windowAgreement.toStringAsFixed(3)} '
+          'calibration=${calibrated.reason}',
+        );
+      }
+
       diagnostics.add(
         ArcBlueprintCellDiagnostic(
           rowIndex: row,
@@ -147,6 +173,23 @@ class ArcBlueprintHybridRecognitionEngine {
         ? 0.0
         : diagnostics.map((item) => item.confidence).reduce((a, b) => a + b) /
               diagnostics.length;
+
+    if (kDebugMode) {
+      final ownedCandidates = samples
+          .where((sample) => sample.occupancyScore >= 0.84)
+          .length;
+      final missingCandidates = samples
+          .where((sample) => sample.occupancyScore <= 0.22)
+          .length;
+      final uncertainCandidates =
+          samples.length - ownedCandidates - missingCandidates;
+      debugPrint(
+        'ARC RECOGNITION: $captureId summary '
+        'owned=$ownedCandidates missing=$missingCandidates '
+        'uncertain=$uncertainCandidates '
+        'captureConfidence=${captureConfidence.toStringAsFixed(3)}',
+      );
+    }
 
     return ArcBlueprintHybridRecognitionResult(
       samples: List<ArcBlueprintPhotoOccupancySample>.unmodifiable(samples),
@@ -246,6 +289,8 @@ class ArcBlueprintHybridRecognitionEngine {
     var saturationSum = 0.0;
     var edgeSum = 0.0;
     var foreground = 0;
+    var blueprintBlue = 0;
+    var brightFeature = 0;
     var count = 0;
 
     for (var y = top; y < bottom; y += stride) {
@@ -264,6 +309,20 @@ class ArcBlueprintHybridRecognitionEngine {
 
         if ((saturation >= 0.15 && luma >= 20) || dx >= 22 || dy >= 22) {
           foreground++;
+        }
+
+        final red = pixel.r.toDouble();
+        final green = pixel.g.toDouble();
+        final blue = pixel.b.toDouble();
+        if (blue >= 92 &&
+            blue >= (red * 1.30) &&
+            blue >= (green * 1.04) &&
+            saturation >= 0.34 &&
+            luma >= 32) {
+          blueprintBlue++;
+        }
+        if (luma >= 128 || (red >= 118 && green >= 118 && blue >= 118)) {
+          brightFeature++;
         }
         count++;
       }
@@ -293,14 +352,28 @@ class ArcBlueprintHybridRecognitionEngine {
       return 0.12;
     }
 
+    final blueCoverage = (blueprintBlue / count).clamp(0.0, 1.0);
+    final brightCoverage = (brightFeature / count).clamp(0.0, 1.0);
+
     final combined =
-        ((texture * 0.27) +
-                (edges * 0.26) +
-                (saturation * 0.17) +
-                (coverage * 0.22) +
-                (range * 0.08))
+        ((blueCoverage * 0.42) +
+                (brightCoverage * 0.24) +
+                (texture * 0.12) +
+                (edges * 0.10) +
+                (coverage * 0.06) +
+                (range * 0.06))
             .clamp(0.0, 1.0);
-    return 1 / (1 + math.exp(-((combined - 0.245) * 11.2)));
+
+    var score = 1 / (1 + math.exp(-((combined - 0.205) * 13.5)));
+    final strongSignature =
+        blueCoverage >= 0.135 &&
+        brightCoverage >= 0.035 &&
+        (texture >= 0.13 || edges >= 0.11) &&
+        range >= 0.10;
+    if (!strongSignature) {
+      score = math.min(score, 0.79);
+    }
+    return score;
   }
 
   img.Image? _decode(Uint8List bytes) {

@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/build/home_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trust/screens/arc_raider_contracts_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_availability_screen.dart';
@@ -141,6 +142,16 @@ class UAGTradersHubApp extends StatefulWidget {
       case ProfileSettingsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ProfileSettingsScreen(),
+          settings: settings,
+        );
+
+      case ArcRaiderContractsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const FeatureAccessRouteGate(
+            flag: FeatureAccessFlag.raiderContracts,
+            title: 'Report a Raider',
+            child: ArcRaiderContractsScreen(),
+          ),
           settings: settings,
         );
 

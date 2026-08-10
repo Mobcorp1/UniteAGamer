@@ -112,6 +112,18 @@ void main() {
     );
   });
 
+  group('Play Like A Pro registry', () {
+    test('registers Play Like A Pro as its own beta feature', () {
+      final entry = ArcFeatureRegistry.byId('play_like_a_pro');
+      expect(entry, isNotNull);
+      expect(
+        entry!.personalisationFeature,
+        ArcPersonalisationFeature.playLikeAPro,
+      );
+      expect(entry.lifecycle, ArcFeatureLifecycle.beta);
+      expect(entry.isRoutable, isTrue);
+    });
+  });
   group('feature registry diagnostics', () {
     test('keeps Rat surfaces dormant even when personalisation names them', () {
       const personalisation = ArcUserPersonalisationProfile(

@@ -46,8 +46,8 @@ class ArcBlueprintPhotoOccupancyResult {
 class ArcBlueprintPhotoOccupancyEngine {
   const ArcBlueprintPhotoOccupancyEngine({
     this.columns = ArcBlueprintCanonicalGrid.columns,
-    this.ownedThreshold = 0.72,
-    this.missingThreshold = 0.28,
+    this.ownedThreshold = 0.84,
+    this.missingThreshold = 0.22,
   });
 
   final int columns;

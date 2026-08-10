@@ -13,6 +13,8 @@ class ArcBlueprintCellEvidence {
     required this.saturation,
     required this.foregroundCoverage,
     required this.luminanceRange,
+    required this.blueprintBlueCoverage,
+    required this.brightFeatureCoverage,
     required this.windowAgreement,
   });
 
@@ -24,6 +26,8 @@ class ArcBlueprintCellEvidence {
       saturation = 0,
       foregroundCoverage = 0,
       luminanceRange = 0,
+      blueprintBlueCoverage = 0,
+      brightFeatureCoverage = 0,
       windowAgreement = 1;
 
   final double occupancyScore;
@@ -33,6 +37,8 @@ class ArcBlueprintCellEvidence {
   final double saturation;
   final double foregroundCoverage;
   final double luminanceRange;
+  final double blueprintBlueCoverage;
+  final double brightFeatureCoverage;
   final double windowAgreement;
 }
 
@@ -144,6 +150,12 @@ class ArcBlueprintCellAnalyzer {
     final averageRange = _average(
       measurements.map((measurement) => measurement.luminanceRange),
     );
+    final averageBlueprintBlue = _average(
+      measurements.map((measurement) => measurement.blueprintBlueCoverage),
+    );
+    final averageBrightFeature = _average(
+      measurements.map((measurement) => measurement.brightFeatureCoverage),
+    );
 
     // Uniform dark/grey panels must remain empty regardless of relative
     // brightness differences across the captured screen.
@@ -164,7 +176,7 @@ class ArcBlueprintCellAnalyzer {
         ((averageTexture >= 0.15 && averageEdges >= 0.14) ||
             (averageSaturation >= 0.18 && averageRange >= 0.18));
     if (clearlyOccupied) {
-      occupancy = math.max(occupancy, 0.76);
+      occupancy = math.max(occupancy, 0.70);
     }
 
     final distanceFromUncertainBand = ((occupancy - 0.50).abs() * 2).clamp(
@@ -182,6 +194,8 @@ class ArcBlueprintCellAnalyzer {
       saturation: averageSaturation,
       foregroundCoverage: averageCoverage,
       luminanceRange: averageRange,
+      blueprintBlueCoverage: averageBlueprintBlue,
+      brightFeatureCoverage: averageBrightFeature,
       windowAgreement: agreement.toDouble(),
     );
   }
@@ -226,6 +240,8 @@ class ArcBlueprintCellAnalyzer {
     var saturationSum = 0.0;
     var edgeSum = 0.0;
     var foregroundPixels = 0;
+    var blueprintBluePixels = 0;
+    var brightFeaturePixels = 0;
     var count = 0;
 
     for (var y = top; y < bottom; y += stride) {
@@ -251,6 +267,22 @@ class ArcBlueprintCellAnalyzer {
             verticalDifference >= 22) {
           foregroundPixels++;
         }
+
+        final red = pixel.r.toDouble();
+        final green = pixel.g.toDouble();
+        final blue = pixel.b.toDouble();
+        if (blue >= 92 &&
+            blue >= (red * 1.30) &&
+            blue >= (green * 1.04) &&
+            saturation >= 0.34 &&
+            luminance >= 32) {
+          blueprintBluePixels++;
+        }
+
+        if (luminance >= 128 || (red >= 118 && green >= 118 && blue >= 118)) {
+          brightFeaturePixels++;
+        }
+
         count++;
       }
     }
@@ -272,6 +304,8 @@ class ArcBlueprintCellAnalyzer {
     final edgeDensity = ((edgeSum / (count * 2)) / 68.0).clamp(0.0, 1.0);
     final saturation = (saturationSum / count).clamp(0.0, 1.0);
     final foregroundCoverage = (foregroundPixels / count).clamp(0.0, 1.0);
+    final blueprintBlueCoverage = (blueprintBluePixels / count).clamp(0.0, 1.0);
+    final brightFeatureCoverage = (brightFeaturePixels / count).clamp(0.0, 1.0);
     final luminanceRange =
         ((_percentile(luminanceValues, 0.90) -
                     _percentile(luminanceValues, 0.10)) /
@@ -279,14 +313,37 @@ class ArcBlueprintCellAnalyzer {
             .clamp(0.0, 1.0);
 
     final combined =
-        ((texture * 0.27) +
-                (edgeDensity * 0.26) +
-                (saturation * 0.17) +
-                (foregroundCoverage * 0.22) +
-                (luminanceRange * 0.08))
+        ((blueprintBlueCoverage * 0.42) +
+                (brightFeatureCoverage * 0.24) +
+                (texture * 0.12) +
+                (edgeDensity * 0.10) +
+                (foregroundCoverage * 0.06) +
+                (luminanceRange * 0.06))
             .clamp(0.0, 1.0);
 
-    final occupancy = _sigmoid((combined - 0.245) * 11.2);
+    var occupancy = _sigmoid((combined - 0.205) * 13.5);
+
+    final strongBlueprintSignature =
+        blueprintBlueCoverage >= 0.135 &&
+        brightFeatureCoverage >= 0.035 &&
+        (texture >= 0.13 || edgeDensity >= 0.11) &&
+        luminanceRange >= 0.10;
+
+    final obviousEmptySignature =
+        blueprintBlueCoverage < 0.065 &&
+        brightFeatureCoverage < 0.035 &&
+        texture < 0.16 &&
+        edgeDensity < 0.15;
+
+    if (strongBlueprintSignature) {
+      occupancy = math.max(occupancy, 0.86);
+    } else {
+      occupancy = math.min(occupancy, 0.79);
+    }
+
+    if (obviousEmptySignature) {
+      occupancy = math.min(occupancy, 0.16);
+    }
 
     return _WindowMeasurement(
       occupancyScore: occupancy,
@@ -295,6 +352,8 @@ class ArcBlueprintCellAnalyzer {
       saturation: saturation,
       foregroundCoverage: foregroundCoverage,
       luminanceRange: luminanceRange,
+      blueprintBlueCoverage: blueprintBlueCoverage,
+      brightFeatureCoverage: brightFeatureCoverage,
     );
   }
 
@@ -355,6 +414,8 @@ class _WindowMeasurement {
     required this.saturation,
     required this.foregroundCoverage,
     required this.luminanceRange,
+    required this.blueprintBlueCoverage,
+    required this.brightFeatureCoverage,
   });
 
   const _WindowMeasurement.empty()
@@ -363,7 +424,9 @@ class _WindowMeasurement {
       edgeDensity = 0,
       saturation = 0,
       foregroundCoverage = 0,
-      luminanceRange = 0;
+      luminanceRange = 0,
+      blueprintBlueCoverage = 0,
+      brightFeatureCoverage = 0;
 
   final double occupancyScore;
   final double texture;
@@ -371,4 +434,6 @@ class _WindowMeasurement {
   final double saturation;
   final double foregroundCoverage;
   final double luminanceRange;
+  final double blueprintBlueCoverage;
+  final double brightFeatureCoverage;
 }

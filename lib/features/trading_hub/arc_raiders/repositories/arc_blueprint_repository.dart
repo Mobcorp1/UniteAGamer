@@ -31,10 +31,12 @@ class ArcBlueprintRepository {
       'users/$uid/arc_blueprints';
 
   static List<String> legacyStoragePathCandidatesFor(String uid) => [
+    // Runtime recovery is intentionally limited to user-scoped paths that are
+    // covered by the signed-in user's Firestore permissions. The two former
+    // root-level legacy paths are not readable by normal clients and caused
+    // repeated PERMISSION_DENIED noise during Blueprint photo import.
     'users/$uid/arc_blueprint_states',
     'users/$uid/blueprints',
-    'arc_blueprint_states/$uid/states',
-    'arc_blueprints/$uid/states',
   ];
 
   CollectionReference<Map<String, dynamic>> get _reportsCollection =>
@@ -111,8 +113,26 @@ class ArcBlueprintRepository {
   Future<Map<String, ArcBlueprintState>> loadMyBlueprintStates() async {
     final uid = currentUid;
     if (uid == null) return const <String, ArcBlueprintState>{};
+
     final snapshot = await _stateCollection(uid).get();
-    return _statesFromSnapshotDocs(snapshot.docs);
+
+    // IMPORTANT: one-shot consumers (photo import, delta review, etc.) must
+    // resolve ownership through the exact same canonical + safe-legacy
+    // recovery path used by the live Blueprint Tracker stream. Previously this
+    // method returned only the canonical collection, so the tracker could show
+    // 40 owned while photo import incorrectly saw existingOwned=0.
+    final states = await _statesFromSnapshot(uid, snapshot);
+
+    if (kDebugMode) {
+      final ownedCount = states.values.where((state) => state.owned).length;
+      debugPrint(
+        'ARC BLUEPRINT STATE: load resolved '
+        'uid=$uid states=${states.length} owned=$ownedCount '
+        'canonical=${canonicalStoragePathFor(uid)}',
+      );
+    }
+
+    return states;
   }
 
   Future<ArcBlueprintStateRecoveryPreview>
@@ -165,6 +185,15 @@ class ArcBlueprintRepository {
         batch.set(docRef, state.toMap(), SetOptions(merge: true));
       }
       await batch.commit();
+      if (kDebugMode) {
+        final ownedCount = recovery.mergedStates.values
+            .where((state) => state.owned)
+            .length;
+        debugPrint(
+          'ARC BLUEPRINT STATE: canonical migration complete '
+          'uid=$uid states=${recovery.mergedStates.length} owned=$ownedCount',
+        );
+      }
       return recovery.mergedStates;
     } catch (error, stackTrace) {
       debugPrint('Blueprint legacy recovery failed: $error');
@@ -215,6 +244,13 @@ class ArcBlueprintRepository {
         sources.add(
           ArcBlueprintStateRecoverySource(path: path, states: states),
         );
+        if (kDebugMode && states.isNotEmpty) {
+          final ownedCount = states.values.where((state) => state.owned).length;
+          debugPrint(
+            'ARC BLUEPRINT STATE: recovery source '
+            'path=$path states=${states.length} owned=$ownedCount',
+          );
+        }
       } catch (error, stackTrace) {
         debugPrint('Blueprint legacy path scan failed for $path: $error');
         debugPrintStack(stackTrace: stackTrace);
