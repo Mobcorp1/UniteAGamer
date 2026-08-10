@@ -453,10 +453,16 @@ class _ArcMandatoryOnboardingScreenState
       await prefs.setBool('forceOnboarding', false);
       await prefs.setString('displayName', riderName);
 
-      await UagSessionGateController.markAuthenticated(
-        uid: user.uid,
-        keepSignedIn: _accountCreatedDuringOnboarding ? _keepSignedIn : true,
-      );
+      if (_accountCreatedDuringOnboarding) {
+        await UagSessionGateController.markAuthenticated(
+          uid: user.uid,
+          keepSignedIn: _keepSignedIn,
+        );
+      } else {
+        await UagSessionGateController.markAuthenticatedWithStoredPreference(
+          uid: user.uid,
+        );
+      }
 
       final personalisation = buildArcOnboardingPersonalisation(
         primaryGoal: primaryGoal,

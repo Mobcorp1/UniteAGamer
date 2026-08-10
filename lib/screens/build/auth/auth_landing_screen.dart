@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class AuthLandingScreen extends StatefulWidget {
@@ -121,7 +120,9 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
 
   void _openCreateAccount() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ArcMandatoryOnboardingScreen()),
+      MaterialPageRoute(
+        builder: (_) => const AuthScreen(initialIsLogin: false),
+      ),
     );
   }
 
@@ -135,11 +136,12 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
           errorBuilder: (_, _, _) => Image.asset(
             'assets/images/auth_bg_landscape.webp',
             fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const StaticWatermark(),
+            errorBuilder: (_, _, _) =>
+                const ColoredBox(color: Color(0xFF090529)),
           ),
         ),
         Container(color: Colors.black.withValues(alpha: 0.48)),
-        const StaticWatermark(),
+
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

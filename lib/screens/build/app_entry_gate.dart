@@ -1,16 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) {
   if (data['isAdmin'] == true || data['isDev'] == true) return false;
-  return data['arcMandatoryOnboardingComplete'] != true;
+  if (data['arcMandatoryOnboardingComplete'] == true) return false;
+
+  // Compatibility for established accounts created before the mandatory ARC
+  // onboarding flag became canonical.
+  if (data['onboardingComplete'] == true) return false;
+
+  return true;
 }
 
 bool arcNeedsProgressiveOnboarding(Map<String, dynamic> data) =>
@@ -29,12 +37,22 @@ class _AppEntryGateState extends State<AppEntryGate> {
   bool _fanDisclaimerChecked = false;
 
   Future<bool> _needsOnboarding(String uid) async {
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .get();
-    final data = doc.data() ?? <String, dynamic>{};
-    return arcNeedsMandatoryOnboarding(data);
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      final data = doc.data() ?? <String, dynamic>{};
+      return arcNeedsMandatoryOnboarding(data);
+    } catch (error, stackTrace) {
+      debugPrint('AppEntryGate onboarding lookup failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      // A transient Firestore failure must not throw an already-completed
+      // account back into setup on the same device.
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('hasCompletedOnboarding') != true;
+    }
   }
 
   Future<void> _runLegalGateOnce() async {
@@ -65,24 +83,43 @@ class _AppEntryGateState extends State<AppEntryGate> {
         }
 
         return FutureBuilder<bool>(
-          future: _needsOnboarding(user.uid),
-          builder: (context, onboardingSnapshot) {
-            if (onboardingSnapshot.connectionState == ConnectionState.waiting) {
+          future: UagSessionGateController.isSessionAllowed(user.uid),
+          builder: (context, sessionSnapshot) {
+            if (sessionSnapshot.connectionState == ConnectionState.waiting) {
               return const _GateLoadingScaffold();
             }
 
-            final needsOnboarding = onboardingSnapshot.data ?? true;
-            if (needsOnboarding) {
+            // Firebase may restore a user automatically on Android or web.
+            // The UAG session policy remains authoritative: a restored Firebase
+            // user cannot silently enter unless this runtime was explicitly
+            // authenticated or Keep Signed In authorises the device.
+            if (sessionSnapshot.data != true) {
               _fanDisclaimerChecked = false;
-              return const ArcMandatoryOnboardingScreen();
+              return const AuthLandingScreen();
             }
 
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _runLegalGateOnce();
-            });
+            return FutureBuilder<bool>(
+              future: _needsOnboarding(user.uid),
+              builder: (context, onboardingSnapshot) {
+                if (onboardingSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const _GateLoadingScaffold();
+                }
 
-            return const ArcCommandCentreScreen();
+                final needsOnboarding = onboardingSnapshot.data ?? true;
+                if (needsOnboarding) {
+                  _fanDisclaimerChecked = false;
+                  return const ArcMandatoryOnboardingScreen();
+                }
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _runLegalGateOnce();
+                });
+
+                return const ArcCommandCentreScreen();
+              },
+            );
           },
         );
       },
@@ -97,11 +134,8 @@ class _GateLoadingScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(
-        children: const [
-          Positioned.fill(child: StaticWatermark()),
-          Center(child: CircularProgressIndicator(color: AppTheme.neonCyan)),
-        ],
+      body: const Center(
+        child: CircularProgressIndicator(color: AppTheme.neonCyan),
       ),
     );
   }

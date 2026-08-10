@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html><html><head>
+<!DOCTYPE html><html><head>
   <base href="/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="UAG Arc Raiders Hub standalone companion app.">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#0A0925">
 
   <meta name="mobile-web-app-capable" content="yes">
@@ -27,19 +27,27 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
+      overscroll-behavior: none;
       background: #0A0925;
     }
 
     body {
-      position: fixed;
-      inset: 0;
+      position: relative;
+    }
+
+    @supports (height: 100dvh) {
+      html,
+      body {
+        height: 100dvh;
+        min-height: 100dvh;
+      }
     }
 
     #loading {
       position: fixed;
       inset: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -50,20 +58,16 @@
       text-transform: uppercase;
     }
 
-    flutter-view,
-    flt-glass-pane,
-    flt-scene-host,
-    flt-semantics-host,
-    flt-semantics,
-    flt-platform-view,
-    canvas {
-      width: 100vw !important;
-      height: 100vh !important;
-      min-width: 100vw !important;
-      min-height: 100vh !important;
-      max-width: none !important;
-      max-height: none !important;
-      display: block !important;
+    /* Keep the Flutter host full-screen, but do not force its internal
+       editable/canvas/semantics nodes to viewport dimensions. Mobile WebKit
+       must be free to reposition its native text-editing element when the
+       software keyboard opens. */
+    flutter-view {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
     }
   </style>
   

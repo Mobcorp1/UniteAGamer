@@ -93,6 +93,18 @@ class UagSessionGateController {
     return keepSignedIn && allowedUid == uid;
   }
 
+  static Future<bool> keepSignedInPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keepSignedInKey) ?? false;
+  }
+
+  static Future<void> markAuthenticatedWithStoredPreference({
+    required String uid,
+  }) async {
+    final keepSignedIn = await keepSignedInPreference();
+    await markAuthenticated(uid: uid, keepSignedIn: keepSignedIn);
+  }
+
   static Future<bool> isBiometricRelockRequired(String uid) async {
     if (_runtimeBiometricUnlockedUid == uid &&
         _lastBackgroundedAt != null &&

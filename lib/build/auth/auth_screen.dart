@@ -622,6 +622,7 @@ class _AuthScreenState extends State<AuthScreen> {
       controller: controller,
       style: const TextStyle(color: Colors.white),
       obscureText: !isVisible,
+      keyboardType: TextInputType.visiblePassword,
       autocorrect: false,
       enableSuggestions: false,
       autofillHints: autofillHints,
