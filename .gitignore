@@ -64,3 +64,6 @@ Thumbs.db
 .uag_patch_reports/
 
 *.pass*.bak
+
+# Local UAG pass backups
+.pass_backups/
