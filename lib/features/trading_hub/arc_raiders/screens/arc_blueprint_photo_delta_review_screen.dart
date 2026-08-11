@@ -9,10 +9,13 @@ class ArcBlueprintPhotoDeltaReviewScreen extends StatefulWidget {
     super.key,
     required this.proposedAdditions,
     required this.uncertainIgnoredCount,
+    this.applySelected,
   });
 
   final List<ArcBlueprintPhotoCellDecision> proposedAdditions;
   final int uncertainIgnoredCount;
+  final Future<void> Function(List<ArcBlueprintPhotoCellDecision> selected)?
+  applySelected;
 
   @override
   State<ArcBlueprintPhotoDeltaReviewScreen> createState() =>
@@ -75,33 +78,14 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
       return;
     }
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add selected Blueprints?'),
-        content: Text(
-          'Add ${selected.length} newly detected Blueprint'
-          '${selected.length == 1 ? '' : 's'} to your existing tracker? '
-          'Previously owned Blueprints and duplicate counts will not be changed.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Add Selected'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) return;
-
     setState(() => _saving = true);
     try {
-      await ArcBlueprintPhotoImportService().apply(selected);
+      final applySelected = widget.applySelected;
+      if (applySelected == null) {
+        await ArcBlueprintPhotoImportService().apply(selected);
+      } else {
+        await applySelected(selected);
+      }
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } on FormatException catch (error) {
@@ -215,7 +199,7 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
           label: Text(
             selectedCount == 0
                 ? 'Keep Tracker Unchanged'
-                : 'Add $selectedCount Selected',
+                : 'Update Blueprint Grid',
           ),
         ),
       ),

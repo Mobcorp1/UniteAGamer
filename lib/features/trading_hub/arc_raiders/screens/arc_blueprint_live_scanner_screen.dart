@@ -1,25 +1,26 @@
 import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_automatic_grid_selector.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_camera_lifecycle_guard.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_camera_frame_adapter.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_detector.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_grid_lock_tracker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_dual_capture_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_grid_detection_overlay.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_live_targeting_overlay.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/manual_alignment_controller.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_perspective_cropper.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_preview_frame_gate.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_camera_session_policy.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_camera_health_guard.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_camera_operation_queue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_edge_calibration.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_camera_diagnostic_screen.dart';
 
-/// Pure shutter-availability contract retained for scanner regression tests.
-///
-/// Grid-lock state is intentionally not part of this predicate. Live grid lock
-/// can improve guidance, but camera availability itself is determined only by
-/// controller readiness, capture-in-progress state, and unsupported portrait
-/// orientation.
 bool canStartCapture({
   required bool controllerInitialized,
   required bool capturing,
@@ -47,35 +48,25 @@ class ArcBlueprintLiveScannerScreen extends StatefulWidget {
       _ArcBlueprintLiveScannerScreenState();
 }
 
+enum _BlueprintLockState { searching, detected, locked }
+
 class _ArcBlueprintLiveScannerScreenState
     extends State<ArcBlueprintLiveScannerScreen>
     with WidgetsBindingObserver {
   final ArcBlueprintAutomaticGridSelector _selector =
       const ArcBlueprintAutomaticGridSelector();
-  final ArcBlueprintCameraFrameAdapter _frameAdapter =
-      const ArcBlueprintCameraFrameAdapter(maximumWidth: 480);
-  final ArcBlueprintLiveGridLockTracker _liveLockTracker =
-      ArcBlueprintLiveGridLockTracker(
-        requiredStableFrames: 3,
-        minimumConfidence: 0.62,
-      );
 
-  ArcBlueprintGridDetection? _lastDetection;
-
-  final ArcCameraLifecycleGuard _cameraLifecycle = ArcCameraLifecycleGuard();
   CameraController? _controller;
-  Future<void>? _initializationFuture;
-  bool _disposed = false;
   CameraDescription? _description;
   bool _initializing = true;
   bool _capturing = false;
-  bool _processingLiveFrame = false;
-  DateTime? _lastLiveFrameAt;
-  bool _stableLiveLock = false;
   bool _debugDetection = false;
+  bool _analyzingPreview = false;
   String? _error;
-  String _lockMessage = 'AUTO GRID READY';
-  double _lastConfidence = 0;
+  _BlueprintLockState _lockState = _BlueprintLockState.searching;
+  DateTime? _potentialLockTime;
+  ArcBlueprintGridDetection _latestDetection =
+      const ArcBlueprintGridDetection.notFound();
   FlashMode _flashMode = FlashMode.off;
   double _zoom = 1;
   double _baseZoom = 1;
@@ -86,154 +77,205 @@ class _ArcBlueprintLiveScannerScreenState
 
   bool get _capturingBottom => _captureSession.hasTop;
 
+  bool get _gridLocked => _lockState == _BlueprintLockState.locked;
+
+  // One persistent manual frame is shared by both captures. The in-game
+  // panel stays in the same physical position when the user scrolls from the
+  // top section to rows 6-9, so changing to a second default frame causes the
+  // guide to jump smaller/lower between captures.
+  final ManualAlignmentController _alignmentController =
+      ManualAlignmentController()..resetToTopDefault();
+
+  // Last known viewport size used for normalized->source coordinate mapping.
+  Size? _viewportSize;
+
+  bool _cameraInitializing = false;
+  int _cameraRecoveryAttempts = 0;
+  bool _previewStreamPending = false;
+  bool _lifecycleTransitionInProgress = false;
+  bool _cameraHealthy = false;
+  bool _controllerErrorRecoveryInFlight = false;
+  DateTime? _controllerReadyAt;
+  final ArcCameraOperationQueue _cameraOperations = ArcCameraOperationQueue();
+
+  final ArcBlueprintCameraHealthGuard _cameraHealthGuard =
+      const ArcBlueprintCameraHealthGuard(
+        minimumReadyAge: Duration(milliseconds: 900),
+      );
+
+  bool get _liveAnalysisEnabled =>
+      arcBlueprintLiveAnalysisEnabled(defaultTargetPlatform);
+
+  final ArcBlueprintPreviewFrameGate _previewFrameGate =
+      ArcBlueprintPreviewFrameGate(
+        minimumInterval: const Duration(milliseconds: 250),
+      );
+  int _previewFramesSeen = 0;
+  int _previewFramesProcessed = 0;
+  int _previewFramesDropped = 0;
+  DateTime _lastPreviewStatsLog = DateTime.fromMillisecondsSinceEpoch(0);
+
+  void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint('ARC SCANNER: $message');
+    }
+  }
+
+  bool _isCameraDeviceError(CameraException error) {
+    return error.code == 'ERROR_CAMERA_DEVICE' ||
+        error.description?.contains('ERROR_CAMERA_DEVICE') == true;
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     unawaited(_initialize());
   }
 
   @override
   void dispose() {
-    _disposed = true;
     WidgetsBinding.instance.removeObserver(this);
-    _cameraLifecycle.invalidate();
 
+    // Detach widget ownership synchronously before the asynchronous platform
+    // disposal begins. This prevents CameraPreview from rebuilding against a
+    // controller that is already being disposed.
     final controller = _controller;
     _controller = null;
 
     if (controller != null) {
-      unawaited(_disposeController(controller));
+      unawaited(
+        _cameraOperations.run<void>(() => _disposeController(controller)),
+      );
     }
 
+    unawaited(SystemChrome.setPreferredOrientations(DeviceOrientation.values));
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_disposed) return;
+    _debugLog('Lifecycle $state');
 
+    // Android can emit transient inactive/hidden states while camera surfaces,
+    // system overlays, navigation and focus are changing. Disposing the native
+    // Camera2 session during those transient states races the plugin's own
+    // onClosed callback. Only tear down when the app is genuinely paused or
+    // detached.
     if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      unawaited(_pauseCamera());
+        state == AppLifecycleState.hidden) {
+      _debugLog('Lifecycle transient state ignored for camera ownership');
       return;
     }
 
-    if (state == AppLifecycleState.resumed) {
-      unawaited(_resumeCamera());
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_pauseCameraForLifecycle());
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed && _description != null) {
+      unawaited(_resumeCameraForLifecycle());
     }
   }
 
-  Future<void> _pauseCamera() async {
-    if (_disposed) return;
+  Future<void> _pauseCameraForLifecycle() {
+    return _cameraOperations.run<void>(_pauseCameraForLifecycleUnlocked);
+  }
 
-    _cameraLifecycle.invalidate();
+  Future<void> _pauseCameraForLifecycleUnlocked() async {
+    if (_lifecycleTransitionInProgress) return;
+
     final controller = _controller;
-
     if (controller == null) return;
 
-    if (mounted) {
-      setState(() {
-        if (identical(_controller, controller)) {
-          _controller = null;
-        }
-        _stableLiveLock = false;
-        _lastDetection = null;
-        _lastConfidence = 0;
-      });
-
-      // Remove CameraPreview from the widget tree before disposing the
-      // controller referenced by the previous frame.
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-    } else if (identical(_controller, controller)) {
-      _controller = null;
-    }
-
-    await _disposeController(controller);
-  }
-
-  Future<void> _resumeCamera() async {
-    if (_disposed || !mounted || _controller != null) return;
-    await _initialize(description: _description);
-  }
-
-  Future<void> _disposeController(CameraController controller) async {
+    _lifecycleTransitionInProgress = true;
     try {
-      if (controller.value.isInitialized &&
-          controller.value.isStreamingImages) {
-        await controller.stopImageStream();
+      _debugLog('Lifecycle pause/detach preview');
+
+      if (mounted) {
+        setState(() {
+          if (identical(_controller, controller)) {
+            _controller = null;
+          }
+        });
+
+        // Give Flutter one frame to remove CameraPreview before the native
+        // controller tears down its preview surface.
+        await WidgetsBinding.instance.endOfFrame;
+      } else if (identical(_controller, controller)) {
+        _controller = null;
       }
-    } on CameraException {
-      // The platform may already have closed the stream while backgrounding.
-    } catch (_) {
-      // Disposal must continue even if CameraX reports a stale stream.
+
+      _debugLog('Lifecycle disposing detached controller');
+      await _disposeController(controller);
+    } finally {
+      _lifecycleTransitionInProgress = false;
+    }
+  }
+
+  Future<void> _resumeCameraForLifecycle() {
+    return _cameraOperations.run<void>(() async {
+      if (_lifecycleTransitionInProgress ||
+          _controller != null ||
+          _cameraInitializing ||
+          !mounted) {
+        return;
+      }
+
+      _debugLog('Lifecycle resume/reinitialize controller');
+      await _initializeUnlocked(description: _description);
+    });
+  }
+
+  Future<void> _disposeController(CameraController? controller) async {
+    if (controller == null) return;
+    if (controller.value.isStreamingImages) {
+      try {
+        _debugLog('Image stream stopping before dispose');
+        await controller.stopImageStream();
+        _debugLog('Image stream stopped before dispose');
+      } on CameraException catch (_) {
+        _debugLog('Image stream stop failed during dispose');
+      }
     }
 
     try {
       await controller.dispose();
-    } on CameraException {
-      // CameraX can report a device error while the controller is closing.
-    } catch (_) {
-      // Best-effort cleanup; never reuse this controller after this point.
+      _cameraHealthy = false;
+      _controllerReadyAt = null;
+      _debugLog('Controller disposed');
+    } on CameraException catch (_) {
+      _debugLog('Controller dispose failed');
     }
   }
 
-  Future<void> _initialize({CameraDescription? description}) async {
-    if (_disposed || !mounted) return;
-
-    final existingInitialization = _initializationFuture;
-    if (existingInitialization != null) {
-      await existingInitialization;
-      if (_disposed || !mounted || _controller != null) return;
-    }
-
-    final generation = _cameraLifecycle.beginGeneration();
-    final future = _initializeGeneration(
-      generation: generation,
-      description: description,
+  Future<void> _initialize({CameraDescription? description}) {
+    return _cameraOperations.run<void>(
+      () => _initializeUnlocked(description: description),
     );
-    _initializationFuture = future;
-
-    try {
-      await future;
-    } finally {
-      if (identical(_initializationFuture, future)) {
-        _initializationFuture = null;
-      }
-    }
   }
 
-  Future<void> _initializeGeneration({
-    required int generation,
-    CameraDescription? description,
-  }) async {
-    if (_disposed || !mounted || !_cameraLifecycle.isCurrent(generation)) {
+  Future<void> _initializeUnlocked({CameraDescription? description}) async {
+    if (_cameraInitializing) {
+      _debugLog('Camera initialization already in progress; skipping');
       return;
     }
 
-    setState(() {
-      _initializing = true;
-      _error = null;
-    });
-
-    CameraController? createdController;
+    _cameraInitializing = true;
+    if (mounted) {
+      setState(() {
+        _initializing = true;
+        _error = null;
+      });
+    }
 
     try {
       final cameras = description == null ? await availableCameras() : null;
-
-      if (!_cameraLifecycle.isCurrent(generation) || _disposed || !mounted) {
-        return;
-      }
-
-      if (description == null && (cameras == null || cameras.isEmpty)) {
-        setState(() {
-          _initializing = false;
-          _error = 'No camera was found on this device.';
-        });
-        return;
-      }
-
       final selected =
           description ??
           cameras!.firstWhere(
@@ -241,36 +283,47 @@ class _ArcBlueprintLiveScannerScreenState
             orElse: () => cameras.first,
           );
 
-      final previous = _controller;
-      if (previous != null) {
-        setState(() => _controller = null);
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-        await _disposeController(previous);
+      if (_controller != null) {
+        _debugLog('Disposing previous controller during initialization');
+        await _disposeController(_controller);
+        _controller = null;
       }
 
-      if (!_cameraLifecycle.isCurrent(generation) || _disposed || !mounted) {
-        return;
-      }
-
+      _debugLog('Controller created');
       final controller = CameraController(
         selected,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
       );
-      createdController = controller;
+
+      controller.addListener(() {
+        if (!mounted || !identical(_controller, controller)) {
+          return;
+        }
+
+        if (controller.value.hasError) {
+          final description =
+              controller.value.errorDescription ?? 'Unknown camera error';
+          _debugLog('Controller reported error: $description');
+
+          _cameraHealthy = false;
+          _controllerReadyAt = null;
+
+          if (!_controllerErrorRecoveryInFlight &&
+              _cameraRecoveryAttempts == 0) {
+            _controllerErrorRecoveryInFlight = true;
+            _cameraRecoveryAttempts += 1;
+            unawaited(_recoverFromControllerError(controller));
+          }
+        }
+      });
 
       await controller.initialize();
-
-      if (!_cameraLifecycle.isCurrent(generation) || _disposed || !mounted) {
-        await _disposeController(controller);
-        return;
-      }
-
+      _debugLog('Controller initialised');
       await controller.setFlashMode(FlashMode.off);
       final minZoom = await controller.getMinZoomLevel();
       final maxZoom = await controller.getMaxZoomLevel();
-
-      if (!_cameraLifecycle.isCurrent(generation) || _disposed || !mounted) {
+      if (!mounted) {
         await _disposeController(controller);
         return;
       }
@@ -284,170 +337,336 @@ class _ArcBlueprintLiveScannerScreenState
         _maxZoom = maxZoom;
         _zoom = minZoom;
         _baseZoom = minZoom;
+        _cameraHealthy = !controller.value.hasError;
+        _controllerReadyAt = DateTime.now();
       });
 
-      await _startLiveDetection(controller, generation: generation);
+      if (_liveAnalysisEnabled) {
+        _schedulePreviewStreamStart(controller);
+      } else {
+        _debugLog(
+          'Android capture-only mode: live ImageAnalysis disabled; '
+          'Preview + ImageCapture remain active',
+        );
+      }
     } on CameraException catch (error) {
-      if (createdController != null &&
-          !identical(_controller, createdController)) {
-        await _disposeController(createdController);
-      }
-
-      if (!_cameraLifecycle.isCurrent(generation) || _disposed || !mounted) {
-        return;
-      }
-
-      setState(() {
-        _initializing = false;
-        _controller = null;
-        _error = error.description ?? error.code;
-      });
+      if (!mounted) return;
+      _handleCameraException(error);
     } on PlatformException catch (error) {
-      if (createdController != null &&
-          !identical(_controller, createdController)) {
-        await _disposeController(createdController);
-      }
-
-      if (!_cameraLifecycle.isCurrent(generation) || _disposed || !mounted) {
-        return;
-      }
-
+      if (!mounted) return;
       setState(() {
         _initializing = false;
-        _controller = null;
         _error = error.message ?? 'The camera could not be started.';
       });
     } catch (_) {
-      if (createdController != null &&
-          !identical(_controller, createdController)) {
-        await _disposeController(createdController);
+      if (!mounted) return;
+      setState(() {
+        _initializing = false;
+        _error = 'No usable camera could be started.';
+      });
+    } finally {
+      _cameraInitializing = false;
+    }
+  }
+
+  void _handleCameraException(CameraException error) {
+    if (!mounted) return;
+    final errorMessage = error.description ?? error.code;
+    _debugLog('Camera exception: $errorMessage');
+
+    if (_isCameraDeviceError(error) && _cameraRecoveryAttempts == 0) {
+      _cameraRecoveryAttempts += 1;
+      _debugLog('CameraX recovery');
+      unawaited(_recoverCameraSession());
+    }
+
+    setState(() {
+      _initializing = false;
+      _error = errorMessage;
+    });
+  }
+
+  Future<void> _schedulePreviewStreamStart(CameraController controller) async {
+    if (!_liveAnalysisEnabled) return;
+    if (_previewStreamPending) return;
+    _previewStreamPending = true;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (!mounted) {
+      _previewStreamPending = false;
+      return;
+    }
+    if (_controller != controller) {
+      _previewStreamPending = false;
+      return;
+    }
+    _debugLog('Preview attached; starting image stream after delay');
+    _previewStreamPending = false;
+    await _startPreviewStream();
+  }
+
+  Future<void> _recoverCameraSession() {
+    return _cameraOperations.run<void>(_recoverCameraSessionUnlocked);
+  }
+
+  Future<void> _recoverCameraSessionUnlocked() async {
+    if (!mounted) return;
+    _debugLog('Recovering camera session');
+    _cameraHealthy = false;
+    _controllerReadyAt = null;
+    final description = _description;
+    final activeController = _controller;
+
+    if (activeController != null) {
+      if (mounted) {
+        setState(() {
+          if (identical(_controller, activeController)) {
+            _controller = null;
+          }
+        });
+        await WidgetsBinding.instance.endOfFrame;
+      } else if (identical(_controller, activeController)) {
+        _controller = null;
       }
 
-      if (!_cameraLifecycle.isCurrent(generation) || _disposed || !mounted) {
+      await _disposeController(activeController);
+    }
+
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    await _initializeUnlocked(description: description);
+  }
+
+  Future<void> _recoverFromControllerError(
+    CameraController failedController,
+  ) async {
+    try {
+      if (!mounted || !identical(_controller, failedController)) {
         return;
       }
 
-      setState(() {
-        _initializing = false;
-        _controller = null;
-        _error = 'No usable camera could be started.';
-      });
+      _debugLog('Recovering from Camera2 controller error');
+      await _recoverCameraSession();
+    } finally {
+      _controllerErrorRecoveryInFlight = false;
     }
   }
 
-  Future<void> _startLiveDetection(
-    CameraController controller, {
-    int? generation,
-  }) async {
-    final expectedGeneration = generation ?? _cameraLifecycle.currentGeneration;
+  Future<void> _startPreviewStream() async {
+    if (!_liveAnalysisEnabled) return;
 
-    if (_disposed ||
-        !_cameraLifecycle.isCurrent(expectedGeneration) ||
-        !identical(_controller, controller) ||
-        !controller.value.isInitialized ||
-        controller.value.isStreamingImages) {
-      return;
-    }
-
-    _liveLockTracker.reset();
-    _stableLiveLock = false;
-    _lastDetection = null;
-    _lastConfidence = 0;
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (controller.value.isStreamingImages) return;
+    if (_previewStreamPending) return;
 
     try {
-      await controller.startImageStream(
-        (frame) => _processLiveFrame(
-          frame,
-          controller: controller,
-          generation: expectedGeneration,
-        ),
+      _previewFrameGate.reset();
+      _previewFramesSeen = 0;
+      _previewFramesProcessed = 0;
+      _previewFramesDropped = 0;
+      _lastPreviewStatsLog = DateTime.now();
+      _debugLog('Image stream starting');
+      await controller.startImageStream(_processPreviewFrame);
+      _debugLog('Image stream started');
+    } on CameraException catch (error) {
+      _debugLog('Image stream failed: ${error.description ?? error.code}');
+      if (_isCameraDeviceError(error) && _cameraRecoveryAttempts == 0) {
+        _cameraRecoveryAttempts += 1;
+        _debugLog('CameraX recovery from stream failure');
+        unawaited(_recoverCameraSession());
+      }
+      // Ignore preview streaming errors and continue with capture-only mode.
+    }
+  }
+
+  Future<void> _stopPreviewStream() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (!controller.value.isStreamingImages) return;
+
+    try {
+      _debugLog('Image stream stopping');
+      await controller.stopImageStream();
+      _previewFrameGate.reset();
+      _debugLog(
+        'Image stream stopped '
+        '(seen=$_previewFramesSeen processed=$_previewFramesProcessed '
+        'dropped=$_previewFramesDropped)',
       );
-    } on CameraException {
-      // Still-photo capture remains available if streaming is unsupported.
+    } on CameraException catch (error) {
+      _debugLog('Image stream stop failed: ${error.description ?? error.code}');
+      // Ignore if the stream is already stopped.
     }
   }
 
-  Future<void> _stopLiveDetection({CameraController? controller}) async {
-    final activeController = controller ?? _controller;
-    if (activeController == null ||
-        !activeController.value.isInitialized ||
-        !activeController.value.isStreamingImages) {
+  void _processPreviewFrame(CameraImage image) {
+    _previewFramesSeen += 1;
+
+    if (_capturing || _analyzingPreview || !mounted) {
+      _previewFramesDropped += 1;
+      _logPreviewStatsIfDue();
       return;
     }
+
+    final nowMicros = DateTime.now().microsecondsSinceEpoch;
+    if (!_previewFrameGate.shouldProcess(nowMicros)) {
+      _previewFramesDropped += 1;
+      _logPreviewStatsIfDue();
+      return;
+    }
+
+    _analyzingPreview = true;
+    final stopwatch = Stopwatch()..start();
 
     try {
-      await activeController.stopImageStream();
-    } on CameraException {
-      // Capture/disposal will surface any real camera failure.
+      final detectionRows = _capturingBottom ? 3 : 5;
+      final frameImage = _convertCameraImage(image);
+      if (frameImage == null) {
+        _previewFramesDropped += 1;
+        return;
+      }
+
+      final detection = ArcBlueprintGridDetector(
+        columns: 10,
+        rows: detectionRows,
+        analysisWidth: 320,
+      ).detectImage(frameImage);
+
+      _previewFramesProcessed += 1;
+      _updateLockState(detection);
+    } finally {
+      stopwatch.stop();
+      _analyzingPreview = false;
+
+      if (stopwatch.elapsedMilliseconds >= 100) {
+        _debugLog(
+          'Slow preview analysis: ${stopwatch.elapsedMilliseconds}ms '
+          '${image.width}x${image.height} ${image.format.group.name}',
+        );
+      }
+      _logPreviewStatsIfDue();
     }
   }
 
-  void _processLiveFrame(
-    CameraImage frame, {
-    required CameraController controller,
-    required int generation,
-  }) {
-    if (_disposed ||
-        _capturing ||
-        _processingLiveFrame ||
-        !mounted ||
-        !_cameraLifecycle.isCurrent(generation) ||
-        !identical(_controller, controller)) {
-      return;
-    }
+  void _logPreviewStatsIfDue() {
+    if (!kDebugMode) return;
 
     final now = DateTime.now();
-    final last = _lastLiveFrameAt;
-    if (last != null &&
-        now.difference(last) < const Duration(milliseconds: 350)) {
+    if (now.difference(_lastPreviewStatsLog) < const Duration(seconds: 2)) {
       return;
     }
 
-    _lastLiveFrameAt = now;
-    _processingLiveFrame = true;
+    _lastPreviewStatsLog = now;
+    _debugLog(
+      'Preview stats: seen=$_previewFramesSeen '
+      'processed=$_previewFramesProcessed '
+      'dropped=$_previewFramesDropped '
+      'streaming=${_controller?.value.isStreamingImages ?? false} '
+      'analyzing=$_analyzingPreview',
+    );
+  }
 
-    Future<void>(() {
-      try {
-        final image = _frameAdapter.convert(
-          frame,
-          rotationDegrees: _description?.sensorOrientation ?? 0,
-        );
+  img.Image? _convertCameraImage(CameraImage image) {
+    // Live detection does not need capture-resolution RGB conversion.
+    // 360px keeps enough structure for grid lock while cutting per-frame
+    // conversion work by roughly 75% versus the previous 720px path.
+    const maxPreviewWidth = 360;
+    final srcWidth = image.width;
+    final srcHeight = image.height;
+    final targetWidth = srcWidth > maxPreviewWidth ? maxPreviewWidth : srcWidth;
+    final scale = srcWidth / targetWidth;
+    final targetHeight = (srcHeight / scale).round();
 
-        final detector = ArcBlueprintGridDetector(
-          columns: 10,
-          rows: _capturingBottom ? 3 : 5,
-          analysisWidth: 480,
-          minimumConfidence: 0.58,
-        );
+    if (image.format.group == ImageFormatGroup.yuv420) {
+      final yPlane = image.planes[0];
+      final uPlane = image.planes[1];
+      final vPlane = image.planes[2];
+      final result = img.Image(width: targetWidth, height: targetHeight);
 
-        final detection = detector.detectImage(image);
-        final state = _liveLockTracker.update(detection);
+      for (var y = 0; y < targetHeight; y++) {
+        final sourceY = (y * scale).floor().clamp(0, srcHeight - 1);
+        final yRow = sourceY * yPlane.bytesPerRow;
+        final uvRow = (sourceY / 2).floor();
 
-        if (_disposed ||
-            !mounted ||
-            !_cameraLifecycle.isCurrent(generation) ||
-            !identical(_controller, controller)) {
-          return;
+        for (var x = 0; x < targetWidth; x++) {
+          final sourceX = (x * scale).floor().clamp(0, srcWidth - 1);
+          final yIndex = yRow + sourceX;
+          final uvCol = (sourceX / 2).floor();
+          final uIndex =
+              uvRow * uPlane.bytesPerRow + uvCol * (uPlane.bytesPerPixel ?? 1);
+          final vIndex =
+              uvRow * vPlane.bytesPerRow + uvCol * (vPlane.bytesPerPixel ?? 1);
+
+          final yValue = yPlane.bytes[yIndex];
+          final uValue = uPlane.bytes[uIndex];
+          final vValue = vPlane.bytes[vIndex];
+          final yPrime = yValue.toInt();
+          final uPrime = uValue.toInt() - 128;
+          final vPrime = vValue.toInt() - 128;
+
+          final r = (yPrime + 1.402 * vPrime).round().clamp(0, 255);
+          final g = (yPrime - 0.344136 * uPrime - 0.714136 * vPrime)
+              .round()
+              .clamp(0, 255);
+          final b = (yPrime + 1.772 * uPrime).round().clamp(0, 255);
+          result.setPixelRgba(x, y, r, g, b, 255);
         }
-
-        setState(() {
-          _lastDetection = state.detection;
-          _lastConfidence = state.detection?.confidence ?? 0;
-          _stableLiveLock = state.isStable;
-
-          if (state.isStable) {
-            _lockMessage =
-                'GRID LOCKED ${(_lastConfidence * 100).round()}% — READY';
-          } else if (state.detection != null) {
-            _lockMessage = 'HOLD STEADY ${(_lastConfidence * 100).round()}%';
-          } else {
-            _lockMessage = 'ALIGN BLUEPRINT GRID INSIDE THE CORNERS';
-          }
-        });
-      } finally {
-        _processingLiveFrame = false;
       }
-    });
+
+      return result;
+    }
+
+    if (image.format.group == ImageFormatGroup.bgra8888) {
+      final plane = image.planes[0];
+      final result = img.Image(width: targetWidth, height: targetHeight);
+
+      for (var y = 0; y < targetHeight; y++) {
+        final sourceY = (y * scale).floor().clamp(0, srcHeight - 1);
+        final rowOffset = sourceY * plane.bytesPerRow;
+
+        for (var x = 0; x < targetWidth; x++) {
+          final sourceX = (x * scale).floor().clamp(0, srcWidth - 1);
+          final index = rowOffset + sourceX * 4;
+          final b = plane.bytes[index];
+          final g = plane.bytes[index + 1];
+          final r = plane.bytes[index + 2];
+          final a = plane.bytes[index + 3];
+          result.setPixelRgba(x, y, r, g, b, a);
+        }
+      }
+
+      return result;
+    }
+
+    return null;
+  }
+
+  void _updateLockState(ArcBlueprintGridDetection detection) {
+    final now = DateTime.now();
+    final isLocked = detection.isLocked;
+    final isDetected = detection.isValid;
+
+    if (isLocked) {
+      _potentialLockTime ??= now;
+      if (now.difference(_potentialLockTime!).inMilliseconds >= 1000) {
+        _lockState = _BlueprintLockState.locked;
+      } else {
+        _lockState = _BlueprintLockState.detected;
+      }
+    } else if (isDetected) {
+      _potentialLockTime = null;
+      _lockState = _BlueprintLockState.detected;
+    } else {
+      _potentialLockTime = null;
+      _lockState = _BlueprintLockState.searching;
+    }
+
+    if (mounted) {
+      setState(() {
+        _latestDetection = detection;
+      });
+    }
   }
 
   Future<void> _toggleFlash() async {
@@ -456,9 +675,7 @@ class _ArcBlueprintLiveScannerScreenState
     final next = _flashMode == FlashMode.off ? FlashMode.torch : FlashMode.off;
     try {
       await controller.setFlashMode(next);
-      if (mounted && identical(_controller, controller)) {
-        setState(() => _flashMode = next);
-      }
+      if (mounted) setState(() => _flashMode = next);
     } on CameraException {
       _showMessage('Flash is not available for this camera.');
     }
@@ -469,53 +686,11 @@ class _ArcBlueprintLiveScannerScreenState
     if (controller == null || !controller.value.isInitialized) return;
     final next = (_baseZoom * details.scale).clamp(_minZoom, _maxZoom);
     _zoom = next;
-    try {
-      await controller.setZoomLevel(next);
-    } on CameraException {
-      // Ignore a zoom update racing with camera pause/disposal.
-    }
+    await controller.setZoomLevel(next);
   }
 
   void _onScaleEnd(ScaleEndDetails details) {
     _baseZoom = _zoom;
-  }
-
-  Future<void> _showDetectionDebug({
-    required Uint8List imageBytes,
-    required ArcBlueprintGridDetection detection,
-  }) async {
-    if (!_debugDetection || !mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: Colors.black,
-          title: Text(
-            detection.isLocked
-                ? 'GRID LOCKED ${(detection.confidence * 100).round()}%'
-                : 'GRID NOT LOCKED',
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'VT323',
-              fontSize: 24,
-            ),
-          ),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ArcBlueprintGridDetectionOverlay(
-              imageBytes: imageBytes,
-              detection: detection,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Continue'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _capture() async {
@@ -524,53 +699,123 @@ class _ArcBlueprintLiveScannerScreenState
       return;
     }
 
-    setState(() {
-      _capturing = true;
-      _lockMessage = 'ANALYSING GRID…';
-    });
-
-    await _stopLiveDetection(controller: controller);
-
-    if (_disposed ||
-        !mounted ||
-        !identical(_controller, controller) ||
-        !controller.value.isInitialized) {
-      if (mounted) setState(() => _capturing = false);
+    if (controller.value.hasError || !_cameraHealthy) {
+      _showMessage('Camera is recovering. Please wait a moment and retry.');
+      if (!_controllerErrorRecoveryInFlight && _cameraRecoveryAttempts == 0) {
+        _controllerErrorRecoveryInFlight = true;
+        _cameraRecoveryAttempts += 1;
+        unawaited(_recoverFromControllerError(controller));
+      }
       return;
     }
 
+    final remainingDelay = _cameraHealthGuard.remainingReadyDelay(
+      readyAt: _controllerReadyAt,
+      now: DateTime.now(),
+    );
+
+    if (remainingDelay > Duration.zero) {
+      _debugLog(
+        'Capture waiting ${remainingDelay.inMilliseconds}ms for Camera2 session',
+      );
+      await Future<void>.delayed(remainingDelay);
+    }
+
+    if (!mounted ||
+        !identical(_controller, controller) ||
+        !_cameraHealthGuard.canCapture(
+          initialized: controller.value.isInitialized,
+          hasError: controller.value.hasError,
+          isTakingPicture: controller.value.isTakingPicture,
+          capturing: _capturing,
+          readyAt: _controllerReadyAt,
+          now: DateTime.now(),
+        )) {
+      _showMessage('Camera is not ready yet. Please retry.');
+      return;
+    }
+
+    setState(() {
+      _capturing = true;
+    });
+
+    var didNavigateAway = false;
+
     try {
+      _debugLog('Capture started');
+      await _stopPreviewStream();
+
+      if (!mounted ||
+          !identical(_controller, controller) ||
+          controller.value.hasError ||
+          !controller.value.isInitialized) {
+        throw CameraException(
+          'cameraNotReady',
+          'Camera session changed before capture.',
+        );
+      }
+
       final photo = await controller.takePicture();
       final bytes = await photo.readAsBytes();
       final section = _capturingBottom
           ? ArcBlueprintGridSection.bottom
           : ArcBlueprintGridSection.top;
-      final selection = _selector.select(bytes, section: section);
-      final detection = selection.detection;
-      if (mounted) setState(() => _lastDetection = detection);
-      await _showDetectionDebug(imageBytes: bytes, detection: detection);
-      final corrected = selection.imageBytes;
+
+      // Use manual alignment calibration where possible as the authoritative crop.
+      Uint8List corrected;
+      try {
+        final alignmentController = _alignmentController;
+        if (_viewportSize != null && alignmentController.calibration.isValid) {
+          final manuallyRectified = ArcBlueprintPerspectiveCropper().rectify(
+            imageBytes: bytes,
+            viewportSize: _viewportSize!,
+            calibration: alignmentController.calibration,
+            outputRows: section == ArcBlueprintGridSection.bottom ? 4 : 5,
+          );
+
+          try {
+            final normalized = _selector.select(
+              manuallyRectified,
+              section: section,
+            );
+            corrected = normalized.imageBytes;
+            _debugLog(
+              'Post-capture grid normalized: '
+              '${normalized.detection.confidence.toStringAsFixed(3)}',
+            );
+          } on FormatException catch (error) {
+            corrected = manuallyRectified;
+            _debugLog(
+              'Post-capture normalization unavailable; using manual frame: '
+              '${error.message}',
+            );
+          }
+        } else {
+          // Fallback to automatic selector when viewport not available
+          final selection = _selector.select(bytes, section: section);
+          corrected = selection.imageBytes;
+        }
+      } catch (_) {
+        // If cropper fails, fallback to automatic selection
+        final selection = _selector.select(bytes, section: section);
+        corrected = selection.imageBytes;
+      }
+
       if (!mounted) return;
-      setState(() {
-        _lastConfidence = detection.confidence;
-        _lockMessage = 'GRID LOCKED ${(detection.confidence * 100).round()}%';
-      });
 
       if (!_capturingBottom) {
+        final nextSession = _captureSession.captureTop(corrected);
         setState(() {
-          _captureSession = _captureSession.captureTop(corrected);
+          _captureSession = nextSession;
+          _lockState = _BlueprintLockState.searching;
+          _potentialLockTime = null;
+          _latestDetection = const ArcBlueprintGridDetection.notFound();
         });
         _showMessage(
           'Rows 1–5 captured. Scroll to row 6 for the second capture.',
         );
-        _liveLockTracker.reset();
-        if (mounted) {
-          setState(() {
-            _lastDetection = null;
-            _lastConfidence = 0;
-            _stableLiveLock = false;
-            _lockMessage = 'ALIGN ROW 6 INSIDE THE CORNERS';
-          });
+        if (mounted && _liveAnalysisEnabled) {
+          await _startPreviewStream();
         }
         return;
       }
@@ -581,31 +826,48 @@ class _ArcBlueprintLiveScannerScreenState
       if (top == null || bottom == null || !mounted) return;
 
       setState(() => _captureSession = completed);
+      didNavigateAway = true;
       Navigator.of(context).pop(
         ArcBlueprintScannerResult(topImageBytes: top, bottomImageBytes: bottom),
       );
     } on FormatException catch (error) {
       _showMessage(error.message);
     } on CameraException catch (error) {
+      _cameraHealthy = false;
+      _controllerReadyAt = null;
       _showMessage(error.description ?? error.code);
-    } catch (_) {
+
+      if (_cameraRecoveryAttempts == 0) {
+        _cameraRecoveryAttempts += 1;
+        _debugLog('Camera2 recovery from capture failure');
+        unawaited(_recoverCameraSession());
+      }
+    } on PlatformException catch (error) {
+      _cameraHealthy = false;
+      _controllerReadyAt = null;
+      _debugLog(
+        'Camera2 platform capture failure: ${error.code} ${error.message}',
+      );
+      _showMessage('Camera session reset. Please retry the photo.');
+
+      if (_cameraRecoveryAttempts == 0) {
+        _cameraRecoveryAttempts += 1;
+        unawaited(_recoverCameraSession());
+      }
+    } catch (error) {
+      _debugLog('Capture failure: $error');
       _showMessage('The Blueprint grid could not be captured. Please retry.');
     } finally {
-      if (mounted) {
-        setState(() => _capturing = false);
-        final activeController = _controller;
-        if (!_disposed &&
-            activeController != null &&
-            activeController.value.isInitialized &&
-            Navigator.of(context).canPop()) {
-          unawaited(
-            _startLiveDetection(
-              activeController,
-              generation: _cameraLifecycle.currentGeneration,
-            ),
-          );
-        }
+      if (mounted) setState(() => _capturing = false);
+      if (!didNavigateAway &&
+          mounted &&
+          controller == _controller &&
+          controller.value.isInitialized &&
+          !controller.value.isStreamingImages &&
+          _liveAnalysisEnabled) {
+        await _startPreviewStream();
       }
+      _debugLog('Capture finished');
     }
   }
 
@@ -619,14 +881,11 @@ class _ArcBlueprintLiveScannerScreenState
   @override
   Widget build(BuildContext context) {
     final controller = _controller;
-    final cameraReady =
-        controller != null && controller.value.isInitialized && !_disposed;
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: _initializing
           ? const Center(child: CircularProgressIndicator())
-          : _error != null || !cameraReady
+          : _error != null || controller == null
           ? _ErrorState(
               message: _error ?? 'Camera unavailable.',
               onRetry: _initialize,
@@ -634,6 +893,29 @@ class _ArcBlueprintLiveScannerScreenState
             )
           : LayoutBuilder(
               builder: (context, constraints) {
+                final media = MediaQuery.of(context);
+                final isPortrait = media.size.width < media.size.height;
+                final captureStep = _capturingBottom
+                    ? 'Capture 2 of 2'
+                    : 'Capture 1 of 2';
+                final captureInstructions = _capturingBottom
+                    ? 'Scroll until Row 6 is at the top. Align the cyan corners with the OUTER CELL GRID — exclude the BLUEPRINTS title/header.'
+                    : 'Align the four cyan corners with the OUTER CELL GRID only. Exclude the BLUEPRINTS title, FOUND count and surrounding panel.';
+                final lockStatusText =
+                    _lockState == _BlueprintLockState.searching
+                    ? 'Searching for blueprint grid...'
+                    : _lockState == _BlueprintLockState.detected
+                    ? 'Blueprint grid detected'
+                    : 'Grid locked ✓';
+                final statusColor = _gridLocked
+                    ? Colors.greenAccent
+                    : Colors.white;
+                // record viewport size for coordinate mapping
+                _viewportSize = Size(
+                  constraints.maxWidth,
+                  constraints.maxHeight,
+                );
+
                 return GestureDetector(
                   onScaleStart: (_) => _baseZoom = _zoom,
                   onScaleUpdate: _onScaleUpdate,
@@ -641,121 +923,130 @@ class _ArcBlueprintLiveScannerScreenState
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      _CoverCameraPreview(controller: controller),
-                      ArcBlueprintLiveTargetingOverlay(
-                        detection: _lastDetection,
-                        isLocked: _stableLiveLock,
-                        isBottomCapture: _capturingBottom,
-                      ),
-                      Positioned(
-                        left: 12,
-                        right: 12,
-                        top: MediaQuery.paddingOf(context).top + 6,
-                        child: Row(
-                          children: [
-                            IconButton.filledTonal(
-                              onPressed: _capturing
-                                  ? null
-                                  : () => Navigator.of(context).pop(),
-                              icon: const Icon(Icons.close),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _capturingBottom
-                                        ? 'CAPTURE ROWS 6–8 + FINAL 3'
-                                        : 'LIVE BLUEPRINT SCANNER',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'VT323',
-                                      fontSize: 22,
-                                    ),
-                                  ),
-                                  Text(
-                                    _capturingBottom
-                                        ? 'Start at row 6. Include rows 6–8 and the final three slots only.'
-                                        : 'The scanner automatically locks rows 1–5.',
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            IconButton.filledTonal(
-                              tooltip: _debugDetection
-                                  ? 'Grid debug overlay on'
-                                  : 'Grid debug overlay off',
-                              onPressed: _capturing
-                                  ? null
-                                  : () => setState(
-                                      () => _debugDetection = !_debugDetection,
-                                    ),
-                              icon: Icon(
-                                _debugDetection
-                                    ? Icons.bug_report_rounded
-                                    : Icons.bug_report_outlined,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-
-                            IconButton.filledTonal(
-                              onPressed: _capturing ? null : _toggleFlash,
-                              icon: Icon(
-                                _flashMode == FlashMode.off
-                                    ? Icons.flash_off
-                                    : Icons.flash_on,
-                              ),
-                            ),
-                          ],
+                      if (!isPortrait)
+                        _CoverCameraPreview(controller: controller),
+                      if (!isPortrait)
+                        Positioned.fill(
+                          child: _BlueprintScannerOverlay(
+                            controller: _alignmentController,
+                            locked: _gridLocked,
+                            detection: _latestDetection,
+                          ),
                         ),
-                      ),
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        top: MediaQuery.paddingOf(context).top + 78,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.72),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: _stableLiveLock
-                                    ? Colors.greenAccent
-                                    : AppTheme.neonCyan,
+                      if (!isPortrait)
+                        Positioned(
+                          left: 12,
+                          right: 12,
+                          top: media.padding.top + 6,
+                          child: Row(
+                            children: [
+                              IconButton.filledTonal(
+                                onPressed: _capturing
+                                    ? null
+                                    : () => Navigator.of(context).pop(),
+                                icon: const Icon(Icons.close),
                               ),
-                            ),
-                            child: Text(
-                              _lockMessage,
-                              style: TextStyle(
-                                color: _stableLiveLock
-                                    ? Colors.greenAccent
-                                    : Colors.white,
-                                fontFamily: 'VT323',
-                                fontSize: 18,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      captureStep,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: 'VT323',
+                                        fontSize: 22,
+                                      ),
+                                    ),
+                                    Text(
+                                      captureInstructions,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton.filledTonal(
+                                tooltip: 'Open minimal camera diagnostic',
+                                onPressed: _capturing
+                                    ? null
+                                    : () async {
+                                        await Navigator.of(context).push<void>(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) =>
+                                                const ArcCameraDiagnosticScreen(),
+                                          ),
+                                        );
+                                      },
+                                icon: const Icon(Icons.videocam_outlined),
+                              ),
+                              const SizedBox(width: 6),
+                              IconButton.filledTonal(
+                                tooltip: _debugDetection
+                                    ? 'Grid debug overlay on'
+                                    : 'Grid debug overlay off',
+                                onPressed: _capturing
+                                    ? null
+                                    : () => setState(
+                                        () =>
+                                            _debugDetection = !_debugDetection,
+                                      ),
+                                icon: Icon(
+                                  _debugDetection
+                                      ? Icons.bug_report_rounded
+                                      : Icons.bug_report_outlined,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              IconButton.filledTonal(
+                                onPressed: _capturing ? null : _toggleFlash,
+                                icon: Icon(
+                                  _flashMode == FlashMode.off
+                                      ? Icons.flash_off
+                                      : Icons.flash_on,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (!isPortrait)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          top: media.padding.top + 88,
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 184.0),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Text(
+                                lockStatusText,
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontFamily: 'VT323',
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      if (_capturingBottom)
+                      if (!isPortrait && _capturingBottom)
                         Positioned(
                           left: 16,
                           right: 16,
-                          bottom: MediaQuery.paddingOf(context).bottom + 102,
+                          bottom: media.padding.bottom + 102,
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.72),
+                              color: Colors.black.withValues(alpha: 184.0),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppTheme.neonCyan),
                             ),
@@ -770,61 +1061,122 @@ class _ArcBlueprintLiveScannerScreenState
                             ),
                           ),
                         ),
-                      Positioned(
-                        left: 24,
-                        right: 24,
-                        bottom: MediaQuery.paddingOf(context).bottom + 12,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_capturingBottom)
+                      if (!isPortrait)
+                        Positioned(
+                          left: 24,
+                          right: 24,
+                          bottom: media.padding.bottom + 12,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_capturingBottom)
+                                IconButton.filledTonal(
+                                  tooltip: 'Restart top capture',
+                                  onPressed: _capturing
+                                      ? null
+                                      : () => setState(() {
+                                          _captureSession =
+                                              const ArcBlueprintDualCaptureSession();
+                                          _lockState =
+                                              _BlueprintLockState.searching;
+                                          _potentialLockTime = null;
+                                          _latestDetection =
+                                              const ArcBlueprintGridDetection.notFound();
+                                        }),
+                                  icon: const Icon(Icons.restart_alt),
+                                ),
+                              if (_capturingBottom) const SizedBox(width: 12),
+
+                              // Auto align uses the detector result to initialise manual frame
                               IconButton.filledTonal(
-                                tooltip: 'Restart top capture',
+                                tooltip: 'Auto align',
                                 onPressed: _capturing
                                     ? null
-                                    : () => setState(
-                                        () => _captureSession =
-                                            const ArcBlueprintDualCaptureSession(),
-                                      ),
-                                icon: const Icon(Icons.restart_alt),
+                                    : () {
+                                        _alignmentController
+                                            .autoAlignFromDetection(
+                                              _latestDetection,
+                                            );
+                                        setState(() {});
+                                      },
+                                icon: const Icon(Icons.auto_fix_high_rounded),
                               ),
-                            if (_capturingBottom) const SizedBox(width: 16),
-                            InkResponse(
-                              key: const Key('blueprint-live-scanner-capture'),
-                              onTap: _capturing || !_stableLiveLock
-                                  ? null
-                                  : _capture,
-                              radius: 44,
-                              child: Container(
-                                width: 76,
-                                height: 76,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _capturing || !_stableLiveLock
-                                      ? Colors.white38
-                                      : Colors.white,
-                                  border: Border.all(
-                                    color: AppTheme.neonCyan,
-                                    width: 5,
-                                  ),
+                              const SizedBox(width: 8),
+
+                              IconButton.filledTonal(
+                                tooltip: 'Reset frame',
+                                onPressed: _capturing
+                                    ? null
+                                    : () {
+                                        _alignmentController.resetToDefaults(
+                                          bottomCapture: false,
+                                        );
+                                        setState(() {});
+                                      },
+                                icon: const Icon(Icons.crop_rounded),
+                              ),
+                              const SizedBox(width: 12),
+
+                              InkResponse(
+                                key: const Key(
+                                  'blueprint-live-scanner-capture',
                                 ),
-                                child: _capturing
-                                    ? const Padding(
-                                        padding: EdgeInsets.all(22),
-                                        child: CircularProgressIndicator(),
-                                      )
-                                    : Icon(
-                                        _capturingBottom
-                                            ? Icons.check_rounded
-                                            : Icons.camera_alt_rounded,
-                                        color: Colors.black,
-                                        size: 34,
-                                      ),
+                                onTap:
+                                    (canStartCapture(
+                                      controllerInitialized:
+                                          controller.value.isInitialized,
+                                      capturing: _capturing,
+                                      isPortrait: isPortrait,
+                                    ))
+                                    ? _capture
+                                    : null,
+                                radius: 44,
+                                child: Container(
+                                  width: 76,
+                                  height: 76,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _capturing
+                                        ? Colors.white38
+                                        : (_gridLocked
+                                              ? Colors.white
+                                              : Colors.white12),
+                                    border: Border.all(
+                                      color: _gridLocked
+                                          ? Colors.greenAccent
+                                          : AppTheme.neonCyan,
+                                      width: 5,
+                                    ),
+                                  ),
+                                  child: _capturing
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(22),
+                                          child: CircularProgressIndicator(),
+                                        )
+                                      : Icon(
+                                          _capturingBottom
+                                              ? Icons.check_rounded
+                                              : Icons.camera_alt_rounded,
+                                          color: _gridLocked
+                                              ? Colors.black
+                                              : Colors.white54,
+                                          size: 34,
+                                        ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                      if (!isPortrait && kDebugMode)
+                        Positioned(
+                          left: 18,
+                          bottom: media.padding.bottom + 100,
+                          child: _DebugGridMetrics(
+                            detection: _latestDetection,
+                            locked: _gridLocked,
+                          ),
+                        ),
+                      if (isPortrait) const _RotateToLandscapePage(),
                     ],
                   ),
                 );
@@ -841,12 +1193,9 @@ class _CoverCameraPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return const ColoredBox(color: Colors.black);
-    }
-
     final previewSize = controller.value.previewSize;
     if (previewSize == null) return CameraPreview(controller);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final viewport = Size(constraints.maxWidth, constraints.maxHeight);
@@ -881,6 +1230,376 @@ class _CoverCameraPreview extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _BlueprintScannerOverlay extends StatefulWidget {
+  const _BlueprintScannerOverlay({
+    required this.controller,
+    required this.locked,
+    required this.detection,
+  });
+
+  final ManualAlignmentController controller;
+  final bool locked;
+  final ArcBlueprintGridDetection detection;
+
+  @override
+  State<_BlueprintScannerOverlay> createState() =>
+      _BlueprintScannerOverlayState();
+}
+
+class _BlueprintScannerOverlayState extends State<_BlueprintScannerOverlay> {
+  _DragTarget _dragTarget = _DragTarget.none;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onPanStart: (details) {
+            final local = details.localPosition;
+            final norm = Offset(local.dx / size.width, local.dy / size.height);
+            final rect = widget.controller.calibration.normalizedRect;
+            const cornerThreshold = 0.065;
+            const edgeThreshold = 0.035;
+
+            bool near(Offset point) =>
+                (norm.dx - point.dx).abs() <= cornerThreshold &&
+                (norm.dy - point.dy).abs() <= cornerThreshold;
+
+            if (near(rect.topLeft)) {
+              _dragTarget = _DragTarget.topLeft;
+            } else if (near(rect.topRight)) {
+              _dragTarget = _DragTarget.topRight;
+            } else if (near(rect.bottomLeft)) {
+              _dragTarget = _DragTarget.bottomLeft;
+            } else if (near(rect.bottomRight)) {
+              _dragTarget = _DragTarget.bottomRight;
+            } else if ((norm.dx - rect.left).abs() < edgeThreshold &&
+                norm.dy >= rect.top &&
+                norm.dy <= rect.bottom) {
+              _dragTarget = _DragTarget.left;
+            } else if ((norm.dx - rect.right).abs() < edgeThreshold &&
+                norm.dy >= rect.top &&
+                norm.dy <= rect.bottom) {
+              _dragTarget = _DragTarget.right;
+            } else if ((norm.dy - rect.top).abs() < edgeThreshold &&
+                norm.dx >= rect.left &&
+                norm.dx <= rect.right) {
+              _dragTarget = _DragTarget.top;
+            } else if ((norm.dy - rect.bottom).abs() < edgeThreshold &&
+                norm.dx >= rect.left &&
+                norm.dx <= rect.right) {
+              _dragTarget = _DragTarget.bottom;
+            } else if (rect.contains(norm)) {
+              _dragTarget = _DragTarget.center;
+            } else {
+              _dragTarget = _DragTarget.none;
+            }
+          },
+          onPanUpdate: (details) {
+            final local = details.localPosition;
+            final dx = details.delta.dx / size.width;
+            final dy = details.delta.dy / size.height;
+            final normX = (local.dx / size.width).clamp(0.0, 1.0);
+            final normY = (local.dy / size.height).clamp(0.0, 1.0);
+
+            setState(() {
+              void moveHorizontal(ArcBlueprintCropEdge edge) {
+                widget.controller.moveEdge(edge, normX);
+              }
+
+              void moveVertical(ArcBlueprintCropEdge edge) {
+                widget.controller.moveEdge(edge, normY);
+              }
+
+              switch (_dragTarget) {
+                case _DragTarget.topLeft:
+                  moveHorizontal(ArcBlueprintCropEdge.left);
+                  moveVertical(ArcBlueprintCropEdge.top);
+                  break;
+                case _DragTarget.topRight:
+                  moveHorizontal(ArcBlueprintCropEdge.right);
+                  moveVertical(ArcBlueprintCropEdge.top);
+                  break;
+                case _DragTarget.bottomLeft:
+                  moveHorizontal(ArcBlueprintCropEdge.left);
+                  moveVertical(ArcBlueprintCropEdge.bottom);
+                  break;
+                case _DragTarget.bottomRight:
+                  moveHorizontal(ArcBlueprintCropEdge.right);
+                  moveVertical(ArcBlueprintCropEdge.bottom);
+                  break;
+                case _DragTarget.left:
+                  moveHorizontal(ArcBlueprintCropEdge.left);
+                  break;
+                case _DragTarget.right:
+                  moveHorizontal(ArcBlueprintCropEdge.right);
+                  break;
+                case _DragTarget.top:
+                  moveVertical(ArcBlueprintCropEdge.top);
+                  break;
+                case _DragTarget.bottom:
+                  moveVertical(ArcBlueprintCropEdge.bottom);
+                  break;
+                case _DragTarget.center:
+                  widget.controller.translate(dx, dy);
+                  break;
+                case _DragTarget.none:
+                  break;
+              }
+            });
+          },
+          onPanEnd: (_) => _dragTarget = _DragTarget.none,
+          onPanCancel: () => _dragTarget = _DragTarget.none,
+          child: CustomPaint(
+            painter: _BlueprintGuidePainter2(
+              calibration: widget.controller.calibration,
+              locked: widget.locked,
+              detection: widget.detection,
+            ),
+            size: Size.infinite,
+          ),
+        );
+      },
+    );
+  }
+}
+
+enum _DragTarget {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+  left,
+  right,
+  top,
+  bottom,
+  center,
+  none,
+}
+
+class _BlueprintGuidePainter2 extends CustomPainter {
+  const _BlueprintGuidePainter2({
+    required this.calibration,
+    required this.locked,
+    required this.detection,
+  });
+
+  final ArcBlueprintEdgeCalibration calibration;
+  final bool locked;
+  final ArcBlueprintGridDetection detection;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(
+      calibration.left * size.width,
+      calibration.top * size.height,
+      (calibration.right - calibration.left) * size.width,
+      (calibration.bottom - calibration.top) * size.height,
+    );
+
+    final outer = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final cutout = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(20)));
+    final overlay = Path.combine(PathOperation.difference, outer, cutout);
+
+    canvas.drawPath(
+      overlay,
+      Paint()..color = Colors.black.withValues(alpha: 132.6),
+    );
+
+    final borderPaint = Paint()
+      ..color = locked ? Colors.greenAccent : Colors.white70
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(20)),
+      borderPaint,
+    );
+
+    final bracketPaint = Paint()
+      ..color = locked ? Colors.greenAccent : Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    const bracketLength = 44.0;
+
+    void drawCorner(Offset corner, double dx, double dy) {
+      canvas.drawLine(corner, corner.translate(dx, 0), bracketPaint);
+      canvas.drawLine(corner, corner.translate(0, dy), bracketPaint);
+    }
+
+    drawCorner(rect.topLeft, bracketLength, 0);
+    drawCorner(rect.topRight, -bracketLength, 0);
+    drawCorner(rect.bottomLeft, bracketLength, 0);
+    drawCorner(rect.bottomRight, -bracketLength, 0);
+
+    // The in-game panel already draws its own cell boundaries. Do not
+    // paint a synthetic 10x5 grid over it: users only need to align the
+    // outside boundary, while post-capture detection resolves the cells.
+
+    // Four high-visibility corner handles are the primary alignment controls.
+    final handlePaint = Paint()
+      ..color = AppTheme.neonCyan.withValues(alpha: 229.5);
+    const handleSize = 16.0;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.topLeft,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.topRight,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.bottomLeft,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: rect.bottomRight,
+        width: handleSize,
+        height: handleSize,
+      ),
+      handlePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BlueprintGuidePainter2 oldDelegate) {
+    return oldDelegate.locked != locked ||
+        oldDelegate.calibration != calibration ||
+        oldDelegate.detection != detection;
+  }
+}
+
+class _DebugGridMetrics extends StatelessWidget {
+  const _DebugGridMetrics({required this.detection, required this.locked});
+
+  final ArcBlueprintGridDetection detection;
+  final bool locked;
+
+  String get _confidence => '${(detection.confidence * 100).round()}%';
+
+  String get _coverage {
+    if (!detection.isValid) return '0%';
+    final area =
+        (detection.bottomRight.dx - detection.topLeft.dx) *
+        (detection.bottomRight.dy - detection.topLeft.dy);
+    return '${(area * 100).round()}%';
+  }
+
+  String get _angle {
+    if (!detection.isValid) return '0.0°';
+    final deltaX = detection.topRight.dx - detection.topLeft.dx;
+    final deltaY = detection.topRight.dy - detection.topLeft.dy;
+    return '${(math.atan2(deltaY, deltaX) * 180 / math.pi).abs().toStringAsFixed(1)}°';
+  }
+
+  String get _perspective {
+    if (!detection.isValid) return '0.0%';
+    final topWidth = (detection.topRight.dx - detection.topLeft.dx).abs();
+    final bottomWidth = (detection.bottomRight.dx - detection.bottomLeft.dx)
+        .abs();
+    final widthDiff = (topWidth - bottomWidth).abs();
+    final widthRatio = widthDiff / math.max(topWidth, bottomWidth);
+    final leftHeight = (detection.bottomLeft.dy - detection.topLeft.dy).abs();
+    final rightHeight = (detection.bottomRight.dy - detection.topRight.dy)
+        .abs();
+    final heightDiff = (leftHeight - rightHeight).abs();
+    final heightRatio = heightDiff / math.max(leftHeight, rightHeight);
+    final result = ((widthRatio + heightRatio) / 2 * 100).clamp(0, 100);
+    return '${result.round()}%';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 158.0),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: locked ? Colors.greenAccent : Colors.white24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Grid angle: $_angle',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Perspective: $_perspective',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Lock confidence: $_confidence',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Coverage: $_coverage',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RotateToLandscapePage extends StatelessWidget {
+  const _RotateToLandscapePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.screen_rotation_rounded,
+            color: Colors.white,
+            size: 68,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Rotate your phone to landscape',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'The Blueprint Scanner is designed for landscape mode.\nRotate your phone and continue.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 }

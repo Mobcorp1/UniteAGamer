@@ -19,10 +19,14 @@ class ArcBlueprintPerspectiveCropper {
     required Uint8List imageBytes,
     required Size viewportSize,
     required ArcBlueprintEdgeCalibration calibration,
+    int outputRows = 5,
   }) {
     final decoded = _decode(imageBytes);
     if (!calibration.isValid || viewportSize.isEmpty) {
       throw const FormatException('The Blueprint crop area is invalid.');
+    }
+    if (outputRows <= 0) {
+      throw const FormatException('The Blueprint crop row count is invalid.');
     }
 
     final sourceSize = Size(
@@ -53,7 +57,7 @@ class ArcBlueprintPerspectiveCropper {
       ),
     ];
 
-    return _rectify(decoded, corners, outputHeight: cellHeight * 5);
+    return _rectify(decoded, corners, outputHeight: cellHeight * outputRows);
   }
 
   Uint8List rectifyDetection({

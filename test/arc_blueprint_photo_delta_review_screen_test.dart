@@ -28,11 +28,47 @@ void main() {
 
     expect(find.text('REVIEW NEW BLUEPRINTS'), findsOneWidget);
     expect(find.textContaining('25 uncertain slots'), findsOneWidget);
-    expect(find.text('Add 1 Selected'), findsOneWidget);
+    expect(find.text('Update Blueprint Grid'), findsOneWidget);
 
     await tester.tap(find.byType(Checkbox));
     await tester.pumpAndSettle();
 
     expect(find.text('Keep Tracker Unchanged'), findsOneWidget);
+  });
+
+  testWidgets('delta review applies selected additions without confirmation', (
+    tester,
+  ) async {
+    final applied = <ArcBlueprintPhotoCellDecision>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ArcBlueprintPhotoDeltaReviewScreen(
+          uncertainIgnoredCount: 0,
+          proposedAdditions: const [
+            ArcBlueprintPhotoCellDecision(
+              blueprintId: 'extended-medium-magazine-iii',
+              blueprintIndex: 81,
+              state: ArcBlueprintPhotoCellState.owned,
+              confidence: 0.96,
+              sourceCaptureId: 'bottom',
+              rowIndex: 8,
+              columnIndex: 1,
+            ),
+          ],
+          applySelected: (selected) async {
+            applied.addAll(selected);
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('blueprint-delta-apply')));
+    await tester.pump();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(applied, hasLength(1));
+    expect(applied.single.blueprintId, 'extended-medium-magazine-iii');
+    expect(applied.single.manuallyConfirmed, isTrue);
   });
 }
