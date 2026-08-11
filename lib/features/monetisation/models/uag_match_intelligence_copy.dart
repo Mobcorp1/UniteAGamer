@@ -111,7 +111,7 @@ class UagMatchIntelligenceCopy {
       premium: 'Advanced',
     ),
     UagMatchIntelligenceComparisonRow(
-      feature: 'Favourite Rider Prioritisation',
+      feature: 'Favourite Raider Prioritisation',
       free: 'Not included',
       essential: 'Included',
       premium: 'Advanced',

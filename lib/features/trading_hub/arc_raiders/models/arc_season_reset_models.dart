@@ -34,7 +34,7 @@ class ArcSeasonResetPolicy {
     'Communication style',
     'Squad intent',
     'Availability',
-    'Favourite Riders',
+    'Favourite Raiders',
     'Reputation',
     'Historical completed trades',
     'Permanent rewards',

@@ -167,7 +167,7 @@ class ArcCompactNavigationCatalog {
           ],
         ),
         ArcCompactNavigationItem(
-          label: 'Match Rider',
+          label: 'Match Raider',
           icon: Icons.groups_2_outlined,
           routeName: ArcMatchRiderScreen.routeName,
           accessFlag: FeatureAccessFlag.matchRaider,

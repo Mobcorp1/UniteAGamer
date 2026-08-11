@@ -85,7 +85,7 @@ void main() {
       expect(rowLabels, contains('Squad Intent Matching'));
       expect(rowLabels, contains('Archetype Fit'));
       expect(rowLabels, contains('Reputation Weighting'));
-      expect(rowLabels, contains('Favourite Rider Prioritisation'));
+      expect(rowLabels, contains('Favourite Raider Prioritisation'));
       expect(rowLabels, contains('Dynamic Re-ranking'));
       expect(rowLabels, contains('Advanced Decision Engine'));
       expect(publicText, isNot(contains('blueprint')));

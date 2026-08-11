@@ -224,7 +224,7 @@ class _TradingBlueprintWatchesScreenState
                       value: favouriteRidersOnly,
                       activeThumbColor: AppTheme.neonPink,
                       title: const Text(
-                        'Favourite Riders only',
+                        'Favourite Raiders only',
                         style: TextStyle(color: Colors.white),
                       ),
                       onChanged: (value) =>
@@ -416,7 +416,7 @@ class _TradingBlueprintWatchesScreenState
             children: [
               _pill('Min ${watch.minimumMatchScore}', AppTheme.neonCyan),
               if (watch.favouriteRidersOnly)
-                _pill('Favourite Riders', AppTheme.neonPink),
+                _pill('Favourite Raiders', AppTheme.neonPink),
               _pill(
                 watch.shouldNotify ? 'Notify' : 'Muted',
                 watch.shouldNotify ? AppTheme.neonPink : Colors.white54,

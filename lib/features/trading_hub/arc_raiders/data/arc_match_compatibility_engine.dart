@@ -881,7 +881,7 @@ class ArcMatchCompatibilityEngine {
       if (_squadIntentRawScore(me, other) >= 32) {
         tags.add('Good squad balance');
       }
-      if (otherSignals.isFavouriteRider) tags.add('Favourite Rider');
+      if (otherSignals.isFavouriteRider) tags.add('Favourite Raider');
     }
     if (tier == ArcMatchIntelligenceTier.advanced &&
         (_progressionRawScore(meSignals, otherSignals) > 0 ||

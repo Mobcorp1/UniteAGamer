@@ -45,7 +45,7 @@ class _TradingNotificationsScreenState
     _InboxFilter.all => 'All',
     _InboxFilter.unread => 'Unread',
     _InboxFilter.trading => 'Trading',
-    _InboxFilter.matchmaking => 'Match Rider',
+    _InboxFilter.matchmaking => 'Match Raider',
     _InboxFilter.operations => 'Operations & Rewards',
     _InboxFilter.community => 'Community',
     _InboxFilter.announcements => 'Announcements',

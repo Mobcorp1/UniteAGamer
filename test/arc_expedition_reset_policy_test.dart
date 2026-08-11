@@ -17,7 +17,7 @@ void main() {
         expect(ArcSeasonResetPolicy.persistentSystems, contains('Reputation'));
         expect(
           ArcSeasonResetPolicy.persistentSystems,
-          contains('Favourite Riders'),
+          contains('Favourite Raiders'),
         );
       },
     );

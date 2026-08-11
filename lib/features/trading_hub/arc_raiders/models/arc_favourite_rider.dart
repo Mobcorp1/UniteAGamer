@@ -46,7 +46,7 @@ class ArcFavouriteRider {
       if (squadSessions > 0) '$squadSessions squad sessions',
       if (previousBlueprintOffer) 'Previous blueprint offer',
     ];
-    return parts.isEmpty ? 'Favourite Rider' : parts.join(' - ');
+    return parts.isEmpty ? 'Favourite Raider' : parts.join(' - ');
   }
 
   Map<String, dynamic> toMap() {

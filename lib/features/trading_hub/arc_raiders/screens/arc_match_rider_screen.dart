@@ -780,8 +780,8 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                     _buildScoreBadge(candidate.score),
                     IconButton(
                       tooltip: isFavourite
-                          ? 'Remove Favourite Rider'
-                          : 'Add Favourite Rider',
+                          ? 'Remove Favourite Raider'
+                          : 'Add Favourite Raider',
                       onPressed: () => _toggleFavourite(
                         candidate.profile,
                         currentlyFavourite: isFavourite,
@@ -1186,8 +1186,8 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         SnackBar(
           content: Text(
             currentlyFavourite
-                ? '${profile.title} removed from Favourite Riders.'
-                : '${profile.title} added to Favourite Riders.',
+                ? '${profile.title} removed from Favourite Raiders.'
+                : '${profile.title} added to Favourite Raiders.',
           ),
         ),
       );

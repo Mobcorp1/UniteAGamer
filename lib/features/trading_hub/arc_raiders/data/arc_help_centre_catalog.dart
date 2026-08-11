@@ -109,19 +109,19 @@ class ArcHelpCentreCatalog {
     ),
     ArcHelpCategory(
       id: 'match-rider',
-      title: 'Match Rider',
+      title: 'Match Raider',
       summary: 'Squad matching, play-style fit and session planning.',
       routeName: ArcMatchRiderScreen.routeName,
       answers: [
         ArcHelpAnswer(
-          question: 'What is Match Rider for?',
+          question: 'What is Match Raider for?',
           answer:
               'Use it to find players with compatible goals, roles and session preferences.',
         ),
         ArcHelpAnswer(
           question: 'Where do planned raids live?',
           answer:
-              'Raid Planner handles route planning and hunt targets; Match Rider focuses on people fit.',
+              'Raid Planner handles route planning and hunt targets; Match Raider focuses on people fit.',
         ),
       ],
     ),

@@ -47,8 +47,8 @@ class TradingListingDetailScreen extends StatelessWidget {
         SnackBar(
           content: Text(
             currentlyFavourite
-                ? '${listing.traderName} removed from Favourite Riders.'
-                : '${listing.traderName} added to Favourite Riders.',
+                ? '${listing.traderName} removed from Favourite Raiders.'
+                : '${listing.traderName} added to Favourite Raiders.',
           ),
         ),
       );
@@ -356,8 +356,8 @@ class TradingListingDetailScreen extends StatelessWidget {
                                             ),
                                             label: Text(
                                               isFavourite
-                                                  ? 'Favourite Rider'
-                                                  : 'Add Favourite Rider',
+                                                  ? 'Favourite Raider'
+                                                  : 'Add Favourite Raider',
                                             ),
                                           ),
                                         );

@@ -43,7 +43,7 @@ class ArcTradePreferences {
       if (fairTrades) 'Fair trades',
       if (communityFirst) 'Community first',
       if (giftExtras) 'Gift extras',
-      if (favouriteRidersFirst) 'Favourite Riders first',
+      if (favouriteRidersFirst) 'Favourite Raiders first',
       if (friendsFirst) 'Friends first',
       if (fixedRequests) 'Fixed requests',
       if (flexibleOffers) 'Flexible offers',

@@ -330,7 +330,7 @@ class UagSessionSchedulePlanner {
       case UagSessionScheduleKind.trade:
         return 'Your ARC Raiders trade$withText starts in 15 minutes. Open the session to confirm or rearrange.';
       case UagSessionScheduleKind.matchmaking:
-        return 'Your Match Rider squad-up$withText starts in 15 minutes. Open the session to get ready.';
+        return 'Your Match Raider squad-up$withText starts in 15 minutes. Open the session to get ready.';
       case UagSessionScheduleKind.raid:
         return 'Your planned ARC Raiders run$withText starts in 15 minutes. Open the planner to get ready.';
     }
@@ -352,7 +352,7 @@ class UagSessionSchedulePlanner {
       case UagSessionScheduleKind.trade:
         return 'Confirm completed, no-show or issues so UAG can protect session quality.';
       case UagSessionScheduleKind.matchmaking:
-        return 'Share a quick rating, no-show or issue report so Match Rider learns from the session.';
+        return 'Share a quick rating, no-show or issue report so Match Raider learns from the session.';
       case UagSessionScheduleKind.raid:
         return 'Log the result, no-show or support issue so your planned run history stays accurate.';
     }

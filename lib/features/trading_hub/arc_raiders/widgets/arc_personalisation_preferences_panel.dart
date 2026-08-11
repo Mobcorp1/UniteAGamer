@@ -318,9 +318,9 @@ class _ArcPersonalisationPreferencesPanelState
       case ArcPersonalisationNotificationCategory.blueprintWatches:
         return 'Blueprint Watches';
       case ArcPersonalisationNotificationCategory.favouriteRiderActivity:
-        return 'Favourite Riders';
+        return 'Favourite Raiders';
       case ArcPersonalisationNotificationCategory.matchRiderActivity:
-        return 'Match Rider';
+        return 'Match Raider';
       case ArcPersonalisationNotificationCategory.availabilityReminders:
         return 'Availability';
       case ArcPersonalisationNotificationCategory.questProgress:

@@ -813,7 +813,7 @@ class _NomadicRiderGuidancePanel extends StatelessWidget {
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
-                  'Nomadic Rider Path',
+                  'Nomadic Raider Path',
                   style: AppTheme.neonTextStyle(
                     fontSize: 22,
                     color: AppTheme.neonPink,
@@ -826,7 +826,7 @@ class _NomadicRiderGuidancePanel extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
-            'When Nomadic Rider rewards are the long-term target, start by improving storage and raid efficiency before chasing high-value cash-ins.',
+            'When Nomadic Raider rewards are the long-term target, start by improving storage and raid efficiency before chasing high-value cash-ins.',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,
@@ -840,7 +840,7 @@ class _NomadicRiderGuidancePanel extends StatelessWidget {
               _PathChip(order: '1', label: 'Backpack Expansion'),
               _PathChip(order: '2', label: 'Storage Upgrade'),
               _PathChip(order: '3', label: 'Value Runs'),
-              _PathChip(order: '4', label: 'Nomadic Rider Rewards'),
+              _PathChip(order: '4', label: 'Nomadic Raider Rewards'),
             ],
           ),
         ],

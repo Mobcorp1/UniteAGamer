@@ -1435,11 +1435,11 @@ class _ClosedBetaDiagnosticsCard extends StatelessWidget {
       ),
       _candidate(
         id: 'match-rider',
-        title: 'Match Rider',
+        title: 'Match Raider',
         type: 'matchmaking',
         included: false,
         reason:
-            'Excluded unless Match Rider repository reports active requests in Command Centre.',
+            'Excluded unless Match Raider repository reports active requests in Command Centre.',
         priority: 0,
       ),
       _candidate(

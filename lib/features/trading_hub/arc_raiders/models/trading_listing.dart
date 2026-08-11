@@ -254,7 +254,7 @@ class TradingListing {
       case TradingListingMode.gift:
         return 'Gift';
       case TradingListingMode.favouriteRidersFirst:
-        return 'Favourite Riders first';
+        return 'Favourite Raiders first';
       case TradingListingMode.fixedReturn:
         return 'Fixed return';
       case TradingListingMode.bestSuitableOffer:

@@ -44,7 +44,7 @@ void main() {
         'Raid Planner',
         'Favourite Loadout',
         'Trading Hub',
-        'Match Rider',
+        'Match Raider',
         'Report a Raider',
         'My Hub',
         'Settings',
@@ -180,7 +180,7 @@ void main() {
           .toList(growable: false);
 
       expect(plan.items.first.label, 'Favourite Loadout');
-      expect(labels, containsAll(['Trading Hub', 'Match Rider', 'Settings']));
+      expect(labels, containsAll(['Trading Hub', 'Match Raider', 'Settings']));
     });
   });
 

@@ -577,7 +577,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       context: context,
       title: 'Start New Expedition?',
       message:
-          'A fresh expedition resets blueprint ownership and duplicates together with Scrappy, quests, bench progress and current-season Operations. Permanent profile, reputation, availability, Favourite Riders and earned reward history remain.',
+          'A fresh expedition resets blueprint ownership and duplicates together with Scrappy, quests, bench progress and current-season Operations. Permanent profile, reputation, availability, Favourite Raiders and earned reward history remain.',
       titleColor: Colors.redAccent,
       confirmLabel: 'Review Full Reset',
       confirmBackgroundColor: Colors.redAccent,

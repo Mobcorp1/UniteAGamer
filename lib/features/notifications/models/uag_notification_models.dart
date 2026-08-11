@@ -119,7 +119,7 @@ enum UagNotificationCategory {
   openBetaUpdates('openBetaUpdates', 'Open Beta Updates'),
   trading('trading', 'Trading'),
   matchmaking('matchmaking', 'Matchmaking'),
-  favouriteRiders('favouriteRiders', 'Favourite Riders'),
+  favouriteRiders('favouriteRiders', 'Favourite Raiders'),
   watchesAndQueues('watchesAndQueues', 'Watches & Queues'),
   operationsAndRewards('operationsAndRewards', 'Operations & Rewards'),
   blueprintIntel('blueprintIntel', 'Blueprint Intel'),

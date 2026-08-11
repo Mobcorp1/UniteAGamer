@@ -35,7 +35,7 @@ class _TradingCreateListingScreenState
     'Next login': TradingListingMode.nextLogin,
     'Scheduled window': TradingListingMode.scheduledWindow,
     'Gift': TradingListingMode.gift,
-    'Favourite Riders first': TradingListingMode.favouriteRidersFirst,
+    'Favourite Raiders first': TradingListingMode.favouriteRidersFirst,
     'Fixed return': TradingListingMode.fixedReturn,
     'Best suitable offer': TradingListingMode.bestSuitableOffer,
   };
@@ -1021,7 +1021,7 @@ class _TradingCreateListingScreenState
             : '',
         sellerTimezone: 'Europe/London',
         duplicateReleasePolicy: _releasePolicyOptions[_selectedReleasePolicy]!,
-        favouriteRidersFirst: _selectedListingMode == 'Favourite Riders first',
+        favouriteRidersFirst: _selectedListingMode == 'Favourite Raiders first',
         fixedReturn: _selectedListingMode == 'Fixed return',
         bestSuitableOffer: _selectedListingMode == 'Best suitable offer',
         maxActiveOffers: int.tryParse(_selectedMaxActiveOffers) ?? 5,

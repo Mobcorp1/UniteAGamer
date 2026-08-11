@@ -10,7 +10,7 @@ void main() {
         'Blueprint Tracker',
         'Favourite Loadout',
         'Trading',
-        'Match Rider',
+        'Match Raider',
         'Operations',
         'Profile and Reputation',
         'Privacy, Safety and Reporting',

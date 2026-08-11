@@ -132,7 +132,7 @@ void main() {
       );
 
       expect(preferences.rankingTags, contains('Fast trades'));
-      expect(preferences.rankingTags, contains('Favourite Riders first'));
+      expect(preferences.rankingTags, contains('Favourite Raiders first'));
       expect(preferences.rankingTags, contains('No unsolicited messages'));
       expect(
         ArcTradePreferences.fromMap(preferences.toMap()).ownerUid,

@@ -159,11 +159,11 @@ extension ArcPersonalisationFeatureX on ArcPersonalisationFeature {
       case ArcPersonalisationFeature.smartTrade:
         return 'Smart Trade';
       case ArcPersonalisationFeature.matchRider:
-        return 'Match Rider';
+        return 'Match Raider';
       case ArcPersonalisationFeature.favouriteRiders:
-        return 'Favourite Riders';
+        return 'Favourite Raiders';
       case ArcPersonalisationFeature.privateRiders:
-        return 'Private Riders';
+        return 'Private Raiders';
       case ArcPersonalisationFeature.questTracker:
         return 'Quest Tracker';
       case ArcPersonalisationFeature.benchTracker:

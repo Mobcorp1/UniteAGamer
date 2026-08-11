@@ -5,6 +5,7 @@ import '../repositories/arc_raider_contracts_repository.dart';
 
 class ArcRaiderContractsAdminPanel extends StatelessWidget {
   const ArcRaiderContractsAdminPanel({super.key});
+
   @override
   Widget build(BuildContext context) {
     final repo = ArcRaiderContractsRepository();
@@ -17,40 +18,72 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Review private reports before any contract becomes live. Resolve disputed completion from evidence.',
+          'Review private reports and structured incident intelligence before any requested contract becomes live.',
           style: TextStyle(color: Colors.white70),
         ),
         const SizedBox(height: 12),
         StreamBuilder<List<ArcRaiderReport>>(
           stream: repo.watchModerationReports(),
           builder: (c, s) => Column(
-            children: (s.data ?? [])
+            children: (s.data ?? const <ArcRaiderReport>[])
                 .map(
                   (r) => Card(
-                    child: ListTile(
+                    child: ExpansionTile(
                       title: Text(r.targetDisplayName),
-                      subtitle: Text('${r.category.name}\n${r.description}'),
-                      isThreeLine: true,
-                      trailing: Wrap(
-                        children: [
-                          IconButton(
-                            tooltip: 'Approve',
-                            icon: const Icon(
-                              Icons.check,
-                              color: Colors.greenAccent,
-                            ),
-                            onPressed: () => _moderate(c, repo, r, true),
+                      subtitle: Text(
+                        '${r.category.name} • ${r.mapDisplayName} • ${r.serverRegion}',
+                      ),
+                      childrenPadding: const EdgeInsets.all(14),
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(r.description),
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Location: ${r.locationLabel}\n'
+                            'Coordinates: ${r.locationX?.toStringAsFixed(4)}, ${r.locationY?.toStringAsFixed(4)}\n'
+                            'Extraction: ${r.atExtraction ? r.extractionName : 'No'}\n'
+                            'Behaviour: ${r.rattingSubtype}\n'
+                            'Incident: ${r.incidentAt}\n'
+                            'Repeat: ${r.repeatBehaviour.name} × ${r.repeatCount}\n'
+                            'Reporter reputation snapshot: ${r.reporterReputationSnapshot}\n'
+                            'Contract requested: ${r.requestContract ? 'Yes' : 'No'}\n'
+                            'Reward: ${r.rewardItems.map((e) => '${e.quantity}× ${e.name}').join(' • ')}',
                           ),
-                          IconButton(
-                            tooltip: 'Reject',
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.redAccent,
+                        ),
+                        if (r.evidence.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Evidence: ${r.evidence.map((e) => e.url).join('\n')}',
                             ),
-                            onPressed: () => _moderate(c, repo, r, false),
                           ),
                         ],
-                      ),
+                        if (r.socialContentUrl.isNotEmpty)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('Social: ${r.socialContentUrl}'),
+                          ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => _moderate(c, repo, r, false),
+                              child: const Text('Reject'),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: () => _moderate(c, repo, r, true),
+                              child: const Text('Approve'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -61,34 +94,50 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
         StreamBuilder<List<ArcRaiderContract>>(
           stream: repo.watchDisputedContracts(),
           builder: (c, s) => Column(
-            children: (s.data ?? [])
+            children: (s.data ?? const <ArcRaiderContract>[])
                 .map(
                   (x) => Card(
-                    child: ListTile(
+                    child: ExpansionTile(
                       title: Text('DISPUTE: ${x.targetDisplayName}'),
-                      subtitle: Text(x.resolution),
-                      trailing: Wrap(
-                        children: [
-                          TextButton(
-                            onPressed: () => repo.resolveContract(
-                              x.id,
-                              completed: true,
-                              resolution:
-                                  'Moderator approved submitted evidence.',
+                      subtitle: Text(x.rewardSummary),
+                      childrenPadding: const EdgeInsets.all(14),
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(x.resolution),
+                        ),
+                        if (x.evidence.isNotEmpty)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Evidence: ${x.evidence.map((e) => e.url).join('\n')}',
                             ),
-                            child: const Text('Complete'),
                           ),
-                          TextButton(
-                            onPressed: () => repo.resolveContract(
-                              x.id,
-                              completed: false,
-                              resolution:
-                                  'Moderator rejected submitted evidence.',
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => repo.resolveContract(
+                                x.id,
+                                completed: false,
+                                resolution:
+                                    'Moderator rejected submitted evidence.',
+                              ),
+                              child: const Text('Reject evidence'),
                             ),
-                            child: const Text('Reject'),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: () => repo.resolveContract(
+                                x.id,
+                                completed: true,
+                                resolution:
+                                    'Moderator approved submitted evidence.',
+                              ),
+                              child: const Text('Complete contract'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -102,16 +151,16 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
   Future<void> _moderate(
     BuildContext context,
     ArcRaiderContractsRepository repo,
-    ArcRaiderReport r,
+    ArcRaiderReport report,
     bool approve,
   ) async {
-    final c = TextEditingController();
-    await showDialog(
+    final controller = TextEditingController();
+    await showDialog<void>(
       context: context,
       builder: (d) => AlertDialog(
         title: Text(approve ? 'Approve report' : 'Reject report'),
         content: TextField(
-          controller: c,
+          controller: controller,
           maxLines: 3,
           decoration: const InputDecoration(labelText: 'Moderation notes'),
         ),
@@ -122,7 +171,11 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () async {
-              await repo.moderateReport(r.id, approve: approve, notes: c.text);
+              await repo.moderateReport(
+                report.id,
+                approve: approve,
+                notes: controller.text,
+              );
               if (d.mounted) Navigator.pop(d);
             },
             child: const Text('Confirm'),
@@ -130,6 +183,6 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
         ],
       ),
     );
-    c.dispose();
+    controller.dispose();
   }
 }

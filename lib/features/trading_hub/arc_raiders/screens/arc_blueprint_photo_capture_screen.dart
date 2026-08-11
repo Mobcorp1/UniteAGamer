@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_pixel_analyzer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_personal_calibration_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_template_verification_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_ownership_marker_verification_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_uploaded_image_processor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
@@ -330,6 +331,20 @@ class _ArcBlueprintPhotoCaptureScreenState
         samples: calibrated.samples,
       );
 
+      // PASS 343: direct owned-card UI verification for first-run scans.
+      // Empty slots can still contain blue/purple grid texture, so strong
+      // whole-cell candidates must also show the game's lower-left Blueprint
+      // emblem / upper-right completion tick unless expected artwork is an
+      // exceptionally strong match. This verifier is suppression-only.
+      const ownershipMarkerVerifier =
+          ArcBlueprintOwnershipMarkerVerificationEngine();
+      final markerVerification = ownershipMarkerVerifier.verify(
+        topBytes: topBytes,
+        bottomBytes: bottomBytes,
+        samples: templateVerification.samples,
+        templateDiagnostics: templateVerification.diagnostics,
+      );
+
       if (kDebugMode) {
         for (final diagnostic in templateVerification.diagnostics) {
           debugPrint(
@@ -356,7 +371,7 @@ class _ArcBlueprintPhotoCaptureScreenState
       const engine = ArcBlueprintPhotoOccupancyEngine(columns: 10);
       final result = engine.classify(
         orderedBlueprintIds: orderedBlueprintIds,
-        samples: templateVerification.samples,
+        samples: markerVerification.samples,
       );
 
       if (kDebugMode) {
@@ -458,7 +473,7 @@ class _ArcBlueprintPhotoCaptureScreenState
 
   String get _stepTitle => _activeSection == ArcBlueprintCaptureSection.top
       ? 'Capture the top of your grid'
-      : 'Capture rows 6–8 and the final three slots';
+      : 'Capture rows 6â€“8 and the final three slots';
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +509,7 @@ class _ArcBlueprintPhotoCaptureScreenState
             Text(
               _activeSection == ArcBlueprintCaptureSection.top
                   ? 'Fit the outer edges of the first five Blueprint rows inside the boundary. Keep the full left, right, top and bottom edges visible.'
-                  : 'Start at row 6. Do not include row 5 again. Keep rows 6–8 fully visible and include the final three Blueprint slots beneath them.',
+                  : 'Start at row 6. Do not include row 5 again. Keep rows 6â€“8 fully visible and include the final three Blueprint slots beneath them.',
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 14),

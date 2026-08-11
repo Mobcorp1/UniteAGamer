@@ -145,7 +145,7 @@ class ArcFeatureRegistry {
     ),
     ArcFeatureRegistryEntry(
       id: 'match_rider',
-      label: 'Match Rider',
+      label: 'Match Raider',
       personalisationFeature: ArcPersonalisationFeature.matchRider,
       lifecycle: ArcFeatureLifecycle.beta,
       routeName: ArcMatchRiderScreen.routeName,
@@ -191,7 +191,8 @@ class ArcFeatureRegistry {
       lifecycle: ArcFeatureLifecycle.beta,
       routeName: PlayLikeAProScreen.routeName,
       accessFlag: FeatureAccessFlag.playLockerPro,
-      notes: 'Expert ARC guidance with preserved session-performance coaching.',
+      notes:
+          'Pro-style preparation, performance routines, UAG Mixtapes and preserved session coaching.',
     ),
     ArcFeatureRegistryEntry(
       id: 'player_locker_pro',

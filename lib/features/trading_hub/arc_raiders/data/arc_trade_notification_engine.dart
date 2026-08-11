@@ -41,7 +41,7 @@ class ArcTradeNotificationEngine {
         shouldNotifyNow: false,
         queueForNextLogin: false,
         includeInDigest: true,
-        reason: 'Waiting for Favourite Rider activity',
+        reason: 'Waiting for Favourite Raider activity',
       );
     }
 

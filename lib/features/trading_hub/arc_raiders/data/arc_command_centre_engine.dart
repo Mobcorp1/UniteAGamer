@@ -200,7 +200,7 @@ class ArcCommandCentreEngine {
       priority = ArcCommandPriority(
         title: 'Complete Your Hub Profile',
         explanation:
-            'Finish ${profileCompletion.missingSummary} so Command Centre, Operations and Match Rider can personalise your next move.',
+            'Finish ${profileCompletion.missingSummary} so Command Centre, Operations and Match Raider can personalise your next move.',
         progressLabel:
             '${profileCompletion.missingFields.length} missing profile ${_plural(profileCompletion.missingFields.length, 'field', 'fields')}',
         statusTag: 'Setup required',

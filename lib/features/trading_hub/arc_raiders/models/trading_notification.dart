@@ -184,9 +184,9 @@ class TradingNotification {
       case TradingNotificationType.blueprintWatchMatch:
         return 'Watch Match';
       case TradingNotificationType.favouriteRiderListing:
-        return 'Favourite Rider';
+        return 'Favourite Raider';
       case TradingNotificationType.favouriteRiderAcquisitionSignal:
-        return 'Rider Signal';
+        return 'Raider Signal';
       case TradingNotificationType.tradeOfferNeedsResponse:
         return 'Offer Response';
       case TradingNotificationType.queuedListingReleased:
