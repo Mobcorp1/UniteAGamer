@@ -1,5 +1,6 @@
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_container_types.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_map_marker.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
@@ -430,11 +431,25 @@ class ArcAdminMapMarkerSubtypeCatalog {
     'riven_tides': ['beachcombing', 'night_raid'],
   };
 
+  static List<ArcAdminMapMarkerSubtype> _canonicalForKind(
+    ArcAdminMapMarkerKind kind,
+  ) {
+    return [
+      for (final entry in ArcMapFilterTaxonomy.forKind(kind))
+        ArcAdminMapMarkerSubtype(
+          id: entry.id,
+          label: entry.label,
+          kind: entry.kind,
+          groupLabel: entry.groupLabel,
+        ),
+    ];
+  }
+
   static List<ArcAdminMapMarkerSubtype> forKind(
     ArcAdminMapMarkerKind kind, {
     String? mapName,
   }) {
-    return switch (kind) {
+    final existing = switch (kind) {
       ArcAdminMapMarkerKind.mapEvent => eventsForMap(mapName),
       ArcAdminMapMarkerKind.questLocation => quest,
       ArcAdminMapMarkerKind.resourceNode ||
@@ -468,6 +483,7 @@ class ArcAdminMapMarkerSubtypeCatalog {
       ArcAdminMapMarkerKind.blueprint ||
       ArcAdminMapMarkerKind.customIntel => const <ArcAdminMapMarkerSubtype>[],
     };
+    return _dedupe([..._canonicalForKind(kind), ...existing]);
   }
 
   static ArcAdminMapMarkerSubtype? resolve(

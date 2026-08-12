@@ -2294,9 +2294,11 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   final _name = TextEditingController();
   final _aliases = TextEditingController();
   final _description = TextEditingController();
+  final _customSubtype = TextEditingController();
   late final TextEditingController _source;
   ArcAdminMapMarkerKind _kind = ArcAdminMapMarkerKind.customIntel;
   String? _subtypeId;
+  bool _customSubtypeEnabled = false;
   ArcRaidIntelConfidence _confidence = ArcRaidIntelConfidence.confirmed;
   String? _blueprintId;
 
@@ -2312,6 +2314,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
       _description.text = initial.description;
       _source.text = initial.sourceLabel;
       _subtypeId = initial.subtypeId;
+      _customSubtype.text = initial.subtypeLabel ?? '';
       _confidence = initial.confidence;
       _blueprintId = initial.blueprintId;
     }
@@ -2322,6 +2325,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
     _name.dispose();
     _aliases.dispose();
     _description.dispose();
+    _customSubtype.dispose();
     _source.dispose();
     super.dispose();
   }
@@ -2334,6 +2338,12 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
       mapName: widget.mapName,
     );
     final selectedSubtype = _subtypeForId(subtypeOptions, _subtypeId);
+    final hasUnknownExistingSubtype =
+        _subtypeId != null && selectedSubtype == null;
+    final subtypeDropdownValue =
+        _customSubtypeEnabled || hasUnknownExistingSubtype
+        ? '__custom__'
+        : selectedSubtype?.id;
 
     return AlertDialog(
       title: Text(widget.title),
@@ -2345,7 +2355,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
               DropdownButtonFormField<ArcAdminMapMarkerKind>(
                 isExpanded: true,
                 initialValue: _kind,
-                decoration: const InputDecoration(labelText: 'Marker type'),
+                decoration: const InputDecoration(labelText: 'Category'),
                 items: [
                   for (final kind in ArcAdminMapMarkerKind.values)
                     if (widget.includeSeedKinds || !kind.isSeedDefinition)
@@ -2354,6 +2364,8 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                 onChanged: (value) => setState(() {
                   _kind = value ?? _kind;
                   _subtypeId = null;
+                  _customSubtypeEnabled = false;
+                  _customSubtype.clear();
                 }),
               ),
               if (subtypeOptions.isNotEmpty) ...[
@@ -2361,23 +2373,36 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                 DropdownButtonFormField<String?>(
                   key: ValueKey<ArcAdminMapMarkerKind>(_kind),
                   isExpanded: true,
-                  initialValue: selectedSubtype?.id,
+                  initialValue: subtypeDropdownValue,
                   decoration: InputDecoration(
                     labelText:
-                        '${selectedSubtype?.groupLabel ?? 'Marker'} subsection',
+                        '${selectedSubtype?.groupLabel ?? 'Filter'} / subtype',
+                    helperText:
+                        'This value drives the public map filter and future icon.',
                   ),
                   items: <DropdownMenuItem<String?>>[
                     const DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('No subsection'),
+                      child: Text('No subtype'),
                     ),
                     for (final subtype in subtypeOptions)
                       DropdownMenuItem<String?>(
                         value: subtype.id,
-                        child: Text(subtype.label),
+                        child: Text('${subtype.groupLabel} • ${subtype.label}'),
                       ),
+                    const DropdownMenuItem<String?>(
+                      value: '__custom__',
+                      child: Text('Custom subtype...'),
+                    ),
                   ],
                   onChanged: (value) => setState(() {
+                    if (value == '__custom__') {
+                      _customSubtypeEnabled = true;
+                      _subtypeId = null;
+                      return;
+                    }
+                    _customSubtypeEnabled = false;
+                    _customSubtype.clear();
                     _subtypeId = value;
                     final subtype = _subtypeForId(subtypeOptions, value);
                     if (subtype != null && _name.text.trim().isEmpty) {
@@ -2385,6 +2410,17 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                     }
                   }),
                 ),
+                if (_customSubtypeEnabled || hasUnknownExistingSubtype) ...[
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _customSubtype,
+                    decoration: const InputDecoration(
+                      labelText: 'Custom filter / subtype name',
+                      helperText:
+                          'Editable admin label; a stable slug is stored for filtering.',
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: 10),
               TextField(
@@ -2481,11 +2517,23 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                 .where((item) => item.isNotEmpty)
                 .toSet()
                 .toList(growable: false);
-            final subtype = ArcAdminMapMarkerSubtypeCatalog.resolve(
-              _kind,
-              _subtypeId,
-              mapName: widget.mapName,
-            );
+            final customSubtypeLabel = _customSubtype.text.trim();
+            final customSubtypeActive =
+                _customSubtypeEnabled || hasUnknownExistingSubtype;
+            final subtype = customSubtypeActive && customSubtypeLabel.isNotEmpty
+                ? ArcAdminMapMarkerSubtype(
+                    id: ArcAdminMapMarkerSubtypeCatalog.slug(
+                      customSubtypeLabel,
+                    ),
+                    label: customSubtypeLabel,
+                    kind: _kind,
+                    groupLabel: 'Custom',
+                  )
+                : ArcAdminMapMarkerSubtypeCatalog.resolve(
+                    _kind,
+                    _subtypeId,
+                    mapName: widget.mapName,
+                  );
             Navigator.pop(
               context,
               _NewMarkerResult(
