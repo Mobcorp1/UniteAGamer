@@ -24,10 +24,30 @@ void main() {
         isNot(ArcMapFilterIconRegistry.fallbackAssetPath),
         reason: iconKey,
       );
+      expect(
+        assetPath,
+        '${ArcMapFilterIconRegistry.assetDirectory}/$iconKey.svg',
+        reason: iconKey,
+      );
+      expect(assetPath, isNot(contains(' (1)')), reason: iconKey);
+      expect(assetPath, isNot(contains(' ')), reason: iconKey);
       final file = File(assetPath);
       expect(file.existsSync(), isTrue, reason: assetPath);
       final svg = file.readAsStringSync();
+      expect(svg.trimLeft(), startsWith('<svg '), reason: iconKey);
       expect(svg, contains('viewBox="0 0 32 32"'), reason: iconKey);
+      expect(svg.trimRight(), endsWith('</svg>'), reason: iconKey);
+      expect(
+        svg.contains('<path') ||
+            svg.contains('<circle') ||
+            svg.contains('<rect'),
+        isTrue,
+        reason: iconKey,
+      );
+      expect(svg, isNot(contains('<image')), reason: iconKey);
+      expect(svg, isNot(contains('base64')), reason: iconKey);
+      expect(svg, isNot(contains('href=')), reason: iconKey);
+      expect(svg, isNot(contains('xlink:href')), reason: iconKey);
     }
   });
 
@@ -36,6 +56,46 @@ void main() {
 
     expect(assetPath, ArcMapFilterIconRegistry.fallbackAssetPath);
     expect(File(assetPath).existsSync(), isTrue);
+  });
+
+  test('canonical registry assets have no duplicate filenames', () {
+    final paths = ArcMapFilterIconRegistry.canonicalAssetPaths;
+    final filenames = paths.map((path) => path.split('/').last).toList();
+
+    expect(ArcMapFilterTaxonomy.all, hasLength(70));
+    expect(paths.toSet(), hasLength(paths.length));
+    expect(filenames.toSet(), hasLength(filenames.length));
+    expect(paths, isNot(contains(ArcMapFilterIconRegistry.fallbackAssetPath)));
+    expect(
+      paths,
+      isNot(
+        contains(
+          '${ArcMapFilterIconRegistry.assetDirectory}/'
+          '${ArcMapFilterIconRegistry.communityReportRatIconKey}.svg',
+        ),
+      ),
+    );
+  });
+
+  test('Report A Rat resolves as a UAG community icon', () {
+    final assetPath = ArcMapFilterIconRegistry.assetPathFor(
+      ArcMapFilterIconRegistry.communityReportRatIconKey,
+    );
+
+    expect(assetPath, isNot(ArcMapFilterIconRegistry.fallbackAssetPath));
+    expect(
+      assetPath,
+      'assets/arc_raiders/map_filter_icons/community_report_rat.svg',
+    );
+    expect(File(assetPath).existsSync(), isTrue);
+    expect(
+      ArcMapFilterIconRegistry.canonicalIconKeys,
+      isNot(contains(ArcMapFilterIconRegistry.communityReportRatIconKey)),
+    );
+    expect(
+      ArcMapFilterIconRegistry.uagCommunityIconKeys,
+      contains(ArcMapFilterIconRegistry.communityReportRatIconKey),
+    );
   });
 
   test('canonical subtype resolves to icon key and asset', () {

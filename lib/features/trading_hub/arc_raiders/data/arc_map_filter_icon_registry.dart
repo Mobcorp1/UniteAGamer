@@ -6,20 +6,32 @@ class ArcMapFilterIconRegistry {
 
   static const String assetDirectory = 'assets/arc_raiders/map_filter_icons';
   static const String fallbackIconKey = 'map_filter_unknown';
+  static const String communityReportRatIconKey = 'community_report_rat';
   static const String fallbackAssetPath =
       '$assetDirectory/$fallbackIconKey.svg';
 
+  static const Set<String> uagCommunityIconKeys = {communityReportRatIconKey};
+
   static Set<String> get canonicalIconKeys => {
     for (final entry in ArcMapFilterTaxonomy.all) entry.iconKey,
+  };
+
+  static Set<String> get supportedIconKeys => {
+    ...canonicalIconKeys,
+    ...uagCommunityIconKeys,
   };
 
   static List<String> get canonicalAssetPaths => [
     for (final key in canonicalIconKeys) assetPathFor(key),
   ];
 
+  static List<String> get uagCommunityAssetPaths => [
+    for (final key in uagCommunityIconKeys) assetPathFor(key),
+  ];
+
   static String assetPathFor(String iconKey) {
     final normalized = _normalize(iconKey);
-    if (!canonicalIconKeys.contains(normalized)) {
+    if (!supportedIconKeys.contains(normalized)) {
       return fallbackAssetPath;
     }
     return '$assetDirectory/$normalized.svg';

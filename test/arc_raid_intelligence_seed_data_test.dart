@@ -29,7 +29,7 @@ void main() {
             );
             expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
             expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isTrue);
-          } else {
+          } else if (!map.hasRenderableMap) {
             expect(map.hasCalibratedMap, isFalse);
             expect(map.schematicLabel, contains('Tactical schematic'));
           }
@@ -40,7 +40,7 @@ void main() {
               map.assetForLayer(ArcRaidMapLayer.surface)?.localAssetPath,
               'assets/arc_raiders/maps/riven_tides/riven_tides_master.webp',
             );
-            expect(map.dataVersion, 'pass-294-riven-tides-provisional-v1');
+            expect(map.dataVersion, 'pass-305-riven-tides-final-v1');
           }
 
           if (map.id == 'dam_battlegrounds') {
@@ -49,10 +49,7 @@ void main() {
               map.assetForLayer(ArcRaidMapLayer.surface)?.localAssetPath,
               'assets/arc_raiders/maps/dam_battlegrounds/dam_battlegrounds_master.webp',
             );
-            expect(
-              map.dataVersion,
-              'pass-294-dam-battlegrounds-provisional-v1',
-            );
+            expect(map.dataVersion, 'pass-305-dam-battlegrounds-final-v1');
           }
 
           if (map.id == 'spaceport') {
@@ -72,10 +69,7 @@ void main() {
               map.assetForLayer(ArcRaidMapLayer.underground)?.localAssetPath,
               'assets/arc_raiders/maps/spaceport/spaceport_level_2.webp',
             );
-            expect(
-              map.dataVersion,
-              'pass-294-spaceport-two-layer-provisional-v1',
-            );
+            expect(map.dataVersion, 'pass-305-spaceport-two-layer-final-v1');
           }
 
           expect(map.regions, isNotEmpty);

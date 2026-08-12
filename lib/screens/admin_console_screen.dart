@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_bro
 import 'package:uag_arc_raiders_hub/features/release/widgets/uag_release_readiness_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_admin_map_editor_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_map_filter_icon_review_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_operations_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_visibility_diagnostics_panel.dart';
@@ -308,6 +309,14 @@ class _AdminConsoleBody extends StatelessWidget {
                             builder: (_) => const ArcAdminMapEditorScreen(),
                           ),
                         );
+                      },
+                    ),
+                    const SizedBox(height: AppTheme.spaceL),
+                    ArcMapFilterIconReviewLaunchCard(
+                      onOpen: () {
+                        Navigator.of(
+                          context,
+                        ).pushNamed(ArcMapFilterIconReviewScreen.routeName);
                       },
                     ),
                     const SizedBox(height: AppTheme.spaceXL),

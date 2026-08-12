@@ -24,6 +24,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_beta_feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_map_filter_icon_review_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
@@ -502,6 +503,12 @@ class UAGTradersHubApp extends StatefulWidget {
       case ArcAdminMapEditorScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcAdminMapEditorScreen(),
+          settings: settings,
+        );
+
+      case ArcMapFilterIconReviewScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcMapFilterIconReviewScreen(),
           settings: settings,
         );
 
