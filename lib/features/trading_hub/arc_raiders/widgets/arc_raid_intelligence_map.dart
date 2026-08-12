@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_blueprint_opportunity_marker.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
@@ -249,10 +250,11 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                                   isBold: true,
                                 ),
                               )
-                            : Icon(
-                                _markerIcon(marker.category),
+                            : ArcMapFilterIcon(
+                                iconKey: marker.iconKey,
+                                category: marker.category,
                                 color: color,
-                                size: 15,
+                                size: 17,
                               ),
                       ),
                     ),
@@ -319,53 +321,6 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
             : AppTheme.neonCyan;
       default:
         return AppTheme.neonCyan;
-    }
-  }
-
-  static IconData _markerIcon(ArcRaidMapMarkerCategory category) {
-    switch (category) {
-      case ArcRaidMapMarkerCategory.blueprintOpportunity:
-      case ArcRaidMapMarkerCategory.topWanted:
-        return Icons.extension_rounded;
-      case ArcRaidMapMarkerCategory.favouriteLoadoutRequirement:
-        return Icons.star_rounded;
-      case ArcRaidMapMarkerCategory.tradePreparationRequirement:
-        return Icons.swap_horiz_rounded;
-      case ArcRaidMapMarkerCategory.standardExtraction:
-        return Icons.exit_to_app_rounded;
-      case ArcRaidMapMarkerCategory.raiderHatch:
-        return Icons.key_rounded;
-      case ArcRaidMapMarkerCategory.spawn:
-      case ArcRaidMapMarkerCategory.spawnRegion:
-        return Icons.my_location_rounded;
-      case ArcRaidMapMarkerCategory.routeWaypoint:
-        return Icons.route_rounded;
-      case ArcRaidMapMarkerCategory.weaponCase:
-        return Icons.inventory_rounded;
-      case ArcRaidMapMarkerCategory.securityLocker:
-        return Icons.lock_rounded;
-      case ArcRaidMapMarkerCategory.firstWaveCache:
-      case ArcRaidMapMarkerCategory.raiderCache:
-      case ArcRaidMapMarkerCategory.fieldCrate:
-      case ArcRaidMapMarkerCategory.containerCluster:
-        return Icons.inventory_2_rounded;
-      case ArcRaidMapMarkerCategory.lockedRoom:
-        return Icons.lock_rounded;
-      case ArcRaidMapMarkerCategory.keyRoom:
-        return Icons.vpn_key_rounded;
-      case ArcRaidMapMarkerCategory.generalLoot:
-        return Icons.all_inbox_rounded;
-      case ArcRaidMapMarkerCategory.mapEvent:
-        return Icons.bolt_rounded;
-      case ArcRaidMapMarkerCategory.arcThreat:
-        return Icons.warning_rounded;
-      case ArcRaidMapMarkerCategory.surfaceTransition:
-      case ArcRaidMapMarkerCategory.undergroundTransition:
-        return Icons.stairs_rounded;
-      case ArcRaidMapMarkerCategory.configuredHazard:
-        return Icons.crisis_alert_rounded;
-      default:
-        return Icons.place_rounded;
     }
   }
 }

@@ -1,4 +1,4 @@
-﻿name: uag_arc_raiders_hub
+name: uag_arc_raiders_hub
 description: "UAG Arc Raiders Hub standalone app."
 publish_to: 'none'
 
@@ -37,6 +37,7 @@ dependencies:
   camera: ^0.12.0+2
   camera_android_camerax: 0.7.2
   image: ^4.8.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +73,7 @@ flutter:
     - assets/arc_raiders/blueprints/
     - assets/arc_raiders/scrappy_resources/
     - assets/arc_raiders/items/
+    - assets/arc_raiders/map_filter_icons/
     - assets/arc_raiders/operations/
     - assets/arc_raiders/operations/badges/
     - assets/arc_raiders/maps/blue_gate/

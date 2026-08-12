@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_subtype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_alignment_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_adapters.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_import_engine.dart';
@@ -20,6 +21,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -150,10 +152,40 @@ class _MarkerPaletteItem {
 }
 
 class _SubtypeFilterOption {
-  const _SubtypeFilterOption({required this.id, required this.label});
+  const _SubtypeFilterOption({
+    required this.id,
+    required this.label,
+    this.iconKey,
+  });
 
   final String? id;
   final String label;
+  final String? iconKey;
+}
+
+class _SubtypeIconLabel extends StatelessWidget {
+  const _SubtypeIconLabel({required this.label, this.iconKey});
+
+  final String label;
+  final String? iconKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconKey = this.iconKey;
+    if (iconKey == null || iconKey.trim().isEmpty) {
+      return Text(label, maxLines: 1, overflow: TextOverflow.ellipsis);
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ArcMapFilterIcon(iconKey: iconKey, color: AppTheme.neonCyan, size: 17),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+      ],
+    );
+  }
 }
 
 class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
@@ -1775,7 +1807,10 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                 .map(
                   (option) => DropdownMenuItem<String?>(
                     value: option.id,
-                    child: Text(option.label),
+                    child: _SubtypeIconLabel(
+                      label: option.label,
+                      iconKey: option.iconKey,
+                    ),
                   ),
                 )
                 .toList(growable: false),
@@ -1860,13 +1895,20 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       const _SubtypeFilterOption(id: null, label: 'All subsections'),
     ];
     final seen = <String>{};
-    void add(String? id, String? label) {
+    void add(String? id, String? label, {String? iconKey}) {
       final cleanId = id?.trim();
       final cleanLabel = label?.trim();
       if (cleanId == null || cleanId.isEmpty) return;
       if (cleanLabel == null || cleanLabel.isEmpty) return;
       if (!seen.add(cleanId)) return;
-      options.add(_SubtypeFilterOption(id: cleanId, label: cleanLabel));
+      options.add(
+        _SubtypeFilterOption(
+          id: cleanId,
+          label: cleanLabel,
+          iconKey:
+              iconKey ?? ArcMapFilterIconRegistry.iconKeyForSubtype(cleanId),
+        ),
+      );
     }
 
     if (_kindFilter != null) {
@@ -1874,7 +1916,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
         _kindFilter!,
         mapName: _map.displayName,
       )) {
-        add(subtype.id, subtype.label);
+        add(subtype.id, subtype.label, iconKey: subtype.iconKey);
       }
     }
     for (final marker in _markers) {
@@ -2388,7 +2430,10 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                     for (final subtype in subtypeOptions)
                       DropdownMenuItem<String?>(
                         value: subtype.id,
-                        child: Text('${subtype.groupLabel} • ${subtype.label}'),
+                        child: _SubtypeIconLabel(
+                          label: '${subtype.groupLabel} • ${subtype.label}',
+                          iconKey: subtype.iconKey,
+                        ),
                       ),
                     const DropdownMenuItem<String?>(
                       value: '__custom__',

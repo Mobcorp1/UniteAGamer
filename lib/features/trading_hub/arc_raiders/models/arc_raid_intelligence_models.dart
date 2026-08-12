@@ -629,6 +629,7 @@ class ArcRaidMapMarker {
     this.count = 1,
     this.detail = '',
     this.tags = const <String>[],
+    this.iconKey,
     this.clusterMemberIds = const <String>[],
     this.blueprintIds = const <String>[],
     this.blueprintFindCounts = const <String, int>{},
@@ -649,6 +650,7 @@ class ArcRaidMapMarker {
   final int count;
   final String detail;
   final List<String> tags;
+  final String? iconKey;
   final List<String> clusterMemberIds;
   final List<String> blueprintIds;
   final Map<String, int> blueprintFindCounts;

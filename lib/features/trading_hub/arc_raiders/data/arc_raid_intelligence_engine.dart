@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_intel_seed.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_opportunity_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_cluster_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_world_intel_population_engine.dart';
@@ -190,6 +191,9 @@ class ArcRaidIntelligenceEngine {
     final detail = marker.description.trim().isEmpty
         ? 'Admin-published Raid Intelligence from $sourceLabel.'
         : marker.description.trim();
+    final iconKey = ArcMapFilterIconRegistry.iconKeyForSubtype(
+      marker.subtypeId,
+    );
 
     return ArcRaidMapMarker(
       id: 'admin_${marker.id}',
@@ -203,6 +207,7 @@ class ArcRaidIntelligenceEngine {
       approximate: !marker.adminVerified,
       count: math.max(1, marker.resolvedEvidenceCount),
       detail: detail,
+      iconKey: iconKey,
       tags: tags,
       blueprintIds: marker.blueprintId == null
           ? const <String>[]

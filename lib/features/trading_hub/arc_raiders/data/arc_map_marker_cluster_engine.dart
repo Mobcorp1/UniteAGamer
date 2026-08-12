@@ -86,6 +86,11 @@ class ArcMapMarkerClusterEngine {
           .toSet()
           .toList(growable: false);
       final blueprintFindCounts = <String, int>{};
+      final iconKeys = nearby
+          .map((item) => item.iconKey?.trim())
+          .whereType<String>()
+          .where((item) => item.isNotEmpty)
+          .toSet();
       for (final item in nearby) {
         for (final entry in item.blueprintFindCounts.entries) {
           blueprintFindCounts.update(
@@ -109,6 +114,7 @@ class ArcMapMarkerClusterEngine {
           approximate: nearby.any((item) => item.approximate),
           count: totalCount,
           detail: labels.take(4).join(' • '),
+          iconKey: iconKeys.length == 1 ? iconKeys.single : null,
           tags: nearby
               .expand((item) => item.tags)
               .toSet()

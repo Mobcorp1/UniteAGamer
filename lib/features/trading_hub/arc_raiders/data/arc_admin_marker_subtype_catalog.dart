@@ -11,12 +11,14 @@ class ArcAdminMapMarkerSubtype {
     required this.label,
     required this.kind,
     required this.groupLabel,
+    this.iconKey,
   });
 
   final String id;
   final String label;
   final ArcAdminMapMarkerKind kind;
   final String groupLabel;
+  final String? iconKey;
 }
 
 class ArcAdminMapMarkerSubtypeCatalog {
@@ -441,6 +443,7 @@ class ArcAdminMapMarkerSubtypeCatalog {
           label: entry.label,
           kind: entry.kind,
           groupLabel: entry.groupLabel,
+          iconKey: entry.iconKey,
         ),
     ];
   }

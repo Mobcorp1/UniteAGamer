@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcMapMarkerDetailCard extends StatelessWidget {
@@ -34,7 +35,13 @@ class ArcMapMarkerDetailCard extends StatelessWidget {
                     color: _color.withValues(alpha: 0.14),
                     border: Border.all(color: _color.withValues(alpha: 0.44)),
                   ),
-                  child: Icon(_icon, color: _color, size: 20),
+                  child: ArcMapFilterIcon(
+                    iconKey: marker.iconKey,
+                    category: marker.category,
+                    color: _color,
+                    size: 22,
+                    semanticLabel: marker.category.label,
+                  ),
                 ),
                 const SizedBox(width: AppTheme.spaceM),
                 Expanded(
@@ -144,33 +151,6 @@ class ArcMapMarkerDetailCard extends StatelessWidget {
             : AppTheme.neonCyan;
       default:
         return AppTheme.neonCyan;
-    }
-  }
-
-  IconData get _icon {
-    switch (marker.category) {
-      case ArcRaidMapMarkerCategory.blueprintOpportunity:
-      case ArcRaidMapMarkerCategory.topWanted:
-        return Icons.extension_rounded;
-      case ArcRaidMapMarkerCategory.spawn:
-      case ArcRaidMapMarkerCategory.spawnRegion:
-        return Icons.my_location_rounded;
-      case ArcRaidMapMarkerCategory.standardExtraction:
-        return Icons.exit_to_app_rounded;
-      case ArcRaidMapMarkerCategory.raiderHatch:
-        return Icons.key_rounded;
-      case ArcRaidMapMarkerCategory.surfaceTransition:
-      case ArcRaidMapMarkerCategory.undergroundTransition:
-        return Icons.layers_rounded;
-      case ArcRaidMapMarkerCategory.weaponCase:
-      case ArcRaidMapMarkerCategory.securityLocker:
-      case ArcRaidMapMarkerCategory.firstWaveCache:
-      case ArcRaidMapMarkerCategory.raiderCache:
-      case ArcRaidMapMarkerCategory.fieldCrate:
-      case ArcRaidMapMarkerCategory.containerCluster:
-        return Icons.inventory_2_rounded;
-      default:
-        return Icons.place_rounded;
     }
   }
 }
