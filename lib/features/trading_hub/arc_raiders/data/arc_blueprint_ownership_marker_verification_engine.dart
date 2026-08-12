@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_occupancy_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_template_verification_engine.dart';
@@ -83,6 +82,8 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
     this.minimumTickMarkerEvidence = 0.18,
     this.minimumCombinedMarkerEvidence = 0.20,
     this.minimumReliableSingleBookEvidence = 0.68,
+    this.highConfidenceProposalFloor = 0.98,
+    this.minimumCorroboratedMarkerEvidence = 0.70,
     this.glareSafetyTemplateSimilarity = 0.78,
   });
 
@@ -92,6 +93,8 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
   final double minimumTickMarkerEvidence;
   final double minimumCombinedMarkerEvidence;
   final double minimumReliableSingleBookEvidence;
+  final double highConfidenceProposalFloor;
+  final double minimumCorroboratedMarkerEvidence;
   final double glareSafetyTemplateSimilarity;
 
   ArcBlueprintOwnershipMarkerVerificationResult verify({
@@ -180,14 +183,36 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
           marker.bookEvidence < minimumReliableSingleBookEvidence;
       final markerEvidenceRejects = markersAbsent || ambiguousBookOnly;
 
-      // Suppression-only. A weak cell is never promoted by marker detection.
+      // PASS 345 dual-gate proposal policy.
       //
-      // A visually "occupied" whole-cell candidate that has neither of the
-      // game's owned-card UI markers is rejected unless expected artwork is an
-      // exceptionally strong match. This is intentionally aimed at first-run
-      // scans where no personal calibration anchors exist yet.
+      // Real-device first-run evidence now shows a stable separation:
+      //   - false positives can still reach 0.929-0.974 whole-cell confidence
+      //     while carrying weak ownership-marker corroboration;
+      //   - genuine owned cards below 0.980 retain strong combined marker
+      //     evidence, or a genuinely strong lower-left book marker when the
+      //     tick is clipped by residual capture drift.
+      //
+      // A candidate therefore survives when either:
+      //   1. whole-cell evidence is exceptionally high (>= 0.980), OR
+      //   2. ownership-marker corroboration is strong (>= 0.700), OR
+      //   3. the book marker alone is strong enough to survive a clipped tick.
+      //
+      // This remains suppression-only and can never promote a weak cell.
+      final highConfidenceCandidate = evidence >= highConfidenceProposalFloor;
+      final corroboratedMarkers =
+          marker.combinedEvidence >= minimumCorroboratedMarkerEvidence;
+      final reliableBookOnly =
+          marker.bookEvidence >= minimumReliableSingleBookEvidence;
+
+      final dualGateRejects =
+          evidence >= ownedThreshold &&
+          !highConfidenceCandidate &&
+          !corroboratedMarkers &&
+          !reliableBookOnly;
+
       if (evidence >= ownedThreshold &&
-          markerEvidenceRejects &&
+          (markerEvidenceRejects || dualGateRejects) &&
+          !highConfidenceCandidate &&
           template.templateSimilarity < glareSafetyTemplateSimilarity) {
         finalScore = math.min(finalScore, maximumSuppressedScore);
         suppressed = true;
@@ -231,6 +256,8 @@ class ArcBlueprintOwnershipMarkerVerificationEngine {
           'marker=${marker.combinedEvidence.toStringAsFixed(3)} '
           'template=${template.templateSimilarity.toStringAsFixed(3)} '
           'multiSignal=${evidence.toStringAsFixed(3)} '
+          'proposalFloor=${highConfidenceProposalFloor.toStringAsFixed(3)} '
+          'markerFloor=${minimumCorroboratedMarkerEvidence.toStringAsFixed(3)} '
           'final=${finalScore.toStringAsFixed(3)} '
           'suppressed=$suppressed',
         );
