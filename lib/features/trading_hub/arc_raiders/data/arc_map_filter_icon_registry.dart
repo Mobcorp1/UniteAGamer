@@ -7,10 +7,52 @@ class ArcMapFilterIconRegistry {
   static const String assetDirectory = 'assets/arc_raiders/map_filter_icons';
   static const String fallbackIconKey = 'map_filter_unknown';
   static const String communityReportRatIconKey = 'community_report_rat';
-  static const String fallbackAssetPath =
-      '$assetDirectory/$fallbackIconKey.svg';
+  static const String fallbackAssetPath = '';
 
   static const Set<String> uagCommunityIconKeys = {communityReportRatIconKey};
+
+  // New in-game raster marker artwork. Taxonomy keys stay stable so existing
+  // Firestore/admin marker data does not need migration.
+  static const Map<String, String> _rasterAssets = {
+    'extract_standard': 'extraction_point.webp',
+    'extract_raider_hatch': 'raider_hatch.webp',
+    'infra_field_depot': 'field_depot.webp',
+    'infra_zipline': 'zipline.webp',
+    'loot_weapon_case': 'weapon_case.webp',
+    'loot_security_locker': 'security_locker.webp',
+    'loot_raider_cache': 'raider_cache.webp',
+    'loot_field_crate': 'field_crate.webp',
+    'loot_ammo_case': 'ammo_case.webp',
+    'loot_medical_container': 'medical_bag.webp',
+    'access_locked_room': 'locked_room.webp',
+    'access_breachable_door': 'breachable_container.webp',
+    'arc_assessor': 'arc_assessor.webp',
+    'arc_baron_husk': 'arc_baron_husk.webp',
+    'arc_bastion': 'arc_bastion.webp',
+    'arc_bombardier': 'arc_bombardier.webp',
+    'arc_comet': 'arc_comet.webp',
+    'arc_courier': 'arc_courier.webp',
+    'arc_fireball': 'arc_fireball.webp',
+    'arc_firefly': 'arc_firefly.webp',
+    'arc_harvester': 'arc_harvester.webp',
+    'arc_hornet': 'arc_hornet.webp',
+    'arc_leaper': 'arc_leaper.webp',
+    'arc_matriarch': 'arc_matriarch.webp',
+    'arc_pop': 'arc_pop.webp',
+    'arc_probe': 'arc_probe.webp',
+    'arc_queen': 'arc_queen.webp',
+    'arc_rocketeer': 'arc_rocketeer.webp',
+    'arc_sentinel': 'arc_sentinel.webp',
+    'arc_shredder': 'arc_shredder.webp',
+    'arc_snitch': 'arc_snitch.webp',
+    'arc_spotter': 'arc_spotter.webp',
+    'arc_surveyor': 'arc_surveyor.webp',
+    'arc_tick': 'arc_tick.webp',
+    'arc_turbine': 'arc_turbine.webp',
+    'arc_turret': 'arc_turret.webp',
+    'arc_vaporizer': 'arc_vaporizer.webp',
+    'arc_wasp': 'arc_wasp.webp',
+  };
 
   static Set<String> get canonicalIconKeys => {
     for (final entry in ArcMapFilterTaxonomy.all) entry.iconKey,
@@ -21,20 +63,26 @@ class ArcMapFilterIconRegistry {
     ...uagCommunityIconKeys,
   };
 
+  static Set<String> get rasterIconKeys => _rasterAssets.keys.toSet();
+
   static List<String> get canonicalAssetPaths => [
-    for (final key in canonicalIconKeys) assetPathFor(key),
+    for (final key in canonicalIconKeys)
+      if (tryAssetPathFor(key) case final path?) path,
   ];
 
   static List<String> get uagCommunityAssetPaths => [
-    for (final key in uagCommunityIconKeys) assetPathFor(key),
+    for (final key in uagCommunityIconKeys)
+      if (tryAssetPathFor(key) case final path?) path,
   ];
 
-  static String assetPathFor(String iconKey) {
+  static String? tryAssetPathFor(String iconKey) {
     final normalized = _normalize(iconKey);
-    if (!supportedIconKeys.contains(normalized)) {
-      return fallbackAssetPath;
-    }
-    return '$assetDirectory/$normalized.svg';
+    final filename = _rasterAssets[normalized];
+    return filename == null ? null : '$assetDirectory/$filename';
+  }
+
+  static String assetPathFor(String iconKey) {
+    return tryAssetPathFor(iconKey) ?? fallbackAssetPath;
   }
 
   static String? iconKeyForSubtype(String? subtypeId) {
@@ -75,20 +123,26 @@ class ArcMapFilterIconRegistry {
     };
   }
 
-  static String assetPathForMarker({
+  static String? tryAssetPathForMarker({
     String? iconKey,
     required ArcRaidMapMarkerCategory category,
   }) {
     final explicit = iconKey?.trim();
     if (explicit != null && explicit.isNotEmpty) {
-      return assetPathFor(explicit);
+      final explicitPath = tryAssetPathFor(explicit);
+      if (explicitPath != null) return explicitPath;
     }
     final categoryKey = iconKeyForMarkerCategory(category);
-    if (categoryKey == null) return fallbackAssetPath;
-    return assetPathFor(categoryKey);
+    return categoryKey == null ? null : tryAssetPathFor(categoryKey);
   }
 
-  static String _normalize(String value) {
-    return value.trim().toLowerCase();
+  static String assetPathForMarker({
+    String? iconKey,
+    required ArcRaidMapMarkerCategory category,
+  }) {
+    return tryAssetPathForMarker(iconKey: iconKey, category: category) ??
+        fallbackAssetPath;
   }
+
+  static String _normalize(String value) => value.trim().toLowerCase();
 }
