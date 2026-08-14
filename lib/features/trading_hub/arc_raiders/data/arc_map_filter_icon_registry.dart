@@ -66,13 +66,11 @@ class ArcMapFilterIconRegistry {
   static Set<String> get rasterIconKeys => _rasterAssets.keys.toSet();
 
   static List<String> get canonicalAssetPaths => [
-    for (final key in canonicalIconKeys)
-      if (tryAssetPathFor(key) case final path?) path,
+    for (final key in canonicalIconKeys) ?tryAssetPathFor(key),
   ];
 
   static List<String> get uagCommunityAssetPaths => [
-    for (final key in uagCommunityIconKeys)
-      if (tryAssetPathFor(key) case final path?) path,
+    for (final key in uagCommunityIconKeys) ?tryAssetPathFor(key),
   ];
 
   static String? tryAssetPathFor(String iconKey) {

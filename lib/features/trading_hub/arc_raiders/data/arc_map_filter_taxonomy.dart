@@ -361,6 +361,14 @@ class ArcMapFilterTaxonomy {
       iconKey: 'arc_tick',
     ),
     ArcMapFilterTaxonomyEntry(
+      id: 'turbine',
+      label: 'Turbine',
+      groupId: 'arc',
+      groupLabel: 'ARC Enemies',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      iconKey: 'arc_turbine',
+    ),
+    ArcMapFilterTaxonomyEntry(
       id: 'turret',
       label: 'Turret',
       groupId: 'arc',

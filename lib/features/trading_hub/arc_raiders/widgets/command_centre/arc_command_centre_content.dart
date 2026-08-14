@@ -39,7 +39,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   @override
   Widget build(BuildContext context) {
     final commandState = widget.commandState;
-    final liveTiles = _liveTiles(commandState).take(4).toList(growable: false);
     final carouselTiles = _systemCarouselTiles(commandState);
     final selectedSystemTile = carouselTiles.isEmpty
         ? null
@@ -96,7 +95,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           _onboardingFocusStrip(commandState.onboardingFocus!),
           const SizedBox(height: 8),
         ],
-        _topCommandDeck(commandState, commandMoves, liveTiles),
+        _topCommandDeck(commandState, commandMoves),
         const SizedBox(height: 8),
         _systemCarousel(carouselTiles),
         const SizedBox(height: 8),
@@ -138,7 +137,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _topCommandDeck(
     ArcCommandCentreState commandState,
     List<_CommandMoveData> commandMoves,
-    List<_CommandTileData> liveTiles,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -153,13 +151,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         );
         final secondary = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _dailyChecklist(commandState.checklist),
-            if (liveTiles.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              _liveTileGrid(liveTiles),
-            ],
-          ],
+          children: [_dailyChecklist(commandState.checklist)],
         );
 
         if (!desktop) {
@@ -413,197 +405,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  List<_CommandTileData> _liveTiles(ArcCommandCentreState state) {
-    final loadout = _snapshotByLabel(state.snapshots, 'Favourite Loadout');
-    final trade = _snapshotByLabel(state.snapshots, 'Trade Activity');
-    return [
-      _tileFromPanel(
-        state.benchSummary,
-        image: _imageForAction(state.benchSummary.action),
-        forceTitle: 'Bench',
-      ),
-      _tileFromPanel(
-        state.resourceSummary,
-        image: _imageForAction(state.resourceSummary.action),
-        forceTitle: 'Resources',
-      ),
-      _tileFromPanel(
-        state.blueprintSummary,
-        image: _imageForAction(state.blueprintSummary.action),
-        forceTitle: 'Blueprints',
-      ),
-      if (trade != null)
-        _tileFromMetric(
-          trade,
-          action: const ArcCommandAction(
-            label: 'Open Trades',
-            intent: ArcCommandActionIntent.smartTrade,
-          ),
-          image: _operationAsset('review_trade_activity_card.webp'),
-          forceTitle: 'Trade',
-        )
-      else
-        _tileFromMetric(
-          loadout ??
-              const ArcCommandSnapshotMetric(
-                label: 'Favourite Loadout',
-                value: 'Set up',
-                detail: 'Open loadout',
-                status: ArcCommandStatus.warning,
-              ),
-          action: const ArcCommandAction(
-            label: 'Open Loadout',
-            intent: ArcCommandActionIntent.favouriteLoadout,
-          ),
-          image: _operationAsset('finish_favourite_loadout_card.webp'),
-          forceTitle: 'Loadout',
-        ),
-    ];
-  }
-
-  List<_CommandTileData> _systemCarouselTiles(ArcCommandCentreState state) {
-    final loadout = _snapshotByLabel(state.snapshots, 'Favourite Loadout');
-    return [
-      _tileFromPanel(
-        state.blueprintSummary,
-        image: _operationAsset('complete_blueprint_collection_card.webp'),
-      ),
-      _tileFromPanel(
-        state.benchSummary,
-        image: _operationAsset('upgrade_gunsmith_card.webp'),
-      ),
-      _tileFromPanel(
-        state.resourceSummary,
-        image: _operationAsset('missing_resources_card.webp'),
-      ),
-      _tileFromPanel(
-        state.raidIntelligenceSummary,
-        image: _imageForAction(state.raidIntelligenceSummary.action),
-      ),
-      _tileFromPanel(
-        state.questSummary,
-        image: _operationAsset('track_quests_card.webp'),
-      ),
-      _tileFromPanel(
-        state.operationsSummary,
-        image: _operationAsset('claim_operations_card.webp'),
-      ),
-      _tileFromPanel(
-        state.weeklyTraderSummary,
-        image: _operationAsset('check_nomadic_trader_card.webp'),
-      ),
-      _tileFromMetric(
-        loadout ??
-            const ArcCommandSnapshotMetric(
-              label: 'Favourite Loadout',
-              value: 'Set up',
-              detail: 'Open loadout',
-              status: ArcCommandStatus.warning,
-            ),
-        action: const ArcCommandAction(
-          label: 'Open Loadout',
-          intent: ArcCommandActionIntent.favouriteLoadout,
-        ),
-        image: _operationAsset('finish_favourite_loadout_card.webp'),
-      ),
-      _CommandTileData(
-        title: 'Tool Deck',
-        value: 'All tools',
-        detail: 'Open full ARC launcher',
-        status: ArcCommandStatus.active,
-        action: const ArcCommandAction(
-          label: 'Open Tool Deck',
-          intent: ArcCommandActionIntent.toolDeck,
-        ),
-        image: _operationAsset('arc_tool_deck_background.webp'),
-      ),
-    ];
-  }
-
-  Widget _liveTileGrid(List<_CommandTileData> tiles) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 720 ? 4 : 2;
-        const spacing = 8.0;
-        final width =
-            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final tile in tiles)
-              SizedBox(width: width, child: _liveTile(tile)),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _liveTile(_CommandTileData tile) {
-    final accent = arcCommandStatusAccent(tile.status);
-    return _tapSurface(
-      action: tile.action,
-      child: Container(
-        height: 88,
-        padding: const EdgeInsets.all(9),
-        decoration: _imageDecoration(tile.image, accent, radius: 18),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              child: Icon(_statusIcon(tile.status), color: accent, size: 18),
-            ),
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Icon(
-                Icons.chevron_right_rounded,
-                color: accent.withValues(alpha: 0.85),
-                size: 20,
-              ),
-            ),
-            Positioned.fill(
-              top: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    _cleanText(tile.value),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(fontSize: 12, color: accent),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    _cleanText(tile.title).toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 9,
-                      color: Colors.white70,
-                      isBold: true,
-                    ),
-                  ),
-                  Text(
-                    _shortActionText(tile.detail),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 9,
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -989,15 +790,63 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     };
   }
 
-  String _tradeSignalDetail(ArcCommandTradeSummary summary) {
-    final looking = summary.lookingFor.where(_isUsefulSignal).take(1).join('');
-    final offering = summary.offering.where(_isUsefulSignal).take(1).join('');
-    if (looking.isNotEmpty && offering.isNotEmpty) {
-      return 'Need: $looking - Offer: $offering';
-    }
-    if (looking.isNotEmpty) return 'Need: $looking';
-    if (offering.isNotEmpty) return 'Offer: $offering';
-    return 'Review trade signals';
+  List<_CommandTileData> _systemCarouselTiles(ArcCommandCentreState state) {
+    final loadout = _snapshotByLabel(state.snapshots, 'Favourite Loadout');
+    return [
+      _tileFromPanel(
+        state.blueprintSummary,
+        image: _operationAsset('complete_blueprint_collection_card.webp'),
+      ),
+      _tileFromPanel(
+        state.benchSummary,
+        image: _operationAsset('upgrade_gunsmith_card.webp'),
+      ),
+      _tileFromPanel(
+        state.resourceSummary,
+        image: _operationAsset('missing_resources_card.webp'),
+      ),
+      _tileFromPanel(
+        state.raidIntelligenceSummary,
+        image: _imageForAction(state.raidIntelligenceSummary.action),
+      ),
+      _tileFromPanel(
+        state.questSummary,
+        image: _operationAsset('track_quests_card.webp'),
+      ),
+      _tileFromPanel(
+        state.operationsSummary,
+        image: _operationAsset('claim_operations_card.webp'),
+      ),
+      _tileFromPanel(
+        state.weeklyTraderSummary,
+        image: _operationAsset('check_nomadic_trader_card.webp'),
+      ),
+      _tileFromMetric(
+        loadout ??
+            const ArcCommandSnapshotMetric(
+              label: 'Favourite Loadout',
+              value: 'Set up',
+              detail: 'Open loadout',
+              status: ArcCommandStatus.warning,
+            ),
+        action: const ArcCommandAction(
+          label: 'Open Loadout',
+          intent: ArcCommandActionIntent.favouriteLoadout,
+        ),
+        image: _operationAsset('finish_favourite_loadout_card.webp'),
+      ),
+      _CommandTileData(
+        title: 'Tool Deck',
+        value: 'All tools',
+        detail: 'Open full ARC launcher',
+        status: ArcCommandStatus.active,
+        action: const ArcCommandAction(
+          label: 'Open Tool Deck',
+          intent: ArcCommandActionIntent.toolDeck,
+        ),
+        image: _operationAsset('arc_tool_deck_background.webp'),
+      ),
+    ];
   }
 
   Widget _systemDetailGrid(List<Widget> children) {
@@ -1448,6 +1297,18 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         summary.offering.any(_isUsefulSignal);
   }
 
+  String _tradeSignalDetail(ArcCommandTradeSummary summary) {
+    final lookingFor = summary.lookingFor.where(_isUsefulSignal).toList();
+    if (lookingFor.isNotEmpty) {
+      return 'Looking for ${lookingFor.first}.';
+    }
+    final offering = summary.offering.where(_isUsefulSignal).toList();
+    if (offering.isNotEmpty) {
+      return 'Offering ${offering.first}.';
+    }
+    return 'Open Smart Trade for current opportunities.';
+  }
+
   bool _isUsefulSignal(String value) {
     final normalized = value.toLowerCase();
     return value.trim().isNotEmpty &&
@@ -1486,47 +1347,47 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   String _cleanText(String value) {
     return value
         .replaceAll(
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          '-',
+        )
+        .replaceAll(
           'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·',
-          '-',
-        )
-        .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡',
           '',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           '',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
           '-',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢',
           "'",
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ',
           '"',
         )
         .replaceAll(
-          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+          'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
           '"',
         )
         .trim();
