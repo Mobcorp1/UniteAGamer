@@ -8,12 +8,12 @@ import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('legacy completed onboarding remains completed', () {
+  test('mandatory onboarding uses the canonical ARC completion flag', () {
     expect(
       arcNeedsMandatoryOnboarding(<String, dynamic>{
         'onboardingComplete': true,
       }),
-      isFalse,
+      isTrue,
     );
     expect(
       arcNeedsMandatoryOnboarding(<String, dynamic>{
@@ -53,7 +53,11 @@ void main() {
       appEntry,
       contains('UagSessionGateController.isSessionAllowed(user.uid)'),
     );
-    expect(appEntry, contains("data['onboardingComplete'] == true"));
+    expect(appEntry, isNot(contains("data['onboardingComplete'] == true")));
+    expect(
+      appEntry,
+      contains("data['arcMandatoryOnboardingComplete'] == true"),
+    );
     expect(authLanding, contains('const AuthScreen(initialIsLogin: false)'));
     expect(onboarding, contains('markAuthenticatedWithStoredPreference'));
     expect(web, contains('interactive-widget=resizes-content'));

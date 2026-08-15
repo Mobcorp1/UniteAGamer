@@ -14,10 +14,6 @@ bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) {
   if (data['isAdmin'] == true || data['isDev'] == true) return false;
   if (data['arcMandatoryOnboardingComplete'] == true) return false;
 
-  // Compatibility for established accounts created before the mandatory ARC
-  // onboarding flag became canonical.
-  if (data['onboardingComplete'] == true) return false;
-
   return true;
 }
 
