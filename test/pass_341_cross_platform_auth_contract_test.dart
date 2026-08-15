@@ -8,21 +8,24 @@ import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('mandatory onboarding uses the canonical ARC completion flag', () {
-    expect(
-      arcNeedsMandatoryOnboarding(<String, dynamic>{
-        'onboardingComplete': true,
-      }),
-      isTrue,
-    );
-    expect(
-      arcNeedsMandatoryOnboarding(<String, dynamic>{
-        'arcMandatoryOnboardingComplete': true,
-      }),
-      isFalse,
-    );
-    expect(arcNeedsMandatoryOnboarding(<String, dynamic>{}), isTrue);
-  });
+  test(
+    'mandatory onboarding honours canonical and migrated legacy completion',
+    () {
+      expect(
+        arcNeedsMandatoryOnboarding(<String, dynamic>{
+          'onboardingComplete': true,
+        }),
+        isFalse,
+      );
+      expect(
+        arcNeedsMandatoryOnboarding(<String, dynamic>{
+          'arcMandatoryOnboardingComplete': true,
+        }),
+        isFalse,
+      );
+      expect(arcNeedsMandatoryOnboarding(<String, dynamic>{}), isTrue);
+    },
+  );
 
   test('stored keep-signed-in preference is readable', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{
@@ -36,7 +39,7 @@ void main() {
     expect(await UagSessionGateController.keepSignedInPreference(), isFalse);
   });
 
-  test('PASS 341 source contracts remain wired', () {
+  test('PASS 341 source contracts remain wired after PASS 342', () {
     final appEntry = File(
       'lib/screens/build/app_entry_gate.dart',
     ).readAsStringSync();
@@ -53,11 +56,11 @@ void main() {
       appEntry,
       contains('UagSessionGateController.isSessionAllowed(user.uid)'),
     );
-    expect(appEntry, isNot(contains("data['onboardingComplete'] == true")));
     expect(
       appEntry,
       contains("data['arcMandatoryOnboardingComplete'] == true"),
     );
+    expect(appEntry, contains("data['onboardingComplete'] == true"));
     expect(authLanding, contains('const AuthScreen(initialIsLogin: false)'));
     expect(onboarding, contains('markAuthenticatedWithStoredPreference'));
     expect(web, contains('interactive-widget=resizes-content'));

@@ -10,12 +10,27 @@ import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart'
 
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
-bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) {
+bool arcHasCompletedMandatoryOnboarding(Map<String, dynamic> data) {
+  if (data['isAdmin'] == true || data['isDev'] == true) return true;
+  if (data['arcMandatoryOnboardingComplete'] == true) return true;
+
+  // PASS 342 migration bridge:
+  // Accounts that completed the pre-canonical onboarding flow must not be
+  // forced through onboarding again. _needsOnboarding migrates this legacy
+  // state to arcMandatoryOnboardingComplete when the account is next loaded.
+  if (data['onboardingComplete'] == true) return true;
+
+  return false;
+}
+
+bool arcNeedsLegacyOnboardingMigration(Map<String, dynamic> data) {
   if (data['isAdmin'] == true || data['isDev'] == true) return false;
   if (data['arcMandatoryOnboardingComplete'] == true) return false;
-
-  return true;
+  return data['onboardingComplete'] == true;
 }
+
+bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) =>
+    !arcHasCompletedMandatoryOnboarding(data);
 
 bool arcNeedsProgressiveOnboarding(Map<String, dynamic> data) =>
     arcNeedsMandatoryOnboarding(data);
@@ -32,6 +47,30 @@ class AppEntryGate extends StatefulWidget {
 class _AppEntryGateState extends State<AppEntryGate> {
   bool _fanDisclaimerChecked = false;
 
+  Future<void> _migrateLegacyOnboardingCompletion(
+    String uid,
+    Map<String, dynamic> data,
+  ) async {
+    if (!arcNeedsLegacyOnboardingMigration(data)) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'arcMandatoryOnboardingComplete': true,
+        'arcMandatoryOnboardingMigratedFromLegacy': true,
+        'arcMandatoryOnboardingMigratedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasCompletedOnboarding', true);
+    } catch (error, stackTrace) {
+      // Migration failure must never throw an already-completed account back
+      // into onboarding. The legacy completion flag remains authoritative for
+      // this read and migration will be retried on a later entry.
+      debugPrint('AppEntryGate legacy onboarding migration failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
   Future<bool> _needsOnboarding(String uid) async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -39,6 +78,11 @@ class _AppEntryGateState extends State<AppEntryGate> {
           .doc(uid)
           .get();
       final data = doc.data() ?? <String, dynamic>{};
+
+      if (arcNeedsLegacyOnboardingMigration(data)) {
+        await _migrateLegacyOnboardingCompletion(uid, data);
+      }
+
       return arcNeedsMandatoryOnboarding(data);
     } catch (error, stackTrace) {
       debugPrint('AppEntryGate onboarding lookup failed: $error');
