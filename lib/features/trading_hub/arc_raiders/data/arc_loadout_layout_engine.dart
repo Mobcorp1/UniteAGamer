@@ -150,61 +150,34 @@ class ArcLoadoutLayoutEngine {
     required List<String> savedItems,
     String? legacyAugment,
   }) {
-    final normalised = <String>[];
-    var hasAugment = false;
+    String? foundAugment;
+    final otherItems = <String>[];
 
+    // Identify the augment and separate other items
     for (final item in savedItems) {
-      if (normalised.length == quickUseSlotCount) break;
       final value = item.trim();
-      if (value.isEmpty || value == emptySlot) {
-        normalised.add(emptySlot);
-        continue;
-      }
+      if (value.isEmpty || value == emptySlot) continue;
 
       final option = quickUseOptionForName(value);
-      if (option == null) {
-        normalised.add(emptySlot);
-        continue;
-      }
+      if (option == null) continue;
+
       if (option.type == ArcLoadoutSlotType.augment) {
-        if (hasAugment) {
-          normalised.add(emptySlot);
-          continue;
-        }
-        hasAugment = true;
-      }
-      normalised.add(option.name);
-    }
-
-    while (normalised.length < quickUseSlotCount) {
-      normalised.add(emptySlot);
-    }
-
-    final legacy = legacyAugment?.trim() ?? '';
-    final legacyOption = quickUseOptionForName(legacy);
-    if (!hasAugment && legacyOption?.type == ArcLoadoutSlotType.augment) {
-      final emptyIndex = normalised.indexOf(emptySlot);
-      if (emptyIndex != -1) {
-        normalised[emptyIndex] = legacyOption!.name;
-        hasAugment = true;
+        foundAugment ??= option.name;
+      } else {
+        otherItems.add(option.name);
       }
     }
 
-    final augment = normalised
-        .map(quickUseOptionForName)
-        .whereType<ArcLoadoutOption>()
-        .firstWhere(
-          (option) => option.type == ArcLoadoutSlotType.augment,
-          orElse: () => const ArcLoadoutOption(
-            name: '',
-            type: ArcLoadoutSlotType.augment,
-            description: '',
-          ),
-        )
-        .name;
+    final augment = foundAugment ?? legacyAugment?.trim() ?? '';
+
+    // Build exactly six quick-use slots from non-augment items
+    final quickUse = List<String>.generate(quickUseSlotCount, (index) {
+      if (index < otherItems.length) return otherItems[index];
+      return emptySlot;
+    });
 
     return ArcQuickUseMigrationResult(
-      quickUse: List<String>.unmodifiable(normalised),
+      quickUse: List<String>.unmodifiable(quickUse),
       augment: augment,
     );
   }

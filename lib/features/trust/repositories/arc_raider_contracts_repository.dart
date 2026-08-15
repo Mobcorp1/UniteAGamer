@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../monetisation/models/uag_user_entitlement.dart';
 import '../models/arc_raider_contract_models.dart';
 
 class ArcRaiderContractsRepository {
@@ -152,7 +153,7 @@ class ArcRaiderContractsRepository {
     await _notify(
       targetUid: uid,
       title: 'Report received',
-      body: 'Your Raider report is private and queued for moderator review.',
+      body: 'Your Rat report is private and queued for moderator review.',
       entityId: ref.id,
       type: 'conductReportReceived',
     );
@@ -243,7 +244,7 @@ class ArcRaiderContractsRepository {
       body: approve
           ? contractId == null
                 ? 'Your report was approved for Rat Activity intelligence.'
-                : 'Your report was approved and your Raider Contract is now live.'
+                : 'Your report was approved and your Rat Contract is now live.'
           : 'Your report was not approved. Review the moderation notes.',
       entityId: contractId ?? id,
       type: 'conductReportOutcome',
@@ -263,20 +264,149 @@ class ArcRaiderContractsRepository {
           contract.targetUid == uid) {
         throw StateError('This contract cannot be accepted by this account.');
       }
+      if (contract.contractType == ArcRaiderContractType.closed) {
+        final entitlement = await _readEntitlement(uid);
+        if (!entitlement.isPaid && !entitlement.hasAdminBypass) {
+          throw StateError(
+            'Closed contracts require an active paid entitlement.',
+          );
+        }
+      }
+      final participantRef = ref.collection('participants').doc(uid);
+      tx.set(participantRef, {
+        'contractId': id,
+        'hunterUid': uid,
+        'joinedAt': FieldValue.serverTimestamp(),
+        'status': 'active',
+        'requestedReward': {},
+        'negotiatedReward': {},
+        'evidence': <Map<String, dynamic>>[],
+        'claimedRewardIds': <String>[],
+        'moderationNotes': '',
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       tx.update(ref, {
         'status': 'accepted',
         'hunterUid': uid,
+        'participantCount': FieldValue.increment(1),
         'acceptedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
     await _notify(
       targetUid: reporterUid,
-      title: 'Raider Contract accepted',
-      body: 'A hunter has accepted your Raider Contract.',
+      title: 'Rat Contract accepted',
+      body: 'A hunter has accepted your Rat Contract.',
       entityId: id,
       type: 'operations',
     );
+  }
+
+  Future<void> joinContract(String id) async {
+    _requireSignedIn();
+    await _db.runTransaction((tx) async {
+      final ref = _contracts.doc(id);
+      final snapshot = await tx.get(ref);
+      if (!snapshot.exists) {
+        throw StateError('Contract not found.');
+      }
+      final contract = ArcRaiderContract.fromMap(snapshot.data() ?? {});
+      if (contract.status != ArcRaiderContractStatus.available ||
+          contract.reporterUid == uid ||
+          contract.targetUid == uid ||
+          contract.isExpired ||
+          !contract.hasRemainingRewards) {
+        throw StateError('This contract is not joinable right now.');
+      }
+      if (contract.contractType == ArcRaiderContractType.closed) {
+        final entitlement = await _readEntitlement(uid);
+        if (!entitlement.isPaid && !entitlement.hasAdminBypass) {
+          throw StateError(
+            'Closed contracts require an active paid entitlement.',
+          );
+        }
+      }
+      final participantRef = ref.collection('participants').doc(uid);
+      tx.set(participantRef, {
+        'contractId': id,
+        'hunterUid': uid,
+        'status': 'active',
+        'joinedAt': FieldValue.serverTimestamp(),
+        'requestedReward': {},
+        'negotiatedReward': {},
+        'evidence': <Map<String, dynamic>>[],
+        'claimedRewardIds': <String>[],
+        'moderationNotes': '',
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      tx.update(ref, {
+        'participantCount': FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<void> claimReward(
+    String id, {
+    required String itemId,
+    int quantity = 1,
+  }) async {
+    if (quantity <= 0) {
+      throw ArgumentError('Reward quantity must be positive.');
+    }
+    await _db.runTransaction((tx) async {
+      final ref = _contracts.doc(id);
+      final snapshot = await tx.get(ref);
+      if (!snapshot.exists) {
+        throw StateError('Contract not found.');
+      }
+      final contract = ArcRaiderContract.fromMap(snapshot.data() ?? {});
+      final pool = contract.rewardPool.isEmpty
+          ? contract.rewardItems
+                .map(
+                  (item) => ArcRaiderRewardPoolEntry(
+                    itemId: item.itemId,
+                    name: item.name,
+                    category: item.category,
+                    quantityOffered: item.quantity,
+                    quantityRemaining: item.quantity,
+                  ),
+                )
+                .toList(growable: false)
+          : contract.rewardPool;
+      final target = pool.firstWhere(
+        (entry) => entry.itemId == itemId,
+        orElse: () => throw StateError('Reward not found in contract pool.'),
+      );
+      final available = target.quantityRemaining;
+      if (available < quantity) {
+        throw StateError(
+          'Requested quantity exceeds the remaining reward pool.',
+        );
+      }
+      final nextPool = pool
+          .map(
+            (entry) => entry.itemId == itemId
+                ? entry.withVerifiedClaim(quantity: quantity)
+                : entry,
+          )
+          .toList(growable: false);
+      final nextStatus = nextPool.every((entry) => entry.quantityRemaining <= 0)
+          ? 'cancelled'
+          : contract.status.name;
+      tx.update(ref, {
+        'rewardPool': nextPool.map((entry) => entry.toMap()).toList(),
+        'status': nextStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      final participantRef = ref.collection('participants').doc(uid);
+      tx.set(participantRef, {
+        'claimedRewardIds': FieldValue.arrayUnion([itemId]),
+        'status': 'rewardDelivered',
+        'verifiedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
   }
 
   Future<void> startContract(String id) =>
@@ -306,7 +436,7 @@ class ArcRaiderContractsRepository {
     await _notify(
       targetUid: contract.reporterUid,
       title: 'Contract evidence submitted',
-      body: 'Evidence has been submitted for your Raider Contract.',
+      body: 'Evidence has been submitted for your Rat Contract.',
       entityId: id,
       type: 'operations',
     );
@@ -331,7 +461,7 @@ class ArcRaiderContractsRepository {
         : contract.reporterUid;
     await _notify(
       targetUid: otherUid,
-      title: 'Raider Contract disputed',
+      title: 'Rat Contract disputed',
       body: 'A contract participant requested moderator review.',
       entityId: id,
       type: 'operations',
@@ -370,9 +500,7 @@ class ArcRaiderContractsRepository {
     }
     await _notify(
       targetUid: contract.hunterUid,
-      title: completed
-          ? 'Raider Contract completed'
-          : 'Raider Contract rejected',
+      title: completed ? 'Rat Contract completed' : 'Rat Contract rejected',
       body: resolution.trim().isEmpty
           ? 'The contract has been resolved.'
           : resolution.trim(),
@@ -420,6 +548,11 @@ class ArcRaiderContractsRepository {
         data['isModerator'] != true) {
       throw StateError('Moderator access required.');
     }
+  }
+
+  Future<UagUserEntitlement> _readEntitlement(String userId) async {
+    final data = (await _db.collection('users').doc(userId).get()).data() ?? {};
+    return UagUserEntitlement.fromUserDoc(uid: userId, data: data);
   }
 
   Future<void> _notify({

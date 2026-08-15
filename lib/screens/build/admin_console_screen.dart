@@ -128,8 +128,8 @@ class _AdminFeature {
 const List<_AdminFeature> _featureToggles = [
   _AdminFeature(
     key: 'raiderContractsEnabled',
-    title: 'Report a Raider / Contracts',
-    subtitle: 'Moderated community reports and Raider Contract lifecycle.',
+    title: 'Report a Rat / Contracts',
+    subtitle: 'Moderated community reports and Rat Contract lifecycle.',
     icon: Icons.gavel_rounded,
   ),
   _AdminFeature(

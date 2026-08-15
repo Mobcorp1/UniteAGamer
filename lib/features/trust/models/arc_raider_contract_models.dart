@@ -21,6 +21,24 @@ enum ArcRaiderContractStatus {
   cancelled,
 }
 
+enum ArcRaiderContractType { open, closed }
+
+enum ArcRaiderParticipationStatus {
+  interested,
+  negotiating,
+  active,
+  evidenceSubmitted,
+  verified,
+  rejected,
+  disputed,
+  rewardPending,
+  rewardDelivered,
+  expired,
+  withdrawn,
+}
+
+enum ArcRaiderCounterOfferStatus { proposed, accepted, rejected, countered }
+
 enum ArcRaiderReportCategory {
   extractionRatting,
   ambushRatting,
@@ -120,6 +138,242 @@ class ArcRaiderRewardItem {
         name: '${map['name'] ?? ''}',
         category: '${map['category'] ?? ''}',
         quantity: (map['quantity'] as num?)?.toInt() ?? 1,
+      );
+}
+
+class ArcRaiderRewardPoolEntry {
+  const ArcRaiderRewardPoolEntry({
+    required this.itemId,
+    required this.name,
+    required this.category,
+    required this.quantityOffered,
+    this.quantityRemaining = 0,
+    this.quantityClaimed = 0,
+    this.bundleId = '',
+    this.bundled = false,
+    this.createdAt,
+    this.updatedAt,
+  }) : assert(quantityOffered >= 0),
+       assert(quantityRemaining >= 0),
+       assert(quantityClaimed >= 0);
+
+  final String itemId;
+  final String name;
+  final String category;
+  final int quantityOffered;
+  final int quantityRemaining;
+  final int quantityClaimed;
+  final String bundleId;
+  final bool bundled;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  bool get available => quantityRemaining > 0;
+
+  ArcRaiderRewardPoolEntry withVerifiedClaim({required int quantity}) {
+    final amount = quantity <= 0 ? 0 : quantity;
+    final nextRemaining = (quantityRemaining - amount).clamp(
+      0,
+      quantityRemaining,
+    );
+    return ArcRaiderRewardPoolEntry(
+      itemId: itemId,
+      name: name,
+      category: category,
+      quantityOffered: quantityOffered,
+      quantityRemaining: nextRemaining,
+      quantityClaimed: quantityClaimed + amount,
+      bundleId: bundleId,
+      bundled: bundled,
+      createdAt: createdAt,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'itemId': itemId,
+    'name': name,
+    'category': category,
+    'quantityOffered': quantityOffered,
+    'quantityRemaining': quantityRemaining,
+    'quantityClaimed': quantityClaimed,
+    'bundleId': bundleId,
+    'bundled': bundled,
+    if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
+    if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+  };
+
+  factory ArcRaiderRewardPoolEntry.fromMap(Map<String, dynamic> map) =>
+      ArcRaiderRewardPoolEntry(
+        itemId: '${map['itemId'] ?? ''}',
+        name: '${map['name'] ?? ''}',
+        category: '${map['category'] ?? ''}',
+        quantityOffered:
+            (map['quantityOffered'] as num?)?.toInt() ??
+            (map['quantity'] as num?)?.toInt() ??
+            1,
+        quantityRemaining:
+            (map['quantityRemaining'] as num?)?.toInt() ??
+            (map['quantityOffered'] as num?)?.toInt() ??
+            (map['quantity'] as num?)?.toInt() ??
+            1,
+        quantityClaimed: (map['quantityClaimed'] as num?)?.toInt() ?? 0,
+        bundleId: '${map['bundleId'] ?? ''}',
+        bundled:
+            map['bundled'] == true ||
+            map['bundleId']?.toString().isNotEmpty == true,
+        createdAt: _date(map['createdAt']),
+        updatedAt: _date(map['updatedAt']),
+      );
+}
+
+class ArcRaiderContractParticipant {
+  const ArcRaiderContractParticipant({
+    required this.contractId,
+    required this.hunterUid,
+    required this.joinedAt,
+    this.status = ArcRaiderParticipationStatus.interested,
+    this.requestedReward = const {},
+    this.negotiatedReward = const {},
+    this.evidence = const [],
+    this.claimedRewardIds = const [],
+    this.moderationNotes = '',
+    this.verifiedAt,
+    this.updatedAt,
+  });
+
+  final String contractId;
+  final String hunterUid;
+  final DateTime? joinedAt;
+  final ArcRaiderParticipationStatus status;
+  final Map<String, dynamic> requestedReward;
+  final Map<String, dynamic> negotiatedReward;
+  final List<ArcRaiderEvidence> evidence;
+  final List<String> claimedRewardIds;
+  final String moderationNotes;
+  final DateTime? verifiedAt;
+  final DateTime? updatedAt;
+
+  bool get isActive =>
+      status == ArcRaiderParticipationStatus.active ||
+      status == ArcRaiderParticipationStatus.evidenceSubmitted ||
+      status == ArcRaiderParticipationStatus.verified ||
+      status == ArcRaiderParticipationStatus.rewardPending ||
+      status == ArcRaiderParticipationStatus.rewardDelivered;
+
+  Map<String, dynamic> toMap() => {
+    'contractId': contractId,
+    'hunterUid': hunterUid,
+    if (joinedAt != null) 'joinedAt': Timestamp.fromDate(joinedAt!),
+    'status': status.name,
+    'requestedReward': requestedReward,
+    'negotiatedReward': negotiatedReward,
+    'evidence': evidence.map((e) => e.toMap()).toList(),
+    'claimedRewardIds': claimedRewardIds,
+    'moderationNotes': moderationNotes,
+    if (verifiedAt != null) 'verifiedAt': Timestamp.fromDate(verifiedAt!),
+    if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+  };
+
+  factory ArcRaiderContractParticipant.fromMap(Map<String, dynamic> map) =>
+      ArcRaiderContractParticipant(
+        contractId: '${map['contractId'] ?? ''}',
+        hunterUid: '${map['hunterUid'] ?? ''}',
+        joinedAt: _date(map['joinedAt']),
+        status: _enumValue(
+          ArcRaiderParticipationStatus.values,
+          map['status'],
+          ArcRaiderParticipationStatus.interested,
+        ),
+        requestedReward: Map<String, dynamic>.from(
+          (map['requestedReward'] as Map?)?.cast<String, dynamic>() ??
+              const <String, dynamic>{},
+        ),
+        negotiatedReward: Map<String, dynamic>.from(
+          (map['negotiatedReward'] as Map?)?.cast<String, dynamic>() ??
+              const <String, dynamic>{},
+        ),
+        evidence: (map['evidence'] is Iterable)
+            ? (map['evidence'] as Iterable)
+                  .whereType<Map>()
+                  .map(
+                    (e) =>
+                        ArcRaiderEvidence.fromMap(Map<String, dynamic>.from(e)),
+                  )
+                  .toList(growable: false)
+            : const [],
+        claimedRewardIds: ((map['claimedRewardIds'] as Iterable?) ?? const [])
+            .whereType<String>()
+            .toList(growable: false),
+        moderationNotes: '${map['moderationNotes'] ?? ''}',
+        verifiedAt: _date(map['verifiedAt']),
+        updatedAt: _date(map['updatedAt']),
+      );
+}
+
+class ArcRaiderCounterOffer {
+  const ArcRaiderCounterOffer({
+    required this.id,
+    required this.contractId,
+    required this.hunterUid,
+    required this.requestedRewardItemIds,
+    required this.quantities,
+    this.bundleRequest = '',
+    this.alternativeItemIds = const [],
+    this.status = ArcRaiderCounterOfferStatus.proposed,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  final String id;
+  final String contractId;
+  final String hunterUid;
+  final List<String> requestedRewardItemIds;
+  final List<int> quantities;
+  final String bundleRequest;
+  final List<String> alternativeItemIds;
+  final ArcRaiderCounterOfferStatus status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'contractId': contractId,
+    'hunterUid': hunterUid,
+    'requestedRewardItemIds': requestedRewardItemIds,
+    'quantities': quantities,
+    'bundleRequest': bundleRequest,
+    'alternativeItemIds': alternativeItemIds,
+    'status': status.name,
+    if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
+    if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+  };
+
+  factory ArcRaiderCounterOffer.fromMap(Map<String, dynamic> map) =>
+      ArcRaiderCounterOffer(
+        id: '${map['id'] ?? ''}',
+        contractId: '${map['contractId'] ?? ''}',
+        hunterUid: '${map['hunterUid'] ?? ''}',
+        requestedRewardItemIds:
+            ((map['requestedRewardItemIds'] as Iterable?) ?? const [])
+                .whereType<String>()
+                .toList(growable: false),
+        quantities: ((map['quantities'] as Iterable?) ?? const [])
+            .whereType<num>()
+            .map((value) => value.toInt())
+            .toList(growable: false),
+        bundleRequest: '${map['bundleRequest'] ?? ''}',
+        alternativeItemIds:
+            ((map['alternativeItemIds'] as Iterable?) ?? const [])
+                .whereType<String>()
+                .toList(growable: false),
+        status: _enumValue(
+          ArcRaiderCounterOfferStatus.values,
+          map['status'],
+          ArcRaiderCounterOfferStatus.proposed,
+        ),
+        createdAt: _date(map['createdAt']),
+        updatedAt: _date(map['updatedAt']),
       );
 }
 
@@ -334,9 +588,12 @@ class ArcRaiderContract {
     required this.status,
     this.targetUid = '',
     this.hunterUid = '',
+    this.contractType = ArcRaiderContractType.open,
     this.rewardItems = const [],
+    this.rewardPool = const [],
     this.rewardSummary = '',
     this.reputationReward = 10,
+    this.participantCount = 0,
     this.evidenceRequirements =
         'Provide clear in-app evidence that identifies the encounter and outcome.',
     this.evidence = const [],
@@ -344,6 +601,7 @@ class ArcRaiderContract {
     this.moderationNotes = '',
     this.moderatedByUid = '',
     this.socialContentUrl = '',
+    this.closedContractEntitlement = '',
     this.createdAt,
     this.updatedAt,
     this.acceptedAt,
@@ -358,14 +616,18 @@ class ArcRaiderContract {
   final String targetDisplayName;
   final String reporterUid;
   final String hunterUid;
+  final ArcRaiderContractType contractType;
   final List<ArcRaiderRewardItem> rewardItems;
+  final List<ArcRaiderRewardPoolEntry> rewardPool;
   final String rewardSummary;
   final String evidenceRequirements;
   final String resolution;
   final String moderationNotes;
   final String moderatedByUid;
   final String socialContentUrl;
+  final String closedContractEntitlement;
   final int reputationReward;
+  final int participantCount;
   final ArcRaiderContractStatus status;
   final List<ArcRaiderEvidence> evidence;
   final DateTime? createdAt;
@@ -375,6 +637,13 @@ class ArcRaiderContract {
   final DateTime? resolvedAt;
   final DateTime? expiresAt;
 
+  bool get isClosedContract => contractType == ArcRaiderContractType.closed;
+  bool get hasRemainingRewards => rewardPool.isNotEmpty
+      ? rewardPool.any((entry) => entry.quantityRemaining > 0)
+      : rewardItems.any((item) => item.quantity > 0);
+  bool get isExhausted => rewardPool.isNotEmpty
+      ? rewardPool.every((entry) => entry.quantityRemaining <= 0)
+      : rewardItems.every((item) => item.quantity <= 0);
   bool get isExpired =>
       expiresAt != null &&
       expiresAt!.isBefore(DateTime.now()) &&
@@ -383,9 +652,76 @@ class ArcRaiderContract {
         ArcRaiderContractStatus.cancelled,
         ArcRaiderContractStatus.rejected,
       }.contains(status);
-
+  bool get isLive =>
+      !{
+        ArcRaiderContractStatus.completed,
+        ArcRaiderContractStatus.cancelled,
+        ArcRaiderContractStatus.rejected,
+        ArcRaiderContractStatus.expired,
+      }.contains(status) &&
+      !isExpired &&
+      hasRemainingRewards;
   bool get canAccept =>
-      status == ArcRaiderContractStatus.available && !isExpired;
+      status == ArcRaiderContractStatus.available &&
+      !isExpired &&
+      hasRemainingRewards;
+
+  ArcRaiderContract applyVerifiedRewardClaim({
+    required String itemId,
+    int quantity = 1,
+  }) {
+    final nextPool = rewardPool.isEmpty
+        ? rewardItems
+              .map(
+                (item) => ArcRaiderRewardPoolEntry(
+                  itemId: itemId,
+                  name: item.name,
+                  category: item.category,
+                  quantityOffered: item.quantity,
+                  quantityRemaining: item.quantity,
+                  quantityClaimed: 0,
+                ),
+              )
+              .toList(growable: false)
+        : rewardPool
+              .map(
+                (entry) => entry.itemId == itemId
+                    ? entry.withVerifiedClaim(quantity: quantity)
+                    : entry,
+              )
+              .toList(growable: false);
+    final nextStatus = nextPool.every((entry) => entry.quantityRemaining <= 0)
+        ? ArcRaiderContractStatus.cancelled
+        : status;
+    return ArcRaiderContract(
+      id: id,
+      reportId: reportId,
+      targetUid: targetUid,
+      targetDisplayName: targetDisplayName,
+      reporterUid: reporterUid,
+      hunterUid: hunterUid,
+      contractType: contractType,
+      status: nextStatus,
+      rewardItems: rewardItems,
+      rewardPool: nextPool,
+      rewardSummary: rewardSummary,
+      reputationReward: reputationReward,
+      participantCount: participantCount,
+      evidenceRequirements: evidenceRequirements,
+      evidence: evidence,
+      resolution: resolution,
+      moderationNotes: moderationNotes,
+      moderatedByUid: moderatedByUid,
+      socialContentUrl: socialContentUrl,
+      closedContractEntitlement: closedContractEntitlement,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      acceptedAt: acceptedAt,
+      evidenceSubmittedAt: evidenceSubmittedAt,
+      resolvedAt: resolvedAt,
+      expiresAt: expiresAt,
+    );
+  }
 
   bool canTransitionTo(ArcRaiderContractStatus next) {
     const allowed = <ArcRaiderContractStatus, Set<ArcRaiderContractStatus>>{
@@ -417,6 +753,23 @@ class ArcRaiderContract {
     return allowed[status]?.contains(next) ?? false;
   }
 
+  static Duration maxDurationForType(ArcRaiderContractType type) =>
+      type == ArcRaiderContractType.closed
+      ? const Duration(days: 7)
+      : const Duration(days: 14);
+
+  static bool isValidClosedContractExpiry(
+    DateTime? expiresAt,
+    DateTime createdAt,
+  ) {
+    if (expiresAt == null) {
+      return false;
+    }
+    final max = createdAt.add(const Duration(days: 7));
+    return !expiresAt.isBefore(createdAt) &&
+        !expiresAt.isAfter(max.add(const Duration(minutes: 1)));
+  }
+
   Map<String, dynamic> toMap() => {
     'id': id,
     'reportId': reportId,
@@ -424,16 +777,20 @@ class ArcRaiderContract {
     'targetDisplayName': targetDisplayName,
     'reporterUid': reporterUid,
     'hunterUid': hunterUid,
+    'contractType': contractType.name,
     'status': status.name,
     'rewardItems': rewardItems.map((e) => e.toMap()).toList(),
+    'rewardPool': rewardPool.map((e) => e.toMap()).toList(),
     'rewardSummary': rewardSummary,
     'reputationReward': reputationReward,
+    'participantCount': participantCount,
     'evidenceRequirements': evidenceRequirements,
     'evidence': evidence.map((e) => e.toMap()).toList(),
     'resolution': resolution,
     'moderationNotes': moderationNotes,
     'moderatedByUid': moderatedByUid,
     'socialContentUrl': socialContentUrl,
+    'closedContractEntitlement': closedContractEntitlement,
     if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
     if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     if (acceptedAt != null) 'acceptedAt': Timestamp.fromDate(acceptedAt!),
@@ -443,50 +800,83 @@ class ArcRaiderContract {
     if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
   };
 
-  factory ArcRaiderContract.fromMap(Map<String, dynamic> map) =>
-      ArcRaiderContract(
-        id: '${map['id'] ?? ''}',
-        reportId: '${map['reportId'] ?? ''}',
-        targetUid: '${map['targetUid'] ?? ''}',
-        targetDisplayName: '${map['targetDisplayName'] ?? ''}',
-        reporterUid: '${map['reporterUid'] ?? ''}',
-        hunterUid: '${map['hunterUid'] ?? ''}',
-        status: _enumValue(
-          ArcRaiderContractStatus.values,
-          map['status'],
-          ArcRaiderContractStatus.available,
-        ),
-        rewardItems: (map['rewardItems'] is Iterable)
-            ? (map['rewardItems'] as Iterable)
-                  .whereType<Map>()
-                  .map(
-                    (e) => ArcRaiderRewardItem.fromMap(
-                      Map<String, dynamic>.from(e),
-                    ),
-                  )
-                  .toList(growable: false)
-            : const [],
-        rewardSummary: '${map['rewardSummary'] ?? ''}',
-        reputationReward: (map['reputationReward'] as num?)?.toInt() ?? 10,
-        evidenceRequirements: '${map['evidenceRequirements'] ?? ''}',
-        evidence: (map['evidence'] is Iterable)
-            ? (map['evidence'] as Iterable)
-                  .whereType<Map>()
-                  .map(
-                    (e) =>
-                        ArcRaiderEvidence.fromMap(Map<String, dynamic>.from(e)),
-                  )
-                  .toList(growable: false)
-            : const [],
-        resolution: '${map['resolution'] ?? ''}',
-        moderationNotes: '${map['moderationNotes'] ?? ''}',
-        moderatedByUid: '${map['moderatedByUid'] ?? ''}',
-        socialContentUrl: '${map['socialContentUrl'] ?? ''}',
-        createdAt: _date(map['createdAt']),
-        updatedAt: _date(map['updatedAt']),
-        acceptedAt: _date(map['acceptedAt']),
-        evidenceSubmittedAt: _date(map['evidenceSubmittedAt']),
-        resolvedAt: _date(map['resolvedAt']),
-        expiresAt: _date(map['expiresAt']),
-      );
+  factory ArcRaiderContract.fromMap(Map<String, dynamic> map) {
+    final rewardItems = (map['rewardItems'] is Iterable)
+        ? (map['rewardItems'] as Iterable)
+              .whereType<Map>()
+              .map(
+                (e) =>
+                    ArcRaiderRewardItem.fromMap(Map<String, dynamic>.from(e)),
+              )
+              .toList(growable: false)
+        : const <ArcRaiderRewardItem>[];
+    final rewardPool = (map['rewardPool'] is Iterable)
+        ? (map['rewardPool'] as Iterable)
+              .whereType<Map>()
+              .map(
+                (e) => ArcRaiderRewardPoolEntry.fromMap(
+                  Map<String, dynamic>.from(e),
+                ),
+              )
+              .toList(growable: false)
+        : rewardItems
+              .map(
+                (item) => ArcRaiderRewardPoolEntry(
+                  itemId: item.itemId,
+                  name: item.name,
+                  category: item.category,
+                  quantityOffered: item.quantity,
+                  quantityRemaining: item.quantity,
+                  quantityClaimed: 0,
+                ),
+              )
+              .toList(growable: false);
+    return ArcRaiderContract(
+      id: '${map['id'] ?? ''}',
+      reportId: '${map['reportId'] ?? ''}',
+      targetUid: '${map['targetUid'] ?? ''}',
+      targetDisplayName: '${map['targetDisplayName'] ?? ''}',
+      reporterUid: '${map['reporterUid'] ?? ''}',
+      hunterUid: '${map['hunterUid'] ?? ''}',
+      contractType: _enumValue(
+        ArcRaiderContractType.values,
+        map['contractType'],
+        ArcRaiderContractType.open,
+      ),
+      status: _enumValue(
+        ArcRaiderContractStatus.values,
+        map['status'],
+        ArcRaiderContractStatus.available,
+      ),
+      rewardItems: rewardItems,
+      rewardPool: rewardPool,
+      rewardSummary: '${map['rewardSummary'] ?? ''}',
+      reputationReward: (map['reputationReward'] as num?)?.toInt() ?? 10,
+      participantCount:
+          (map['participantCount'] as num?)?.toInt() ??
+          (map['activeParticipantCount'] as num?)?.toInt() ??
+          0,
+      evidenceRequirements: '${map['evidenceRequirements'] ?? ''}',
+      evidence: (map['evidence'] is Iterable)
+          ? (map['evidence'] as Iterable)
+                .whereType<Map>()
+                .map(
+                  (e) =>
+                      ArcRaiderEvidence.fromMap(Map<String, dynamic>.from(e)),
+                )
+                .toList(growable: false)
+          : const [],
+      resolution: '${map['resolution'] ?? ''}',
+      moderationNotes: '${map['moderationNotes'] ?? ''}',
+      moderatedByUid: '${map['moderatedByUid'] ?? ''}',
+      socialContentUrl: '${map['socialContentUrl'] ?? ''}',
+      closedContractEntitlement: '${map['closedContractEntitlement'] ?? ''}',
+      createdAt: _date(map['createdAt']),
+      updatedAt: _date(map['updatedAt']),
+      acceptedAt: _date(map['acceptedAt']),
+      evidenceSubmittedAt: _date(map['evidenceSubmittedAt']),
+      resolvedAt: _date(map['resolvedAt']),
+      expiresAt: _date(map['expiresAt']),
+    );
+  }
 }

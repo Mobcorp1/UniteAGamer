@@ -4,10 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:uag_arc_raiders_hub/build/auth/uag_auth_autofill.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
@@ -61,19 +58,11 @@ class ArcMandatoryOnboardingScreen extends StatefulWidget {
 class _ArcMandatoryOnboardingScreenState
     extends State<ArcMandatoryOnboardingScreen> {
   final _pageController = PageController();
-  final _emailController = TextEditingController();
-  final _confirmEmailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   final _riderNameController = TextEditingController();
   final _profileRepository = ArcTraderProfileRepository();
   final _personalisationRepository = ArcUserPersonalisationRepository();
 
   int _step = 0;
-  String? _emailError;
-  String? _confirmEmailError;
-  String? _passwordError;
-  String? _confirmPasswordError;
   String? _riderNameError;
   ArcPersonalisationGoal? _primaryGoal;
   _BlueprintSetupChoice _blueprintSetupChoice =
@@ -82,11 +71,6 @@ class _ArcMandatoryOnboardingScreenState
   bool _acceptedTermsOfService = false;
   bool _acceptedDataSecurity = false;
   bool _acceptedAgeConfirmation = false;
-  bool _accountCreatedDuringOnboarding = false;
-  bool _showPassword = false;
-  bool _showConfirmPassword = false;
-  bool _rememberEmail = true;
-  bool _keepSignedIn = true;
   bool _saving = false;
 
   static const _goalOptions = <_GoalOption>[
@@ -128,20 +112,9 @@ class _ArcMandatoryOnboardingScreenState
   @override
   void dispose() {
     _pageController.dispose();
-    _emailController.dispose();
-    _confirmEmailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
     _riderNameController.dispose();
     super.dispose();
   }
-
-  bool get _showsAccountCreationStep => shouldShowArcOnboardingAccountCreation(
-    adminPreview: widget.adminPreview,
-    previewAccountCreation: widget.previewAccountCreation,
-    accountCreatedDuringOnboarding: _accountCreatedDuringOnboarding,
-    hasCurrentUser: FirebaseAuth.instance.currentUser != null,
-  );
 
   bool get _legalComplete =>
       _acceptedTraderCode &&
@@ -158,16 +131,9 @@ class _ArcMandatoryOnboardingScreenState
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
     if (_step == 0) {
-      if (widget.adminPreview && widget.previewAccountCreation) {
-        if (!_validateAccountStep()) return;
-      } else if (_showsAccountCreationStep) {
-        final created = await _createOnboardingAccount();
-        if (!created || !mounted) return;
-      } else {
-        final error = validateArcRiderName(_riderNameController.text);
-        setState(() => _riderNameError = error);
-        if (error != null) return;
-      }
+      final error = validateArcRiderName(_riderNameController.text);
+      setState(() => _riderNameError = error);
+      if (error != null) return;
     }
     if (_step == 1 && !_legalComplete) {
       _showMessage('Accept all required agreements to continue.');
@@ -189,184 +155,6 @@ class _ArcMandatoryOnboardingScreenState
     );
   }
 
-  bool _validateAccountStep() {
-    final email = _emailController.text;
-    final confirmEmail = _confirmEmailController.text;
-    final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
-    final riderName = _riderNameController.text;
-
-    final emailError = validateArcOnboardingEmail(email);
-    final confirmEmailError = validateArcOnboardingConfirmEmail(
-      email: email,
-      confirmEmail: confirmEmail,
-    );
-    final passwordError = validateArcOnboardingPassword(password);
-    final confirmPasswordError = validateArcOnboardingConfirmPassword(
-      password: password,
-      confirmPassword: confirmPassword,
-    );
-    final riderNameError = validateArcRiderName(riderName);
-
-    setState(() {
-      _emailError = emailError;
-      _confirmEmailError = confirmEmailError;
-      _passwordError = passwordError;
-      _confirmPasswordError = confirmPasswordError;
-      _riderNameError = riderNameError;
-    });
-
-    return emailError == null &&
-        confirmEmailError == null &&
-        passwordError == null &&
-        confirmPasswordError == null &&
-        riderNameError == null;
-  }
-
-  Future<User> _waitForSignedInUser(UserCredential credential) async {
-    final user = credential.user ?? FirebaseAuth.instance.currentUser;
-    if (user != null) return user;
-
-    try {
-      return await FirebaseAuth.instance
-          .authStateChanges()
-          .where((next) => next != null)
-          .map((next) => next!)
-          .first
-          .timeout(const Duration(seconds: 4));
-    } on TimeoutException {
-      throw FirebaseAuthException(
-        code: 'user-null',
-        message: 'Account created but the signed-in session was not available.',
-      );
-    }
-  }
-
-  Future<User?> _currentSignedInUser() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) return user;
-
-    try {
-      return await FirebaseAuth.instance
-          .authStateChanges()
-          .where((next) => next != null)
-          .map((next) => next!)
-          .first
-          .timeout(const Duration(seconds: 2));
-    } on TimeoutException {
-      return null;
-    }
-  }
-
-  String _accountCreationErrorMessage(FirebaseAuthException error) {
-    return switch (error.code) {
-      'email-already-in-use' =>
-        'That email already has an account. Log in instead.',
-      'invalid-email' => 'Enter a valid email address.',
-      'weak-password' => 'Use a stronger password.',
-      'network-request-failed' =>
-        'Network connection failed. Check your connection and try again.',
-      _ => error.message ?? 'Account creation failed. Try again.',
-    };
-  }
-
-  Future<bool> _createOnboardingAccount() async {
-    if (!_validateAccountStep()) return false;
-
-    final email = normalizeArcOnboardingEmail(_emailController.text);
-    final password = _passwordController.text.trim();
-    final riderName = _riderNameController.text.trim();
-
-    TextInput.finishAutofillContext();
-    UagSessionGateController.markOnboardingAuthHandshakeStarted();
-    setState(() => _saving = true);
-
-    try {
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: email, password: password);
-      final user = await _waitForSignedInUser(credential);
-
-      await _completeAccountCreationHandoff(
-        user: user,
-        email: email,
-        riderName: riderName,
-      );
-
-      if (!mounted) return false;
-      setState(() {
-        _accountCreatedDuringOnboarding = true;
-        _emailError = null;
-        _confirmEmailError = null;
-        _passwordError = null;
-        _confirmPasswordError = null;
-        _riderNameError = null;
-        _saving = false;
-      });
-      return true;
-    } on FirebaseAuthException catch (error) {
-      UagSessionGateController.clearOnboardingAuthHandshake();
-      if (!mounted) return false;
-      setState(() => _saving = false);
-      _showMessage(_accountCreationErrorMessage(error));
-      return false;
-    } catch (error) {
-      UagSessionGateController.clearOnboardingAuthHandshake();
-      if (!mounted) return false;
-      setState(() => _saving = false);
-      _showMessage('Could not create your account. Try again.');
-      debugPrint('Onboarding account creation failed: $error');
-      return false;
-    }
-  }
-
-  Future<void> _completeAccountCreationHandoff({
-    required User user,
-    required String email,
-    required String riderName,
-  }) async {
-    await Future.wait<void>([
-      UagSessionGateController.markAuthenticated(
-        uid: user.uid,
-        keepSignedIn: _keepSignedIn,
-      ),
-      _persistOnboardingDevicePrefs(email: email, riderName: riderName),
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .set(
-            buildArcOnboardingAccountCreationPayload(
-              email: email,
-              riderName: riderName,
-            ),
-            SetOptions(merge: true),
-          ),
-      if (user.displayName != riderName) user.updateDisplayName(riderName),
-    ]).timeout(const Duration(seconds: 12));
-
-    unawaited(
-      user.sendEmailVerification().catchError((Object error, StackTrace st) {
-        debugPrint('Onboarding verification email failed safely: $error');
-        debugPrintStack(stackTrace: st);
-      }),
-    );
-  }
-
-  Future<void> _persistOnboardingDevicePrefs({
-    required String email,
-    required String riderName,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('uag_remember_email', _rememberEmail);
-    if (_rememberEmail) {
-      await prefs.setString('uag_last_login_email', email);
-    } else {
-      await prefs.remove('uag_last_login_email');
-    }
-    await prefs.setBool('hasCompletedOnboarding', false);
-    await prefs.setBool('hasCompletedProfileSetup', false);
-    await prefs.setBool('forceOnboarding', false);
-    await prefs.setString('displayName', riderName);
-  }
 
   void _back() {
     if (_saving || _step == 0) return;
@@ -397,15 +185,13 @@ class _ArcMandatoryOnboardingScreenState
       return;
     }
 
-    final user = await _currentSignedInUser();
+    final user = FirebaseAuth.instance.currentUser;
     final primaryGoal = _primaryGoal;
     final riderName = _riderNameController.text.trim();
     final nameError = validateArcRiderName(riderName);
 
     if (user == null) {
-      setState(() => _step = 0);
-      _pageController.jumpToPage(0);
-      _showMessage('Create your account first.');
+      _showMessage('You must be signed in to complete setup.');
       return;
     }
     if (nameError != null || primaryGoal == null || !_legalComplete) {
@@ -430,22 +216,14 @@ class _ArcMandatoryOnboardingScreenState
       blueprintSetupMode: _blueprintSetupChoice.name,
       recommendedFirstSystem: arcOnboardingRecommendedSystem(primaryGoal),
       legalAccepted: legalAccepted,
-      accountCreatedDuringOnboarding: _accountCreatedDuringOnboarding,
+      accountCreatedDuringOnboarding: false,
     );
-    final accountProfilePayload = _accountCreatedDuringOnboarding
-        ? buildArcOnboardingAccountProfilePayload(
-            email: normalizeArcOnboardingEmail(
-              user.email ?? _emailController.text,
-            ),
-            riderName: riderName,
-          )
-        : const <String, dynamic>{};
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        ...accountProfilePayload,
-        ...payload,
-      }, SetOptions(merge: true));
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+        payload,
+        SetOptions(merge: true),
+      );
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('hasCompletedOnboarding', true);
@@ -453,16 +231,9 @@ class _ArcMandatoryOnboardingScreenState
       await prefs.setBool('forceOnboarding', false);
       await prefs.setString('displayName', riderName);
 
-      if (_accountCreatedDuringOnboarding) {
-        await UagSessionGateController.markAuthenticated(
-          uid: user.uid,
-          keepSignedIn: _keepSignedIn,
-        );
-      } else {
-        await UagSessionGateController.markAuthenticatedWithStoredPreference(
-          uid: user.uid,
-        );
-      }
+      await UagSessionGateController.markAuthenticatedWithStoredPreference(
+        uid: user.uid,
+      );
 
       final personalisation = buildArcOnboardingPersonalisation(
         primaryGoal: primaryGoal,
@@ -498,6 +269,9 @@ class _ArcMandatoryOnboardingScreenState
     }
   }
 
+  bool get _showsAccountCreationStep =>
+      widget.previewAccountCreation || FirebaseAuth.instance.currentUser == null;
+
   @override
   Widget build(BuildContext context) {
     final showsAccountCreationStep = _showsAccountCreationStep;
@@ -524,61 +298,16 @@ class _ArcMandatoryOnboardingScreenState
                           controller: _pageController,
                           physics: const NeverScrollableScrollPhysics(),
                           children: [
-                            showsAccountCreationStep
-                                ? _AccountCreationStep(
-                                    emailController: _emailController,
-                                    confirmEmailController:
-                                        _confirmEmailController,
-                                    passwordController: _passwordController,
-                                    confirmPasswordController:
-                                        _confirmPasswordController,
-                                    riderNameController: _riderNameController,
-                                    emailError: _emailError,
-                                    confirmEmailError: _confirmEmailError,
-                                    passwordError: _passwordError,
-                                    confirmPasswordError: _confirmPasswordError,
-                                    riderNameError: _riderNameError,
-                                    showPassword: _showPassword,
-                                    showConfirmPassword: _showConfirmPassword,
-                                    rememberEmail: _rememberEmail,
-                                    keepSignedIn: _keepSignedIn,
-                                    onChanged: () {
-                                      if (_emailError != null ||
-                                          _confirmEmailError != null ||
-                                          _passwordError != null ||
-                                          _confirmPasswordError != null ||
-                                          _riderNameError != null) {
-                                        setState(() {
-                                          _emailError = null;
-                                          _confirmEmailError = null;
-                                          _passwordError = null;
-                                          _confirmPasswordError = null;
-                                          _riderNameError = null;
-                                        });
-                                      }
-                                    },
-                                    onTogglePassword: () => setState(
-                                      () => _showPassword = !_showPassword,
-                                    ),
-                                    onToggleConfirmPassword: () => setState(
-                                      () => _showConfirmPassword =
-                                          !_showConfirmPassword,
-                                    ),
-                                    onRememberEmailChanged: (value) =>
-                                        setState(() => _rememberEmail = value),
-                                    onKeepSignedInChanged: (value) =>
-                                        setState(() => _keepSignedIn = value),
-                                  )
-                                : _IdentityStep(
-                                    email: email,
-                                    controller: _riderNameController,
-                                    errorText: _riderNameError,
-                                    onChanged: (_) {
-                                      if (_riderNameError != null) {
-                                        setState(() => _riderNameError = null);
-                                      }
-                                    },
-                                  ),
+                            _IdentityStep(
+                              email: email,
+                              controller: _riderNameController,
+                              errorText: _riderNameError,
+                              onChanged: (_) {
+                                if (_riderNameError != null) {
+                                  setState(() => _riderNameError = null);
+                                }
+                              },
+                            ),
                             _LegalStep(
                               traderCode: _acceptedTraderCode,
                               terms: _acceptedTermsOfService,
@@ -754,185 +483,6 @@ class _StepFrame extends StatelessWidget {
   }
 }
 
-class _AccountCreationStep extends StatelessWidget {
-  const _AccountCreationStep({
-    required this.emailController,
-    required this.confirmEmailController,
-    required this.passwordController,
-    required this.confirmPasswordController,
-    required this.riderNameController,
-    required this.emailError,
-    required this.confirmEmailError,
-    required this.passwordError,
-    required this.confirmPasswordError,
-    required this.riderNameError,
-    required this.showPassword,
-    required this.showConfirmPassword,
-    required this.rememberEmail,
-    required this.keepSignedIn,
-    required this.onChanged,
-    required this.onTogglePassword,
-    required this.onToggleConfirmPassword,
-    required this.onRememberEmailChanged,
-    required this.onKeepSignedInChanged,
-  });
-
-  final TextEditingController emailController;
-  final TextEditingController confirmEmailController;
-  final TextEditingController passwordController;
-  final TextEditingController confirmPasswordController;
-  final TextEditingController riderNameController;
-  final String? emailError;
-  final String? confirmEmailError;
-  final String? passwordError;
-  final String? confirmPasswordError;
-  final String? riderNameError;
-  final bool showPassword;
-  final bool showConfirmPassword;
-  final bool rememberEmail;
-  final bool keepSignedIn;
-  final VoidCallback onChanged;
-  final VoidCallback onTogglePassword;
-  final VoidCallback onToggleConfirmPassword;
-  final ValueChanged<bool> onRememberEmailChanged;
-  final ValueChanged<bool> onKeepSignedInChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return _StepFrame(
-      icon: Icons.person_add_alt_1_rounded,
-      title: 'CREATE YOUR RAIDER ACCOUNT',
-      subtitle:
-          'Email, confirm email, password, confirm password and Raider name.',
-      child: AutofillGroup(
-        child: Column(
-          children: [
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: UagAuthAutofill.registrationEmail,
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              enableSuggestions: true,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Email address',
-                prefixIcon: const Icon(Icons.email_outlined),
-                errorText: emailError,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmEmailController,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: UagAuthAutofill.registrationEmail,
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              enableSuggestions: true,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Confirm email address',
-                prefixIcon: const Icon(Icons.mark_email_read_outlined),
-                errorText: confirmEmailError,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: passwordController,
-              autofillHints: UagAuthAutofill.newPassword,
-              textInputAction: TextInputAction.next,
-              obscureText: !showPassword,
-              autocorrect: false,
-              enableSuggestions: false,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Password',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                errorText: passwordError,
-                suffixIcon: IconButton(
-                  tooltip: showPassword ? 'Hide password' : 'Show password',
-                  onPressed: onTogglePassword,
-                  icon: Icon(
-                    showPassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmPasswordController,
-              autofillHints: UagAuthAutofill.newPassword,
-              textInputAction: TextInputAction.next,
-              obscureText: !showConfirmPassword,
-              autocorrect: false,
-              enableSuggestions: false,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Confirm password',
-                prefixIcon: const Icon(Icons.lock_reset_rounded),
-                errorText: confirmPasswordError,
-                suffixIcon: IconButton(
-                  tooltip: showConfirmPassword
-                      ? 'Hide password'
-                      : 'Show password',
-                  onPressed: onToggleConfirmPassword,
-                  icon: Icon(
-                    showConfirmPassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: riderNameController,
-              autofillHints: UagAuthAutofill.displayName,
-              textInputAction: TextInputAction.done,
-              maxLength: 24,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Raider name',
-                hintText: 'Enter your display name',
-                prefixIcon: const Icon(Icons.person_outline_rounded),
-                errorText: riderNameError,
-              ),
-            ),
-            CheckboxListTile(
-              value: rememberEmail,
-              onChanged: (value) => onRememberEmailChanged(value ?? true),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              activeColor: AppTheme.neonCyan,
-              title: const Text(
-                'Remember email on this device',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            SwitchListTile(
-              value: keepSignedIn,
-              onChanged: onKeepSignedInChanged,
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              activeThumbColor: AppTheme.neonCyan,
-              title: const Text(
-                'Keep me signed in on this device',
-                style: TextStyle(color: Colors.white70),
-              ),
-              subtitle: const Text(
-                'Turn off on shared devices. You will still enter Command Centre after setup.',
-                style: TextStyle(color: Colors.white38, fontSize: 11),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _IdentityStep extends StatelessWidget {
   const _IdentityStep({

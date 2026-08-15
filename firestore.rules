@@ -282,6 +282,24 @@ service cloud.firestore {
             request.resource.data.status == 'disputed')
         ));
       allow delete: if false;
+
+      match /participants/{hunterUid} {
+        allow read: if isSignedIn() && (resource.data.hunterUid == request.auth.uid || resource.data.contractId == contractId || isTrustModerator());
+        allow create, update: if isSignedIn() &&
+          request.resource.data.contractId == contractId &&
+          request.resource.data.hunterUid == hunterUid &&
+          (request.auth.uid == hunterUid || isTrustModerator());
+        allow delete: if false;
+      }
+
+      match /counter_offers/{offerId} {
+        allow read: if isSignedIn() && (resource.data.hunterUid == request.auth.uid || isTrustModerator());
+        allow create, update: if isSignedIn() &&
+          request.resource.data.contractId == contractId &&
+          request.resource.data.hunterUid == request.auth.uid &&
+          request.resource.data.status in ['proposed', 'accepted', 'rejected', 'countered'];
+        allow delete: if false;
+      }
     }
 
     match /arc_blueprint_drop_reports/{reportId} {

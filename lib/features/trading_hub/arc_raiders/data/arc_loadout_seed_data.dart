@@ -65,7 +65,7 @@ class ArcLoadoutSeedData {
       name: 'Bettina',
       category: 'Weapon',
       role: 'Attachment layout verified in-game',
-      slots: ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
+      slots: ['Muzzle Mod', 'Medium Magazine Mod', 'Stock Mod'],
     ),
     ArcLoadoutWeaponSpec(
       name: 'Bobcat',
@@ -183,7 +183,7 @@ class ArcLoadoutSeedData {
       name: 'Renegade',
       category: 'Battle Rifle',
       role: 'Heavy sustained raider pressure',
-      slots: ['Muzzle Mod', 'Underbarrel Mod', 'Stock Mod'],
+      slots: ['Muzzle Mod', 'Medium Magazine Mod', 'Stock Mod'],
       blueprintBased: true,
     ),
     ArcLoadoutWeaponSpec(

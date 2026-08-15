@@ -43,7 +43,7 @@ class _State extends State<ArcRaiderContractsScreen>
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.transparent,
     appBar: const UagAppBar(
-      title: 'Report a Raider',
+      title: 'Report a Rat',
       subtitle:
           'Private reports, Rat Activity intelligence and moderated contracts.',
     ),
@@ -361,7 +361,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
     switch (step) {
       case 0:
         return _card('Who are you reporting?', [
-          _field(target, 'Raider display name *'),
+          _field(target, 'Rat display name *'),
           _field(identity, 'Game identity / platform ID'),
           _continue(() => target.text.trim().length >= 2),
         ]);
@@ -494,7 +494,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
           _continue(() => details.text.trim().length >= 20),
         ]);
       case 11:
-        return _card('Create a Raider Contract if approved?', [
+        return _card('Create a Rat Contract if approved?', [
           const Text(
             'A contract is optional. The report can still contribute to moderated Rat Activity intelligence without one.',
           ),
@@ -772,7 +772,7 @@ class _Contracts extends StatelessWidget {
       }
       final items = snapshot.data!;
       if (items.isEmpty) {
-        return const Center(child: Text('No Raider Contracts here yet.'));
+        return const Center(child: Text('No Rat Contracts here yet.'));
       }
       return ListView(
         padding: AppTheme.pagePadding,

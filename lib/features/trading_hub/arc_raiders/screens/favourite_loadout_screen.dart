@@ -937,6 +937,35 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     setState(() => _shield = selected.name);
   }
 
+  Future<void> _pickAugment(Map<String, ArcBlueprintState> states) async {
+    final options = ArcLoadoutSeedData.augments;
+    final selected = await _showPicker<ArcLoadoutOption>(
+      title: 'Select Augment',
+      items: options,
+      labelBuilder: (option) => option.name,
+      subtitleBuilder: (option) => option.description,
+      leadingBuilder: (option) {
+        final owned = _isOwnedOrNotBlueprint(
+          itemName: option.name,
+          blueprintBased: option.blueprintBased,
+          states: states,
+        );
+        return _itemImage(
+          imageAsset: _assetForLoadoutItem(
+            option.name,
+            ArcLoadoutAssetKind.augment,
+          ),
+          accent: AppTheme.neonCyan,
+          owned: owned,
+          icon: Icons.health_and_safety_rounded,
+        );
+      },
+      selectedBuilder: (option) => option.name == _augment,
+    );
+    if (selected == null) return;
+    setState(() => _augment = selected.name);
+  }
+
   Future<void> _pickQuickSlot(int index) async {
     while (_quickSlots.length < ArcLoadoutLayoutEngine.quickUseSlotCount) {
       _quickSlots.add(ArcLoadoutLayoutEngine.emptySlot);
@@ -944,16 +973,11 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final currentOption = ArcLoadoutLayoutEngine.quickUseOptionForName(
       _quickSlots[index],
     );
-    final augmentAlreadySelected = _quickSlots.indexed.any((entry) {
-      if (entry.$1 == index) return false;
-      return ArcLoadoutLayoutEngine.quickUseOptionForName(entry.$2)?.type ==
-          ArcLoadoutSlotType.augment;
-    });
+
+    // Quick Use slots no longer accept augments
     final options = <ArcLoadoutOption>[
       ...ArcLoadoutLayoutEngine.quickUseOptions().where((option) {
-        if (option.type != ArcLoadoutSlotType.augment) return true;
-        return !augmentAlreadySelected ||
-            currentOption?.type == ArcLoadoutSlotType.augment;
+        return option.type != ArcLoadoutSlotType.augment;
       }),
       ArcLoadoutOption(
         name: ArcLoadoutLayoutEngine.emptySlot,
@@ -979,19 +1003,16 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
               ? Icons.remove_circle_outline_rounded
               : option.type == ArcLoadoutSlotType.consumables
               ? Icons.medical_services_rounded
-              : option.type == ArcLoadoutSlotType.augment
-              ? Icons.health_and_safety_rounded
               : Icons.inventory_2_rounded,
         );
       },
       selectedBuilder: (option) => option.name == _quickSlots[index],
       footerText:
-          'Six fixed Quick Use slots accept gadgets, utility, healing, throwables and one augment. Weapons, attachments and shield stay out of this picker.',
+          'Exactly six Quick Use slots for gadgets, utility, healing and throwables. Augment and Shield have their own dedicated slots.',
     );
     if (selected == null) return;
     setState(() {
       _quickSlots[index] = selected.name;
-      _normaliseQuickSlots();
     });
   }
 
@@ -1357,6 +1378,37 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     );
   }
 
+  Widget _buildAugmentBlock(Map<String, ArcBlueprintState> states) {
+    final augmentOption = _optionForName(_augment);
+    final owned = _isOwnedOrNotBlueprint(
+      itemName: _augment,
+      blueprintBased: augmentOption?.blueprintBased ?? false,
+      states: states,
+    );
+
+    return _arcPanel(
+      accent: AppTheme.neonCyan,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader('FAVOURITE AUGMENT', AppTheme.neonCyan),
+          const SizedBox(height: 10),
+          _itemTile(
+            label: _augment.isEmpty ? 'Select Augment' : _augment,
+            subtitle: augmentOption?.description ?? 'Tap to choose augment.',
+            imageAsset: _assetForLoadoutItem(
+              _augment,
+              ArcLoadoutAssetKind.augment,
+            ),
+            accent: AppTheme.neonCyan,
+            owned: owned,
+            onTap: () => _pickAugment(states),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLoadoutBoard(Map<String, ArcBlueprintState> states) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1371,7 +1423,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 children: [
                   Expanded(child: _buildWeaponSlot(true, states)),
                   const SizedBox(width: 10),
-                  Expanded(child: _buildShieldBlock(states)),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildAugmentBlock(states),
+                        const SizedBox(height: 10),
+                        _buildShieldBlock(states),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   Expanded(child: _buildQuickSlots(states)),
                 ],
@@ -1397,7 +1457,15 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 children: [
                   Expanded(child: _buildWeaponSlot(true, states)),
                   const SizedBox(width: 10),
-                  Expanded(child: _buildShieldBlock(states)),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildAugmentBlock(states),
+                        const SizedBox(height: 10),
+                        _buildShieldBlock(states),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -1417,6 +1485,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
 
         return Column(
           children: [
+            _buildAugmentBlock(states),
+            const SizedBox(height: 10),
             _buildShieldBlock(states),
             const SizedBox(height: 10),
             _buildWeaponSlot(true, states),
@@ -1669,7 +1739,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           _sectionHeader('QUICK USE', Colors.amberAccent),
           const SizedBox(height: 6),
           Text(
-            '6 fixed slots - one augment max - weapons and attachments excluded',
+            '6 fixed slots - gadgets, utility, healing and throwables - weapons and augment excluded',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.56),
               fontSize: 11,

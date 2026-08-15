@@ -181,7 +181,7 @@ class ArcCompactNavigationCatalog {
       label: 'PROFILE',
       items: <ArcCompactNavigationItem>[
         ArcCompactNavigationItem(
-          label: 'Report a Raider',
+          label: 'Report a Rat',
           icon: Icons.gavel_rounded,
           routeName: ArcRaiderContractsScreen.routeName,
           accessFlag: FeatureAccessFlag.raiderContracts,

@@ -9,10 +9,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/uag_auth_autofill.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
+import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_form_dropdown_field.dart';
 
 class AuthScreen extends StatefulWidget {
   static const String routeName = '/auth';
@@ -244,6 +249,13 @@ class _AuthScreenState extends State<AuthScreen> {
     return null;
   }
 
+
+  void _openOnboardingAccountCreation() {
+    setState(() {
+      _isLogin = false;
+    });
+  }
+
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
 
@@ -320,17 +332,13 @@ class _AuthScreenState extends State<AuthScreen> {
 
         // Authentication owns account creation and minimal base profile.
         // ARC profile details and legal are now in mandatory onboarding.
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set({
-              'email': email,
-              'createdAt': FieldValue.serverTimestamp(),
-              'updatedAt': FieldValue.serverTimestamp(),
-              'onboardingComplete': false,
-              'arcMandatoryOnboardingComplete': false,
-            }, SetOptions(merge: true))
-            .timeout(const Duration(seconds: 12));
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'email': email,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'onboardingComplete': false,
+          'arcMandatoryOnboardingComplete': false,
+        }, SetOptions(merge: true)).timeout(const Duration(seconds: 12));
 
         unawaited(
           user.sendEmailVerification().catchError((
@@ -455,6 +463,18 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  Future<void> _openTerms() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TermsOfUseScreen()));
+  }
+
+  Future<void> _openPrivacy() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()));
+  }
+
   Widget _buildPasswordField({
     required TextEditingController controller,
     required String label,
@@ -492,6 +512,7 @@ class _AuthScreenState extends State<AuthScreen> {
       validator: validator,
     );
   }
+
 
   Widget _buildRememberEmailTile() {
     return CheckboxListTile(
@@ -788,6 +809,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           : () {
                               setState(() {
                                 _isLogin = !_isLogin;
+                                _signupStep = 0;
                               });
                             },
                       child: Text(
