@@ -732,6 +732,7 @@ class ArcRaidMapFilterState {
     this.hideDisputed = true,
     this.hideStale = true,
     this.routeOnly = false,
+    this.selectedIconKeys = const <String>{},
     this.searchQuery = '',
   });
 
@@ -753,6 +754,7 @@ class ArcRaidMapFilterState {
   final bool hideDisputed;
   final bool hideStale;
   final bool routeOnly;
+  final Set<String> selectedIconKeys;
   final String searchQuery;
 
   static const defaults = ArcRaidMapFilterState();
@@ -778,6 +780,7 @@ class ArcRaidMapFilterState {
       hideDisputed != defaults.hideDisputed,
       hideStale != defaults.hideStale,
       routeOnly != defaults.routeOnly,
+      selectedIconKeys.isNotEmpty,
       searchQuery.trim().isNotEmpty,
     ];
     return values.where((changed) => changed).length;
@@ -789,6 +792,11 @@ class ArcRaidMapFilterState {
         marker.category != ArcRaidMapMarkerCategory.standardExtraction &&
         marker.category != ArcRaidMapMarkerCategory.raiderHatch &&
         marker.category != ArcRaidMapMarkerCategory.spawn) {
+      return false;
+    }
+    if (selectedIconKeys.isNotEmpty &&
+        (marker.iconKey == null ||
+            !selectedIconKeys.contains(marker.iconKey))) {
       return false;
     }
     final query = searchQuery.trim().toLowerCase();
@@ -867,6 +875,7 @@ class ArcRaidMapFilterState {
     bool? hideDisputed,
     bool? hideStale,
     bool? routeOnly,
+    Set<String>? selectedIconKeys,
     String? searchQuery,
   }) {
     return ArcRaidMapFilterState(
@@ -889,6 +898,7 @@ class ArcRaidMapFilterState {
       hideDisputed: hideDisputed ?? this.hideDisputed,
       hideStale: hideStale ?? this.hideStale,
       routeOnly: routeOnly ?? this.routeOnly,
+      selectedIconKeys: selectedIconKeys ?? this.selectedIconKeys,
       searchQuery: searchQuery ?? this.searchQuery,
     );
   }

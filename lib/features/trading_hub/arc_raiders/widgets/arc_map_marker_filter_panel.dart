@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_marker_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcMapMarkerFilterPanel extends StatelessWidget {
@@ -57,6 +60,100 @@ class ArcMapMarkerFilterPanel extends StatelessWidget {
                     ),
                   );
                 },
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        ExpansionTile(
+          initiallyExpanded: false,
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 10),
+          leading: const Icon(
+            Icons.radar_rounded,
+            color: AppTheme.neonCyan,
+            size: 19,
+          ),
+          title: Text(
+            'Map Marker Types',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: Colors.white,
+              isBold: true,
+            ),
+          ),
+          subtitle: filters.selectedIconKeys.isEmpty
+              ? const Text('All marker types')
+              : Text('${filters.selectedIconKeys.length} selected'),
+          children: [
+            for (final groupLabel in <String>[
+              'ARC Enemies',
+              'Extraction',
+              'Loot',
+              'Infrastructure',
+              'Access',
+            ]) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 6),
+                  child: Text(
+                    groupLabel.toUpperCase(),
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 10,
+                      color: AppTheme.tradingMutedText,
+                      isBold: true,
+                    ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final entry in ArcMapFilterTaxonomy.all.where(
+                      (entry) =>
+                          entry.groupLabel == groupLabel &&
+                          ArcMapFilterIconRegistry.tryAssetPathFor(
+                                entry.iconKey,
+                              ) !=
+                              null,
+                    ))
+                      FilterChip(
+                        avatar: ArcMapFilterIcon(
+                          iconKey: entry.iconKey,
+                          size: 22,
+                          semanticLabel: entry.label,
+                        ),
+                        label: Text(entry.label),
+                        selected: filters.selectedIconKeys.contains(
+                          entry.iconKey,
+                        ),
+                        onSelected: (selected) {
+                          final next = <String>{...filters.selectedIconKeys};
+                          if (selected) {
+                            next.add(entry.iconKey);
+                          } else {
+                            next.remove(entry.iconKey);
+                          }
+                          onChanged(filters.copyWith(selectedIconKeys: next));
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+            if (filters.selectedIconKeys.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => onChanged(
+                    filters.copyWith(selectedIconKeys: const <String>{}),
+                  ),
+                  icon: const Icon(Icons.clear_all_rounded),
+                  label: const Text('Show all marker types'),
+                ),
               ),
           ],
         ),

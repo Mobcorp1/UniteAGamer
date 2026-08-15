@@ -1399,10 +1399,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                     ),
                   ],
                 ),
-                child: Icon(
-                  _kindIcon(marker.kind),
-                  size: selected ? 13 : 10,
+                child: ArcMapFilterIcon(
+                  iconKey: ArcMapFilterIconRegistry.iconKeyForSubtype(
+                    marker.subtypeId,
+                  ),
+                  size: selected ? 19 : 16,
                   color: _kindColor(marker.kind),
+                  semanticLabel: marker.subtypeLabel ?? marker.name,
                 ),
               ),
             ),
