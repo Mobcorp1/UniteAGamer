@@ -6,13 +6,13 @@ void main() {
     test('new or reset users require onboarding', () {
       expect(arcNeedsMandatoryOnboarding(const {}), isTrue);
       expect(
-        arcNeedsMandatoryOnboarding(const {'onboardingComplete': true}),
-        isTrue,
-      );
-      expect(
         arcNeedsMandatoryOnboarding(const {
           'arcMandatoryOnboardingComplete': false,
         }),
+        isTrue,
+      );
+      expect(
+        arcNeedsMandatoryOnboarding(const {'onboardingComplete': false}),
         isTrue,
       );
     });
@@ -26,6 +26,23 @@ void main() {
       );
     });
 
+    test('legacy completed users continue and qualify for migration', () {
+      const legacyComplete = <String, dynamic>{'onboardingComplete': true};
+
+      expect(arcNeedsMandatoryOnboarding(legacyComplete), isFalse);
+      expect(arcNeedsLegacyOnboardingMigration(legacyComplete), isTrue);
+    });
+
+    test('canonical completion supersedes legacy migration', () {
+      const canonicalComplete = <String, dynamic>{
+        'onboardingComplete': true,
+        'arcMandatoryOnboardingComplete': true,
+      };
+
+      expect(arcNeedsMandatoryOnboarding(canonicalComplete), isFalse);
+      expect(arcNeedsLegacyOnboardingMigration(canonicalComplete), isFalse);
+    });
+
     test('progressive helper remains a compatibility alias', () {
       expect(
         arcNeedsProgressiveOnboarding(const {
@@ -37,6 +54,10 @@ void main() {
         arcNeedsProgressiveOnboarding(const {
           'arcMandatoryOnboardingComplete': true,
         }),
+        isFalse,
+      );
+      expect(
+        arcNeedsProgressiveOnboarding(const {'onboardingComplete': true}),
         isFalse,
       );
     });
