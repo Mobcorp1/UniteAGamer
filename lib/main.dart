@@ -550,8 +550,7 @@ class _DirectOnboardingRouteGate extends StatelessWidget {
 
 class _UAGTradersHubAppState extends State<UAGTradersHubApp>
     with WidgetsBindingObserver {
-  final ArcOperationsRepository _operationsRepository =
-      ArcOperationsRepository();
+  ArcOperationsRepository? _operationsRepository;
   StreamSubscription<User?>? _authSubscription;
   Timer? _sessionHeartbeat;
   String? _sessionUid;
@@ -562,6 +561,7 @@ class _UAGTradersHubAppState extends State<UAGTradersHubApp>
   void initState() {
     super.initState();
     if (!widget.testMode) {
+      _operationsRepository = ArcOperationsRepository();
       WidgetsBinding.instance.addObserver(this);
       _authSubscription = FirebaseAuth.instance.authStateChanges().listen(
         _handleSessionUser,
@@ -605,9 +605,12 @@ class _UAGTradersHubAppState extends State<UAGTradersHubApp>
     _sessionUid = user.uid;
     _sessionId = '${user.uid}-${now.toUtc().millisecondsSinceEpoch}';
     _lastSessionDurationRecordedAt = now;
-    unawaited(
-      _operationsRepository.recordSessionStarted(sessionId: _sessionId),
-    );
+    final operationsRepository = _operationsRepository;
+    if (operationsRepository != null) {
+      unawaited(
+        operationsRepository.recordSessionStarted(sessionId: _sessionId),
+      );
+    }
     _sessionHeartbeat = Timer.periodic(
       const Duration(minutes: 1),
       (_) => unawaited(_flushSessionDuration()),
@@ -633,7 +636,10 @@ class _UAGTradersHubAppState extends State<UAGTradersHubApp>
     if (duration.inSeconds < 5) return;
 
     _lastSessionDurationRecordedAt = now;
-    await _operationsRepository.recordSessionDuration(
+    final operationsRepository = _operationsRepository;
+    if (operationsRepository == null) return;
+
+    await operationsRepository.recordSessionDuration(
       duration,
       sessionId: _sessionId,
     );
@@ -652,25 +658,9 @@ class _UAGTradersHubAppState extends State<UAGTradersHubApp>
           ? null
           : TradingPushService.instance.navigatorKey,
       onGenerateRoute: widget._buildRoute,
-      home: StreamBuilder<User?>(
-        stream: widget.testMode
-            ? Stream<User?>.value(null)
-            : FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              backgroundColor: Colors.transparent,
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          if (snapshot.hasData) {
-            return const AppEntryGate();
-          }
-
-          return const AuthLandingScreen();
-        },
-      ),
+      // PASS 343: AppEntryGate is the single production entry authority.
+      // Test mode stays Firebase-independent for widget smoke tests.
+      home: widget.testMode ? const AuthLandingScreen() : const AppEntryGate(),
     );
   }
 }
