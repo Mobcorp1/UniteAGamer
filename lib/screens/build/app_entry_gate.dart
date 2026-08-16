@@ -10,24 +10,86 @@ import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart'
 
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+bool arcHasExplicitIncompleteOnboarding(Map<String, dynamic> data) {
+  return data['arcMandatoryOnboardingComplete'] == false ||
+      data['onboardingComplete'] == false;
+}
+
+bool arcLooksLikeEstablishedLegacyAccount(Map<String, dynamic> data) {
+  // Explicit incomplete state always wins. Current account creation writes
+  // these false flags, so profile-shaped new accounts cannot bypass onboarding.
+  if (arcHasExplicitIncompleteOnboarding(data)) return false;
+
+  if (data['hasCompletedOnboarding'] == true ||
+      data['hasCompletedProfileSetup'] == true ||
+      data['profileSetupComplete'] == true) {
+    return true;
+  }
+
+  final arcOnboarding = data['arcOnboarding'];
+  if (arcOnboarding is Map && arcOnboarding['completedAt'] != null) {
+    return true;
+  }
+
+  final displayName = data['displayName']?.toString().trim() ?? '';
+  final basicProfile = data['basicProfile'];
+  final traderProfile = data['traderProfile'];
+
+  final hasBasicProfile =
+      basicProfile is Map &&
+      basicProfile.isNotEmpty &&
+      ((basicProfile['displayName']?.toString().trim() ?? '').isNotEmpty ||
+          (basicProfile['email']?.toString().trim() ?? '').isNotEmpty);
+
+  final hasTraderProfile =
+      traderProfile is Map &&
+      traderProfile.isNotEmpty &&
+      ((traderProfile['uagName']?.toString().trim() ?? '').isNotEmpty ||
+          (traderProfile['uagId']?.toString().trim() ?? '').isNotEmpty ||
+          (traderProfile['embarkId']?.toString().trim() ?? '').isNotEmpty);
+
+  // Pre-mandatory-onboarding accounts already had populated UAG/trader profile
+  // documents but no onboarding flags at all. Requiring both a usable identity
+  // and a structured historical profile avoids treating an identity-only
+  // Firebase user document as completed.
+  return displayName.isNotEmpty && (hasBasicProfile || hasTraderProfile);
+}
+
+String? arcLegacyOnboardingMigrationReason(Map<String, dynamic> data) {
+  if (data['arcMandatoryOnboardingComplete'] == true) return null;
+  if (arcHasExplicitIncompleteOnboarding(data)) return null;
+
+  if (data['onboardingComplete'] == true) return 'onboardingComplete';
+  if (data['hasCompletedOnboarding'] == true) return 'hasCompletedOnboarding';
+  if (data['hasCompletedProfileSetup'] == true) {
+    return 'hasCompletedProfileSetup';
+  }
+  if (data['profileSetupComplete'] == true) return 'profileSetupComplete';
+
+  final arcOnboarding = data['arcOnboarding'];
+  if (arcOnboarding is Map && arcOnboarding['completedAt'] != null) {
+    return 'arcOnboarding.completedAt';
+  }
+
+  if (arcLooksLikeEstablishedLegacyAccount(data)) {
+    return 'establishedLegacyProfile';
+  }
+
+  return null;
+}
+
 bool arcHasCompletedMandatoryOnboarding(Map<String, dynamic> data) {
   if (data['isAdmin'] == true || data['isDev'] == true) return true;
   if (data['arcMandatoryOnboardingComplete'] == true) return true;
-
-  // PASS 342 migration bridge:
-  // Accounts that completed the pre-canonical onboarding flow must not be
-  // forced through onboarding again. _needsOnboarding migrates this legacy
-  // state to arcMandatoryOnboardingComplete when the account is next loaded.
   if (data['onboardingComplete'] == true) return true;
 
-  return false;
+  if (arcHasExplicitIncompleteOnboarding(data)) return false;
+
+  return arcLooksLikeEstablishedLegacyAccount(data);
 }
 
-bool arcNeedsLegacyOnboardingMigration(Map<String, dynamic> data) {
-  if (data['isAdmin'] == true || data['isDev'] == true) return false;
-  if (data['arcMandatoryOnboardingComplete'] == true) return false;
-  return data['onboardingComplete'] == true;
-}
+bool arcNeedsLegacyOnboardingMigration(Map<String, dynamic> data) =>
+    arcLegacyOnboardingMigrationReason(data) != null;
 
 bool arcNeedsMandatoryOnboarding(Map<String, dynamic> data) =>
     !arcHasCompletedMandatoryOnboarding(data);
@@ -54,9 +116,14 @@ class _AppEntryGateState extends State<AppEntryGate> {
     if (!arcNeedsLegacyOnboardingMigration(data)) return;
 
     try {
+      final migrationReason =
+          arcLegacyOnboardingMigrationReason(data) ?? 'legacyCompatibility';
+
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'arcMandatoryOnboardingComplete': true,
+        'onboardingComplete': true,
         'arcMandatoryOnboardingMigratedFromLegacy': true,
+        'arcMandatoryOnboardingMigrationReason': migrationReason,
         'arcMandatoryOnboardingMigratedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
