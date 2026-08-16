@@ -3,6 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class UagSessionGateController {
   static const String _keepSignedInKey = 'uag_keep_signed_in';
   static const String _sessionAllowedUidKey = 'uag_session_allowed_uid';
+  static const String _sessionContractVersionKey =
+      'uag_session_contract_version';
+  static const int _currentSessionContractVersion = 2;
   static const String _biometricEnabledKey = 'uag_biometric_login_enabled';
   static const String _biometricAllowedUidKey = 'uag_biometric_allowed_uid';
 
@@ -37,6 +40,10 @@ class UagSessionGateController {
     await prefs.setBool(_keepSignedInKey, keepSignedIn);
 
     if (keepSignedIn) {
+      await prefs.setInt(
+        _sessionContractVersionKey,
+        _currentSessionContractVersion,
+      );
       await prefs.setString(_sessionAllowedUidKey, uid);
 
       final biometricsEnabled = prefs.getBool(_biometricEnabledKey) ?? false;
@@ -46,6 +53,7 @@ class UagSessionGateController {
     } else {
       await prefs.remove(_sessionAllowedUidKey);
       await prefs.remove(_biometricAllowedUidKey);
+      await prefs.remove(_sessionContractVersionKey);
     }
   }
 
@@ -55,6 +63,10 @@ class UagSessionGateController {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keepSignedInKey, true);
+    await prefs.setInt(
+      _sessionContractVersionKey,
+      _currentSessionContractVersion,
+    );
     await prefs.setString(_sessionAllowedUidKey, uid);
     await prefs.setBool(_biometricEnabledKey, true);
     await prefs.setString(_biometricAllowedUidKey, uid);
@@ -89,8 +101,11 @@ class UagSessionGateController {
     final prefs = await SharedPreferences.getInstance();
     final keepSignedIn = prefs.getBool(_keepSignedInKey) ?? false;
     final allowedUid = prefs.getString(_sessionAllowedUidKey);
+    final contractVersion = prefs.getInt(_sessionContractVersionKey);
 
-    return keepSignedIn && allowedUid == uid;
+    return keepSignedIn &&
+        contractVersion == _currentSessionContractVersion &&
+        allowedUid == uid;
   }
 
   static Future<bool> keepSignedInPreference() async {
@@ -137,7 +152,15 @@ class UagSessionGateController {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_sessionAllowedUidKey);
     await prefs.remove(_biometricAllowedUidKey);
+    await prefs.remove(_sessionContractVersionKey);
     await prefs.setBool(_keepSignedInKey, false);
+  }
+
+  static void resetRuntimeForTest() {
+    _runtimeAuthenticatedUid = null;
+    _runtimeBiometricUnlockedUid = null;
+    _onboardingAuthHandshakeUntil = null;
+    _lastBackgroundedAt = null;
   }
 
   static bool get _onboardingAuthHandshakeActive {
