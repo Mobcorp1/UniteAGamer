@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 
 class ArcBenchUpgradeRequirement {
@@ -614,8 +615,7 @@ class ArcBenchUpgradeSeedData {
   }
 
   static String _imageAssetForItemId(String itemId) {
-    final canonicalId = _canonicalResourceId(itemId);
-    return 'assets/arc_raiders/scrappy_resources/${canonicalId.replaceAll('-', '_')}.webp';
+    return ArcItemAssetRegistry.assetPathForId(itemId);
   }
 
   static String _canonicalResourceId(String itemId) {

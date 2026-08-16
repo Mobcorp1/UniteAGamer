@@ -1,3 +1,4 @@
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_item_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 
 class ArcQuestRequirement {
@@ -404,7 +405,7 @@ class ArcQuestRequirementSeedData {
       itemName: 'Coffee Pot',
       quantity: 1,
       sourceHint:
-          'Best intel: kitchens, cafÃ©s, residential counters, commercial interiors and shelves.',
+          'Best intel: kitchens, cafÃƒÂ©s, residential counters, commercial interiors and shelves.',
     ),
     ArcQuestRequirement(
       questName: 'A New Type Of Plant',
@@ -520,29 +521,7 @@ class ArcQuestRequirementSeedData {
   }
 
   static String _imageAssetForItemId(String itemId) {
-    final canonicalId = switch (itemId) {
-      'apricot' => 'apricots',
-      'lemon' => 'lemons',
-      'prickly-pear' => 'prickly-pears',
-      'very-comfortable-pillow' => 'very-comfortable-pillows',
-      'wasp-driver' => 'wasp-drivers',
-      'hornet-driver' => 'hornet-drivers',
-      'snitch-scanner' => 'snitch-scanners',
-      'leaper-pulse-unit' => 'leaper-pulse-units',
-      'surveyor-vault' => 'surveyor-vaults',
-      'fireball-burner' => 'fireball-burners',
-      'rocketeer-driver' => 'rocketeer-drivers',
-      'bastion-cell' => 'bastion-cells',
-      'tick-pod' => 'tick-pods',
-      'firefly-burner' => 'firefly-burners',
-      'electrical-component' => 'electrical-components',
-      'mechanical-component' => 'mechanical-components',
-      'advanced-electrical-component' => 'advanced-electrical-components',
-      'advanced-mechanical-component' => 'advanced-mechanical-components',
-      'wire' => 'wires',
-      _ => itemId,
-    };
-    return 'assets/arc_raiders/scrappy_resources/${canonicalId.replaceAll('-', '_')}.webp';
+    return ArcItemAssetRegistry.assetPathForId(itemId);
   }
 
   static ArcScrappyTier _tierForTrader(String trader) {
