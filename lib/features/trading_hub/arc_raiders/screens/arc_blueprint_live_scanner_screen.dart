@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_automatic_grid_selector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_detector.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_stabilizer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_dual_capture_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
@@ -114,6 +116,14 @@ class _ArcBlueprintLiveScannerScreenState
   int _previewFramesProcessed = 0;
   int _previewFramesDropped = 0;
   DateTime _lastPreviewStatsLog = DateTime.fromMillisecondsSinceEpoch(0);
+  final ArcBlueprintLiveOccupancyEngine _liveOccupancyEngine =
+      const ArcBlueprintLiveOccupancyEngine();
+  final ArcBlueprintLiveOccupancyStabilizer _liveOccupancyStabilizer =
+      ArcBlueprintLiveOccupancyStabilizer();
+  ArcBlueprintLiveOccupancySnapshot _liveOccupancySnapshot =
+      const ArcBlueprintLiveOccupancySnapshot.empty();
+  DateTime? _lastLiveOccupancyAnalysisAt;
+  static const Duration _liveOccupancyInterval = Duration(milliseconds: 650);
 
   void _debugLog(String message) {
     if (kDebugMode) {
@@ -345,7 +355,7 @@ class _ArcBlueprintLiveScannerScreenState
         _schedulePreviewStreamStart(controller);
       } else {
         _debugLog(
-          'Android capture-only mode: live ImageAnalysis disabled; '
+          'Live ImageAnalysis is unavailable on this platform; '
           'Preview + ImageCapture remain active',
         );
       }
@@ -535,6 +545,10 @@ class _ArcBlueprintLiveScannerScreenState
 
       _previewFramesProcessed += 1;
       _updateLockState(detection);
+
+      if (detection.isLocked) {
+        _processLiveOccupancy(frameImage, detection);
+      }
     } finally {
       stopwatch.stop();
       _analyzingPreview = false;
@@ -547,6 +561,49 @@ class _ArcBlueprintLiveScannerScreenState
       }
       _logPreviewStatsIfDue();
     }
+  }
+
+  void _processLiveOccupancy(
+    img.Image frameImage,
+    ArcBlueprintGridDetection detection,
+  ) {
+    final now = DateTime.now();
+    final last = _lastLiveOccupancyAnalysisAt;
+    if (last != null && now.difference(last) < _liveOccupancyInterval) {
+      return;
+    }
+    _lastLiveOccupancyAnalysisAt = now;
+
+    final section = _capturingBottom
+        ? ArcBlueprintGridSection.bottom
+        : ArcBlueprintGridSection.top;
+    final analysis = _liveOccupancyEngine.analyzeFrame(
+      frameImage: frameImage,
+      detection: detection,
+      section: section,
+      captureId: 'live-${now.microsecondsSinceEpoch}',
+    );
+
+    if (!analysis.succeeded) {
+      _debugLog('Live occupancy unavailable: ${analysis.error}');
+      return;
+    }
+
+    final snapshot = _liveOccupancyStabilizer.addFrame(analysis.samples);
+    if (!mounted) return;
+
+    setState(() {
+      _liveOccupancySnapshot = snapshot;
+    });
+
+    _debugLog(
+      'Live occupancy: '
+      '${snapshot.stableCellCount}/${snapshot.totalCellCount} stable '
+      'owned=${snapshot.ownedStableCount} '
+      'missing=${snapshot.missingStableCount} '
+      'uncertain=${snapshot.uncertainCellCount} '
+      'confidence=${analysis.captureConfidence.toStringAsFixed(3)}',
+    );
   }
 
   void _logPreviewStatsIfDue() {
@@ -601,6 +658,48 @@ class _ArcBlueprintLiveScannerScreenState
           final yValue = yPlane.bytes[yIndex];
           final uValue = uPlane.bytes[uIndex];
           final vValue = vPlane.bytes[vIndex];
+          final yPrime = yValue.toInt();
+          final uPrime = uValue.toInt() - 128;
+          final vPrime = vValue.toInt() - 128;
+
+          final r = (yPrime + 1.402 * vPrime).round().clamp(0, 255);
+          final g = (yPrime - 0.344136 * uPrime - 0.714136 * vPrime)
+              .round()
+              .clamp(0, 255);
+          final b = (yPrime + 1.772 * uPrime).round().clamp(0, 255);
+          result.setPixelRgba(x, y, r, g, b, 255);
+        }
+      }
+
+      return result;
+    }
+
+    if (image.format.group == ImageFormatGroup.nv21 &&
+        image.planes.isNotEmpty) {
+      final plane = image.planes.first;
+      final bytes = plane.bytes;
+      final yStride = plane.bytesPerRow;
+      final yPlaneLength = yStride * srcHeight;
+      final uvStride = srcWidth;
+      final result = img.Image(width: targetWidth, height: targetHeight);
+
+      for (var y = 0; y < targetHeight; y++) {
+        final sourceY = (y * scale).floor().clamp(0, srcHeight - 1);
+        for (var x = 0; x < targetWidth; x++) {
+          final sourceX = (x * scale).floor().clamp(0, srcWidth - 1);
+          final yIndex = (sourceY * yStride) + sourceX;
+          final uvIndex =
+              yPlaneLength +
+              ((sourceY ~/ 2) * uvStride) +
+              ((sourceX ~/ 2) * 2);
+
+          if (yIndex >= bytes.length || uvIndex + 1 >= bytes.length) {
+            continue;
+          }
+
+          final yValue = bytes[yIndex];
+          final vValue = bytes[uvIndex];
+          final uValue = bytes[uvIndex + 1];
           final yPrime = yValue.toInt();
           final uPrime = uValue.toInt() - 128;
           final vPrime = vValue.toInt() - 128;
@@ -805,6 +904,10 @@ class _ArcBlueprintLiveScannerScreenState
 
       if (!_capturingBottom) {
         final nextSession = _captureSession.captureTop(corrected);
+        _liveOccupancyStabilizer.reset();
+        _liveOccupancySnapshot =
+            const ArcBlueprintLiveOccupancySnapshot.empty();
+        _lastLiveOccupancyAnalysisAt = null;
         setState(() {
           _captureSession = nextSession;
           _lockState = _BlueprintLockState.searching;
@@ -901,12 +1004,16 @@ class _ArcBlueprintLiveScannerScreenState
                 final captureInstructions = _capturingBottom
                     ? 'Scroll until Row 6 is at the top. Align the cyan corners with the OUTER CELL GRID — exclude the BLUEPRINTS title/header.'
                     : 'Align the four cyan corners with the OUTER CELL GRID only. Exclude the BLUEPRINTS title, FOUND count and surrounding panel.';
+                final liveOccupancySuffix =
+                    _liveOccupancySnapshot.totalCellCount > 0
+                    ? ' • Live ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} stable'
+                    : '';
                 final lockStatusText =
                     _lockState == _BlueprintLockState.searching
                     ? 'Searching for blueprint grid...'
                     : _lockState == _BlueprintLockState.detected
                     ? 'Blueprint grid detected'
-                    : 'Grid locked ✓';
+                    : 'Grid locked ✓$liveOccupancySuffix';
                 final statusColor = _gridLocked
                     ? Colors.greenAccent
                     : Colors.white;
@@ -1077,6 +1184,10 @@ class _ArcBlueprintLiveScannerScreenState
                                       : () => setState(() {
                                           _captureSession =
                                               const ArcBlueprintDualCaptureSession();
+                                          _liveOccupancyStabilizer.reset();
+                                          _liveOccupancySnapshot =
+                                              const ArcBlueprintLiveOccupancySnapshot.empty();
+                                          _lastLiveOccupancyAnalysisAt = null;
                                           _lockState =
                                               _BlueprintLockState.searching;
                                           _potentialLockTime = null;
