@@ -11,9 +11,11 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_stabilizer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_scan_flow_controller.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_scan_result_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_dual_capture_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/manual_alignment_controller.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_perspective_cropper.dart';
@@ -35,11 +37,15 @@ class ArcBlueprintScannerResult {
   ArcBlueprintScannerResult({
     required Uint8List topImageBytes,
     required Uint8List bottomImageBytes,
+    required this.decisions,
+    required this.uncertainIgnoredCount,
   }) : topImageBytes = Uint8List.fromList(topImageBytes),
        bottomImageBytes = Uint8List.fromList(bottomImageBytes);
 
   final Uint8List topImageBytes;
   final Uint8List bottomImageBytes;
+  final List<ArcBlueprintPhotoCellDecision> decisions;
+  final int uncertainIgnoredCount;
 }
 
 class ArcBlueprintLiveScannerScreen extends StatefulWidget {
@@ -658,10 +664,22 @@ class _ArcBlueprintLiveScannerScreenState
       if (transition.phase == ArcBlueprintLiveScanPhase.complete) {
         final result = _liveScanFlow.result;
         if (result == null) return;
+        const resultEngine = ArcBlueprintLiveScanResultEngine();
+        final decisionResult = resultEngine.build(
+          top: result.topSnapshot,
+          bottom: result.bottomSnapshot,
+        );
+        if (!decisionResult.succeeded) {
+          _showMessage(decisionResult.errors.join(' '));
+          _restartLiveScan();
+          return;
+        }
         Navigator.of(context).pop(
           ArcBlueprintScannerResult(
             topImageBytes: result.topFrameBytes,
             bottomImageBytes: result.bottomFrameBytes,
+            decisions: decisionResult.decisions,
+            uncertainIgnoredCount: 0,
           ),
         );
       }
@@ -1020,7 +1038,12 @@ class _ArcBlueprintLiveScannerScreenState
       setState(() => _captureSession = completed);
       didNavigateAway = true;
       Navigator.of(context).pop(
-        ArcBlueprintScannerResult(topImageBytes: top, bottomImageBytes: bottom),
+        ArcBlueprintScannerResult(
+          topImageBytes: top,
+          bottomImageBytes: bottom,
+          decisions: const <ArcBlueprintPhotoCellDecision>[],
+          uncertainIgnoredCount: 0,
+        ),
       );
     } on FormatException catch (error) {
       _showMessage(error.message);
@@ -1097,18 +1120,18 @@ class _ArcBlueprintLiveScannerScreenState
                     : 'Live scan - rows 1-5';
                 final scanInstructions = awaitingBottom
                     ? 'Scroll the in-game Blueprint list until Row 6 is at the top, then continue. No photo is required.'
-                    : 'Keep the complete outer edge of the Blueprint cell grid in view. UAG frames the grid automatically ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no manual grid alignment and no photo capture.';
+                    : 'Keep the complete outer edge of the Blueprint cell grid in view. UAG frames the grid automatically. No manual alignment or photo capture is required.';
                 final liveOccupancySuffix =
                     _liveOccupancySnapshot.totalCellCount > 0
-                    ? ' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Live ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} stable'
+                    ? ' - Live ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} stable'
                     : '';
                 final lockStatusText = awaitingBottom
-                    ? 'Rows 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 scanned ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ scroll to Row 6'
+                    ? 'Rows 1-5 scanned - scroll to Row 6'
                     : _lockState == _BlueprintLockState.searching
                     ? 'Finding the outer Blueprint grid edges...'
                     : _lockState == _BlueprintLockState.detected
-                    ? 'Blueprint grid found ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ framing edges...'
-                    : 'Auto frame locked ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“$liveOccupancySuffix';
+                    ? 'Blueprint grid found - framing edges...'
+                    : 'Auto frame locked$liveOccupancySuffix';
                 final statusColor = _gridLocked
                     ? Colors.greenAccent
                     : Colors.white;
@@ -1237,7 +1260,7 @@ class _ArcBlueprintLiveScannerScreenState
                               border: Border.all(color: AppTheme.neonCyan),
                             ),
                             child: const Text(
-                              'ROWS 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 SAVED ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â START AT ROW 6, NO DUPLICATE ROW',
+                              'ROWS 1-5 SAVED - START AT ROW 6, NO DUPLICATE ROW',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white,
@@ -1297,7 +1320,7 @@ class _ArcBlueprintLiveScannerScreenState
                                           _liveOccupancySnapshot
                                                       .totalCellCount >
                                                   0
-                                              ? 'AUTO SCANNING ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} STABLE'
+                                              ? 'AUTO SCANNING - ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} STABLE'
                                               : 'AUTO FRAMING BLUEPRINT GRID',
                                           style: const TextStyle(
                                             color: Colors.white,
@@ -1482,10 +1505,10 @@ class _DebugGridMetrics extends StatelessWidget {
   }
 
   String get _angle {
-    if (!detection.isValid) return '0.0Ãƒâ€šÃ‚Â°';
+    if (!detection.isValid) return '0.0 deg';
     final deltaX = detection.topRight.dx - detection.topLeft.dx;
     final deltaY = detection.topRight.dy - detection.topLeft.dy;
-    return '${(math.atan2(deltaY, deltaX) * 180 / math.pi).abs().toStringAsFixed(1)}Ãƒâ€šÃ‚Â°';
+    return '${(math.atan2(deltaY, deltaX) * 180 / math.pi).abs().toStringAsFixed(1)} deg';
   }
 
   String get _perspective {

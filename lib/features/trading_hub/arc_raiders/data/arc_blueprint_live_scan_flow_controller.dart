@@ -24,31 +24,43 @@ class ArcBlueprintLiveScanFramePair {
   ArcBlueprintLiveScanFramePair({
     required Uint8List topFrameBytes,
     required Uint8List bottomFrameBytes,
+    required this.topSnapshot,
+    required this.bottomSnapshot,
   }) : topFrameBytes = Uint8List.fromList(topFrameBytes),
        bottomFrameBytes = Uint8List.fromList(bottomFrameBytes);
 
   final Uint8List topFrameBytes;
   final Uint8List bottomFrameBytes;
+  final ArcBlueprintLiveOccupancySnapshot topSnapshot;
+  final ArcBlueprintLiveOccupancySnapshot bottomSnapshot;
 }
 
 class ArcBlueprintLiveScanFlowController {
   ArcBlueprintLiveScanPhase _phase = ArcBlueprintLiveScanPhase.topScanning;
   Uint8List? _topFrameBytes;
   Uint8List? _bottomFrameBytes;
+  ArcBlueprintLiveOccupancySnapshot? _topSnapshot;
+  ArcBlueprintLiveOccupancySnapshot? _bottomSnapshot;
 
   ArcBlueprintLiveScanPhase get phase => _phase;
 
   ArcBlueprintLiveScanFramePair? get result {
     final top = _topFrameBytes;
     final bottom = _bottomFrameBytes;
+    final topSnapshot = _topSnapshot;
+    final bottomSnapshot = _bottomSnapshot;
     if (_phase != ArcBlueprintLiveScanPhase.complete ||
         top == null ||
-        bottom == null) {
+        bottom == null ||
+        topSnapshot == null ||
+        bottomSnapshot == null) {
       return null;
     }
     return ArcBlueprintLiveScanFramePair(
       topFrameBytes: top,
       bottomFrameBytes: bottom,
+      topSnapshot: topSnapshot,
+      bottomSnapshot: bottomSnapshot,
     );
   }
 
@@ -63,10 +75,12 @@ class ArcBlueprintLiveScanFlowController {
     switch (_phase) {
       case ArcBlueprintLiveScanPhase.topScanning:
         _topFrameBytes = Uint8List.fromList(frameBytes);
+        _topSnapshot = snapshot;
         _phase = ArcBlueprintLiveScanPhase.awaitingBottomScroll;
         return ArcBlueprintLiveScanTransition(accepted: true, phase: _phase);
       case ArcBlueprintLiveScanPhase.bottomScanning:
         _bottomFrameBytes = Uint8List.fromList(frameBytes);
+        _bottomSnapshot = snapshot;
         _phase = ArcBlueprintLiveScanPhase.complete;
         return ArcBlueprintLiveScanTransition(accepted: true, phase: _phase);
       case ArcBlueprintLiveScanPhase.awaitingBottomScroll:
@@ -88,5 +102,7 @@ class ArcBlueprintLiveScanFlowController {
     _phase = ArcBlueprintLiveScanPhase.topScanning;
     _topFrameBytes = null;
     _bottomFrameBytes = null;
+    _topSnapshot = null;
+    _bottomSnapshot = null;
   }
 }

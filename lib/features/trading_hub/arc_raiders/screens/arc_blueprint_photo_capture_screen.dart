@@ -171,21 +171,14 @@ class _ArcBlueprintPhotoCaptureScreenState
         _showMessage('No Blueprint grid was captured.');
         return;
       }
-      final topSnapshot = Uint8List.fromList(result.topImageBytes);
-      final bottomSnapshot = Uint8List.fromList(result.bottomImageBytes);
-
-      await _repository.saveDualCapture(
-        topBytes: topSnapshot,
-        bottomBytes: bottomSnapshot,
-        topFileName: 'blueprint_grid_top.jpg',
-        bottomFileName: 'blueprint_grid_bottom.jpg',
-      );
-      if (!mounted) return;
-      setState(() {
-        _draft = _repository.current;
-        _activeSection = ArcBlueprintCaptureSection.bottom;
-      });
-      await _scanAndImport();
+      if (result.decisions.isEmpty) {
+        _showMessage(
+          'The live scanner did not return stable Blueprint positions. Try again or use Photo Import.',
+          error: true,
+        );
+        return;
+      }
+      await _reviewLiveScannerResult(result);
     } on PlatformException catch (error) {
       _showMessage(_pickerErrorMessage(error, ImageSource.camera), error: true);
     } catch (error) {
@@ -196,6 +189,46 @@ class _ArcBlueprintPhotoCaptureScreenState
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _reviewLiveScannerResult(
+    ArcBlueprintScannerResult result,
+  ) async {
+    final existing = await ArcBlueprintRepository().loadMyBlueprintStates();
+    final proposedAdditions = result.decisions
+        .where(
+          (decision) =>
+              decision.state == ArcBlueprintPhotoCellState.owned &&
+              existing[decision.blueprintId]?.owned != true,
+        )
+        .toList(growable: false);
+
+    if (kDebugMode) {
+      debugPrint(
+        'ARC LIVE SCANNER: existingOwned=${existing.values.where((state) => state.owned).length} '
+        'proposedAdditions=${proposedAdditions.length}',
+      );
+    }
+
+    if (proposedAdditions.isEmpty) {
+      _showMessage('No new Blueprint ownership was detected by the live scan.');
+      return;
+    }
+
+    if (!mounted) return;
+    final applied = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => ArcBlueprintPhotoDeltaReviewScreen(
+          proposedAdditions: proposedAdditions,
+          uncertainIgnoredCount: result.uncertainIgnoredCount,
+        ),
+      ),
+    );
+    if (applied != true) return;
+
+    await _repository.clear();
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
   }
 
   Future<void> _pick(ImageSource source) async {
@@ -473,7 +506,7 @@ class _ArcBlueprintPhotoCaptureScreenState
 
   String get _stepTitle => _activeSection == ArcBlueprintCaptureSection.top
       ? 'Capture the top of your grid'
-      : 'Capture rows 6â€“8 and the final three slots';
+      : 'Capture rows 6-8 and the final three slots';
 
   @override
   Widget build(BuildContext context) {
@@ -509,7 +542,7 @@ class _ArcBlueprintPhotoCaptureScreenState
             Text(
               _activeSection == ArcBlueprintCaptureSection.top
                   ? 'Fit the outer edges of the first five Blueprint rows inside the boundary. Keep the full left, right, top and bottom edges visible.'
-                  : 'Start at row 6. Do not include row 5 again. Keep rows 6â€“8 fully visible and include the final three Blueprint slots beneath them.',
+                  : 'Start at row 6. Do not include row 5 again. Keep rows 6-8 fully visible and include the final three Blueprint slots beneath them.',
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 14),
