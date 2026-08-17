@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_grid_detector.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_stabilizer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_scan_flow_controller.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_section_grid_extractor.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_dual_capture_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_grid_detection.dart';
@@ -20,7 +21,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_camera_session_policy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_camera_health_guard.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_camera_operation_queue.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_edge_calibration.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_camera_diagnostic_screen.dart';
 
 bool canStartCapture({
@@ -62,7 +62,6 @@ class _ArcBlueprintLiveScannerScreenState
   CameraDescription? _description;
   bool _initializing = true;
   bool _capturing = false;
-  bool _debugDetection = false;
   bool _analyzingPreview = false;
   String? _error;
   _BlueprintLockState _lockState = _BlueprintLockState.searching;
@@ -77,7 +76,9 @@ class _ArcBlueprintLiveScannerScreenState
   ArcBlueprintDualCaptureSession _captureSession =
       const ArcBlueprintDualCaptureSession();
 
-  bool get _capturingBottom => _captureSession.hasTop;
+  bool get _capturingBottom =>
+      _liveScanFlow.phase == ArcBlueprintLiveScanPhase.bottomScanning ||
+      _liveScanFlow.phase == ArcBlueprintLiveScanPhase.complete;
 
   bool get _gridLocked => _lockState == _BlueprintLockState.locked;
 
@@ -122,6 +123,9 @@ class _ArcBlueprintLiveScannerScreenState
       ArcBlueprintLiveOccupancyStabilizer();
   ArcBlueprintLiveOccupancySnapshot _liveOccupancySnapshot =
       const ArcBlueprintLiveOccupancySnapshot.empty();
+  final ArcBlueprintLiveScanFlowController _liveScanFlow =
+      ArcBlueprintLiveScanFlowController();
+  bool _autoCompletingLiveSection = false;
   DateTime? _lastLiveOccupancyAnalysisAt;
   static const Duration _liveOccupancyInterval = Duration(milliseconds: 650);
 
@@ -567,6 +571,11 @@ class _ArcBlueprintLiveScannerScreenState
     img.Image frameImage,
     ArcBlueprintGridDetection detection,
   ) {
+    if (_liveScanFlow.phase == ArcBlueprintLiveScanPhase.awaitingBottomScroll ||
+        _liveScanFlow.phase == ArcBlueprintLiveScanPhase.complete) {
+      return;
+    }
+
     final now = DateTime.now();
     final last = _lastLiveOccupancyAnalysisAt;
     if (last != null && now.difference(last) < _liveOccupancyInterval) {
@@ -604,6 +613,85 @@ class _ArcBlueprintLiveScannerScreenState
       'uncertain=${snapshot.uncertainCellCount} '
       'confidence=${analysis.captureConfidence.toStringAsFixed(3)}',
     );
+
+    if (snapshot.sectionStable && !_autoCompletingLiveSection) {
+      _completeStableLiveSection(frameImage, snapshot);
+    }
+  }
+
+  void _completeStableLiveSection(
+    img.Image frameImage,
+    ArcBlueprintLiveOccupancySnapshot snapshot,
+  ) {
+    if (_autoCompletingLiveSection || !snapshot.sectionStable || !mounted) {
+      return;
+    }
+    _autoCompletingLiveSection = true;
+
+    try {
+      final frameBytes = Uint8List.fromList(
+        img.encodeJpg(frameImage, quality: 92),
+      );
+      final transition = _liveScanFlow.acceptStableFrame(
+        snapshot: snapshot,
+        frameBytes: frameBytes,
+      );
+      if (!transition.accepted) return;
+
+      _liveOccupancyStabilizer.reset();
+      _lastLiveOccupancyAnalysisAt = null;
+
+      if (transition.phase == ArcBlueprintLiveScanPhase.awaitingBottomScroll) {
+        setState(() {
+          _liveOccupancySnapshot =
+              const ArcBlueprintLiveOccupancySnapshot.empty();
+          _lockState = _BlueprintLockState.searching;
+          _potentialLockTime = null;
+          _latestDetection = const ArcBlueprintGridDetection.notFound();
+        });
+        _showMessage(
+          'Rows 1-5 scanned. Scroll the in-game Blueprint list until Row 6 is at the top, then continue.',
+        );
+        return;
+      }
+
+      if (transition.phase == ArcBlueprintLiveScanPhase.complete) {
+        final result = _liveScanFlow.result;
+        if (result == null) return;
+        Navigator.of(context).pop(
+          ArcBlueprintScannerResult(
+            topImageBytes: result.topFrameBytes,
+            bottomImageBytes: result.bottomFrameBytes,
+          ),
+        );
+      }
+    } finally {
+      _autoCompletingLiveSection = false;
+    }
+  }
+
+  void _beginBottomLiveScan() {
+    if (!_liveScanFlow.beginBottomSection()) return;
+    _liveOccupancyStabilizer.reset();
+    setState(() {
+      _liveOccupancySnapshot = const ArcBlueprintLiveOccupancySnapshot.empty();
+      _lastLiveOccupancyAnalysisAt = null;
+      _lockState = _BlueprintLockState.searching;
+      _potentialLockTime = null;
+      _latestDetection = const ArcBlueprintGridDetection.notFound();
+    });
+  }
+
+  void _restartLiveScan() {
+    _liveScanFlow.restart();
+    _liveOccupancyStabilizer.reset();
+    setState(() {
+      _liveOccupancySnapshot = const ArcBlueprintLiveOccupancySnapshot.empty();
+      _lastLiveOccupancyAnalysisAt = null;
+      _lockState = _BlueprintLockState.searching;
+      _potentialLockTime = null;
+      _latestDetection = const ArcBlueprintGridDetection.notFound();
+    });
   }
 
   void _logPreviewStatsIfDue() {
@@ -689,9 +777,7 @@ class _ArcBlueprintLiveScannerScreenState
           final sourceX = (x * scale).floor().clamp(0, srcWidth - 1);
           final yIndex = (sourceY * yStride) + sourceX;
           final uvIndex =
-              yPlaneLength +
-              ((sourceY ~/ 2) * uvStride) +
-              ((sourceX ~/ 2) * 2);
+              yPlaneLength + ((sourceY ~/ 2) * uvStride) + ((sourceX ~/ 2) * 2);
 
           if (yIndex >= bytes.length || uvIndex + 1 >= bytes.length) {
             continue;
@@ -792,6 +878,9 @@ class _ArcBlueprintLiveScannerScreenState
     _baseZoom = _zoom;
   }
 
+  // PASS 348 keeps the still-capture implementation as a recovery fallback for
+  // PASS 349 integration, but normal scanner UX never invokes it.
+  // ignore: unused_element
   Future<void> _capture() async {
     final controller = _controller;
     if (_capturing || controller == null || !controller.value.isInitialized) {
@@ -915,7 +1004,7 @@ class _ArcBlueprintLiveScannerScreenState
           _latestDetection = const ArcBlueprintGridDetection.notFound();
         });
         _showMessage(
-          'Rows 1–5 captured. Scroll to row 6 for the second capture.',
+          'Rows 1-5 captured. Scroll to row 6 for the second capture.',
         );
         if (mounted && _liveAnalysisEnabled) {
           await _startPreviewStream();
@@ -998,22 +1087,28 @@ class _ArcBlueprintLiveScannerScreenState
               builder: (context, constraints) {
                 final media = MediaQuery.of(context);
                 final isPortrait = media.size.width < media.size.height;
-                final captureStep = _capturingBottom
-                    ? 'Capture 2 of 2'
-                    : 'Capture 1 of 2';
-                final captureInstructions = _capturingBottom
-                    ? 'Scroll until Row 6 is at the top. Align the cyan corners with the OUTER CELL GRID — exclude the BLUEPRINTS title/header.'
-                    : 'Align the four cyan corners with the OUTER CELL GRID only. Exclude the BLUEPRINTS title, FOUND count and surrounding panel.';
+                final awaitingBottom =
+                    _liveScanFlow.phase ==
+                    ArcBlueprintLiveScanPhase.awaitingBottomScroll;
+                final scanStep = _capturingBottom
+                    ? 'Live scan - rows 6-9'
+                    : awaitingBottom
+                    ? 'Top section complete'
+                    : 'Live scan - rows 1-5';
+                final scanInstructions = awaitingBottom
+                    ? 'Scroll the in-game Blueprint list until Row 6 is at the top, then continue. No photo is required.'
+                    : 'Keep the complete outer edge of the Blueprint cell grid in view. UAG frames the grid automatically ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no manual grid alignment and no photo capture.';
                 final liveOccupancySuffix =
                     _liveOccupancySnapshot.totalCellCount > 0
-                    ? ' • Live ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} stable'
+                    ? ' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Live ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} stable'
                     : '';
-                final lockStatusText =
-                    _lockState == _BlueprintLockState.searching
-                    ? 'Searching for blueprint grid...'
+                final lockStatusText = awaitingBottom
+                    ? 'Rows 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 scanned ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ scroll to Row 6'
+                    : _lockState == _BlueprintLockState.searching
+                    ? 'Finding the outer Blueprint grid edges...'
                     : _lockState == _BlueprintLockState.detected
-                    ? 'Blueprint grid detected'
-                    : 'Grid locked ✓$liveOccupancySuffix';
+                    ? 'Blueprint grid found ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ framing edges...'
+                    : 'Auto frame locked ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“$liveOccupancySuffix';
                 final statusColor = _gridLocked
                     ? Colors.greenAccent
                     : Colors.white;
@@ -1034,10 +1129,11 @@ class _ArcBlueprintLiveScannerScreenState
                         _CoverCameraPreview(controller: controller),
                       if (!isPortrait)
                         Positioned.fill(
-                          child: _BlueprintScannerOverlay(
-                            controller: _alignmentController,
-                            locked: _gridLocked,
-                            detection: _latestDetection,
+                          child: IgnorePointer(
+                            child: _BlueprintAutoFrameOverlay(
+                              locked: _gridLocked,
+                              detection: _latestDetection,
+                            ),
                           ),
                         ),
                       if (!isPortrait)
@@ -1059,7 +1155,7 @@ class _ArcBlueprintLiveScannerScreenState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      captureStep,
+                                      scanStep,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontFamily: 'VT323',
@@ -1067,7 +1163,7 @@ class _ArcBlueprintLiveScannerScreenState
                                       ),
                                     ),
                                     Text(
-                                      captureInstructions,
+                                      scanInstructions,
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
@@ -1089,23 +1185,6 @@ class _ArcBlueprintLiveScannerScreenState
                                         );
                                       },
                                 icon: const Icon(Icons.videocam_outlined),
-                              ),
-                              const SizedBox(width: 6),
-                              IconButton.filledTonal(
-                                tooltip: _debugDetection
-                                    ? 'Grid debug overlay on'
-                                    : 'Grid debug overlay off',
-                                onPressed: _capturing
-                                    ? null
-                                    : () => setState(
-                                        () =>
-                                            _debugDetection = !_debugDetection,
-                                      ),
-                                icon: Icon(
-                                  _debugDetection
-                                      ? Icons.bug_report_rounded
-                                      : Icons.bug_report_outlined,
-                                ),
                               ),
                               const SizedBox(width: 6),
                               IconButton.filledTonal(
@@ -1158,7 +1237,7 @@ class _ArcBlueprintLiveScannerScreenState
                               border: Border.all(color: AppTheme.neonCyan),
                             ),
                             child: const Text(
-                              'ROWS 1–5 SAVED — START AT ROW 6, NO DUPLICATE ROW',
+                              'ROWS 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 SAVED ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â START AT ROW 6, NO DUPLICATE ROW',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white,
@@ -1173,109 +1252,73 @@ class _ArcBlueprintLiveScannerScreenState
                           left: 24,
                           right: 24,
                           bottom: media.padding.bottom + 12,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_capturingBottom)
-                                IconButton.filledTonal(
-                                  tooltip: 'Restart top capture',
-                                  onPressed: _capturing
-                                      ? null
-                                      : () => setState(() {
-                                          _captureSession =
-                                              const ArcBlueprintDualCaptureSession();
-                                          _liveOccupancyStabilizer.reset();
-                                          _liveOccupancySnapshot =
-                                              const ArcBlueprintLiveOccupancySnapshot.empty();
-                                          _lastLiveOccupancyAnalysisAt = null;
-                                          _lockState =
-                                              _BlueprintLockState.searching;
-                                          _potentialLockTime = null;
-                                          _latestDetection =
-                                              const ArcBlueprintGridDetection.notFound();
-                                        }),
-                                  icon: const Icon(Icons.restart_alt),
-                                ),
-                              if (_capturingBottom) const SizedBox(width: 12),
-
-                              // Auto align uses the detector result to initialise manual frame
-                              IconButton.filledTonal(
-                                tooltip: 'Auto align',
-                                onPressed: _capturing
-                                    ? null
-                                    : () {
-                                        _alignmentController
-                                            .autoAlignFromDetection(
-                                              _latestDetection,
-                                            );
-                                        setState(() {});
-                                      },
-                                icon: const Icon(Icons.auto_fix_high_rounded),
-                              ),
-                              const SizedBox(width: 8),
-
-                              IconButton.filledTonal(
-                                tooltip: 'Reset frame',
-                                onPressed: _capturing
-                                    ? null
-                                    : () {
-                                        _alignmentController.resetToDefaults(
-                                          bottomCapture: false,
-                                        );
-                                        setState(() {});
-                                      },
-                                icon: const Icon(Icons.crop_rounded),
-                              ),
-                              const SizedBox(width: 12),
-
-                              InkResponse(
-                                key: const Key(
-                                  'blueprint-live-scanner-capture',
-                                ),
-                                onTap:
-                                    (canStartCapture(
-                                      controllerInitialized:
-                                          controller.value.isInitialized,
-                                      capturing: _capturing,
-                                      isPortrait: isPortrait,
-                                    ))
-                                    ? _capture
-                                    : null,
-                                radius: 44,
-                                child: Container(
-                                  width: 76,
-                                  height: 76,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: _capturing
-                                        ? Colors.white38
-                                        : (_gridLocked
-                                              ? Colors.white
-                                              : Colors.white12),
-                                    border: Border.all(
-                                      color: _gridLocked
-                                          ? Colors.greenAccent
-                                          : AppTheme.neonCyan,
-                                      width: 5,
+                          child: Center(
+                            child: awaitingBottom
+                                ? FilledButton.icon(
+                                    key: const Key(
+                                      'blueprint-live-scanner-begin-bottom',
+                                    ),
+                                    onPressed: _beginBottomLiveScan,
+                                    icon: const Icon(
+                                      Icons.keyboard_double_arrow_down_rounded,
+                                    ),
+                                    label: const Text('SCAN ROWS 6-9'),
+                                  )
+                                : Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 184.0,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                        color: _gridLocked
+                                            ? Colors.greenAccent
+                                            : AppTheme.neonCyan,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _gridLocked
+                                              ? Icons
+                                                    .center_focus_strong_rounded
+                                              : Icons.center_focus_weak_rounded,
+                                          color: _gridLocked
+                                              ? Colors.greenAccent
+                                              : Colors.white70,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          _liveOccupancySnapshot
+                                                      .totalCellCount >
+                                                  0
+                                              ? 'AUTO SCANNING ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} STABLE'
+                                              : 'AUTO FRAMING BLUEPRINT GRID',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontFamily: 'VT323',
+                                            fontSize: 17,
+                                          ),
+                                        ),
+                                        if (_capturingBottom) ...[
+                                          const SizedBox(width: 8),
+                                          IconButton(
+                                            tooltip: 'Restart live scan',
+                                            onPressed: _restartLiveScan,
+                                            icon: const Icon(
+                                              Icons.restart_alt_rounded,
+                                            ),
+                                            color: Colors.white70,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
-                                  child: _capturing
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(22),
-                                          child: CircularProgressIndicator(),
-                                        )
-                                      : Icon(
-                                          _capturingBottom
-                                              ? Icons.check_rounded
-                                              : Icons.camera_alt_rounded,
-                                          color: _gridLocked
-                                              ? Colors.black
-                                              : Colors.white54,
-                                          size: 34,
-                                        ),
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       if (!isPortrait && kDebugMode)
@@ -1345,258 +1388,80 @@ class _CoverCameraPreview extends StatelessWidget {
   }
 }
 
-class _BlueprintScannerOverlay extends StatefulWidget {
-  const _BlueprintScannerOverlay({
-    required this.controller,
+class _BlueprintAutoFrameOverlay extends StatelessWidget {
+  const _BlueprintAutoFrameOverlay({
     required this.locked,
     required this.detection,
   });
 
-  final ManualAlignmentController controller;
   final bool locked;
   final ArcBlueprintGridDetection detection;
 
   @override
-  State<_BlueprintScannerOverlay> createState() =>
-      _BlueprintScannerOverlayState();
-}
-
-class _BlueprintScannerOverlayState extends State<_BlueprintScannerOverlay> {
-  _DragTarget _dragTarget = _DragTarget.none;
-
-  @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onPanStart: (details) {
-            final local = details.localPosition;
-            final norm = Offset(local.dx / size.width, local.dy / size.height);
-            final rect = widget.controller.calibration.normalizedRect;
-            const cornerThreshold = 0.065;
-            const edgeThreshold = 0.035;
-
-            bool near(Offset point) =>
-                (norm.dx - point.dx).abs() <= cornerThreshold &&
-                (norm.dy - point.dy).abs() <= cornerThreshold;
-
-            if (near(rect.topLeft)) {
-              _dragTarget = _DragTarget.topLeft;
-            } else if (near(rect.topRight)) {
-              _dragTarget = _DragTarget.topRight;
-            } else if (near(rect.bottomLeft)) {
-              _dragTarget = _DragTarget.bottomLeft;
-            } else if (near(rect.bottomRight)) {
-              _dragTarget = _DragTarget.bottomRight;
-            } else if ((norm.dx - rect.left).abs() < edgeThreshold &&
-                norm.dy >= rect.top &&
-                norm.dy <= rect.bottom) {
-              _dragTarget = _DragTarget.left;
-            } else if ((norm.dx - rect.right).abs() < edgeThreshold &&
-                norm.dy >= rect.top &&
-                norm.dy <= rect.bottom) {
-              _dragTarget = _DragTarget.right;
-            } else if ((norm.dy - rect.top).abs() < edgeThreshold &&
-                norm.dx >= rect.left &&
-                norm.dx <= rect.right) {
-              _dragTarget = _DragTarget.top;
-            } else if ((norm.dy - rect.bottom).abs() < edgeThreshold &&
-                norm.dx >= rect.left &&
-                norm.dx <= rect.right) {
-              _dragTarget = _DragTarget.bottom;
-            } else if (rect.contains(norm)) {
-              _dragTarget = _DragTarget.center;
-            } else {
-              _dragTarget = _DragTarget.none;
-            }
-          },
-          onPanUpdate: (details) {
-            final local = details.localPosition;
-            final dx = details.delta.dx / size.width;
-            final dy = details.delta.dy / size.height;
-            final normX = (local.dx / size.width).clamp(0.0, 1.0);
-            final normY = (local.dy / size.height).clamp(0.0, 1.0);
-
-            setState(() {
-              void moveHorizontal(ArcBlueprintCropEdge edge) {
-                widget.controller.moveEdge(edge, normX);
-              }
-
-              void moveVertical(ArcBlueprintCropEdge edge) {
-                widget.controller.moveEdge(edge, normY);
-              }
-
-              switch (_dragTarget) {
-                case _DragTarget.topLeft:
-                  moveHorizontal(ArcBlueprintCropEdge.left);
-                  moveVertical(ArcBlueprintCropEdge.top);
-                  break;
-                case _DragTarget.topRight:
-                  moveHorizontal(ArcBlueprintCropEdge.right);
-                  moveVertical(ArcBlueprintCropEdge.top);
-                  break;
-                case _DragTarget.bottomLeft:
-                  moveHorizontal(ArcBlueprintCropEdge.left);
-                  moveVertical(ArcBlueprintCropEdge.bottom);
-                  break;
-                case _DragTarget.bottomRight:
-                  moveHorizontal(ArcBlueprintCropEdge.right);
-                  moveVertical(ArcBlueprintCropEdge.bottom);
-                  break;
-                case _DragTarget.left:
-                  moveHorizontal(ArcBlueprintCropEdge.left);
-                  break;
-                case _DragTarget.right:
-                  moveHorizontal(ArcBlueprintCropEdge.right);
-                  break;
-                case _DragTarget.top:
-                  moveVertical(ArcBlueprintCropEdge.top);
-                  break;
-                case _DragTarget.bottom:
-                  moveVertical(ArcBlueprintCropEdge.bottom);
-                  break;
-                case _DragTarget.center:
-                  widget.controller.translate(dx, dy);
-                  break;
-                case _DragTarget.none:
-                  break;
-              }
-            });
-          },
-          onPanEnd: (_) => _dragTarget = _DragTarget.none,
-          onPanCancel: () => _dragTarget = _DragTarget.none,
-          child: CustomPaint(
-            painter: _BlueprintGuidePainter2(
-              calibration: widget.controller.calibration,
-              locked: widget.locked,
-              detection: widget.detection,
-            ),
-            size: Size.infinite,
-          ),
-        );
-      },
+    return CustomPaint(
+      painter: _BlueprintAutoFramePainter(locked: locked, detection: detection),
+      size: Size.infinite,
     );
   }
 }
 
-enum _DragTarget {
-  topLeft,
-  topRight,
-  bottomLeft,
-  bottomRight,
-  left,
-  right,
-  top,
-  bottom,
-  center,
-  none,
-}
-
-class _BlueprintGuidePainter2 extends CustomPainter {
-  const _BlueprintGuidePainter2({
-    required this.calibration,
+class _BlueprintAutoFramePainter extends CustomPainter {
+  const _BlueprintAutoFramePainter({
     required this.locked,
     required this.detection,
   });
 
-  final ArcBlueprintEdgeCalibration calibration;
   final bool locked;
   final ArcBlueprintGridDetection detection;
 
+  Offset _point(Offset normalized, Size size) =>
+      Offset(normalized.dx * size.width, normalized.dy * size.height);
+
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(
-      calibration.left * size.width,
-      calibration.top * size.height,
-      (calibration.right - calibration.left) * size.width,
-      (calibration.bottom - calibration.top) * size.height,
-    );
+    if (!detection.isValid) return;
 
-    final outer = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    final cutout = Path()
-      ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(20)));
-    final overlay = Path.combine(PathOperation.difference, outer, cutout);
+    final topLeft = _point(detection.topLeft, size);
+    final topRight = _point(detection.topRight, size);
+    final bottomRight = _point(detection.bottomRight, size);
+    final bottomLeft = _point(detection.bottomLeft, size);
 
-    canvas.drawPath(
-      overlay,
-      Paint()..color = Colors.black.withValues(alpha: 132.6),
-    );
+    final frame = Path()
+      ..moveTo(topLeft.dx, topLeft.dy)
+      ..lineTo(topRight.dx, topRight.dy)
+      ..lineTo(bottomRight.dx, bottomRight.dy)
+      ..lineTo(bottomLeft.dx, bottomLeft.dy)
+      ..close();
 
-    final borderPaint = Paint()
-      ..color = locked ? Colors.greenAccent : Colors.white70
+    final framePaint = Paint()
+      ..color = locked ? Colors.greenAccent : AppTheme.neonCyan
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(20)),
-      borderPaint,
-    );
+      ..strokeWidth = locked ? 3.5 : 2.0
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(frame, framePaint);
 
-    final bracketPaint = Paint()
+    final cornerPaint = Paint()
       ..color = locked ? Colors.greenAccent : Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
-    const bracketLength = 44.0;
+    const length = 30.0;
 
-    void drawCorner(Offset corner, double dx, double dy) {
-      canvas.drawLine(corner, corner.translate(dx, 0), bracketPaint);
-      canvas.drawLine(corner, corner.translate(0, dy), bracketPaint);
+    void bracket(Offset corner, Offset horizontal, Offset vertical) {
+      canvas.drawLine(corner, corner + horizontal * length, cornerPaint);
+      canvas.drawLine(corner, corner + vertical * length, cornerPaint);
     }
 
-    drawCorner(rect.topLeft, bracketLength, 0);
-    drawCorner(rect.topRight, -bracketLength, 0);
-    drawCorner(rect.bottomLeft, bracketLength, 0);
-    drawCorner(rect.bottomRight, -bracketLength, 0);
-
-    // The in-game panel already draws its own cell boundaries. Do not
-    // paint a synthetic 10x5 grid over it: users only need to align the
-    // outside boundary, while post-capture detection resolves the cells.
-
-    // Four high-visibility corner handles are the primary alignment controls.
-    final handlePaint = Paint()
-      ..color = AppTheme.neonCyan.withValues(alpha: 229.5);
-    const handleSize = 16.0;
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: rect.topLeft,
-        width: handleSize,
-        height: handleSize,
-      ),
-      handlePaint,
-    );
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: rect.topRight,
-        width: handleSize,
-        height: handleSize,
-      ),
-      handlePaint,
-    );
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: rect.bottomLeft,
-        width: handleSize,
-        height: handleSize,
-      ),
-      handlePaint,
-    );
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: rect.bottomRight,
-        width: handleSize,
-        height: handleSize,
-      ),
-      handlePaint,
-    );
+    bracket(topLeft, const Offset(1, 0), const Offset(0, 1));
+    bracket(topRight, const Offset(-1, 0), const Offset(0, 1));
+    bracket(bottomLeft, const Offset(1, 0), const Offset(0, -1));
+    bracket(bottomRight, const Offset(-1, 0), const Offset(0, -1));
   }
 
   @override
-  bool shouldRepaint(covariant _BlueprintGuidePainter2 oldDelegate) {
-    return oldDelegate.locked != locked ||
-        oldDelegate.calibration != calibration ||
-        oldDelegate.detection != detection;
+  bool shouldRepaint(covariant _BlueprintAutoFramePainter oldDelegate) {
+    return oldDelegate.locked != locked || oldDelegate.detection != detection;
   }
 }
 
@@ -1617,10 +1482,10 @@ class _DebugGridMetrics extends StatelessWidget {
   }
 
   String get _angle {
-    if (!detection.isValid) return '0.0°';
+    if (!detection.isValid) return '0.0Ãƒâ€šÃ‚Â°';
     final deltaX = detection.topRight.dx - detection.topLeft.dx;
     final deltaY = detection.topRight.dy - detection.topLeft.dy;
-    return '${(math.atan2(deltaY, deltaX) * 180 / math.pi).abs().toStringAsFixed(1)}°';
+    return '${(math.atan2(deltaY, deltaX) * 180 / math.pi).abs().toStringAsFixed(1)}Ãƒâ€šÃ‚Â°';
   }
 
   String get _perspective {
