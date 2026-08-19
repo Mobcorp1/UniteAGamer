@@ -686,6 +686,7 @@ class ArcAdminMapMarkerSubtypeCatalog {
       'raider_cache' || 'hidden_cache' => ArcAdminMapMarkerKind.raiderCache,
       'security_locker' ||
       'black_crate_security_container' => ArcAdminMapMarkerKind.securityRoom,
+      'weapon_case' || 'weapon_tube' => ArcAdminMapMarkerKind.weaponCase,
       'weapon_cache' => ArcAdminMapMarkerKind.weaponCache,
       _ => ArcAdminMapMarkerKind.lootContainer,
     };

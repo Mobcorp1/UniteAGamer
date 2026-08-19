@@ -124,44 +124,59 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Admin Map & Intel Editor'), findsOneWidget);
-    expect(find.text('Add POI'), findsOneWidget);
-    expect(find.text('Add Historical Blueprint'), findsOneWidget);
-    expect(find.text('Save Draft'), findsOneWidget);
-    expect(find.text('Export JSON'), findsOneWidget);
-    expect(find.text('Import JSON'), findsOneWidget);
-    expect(find.text('Populate UAG World'), findsOneWidget);
+    expect(find.text('Add Map Point'), findsOneWidget);
+    expect(find.text('Add Blueprint Location'), findsOneWidget);
     expect(find.text('UAG MARKER PALETTE'), findsOneWidget);
     expect(find.text('Event'), findsOneWidget);
     expect(find.text('Resource'), findsOneWidget);
     expect(find.text('ARC Spawn'), findsOneWidget);
     expect(find.text('Containers'), findsOneWidget);
     expect(find.text('Hazard'), findsOneWidget);
-    expect(find.text('Publish Selected'), findsOneWidget);
-    expect(find.text('Edit Selected'), findsOneWidget);
-    expect(find.text('Duplicate Selected'), findsOneWidget);
-    expect(find.text('Delete Selected'), findsOneWidget);
+    expect(find.text('Publish Marker'), findsOneWidget);
+    expect(find.text('Edit Marker'), findsOneWidget);
+    expect(find.text('Delete Marker'), findsOneWidget);
+    expect(find.text('Save Changes'), findsOneWidget);
 
-    await tester.scrollUntilVisible(
-      find.text('IMPORT PIPELINE'),
-      220,
-      scrollable: find.byType(Scrollable).last,
-    );
+    final mapEditorScrollable = find
+        .descendant(
+          of: find.byKey(const Key('map-editor-precision-scroll')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+
+    Future<void> reveal(String text) async {
+      final state = tester.state<ScrollableState>(mapEditorScrollable);
+
+      while (find.text(text).evaluate().isEmpty &&
+          state.position.pixels < state.position.maxScrollExtent) {
+        final next = (state.position.pixels + 300).clamp(
+          0.0,
+          state.position.maxScrollExtent,
+        );
+        state.position.jumpTo(next);
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text(text), findsWidgets);
+    }
+
+    await reveal('ADVANCED MAP TOOLS');
+    await tester.tap(find.text('ADVANCED MAP TOOLS'));
     await tester.pumpAndSettle();
-    expect(find.text('IMPORT PIPELINE'), findsOneWidget);
+    expect(find.text('Export Marker Data'), findsOneWidget);
+    expect(find.text('Import Marker Data'), findsOneWidget);
+    expect(find.text('Process Imported Map Data'), findsOneWidget);
 
-    await tester.scrollUntilVisible(
-      find.text('Confidence filter'),
-      220,
-      scrollable: find.byType(Scrollable).last,
-    );
+    await reveal('FILTER MARKERS');
+    await tester.tap(find.text('FILTER MARKERS').first);
     await tester.pumpAndSettle();
-
+    await reveal('Confidence filter');
     expect(find.text('Confidence filter'), findsOneWidget);
     expect(find.text('Source permission'), findsOneWidget);
     expect(find.text('Evidence type'), findsOneWidget);
     expect(find.text('Grid'), findsOneWidget);
 
-    await tester.tap(find.text('Save Draft'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pumpAndSettle();
     expect(repository.savedMarkers, isNotEmpty);
     expect(find.textContaining('Draft saved successfully'), findsOneWidget);
@@ -217,9 +232,7 @@ void main() {
 
     await tester.drag(markerFinder, const Offset(120, 80));
     await tester.pumpAndSettle();
-    expect(find.text('Unsaved changes'), findsOneWidget);
-
-    await tester.tap(find.text('Save Draft'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pumpAndSettle();
 
     final saved = repository.savedMarkers.firstWhere(

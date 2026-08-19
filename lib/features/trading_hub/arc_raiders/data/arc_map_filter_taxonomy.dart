@@ -155,6 +155,14 @@ class ArcMapFilterTaxonomy {
       iconKey: 'loot_weapon_case',
     ),
     ArcMapFilterTaxonomyEntry(
+      id: 'weapon_tube',
+      label: 'Weapon Tube',
+      groupId: 'loot',
+      groupLabel: 'Loot & Containers',
+      kind: ArcAdminMapMarkerKind.weaponCase,
+      iconKey: 'firearm',
+    ),
+    ArcMapFilterTaxonomyEntry(
       id: 'weapon_cache',
       label: 'Weapon Cache',
       groupId: 'loot',

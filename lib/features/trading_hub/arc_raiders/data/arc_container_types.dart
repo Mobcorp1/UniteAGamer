@@ -108,6 +108,18 @@ class ArcContainerTypes {
     description: 'Field depot or larger staged supply source.',
   );
 
+  static const ArcContainerType weaponCase = ArcContainerType(
+    id: 'weapon_case',
+    label: 'Weapon Case',
+    description: 'Dedicated weapon case loot source.',
+  );
+
+  static const ArcContainerType weaponTube = ArcContainerType(
+    id: 'weapon_tube',
+    label: 'Weapon Tube',
+    description: 'Long weapon tube or weapon storage tube.',
+  );
+
   static const ArcContainerType weaponCache = ArcContainerType(
     id: 'weapon_cache',
     label: 'Weapon Cache',
@@ -254,6 +266,8 @@ class ArcContainerTypes {
     suitcase,
     toolbox,
     trailer,
+    weaponCase,
+    weaponTube,
     weaponCache,
     wickerBasket,
     looseLoot,

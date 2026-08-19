@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_subtype_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_admin_marker_visual_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
@@ -24,6 +25,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_precision_scroll_view.dart';
 
 class ArcAdminMapEditorScreen extends StatefulWidget {
   const ArcAdminMapEditorScreen({super.key, this.repository, this.appBar});
@@ -164,21 +166,40 @@ class _SubtypeFilterOption {
 }
 
 class _SubtypeIconLabel extends StatelessWidget {
-  const _SubtypeIconLabel({required this.label, this.iconKey});
+  const _SubtypeIconLabel({required this.label, this.iconKey, this.subtypeId});
 
   final String label;
   final String? iconKey;
+  final String? subtypeId;
 
   @override
   Widget build(BuildContext context) {
-    final iconKey = this.iconKey;
-    if (iconKey == null || iconKey.trim().isEmpty) {
-      return Text(label, maxLines: 1, overflow: TextOverflow.ellipsis);
-    }
+    final assetPath = ArcAdminMarkerVisualRegistry.assetPathForSubtype(
+      subtypeId,
+    );
+    final fallback = iconKey == null || iconKey!.trim().isEmpty
+        ? const Icon(Icons.place_outlined, color: AppTheme.neonCyan, size: 18)
+        : ArcMapFilterIcon(
+            iconKey: iconKey!,
+            color: AppTheme.neonCyan,
+            size: 18,
+          );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ArcMapFilterIcon(iconKey: iconKey, color: AppTheme.neonCyan, size: 17),
+        SizedBox.square(
+          dimension: 26,
+          child: assetPath == null
+              ? Center(child: fallback)
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset(
+                    assetPath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Center(child: fallback),
+                  ),
+                ),
+        ),
         const SizedBox(width: 8),
         Flexible(
           child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -1429,145 +1450,200 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                 ElevatedButton.icon(
                   onPressed: _saving ? null : _beginPoiPlacement,
                   icon: const Icon(Icons.add_location_alt_rounded),
-                  label: const Text('Add POI'),
+                  label: const Text('Add Map Point'),
                 ),
                 OutlinedButton.icon(
                   onPressed: _saving
                       ? null
                       : _beginHistoricalBlueprintPlacement,
                   icon: const Icon(Icons.extension_rounded),
-                  label: const Text('Add Historical Blueprint'),
+                  label: const Text('Add Blueprint Location'),
                 ),
                 OutlinedButton.icon(
                   onPressed: _selected == null || _saving
                       ? null
                       : _editSelected,
                   icon: const Icon(Icons.edit_location_alt_rounded),
-                  label: const Text('Edit Selected'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _selected == null || _saving
-                      ? null
-                      : _duplicateSelected,
-                  icon: const Icon(Icons.copy_all_rounded),
-                  label: const Text('Duplicate Selected'),
+                  label: const Text('Edit Marker'),
                 ),
                 OutlinedButton.icon(
                   onPressed: _selected == null || _saving
                       ? null
                       : _deleteSelected,
                   icon: const Icon(Icons.delete_outline_rounded),
-                  label: const Text('Delete Selected'),
+                  label: const Text('Delete Marker'),
                 ),
                 OutlinedButton.icon(
                   onPressed: _saving ? null : _saveDrafts,
                   icon: const Icon(Icons.save_outlined),
-                  label: const Text('Save Draft'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _exportJson,
-                  icon: const Icon(Icons.data_object_rounded),
-                  label: const Text('Export JSON'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _saving ? null : _importJsonFromClipboard,
-                  icon: const Icon(Icons.input_rounded),
-                  label: const Text('Import JSON'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _saving ? null : _populateWorldIntel,
-                  icon: const Icon(Icons.auto_awesome_rounded),
-                  label: const Text('Populate UAG World'),
+                  label: const Text('Save Changes'),
                 ),
               ],
             ),
           ),
           const Divider(height: 1),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(10),
+            child: UagPrecisionScrollView(
+              key: const Key('map-editor-precision-scroll'),
+              scrollScale: 0.25,
+              showScrollbar: true,
+              scrollbarThickness: 11,
+              padding: const EdgeInsets.fromLTRB(10, 10, 16, 10),
               children: [
-                _saveStatusCard(),
+                _MapEditorExpandableSection(
+                  title: 'SAVE & STATUS',
+                  child: _saveStatusCard(),
+                ),
                 const SizedBox(height: 10),
-                _markerPaletteCard(),
+                _MapEditorExpandableSection(
+                  title: 'ADD MARKERS',
+                  initiallyExpanded: true,
+                  child: _markerPaletteCard(),
+                ),
                 const SizedBox(height: 10),
-                _importDashboardCard(),
+                _MapEditorExpandableSection(
+                  title: 'FILTER MARKERS',
+                  child: _markerFiltersCard(),
+                ),
                 const SizedBox(height: 10),
-                _markerFiltersCard(),
+                if (_selected != null)
+                  _MapEditorExpandableSection(
+                    title: 'SELECTED MARKER',
+                    initiallyExpanded: true,
+                    child: _selectedCard(_selected!),
+                  ),
+                if (_selected != null) const SizedBox(height: 10),
+                _MapEditorExpandableSection(
+                  title: 'ADVANCED MAP TOOLS',
+                  child: _advancedMapToolsCard(),
+                ),
                 const SizedBox(height: 10),
-                if (_selected != null) _selectedCard(_selected!),
-                const SizedBox(height: 10),
-                Text(
-                  '${_visibleMarkers.length} MARKERS',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 10,
-                    color: AppTheme.neonCyan,
-                    isBold: true,
+                _MapEditorExpandableSection(
+                  title: 'MARKERS ON THIS VIEW (${_visibleMarkers.length})',
+                  child: Column(
+                    children: [
+                      for (final marker in _visibleMarkers)
+                        ListTile(
+                          dense: true,
+                          selected: _selected?.id == marker.id,
+                          leading: Icon(
+                            _kindIcon(marker.kind),
+                            color: _kindColor(marker.kind),
+                          ),
+                          title: Text(
+                            marker.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${marker.subtypeLabel?.trim().isNotEmpty == true ? '${marker.kind.label} / ${marker.subtypeLabel!.trim()}' : marker.kind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
+                          ),
+                          trailing: _markerStateIcon(marker),
+                          onTap: () => setState(() => _selected = marker),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                for (final marker in _visibleMarkers)
-                  ListTile(
-                    dense: true,
-                    selected: _selected?.id == marker.id,
-                    leading: Icon(
-                      _kindIcon(marker.kind),
-                      color: _kindColor(marker.kind),
-                    ),
-                    title: Text(
-                      marker.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      '${marker.subtypeLabel?.trim().isNotEmpty == true ? '${marker.kind.label} / ${marker.subtypeLabel!.trim()}' : marker.kind.label} • ${marker.point.x.toStringAsFixed(4)}, ${marker.point.y.toStringAsFixed(4)}',
-                    ),
-                    trailing: _markerStateIcon(marker),
-                    onTap: () => setState(() => _selected = marker),
-                  ),
               ],
             ),
           ),
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(10),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _selected == null || _saving
-                        ? null
-                        : _publishSelected,
-                    icon: const Icon(Icons.cloud_upload_rounded),
-                    label: const Text('Publish Selected'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: 'Publish all visible markers',
-                  onPressed: _visibleMarkers.isEmpty || _saving
-                      ? null
-                      : _publishAll,
-                  icon: const Icon(Icons.cloud_sync_rounded),
-                ),
-                IconButton(
-                  tooltip: 'Publish eligible imported markers',
-                  onPressed: _saving ? null : _publishEligibleImports,
-                  icon: const Icon(Icons.verified_rounded),
-                ),
-                IconButton(
-                  tooltip: 'Publish high-confidence visible markers',
-                  onPressed: _saving ? null : _publishHighConfidence,
-                  icon: const Icon(Icons.published_with_changes_rounded),
-                ),
-                IconButton(
-                  tooltip: 'Archive visible exception markers',
-                  onPressed: _saving ? null : _archiveVisibleExceptions,
-                  icon: const Icon(Icons.archive_outlined),
-                ),
-              ],
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _selected == null || _saving
+                    ? null
+                    : _publishSelected,
+                icon: const Icon(Icons.cloud_upload_rounded),
+                label: const Text('Publish Marker'),
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _advancedMapToolsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.22),
+        backgroundColor: Colors.black.withValues(alpha: 0.20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'These tools are for bulk data maintenance and recovery. '
+            'Normal map editing does not require them.',
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _exportJson,
+                icon: const Icon(Icons.data_object_rounded),
+                label: const Text('Export Marker Data'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _importJsonFromClipboard,
+                icon: const Icon(Icons.input_rounded),
+                label: const Text('Import Marker Data'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _populateWorldIntel,
+                icon: const Icon(Icons.auto_awesome_rounded),
+                label: const Text('Process Imported Map Data'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _selected == null || _saving
+                    ? null
+                    : _duplicateSelected,
+                icon: const Icon(Icons.copy_all_rounded),
+                label: const Text('Duplicate Marker'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text('BULK PUBLISHING', style: _sectionLabelStyle()),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _visibleMarkers.isEmpty || _saving
+                    ? null
+                    : _publishAll,
+                icon: const Icon(Icons.cloud_sync_rounded),
+                label: const Text('Publish Visible Markers'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _publishEligibleImports,
+                icon: const Icon(Icons.verified_rounded),
+                label: const Text('Publish Approved Imports'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _publishHighConfidence,
+                icon: const Icon(Icons.published_with_changes_rounded),
+                label: const Text('Publish High-Confidence Markers'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _archiveVisibleExceptions,
+                icon: const Icon(Icons.archive_outlined),
+                label: const Text('Archive Problem Markers'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _importDashboardCard(),
         ],
       ),
     );
@@ -1813,6 +1889,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                     child: _SubtypeIconLabel(
                       label: option.label,
                       iconKey: option.iconKey,
+                      subtypeId: option.id,
                     ),
                   ),
                 )
@@ -2232,6 +2309,47 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
   }
 }
 
+class _MapEditorExpandableSection extends StatelessWidget {
+  const _MapEditorExpandableSection({
+    required this.title,
+    required this.child,
+    this.initiallyExpanded = false,
+  });
+
+  final String title;
+  final Widget child;
+  final bool initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: AppTheme.tradingCardDecoration(
+        borderColor: AppTheme.neonCyan.withValues(alpha: 0.20),
+        backgroundColor: Colors.black.withValues(alpha: 0.16),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          title: Text(
+            title,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: AppTheme.neonCyan,
+              isBold: true,
+            ),
+          ),
+          iconColor: AppTheme.neonCyan,
+          collapsedIconColor: AppTheme.neonCyan,
+          children: [child],
+        ),
+      ),
+    );
+  }
+}
+
 class _ArcAdminMapReferenceGridPainter extends CustomPainter {
   const _ArcAdminMapReferenceGridPainter();
 
@@ -2436,6 +2554,7 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
                         child: _SubtypeIconLabel(
                           label: '${subtype.groupLabel} • ${subtype.label}',
                           iconKey: subtype.iconKey,
+                          subtypeId: subtype.id,
                         ),
                       ),
                     const DropdownMenuItem<String?>(
