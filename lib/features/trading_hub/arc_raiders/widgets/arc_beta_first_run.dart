@@ -530,6 +530,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
           builder: (_) => ArcMandatoryOnboardingScreen(
             adminPreview: true,
             previewAccountCreation: previewAccountCreation,
+            initialStep: step.clamp(0, 3),
           ),
         ),
       );
@@ -551,12 +552,12 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
   Widget build(BuildContext context) {
     final actions = <_ArcBetaDevAction>[
       _ArcBetaDevAction(
-        label: 'Preview fresh player',
+        label: 'Preview New Player Onboarding',
         icon: Icons.person_add_alt_1_rounded,
         onTap: () => _launchOnboardingPreview(),
       ),
       _ArcBetaDevAction(
-        label: 'Preview active under 25',
+        label: 'Preview Existing Player Onboarding',
         icon: Icons.speed_rounded,
         onTap: () => _launchOnboardingPreview(
           playerState: 'active',
@@ -564,7 +565,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
         ),
       ),
       _ArcBetaDevAction(
-        label: 'Preview active 25+',
+        label: 'Preview Experienced Player Onboarding',
         icon: Icons.workspace_premium_rounded,
         onTap: () => _launchOnboardingPreview(
           playerState: 'active',
@@ -573,17 +574,17 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
         ),
       ),
       _ArcBetaDevAction(
-        label: 'Preview post-expedition',
+        label: 'Preview Returning Player Onboarding',
         icon: Icons.restart_alt_rounded,
         onTap: () => _launchOnboardingPreview(playerState: 'postExpedition'),
       ),
       _ArcBetaDevAction(
-        label: 'Preview legal step',
+        label: 'Preview Agreements Step',
         icon: Icons.policy_rounded,
-        onTap: () => _launchOnboardingPreview(step: 4),
+        onTap: () => _launchOnboardingPreview(step: 1),
       ),
       _ArcBetaDevAction(
-        label: 'Reset onboarding state',
+        label: 'Reset My Onboarding',
         icon: Icons.restore_rounded,
         onTap: () => _run(
           'Onboarding reset. The next real app entry will show first-run onboarding.',
@@ -591,7 +592,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
         ),
       ),
       _ArcBetaDevAction(
-        label: 'Mark onboarding complete',
+        label: 'Mark My Onboarding Complete',
         icon: Icons.check_circle_outline_rounded,
         onTap: () => _run(
           'Onboarding marked complete.',
@@ -599,7 +600,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
         ),
       ),
       _ArcBetaDevAction(
-        label: 'Reset beta progress',
+        label: 'Reset All Beta Test Progress',
         icon: Icons.warning_amber_rounded,
         onTap: () => _run(
           'Closed beta progress reset.',
@@ -654,7 +655,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Open onboarding preview, reset beta state and test first-run flows without reinstalling.',
+            'Preview each onboarding path, reset your own onboarding, or mark it complete for testing.',
             style: AppTheme.bodyTextStyle(
               fontSize: widget.compact ? 10 : 12,
               color: Colors.white.withValues(alpha: 0.72),

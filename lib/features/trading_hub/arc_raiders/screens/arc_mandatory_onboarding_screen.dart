@@ -32,10 +32,12 @@ class ArcMandatoryOnboardingScreen extends StatefulWidget {
     super.key,
     this.adminPreview = false,
     this.previewAccountCreation = false,
+    this.initialStep = 0,
   });
 
   final bool adminPreview;
   final bool previewAccountCreation;
+  final int initialStep;
 
   static ArcMandatoryOnboardingScreen fromRouteSettings(
     RouteSettings settings,
@@ -46,10 +48,14 @@ class ArcMandatoryOnboardingScreen extends StatefulWidget {
         args is Map && args['previewAccountCreation'] == true;
     final freshPreview =
         args is Map && args['playerState']?.toString() == 'fresh';
+    final requestedStep = args is Map && args['step'] is int
+        ? args['step'] as int
+        : 0;
 
     return ArcMandatoryOnboardingScreen(
       adminPreview: adminPreview,
       previewAccountCreation: adminPreview && (explicitPreview || freshPreview),
+      initialStep: requestedStep.clamp(0, 3),
     );
   }
 
@@ -60,7 +66,7 @@ class ArcMandatoryOnboardingScreen extends StatefulWidget {
 
 class _ArcMandatoryOnboardingScreenState
     extends State<ArcMandatoryOnboardingScreen> {
-  final _pageController = PageController();
+  PageController _pageController = PageController();
   final _emailController = TextEditingController();
   final _confirmEmailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -120,6 +126,11 @@ class _ArcMandatoryOnboardingScreenState
   @override
   void initState() {
     super.initState();
+    _step = widget.adminPreview ? widget.initialStep.clamp(0, 3) : 0;
+    if (_step > 0) {
+      _pageController.dispose();
+      _pageController = PageController(initialPage: _step);
+    }
     final user = FirebaseAuth.instance.currentUser;
     final existing = user?.displayName?.trim() ?? '';
     if (existing.isNotEmpty) _riderNameController.text = existing;

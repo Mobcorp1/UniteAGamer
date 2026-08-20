@@ -75,6 +75,7 @@ class _UagAdaptiveCardDeckState extends State<UagAdaptiveCardDeck> {
     _controller = PageController(
       initialPage: initialPage,
       viewportFraction: nextFraction,
+      keepPage: false,
     );
   }
 
@@ -168,7 +169,7 @@ class _UagAdaptiveCardDeckState extends State<UagAdaptiveCardDeck> {
       child: PageView.builder(
         controller: controller,
         scrollDirection: axis,
-        padEnds: true,
+        padEnds: vertical,
         physics: const PageScrollPhysics(),
         itemCount: widget.cards.length,
         onPageChanged: _onPageChanged,

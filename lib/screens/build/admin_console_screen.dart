@@ -353,10 +353,11 @@ class _AdminConsoleBody extends StatelessWidget {
                     _AdminExpandableSection(
                       key: const Key('admin-section-closed-beta-tools'),
                       header: _sectionHeader(
-                        title: 'Closed Beta Tools',
+                        title: 'Onboarding & Beta Testing',
                         subtitle:
-                            'Admin-only reset controls for onboarding, tutorial replay and beta testing utilities.',
+                            'Preview, reset and verify the complete player onboarding flow.',
                       ),
+                      initiallyExpanded: true,
                       children: [
                         const ArcBetaDeveloperToolsCard(),
                         const SizedBox(height: AppTheme.spaceL),
@@ -631,10 +632,12 @@ class _AdminExpandableSection extends StatelessWidget {
     super.key,
     required this.header,
     required this.children,
+    this.initiallyExpanded = false,
   });
 
   final Widget header;
   final List<Widget> children;
+  final bool initiallyExpanded;
 
   @override
   Widget build(BuildContext context) {
@@ -646,7 +649,7 @@ class _AdminExpandableSection extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          initiallyExpanded: false,
+          initiallyExpanded: initiallyExpanded,
           tilePadding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spaceM,
             vertical: 4,
