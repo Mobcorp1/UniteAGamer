@@ -14,6 +14,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_drop_intel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/raid_planner_blueprint_rules.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/raid_planner_engine.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_map_conditions.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/data/arc_regional_opportunity_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/models/raid_planner_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/repositories/raid_planner_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
@@ -41,6 +43,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       ArcTraderProfileRepository();
   late final TextEditingController _eventFinderController;
   String _eventFinderQuery = '';
+  ArcServerRegion _selectedServerRegion = ArcServerRegion.europe;
+  String? _selectedItemTargetId;
+  late Future<ArcRegionalMapConditionsSnapshot> _regionalConditionsFuture;
 
   late DateTime _plannerNowUtc;
   Timer? _plannerClockTimer;
@@ -49,6 +54,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   void initState() {
     super.initState();
     _plannerNowUtc = DateTime.now().toUtc();
+    _regionalConditionsFuture = ArcRegionalMapConditionsService.load();
     _eventFinderController = TextEditingController();
     _eventFinderController.addListener(_onEventFinderChanged);
     _plannerClockTimer = Timer.periodic(const Duration(seconds: 15), (_) {
@@ -88,13 +94,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     final minutes = duration.inMinutes.remainder(60);
     if (hours <= 0) return '${minutes}m';
     return '${hours}h ${minutes}m';
-  }
-
-  String _eventSearchLabel(String query) {
-    final value = query.trim();
-    return value.isEmpty
-        ? 'Type an event or map name to search windows.'
-        : 'Showing next 3 windows for "$value".';
   }
 
   Color _tierColor(RaidTargetTier tier) {
@@ -625,77 +624,430 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
-  Widget _eventFinderCard(DateTime utcNow) {
-    final normalized = _eventFinderQuery.trim().toLowerCase();
-    final windows = normalized.length < 2
-        ? <RaidPlannerOpportunity>[]
-        : RaidPlannerEngine.eventLookup(
-            query: normalized,
-            nowUtc: utcNow,
-            limit: 3,
-          );
+  Future<void> _refreshRegionalConditions() async {
+    final next = ArcRegionalMapConditionsService.load(forceRefresh: true);
+    setState(() {
+      _regionalConditionsFuture = next;
+    });
+    await next;
+  }
 
-    return CollapsibleSectionCard(
-      title: 'Event Finder',
-      titleColor: AppTheme.neonCyan,
-      initiallyExpanded: false,
+  String _regionalStatusText(
+    ArcRegionalOpportunity opportunity,
+    DateTime utcNow,
+  ) {
+    if (opportunity.live) {
+      final remaining = opportunity.window.endUtc.difference(utcNow);
+      return 'LIVE - ${_durationLabel(remaining)} remaining';
+    }
+    final until = opportunity.window.startUtc.difference(utcNow);
+    return 'Starts in ${_durationLabel(until)}';
+  }
+
+  Widget _regionalOpportunityTile(
+    ArcRegionalOpportunity opportunity,
+    DateTime utcNow,
+  ) {
+    final switchText = opportunity.shouldSwitchRegion
+        ? 'Switch ARC server to ${opportunity.region.label}'
+        : 'Stay on ${opportunity.region.label}';
+    final playtimeText = opportunity.insideSavedPlaytime
+        ? 'Matches your saved playtime'
+        : 'Outside your usual playtime';
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.24),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: opportunity.insideSavedPlaytime
+              ? AppTheme.neonCyan.withValues(alpha: 0.38)
+              : AppTheme.neonPink.withValues(alpha: 0.28),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Search any event or map to see the next 3 matching windows. This uses the same live UTC schedule as the planner and converts times to your device timezone.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 13,
-              color: AppTheme.tradingMutedText,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          TextField(
-            controller: _eventFinderController,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              labelText: 'Search event or map',
-              hintText: 'Locked Gate, lock gate, Hurricane, Dam...',
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _eventFinderQuery.trim().isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Clear search',
-                      onPressed: _eventFinderController.clear,
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.45),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  opportunity.target.label,
+                  style: AppTheme.tradingHeading(fontSize: 16),
                 ),
               ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: AppTheme.neonCyan),
-              ),
-            ),
+              if (opportunity.target.verifiedConditionLink)
+                const Icon(
+                  Icons.verified_rounded,
+                  color: AppTheme.neonCyan,
+                  size: 17,
+                ),
+            ],
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 5),
           Text(
-            _eventSearchLabel(_eventFinderQuery),
+            '${opportunity.condition.conditionName} - ${opportunity.condition.mapDisplayName}',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,
+              isBold: true,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
-          if (normalized.length >= 2 && windows.isEmpty)
-            Text(
-              'No matching upcoming event windows found.',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 13,
-                color: AppTheme.tradingMutedText,
-              ),
-            )
-          else
-            ...windows.map(
-              (opportunity) => _opportunityCard(opportunity, utcNow),
+          const SizedBox(height: 4),
+          Text(
+            '${_clock(opportunity.window.startUtc)}-${_clock(opportunity.window.endUtc)} - ${opportunity.region.label}',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 13,
+              color: AppTheme.neonCyan,
             ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${_regionalStatusText(opportunity, utcNow)} - $playtimeText',
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: opportunity.insideSavedPlaytime
+                  ? AppTheme.neonCyan
+                  : AppTheme.tradingMutedText,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            switchText,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 12,
+              color: opportunity.shouldSwitchRegion
+                  ? AppTheme.neonPink
+                  : Colors.white70,
+              isBold: true,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _regionalBlueprintPlannerCard({
+    required Map<String, ArcBlueprintState> states,
+    required ArcAvailability availability,
+    required DateTime utcNow,
+  }) {
+    return CollapsibleSectionCard(
+      title: 'Regional Blueprint Opportunities',
+      titleColor: AppTheme.neonCyan,
+      initiallyExpanded: true,
+      child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
+        future: _regionalConditionsFuture,
+        builder: (context, snapshot) {
+          final data = snapshot.data;
+          if (data == null) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 18),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final recommendations =
+              ArcRegionalOpportunityEngine.blueprintRecommendations(
+                snapshot: data,
+                states: states,
+                availability: availability,
+                homeRegion: _selectedServerRegion,
+                nowUtc: utcNow,
+                limit: 8,
+              );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'UAG reads your missing Blueprint Tracker entries, your saved playtime and the regional ARC schedule. If your home region misses the window, it recommends the earliest server you can switch to.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 13,
+                  color: AppTheme.tradingMutedText,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<ArcServerRegion>(
+                      initialValue: _selectedServerRegion,
+                      decoration: const InputDecoration(
+                        labelText: 'Your ARC server region',
+                      ),
+                      items: [
+                        for (final region in ArcServerRegion.values)
+                          DropdownMenuItem(
+                            value: region,
+                            child: Text(region.label),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => _selectedServerRegion = value);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    tooltip: 'Refresh official regional schedule',
+                    onPressed: _refreshRegionalConditions,
+                    icon: const Icon(Icons.refresh_rounded),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                data.sourceLabel,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 11,
+                  color: data.isOfficialLive
+                      ? AppTheme.neonCyan
+                      : Colors.orangeAccent,
+                  isBold: true,
+                ),
+              ),
+              if (!data.isOfficialLive) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Live refresh was unavailable. UAG is showing the last official captured regional schedule until the source can be reached again.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 11,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 14),
+              if (recommendations.isEmpty)
+                Text(
+                  'No condition-linked missing Blueprint opportunities are available in the loaded schedule window.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                )
+              else
+                ...recommendations.map(
+                  (item) => _regionalOpportunityTile(item, utcNow),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _regionalItemPlannerCard({
+    required ArcAvailability availability,
+    required DateTime utcNow,
+  }) {
+    return CollapsibleSectionCard(
+      title: 'Condition Item Finder',
+      titleColor: AppTheme.neonPink,
+      initiallyExpanded: false,
+      child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
+        future: _regionalConditionsFuture,
+        builder: (context, snapshot) {
+          final data = snapshot.data;
+          final selected = _selectedItemTargetId;
+          final recommendations = data == null || selected == null
+              ? const <ArcRegionalOpportunity>[]
+              : ArcRegionalOpportunityEngine.itemRecommendations(
+                  snapshot: data,
+                  itemId: selected,
+                  availability: availability,
+                  homeRegion: _selectedServerRegion,
+                  nowUtc: utcNow,
+                  limit: 6,
+                );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Choose an in-game objective and UAG will resolve the condition, map window and best regional server against your playtime.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 13,
+                  color: AppTheme.tradingMutedText,
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: selected,
+                decoration: const InputDecoration(
+                  labelText: 'Item / ARC objective',
+                ),
+                items: [
+                  for (final rule in ArcRegionalOpportunityEngine.itemRules)
+                    DropdownMenuItem(value: rule.id, child: Text(rule.label)),
+                ],
+                onChanged: (value) {
+                  setState(() => _selectedItemTargetId = value);
+                },
+              ),
+              const SizedBox(height: 14),
+              if (selected != null && data == null)
+                const Center(child: CircularProgressIndicator())
+              else if (selected != null && recommendations.isEmpty)
+                Text(
+                  'No matching regional condition is available in the loaded official schedule window.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                )
+              else
+                ...recommendations.map(
+                  (item) => _regionalOpportunityTile(item, utcNow),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _eventFinderCard(DateTime utcNow) {
+    final normalized = _eventFinderQuery.trim();
+
+    return CollapsibleSectionCard(
+      title: 'Regional Condition Finder',
+      titleColor: AppTheme.neonCyan,
+      initiallyExpanded: false,
+      child: FutureBuilder<ArcRegionalMapConditionsSnapshot>(
+        future: _regionalConditionsFuture,
+        builder: (context, snapshot) {
+          final data = snapshot.data;
+          final matches = data == null || normalized.length < 2
+              ? const <ArcRegionalMapConditionEntry>[]
+              : ArcRegionalOpportunityEngine.findConditions(
+                  snapshot: data,
+                  query: normalized,
+                );
+
+          final rows =
+              <
+                ({
+                  ArcRegionalMapConditionEntry entry,
+                  ArcServerRegion region,
+                  ArcRegionalConditionWindow window,
+                })
+              >[];
+          for (final entry in matches) {
+            for (final region in ArcServerRegion.values) {
+              final window = entry.windowFor(region);
+              if (window == null || !window.endUtc.isAfter(utcNow)) continue;
+              rows.add((entry: entry, region: region, window: window));
+            }
+          }
+          rows.sort((a, b) => a.window.startUtc.compareTo(b.window.startUtc));
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Search a condition or map. UAG compares Europe, North America, Brazil, East Asia and Oceania and shows the earliest opportunities in your local time.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 13,
+                  color: AppTheme.tradingMutedText,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              TextField(
+                controller: _eventFinderController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Find condition or map',
+                  hintText: 'Matriarch, Harvester, Night Raid, Blue Gate...',
+                  prefixIcon: const Icon(Icons.travel_explore_rounded),
+                  suffixIcon: _eventFinderQuery.trim().isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear search',
+                          onPressed: _eventFinderController.clear,
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              if (normalized.length < 2)
+                Text(
+                  'Type at least 2 characters.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                )
+              else if (data == null)
+                const Center(child: CircularProgressIndicator())
+              else if (rows.isEmpty)
+                Text(
+                  'No matching upcoming regional windows found.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                )
+              else
+                ...rows.take(8).map((row) {
+                  final switchServer = row.region != _selectedServerRegion;
+                  final live = row.window.isActiveAt(utcNow);
+                  return Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: live
+                            ? AppTheme.neonPink.withValues(alpha: 0.45)
+                            : AppTheme.neonCyan.withValues(alpha: 0.24),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${row.entry.conditionName} - ${row.entry.mapDisplayName}',
+                          style: AppTheme.tradingHeading(fontSize: 15),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${row.region.label} - ${_clock(row.window.startUtc)}-${_clock(row.window.endUtc)}',
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 12,
+                            color: AppTheme.neonCyan,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          live
+                              ? 'LIVE NOW'
+                              : switchServer
+                              ? 'Switch server to ${row.region.label}'
+                              : 'Available on your selected region',
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 12,
+                            color: live
+                                ? AppTheme.neonPink
+                                : switchServer
+                                ? AppTheme.neonPink
+                                : Colors.white70,
+                            isBold: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1053,6 +1405,17 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           children: [
             _entitlementCard(entitlement),
             const SizedBox(height: 14),
+            _regionalBlueprintPlannerCard(
+              states: states,
+              availability: availability,
+              utcNow: utcNow,
+            ),
+            const SizedBox(height: 14),
+            _regionalItemPlannerCard(
+              availability: availability,
+              utcNow: utcNow,
+            ),
+            const SizedBox(height: 14),
             _availabilityPlannerCard(
               allOpportunities: allOpportunities,
               availability: availability,
@@ -1179,7 +1542,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       ),
       appBar: const UagAppBar(
         title: 'Raid Timeline',
-        subtitle: 'Blueprint-driven event timing and session planning.',
+        subtitle: 'Regional condition, Blueprint and playtime intelligence.',
       ),
       drawer: const AppDrawer(),
       body: ArcRaidersScreenShell(
