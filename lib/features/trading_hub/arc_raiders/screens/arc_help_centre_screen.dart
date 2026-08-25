@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.d
 import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_help_centre_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcHelpCentreArgs {
@@ -122,37 +123,16 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
   }
 
   Widget _buildSearch() {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
-      ),
+    return TradingCard(
+      compact: true,
       child: TextField(
         onChanged: (value) => setState(() => _query = value),
         style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.search_rounded),
-          hintText: 'Search Help Centre',
-          hintStyle: const TextStyle(color: Colors.white54),
-          filled: true,
-          fillColor: Colors.black.withValues(alpha: 0.22),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: AppTheme.neonCyan.withValues(alpha: 0.18),
+        decoration: AppTheme.tradingInputDecoration(label: 'Search Help Centre')
+            .copyWith(
+              prefixIcon: const Icon(Icons.search_rounded),
+              hintText: 'Search Help Centre',
             ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: AppTheme.neonCyan.withValues(alpha: 0.18),
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppTheme.neonCyan),
-          ),
-        ),
       ),
     );
   }
@@ -310,14 +290,7 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
   }
 
   Widget _helpPanel({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
-      ),
-      child: child,
-    );
+    return TradingCard(compact: true, child: child);
   }
 
   Widget _textAction({
@@ -353,52 +326,44 @@ class _HelpCategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
+    return TradingCard(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 16,
-          borderColor: color.withValues(alpha: selected ? 0.48 : 0.18),
-          backgroundColor: selected
-              ? color.withValues(alpha: 0.10)
-              : AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.help_outline_rounded, color: color, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    category.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 13,
-                      color: Colors.white,
-                      isBold: true,
-                    ),
+      accent: color,
+      selected: selected,
+      compact: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.help_outline_rounded, color: color, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  category.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                    isBold: true,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              category.summary,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontSize: 12,
-                height: 1.25,
               ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            category.summary,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: AppTheme.tradingFaintText,
+              fontSize: 12,
+              height: 1.25,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

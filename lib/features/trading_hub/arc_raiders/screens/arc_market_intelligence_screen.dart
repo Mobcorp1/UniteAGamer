@@ -11,6 +11,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_stat_chip.dart';
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -443,12 +445,8 @@ class _ArcMarketIntelligenceScreenState
     required int priorityCount,
     required int wantedResourceCount,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
-        radius: 22,
-      ),
+    return TradingCard(
+      accent: AppTheme.neonCyan,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -469,56 +467,32 @@ class _ArcMarketIntelligenceScreenState
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildStatPill(
-                'Community Reports',
-                '$totalReports',
-                AppTheme.neonCyan,
+              TradingStatChip(
+                label: 'Reports',
+                value: '$totalReports',
+                icon: Icons.forum_outlined,
               ),
-              _buildStatPill(
-                'Missing Blueprints',
-                '$totalMissing',
-                AppTheme.neonPink,
+              TradingStatChip(
+                label: 'Missing',
+                value: '$totalMissing',
+                icon: Icons.grid_off_outlined,
+                color: AppTheme.neonPink,
               ),
-              _buildStatPill(
-                'Priority Targets',
-                '$priorityCount / 5',
-                AppTheme.warningAmber,
+              TradingStatChip(
+                label: 'Priority',
+                value: '$priorityCount / 5',
+                icon: Icons.push_pin_outlined,
+                color: AppTheme.warningAmber,
               ),
-              _buildStatPill(
-                'Wanted Resources',
-                '$wantedResourceCount',
-                Colors.white70,
+              TradingStatChip(
+                label: 'Resources',
+                value: '$wantedResourceCount',
+                icon: Icons.inventory_2_outlined,
+                color: AppTheme.tradingMutedText,
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStatPill(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: AppTheme.tradingPillDecoration(color: color),
-      child: RichText(
-        text: TextSpan(
-          style: AppTheme.bodyTextStyle(
-            fontSize: 13,
-            color: Colors.white70,
-            isBold: true,
-          ),
-          children: [
-            TextSpan(text: '$label: '),
-            TextSpan(
-              text: value,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 13,
-                color: color,
-                isBold: true,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

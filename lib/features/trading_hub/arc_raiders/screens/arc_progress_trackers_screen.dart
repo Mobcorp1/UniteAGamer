@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -163,8 +164,7 @@ class _TrackerLinkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = link.accent;
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
+    return TradingCard(
       onTap: () {
         if (availability.canOpenFeature) {
           Navigator.of(context).pushNamed(link.routeName);
@@ -179,14 +179,10 @@ class _TrackerLinkCard extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 118),
-        padding: const EdgeInsets.all(14),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 16,
-          borderColor: accent.withValues(alpha: 0.28),
-          backgroundColor: AppTheme.cardBackground.withValues(alpha: 0.68),
-        ),
+      accent: accent,
+      compact: true,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 104),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -218,7 +214,7 @@ class _TrackerLinkCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
                       fontSize: 12,
-                      color: Colors.white70,
+                      color: AppTheme.tradingMutedText,
                     ).copyWith(height: 1.3),
                   ),
                 ],
@@ -266,13 +262,9 @@ class _TrackerEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.22),
-        backgroundColor: Colors.black.withValues(alpha: 0.18),
-      ),
+    return TradingCard(
+      compact: true,
+      accent: AppTheme.neonPink,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

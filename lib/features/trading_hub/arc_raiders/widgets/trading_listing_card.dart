@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_risk_badge.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingListingCard extends StatelessWidget {
@@ -75,90 +77,101 @@ class TradingListingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = listing.isLive ? AppTheme.neonCyan : Colors.white54;
+    final statusColor = listing.isLive
+        ? AppTheme.tradingSuccess
+        : AppTheme.tradingFaintText;
     final statusLabel = listing.isLive
         ? 'Live'
         : (listing.active ? 'Expired' : 'Closed');
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
+    return TradingCard(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-        decoration: AppTheme.tradingCardDecoration(),
-        child: Padding(
-          padding: AppTheme.sectionCardPadding,
-          child: Column(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      accent: listing.isLive ? AppTheme.neonCyan : AppTheme.tradingFaintText,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      listing.title,
-                      style: AppTheme.tradingHeading(
-                        fontSize: 22,
-                        color: AppTheme.neonCyan,
-                      ),
-                    ),
+              Expanded(
+                child: Text(
+                  listing.title,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 20,
+                    color: AppTheme.neonCyan,
                   ),
-                  if (showStatus) ...[
-                    const SizedBox(width: 12),
-                    _chip(statusLabel, statusColor),
-                  ],
-                  if (trailing != null) ...[
-                    const SizedBox(width: 12),
-                    trailing!,
-                  ],
-                ],
-              ),
-              const SizedBox(height: AppTheme.spaceS),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _chip(listing.riskLabel, listing.riskColor()),
-                  _metaChip(listing.region),
-                  _metaChip(listing.playWindow),
-                  _metaChip(listing.listingModeLabel),
-                  _metaChip(listing.expiryLabel()),
-                  _metaChip(listing.listingTypeLabel),
-                  if (listing.seriousOffersOnly) _metaChip('Serious only'),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spaceM),
-              _labelValue('Offering', listing.offeredItem),
-              const SizedBox(height: AppTheme.spaceS),
-              _labelValue('Wants', listing.wantedText),
-              const SizedBox(height: AppTheme.spaceS),
-              _labelValue('Accepts', listing.acceptedTradeTypesLabel),
-              if (listing.hasSeedOffer) ...[
-                const SizedBox(height: AppTheme.spaceS),
-                _labelValue('Seed Value', '${listing.seedTotalOffered} seeds'),
-              ],
-              if (listing.notes.trim().isNotEmpty) ...[
-                const SizedBox(height: AppTheme.spaceS),
-                _labelValue('Notes', listing.notes.trim()),
-              ],
-              const SizedBox(height: AppTheme.spaceM),
-              Divider(color: AppTheme.tradingDivider),
-              const SizedBox(height: AppTheme.spaceS),
-              Text(
-                listing.traderDisplayLine,
-                style: TextStyle(
-                  color: AppTheme.tradingMutedText,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                listing.reputationSummary,
-                style: TextStyle(color: AppTheme.tradingFaintText),
+              if (showStatus) ...[
+                const SizedBox(width: 12),
+                _chip(statusLabel, statusColor),
+              ],
+              if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              TradingRiskBadge(level: listing.riskLevel),
+              _metaChip(listing.region),
+              _metaChip(listing.playWindow),
+              _metaChip(listing.listingModeLabel),
+              _metaChip(listing.expiryLabel()),
+              _metaChip(listing.listingTypeLabel),
+              if (listing.seriousOffersOnly) _metaChip('Serious only'),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceM),
+          _labelValue('Offering', listing.offeredItem),
+          const SizedBox(height: AppTheme.spaceS),
+          _labelValue('Wants', listing.wantedText),
+          const SizedBox(height: AppTheme.spaceS),
+          _labelValue('Accepts', listing.acceptedTradeTypesLabel),
+          if (listing.hasSeedOffer) ...[
+            const SizedBox(height: AppTheme.spaceS),
+            _labelValue('Seed Value', '${listing.seedTotalOffered} seeds'),
+          ],
+          if (listing.notes.trim().isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceS),
+            _labelValue('Notes', listing.notes.trim()),
+          ],
+          const SizedBox(height: AppTheme.spaceM),
+          Divider(color: AppTheme.tradingDivider),
+          const SizedBox(height: AppTheme.spaceS),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.account_circle_outlined,
+                size: 18,
+                color: AppTheme.neonCyan,
+              ),
+              const SizedBox(width: AppTheme.spaceS),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      listing.traderDisplayLine,
+                      style: TextStyle(
+                        color: AppTheme.tradingMutedText,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      listing.reputationSummary,
+                      style: TextStyle(color: AppTheme.tradingFaintText),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

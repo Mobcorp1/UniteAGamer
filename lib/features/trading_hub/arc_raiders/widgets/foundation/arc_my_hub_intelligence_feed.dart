@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_glass_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_status_pill.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcMyHubIntelligenceFeed extends StatelessWidget {
   const ArcMyHubIntelligenceFeed({
@@ -10,7 +10,7 @@ class ArcMyHubIntelligenceFeed extends StatelessWidget {
     this.duplicateBlueprints = 0,
     this.tradeHooks = 0,
     this.activeIntel = 0,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final int missingBlueprints;
@@ -23,60 +23,58 @@ class ArcMyHubIntelligenceFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     return ArcGlassPanel(
       accent: accent,
-      padding: const EdgeInsets.all(14),
-      radius: 22,
+      role: ArcSurfaceRole.raised,
+      padding: ArcUiTokens.panelPadding,
+      radius: ArcUiTokens.radiusXL,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(Icons.psychology_alt_rounded, color: accent, size: 24),
-              const SizedBox(width: 10),
+              const SizedBox(width: ArcUiTokens.gapM),
               Expanded(
                 child: Text(
                   'PERSONAL INTELLIGENCE',
-                  style: AppTheme.neonTextStyle(fontSize: 16, color: accent),
+                  style: ArcUiTokens.cardTitle(color: accent),
                 ),
               ),
-              ArcStatusPill(
+              const ArcStatusPill(
                 label: 'LIVE',
-                accent: AppTheme.neonPink,
+                tone: ArcSemanticTone.secondary,
                 isStrong: true,
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: ArcUiTokens.gapM),
           Text(
             'Your hub now acts as the personal layer: tracking progress, trade opportunities, intel and next actions without turning every system into manual admin.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.72),
-            ),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: ArcUiTokens.gapM),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
+            spacing: ArcUiTokens.gapS,
+            runSpacing: ArcUiTokens.gapS,
+            children: const [
               ArcStatusPill(
                 icon: Icons.grid_on_rounded,
                 label: 'Blueprints',
-                accent: AppTheme.neonCyan,
+                tone: ArcSemanticTone.primary,
               ),
               ArcStatusPill(
                 icon: Icons.swap_horiz_rounded,
                 label: 'Trade hooks',
-                accent: AppTheme.neonPink,
+                tone: ArcSemanticTone.secondary,
               ),
               ArcStatusPill(
                 icon: Icons.radar_rounded,
                 label: 'Intel',
-                accent: Colors.amberAccent,
+                tone: ArcSemanticTone.warning,
               ),
               ArcStatusPill(
                 icon: Icons.route_rounded,
                 label: 'Raid windows',
-                accent: Colors.lightGreenAccent,
+                tone: ArcSemanticTone.success,
               ),
             ],
           ),

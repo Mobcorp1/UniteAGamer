@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcGlassPanel extends StatelessWidget {
   const ArcGlassPanel({
     super.key,
     required this.child,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
     this.padding = ArcUiTokens.panelPadding,
     this.radius = ArcUiTokens.radiusL,
-    this.borderOpacity = 0.36,
-    this.glow = true,
+    this.borderOpacity = 0.16,
+    this.glow = false,
+    this.selected = false,
+    this.role = ArcSurfaceRole.panel,
   });
 
   final Widget child;
@@ -19,19 +20,21 @@ class ArcGlassPanel extends StatelessWidget {
   final double radius;
   final double borderOpacity;
   final bool glow;
+  final bool selected;
+  final ArcSurfaceRole role;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
       padding: padding,
-      decoration: BoxDecoration(
-        gradient: ArcUiTokens.darkGlassGradient(accent: accent),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: accent.withValues(alpha: borderOpacity),
-          width: 1.1,
-        ),
-        boxShadow: glow ? ArcUiTokens.glow(accent) : null,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: role,
+        accent: accent,
+        radius: radius,
+        borderOpacity: borderOpacity,
+        selected: selected,
+        glow: glow || selected,
       ),
       child: child,
     );

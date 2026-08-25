@@ -1561,44 +1561,43 @@ class _ArcHubArtPainter extends CustomPainter {
   }
 
   void _drawGlowOrbs(Canvas canvas, Size size) {
-    final cyanGlow = Paint()
+    final diagonalWash = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topRight,
+        end: Alignment.bottomLeft,
+        colors: [
+          accent.withValues(alpha: 0.18),
+          Colors.transparent,
+          AppTheme.neonPink.withValues(alpha: 0.10),
+        ],
+        stops: const [0, 0.52, 1],
+      ).createShader(Offset.zero & size);
+
+    canvas.drawRect(Offset.zero & size, diagonalWash);
+
+    final horizonWash = Paint()
       ..shader =
-          RadialGradient(
+          LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
             colors: [
-              accent.withValues(alpha: 0.55),
+              accent.withValues(alpha: 0.0),
+              accent.withValues(alpha: 0.12),
               accent.withValues(alpha: 0.0),
             ],
+            stops: const [0, 0.52, 1],
           ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.72, size.height * 0.30),
-              radius: size.width * 0.46,
+            Rect.fromLTWH(
+              0,
+              size.height * 0.24,
+              size.width,
+              size.height * 0.40,
             ),
           );
 
-    canvas.drawCircle(
-      Offset(size.width * 0.72, size.height * 0.30),
-      size.width * 0.46,
-      cyanGlow,
-    );
-
-    final pinkGlow = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [
-              AppTheme.neonPink.withValues(alpha: 0.32),
-              AppTheme.neonPink.withValues(alpha: 0.0),
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.22, size.height * 0.74),
-              radius: size.width * 0.42,
-            ),
-          );
-
-    canvas.drawCircle(
-      Offset(size.width * 0.22, size.height * 0.74),
-      size.width * 0.42,
-      pinkGlow,
+    canvas.drawRect(
+      Rect.fromLTWH(0, size.height * 0.24, size.width, size.height * 0.40),
+      horizonWash,
     );
   }
 

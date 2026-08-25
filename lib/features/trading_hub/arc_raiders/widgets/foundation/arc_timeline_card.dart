@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_glass_panel.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcTimelineCard extends StatelessWidget {
   const ArcTimelineCard({
@@ -9,7 +9,7 @@ class ArcTimelineCard extends StatelessWidget {
     required this.title,
     required this.points,
     this.status,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String time;
@@ -27,10 +27,7 @@ class ArcTimelineCard extends StatelessWidget {
           width: 48,
           child: Text(
             time,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.75),
-            ),
+            style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
           ),
         ),
         Column(
@@ -51,8 +48,9 @@ class ArcTimelineCard extends StatelessWidget {
         Expanded(
           child: ArcGlassPanel(
             accent: accent,
-            padding: const EdgeInsets.all(14),
-            radius: 16,
+            role: ArcSurfaceRole.raised,
+            padding: ArcUiTokens.compactPanelPadding,
+            radius: ArcUiTokens.radiusL,
             glow: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,34 +60,22 @@ class ArcTimelineCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         title,
-                        style: AppTheme.bodyTextStyle(
+                        style: ArcUiTokens.body(
                           fontSize: 14,
-                          isBold: true,
-                          color: Colors.white,
+                          weight: FontWeight.w700,
+                          color: ArcUiTokens.textPrimary,
                         ),
                       ),
                     ),
                     if (status != null)
-                      Text(
-                        status!,
-                        style: AppTheme.neonTextStyle(
-                          fontSize: 12,
-                          color: accent,
-                        ),
-                      ),
+                      Text(status!, style: ArcUiTokens.label(color: accent)),
                   ],
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: ArcUiTokens.gapS),
                 for (final point in points)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 3),
-                    child: Text(
-                      '• $point',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.68),
-                      ),
-                    ),
+                    child: Text('• $point', style: ArcUiTokens.bodySmall()),
                   ),
               ],
             ),

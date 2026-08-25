@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_glass_panel.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcBottomActionDock extends StatelessWidget {
   const ArcBottomActionDock({
     super.key,
     required this.actions,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final List<ArcDockAction> actions;
@@ -16,8 +16,12 @@ class ArcBottomActionDock extends StatelessWidget {
   Widget build(BuildContext context) {
     return ArcGlassPanel(
       accent: accent,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      radius: 28,
+      role: ArcSurfaceRole.overlay,
+      padding: const EdgeInsets.symmetric(
+        horizontal: ArcUiTokens.gapS,
+        vertical: ArcUiTokens.gapM,
+      ),
+      radius: ArcUiTokens.radiusXXL,
       child: Row(
         children: [
           for (var index = 0; index < actions.length; index++) ...[
@@ -26,7 +30,9 @@ class ArcBottomActionDock extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
                 onTap: actions[index].onTap,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: ArcUiTokens.gapS,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -35,14 +41,12 @@ class ArcBottomActionDock extends StatelessWidget {
                         color: actions[index].accent,
                         size: 24,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: ArcUiTokens.gapXS),
                       Text(
                         actions[index].label.toUpperCase(),
                         textAlign: TextAlign.center,
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 10,
-                          color: Colors.white.withValues(alpha: 0.82),
-                          isBold: true,
+                        style: ArcUiTokens.label(
+                          color: ArcUiTokens.textSecondary,
                         ),
                       ),
                     ],
@@ -51,11 +55,7 @@ class ArcBottomActionDock extends StatelessWidget {
               ),
             ),
             if (index != actions.length - 1)
-              Container(
-                width: 1,
-                height: 42,
-                color: Colors.white.withValues(alpha: 0.10),
-              ),
+              Container(width: 1, height: 42, color: ArcUiTokens.borderSubtle),
           ],
         ],
       ),
@@ -68,7 +68,7 @@ class ArcDockAction {
     required this.label,
     required this.icon,
     required this.onTap,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String label;

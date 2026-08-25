@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_glass_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_status_pill.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcMyHubCommandHeader extends StatelessWidget {
   const ArcMyHubCommandHeader({
     super.key,
     required this.title,
     required this.subtitle,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String title;
@@ -19,8 +19,10 @@ class ArcMyHubCommandHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return ArcGlassPanel(
       accent: accent,
-      radius: 26,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      role: ArcSurfaceRole.interactive,
+      selected: true,
+      radius: ArcUiTokens.radiusXXL,
+      padding: ArcUiTokens.panelPadding,
       child: Row(
         children: [
           Container(
@@ -32,15 +34,14 @@ class ArcMyHubCommandHeader extends StatelessWidget {
               border: Border.all(color: accent.withValues(alpha: 0.48)),
               boxShadow: [
                 BoxShadow(
-                  color: accent.withValues(alpha: 0.18),
-                  blurRadius: 18,
-                  spreadRadius: 1,
+                  color: accent.withValues(alpha: 0.10),
+                  blurRadius: 16,
                 ),
               ],
             ),
             child: Icon(Icons.radar_rounded, color: accent, size: 26),
           ),
-          const SizedBox(width: 13),
+          const SizedBox(width: ArcUiTokens.gapM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,16 +50,15 @@ class ArcMyHubCommandHeader extends StatelessWidget {
                   title.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.neonTextStyle(fontSize: 20, color: accent),
+                  style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: ArcUiTokens.gapXS),
                 Text(
                   subtitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.70),
+                  style: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textSecondary,
                   ),
                 ),
               ],
@@ -68,7 +68,7 @@ class ArcMyHubCommandHeader extends StatelessWidget {
           const ArcStatusPill(
             label: 'PERSONAL',
             icon: Icons.person_pin_circle_rounded,
-            accent: AppTheme.neonPink,
+            tone: ArcSemanticTone.secondary,
             isStrong: true,
           ),
         ],

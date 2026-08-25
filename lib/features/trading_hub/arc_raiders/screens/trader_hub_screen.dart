@@ -107,7 +107,7 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
     setState(() => _currentIndex = index);
   }
 
-  BottomNavigationBarItem _item({
+  NavigationDestination _destination({
     required IconData icon,
     required String label,
     int badgeCount = 0,
@@ -148,7 +148,7 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
               ),
             ],
           );
-    return BottomNavigationBarItem(icon: iconWidget, label: label);
+    return NavigationDestination(icon: iconWidget, label: label);
   }
 
   Widget _tabNavigator(int index) {
@@ -221,25 +221,24 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
                 ),
               ),
             ),
-            bottomNavigationBar: BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              currentIndex: _currentIndex,
-              onTap: _onTap,
-              backgroundColor: AppTheme.cardBackgroundDeep,
-              selectedItemColor: AppTheme.neonPink,
-              unselectedItemColor: AppTheme.tradingFaintText,
-              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
-              items: [
-                _item(icon: Icons.storefront_rounded, label: 'Market'),
-                _item(icon: Icons.add_circle_outline, label: 'Create'),
-                _item(icon: Icons.swap_horiz_rounded, label: 'Activity'),
-                _item(icon: Icons.handshake_outlined, label: 'Sessions'),
-                _item(
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: _currentIndex,
+              onDestinationSelected: _onTap,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              destinations: [
+                _destination(icon: Icons.storefront_rounded, label: 'Market'),
+                _destination(icon: Icons.add_circle_outline, label: 'Create'),
+                _destination(icon: Icons.swap_horiz_rounded, label: 'Activity'),
+                _destination(icon: Icons.handshake_outlined, label: 'Sessions'),
+                _destination(
                   icon: Icons.notifications_active_outlined,
                   label: 'Alerts',
                   badgeCount: unreadCount,
                 ),
-                _item(icon: Icons.person_outline_rounded, label: 'Profile'),
+                _destination(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Profile',
+                ),
               ],
             ),
           ),

@@ -24,6 +24,7 @@ import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcRaidersScreenBackdrop extends StatelessWidget {
   const ArcRaidersScreenBackdrop({super.key});
@@ -69,9 +70,9 @@ class ArcRaidersScreenShell extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.045),
+                    ArcUiTokens.primaryAccent.withValues(alpha: 0.030),
                     Colors.transparent,
-                    AppTheme.neonPink.withValues(alpha: 0.055),
+                    ArcUiTokens.secondaryAccent.withValues(alpha: 0.032),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -205,7 +206,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
     this.icon,
     this.logoAsset,
     this.trailing,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String title;
@@ -263,7 +264,7 @@ class ArcRaidersPageHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.tradingHeading(
-                    fontSize: compact ? 14.5 : 17,
+                    fontSize: compact ? 15 : 18,
                     color: accent,
                   ),
                 ),
@@ -274,8 +275,8 @@ class ArcRaidersPageHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
-                      color: Colors.white60,
+                      fontSize: 11,
+                      color: ArcUiTokens.textTertiary,
                       isBold: true,
                     ).copyWith(height: 1.15),
                   ),
@@ -295,7 +296,7 @@ class ArcRaidersHeroBanner extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String title;
@@ -307,48 +308,40 @@ class ArcRaidersHeroBanner extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 600;
 
     return Container(
-      padding: EdgeInsets.all(compact ? 8 : 10),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: 18,
-        borderColor: accent.withValues(alpha: 0.32),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+      padding: EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        radius: ArcUiTokens.radiusL,
+        accent: accent,
+        borderOpacity: 0.24,
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            top: -20,
-            right: -20,
-            child: IgnorePointer(
-              child: Container(
-                width: 160,
-                height: 160,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: accent.withValues(alpha: 0.06),
-                ),
-              ),
+          Container(
+            width: compact ? 36 : 44,
+            height: 3,
+            decoration: BoxDecoration(
+              color: accent,
+              borderRadius: BorderRadius.circular(999),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTheme.tradingHeading(
-                  fontSize: compact ? 18 : 22,
-                  color: accent,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                subtitle,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: compact ? 11 : 13,
-                  color: Colors.white70,
-                  isBold: true,
-                ).copyWith(height: 1.4),
-              ),
-            ],
+          const SizedBox(height: ArcUiTokens.gapM),
+          Text(
+            title,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: compact ? 18 : 22,
+              color: accent,
+            ),
+          ),
+          const SizedBox(height: ArcUiTokens.gapS),
+          Text(
+            subtitle,
+            style: ArcUiTokens.body(
+              fontSize: compact ? 12 : 13,
+              color: ArcUiTokens.textSecondary,
+              weight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -360,7 +353,7 @@ class ArcRaidersSectionCard extends StatelessWidget {
   const ArcRaidersSectionCard({
     super.key,
     required this.child,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
     this.padding = const EdgeInsets.all(AppTheme.spaceS),
     this.radius = 18,
   });
@@ -374,10 +367,11 @@ class ArcRaidersSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: padding,
-      decoration: AppTheme.tradingCardDecoration(
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
         radius: radius,
-        borderColor: accent.withValues(alpha: 0.32),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
+        accent: accent,
+        borderOpacity: 0.18,
       ),
       child: child,
     );

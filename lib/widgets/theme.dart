@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 class AppTheme {
-  static const Color neonPink = Color.fromARGB(255, 255, 20, 147);
-  static const Color neonCyan = Color.fromARGB(255, 0, 255, 255);
-  static const Color darkBackground = Color.fromARGB(255, 10, 9, 37);
-  static const Color cardBackground = Color(0xFF090529);
-  static const Color cardBackgroundAlt = Color(0xFF0D1030);
-  static const Color cardBackgroundDeep = Color(0xFF06071C);
+  static const Color neonPink = Color(0xFFE052B7);
+  static const Color neonCyan = Color(0xFF22DDF2);
+  static const Color darkBackground = Color(0xFF05070D);
+  static const Color cardBackground = Color(0xFF0A1118);
+  static const Color cardBackgroundAlt = Color(0xFF0D151E);
+  static const Color cardBackgroundDeep = Color(0xFF060A10);
   static const Color dangerRed = Color.fromARGB(255, 255, 80, 80);
   static const Color warningAmber = Color.fromARGB(255, 255, 190, 70);
 
@@ -26,9 +26,9 @@ class AppTheme {
   static const double glowMedium = 6.0;
   static const double glowStrong = 12.0;
 
-  static const double bodyLetterSpacing = 0.20;
-  static const double titleLetterSpacing = 0.55;
-  static const double heroLetterSpacing = 0.60;
+  static const double bodyLetterSpacing = 0;
+  static const double titleLetterSpacing = 0;
+  static const double heroLetterSpacing = 0;
 
   static const double pageMaxWidth = 720.0;
 
@@ -78,21 +78,18 @@ class AppTheme {
       scaffoldBackgroundColor: Colors.transparent,
       primaryColor: darkBackground,
       colorScheme: const ColorScheme.dark(
-        primary: neonPink,
-        secondary: neonCyan,
-        surface: darkBackground,
+        primary: neonCyan,
+        secondary: neonPink,
+        surface: cardBackgroundDeep,
       ),
-      iconTheme: const IconThemeData(color: neonPink),
+      iconTheme: const IconThemeData(color: neonCyan),
       textTheme: TextTheme(
-        bodyLarge: bodyTextStyle(fontSize: 18, color: neonCyan),
-        bodyMedium: bodyTextStyle(fontSize: 16, color: neonCyan),
-        bodySmall: bodyTextStyle(
-          fontSize: 14,
-          color: neonCyan.withValues(alpha: 0.88),
-        ),
+        bodyLarge: bodyTextStyle(fontSize: 18, color: Colors.white),
+        bodyMedium: bodyTextStyle(fontSize: 16, color: tradingMutedText),
+        bodySmall: bodyTextStyle(fontSize: 14, color: tradingFaintText),
         titleLarge: titleTextStyle(
           fontSize: 28.0,
-          color: neonPink,
+          color: Colors.white,
           isBold: true,
         ),
         titleMedium: titleTextStyle(
@@ -102,10 +99,10 @@ class AppTheme {
         ),
         titleSmall: titleTextStyle(
           fontSize: 18.0,
-          color: neonPink,
+          color: Colors.white,
           isBold: true,
         ),
-        headlineSmall: heroTextStyle(fontSize: 32.0, color: neonPink),
+        headlineSmall: heroTextStyle(fontSize: 32.0, color: neonCyan),
         labelSmall: buttonTextStyle(color: neonCyan, fontSize: 13.0),
       ),
       appBarTheme: AppBarTheme(
@@ -123,27 +120,27 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.all(
-            neonPink.withValues(alpha: 0.14),
+            neonCyan.withValues(alpha: 0.92),
           ),
-          foregroundColor: WidgetStateProperty.all(neonPink),
+          foregroundColor: WidgetStateProperty.all(darkBackground),
           shadowColor: WidgetStateProperty.all(
-            neonPink.withValues(alpha: 0.16),
+            neonCyan.withValues(alpha: 0.12),
           ),
           elevation: WidgetStateProperty.all(0),
           overlayColor: WidgetStateProperty.all(
-            neonPink.withValues(alpha: 0.08),
+            Colors.black.withValues(alpha: 0.08),
           ),
           shape: WidgetStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(buttonRadius),
               side: BorderSide(
-                color: neonPink.withValues(alpha: 0.82),
+                color: neonCyan.withValues(alpha: 0.82),
                 width: buttonBorderWidth,
               ),
             ),
           ),
           textStyle: WidgetStateProperty.all(
-            buttonTextStyle(color: neonPink, fontSize: 16),
+            buttonTextStyle(color: darkBackground, fontSize: 16),
           ),
           padding: WidgetStateProperty.all(buttonPadding),
         ),
@@ -514,18 +511,18 @@ class AppTheme {
   }
 
   static Color primaryButtonBorder(bool enabled) => enabled
-      ? neonPink.withValues(alpha: 0.92)
-      : neonPink.withValues(alpha: 0.24);
+      ? neonCyan.withValues(alpha: 0.88)
+      : neonCyan.withValues(alpha: 0.24);
 
   static Color primaryButtonText(bool enabled) =>
-      enabled ? darkBackground : neonPink.withValues(alpha: 0.35);
+      enabled ? darkBackground : neonCyan.withValues(alpha: 0.35);
 
   static Color primaryButtonFill(bool enabled) => enabled
-      ? neonPink.withValues(alpha: 0.92)
+      ? neonCyan.withValues(alpha: 0.90)
       : Colors.white.withValues(alpha: 0.04);
 
   static Color primaryButtonGlow(bool enabled) =>
-      enabled ? neonPink.withValues(alpha: 0.26) : Colors.transparent;
+      enabled ? neonCyan.withValues(alpha: 0.16) : Colors.transparent;
 
   static Color secondaryButtonBorder(bool enabled) => enabled
       ? neonCyan.withValues(alpha: 0.82)
@@ -569,22 +566,22 @@ class AppTheme {
   static Color sectionCardTitle([Color? color]) => color ?? neonPink;
   static Color sectionCardBackground([Color? color]) => color ?? glassSurface;
 
-  static Color get tradingCardBackground => cardBackgroundAlt;
-  static Color get tradingCardBorder => neonCyan.withValues(alpha: 0.20);
-  static Color get tradingSoftBorder => neonCyan.withValues(alpha: 0.12);
-  static Color get tradingMutedText => Colors.white70;
-  static Color get tradingFaintText => Colors.white60;
-  static Color get tradingDivider => neonCyan.withValues(alpha: 0.15);
-  static Color get tradingSuccess => Colors.greenAccent;
-  static Color get tradingWarning => Colors.amberAccent;
-  static Color get tradingDanger => Colors.redAccent;
+  static Color get tradingCardBackground => const Color(0xFF0D151E);
+  static Color get tradingCardBorder => neonCyan.withValues(alpha: 0.16);
+  static Color get tradingSoftBorder => Colors.white.withValues(alpha: 0.10);
+  static Color get tradingMutedText => const Color(0xFFC6D3DA);
+  static Color get tradingFaintText => const Color(0xFF91A4AF);
+  static Color get tradingDivider => Colors.white.withValues(alpha: 0.09);
+  static Color get tradingSuccess => const Color(0xFF6EE7B7);
+  static Color get tradingWarning => const Color(0xFFFFC857);
+  static Color get tradingDanger => const Color(0xFFFF6B6B);
 
   static TextStyle tradingHeading({
     double fontSize = 24,
     Color? color,
     bool isBold = true,
   }) {
-    return neonTextStyle(
+    return titleTextStyle(
       fontSize: fontSize,
       color: color ?? neonCyan,
       isBold: isBold,
@@ -594,7 +591,7 @@ class AppTheme {
   static BoxDecoration tradingCardDecoration({
     Color? borderColor,
     Color? backgroundColor,
-    double radius = 18,
+    double radius = 16,
   }) {
     return BoxDecoration(
       color: backgroundColor ?? tradingCardBackground,
@@ -602,8 +599,13 @@ class AppTheme {
       border: Border.all(color: borderColor ?? tradingCardBorder),
       boxShadow: [
         BoxShadow(
-          color: neonCyan.withValues(alpha: 0.05),
-          blurRadius: 12,
+          color: Colors.black.withValues(alpha: 0.18),
+          blurRadius: 14,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: (borderColor ?? neonCyan).withValues(alpha: 0.035),
+          blurRadius: 18,
           spreadRadius: 0.4,
         ),
       ],
@@ -612,30 +614,49 @@ class AppTheme {
 
   static BoxDecoration tradingPillDecoration({required Color color}) {
     return BoxDecoration(
-      color: color.withValues(alpha: 0.12),
+      color: color.withValues(alpha: 0.09),
       borderRadius: BorderRadius.circular(999),
       border: Border.all(
-        color: color.withValues(alpha: 0.45),
+        color: color.withValues(alpha: 0.34),
         width: pillBorderWidth,
       ),
     );
   }
 
   static InputDecoration tradingInputDecoration({required String label}) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: neonCyan.withValues(alpha: 0.22)),
+    );
+
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: neonPink),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: neonCyan.withValues(alpha: 0.25)),
+      filled: true,
+      fillColor: const Color(0xFF111B25).withValues(alpha: 0.82),
+      labelStyle: bodyTextStyle(fontSize: 13, color: tradingFaintText),
+      floatingLabelStyle: bodyTextStyle(
+        fontSize: 13,
+        color: neonCyan,
+        isBold: true,
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: neonPink),
+      hintStyle: bodyTextStyle(
+        fontSize: 13,
+        color: tradingFaintText.withValues(alpha: 0.75),
       ),
-      disabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: border,
+      enabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(color: neonCyan.withValues(alpha: 0.86)),
+      ),
+      disabledBorder: border.copyWith(
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      errorBorder: border.copyWith(
+        borderSide: BorderSide(color: tradingDanger.withValues(alpha: 0.72)),
+      ),
+      focusedErrorBorder: border.copyWith(
+        borderSide: BorderSide(color: tradingDanger.withValues(alpha: 0.92)),
       ),
     );
   }

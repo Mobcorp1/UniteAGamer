@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcSectionHeader extends StatelessWidget {
   const ArcSectionHeader({
@@ -7,7 +8,7 @@ class ArcSectionHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String title;
@@ -26,17 +27,11 @@ class ArcSectionHeader extends StatelessWidget {
             children: [
               Text(
                 title.toUpperCase(),
-                style: AppTheme.neonTextStyle(fontSize: 17, color: accent),
+                style: ArcUiTokens.sectionTitle(color: accent),
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: 3),
-                Text(
-                  subtitle!,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.68),
-                  ),
-                ),
+                const SizedBox(height: ArcUiTokens.gapXS),
+                Text(subtitle!, style: ArcUiTokens.bodySmall()),
               ],
             ],
           ),

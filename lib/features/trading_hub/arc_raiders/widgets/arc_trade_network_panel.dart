@@ -11,6 +11,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_stat_chip.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcTradeNetworkPanel extends StatefulWidget {
@@ -150,14 +152,10 @@ class _ArcTradeNetworkPanelState extends State<ArcTradeNetworkPanel> {
       ownedItemQuantities: widget.trackedItemQuantities,
     );
 
-    return Container(
-      width: double.infinity,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: summary.hasActionableOpportunities
-            ? AppTheme.neonCyan.withValues(alpha: 0.34)
-            : AppTheme.tradingSoftBorder,
-      ),
-      padding: AppTheme.sectionCardPadding,
+    return TradingCard(
+      accent: summary.hasActionableOpportunities
+          ? AppTheme.neonCyan
+          : AppTheme.tradingFaintText,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -411,27 +409,29 @@ class _Header extends StatelessWidget {
           runSpacing: 6,
           alignment: WrapAlignment.end,
           children: [
-            _metric('Direct', summary.directMatches.length),
-            _metric('Chains', summary.threeRaiderChains.length),
-            _metric('Prep', summary.preparationOpportunities.length),
+            TradingStatChip(
+              label: 'Direct',
+              value: '${summary.directMatches.length}',
+              icon: Icons.bolt_rounded,
+              compact: true,
+            ),
+            TradingStatChip(
+              label: 'Chains',
+              value: '${summary.threeRaiderChains.length}',
+              icon: Icons.hub_rounded,
+              color: AppTheme.neonPink,
+              compact: true,
+            ),
+            TradingStatChip(
+              label: 'Prep',
+              value: '${summary.preparationOpportunities.length}',
+              icon: Icons.inventory_2_outlined,
+              color: AppTheme.tradingWarning,
+              compact: true,
+            ),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _metric(String label, int value) {
-    return Container(
-      padding: AppTheme.pillPadding,
-      decoration: AppTheme.tradingPillDecoration(color: AppTheme.neonPink),
-      child: Text(
-        '$label $value',
-        style: const TextStyle(
-          color: AppTheme.neonPink,
-          fontWeight: FontWeight.w800,
-          fontSize: 12,
-        ),
-      ),
     );
   }
 }

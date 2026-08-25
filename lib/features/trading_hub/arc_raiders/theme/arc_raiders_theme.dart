@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcRaidersTheme {
   const ArcRaidersTheme._();
 
-  static const Color background = Color(0xFF060606);
-  static const Color panel = Color(0xFF101114);
-  static const Color panelAlt = Color(0xFF15171C);
-  static const Color textPrimary = Color(0xFFEDEDED);
-  static const Color textSecondary = Color(0xFFBFC5CC);
+  static const Color background = ArcUiTokens.background;
+  static const Color panel = ArcUiTokens.surfacePanel;
+  static const Color panelAlt = ArcUiTokens.surfaceRaised;
+  static const Color textPrimary = ArcUiTokens.textPrimary;
+  static const Color textSecondary = ArcUiTokens.textSecondary;
 
-  static const Color stripeBlue = Color(0xFF22E7FF);
-  static const Color stripePink = Color(0xFFFF4FBD);
-  static const Color stripePurple = Color(0xFFA55CFF);
-  static const Color stripeYellow = Color(0xFFF7D54B);
+  static const Color stripeBlue = ArcUiTokens.primaryAccent;
+  static const Color stripePink = ArcUiTokens.secondaryAccent;
+  static const Color stripePurple = ArcUiTokens.tertiaryAccent;
+  static const Color stripeYellow = ArcUiTokens.attentionAccent;
 
   static const LinearGradient energyGradient = LinearGradient(
     begin: Alignment.bottomRight,
@@ -25,9 +25,9 @@ class ArcRaidersTheme {
   static List<BoxShadow> outerGlow([Color color = stripeBlue]) {
     return <BoxShadow>[
       BoxShadow(
-        color: color.withValues(alpha: 0.14),
+        color: color.withValues(alpha: 0.07),
         blurRadius: 18,
-        spreadRadius: 0.6,
+        spreadRadius: 0.2,
       ),
     ];
   }
@@ -37,14 +37,13 @@ class ArcRaidersTheme {
     Color? backgroundColor,
     double radius = 18,
   }) {
-    return BoxDecoration(
-      color: backgroundColor ?? panel,
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: (borderColor ?? stripeBlue).withValues(alpha: 0.22),
-        width: 1.0,
-      ),
-      boxShadow: outerGlow(borderColor ?? stripeBlue),
+    return ArcUiTokens.surfaceDecoration(
+      role: ArcSurfaceRole.panel,
+      accent: borderColor ?? stripeBlue,
+      backgroundColor: backgroundColor ?? panel,
+      radius: radius,
+      borderOpacity: 0.22,
+      glow: borderColor != null,
     );
   }
 
@@ -52,25 +51,20 @@ class ArcRaidersTheme {
     Color? backgroundColor,
     double radius = 18,
   }) {
-    return BoxDecoration(
-      color: backgroundColor ?? panelAlt,
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+    return ArcUiTokens.surfaceDecoration(
+      role: ArcSurfaceRole.raised,
+      backgroundColor: backgroundColor ?? panelAlt,
+      radius: radius,
+      borderOpacity: 0.10,
     );
   }
 
   static TextStyle hubTitle({double fontSize = 24, Color color = textPrimary}) {
-    return AppTheme.heroTextStyle(fontSize: fontSize, color: color);
+    return ArcUiTokens.pageTitle(fontSize: fontSize, color: color);
   }
 
   static TextStyle label({double fontSize = 12, Color color = textSecondary}) {
-    return TextStyle(
-      fontSize: fontSize,
-      fontFamily: AppTheme.bodyFontFamily,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.9,
-      color: color,
-    );
+    return ArcUiTokens.label(color: color).copyWith(fontSize: fontSize);
   }
 
   static TextStyle value({
@@ -78,11 +72,9 @@ class ArcRaidersTheme {
     Color color = textPrimary,
     bool bold = true,
   }) {
-    return TextStyle(
+    return ArcUiTokens.body(
       fontSize: fontSize,
-      fontFamily: AppTheme.bodyFontFamily,
-      fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-      letterSpacing: 0.15,
+      weight: bold ? FontWeight.w700 : FontWeight.w500,
       color: color,
     );
   }
@@ -91,22 +83,9 @@ class ArcRaidersTheme {
     required String labelText,
     IconData? prefixIcon,
   }) {
-    return InputDecoration(
+    return ArcUiTokens.inputDecoration(
       labelText: labelText,
-      filled: true,
-      fillColor: panelAlt,
-      labelStyle: ArcRaidersTheme.label(),
-      prefixIcon: prefixIcon == null
-          ? null
-          : Icon(prefixIcon, color: stripeBlue.withValues(alpha: 0.88)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: stripeBlue.withValues(alpha: 0.18)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: stripePink.withValues(alpha: 0.9)),
-      ),
+      prefixIcon: prefixIcon,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_fitted_weapon_bundle_editor.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_seed_bundle_picker.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/trade_items_data.dart';
@@ -217,44 +218,6 @@ class _TradingCreateListingScreenState
           )
           .toList(),
       onChanged: onChanged,
-    );
-  }
-
-  Widget _bundleRow({
-    required String label,
-    required int value,
-    required VoidCallback onMinus,
-    required VoidCallback onPlus,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-          ),
-        ),
-        IconButton(
-          onPressed: onMinus,
-          icon: const Icon(
-            Icons.remove_circle_outline,
-            color: AppTheme.neonPink,
-          ),
-        ),
-        Text(
-          '$value',
-          style: AppTheme.tradingHeading(
-            fontSize: 22,
-            color: AppTheme.neonCyan,
-          ),
-        ),
-        IconButton(
-          onPressed: onPlus,
-          icon: const Icon(Icons.add_circle_outline, color: AppTheme.neonPink),
-        ),
-      ],
     );
   }
 
@@ -1221,49 +1184,24 @@ class _TradingCreateListingScreenState
                                     color: AppTheme.neonPink,
                                   ),
                                   const SizedBox(height: AppTheme.spaceM),
-                                  Text(
-                                    'Seed Bundles',
-                                    style: AppTheme.tradingHeading(
-                                      fontSize: 18,
-                                      color: AppTheme.neonCyan,
+                                  TradingSeedBundlePicker(
+                                    smallBundles: _smallBundles,
+                                    mediumBundles: _mediumBundles,
+                                    largeBundles: _largeBundles,
+                                    onSmallChanged: (value) => setState(
+                                      () => _smallBundles = value
+                                          .clamp(0, 999)
+                                          .toInt(),
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  _bundleRow(
-                                    label: '10 Seeds',
-                                    value: _smallBundles,
-                                    onMinus: () => setState(
-                                      () => _smallBundles = (_smallBundles - 1)
-                                          .clamp(0, 999),
+                                    onMediumChanged: (value) => setState(
+                                      () => _mediumBundles = value
+                                          .clamp(0, 999)
+                                          .toInt(),
                                     ),
-                                    onPlus: () =>
-                                        setState(() => _smallBundles += 1),
-                                  ),
-                                  _bundleRow(
-                                    label: '50 Seeds',
-                                    value: _mediumBundles,
-                                    onMinus: () => setState(
-                                      () => _mediumBundles =
-                                          (_mediumBundles - 1).clamp(0, 999),
-                                    ),
-                                    onPlus: () =>
-                                        setState(() => _mediumBundles += 1),
-                                  ),
-                                  _bundleRow(
-                                    label: '100 Seeds',
-                                    value: _largeBundles,
-                                    onMinus: () => setState(
-                                      () => _largeBundles = (_largeBundles - 1)
-                                          .clamp(0, 999),
-                                    ),
-                                    onPlus: () =>
-                                        setState(() => _largeBundles += 1),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Total offered seed value: $_seedTotal',
-                                    style: TextStyle(
-                                      color: AppTheme.tradingMutedText,
+                                    onLargeChanged: (value) => setState(
+                                      () => _largeBundles = value
+                                          .clamp(0, 999)
+                                          .toInt(),
                                     ),
                                   ),
                                 ],

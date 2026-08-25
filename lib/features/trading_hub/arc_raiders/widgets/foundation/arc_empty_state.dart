@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_glass_panel.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcEmptyState extends StatelessWidget {
   const ArcEmptyState({
@@ -8,7 +8,7 @@ class ArcEmptyState extends StatelessWidget {
     required this.title,
     required this.message,
     this.icon = Icons.radar_rounded,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
   });
 
   final String title;
@@ -20,24 +20,22 @@ class ArcEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return ArcGlassPanel(
       accent: accent,
-      padding: const EdgeInsets.all(22),
+      role: ArcSurfaceRole.raised,
+      padding: const EdgeInsets.all(ArcUiTokens.gapXXL),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: accent, size: 38),
-          const SizedBox(height: 12),
+          const SizedBox(height: ArcUiTokens.gapM),
           Text(
             title,
-            style: AppTheme.neonTextStyle(fontSize: 18, color: accent),
+            style: ArcUiTokens.sectionTitle(fontSize: 18, color: accent),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: ArcUiTokens.gapS),
           Text(
             message,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.70),
-            ),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingHubFeatureCard extends StatelessWidget {
@@ -22,33 +23,19 @@ class TradingHubFeatureCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-            border: Border.all(
-              color: AppTheme.neonCyan.withValues(alpha: 0.25),
-              width: AppTheme.cardBorderWidth,
-            ),
-            color: AppTheme.cardFillColor,
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.neonCyan.withValues(alpha: 0.08),
-                blurRadius: 16,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
+        child: TradingCard(
+          padding: EdgeInsets.zero,
+          accent: AppTheme.neonCyan,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (backgroundImagePath != null)
                 ClipRRect(
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(AppTheme.cardRadius),
-                    topRight: Radius.circular(AppTheme.cardRadius),
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
                   ),
                   child: SizedBox(
                     width: double.infinity,
@@ -68,8 +55,12 @@ class TradingHubFeatureCard extends StatelessWidget {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                AppTheme.cardFillColor.withValues(alpha: 0.12),
-                                AppTheme.cardFillColor.withValues(alpha: 0.68),
+                                AppTheme.cardBackgroundDeep.withValues(
+                                  alpha: 0.12,
+                                ),
+                                AppTheme.cardBackgroundDeep.withValues(
+                                  alpha: 0.72,
+                                ),
                               ],
                             ),
                           ),
@@ -111,7 +102,7 @@ class TradingHubFeatureCard extends StatelessWidget {
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.neonPink,
+                        color: AppTheme.tradingMutedText,
                         height: 1.35,
                       ),
                     ),

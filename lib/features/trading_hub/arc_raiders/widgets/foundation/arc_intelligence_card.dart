@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_glass_panel.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcIntelligenceCard extends StatelessWidget {
   const ArcIntelligenceCard({
@@ -10,7 +10,7 @@ class ArcIntelligenceCard extends StatelessWidget {
     required this.icon,
     this.actionLabel,
     this.onAction,
-    this.accent = AppTheme.neonCyan,
+    this.accent = ArcUiTokens.primaryAccent,
     this.backgroundAsset,
   });
 
@@ -26,9 +26,10 @@ class ArcIntelligenceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ArcGlassPanel(
       accent: accent,
+      role: ArcSurfaceRole.interactive,
       padding: EdgeInsets.zero,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
         child: Stack(
           children: [
             if (backgroundAsset != null)
@@ -40,28 +41,24 @@ class ArcIntelligenceCard extends StatelessWidget {
                 ),
               ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: ArcUiTokens.panelPadding,
               child: Row(
                 children: [
                   Icon(icon, color: accent, size: 30),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: ArcUiTokens.gapM),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           title,
-                          style: AppTheme.neonTextStyle(
-                            fontSize: 17,
-                            color: accent,
-                          ),
+                          style: ArcUiTokens.cardTitle(color: accent),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: ArcUiTokens.gapXS),
                         Text(
                           body,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.75),
+                          style: ArcUiTokens.bodySmall(
+                            color: ArcUiTokens.textSecondary,
                           ),
                         ),
                       ],
