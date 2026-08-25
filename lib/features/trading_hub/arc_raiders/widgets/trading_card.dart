@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingCard extends StatelessWidget {
@@ -28,20 +29,17 @@ class TradingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = selected
-        ? (accent ?? AppTheme.neonCyan).withValues(alpha: 0.54)
-        : (accent?.withValues(alpha: 0.24) ?? AppTheme.tradingCardBorder);
-
     final content = Container(
       width: double.infinity,
       margin: margin,
       padding: compact ? const EdgeInsets.all(AppTheme.spaceM) : padding,
-      decoration: AppTheme.tradingCardDecoration(
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: selected ? ArcSurfaceRole.interactive : ArcSurfaceRole.panel,
+        accent: accent,
         radius: radius,
-        borderColor: borderColor,
-        backgroundColor: selected
-            ? AppTheme.cardBackgroundAlt.withValues(alpha: 0.94)
-            : null,
+        borderOpacity: accent == null ? 0.12 : 0.24,
+        selected: selected,
+        glow: selected && accent != null,
       ),
       child: trailing == null
           ? child

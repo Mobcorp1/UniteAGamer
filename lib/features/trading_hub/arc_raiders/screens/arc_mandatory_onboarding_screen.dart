@@ -516,158 +516,153 @@ class _ArcMandatoryOnboardingScreenState
         FirebaseAuth.instance.currentUser?.email ?? 'Signed-in account';
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    children: [
-                      if (widget.adminPreview) const _PreviewBanner(),
-                      _TopBar(step: _step, onBack: _back),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: PageView(
-                          controller: _pageController,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            showsAccountCreationStep
-                                ? _AccountCreationStep(
-                                    emailController: _emailController,
-                                    confirmEmailController:
-                                        _confirmEmailController,
-                                    passwordController: _passwordController,
-                                    confirmPasswordController:
-                                        _confirmPasswordController,
-                                    riderNameController: _riderNameController,
-                                    emailError: _emailError,
-                                    confirmEmailError: _confirmEmailError,
-                                    passwordError: _passwordError,
-                                    confirmPasswordError: _confirmPasswordError,
-                                    riderNameError: _riderNameError,
-                                    showPassword: _showPassword,
-                                    showConfirmPassword: _showConfirmPassword,
-                                    rememberEmail: _rememberEmail,
-                                    keepSignedIn: _keepSignedIn,
-                                    onChanged: () {
-                                      if (_emailError != null ||
-                                          _confirmEmailError != null ||
-                                          _passwordError != null ||
-                                          _confirmPasswordError != null ||
-                                          _riderNameError != null) {
-                                        setState(() {
-                                          _emailError = null;
-                                          _confirmEmailError = null;
-                                          _passwordError = null;
-                                          _confirmPasswordError = null;
-                                          _riderNameError = null;
-                                        });
-                                      }
-                                    },
-                                    onTogglePassword: () => setState(
-                                      () => _showPassword = !_showPassword,
-                                    ),
-                                    onToggleConfirmPassword: () => setState(
-                                      () => _showConfirmPassword =
-                                          !_showConfirmPassword,
-                                    ),
-                                    onRememberEmailChanged: (value) =>
-                                        setState(() => _rememberEmail = value),
-                                    onKeepSignedInChanged: (value) =>
-                                        setState(() => _keepSignedIn = value),
-                                  )
-                                : _IdentityStep(
-                                    email: email,
-                                    controller: _riderNameController,
-                                    errorText: _riderNameError,
-                                    onChanged: (_) {
-                                      if (_riderNameError != null) {
-                                        setState(() => _riderNameError = null);
-                                      }
-                                    },
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  children: [
+                    if (widget.adminPreview) const _PreviewBanner(),
+                    _TopBar(step: _step, onBack: _back),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          showsAccountCreationStep
+                              ? _AccountCreationStep(
+                                  emailController: _emailController,
+                                  confirmEmailController:
+                                      _confirmEmailController,
+                                  passwordController: _passwordController,
+                                  confirmPasswordController:
+                                      _confirmPasswordController,
+                                  riderNameController: _riderNameController,
+                                  emailError: _emailError,
+                                  confirmEmailError: _confirmEmailError,
+                                  passwordError: _passwordError,
+                                  confirmPasswordError: _confirmPasswordError,
+                                  riderNameError: _riderNameError,
+                                  showPassword: _showPassword,
+                                  showConfirmPassword: _showConfirmPassword,
+                                  rememberEmail: _rememberEmail,
+                                  keepSignedIn: _keepSignedIn,
+                                  onChanged: () {
+                                    if (_emailError != null ||
+                                        _confirmEmailError != null ||
+                                        _passwordError != null ||
+                                        _confirmPasswordError != null ||
+                                        _riderNameError != null) {
+                                      setState(() {
+                                        _emailError = null;
+                                        _confirmEmailError = null;
+                                        _passwordError = null;
+                                        _confirmPasswordError = null;
+                                        _riderNameError = null;
+                                      });
+                                    }
+                                  },
+                                  onTogglePassword: () => setState(
+                                    () => _showPassword = !_showPassword,
                                   ),
-                            _LegalStep(
-                              traderCode: _acceptedTraderCode,
-                              terms: _acceptedTermsOfService,
-                              dataSecurity: _acceptedDataSecurity,
-                              ageConfirmation: _acceptedAgeConfirmation,
-                              onTraderCodeChanged: (value) =>
-                                  setState(() => _acceptedTraderCode = value),
-                              onTermsChanged: (value) => setState(
-                                () => _acceptedTermsOfService = value,
-                              ),
-                              onDataChanged: (value) =>
-                                  setState(() => _acceptedDataSecurity = value),
-                              onAgeConfirmationChanged: (value) => setState(
-                                () => _acceptedAgeConfirmation = value,
-                              ),
-                              openTraderCode: () => _openLegalDocument(
-                                const TraderCodeOfConductScreen(),
-                              ),
-                              openTerms: () =>
-                                  _openLegalDocument(const TermsOfUseScreen()),
-                              openPrivacy: () => _openLegalDocument(
-                                const PrivacyPolicyScreen(),
-                              ),
-                            ),
-                            _GoalStep(
-                              selected: _primaryGoal,
-                              options: _goalOptions,
-                              onSelected: (goal) =>
-                                  setState(() => _primaryGoal = goal),
-                            ),
-                            _BlueprintStep(
-                              selected: _blueprintSetupChoice,
-                              onSelected: (choice) => setState(
-                                () => _blueprintSetupChoice = choice,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton.icon(
-                          onPressed: _saving ? null : _next,
-                          icon: _saving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                  onToggleConfirmPassword: () => setState(
+                                    () => _showConfirmPassword =
+                                        !_showConfirmPassword,
                                   ),
+                                  onRememberEmailChanged: (value) =>
+                                      setState(() => _rememberEmail = value),
+                                  onKeepSignedInChanged: (value) =>
+                                      setState(() => _keepSignedIn = value),
                                 )
-                              : Icon(
-                                  _step == 3
-                                      ? Icons.rocket_launch_rounded
-                                      : Icons.arrow_forward_rounded,
+                              : _IdentityStep(
+                                  email: email,
+                                  controller: _riderNameController,
+                                  errorText: _riderNameError,
+                                  onChanged: (_) {
+                                    if (_riderNameError != null) {
+                                      setState(() => _riderNameError = null);
+                                    }
+                                  },
                                 ),
-                          label: Text(
-                            _saving
-                                ? (_step == 0 && showsAccountCreationStep
-                                      ? 'CREATING ACCOUNT...'
-                                      : 'INITIALISING COMMAND CENTRE...')
-                                : _step == 3
-                                ? (widget.adminPreview
-                                      ? 'CLOSE PREVIEW'
-                                      : 'ENTER COMMAND CENTRE')
-                                : 'CONTINUE',
+                          _LegalStep(
+                            traderCode: _acceptedTraderCode,
+                            terms: _acceptedTermsOfService,
+                            dataSecurity: _acceptedDataSecurity,
+                            ageConfirmation: _acceptedAgeConfirmation,
+                            onTraderCodeChanged: (value) =>
+                                setState(() => _acceptedTraderCode = value),
+                            onTermsChanged: (value) =>
+                                setState(() => _acceptedTermsOfService = value),
+                            onDataChanged: (value) =>
+                                setState(() => _acceptedDataSecurity = value),
+                            onAgeConfirmationChanged: (value) => setState(
+                              () => _acceptedAgeConfirmation = value,
+                            ),
+                            openTraderCode: () => _openLegalDocument(
+                              const TraderCodeOfConductScreen(),
+                            ),
+                            openTerms: () =>
+                                _openLegalDocument(const TermsOfUseScreen()),
+                            openPrivacy: () =>
+                                _openLegalDocument(const PrivacyPolicyScreen()),
                           ),
+                          _GoalStep(
+                            selected: _primaryGoal,
+                            options: _goalOptions,
+                            onSelected: (goal) =>
+                                setState(() => _primaryGoal = goal),
+                          ),
+                          _BlueprintStep(
+                            selected: _blueprintSetupChoice,
+                            onSelected: (choice) =>
+                                setState(() => _blueprintSetupChoice = choice),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _saving ? null : _next,
+                        icon: _saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                _step == 3
+                                    ? Icons.rocket_launch_rounded
+                                    : Icons.arrow_forward_rounded,
+                              ),
+                        label: Text(
+                          _saving
+                              ? (_step == 0 && showsAccountCreationStep
+                                    ? 'CREATING ACCOUNT...'
+                                    : 'INITIALISING COMMAND CENTRE...')
+                              : _step == 3
+                              ? (widget.adminPreview
+                                    ? 'CLOSE PREVIEW'
+                                    : 'ENTER COMMAND CENTRE')
+                              : 'CONTINUE',
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

@@ -94,65 +94,63 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
       const TradingListingQueuesScreen(showAppBar: false),
     ];
 
-    final content = Stack(
-      children: [
-        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-        SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: AppTheme.pagePadding.copyWith(bottom: AppTheme.spaceM),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Track your live trading flow in one place.',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 14,
-                        color: AppTheme.tradingMutedText,
+    final content = ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: AppTheme.pagePadding.copyWith(bottom: AppTheme.spaceM),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Track your live trading flow in one place.',
+                    style: AppTheme.bodyTextStyle(
+                      fontSize: 14,
+                      color: AppTheme.tradingMutedText,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _toggleButton(
+                        label: 'My Listings',
+                        icon: Icons.inventory_2_outlined,
+                        selected: _selectedIndex == 0,
+                        onTap: () => setState(() => _selectedIndex = 0),
                       ),
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        _toggleButton(
-                          label: 'My Listings',
-                          icon: Icons.inventory_2_outlined,
-                          selected: _selectedIndex == 0,
-                          onTap: () => setState(() => _selectedIndex = 0),
-                        ),
-                        _toggleButton(
-                          label: 'My Offers',
-                          icon: Icons.local_offer_outlined,
-                          selected: _selectedIndex == 1,
-                          onTap: () => setState(() => _selectedIndex = 1),
-                        ),
-                        _toggleButton(
-                          label: 'Blueprint Watches',
-                          icon: Icons.add_alert_outlined,
-                          selected: _selectedIndex == 2,
-                          onTap: () => setState(() => _selectedIndex = 2),
-                        ),
-                        _toggleButton(
-                          label: 'Listing Queues',
-                          icon: Icons.dynamic_feed_outlined,
-                          selected: _selectedIndex == 3,
-                          onTap: () => setState(() => _selectedIndex = 3),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      _toggleButton(
+                        label: 'My Offers',
+                        icon: Icons.local_offer_outlined,
+                        selected: _selectedIndex == 1,
+                        onTap: () => setState(() => _selectedIndex = 1),
+                      ),
+                      _toggleButton(
+                        label: 'Blueprint Watches',
+                        icon: Icons.add_alert_outlined,
+                        selected: _selectedIndex == 2,
+                        onTap: () => setState(() => _selectedIndex = 2),
+                      ),
+                      _toggleButton(
+                        label: 'Listing Queues',
+                        icon: Icons.dynamic_feed_outlined,
+                        selected: _selectedIndex == 3,
+                        onTap: () => setState(() => _selectedIndex = 3),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              Expanded(
-                child: IndexedStack(index: _selectedIndex, children: views),
-              ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: IndexedStack(index: _selectedIndex, children: views),
+            ),
+          ],
         ),
-      ],
+      ),
     );
 
     if (!widget.showAppBar) {

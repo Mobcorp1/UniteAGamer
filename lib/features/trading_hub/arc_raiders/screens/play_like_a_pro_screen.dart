@@ -551,10 +551,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
         backgroundColor: Colors.transparent,
         title: Text(
           'Play Like a Pro',
-          style: AppTheme.neonTextStyle(
+          style: AppTheme.tradingHeading(
             fontSize: 25,
             color: AppTheme.neonCyan,
-            isBold: true,
           ),
         ),
         bottom: PreferredSize(
@@ -595,538 +594,523 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
   }
 
   Widget _buildSessionCoach(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          StreamBuilder<PlayLikeAProState>(
-            stream: _repository.watchState(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting &&
-                  !snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
+    return ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: StreamBuilder<PlayLikeAProState>(
+        stream: _repository.watchState(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              if (snapshot.hasError) {
-                return Center(
-                  child: Container(
-                    margin: const EdgeInsets.all(AppTheme.spaceL),
-                    padding: const EdgeInsets.all(AppTheme.spaceL),
-                    decoration: AppTheme.tradingCardDecoration(
-                      borderColor: Colors.redAccent.withValues(alpha: 0.30),
-                    ),
-                    child: Text(
-                      'Could not load Play Like a Pro: ${snapshot.error}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                );
-              }
+          if (snapshot.hasError) {
+            return Center(
+              child: Container(
+                margin: const EdgeInsets.all(AppTheme.spaceL),
+                padding: const EdgeInsets.all(AppTheme.spaceL),
+                decoration: AppTheme.tradingCardDecoration(
+                  borderColor: Colors.redAccent.withValues(alpha: 0.30),
+                ),
+                child: Text(
+                  'Could not load Play Like a Pro: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+            );
+          }
 
-              final state = snapshot.data ?? PlayLikeAProState.initial();
-              _hydrateFromState(state);
+          final state = snapshot.data ?? PlayLikeAProState.initial();
+          _hydrateFromState(state);
 
-              final preRoutine = _buildPreRoutine();
-              final midRoutine = _buildMidRoutine();
-              final insights = _buildInsightBullets(state);
-              final latestDate = state.history.isEmpty
-                  ? null
-                  : DateFormat(
-                      'dd MMM ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ HH:mm',
-                    ).format(state.history.first.createdAt);
+          final preRoutine = _buildPreRoutine();
+          final midRoutine = _buildMidRoutine();
+          final insights = _buildInsightBullets(state);
+          final latestDate = state.history.isEmpty
+              ? null
+              : DateFormat(
+                  'dd MMM ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ HH:mm',
+                ).format(state.history.first.createdAt);
 
-              return SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 980),
-                    child: ListView(
+          return SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 980),
+                child: ListView(
+                  padding: const EdgeInsets.all(AppTheme.spaceL),
+                  children: [
+                    Container(
                       padding: const EdgeInsets.all(AppTheme.spaceL),
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.spaceL),
-                          decoration: AppTheme.tradingCardDecoration(
-                            borderColor: AppTheme.neonCyan.withValues(
-                              alpha: 0.26,
+                      decoration: AppTheme.tradingCardDecoration(
+                        borderColor: AppTheme.neonCyan.withValues(alpha: 0.26),
+                        radius: 22,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Esports-style session prep without the cringe.',
+                            style: AppTheme.tradingHeading(
+                              fontSize: 22,
+                              color: AppTheme.neonCyan,
                             ),
-                            radius: 22,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(height: AppTheme.spaceS),
+                          const Text(
+                            'Track how you feel before you queue, reset yourself when the session starts slipping, and log how you actually performed after the raid. The app then turns that into cleaner prep and fewer throwaway sessions.',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          Wrap(
+                            spacing: AppTheme.spaceS,
+                            runSpacing: AppTheme.spaceS,
                             children: [
-                              Text(
-                                'Esports-style session prep without the cringe.',
-                                style: AppTheme.tradingHeading(
-                                  fontSize: 22,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spaceM,
+                                  vertical: AppTheme.spaceS,
+                                ),
+                                decoration: AppTheme.tradingPillDecoration(
                                   color: AppTheme.neonCyan,
                                 ),
-                              ),
-                              const SizedBox(height: AppTheme.spaceS),
-                              const Text(
-                                'Track how you feel before you queue, reset yourself when the session starts slipping, and log how you actually performed after the raid. The app then turns that into cleaner prep and fewer throwaway sessions.',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  height: 1.4,
+                                child: Text(
+                                  'Goal: ${_goalLabel(_goal)}',
+                                  style: AppTheme.bodyTextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.neonCyan,
+                                    isBold: true,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              Wrap(
-                                spacing: AppTheme.spaceS,
-                                runSpacing: AppTheme.spaceS,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.spaceM,
-                                      vertical: AppTheme.spaceS,
-                                    ),
-                                    decoration: AppTheme.tradingPillDecoration(
-                                      color: AppTheme.neonCyan,
-                                    ),
-                                    child: Text(
-                                      'Goal: ${_goalLabel(_goal)}',
-                                      style: AppTheme.bodyTextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.neonCyan,
-                                        isBold: true,
-                                      ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spaceM,
+                                  vertical: AppTheme.spaceS,
+                                ),
+                                decoration: AppTheme.tradingPillDecoration(
+                                  color: AppTheme.neonPink,
+                                ),
+                                child: Text(
+                                  'Default Reset: ${_resetLabel(_preferredResetStyle)}',
+                                  style: AppTheme.bodyTextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.neonPink,
+                                    isBold: true,
+                                  ),
+                                ),
+                              ),
+                              if (latestDate != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.spaceM,
+                                    vertical: AppTheme.spaceS,
+                                  ),
+                                  decoration: AppTheme.tradingPillDecoration(
+                                    color: AppTheme.tradingSuccess,
+                                  ),
+                                  child: Text(
+                                    'Latest Review: $latestDate',
+                                    style: AppTheme.bodyTextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.tradingSuccess,
+                                      isBold: true,
                                     ),
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.spaceM,
-                                      vertical: AppTheme.spaceS,
-                                    ),
-                                    decoration: AppTheme.tradingPillDecoration(
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    DoseSectionCard(
+                      title: 'Setup & Personal Baseline',
+                      icon: Icons.tune_rounded,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            controller: _preferredGameController,
+                            decoration: AppTheme.tradingInputDecoration(
+                              label: 'Primary Game / Mode',
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          TextField(
+                            controller: _musicTriggerController,
+                            decoration: AppTheme.tradingInputDecoration(
+                              label: 'Music Trigger (optional)',
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          Text(
+                            'Preferred reset',
+                            style: AppTheme.tradingHeading(fontSize: 18),
+                          ),
+                          const SizedBox(height: AppTheme.spaceS),
+                          _choiceWrap<PlayLikeAProResetStyle>(
+                            value: _preferredResetStyle,
+                            values: PlayLikeAProResetStyle.values,
+                            label: _resetLabel,
+                            onChanged: (value) => _preferredResetStyle = value,
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          Text(
+                            'Target session length',
+                            style: AppTheme.tradingHeading(fontSize: 18),
+                          ),
+                          Slider(
+                            value: _preferredSessionMinutes.toDouble(),
+                            min: 30,
+                            max: 180,
+                            divisions: 10,
+                            label: '$_preferredSessionMinutes mins',
+                            onChanged: (next) => setState(() {
+                              _preferredSessionMinutes = next.round();
+                            }),
+                          ),
+                          Text(
+                            '$_preferredSessionMinutes minutes',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: DoseActionButton(
+                              label: _savingPreferences
+                                  ? 'Saving...'
+                                  : 'Save Preferences',
+                              icon: Icons.save_outlined,
+                              onPressed: _savingPreferences
+                                  ? null
+                                  : _savePreferences,
+                              active: !_savingPreferences,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    DoseSectionCard(
+                      title: 'Pre-Session Prep',
+                      icon: Icons.bolt_rounded,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'What are you queuing for?',
+                            style: AppTheme.tradingHeading(fontSize: 18),
+                          ),
+                          const SizedBox(height: AppTheme.spaceS),
+                          _choiceWrap<PlayLikeAProGoal>(
+                            value: _goal,
+                            values: PlayLikeAProGoal.values,
+                            label: _goalLabel,
+                            onChanged: (value) => _goal = value,
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Energy',
+                            value: _energy,
+                            onChanged: (value) => _energy = value,
+                            lowLabel: 'Drained',
+                            highLabel: 'Sharp',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Focus',
+                            value: _focus,
+                            onChanged: (value) => _focus = value,
+                            lowLabel: 'Scattered',
+                            highLabel: 'Locked in',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Calm',
+                            value: _calm,
+                            onChanged: (value) => _calm = value,
+                            lowLabel: 'Wired',
+                            highLabel: 'Settled',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Confidence',
+                            value: _confidence,
+                            onChanged: (value) => _confidence = value,
+                            lowLabel: 'Shaky',
+                            highLabel: 'Confident',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Tilt Risk',
+                            value: _tiltRisk,
+                            onChanged: (value) => _tiltRisk = value,
+                            lowLabel: 'Steady',
+                            highLabel: 'Likely to snap',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          TextField(
+                            controller: _preNotesController,
+                            maxLines: 3,
+                            decoration: AppTheme.tradingInputDecoration(
+                              label: 'Pre-session notes',
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _routineCard(
+                            title: 'Recommended Warm-Up',
+                            icon: Icons.flag_rounded,
+                            bullets: preRoutine,
+                            color: AppTheme.neonCyan,
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          DoseActionButton(
+                            label: _savingPre
+                                ? 'Saving...'
+                                : 'Save Pre-Session Check',
+                            icon: Icons.playlist_add_check_circle_outlined,
+                            onPressed: _savingPre ? null : _savePreGame,
+                            active: !_savingPre,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    DoseSectionCard(
+                      title: 'Mid-Session Reset',
+                      icon: Icons.monitor_heart_outlined,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _scorePicker(
+                            label: 'Tilt Level',
+                            value: _tiltLevel,
+                            onChanged: (value) => _tiltLevel = value,
+                            lowLabel: 'Composed',
+                            highLabel: 'Boiling',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Fatigue',
+                            value: _fatigue,
+                            onChanged: (value) => _fatigue = value,
+                            lowLabel: 'Fresh',
+                            highLabel: 'Spent',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Frustration',
+                            value: _frustration,
+                            onChanged: (value) => _frustration = value,
+                            lowLabel: 'Fine',
+                            highLabel: 'Irritated',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Focus Drop',
+                            value: _focusDrop,
+                            onChanged: (value) => _focusDrop = value,
+                            lowLabel: 'Still dialled in',
+                            highLabel: 'Autopilot',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          SwitchListTile.adaptive(
+                            contentPadding: EdgeInsets.zero,
+                            value: _needsBreak,
+                            onChanged: (value) =>
+                                setState(() => _needsBreak = value),
+                            title: const Text(
+                              'I need a proper break before the next run.',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            subtitle: const Text(
+                              'Use this when you know you are forcing it.',
+                              style: TextStyle(color: Colors.white60),
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          TextField(
+                            controller: _midNotesController,
+                            maxLines: 3,
+                            decoration: AppTheme.tradingInputDecoration(
+                              label: 'What is going wrong?',
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _routineCard(
+                            title: 'Reset Plan',
+                            icon: Icons.health_and_safety_outlined,
+                            bullets: midRoutine,
+                            color: AppTheme.warningAmber,
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          DoseActionButton(
+                            label: _savingMid ? 'Saving...' : 'Save Tilt Check',
+                            icon: Icons.refresh_rounded,
+                            onPressed: _savingMid ? null : _saveMidSession,
+                            variant: DoseActionButtonVariant.secondary,
+                            active: !_savingMid,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    DoseSectionCard(
+                      title: 'Post-Session Review',
+                      icon: Icons.analytics_outlined,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _scorePicker(
+                            label: 'Performance',
+                            value: _performance,
+                            onChanged: (value) => _performance = value,
+                            lowLabel: 'Poor',
+                            highLabel: 'Strong',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Enjoyment',
+                            value: _enjoyment,
+                            onChanged: (value) => _enjoyment = value,
+                            lowLabel: 'Drained',
+                            highLabel: 'Buzzing',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Discipline',
+                            value: _discipline,
+                            onChanged: (value) => _discipline = value,
+                            lowLabel: 'Messy',
+                            highLabel: 'Controlled',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          _scorePicker(
+                            label: 'Tilt Control',
+                            value: _tiltControl,
+                            onChanged: (value) => _tiltControl = value,
+                            lowLabel: 'Lost it',
+                            highLabel: 'Handled it',
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          TextField(
+                            controller: _postNotesController,
+                            maxLines: 4,
+                            decoration: AppTheme.tradingInputDecoration(
+                              label: 'Post-session notes',
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spaceM),
+                          DoseActionButton(
+                            label: _savingPost
+                                ? 'Saving...'
+                                : 'Save Session Review',
+                            icon: Icons.done_all_rounded,
+                            onPressed: _savingPost
+                                ? null
+                                : () => _savePostSession(state),
+                            active: !_savingPost,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    DoseSectionCard(
+                      title: 'Pattern Readout',
+                      icon: Icons.insights_rounded,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...insights.map(
+                            (bullet) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppTheme.spaceM,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 2),
+                                    child: Icon(
+                                      Icons.fiber_manual_record,
+                                      size: 12,
                                       color: AppTheme.neonPink,
                                     ),
+                                  ),
+                                  const SizedBox(width: AppTheme.spaceS),
+                                  Expanded(
                                     child: Text(
-                                      'Default Reset: ${_resetLabel(_preferredResetStyle)}',
-                                      style: AppTheme.bodyTextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.neonPink,
-                                        isBold: true,
+                                      bullet,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        height: 1.4,
                                       ),
                                     ),
                                   ),
-                                  if (latestDate != null)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppTheme.spaceM,
-                                        vertical: AppTheme.spaceS,
-                                      ),
-                                      decoration:
-                                          AppTheme.tradingPillDecoration(
-                                            color: AppTheme.tradingSuccess,
-                                          ),
-                                      child: Text(
-                                        'Latest Review: $latestDate',
-                                        style: AppTheme.bodyTextStyle(
-                                          fontSize: 13,
-                                          color: AppTheme.tradingSuccess,
-                                          isBold: true,
-                                        ),
-                                      ),
-                                    ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DoseSectionCard(
-                          title: 'Setup & Personal Baseline',
-                          icon: Icons.tune_rounded,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextField(
-                                controller: _preferredGameController,
-                                decoration: AppTheme.tradingInputDecoration(
-                                  label: 'Primary Game / Mode',
+                          if (state.history.isNotEmpty) ...[
+                            const SizedBox(height: AppTheme.spaceS),
+                            Text(
+                              'Recent Reviews',
+                              style: AppTheme.tradingHeading(fontSize: 18),
+                            ),
+                            const SizedBox(height: AppTheme.spaceS),
+                            ...state.history.take(5).map((entry) {
+                              return Container(
+                                margin: const EdgeInsets.only(
+                                  bottom: AppTheme.spaceS,
                                 ),
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              TextField(
-                                controller: _musicTriggerController,
-                                decoration: AppTheme.tradingInputDecoration(
-                                  label: 'Music Trigger (optional)',
+                                padding: const EdgeInsets.all(AppTheme.spaceM),
+                                decoration: AppTheme.tradingCardDecoration(
+                                  borderColor: AppTheme.tradingSoftBorder,
+                                  radius: 14,
                                 ),
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              Text(
-                                'Preferred reset',
-                                style: AppTheme.tradingHeading(fontSize: 18),
-                              ),
-                              const SizedBox(height: AppTheme.spaceS),
-                              _choiceWrap<PlayLikeAProResetStyle>(
-                                value: _preferredResetStyle,
-                                values: PlayLikeAProResetStyle.values,
-                                label: _resetLabel,
-                                onChanged: (value) =>
-                                    _preferredResetStyle = value,
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              Text(
-                                'Target session length',
-                                style: AppTheme.tradingHeading(fontSize: 18),
-                              ),
-                              Slider(
-                                value: _preferredSessionMinutes.toDouble(),
-                                min: 30,
-                                max: 180,
-                                divisions: 10,
-                                label: '$_preferredSessionMinutes mins',
-                                onChanged: (next) => setState(() {
-                                  _preferredSessionMinutes = next.round();
-                                }),
-                              ),
-                              Text(
-                                '$_preferredSessionMinutes minutes',
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: DoseActionButton(
-                                  label: _savingPreferences
-                                      ? 'Saving...'
-                                      : 'Save Preferences',
-                                  icon: Icons.save_outlined,
-                                  onPressed: _savingPreferences
-                                      ? null
-                                      : _savePreferences,
-                                  active: !_savingPreferences,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DoseSectionCard(
-                          title: 'Pre-Session Prep',
-                          icon: Icons.bolt_rounded,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'What are you queuing for?',
-                                style: AppTheme.tradingHeading(fontSize: 18),
-                              ),
-                              const SizedBox(height: AppTheme.spaceS),
-                              _choiceWrap<PlayLikeAProGoal>(
-                                value: _goal,
-                                values: PlayLikeAProGoal.values,
-                                label: _goalLabel,
-                                onChanged: (value) => _goal = value,
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Energy',
-                                value: _energy,
-                                onChanged: (value) => _energy = value,
-                                lowLabel: 'Drained',
-                                highLabel: 'Sharp',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Focus',
-                                value: _focus,
-                                onChanged: (value) => _focus = value,
-                                lowLabel: 'Scattered',
-                                highLabel: 'Locked in',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Calm',
-                                value: _calm,
-                                onChanged: (value) => _calm = value,
-                                lowLabel: 'Wired',
-                                highLabel: 'Settled',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Confidence',
-                                value: _confidence,
-                                onChanged: (value) => _confidence = value,
-                                lowLabel: 'Shaky',
-                                highLabel: 'Confident',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Tilt Risk',
-                                value: _tiltRisk,
-                                onChanged: (value) => _tiltRisk = value,
-                                lowLabel: 'Steady',
-                                highLabel: 'Likely to snap',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              TextField(
-                                controller: _preNotesController,
-                                maxLines: 3,
-                                decoration: AppTheme.tradingInputDecoration(
-                                  label: 'Pre-session notes',
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _routineCard(
-                                title: 'Recommended Warm-Up',
-                                icon: Icons.flag_rounded,
-                                bullets: preRoutine,
-                                color: AppTheme.neonCyan,
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              DoseActionButton(
-                                label: _savingPre
-                                    ? 'Saving...'
-                                    : 'Save Pre-Session Check',
-                                icon: Icons.playlist_add_check_circle_outlined,
-                                onPressed: _savingPre ? null : _savePreGame,
-                                active: !_savingPre,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DoseSectionCard(
-                          title: 'Mid-Session Reset',
-                          icon: Icons.monitor_heart_outlined,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _scorePicker(
-                                label: 'Tilt Level',
-                                value: _tiltLevel,
-                                onChanged: (value) => _tiltLevel = value,
-                                lowLabel: 'Composed',
-                                highLabel: 'Boiling',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Fatigue',
-                                value: _fatigue,
-                                onChanged: (value) => _fatigue = value,
-                                lowLabel: 'Fresh',
-                                highLabel: 'Spent',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Frustration',
-                                value: _frustration,
-                                onChanged: (value) => _frustration = value,
-                                lowLabel: 'Fine',
-                                highLabel: 'Irritated',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Focus Drop',
-                                value: _focusDrop,
-                                onChanged: (value) => _focusDrop = value,
-                                lowLabel: 'Still dialled in',
-                                highLabel: 'Autopilot',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              SwitchListTile.adaptive(
-                                contentPadding: EdgeInsets.zero,
-                                value: _needsBreak,
-                                onChanged: (value) =>
-                                    setState(() => _needsBreak = value),
-                                title: const Text(
-                                  'I need a proper break before the next run.',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                subtitle: const Text(
-                                  'Use this when you know you are forcing it.',
-                                  style: TextStyle(color: Colors.white60),
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              TextField(
-                                controller: _midNotesController,
-                                maxLines: 3,
-                                decoration: AppTheme.tradingInputDecoration(
-                                  label: 'What is going wrong?',
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _routineCard(
-                                title: 'Reset Plan',
-                                icon: Icons.health_and_safety_outlined,
-                                bullets: midRoutine,
-                                color: AppTheme.warningAmber,
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              DoseActionButton(
-                                label: _savingMid
-                                    ? 'Saving...'
-                                    : 'Save Tilt Check',
-                                icon: Icons.refresh_rounded,
-                                onPressed: _savingMid ? null : _saveMidSession,
-                                variant: DoseActionButtonVariant.secondary,
-                                active: !_savingMid,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DoseSectionCard(
-                          title: 'Post-Session Review',
-                          icon: Icons.analytics_outlined,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _scorePicker(
-                                label: 'Performance',
-                                value: _performance,
-                                onChanged: (value) => _performance = value,
-                                lowLabel: 'Poor',
-                                highLabel: 'Strong',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Enjoyment',
-                                value: _enjoyment,
-                                onChanged: (value) => _enjoyment = value,
-                                lowLabel: 'Drained',
-                                highLabel: 'Buzzing',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Discipline',
-                                value: _discipline,
-                                onChanged: (value) => _discipline = value,
-                                lowLabel: 'Messy',
-                                highLabel: 'Controlled',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              _scorePicker(
-                                label: 'Tilt Control',
-                                value: _tiltControl,
-                                onChanged: (value) => _tiltControl = value,
-                                lowLabel: 'Lost it',
-                                highLabel: 'Handled it',
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              TextField(
-                                controller: _postNotesController,
-                                maxLines: 4,
-                                decoration: AppTheme.tradingInputDecoration(
-                                  label: 'Post-session notes',
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spaceM),
-                              DoseActionButton(
-                                label: _savingPost
-                                    ? 'Saving...'
-                                    : 'Save Session Review',
-                                icon: Icons.done_all_rounded,
-                                onPressed: _savingPost
-                                    ? null
-                                    : () => _savePostSession(state),
-                                active: !_savingPost,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        DoseSectionCard(
-                          title: 'Pattern Readout',
-                          icon: Icons.insights_rounded,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ...insights.map(
-                                (bullet) => Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: AppTheme.spaceM,
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(top: 2),
-                                        child: Icon(
-                                          Icons.fiber_manual_record,
-                                          size: 12,
-                                          color: AppTheme.neonPink,
-                                        ),
-                                      ),
-                                      const SizedBox(width: AppTheme.spaceS),
-                                      Expanded(
-                                        child: Text(
-                                          bullet,
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            height: 1.4,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${_goalLabel(entry.goal)}',
+                                            style: AppTheme.bodyTextStyle(
+                                              fontSize: 14,
+                                              color: AppTheme.neonCyan,
+                                              isBold: true,
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (state.history.isNotEmpty) ...[
-                                const SizedBox(height: AppTheme.spaceS),
-                                Text(
-                                  'Recent Reviews',
-                                  style: AppTheme.tradingHeading(fontSize: 18),
-                                ),
-                                const SizedBox(height: AppTheme.spaceS),
-                                ...state.history.take(5).map((entry) {
-                                  return Container(
-                                    margin: const EdgeInsets.only(
-                                      bottom: AppTheme.spaceS,
-                                    ),
-                                    padding: const EdgeInsets.all(
-                                      AppTheme.spaceM,
-                                    ),
-                                    decoration: AppTheme.tradingCardDecoration(
-                                      borderColor: AppTheme.tradingSoftBorder,
-                                      radius: 14,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${_goalLabel(entry.goal)}',
-                                                style: AppTheme.bodyTextStyle(
-                                                  fontSize: 14,
-                                                  color: AppTheme.neonCyan,
-                                                  isBold: true,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'Perf ${entry.performance}/5 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Enjoyment ${entry.enjoyment}/5 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Tilt Control ${entry.tiltControl}/5',
-                                                style: const TextStyle(
-                                                  color: Colors.white60,
-                                                ),
-                                              ),
-                                            ],
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Perf ${entry.performance}/5 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Enjoyment ${entry.enjoyment}/5 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Tilt Control ${entry.tiltControl}/5',
+                                            style: const TextStyle(
+                                              color: Colors.white60,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  );
-                                }),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              );
-            },
-          ),
-        ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

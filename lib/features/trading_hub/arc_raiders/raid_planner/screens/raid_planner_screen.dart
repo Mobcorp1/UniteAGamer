@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 
@@ -381,16 +382,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         borderRadius: BorderRadius.circular(999),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: BoxDecoration(
-            color: onTap == null
-                ? Colors.white.withValues(alpha: 0.03)
-                : color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: onTap == null
-                  ? Colors.white24
-                  : color.withValues(alpha: 0.55),
-            ),
+          decoration: ArcUiTokens.chipDecoration(
+            color: onTap == null ? Colors.white54 : color,
+            selected: onTap != null,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -437,12 +431,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _tierColor(target.tier).withValues(alpha: 0.35),
-        ),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: _tierColor(target.tier),
+        radius: 16,
+        borderOpacity: 0.35,
       ),
       child: Row(
         children: [
@@ -574,14 +567,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: (live ? AppTheme.neonPink : AppTheme.neonCyan).withValues(
-            alpha: 0.35,
-          ),
-        ),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: live ? AppTheme.neonPink : AppTheme.neonCyan,
+        radius: 16,
+        borderOpacity: 0.35,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -659,14 +649,13 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: opportunity.insideSavedPlaytime
-              ? AppTheme.neonCyan.withValues(alpha: 0.38)
-              : AppTheme.neonPink.withValues(alpha: 0.28),
-        ),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: opportunity.insideSavedPlaytime
+            ? AppTheme.neonCyan
+            : AppTheme.neonPink,
+        radius: 14,
+        borderOpacity: opportunity.insideSavedPlaytime ? 0.38 : 0.28,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1000,14 +989,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                     width: double.infinity,
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: live
-                            ? AppTheme.neonPink.withValues(alpha: 0.45)
-                            : AppTheme.neonCyan.withValues(alpha: 0.24),
-                      ),
+                    decoration: ArcUiTokens.surfaceDecoration(
+                      role: ArcSurfaceRole.interactive,
+                      accent: live ? AppTheme.neonPink : AppTheme.neonCyan,
+                      radius: 12,
+                      borderOpacity: live ? 0.45 : 0.24,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1252,12 +1238,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.24),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppTheme.neonCyan.withValues(alpha: 0.25),
-            ),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.interactive,
+            accent: AppTheme.neonCyan,
+            radius: 16,
+            borderOpacity: 0.25,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1480,9 +1465,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.18),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonPink,
         radius: 18,
+        borderOpacity: 0.18,
       ),
       child: Row(
         children: [

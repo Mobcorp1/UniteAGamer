@@ -278,271 +278,259 @@ class _TradingNotificationsScreenState
               ],
             )
           : null,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 920),
-                child: StreamBuilder<List<TradingNotification>>(
-                  stream: _repository.watchNotifications(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          'Could not load messages.\n${snapshot.error}',
-                          textAlign: TextAlign.center,
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 15,
-                            color: AppTheme.tradingDanger,
-                          ),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: StreamBuilder<List<TradingNotification>>(
+                stream: _repository.watchNotifications(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Could not load messages.\n${snapshot.error}',
+                        textAlign: TextAlign.center,
+                        style: AppTheme.bodyTextStyle(
+                          fontSize: 15,
+                          color: AppTheme.tradingDanger,
                         ),
-                      );
-                    }
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: AppTheme.neonCyan,
-                        ),
-                      );
-                    }
-                    final all = snapshot.data ?? const <TradingNotification>[];
-                    final unread = all.where((item) => !item.read).length;
-                    final visible = all.where(_matches).toList(growable: false);
-                    return Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '$unread unread • ${all.length} total',
-                                  style: AppTheme.bodyTextStyle(
-                                    fontSize: 13,
-                                    color: AppTheme.tradingMutedText,
-                                  ),
+                      ),
+                    );
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.neonCyan,
+                      ),
+                    );
+                  }
+                  final all = snapshot.data ?? const <TradingNotification>[];
+                  final unread = all.where((item) => !item.read).length;
+                  final visible = all.where(_matches).toList(growable: false);
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '$unread unread • ${all.length} total',
+                                style: AppTheme.bodyTextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.tradingMutedText,
                                 ),
                               ),
-                              if (unread > 0)
-                                TextButton.icon(
-                                  onPressed: _busy ? null : _markAllRead,
-                                  icon: const Icon(Icons.done_all_rounded),
-                                  label: const Text('Mark all read'),
-                                ),
-                            ],
-                          ),
+                            ),
+                            if (unread > 0)
+                              TextButton.icon(
+                                onPressed: _busy ? null : _markAllRead,
+                                icon: const Icon(Icons.done_all_rounded),
+                                label: const Text('Mark all read'),
+                              ),
+                          ],
                         ),
-                        SizedBox(
-                          height: 48,
-                          child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _InboxFilter.values.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(width: 8),
-                            itemBuilder: (context, index) {
-                              final filter = _InboxFilter.values[index];
-                              return ChoiceChip(
-                                label: Text(_filterLabel(filter)),
-                                selected: _filter == filter,
-                                onSelected: (_) =>
-                                    setState(() => _filter = filter),
-                              );
-                            },
-                          ),
+                      ),
+                      SizedBox(
+                        height: 48,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _InboxFilter.values.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(width: 8),
+                          itemBuilder: (context, index) {
+                            final filter = _InboxFilter.values[index];
+                            return ChoiceChip(
+                              label: Text(_filterLabel(filter)),
+                              selected: _filter == filter,
+                              onSelected: (_) =>
+                                  setState(() => _filter = filter),
+                            );
+                          },
                         ),
-                        Expanded(
-                          child: visible.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24),
-                                    child: Text(
-                                      all.isEmpty
-                                          ? 'Your messages, alerts, broadcasts and system updates will appear here.'
-                                          : 'No messages match this filter.',
-                                      textAlign: TextAlign.center,
-                                      style: AppTheme.bodyTextStyle(
-                                        fontSize: 16,
-                                        color: AppTheme.tradingMutedText,
-                                      ),
+                      ),
+                      Expanded(
+                        child: visible.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Text(
+                                    all.isEmpty
+                                        ? 'Your messages, alerts, broadcasts and system updates will appear here.'
+                                        : 'No messages match this filter.',
+                                    textAlign: TextAlign.center,
+                                    style: AppTheme.bodyTextStyle(
+                                      fontSize: 16,
+                                      color: AppTheme.tradingMutedText,
                                     ),
                                   ),
-                                )
-                              : ListView.builder(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    14,
-                                    12,
-                                    14,
-                                    104,
-                                  ),
-                                  itemCount: visible.length,
-                                  itemBuilder: (context, index) {
-                                    final item = visible[index];
-                                    final color = _typeColor(item.type);
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 14,
-                                      ),
-                                      child: Dismissible(
-                                        key: ValueKey(item.id),
-                                        direction: item.read
-                                            ? DismissDirection.endToStart
-                                            : DismissDirection.none,
-                                        background: Container(
-                                          alignment: Alignment.centerRight,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.tradingDanger
-                                                .withValues(alpha: 0.22),
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            Icons.delete_outline_rounded,
-                                            color: AppTheme.tradingDanger,
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(
+                                  14,
+                                  12,
+                                  14,
+                                  104,
+                                ),
+                                itemCount: visible.length,
+                                itemBuilder: (context, index) {
+                                  final item = visible[index];
+                                  final color = _typeColor(item.type);
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 14),
+                                    child: Dismissible(
+                                      key: ValueKey(item.id),
+                                      direction: item.read
+                                          ? DismissDirection.endToStart
+                                          : DismissDirection.none,
+                                      background: Container(
+                                        alignment: Alignment.centerRight,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.tradingDanger
+                                              .withValues(alpha: 0.22),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
                                           ),
                                         ),
-                                        onDismissed: (_) =>
-                                            _deleteNotification(item),
-                                        child: ElectricChargeBorder(
-                                          active: !item.read,
-                                          radius: 20,
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            onTap: () =>
-                                                _openNotification(item),
-                                            child: Container(
-                                              padding:
-                                                  AppTheme.sectionCardPadding,
-                                              decoration:
-                                                  AppTheme.tradingCardDecoration(
-                                                    borderColor: !item.read
-                                                        ? color.withValues(
-                                                            alpha: 0.45,
-                                                          )
+                                        child: Icon(
+                                          Icons.delete_outline_rounded,
+                                          color: AppTheme.tradingDanger,
+                                        ),
+                                      ),
+                                      onDismissed: (_) =>
+                                          _deleteNotification(item),
+                                      child: ElectricChargeBorder(
+                                        active: !item.read,
+                                        radius: 20,
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          onTap: () => _openNotification(item),
+                                          child: Container(
+                                            padding:
+                                                AppTheme.sectionCardPadding,
+                                            decoration:
+                                                AppTheme.tradingCardDecoration(
+                                                  borderColor: !item.read
+                                                      ? color.withValues(
+                                                          alpha: 0.45,
+                                                        )
+                                                      : AppTheme
+                                                            .tradingCardBorder,
+                                                ),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  margin: const EdgeInsets.only(
+                                                    top: 6,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: !item.read
+                                                        ? color
                                                         : AppTheme
-                                                              .tradingCardBorder,
+                                                              .tradingFaintText,
+                                                    shape: BoxShape.circle,
                                                   ),
-                                              child: Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Container(
-                                                    width: 10,
-                                                    height: 10,
-                                                    margin:
-                                                        const EdgeInsets.only(
-                                                          top: 6,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: !item.read
-                                                          ? color
-                                                          : AppTheme
-                                                                .tradingFaintText,
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Wrap(
-                                                          spacing: 8,
-                                                          runSpacing: 8,
-                                                          children: [
-                                                            Text(
-                                                              item.title,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Wrap(
+                                                        spacing: 8,
+                                                        runSpacing: 8,
+                                                        children: [
+                                                          Text(
+                                                            item.title,
+                                                            style:
+                                                                AppTheme.tradingHeading(
+                                                                  fontSize: 20,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                          ),
+                                                          Container(
+                                                            padding: AppTheme
+                                                                .pillPadding,
+                                                            decoration:
+                                                                AppTheme.tradingPillDecoration(
+                                                                  color: color,
+                                                                ),
+                                                            child: Text(
+                                                              item.typeLabel,
                                                               style:
-                                                                  AppTheme.tradingHeading(
+                                                                  AppTheme.bodyTextStyle(
                                                                     fontSize:
-                                                                        20,
-                                                                    color: Colors
-                                                                        .white,
-                                                                  ),
-                                                            ),
-                                                            Container(
-                                                              padding: AppTheme
-                                                                  .pillPadding,
-                                                              decoration:
-                                                                  AppTheme.tradingPillDecoration(
+                                                                        12,
                                                                     color:
                                                                         color,
+                                                                    isBold:
+                                                                        true,
                                                                   ),
-                                                              child: Text(
-                                                                item.typeLabel,
-                                                                style:
-                                                                    AppTheme.bodyTextStyle(
-                                                                      fontSize:
-                                                                          12,
-                                                                      color:
-                                                                          color,
-                                                                      isBold:
-                                                                          true,
-                                                                    ),
-                                                              ),
                                                             ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 8,
-                                                        ),
-                                                        Text(
-                                                          item.body,
-                                                          style: AppTheme.bodyTextStyle(
-                                                            fontSize: 14,
-                                                            color: AppTheme
-                                                                .tradingMutedText,
                                                           ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Text(
+                                                        item.body,
+                                                        style: AppTheme.bodyTextStyle(
+                                                          fontSize: 14,
+                                                          color: AppTheme
+                                                              .tradingMutedText,
                                                         ),
-                                                        const SizedBox(
-                                                          height: 8,
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Text(
+                                                        _formatDate(
+                                                          item.createdAt,
                                                         ),
-                                                        Text(
-                                                          _formatDate(
-                                                            item.createdAt,
-                                                          ),
-                                                          style: AppTheme.bodyTextStyle(
-                                                            fontSize: 12,
-                                                            color: AppTheme
-                                                                .tradingFaintText,
-                                                          ),
+                                                        style: AppTheme.bodyTextStyle(
+                                                          fontSize: 12,
+                                                          color: AppTheme
+                                                              .tradingFaintText,
                                                         ),
-                                                      ],
-                                                    ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  Icon(
-                                                    Icons.chevron_right_rounded,
-                                                    color: AppTheme
-                                                        .tradingFaintText,
-                                                  ),
-                                                ],
-                                              ),
+                                                ),
+                                                Icon(
+                                                  Icons.chevron_right_rounded,
+                                                  color:
+                                                      AppTheme.tradingFaintText,
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),
                                       ),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

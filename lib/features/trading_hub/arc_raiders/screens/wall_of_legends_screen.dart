@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_wall_of_legends_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_wall_of_legends_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class WallOfLegendsScreen extends StatefulWidget {
@@ -167,8 +168,11 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
     final accent = _categoryAccent(entry.category);
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: accent.withValues(alpha: 0.24),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: accent,
+        radius: 16,
+        borderOpacity: 0.24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +247,7 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
         horizontal: AppTheme.spaceS,
         vertical: 6,
       ),
-      decoration: AppTheme.tradingPillDecoration(color: color),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
         style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
@@ -261,8 +265,11 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: accent.withValues(alpha: 0.24),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: accent,
+          radius: 16,
+          borderOpacity: 0.24,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

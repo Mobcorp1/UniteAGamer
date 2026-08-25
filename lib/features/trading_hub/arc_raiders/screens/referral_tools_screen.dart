@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ReferralToolsScreen extends StatefulWidget {
@@ -28,7 +30,9 @@ class _ReferralToolsScreenState extends State<ReferralToolsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(
+      body: ArcRaidersScreenShell(
+        useSafeArea: true,
+        showAdBanner: false,
         child: CustomScrollView(
           slivers: [
             SliverPadding(
@@ -144,8 +148,12 @@ class _ReferralHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 18,
+        borderOpacity: 0.28,
+        glow: true,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,12 +178,11 @@ class _ReferralHeroCard extends StatelessWidget {
                   horizontal: 14,
                   vertical: 10,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.34),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppTheme.neonPink.withValues(alpha: 0.28),
-                  ),
+                decoration: ArcUiTokens.surfaceDecoration(
+                  role: ArcSurfaceRole.interactive,
+                  accent: AppTheme.neonPink,
+                  radius: 14,
+                  borderOpacity: 0.28,
                 ),
                 child: const Text(
                   'UAG-BETA',
@@ -219,8 +226,11 @@ class _ReferralMetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.18),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: AppTheme.neonPink,
+        radius: 16,
+        borderOpacity: 0.18,
       ),
       child: Row(
         children: [
@@ -248,8 +258,11 @@ class _ReferralHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: AppTheme.neonCyan,
+        radius: 16,
+        borderOpacity: 0.18,
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,

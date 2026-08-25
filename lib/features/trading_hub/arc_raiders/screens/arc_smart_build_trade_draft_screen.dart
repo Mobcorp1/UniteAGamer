@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcSmartBuildTradeDraftScreen extends StatefulWidget {
@@ -64,140 +66,147 @@ class _ArcSmartBuildTradeDraftScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Smart Build Trade Draft'),
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        backgroundColor: Colors.transparent,
       ),
-      body: StreamBuilder(
-        stream: _loadouts.watchFavouriteLoadout(),
-        builder: (context, loadoutSnapshot) {
-          if (loadoutSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: StreamBuilder(
+          stream: _loadouts.watchFavouriteLoadout(),
+          builder: (context, loadoutSnapshot) {
+            if (loadoutSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final loadout = loadoutSnapshot.data;
-          final plan = ArcGeneratedLoadoutPlan.fromMap(loadout?.smartBuildData);
-          if (plan == null) {
-            return _emptyState(
-              icon: Icons.tune_rounded,
-              title: 'No active Smart Build',
-              message:
-                  'Generate and save a Smart Build in Favourite Loadout first.',
-              actionLabel: 'Back to Favourite Loadout',
-              onAction: () => Navigator.of(context).pop(),
+            final loadout = loadoutSnapshot.data;
+            final plan = ArcGeneratedLoadoutPlan.fromMap(
+              loadout?.smartBuildData,
             );
-          }
-
-          return StreamBuilder<Map<String, ArcBlueprintState>>(
-            stream: _blueprints.watchMyBlueprintStates(),
-            builder: (context, blueprintSnapshot) {
-              final states =
-                  blueprintSnapshot.data ?? const <String, ArcBlueprintState>{};
-              final integration = ArcLoadoutIntegrationEngine.evaluate(
-                plan: plan,
-                blueprintStates: states,
+            if (plan == null) {
+              return _emptyState(
+                icon: Icons.tune_rounded,
+                title: 'No active Smart Build',
+                message:
+                    'Generate and save a Smart Build in Favourite Loadout first.',
+                actionLabel: 'Back to Favourite Loadout',
+                onAction: () => Navigator.of(context).pop(),
               );
+            }
 
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _header(plan, integration),
-                  const SizedBox(height: 14),
-                  _section(
-                    title: 'Missing Blueprints',
-                    icon: Icons.grid_view_rounded,
-                    accent: AppTheme.neonPink,
-                    children: integration.missingBlueprints.isEmpty
-                        ? const [
-                            Text(
-                              'All Blueprint requirements are secured.',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                          ]
-                        : [
-                            for (final item in integration.missingBlueprints)
-                              _requirementRow(
-                                '${item.itemName} Blueprint',
-                                '${item.slotLabel} • Priority ${item.priorityRank}',
-                                AppTheme.neonPink,
+            return StreamBuilder<Map<String, ArcBlueprintState>>(
+              stream: _blueprints.watchMyBlueprintStates(),
+              builder: (context, blueprintSnapshot) {
+                final states =
+                    blueprintSnapshot.data ??
+                    const <String, ArcBlueprintState>{};
+                final integration = ArcLoadoutIntegrationEngine.evaluate(
+                  plan: plan,
+                  blueprintStates: states,
+                );
+
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 104),
+                  children: [
+                    _header(plan, integration),
+                    const SizedBox(height: 14),
+                    _section(
+                      title: 'Missing Blueprints',
+                      icon: Icons.grid_view_rounded,
+                      accent: AppTheme.neonPink,
+                      children: integration.missingBlueprints.isEmpty
+                          ? const [
+                              Text(
+                                'All Blueprint requirements are secured.',
+                                style: TextStyle(color: Colors.white70),
                               ),
-                          ],
-                  ),
-                  const SizedBox(height: 12),
-                  _section(
-                    title: 'Missing Resources',
-                    icon: Icons.inventory_2_rounded,
-                    accent: Colors.amberAccent,
-                    children: integration.missingResources.isEmpty
-                        ? const [
-                            Text(
-                              'No tracked resource gaps remain.',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                          ]
-                        : [
-                            for (final item in integration.missingResources)
-                              _requirementRow(
-                                '${item.missingQuantity}x ${item.itemName}',
-                                '${item.ownedQuantity}/${item.requiredQuantity} owned',
-                                Colors.amberAccent,
+                            ]
+                          : [
+                              for (final item in integration.missingBlueprints)
+                                _requirementRow(
+                                  '${item.itemName} Blueprint',
+                                  '${item.slotLabel} • Priority ${item.priorityRank}',
+                                  AppTheme.neonPink,
+                                ),
+                            ],
+                    ),
+                    const SizedBox(height: 12),
+                    _section(
+                      title: 'Missing Resources',
+                      icon: Icons.inventory_2_rounded,
+                      accent: Colors.amberAccent,
+                      children: integration.missingResources.isEmpty
+                          ? const [
+                              Text(
+                                'No tracked resource gaps remain.',
+                                style: TextStyle(color: Colors.white70),
                               ),
-                          ],
-                  ),
-                  const SizedBox(height: 12),
-                  _section(
-                    title: 'Trade Rules',
-                    icon: Icons.rule_rounded,
-                    accent: AppTheme.neonCyan,
-                    children: [
-                      _requirementRow(
-                        '${integration.tradeTemplate.components.length} exact requirements',
-                        integration.tradeTemplate.allowEquivalentOffers
-                            ? 'Value build accepts equivalent alternatives.'
-                            : 'Meta build prefers exact components.',
-                        AppTheme.neonCyan,
-                      ),
-                      _requirementRow(
-                        'Minimum complete bundle',
-                        '${integration.tradeTemplate.terms.minimumRequiredQuantity} total item units',
-                        AppTheme.neonCyan,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: integration.tradeTemplate.components.isEmpty
-                            ? null
-                            : () => _copyBundle(plan, integration),
-                        icon: const Icon(Icons.copy_rounded),
-                        label: const Text('Copy Exact Bundle'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => Navigator.of(
-                          context,
-                        ).pushNamed(SmartTradeAssistScreen.routeName),
-                        icon: const Icon(Icons.auto_awesome_rounded),
-                        label: const Text('Open Smart Trade'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => Navigator.of(
-                          context,
-                        ).pushNamed(TraderHubScreen.routeName),
-                        icon: const Icon(Icons.storefront_rounded),
-                        label: const Text('Open Trader Hub'),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          );
-        },
+                            ]
+                          : [
+                              for (final item in integration.missingResources)
+                                _requirementRow(
+                                  '${item.missingQuantity}x ${item.itemName}',
+                                  '${item.ownedQuantity}/${item.requiredQuantity} owned',
+                                  Colors.amberAccent,
+                                ),
+                            ],
+                    ),
+                    const SizedBox(height: 12),
+                    _section(
+                      title: 'Trade Rules',
+                      icon: Icons.rule_rounded,
+                      accent: AppTheme.neonCyan,
+                      children: [
+                        _requirementRow(
+                          '${integration.tradeTemplate.components.length} exact requirements',
+                          integration.tradeTemplate.allowEquivalentOffers
+                              ? 'Value build accepts equivalent alternatives.'
+                              : 'Meta build prefers exact components.',
+                          AppTheme.neonCyan,
+                        ),
+                        _requirementRow(
+                          'Minimum complete bundle',
+                          '${integration.tradeTemplate.terms.minimumRequiredQuantity} total item units',
+                          AppTheme.neonCyan,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        FilledButton.icon(
+                          onPressed:
+                              integration.tradeTemplate.components.isEmpty
+                              ? null
+                              : () => _copyBundle(plan, integration),
+                          icon: const Icon(Icons.copy_rounded),
+                          label: const Text('Copy Exact Bundle'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => Navigator.of(
+                            context,
+                          ).pushNamed(SmartTradeAssistScreen.routeName),
+                          icon: const Icon(Icons.auto_awesome_rounded),
+                          label: const Text('Open Smart Trade'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => Navigator.of(
+                            context,
+                          ).pushNamed(TraderHubScreen.routeName),
+                          icon: const Icon(Icons.storefront_rounded),
+                          label: const Text('Open Trader Hub'),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -211,10 +220,12 @@ class _ArcSmartBuildTradeDraftScreenState
         : AppTheme.neonCyan;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accent.withValues(alpha: 0.45)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: accent,
+        radius: 16,
+        borderOpacity: 0.45,
+        glow: true,
       ),
       child: Row(
         children: [
@@ -275,10 +286,11 @@ class _ArcSmartBuildTradeDraftScreenState
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.035),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withValues(alpha: 0.35)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: accent,
+        radius: 14,
+        borderOpacity: 0.35,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -7,8 +7,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_pla
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_creation_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class SessionPlannerScreen extends StatefulWidget {
@@ -120,109 +121,106 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Session'),
       ),
-      body: Stack(
-        children: [
-          const StaticWatermark(),
-          StreamBuilder<List<UagSession>>(
-            stream: _repository.streamMySessions(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text(
-                    'Could not load sessions: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                );
-              }
-
-              final sessions = snapshot.data ?? const <UagSession>[];
-              final selected = _sessionsForDay(
-                sessions,
-                _selectedDay ?? _focusedDay,
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: StreamBuilder<List<UagSession>>(
+          stream: _repository.streamMySessions(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Could not load sessions: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.white70),
+                ),
               );
+            }
 
-              return ListView(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                children: [
-                  Container(
-                    decoration: AppTheme.tradingCardDecoration(
-                      borderColor: AppTheme.neonCyan.withValues(alpha: 0.26),
+            final sessions = snapshot.data ?? const <UagSession>[];
+            final selected = _sessionsForDay(
+              sessions,
+              _selectedDay ?? _focusedDay,
+            );
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spaceL,
+                AppTheme.spaceL,
+                AppTheme.spaceL,
+                104,
+              ),
+              children: [
+                TradingCard(
+                  accent: AppTheme.neonCyan,
+                  child: TableCalendar<UagSession>(
+                    firstDay: DateTime.now().subtract(
+                      const Duration(days: 365),
                     ),
-                    child: TableCalendar<UagSession>(
-                      firstDay: DateTime.now().subtract(
-                        const Duration(days: 365),
+                    lastDay: DateTime.now().add(const Duration(days: 365)),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    eventLoader: (day) => _sessionsForDay(sessions, day),
+                    calendarStyle: CalendarStyle(
+                      markerDecoration: const BoxDecoration(
+                        color: AppTheme.neonPink,
+                        shape: BoxShape.circle,
                       ),
-                      lastDay: DateTime.now().add(const Duration(days: 365)),
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) =>
-                          isSameDay(_selectedDay, day),
-                      eventLoader: (day) => _sessionsForDay(sessions, day),
-                      calendarStyle: CalendarStyle(
-                        markerDecoration: const BoxDecoration(
-                          color: AppTheme.neonPink,
-                          shape: BoxShape.circle,
-                        ),
-                        todayDecoration: BoxDecoration(
-                          color: AppTheme.neonCyan.withValues(alpha: 0.22),
-                          shape: BoxShape.circle,
-                        ),
-                        selectedDecoration: const BoxDecoration(
-                          color: AppTheme.neonPink,
-                          shape: BoxShape.circle,
-                        ),
-                        defaultTextStyle: const TextStyle(color: Colors.white),
-                        weekendTextStyle: const TextStyle(
-                          color: Colors.white70,
-                        ),
+                      todayDecoration: BoxDecoration(
+                        color: AppTheme.neonCyan.withValues(alpha: 0.22),
+                        shape: BoxShape.circle,
                       ),
-                      headerStyle: const HeaderStyle(
-                        titleCentered: true,
-                        formatButtonVisible: false,
-                        titleTextStyle: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      selectedDecoration: const BoxDecoration(
+                        color: AppTheme.neonPink,
+                        shape: BoxShape.circle,
                       ),
-                      daysOfWeekStyle: const DaysOfWeekStyle(
-                        weekdayStyle: TextStyle(color: Colors.white70),
-                        weekendStyle: TextStyle(color: Colors.white54),
-                      ),
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          _selectedDay = selectedDay;
-                          _focusedDay = focusedDay;
-                        });
-                      },
+                      defaultTextStyle: const TextStyle(color: Colors.white),
+                      weekendTextStyle: const TextStyle(color: Colors.white70),
                     ),
+                    headerStyle: const HeaderStyle(
+                      titleCentered: true,
+                      formatButtonVisible: false,
+                      titleTextStyle: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    daysOfWeekStyle: const DaysOfWeekStyle(
+                      weekdayStyle: TextStyle(color: Colors.white70),
+                      weekendStyle: TextStyle(color: Colors.white54),
+                    ),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
                   ),
-                  const SizedBox(height: AppTheme.spaceL),
-                  Text(
-                    'Sessions',
-                    style: AppTheme.tradingHeading(
-                      fontSize: 22,
-                      color: AppTheme.neonPink,
-                    ),
+                ),
+                const SizedBox(height: AppTheme.spaceL),
+                Text(
+                  'Sessions',
+                  style: AppTheme.tradingHeading(
+                    fontSize: 22,
+                    color: AppTheme.neonPink,
                   ),
-                  const SizedBox(height: AppTheme.spaceM),
-                  if (selected.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(AppTheme.spaceL),
-                      decoration: AppTheme.tradingCardDecoration(),
-                      child: Text(
-                        'No sessions on this day.',
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                if (selected.isEmpty)
+                  TradingCard(
+                    accent: AppTheme.neonCyan,
+                    child: Text(
+                      'No sessions on this day.',
+                      style: AppTheme.bodyTextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
                       ),
-                    )
-                  else
-                    ...selected.map(_buildSessionCard),
-                ],
-              );
-            },
-          ),
-        ],
+                    ),
+                  )
+                else
+                  ...selected.map(_buildSessionCard),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -232,12 +230,9 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
         ? AppTheme.neonCyan
         : AppTheme.neonPink;
 
-    return Container(
+    return TradingCard(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: color.withValues(alpha: 0.35),
-      ),
+      accent: color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -252,7 +247,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
-                  '${session.type.toUpperCase()} â€¢ ${session.status}',
+                  '${session.type.toUpperCase()} - ${session.status}',
                   style: AppTheme.tradingHeading(fontSize: 16, color: color),
                 ),
               ),

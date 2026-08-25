@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -28,80 +29,77 @@ class MyIntelScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const _IntelBackdrop(),
-          SafeArea(
-            child: user == null
-                ? const Center(
-                    child: Text(
-                      'Log in to view your intel reports.',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  )
-                : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: FirebaseFirestore.instance
-                        .collection('arc_blueprint_drop_reports')
-                        .where('userId', isEqualTo: user.uid)
-                        .limit(30)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return _IntelMessage(
-                          icon: Icons.warning_amber_rounded,
-                          title: 'Could not load intel',
-                          message: snapshot.error.toString(),
-                          color: AppTheme.neonPink,
-                        );
-                      }
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: user == null
+              ? const Center(
+                  child: Text(
+                    'Log in to view your intel reports.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                )
+              : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('arc_blueprint_drop_reports')
+                      .where('userId', isEqualTo: user.uid)
+                      .limit(30)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return _IntelMessage(
+                        icon: Icons.warning_amber_rounded,
+                        title: 'Could not load intel',
+                        message: snapshot.error.toString(),
+                        color: AppTheme.neonPink,
+                      );
+                    }
 
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                      final docs = snapshot.data!.docs.toList()
-                        ..sort((a, b) {
-                          final aTime = _readTime(a.data());
-                          final bTime = _readTime(b.data());
-                          return bTime.compareTo(aTime);
-                        });
+                    final docs = snapshot.data!.docs.toList()
+                      ..sort((a, b) {
+                        final aTime = _readTime(a.data());
+                        final bTime = _readTime(b.data());
+                        return bTime.compareTo(aTime);
+                      });
 
-                      final latest = docs.take(5).toList();
+                    final latest = docs.take(5).toList();
 
-                      if (latest.isEmpty) {
-                        return const _IntelMessage(
-                          icon: Icons.radar_rounded,
-                          title: 'No intel reports yet',
-                          message:
-                              'Your latest 5 reports will appear here once you start submitting intel.',
-                          color: AppTheme.neonCyan,
-                        );
-                      }
+                    if (latest.isEmpty) {
+                      return const _IntelMessage(
+                        icon: Icons.radar_rounded,
+                        title: 'No intel reports yet',
+                        message:
+                            'Your latest 5 reports will appear here once you start submitting intel.',
+                        color: AppTheme.neonCyan,
+                      );
+                    }
 
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(14, 16, 14, 30),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 980),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const _IntelHero(),
-                                const SizedBox(height: 16),
-                                for (final doc in latest) ...[
-                                  _IntelReportCard(doc: doc),
-                                  const SizedBox(height: 12),
-                                ],
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(14, 16, 14, 30),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 980),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const _IntelHero(),
+                              const SizedBox(height: 16),
+                              for (final doc in latest) ...[
+                                _IntelReportCard(doc: doc),
+                                const SizedBox(height: 12),
                               ],
-                            ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
@@ -126,16 +124,12 @@ class _IntelHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.46),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.10),
-            blurRadius: 24,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 24,
+        borderOpacity: 0.24,
+        glow: true,
       ),
       child: Row(
         children: [
@@ -208,10 +202,11 @@ class _IntelReportCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.44),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: AppTheme.neonCyan,
+        radius: 22,
+        borderOpacity: 0.18,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,11 +458,7 @@ class _IntelChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.28),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.16)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: AppTheme.neonCyan),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -489,11 +480,7 @@ class _IntelBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.neonPink.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.28)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: AppTheme.neonPink),
       child: Text(
         label,
         style: const TextStyle(
@@ -525,10 +512,11 @@ class _IntelMessage extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.all(18),
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.48),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: color.withValues(alpha: 0.24)),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: color,
+          radius: 22,
+          borderOpacity: 0.24,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -548,39 +536,6 @@ class _IntelMessage extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _IntelBackdrop extends StatelessWidget {
-  const _IntelBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const ArcRaidersScreenBackdrop(),
-        ),
-        Container(color: Colors.black.withValues(alpha: 0.66)),
-        const ArcRaidersScreenBackdrop(),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: 0.86),
-                AppTheme.darkBackground.withValues(alpha: 0.28),
-                Colors.black.withValues(alpha: 0.96),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

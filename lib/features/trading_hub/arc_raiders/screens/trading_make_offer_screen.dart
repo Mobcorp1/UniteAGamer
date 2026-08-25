@@ -8,6 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_seed_bundle_picker.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMakeOfferScreen extends StatefulWidget {
@@ -114,11 +116,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   }
 
   Widget _sectionCard({required String title, required Widget child}) {
-    return Container(
-      width: double.infinity,
+    return TradingCard(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -133,44 +132,6 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           child,
         ],
       ),
-    );
-  }
-
-  Widget _bundleRow({
-    required String label,
-    required int value,
-    required VoidCallback onMinus,
-    required VoidCallback onPlus,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-          ),
-        ),
-        IconButton(
-          onPressed: onMinus,
-          icon: const Icon(
-            Icons.remove_circle_outline,
-            color: AppTheme.neonPink,
-          ),
-        ),
-        Text(
-          '$value',
-          style: AppTheme.tradingHeading(
-            fontSize: 22,
-            color: AppTheme.neonCyan,
-          ),
-        ),
-        IconButton(
-          onPressed: onPlus,
-          icon: const Icon(Icons.add_circle_outline, color: AppTheme.neonPink),
-        ),
-      ],
     );
   }
 
@@ -741,328 +702,276 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
         backgroundColor: Colors.transparent,
         title: Text('Make Offer', style: AppTheme.tradingHeading(fontSize: 25)),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppTheme.pageMaxWidth,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                    children: [
-                      _sectionCard(
-                        title: 'Listing Summary',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              listing.title,
-                              style: AppTheme.tradingHeading(fontSize: 22),
-                            ),
-                            const SizedBox(height: 10),
-                            TradingCosmeticIdentityStrip(
-                              repository: _repository,
-                              uid: listing.ownerUid,
-                              displayName: listing.traderName,
-                              subtitle: [
-                                if (listing.gamerTag.isNotEmpty)
-                                  listing.gamerTag,
-                                if (listing.preferredPlatform.isNotEmpty)
-                                  listing.preferredPlatform,
-                                listing.reputationSummary,
-                              ].join(' - '),
-                              compact: true,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Offering: ${listing.offeredSummary}',
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppTheme.pageMaxWidth,
+              ),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                  children: [
+                    _sectionCard(
+                      title: 'Listing Summary',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            listing.title,
+                            style: AppTheme.tradingHeading(fontSize: 22),
+                          ),
+                          const SizedBox(height: 10),
+                          TradingCosmeticIdentityStrip(
+                            repository: _repository,
+                            uid: listing.ownerUid,
+                            displayName: listing.traderName,
+                            subtitle: [
+                              if (listing.gamerTag.isNotEmpty) listing.gamerTag,
+                              if (listing.preferredPlatform.isNotEmpty)
+                                listing.preferredPlatform,
+                              listing.reputationSummary,
+                            ].join(' - '),
+                            compact: true,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Offering: ${listing.offeredSummary}',
+                            style: TextStyle(color: AppTheme.tradingMutedText),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Wants: ${listing.wantedSummary}',
+                            style: TextStyle(color: AppTheme.tradingMutedText),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildAcceptedBundlePicker(),
+                    _sectionCard(
+                      title: 'Auto Matches',
+                      child: _isLoadingMatches
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppTheme.neonCyan,
+                              ),
+                            )
+                          : _matchingDupes.isEmpty
+                          ? Text(
+                              'No matching dupes found in your collection yet. You can still type a manual offer below.',
                               style: TextStyle(
                                 color: AppTheme.tradingMutedText,
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Wants: ${listing.wantedSummary}',
-                              style: TextStyle(
-                                color: AppTheme.tradingMutedText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      _buildAcceptedBundlePicker(),
-                      _sectionCard(
-                        title: 'Auto Matches',
-                        child: _isLoadingMatches
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppTheme.neonCyan,
-                                ),
-                              )
-                            : _matchingDupes.isEmpty
-                            ? Text(
-                                'No matching dupes found in your collection yet. You can still type a manual offer below.',
-                                style: TextStyle(
-                                  color: AppTheme.tradingMutedText,
-                                ),
-                              )
-                            : Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: _matchingDupes
-                                    .map((name) {
-                                      final selected = _selectedDupes.contains(
-                                        name,
-                                      );
-                                      return FilterChip(
-                                        selected: selected,
-                                        label: Text(name),
-                                        labelStyle: TextStyle(
-                                          color: selected
-                                              ? Colors.black
-                                              : Colors.white,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                        selectedColor: AppTheme.neonCyan,
-                                        checkmarkColor: Colors.black,
-                                        backgroundColor:
-                                            AppTheme.tradingCardBackground,
-                                        side: BorderSide(
-                                          color: selected
-                                              ? AppTheme.neonCyan
-                                              : AppTheme.tradingSoftBorder,
-                                        ),
-                                        onSelected: (value) {
-                                          setState(() {
-                                            if (value) {
-                                              _selectedDupes.add(name);
-                                            } else {
-                                              _selectedDupes.remove(name);
-                                            }
-                                            _syncBlueprintTextFromSelection();
-                                          });
-                                        },
-                                      );
-                                    })
-                                    .toList(growable: false),
-                              ),
-                      ),
-                      if (!listing.wantsNothing) _offerIntelligenceCard(),
-                      _sectionCard(
-                        title: 'Your Offer',
-                        child: Column(
-                          children: [
-                            _buildTextField(
-                              controller: _blueprintController,
-                              label: 'Blueprints You Are Offering',
-                              enabled: !listing.wantsNothing,
-                              validator: (value) {
-                                final hasBlueprint =
-                                    value != null && value.trim().isNotEmpty;
-                                final hasSeeds = _seedTotal > 0;
-                                final hasResources =
-                                    _includesResources &&
-                                    _resourcesController.text.trim().isNotEmpty;
-                                final hasTradeItems =
-                                    _selectedTradeItems.isNotEmpty;
-
-                                if (!hasBlueprint &&
-                                    !hasSeeds &&
-                                    !hasResources &&
-                                    !hasTradeItems) {
-                                  return 'Add at least one blueprint, item, seed bundle or resource.';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 14),
-                            InkWell(
-                              onTap: listing.wantsNothing
-                                  ? null
-                                  : () async {
-                                      final picked =
-                                          await _showTradeItemPicker();
-                                      if (!mounted || picked == null) return;
-                                      setState(() {
-                                        _selectedTradeItems
-                                          ..clear()
-                                          ..addAll(picked);
-                                      });
-                                    },
-                              borderRadius: BorderRadius.circular(16),
-                              child: InputDecorator(
-                                decoration: AppTheme.tradingInputDecoration(
-                                  label: 'Trade Items You Are Offering',
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        listing.wantsNothing
-                                            ? 'No return needed for giveaway claim'
-                                            : _selectionSummary(
-                                                _selectedTradeItems.length,
-                                                'item',
-                                              ),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
+                            )
+                          : Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _matchingDupes
+                                  .map((name) {
+                                    final selected = _selectedDupes.contains(
+                                      name,
+                                    );
+                                    return FilterChip(
+                                      selected: selected,
+                                      label: Text(name),
+                                      labelStyle: TextStyle(
+                                        color: selected
+                                            ? Colors.black
+                                            : Colors.white,
+                                        fontWeight: FontWeight.w700,
                                       ),
-                                    ),
-                                    const Icon(
-                                      Icons.arrow_drop_down_rounded,
-                                      color: Colors.white70,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppTheme.spaceS),
-                            _chipWrap(
-                              _selectedTradeItems
-                                  .map((item) => item.name)
+                                      selectedColor: AppTheme.neonCyan,
+                                      checkmarkColor: Colors.black,
+                                      backgroundColor:
+                                          AppTheme.tradingCardBackground,
+                                      side: BorderSide(
+                                        color: selected
+                                            ? AppTheme.neonCyan
+                                            : AppTheme.tradingSoftBorder,
+                                      ),
+                                      onSelected: (value) {
+                                        setState(() {
+                                          if (value) {
+                                            _selectedDupes.add(name);
+                                          } else {
+                                            _selectedDupes.remove(name);
+                                          }
+                                          _syncBlueprintTextFromSelection();
+                                        });
+                                      },
+                                    );
+                                  })
                                   .toList(growable: false),
                             ),
-                            const SizedBox(height: 14),
-                            SwitchListTile(
-                              value: listing.wantsNothing
-                                  ? false
-                                  : _includesResources,
-                              activeThumbColor: AppTheme.neonPink,
-                              title: const Text(
-                                'Include Resources',
-                                style: TextStyle(color: Colors.white),
+                    ),
+                    if (!listing.wantsNothing) _offerIntelligenceCard(),
+                    _sectionCard(
+                      title: 'Your Offer',
+                      child: Column(
+                        children: [
+                          _buildTextField(
+                            controller: _blueprintController,
+                            label: 'Blueprints You Are Offering',
+                            enabled: !listing.wantsNothing,
+                            validator: (value) {
+                              final hasBlueprint =
+                                  value != null && value.trim().isNotEmpty;
+                              final hasSeeds = _seedTotal > 0;
+                              final hasResources =
+                                  _includesResources &&
+                                  _resourcesController.text.trim().isNotEmpty;
+                              final hasTradeItems =
+                                  _selectedTradeItems.isNotEmpty;
+
+                              if (!hasBlueprint &&
+                                  !hasSeeds &&
+                                  !hasResources &&
+                                  !hasTradeItems) {
+                                return 'Add at least one blueprint, item, seed bundle or resource.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 14),
+                          InkWell(
+                            onTap: listing.wantsNothing
+                                ? null
+                                : () async {
+                                    final picked = await _showTradeItemPicker();
+                                    if (!mounted || picked == null) return;
+                                    setState(() {
+                                      _selectedTradeItems
+                                        ..clear()
+                                        ..addAll(picked);
+                                    });
+                                  },
+                            borderRadius: BorderRadius.circular(16),
+                            child: InputDecorator(
+                              decoration: AppTheme.tradingInputDecoration(
+                                label: 'Trade Items You Are Offering',
                               ),
-                              onChanged: listing.wantsNothing
-                                  ? null
-                                  : (value) {
-                                      setState(() {
-                                        _includesResources = value;
-                                      });
-                                    },
-                            ),
-                            const SizedBox(height: AppTheme.spaceS),
-                            _buildTextField(
-                              controller: _resourcesController,
-                              label: 'Resource Summary',
-                              maxLines: 3,
-                              enabled:
-                                  !listing.wantsNothing && _includesResources,
-                            ),
-                            const SizedBox(height: 16),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Seed Bundles',
-                                style: AppTheme.tradingHeading(
-                                  fontSize: 18,
-                                  color: AppTheme.neonCyan,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            _bundleRow(
-                              label: '10 Seed Bundles',
-                              value: _smallBundles,
-                              onMinus: () {
-                                if (_smallBundles == 0) return;
-                                setState(() => _smallBundles -= 1);
-                              },
-                              onPlus: () {
-                                setState(() => _smallBundles += 1);
-                              },
-                            ),
-                            _bundleRow(
-                              label: '50 Seed Bundles',
-                              value: _mediumBundles,
-                              onMinus: () {
-                                if (_mediumBundles == 0) return;
-                                setState(() => _mediumBundles -= 1);
-                              },
-                              onPlus: () {
-                                setState(() => _mediumBundles += 1);
-                              },
-                            ),
-                            _bundleRow(
-                              label: '100 Seed Bundles',
-                              value: _largeBundles,
-                              onMinus: () {
-                                if (_largeBundles == 0) return;
-                                setState(() => _largeBundles -= 1);
-                              },
-                              onPlus: () {
-                                setState(() => _largeBundles += 1);
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Seed Total: $_seedTotal',
-                                style: AppTheme.tradingHeading(
-                                  fontSize: 18,
-                                  color: AppTheme.neonPink,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _noteController,
-                              label: 'Message To Trader',
-                              maxLines: 3,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _isSaving ? null : _submitOffer,
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.black,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      listing.wantsNothing
+                                          ? 'No return needed for giveaway claim'
+                                          : _selectionSummary(
+                                              _selectedTradeItems.length,
+                                              'item',
+                                            ),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
-                                )
-                              : const Icon(Icons.send_rounded),
-                          label: Text(
-                            _isSaving
-                                ? (listing.wantsNothing
-                                      ? 'Claiming...'
-                                      : 'Sending Offer...')
-                                : (listing.wantsNothing
-                                      ? 'Claim Giveaway'
-                                      : 'Send Offer'),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                                  const Icon(
+                                    Icons.arrow_drop_down_rounded,
+                                    color: Colors.white70,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.neonPink,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                          const SizedBox(height: AppTheme.spaceS),
+                          _chipWrap(
+                            _selectedTradeItems
+                                .map((item) => item.name)
+                                .toList(growable: false),
+                          ),
+                          const SizedBox(height: 14),
+                          SwitchListTile(
+                            value: listing.wantsNothing
+                                ? false
+                                : _includesResources,
+                            activeThumbColor: AppTheme.neonPink,
+                            title: const Text(
+                              'Include Resources',
+                              style: TextStyle(color: Colors.white),
                             ),
+                            onChanged: listing.wantsNothing
+                                ? null
+                                : (value) {
+                                    setState(() {
+                                      _includesResources = value;
+                                    });
+                                  },
+                          ),
+                          const SizedBox(height: AppTheme.spaceS),
+                          _buildTextField(
+                            controller: _resourcesController,
+                            label: 'Resource Summary',
+                            maxLines: 3,
+                            enabled:
+                                !listing.wantsNothing && _includesResources,
+                          ),
+                          const SizedBox(height: 16),
+                          TradingSeedBundlePicker(
+                            smallBundles: _smallBundles,
+                            mediumBundles: _mediumBundles,
+                            largeBundles: _largeBundles,
+                            onSmallChanged: (value) =>
+                                setState(() => _smallBundles = value),
+                            onMediumChanged: (value) =>
+                                setState(() => _mediumBundles = value),
+                            onLargeChanged: (value) =>
+                                setState(() => _largeBundles = value),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _noteController,
+                            label: 'Message To Trader',
+                            maxLines: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isSaving ? null : _submitOffer,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded),
+                        label: Text(
+                          _isSaving
+                              ? (listing.wantsNothing
+                                    ? 'Claiming...'
+                                    : 'Sending Offer...')
+                              : (listing.wantsNothing
+                                    ? 'Claim Giveaway'
+                                    : 'Send Offer'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.neonPink,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

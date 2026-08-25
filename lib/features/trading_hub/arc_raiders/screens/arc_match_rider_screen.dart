@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitleme
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
@@ -309,7 +310,12 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
   Widget _buildHeroCard(ArcMatchRiderProfile profile) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 20,
+        glow: true,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -371,7 +377,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   Widget _buildProfileEditor(ArcMatchRiderProfile profile) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 20,
+      ),
       padding: const EdgeInsets.all(AppTheme.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,7 +536,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   Widget _buildMatchesFeed(ArcMatchRiderProfile profile) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonPink,
+        radius: 20,
+      ),
       padding: const EdgeInsets.all(AppTheme.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -644,9 +658,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: color.withValues(alpha: 0.24),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: color,
         radius: 16,
+        borderOpacity: 0.24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -699,9 +715,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.warningAmber.withValues(alpha: 0.28),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.warning,
+        accent: AppTheme.warningAmber,
         radius: 16,
+        borderOpacity: 0.28,
       ),
       child: Text(
         missing.isEmpty
@@ -720,9 +738,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: AppTheme.neonCyan,
         radius: 16,
+        borderOpacity: 0.18,
       ),
       child: Text(
         'No raiders match yet. Save your profile and check back after more players opt in.',
@@ -740,7 +760,12 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       active: false,
       radius: 18,
       child: Container(
-        decoration: AppTheme.tradingCardDecoration(radius: 18),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          accent: AppTheme.neonCyan,
+          radius: 18,
+          borderOpacity: 0.18,
+        ),
         padding: const EdgeInsets.all(AppTheme.spaceL),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -867,7 +892,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     required bool incoming,
   }) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(radius: 20),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
+        radius: 20,
+      ),
       padding: const EdgeInsets.all(AppTheme.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -933,7 +962,12 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       active: active,
       radius: 16,
       child: Container(
-        decoration: AppTheme.tradingCardDecoration(radius: 16),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          accent: active ? AppTheme.warningAmber : AppTheme.neonCyan,
+          radius: 16,
+          borderOpacity: active ? 0.26 : 0.14,
+        ),
         padding: const EdgeInsets.all(AppTheme.spaceM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1106,11 +1140,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
   Widget _buildStatusPill(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.42)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color, selected: true),
       child: Text(
         text,
         style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
@@ -1122,10 +1152,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     return Container(
       width: 82,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-      decoration: BoxDecoration(
-        color: AppTheme.neonPink.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.45)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonPink,
+        radius: 16,
+        selected: true,
       ),
       child: Column(
         children: [

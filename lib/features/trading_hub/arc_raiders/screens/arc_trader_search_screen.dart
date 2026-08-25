@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../models/arc_trader_search_result.dart';
 import '../repositories/arc_trader_search_repository.dart';
 import '../repositories/trading_repository.dart';
+import '../widgets/arc_raiders_screen_shell.dart';
+import '../widgets/trading_card.dart';
 import '../widgets/trading_cosmetic_identity_strip.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcTraderSearchScreen extends StatefulWidget {
   const ArcTraderSearchScreen({super.key});
@@ -59,16 +62,15 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
       if (item.availabilitySummary.isNotEmpty) item.availabilitySummary,
     ].join(' - ');
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: TradingCosmeticIdentityStrip(
-          repository: _tradingRepository,
-          uid: item.userId,
-          displayName: item.uagName.isEmpty ? item.uagId : item.uagName,
-          subtitle: subtitle,
-          compact: true,
-        ),
+    return TradingCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      accent: item.isAway ? AppTheme.warningAmber : AppTheme.neonCyan,
+      child: TradingCosmeticIdentityStrip(
+        repository: _tradingRepository,
+        uid: item.userId,
+        displayName: item.uagName.isEmpty ? item.uagId : item.uagName,
+        subtitle: subtitle,
+        compact: true,
       ),
     );
   }
@@ -80,35 +82,58 @@ class _ArcTraderSearchScreenState extends State<ArcTraderSearchScreen> {
       extendBody: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Search Traders'),
+        title: Text(
+          'Search Traders',
+          style: AppTheme.tradingHeading(
+            fontSize: 24,
+            color: AppTheme.neonCyan,
+          ),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          TextField(
-            controller: _regionController,
-            decoration: const InputDecoration(labelText: 'Region'),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 104),
+            children: [
+              TextField(
+                controller: _regionController,
+                style: const TextStyle(color: Colors.white),
+                decoration: AppTheme.tradingInputDecoration(label: 'Region'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _platformController,
+                style: const TextStyle(color: Colors.white),
+                decoration: AppTheme.tradingInputDecoration(label: 'Platform'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _wantedBlueprintController,
+                style: const TextStyle(color: Colors.white),
+                decoration: AppTheme.tradingInputDecoration(
+                  label: 'Wanted Blueprint ID',
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _loading ? null : _search,
+                icon: const Icon(Icons.search_rounded),
+                label: Text(_loading ? 'Searching...' : 'Search'),
+              ),
+              const SizedBox(height: 16),
+              if (_results.isEmpty && !_loading)
+                Text(
+                  'No traders found yet.',
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: AppTheme.tradingMutedText,
+                  ),
+                ),
+              for (final result in _results) _buildResultCard(result),
+            ],
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _platformController,
-            decoration: const InputDecoration(labelText: 'Platform'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _wantedBlueprintController,
-            decoration: const InputDecoration(labelText: 'Wanted Blueprint ID'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loading ? null : _search,
-            child: Text(_loading ? 'Searching...' : 'Search'),
-          ),
-          const SizedBox(height: 16),
-          if (_results.isEmpty && !_loading)
-            const Text('No traders found yet.'),
-          for (final result in _results) _buildResultCard(result),
-        ],
+        ),
       ),
     );
   }

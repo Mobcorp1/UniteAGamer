@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/sma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
@@ -296,109 +297,117 @@ class _MyHubScreenState extends State<MyHubScreen> {
         showLogout: true,
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: UagCinematicBackground(
-              accent: selected.accent,
-              showWatermark: true,
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: UagCinematicBackground(
+                accent: selected.accent,
+                showWatermark: true,
+              ),
             ),
-          ),
 
-          Positioned.fill(
-            child: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final bottomReserve = ArcResponsiveChrome.bottomSafePadding(
-                    context,
-                  );
-                  final maxWidth = ArcResponsiveChrome.maxContentWidth(context);
-                  final remainingHeight = math.max(
-                    260.0,
-                    constraints.maxHeight - bottomReserve,
-                  );
-                  final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
-                  final carouselHeight = isDesktop
-                      ? math.min(395.0, remainingHeight * 0.76)
-                      : math.min(460.0, remainingHeight * 0.82);
+            Positioned.fill(
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final bottomReserve = ArcResponsiveChrome.bottomSafePadding(
+                      context,
+                    );
+                    final maxWidth = ArcResponsiveChrome.maxContentWidth(
+                      context,
+                    );
+                    final remainingHeight = math.max(
+                      260.0,
+                      constraints.maxHeight - bottomReserve,
+                    );
+                    final isDesktop = ResponsiveLayoutHelper.isDesktop(context);
+                    final carouselHeight = isDesktop
+                        ? math.min(395.0, remainingHeight * 0.76)
+                        : math.min(460.0, remainingHeight * 0.82);
 
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppTheme.spaceS,
-                      AppTheme.spaceS,
-                      AppTheme.spaceS,
-                      bottomReserve,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: maxWidth),
-                        child: SizedBox(
-                          height: carouselHeight,
-                          child: _PremiumFeatureCarousel(
-                            controller: _controller,
-                            selectedIndex: _selectedIndex,
-                            features: _features,
-                            onPageChanged: (index) {
-                              setState(() => _selectedIndex = index);
-                            },
-                            onOpen: _openFeature,
+                    return Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        AppTheme.spaceS,
+                        AppTheme.spaceS,
+                        AppTheme.spaceS,
+                        bottomReserve,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: maxWidth),
+                          child: SizedBox(
+                            height: carouselHeight,
+                            child: _PremiumFeatureCarousel(
+                              controller: _controller,
+                              selectedIndex: _selectedIndex,
+                              features: _features,
+                              onPageChanged: (index) {
+                                setState(() => _selectedIndex = index);
+                              },
+                              onOpen: _openFeature,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: math.max(
-                      ArcResponsiveChrome.dockMaxWidth(context),
-                      ArcResponsiveChrome.adMaxWidth(context),
+
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: math.max(
+                        ArcResponsiveChrome.dockMaxWidth(context),
+                        ArcResponsiveChrome.adMaxWidth(context),
+                      ),
                     ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppTheme.spaceS,
-                      0,
-                      AppTheme.spaceS,
-                      AppTheme.spaceXS,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const _HubAdSlot(),
-                        const SizedBox(height: AppTheme.spaceXS),
-                        _ArcBottomDock(
-                          onMatch: () => _openFeature(
-                            _featureByTitle('Profile & Reputation'),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        AppTheme.spaceS,
+                        0,
+                        AppTheme.spaceS,
+                        AppTheme.spaceXS,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const _HubAdSlot(),
+                          const SizedBox(height: AppTheme.spaceXS),
+                          _ArcBottomDock(
+                            onMatch: () => _openFeature(
+                              _featureByTitle('Profile & Reputation'),
+                            ),
+                            onRaid: () => _openFeature(
+                              _featureByTitle('Blueprint Tracker'),
+                            ),
+                            onMic: () =>
+                                UagVoiceArcAssistantSheet.show(context),
+                            onTrading: () => _openFeature(
+                              _featureByTitle('Trading Overview'),
+                            ),
+                            onIntel: () =>
+                                _openFeature(_featureByTitle('My Intel')),
                           ),
-                          onRaid: () => _openFeature(
-                            _featureByTitle('Blueprint Tracker'),
-                          ),
-                          onMic: () => UagVoiceArcAssistantSheet.show(context),
-                          onTrading: () =>
-                              _openFeature(_featureByTitle('Trading Overview')),
-                          onIntel: () =>
-                              _openFeature(_featureByTitle('My Intel')),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1171,49 +1180,52 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
           ),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: UagCinematicBackground(
-              accent: selected.accent,
-              showWatermark: true,
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: UagCinematicBackground(
+                accent: selected.accent,
+                showWatermark: true,
+              ),
             ),
-          ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                const _MyHubDividerSpacer(
-                  label: 'Personal Systems',
-                  color: AppTheme.neonCyan,
-                ),
-                Expanded(
-                  child: _PremiumFeatureCarousel(
-                    controller: _controller,
-                    selectedIndex: _selectedIndex,
-                    features: _trackingFeatures,
-                    onPageChanged: (index) {
-                      setState(() => _selectedIndex = index);
-                    },
-                    onOpen: _openFeature,
+            SafeArea(
+              child: Column(
+                children: [
+                  const _MyHubDividerSpacer(
+                    label: 'Personal Systems',
+                    color: AppTheme.neonCyan,
                   ),
-                ),
-                const SizedBox(height: AppTheme.spaceS),
-                const _HubAdSlot(),
-                const SizedBox(height: AppTheme.spaceXS),
-                _ArcBottomDock(
-                  onMatch: () => Navigator.of(context).pop(),
-                  onRaid: () => Navigator.of(context).pop(),
-                  onMic: () => UagVoiceArcAssistantSheet.show(context),
-                  onTrading: () => Navigator.of(context).pop(),
-                  onIntel: () => Navigator.of(context).pop(),
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-              ],
+                  Expanded(
+                    child: _PremiumFeatureCarousel(
+                      controller: _controller,
+                      selectedIndex: _selectedIndex,
+                      features: _trackingFeatures,
+                      onPageChanged: (index) {
+                        setState(() => _selectedIndex = index);
+                      },
+                      onOpen: _openFeature,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spaceS),
+                  const _HubAdSlot(),
+                  const SizedBox(height: AppTheme.spaceXS),
+                  _ArcBottomDock(
+                    onMatch: () => Navigator.of(context).pop(),
+                    onRaid: () => Navigator.of(context).pop(),
+                    onMic: () => UagVoiceArcAssistantSheet.show(context),
+                    onTrading: () => Navigator.of(context).pop(),
+                    onIntel: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(height: AppTheme.spaceL),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -23,6 +23,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -2186,17 +2187,12 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       radius: 22,
       child: Container(
         padding: padding,
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: accent.withValues(alpha: 0.30)),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withValues(alpha: 0.10),
-              blurRadius: 22,
-              spreadRadius: 1,
-            ),
-          ],
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: accent,
+          radius: 22,
+          borderOpacity: 0.30,
+          glow: true,
         ),
         child: child,
       ),
@@ -2548,11 +2544,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
   Widget _pill(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.30)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
         style: AppTheme.buttonTextStyle(color: color, fontSize: 12),
@@ -2571,11 +2563,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: color.withValues(alpha: 0.38)),
-        ),
+        decoration: ArcUiTokens.chipDecoration(color: color, selected: true),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

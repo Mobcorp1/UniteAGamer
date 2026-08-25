@@ -13,6 +13,7 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import '../widgets/foundation/arc_bottom_action_dock.dart';
 import '../widgets/arc_ad_banner_card.dart';
 import '../widgets/arc_asset_thumbnail.dart';
+import '../widgets/arc_raiders_screen_shell.dart';
 
 class NomadicTraderScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/nomadic-trader';
@@ -2392,70 +2393,73 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final wide = constraints.maxWidth >= 760;
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: wide
-                            ? math.min(constraints.maxWidth - 24, 1280.0)
-                            : math.min(constraints.maxWidth - 16, 520.0),
-                      ),
-                      child: Column(
-                        children: [
-                          _hero(),
-                          Transform.translate(
-                            offset: const Offset(0, -8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                              ),
-                              child: Column(
-                                children: [
-                                  _goalPanel(),
-                                  const SizedBox(height: 12),
-                                  _intelligencePanel(),
-                                  const SizedBox(height: 18),
-                                  _carousel(),
-                                  const SizedBox(height: 12),
-                                ],
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 760;
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: wide
+                              ? math.min(constraints.maxWidth - 24, 1280.0)
+                              : math.min(constraints.maxWidth - 16, 520.0),
+                        ),
+                        child: Column(
+                          children: [
+                            _hero(),
+                            Transform.translate(
+                              offset: const Offset(0, -8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                ),
+                                child: Column(
+                                  children: [
+                                    _goalPanel(),
+                                    const SizedBox(height: 12),
+                                    _intelligencePanel(),
+                                    const SizedBox(height: 18),
+                                    _carousel(),
+                                    const SizedBox(height: 12),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-            Positioned(
-              top: 8,
-              left: 10,
-              child: Material(
-                color: Colors.black.withValues(alpha: 0.48),
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => Navigator.of(context).maybePop(),
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(
-                      Icons.arrow_back_rounded,
-                      color: AppTheme.neonPink,
+                  );
+                },
+              ),
+              Positioned(
+                top: 8,
+                left: 10,
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.48),
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => Navigator.of(context).maybePop(),
+                    child: SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Icon(
+                        Icons.arrow_back_rounded,
+                        color: AppTheme.neonPink,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(

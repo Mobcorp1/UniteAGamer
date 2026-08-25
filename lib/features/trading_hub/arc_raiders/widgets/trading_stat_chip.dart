@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingStatChip extends StatelessWidget {
@@ -25,7 +26,7 @@ class TradingStatChip extends StatelessWidget {
         horizontal: compact ? 9 : 11,
         vertical: compact ? 7 : 9,
       ),
-      decoration: AppTheme.tradingPillDecoration(color: color),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -35,7 +36,7 @@ class TradingStatChip extends StatelessWidget {
           ],
           Text(
             value,
-            style: AppTheme.tradingHeading(
+            style: ArcUiTokens.numeric(
               fontSize: compact ? 13 : 15,
               color: color,
             ),
@@ -43,10 +44,10 @@ class TradingStatChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: AppTheme.bodyTextStyle(
-              fontSize: compact ? 10 : 11,
-              color: AppTheme.tradingMutedText,
-              isBold: true,
+            style: ArcUiTokens.label(
+              color: compact
+                  ? ArcUiTokens.textTertiary
+                  : ArcUiTokens.textSecondary,
             ),
           ),
         ],

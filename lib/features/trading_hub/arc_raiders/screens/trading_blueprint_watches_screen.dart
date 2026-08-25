@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingBlueprintWatchesScreen extends StatefulWidget {
@@ -371,14 +372,18 @@ class _TradingBlueprintWatchesScreenState
         : matches.isNotEmpty
         ? AppTheme.tradingSuccess
         : AppTheme.neonCyan;
-    final card = Container(
+    return TradingCard(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: matches.isNotEmpty
-            ? AppTheme.tradingSuccess.withValues(alpha: 0.38)
-            : AppTheme.tradingSoftBorder,
-      ),
+      accent: matches.isNotEmpty ? AppTheme.tradingSuccess : AppTheme.neonCyan,
+      onTap: topMatch == null
+          ? null
+          : () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TradingListingDetailScreen(listing: topMatch),
+                ),
+              );
+            },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -465,19 +470,6 @@ class _TradingBlueprintWatchesScreenState
         ],
       ),
     );
-
-    if (topMatch == null) return card;
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => TradingListingDetailScreen(listing: topMatch),
-          ),
-        );
-      },
-      child: card,
-    );
   }
 
   Widget _emptyState() {
@@ -523,63 +515,58 @@ class _TradingBlueprintWatchesScreenState
   }
 
   Widget _buildBody() {
-    return Stack(
-      children: [
-        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-        SafeArea(
-          child: StreamBuilder<List<ArcBlueprintWatch>>(
-            stream: _repository.watchBlueprintWatches(),
-            builder: (context, watchSnapshot) {
-              return StreamBuilder<List<TradingListing>>(
-                stream: _repository.watchActiveListings(),
-                builder: (context, listingSnapshot) {
-                  final watches =
-                      watchSnapshot.data ?? const <ArcBlueprintWatch>[];
-                  final listings =
-                      listingSnapshot.data ?? const <TradingListing>[];
+    return ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: StreamBuilder<List<ArcBlueprintWatch>>(
+          stream: _repository.watchBlueprintWatches(),
+          builder: (context, watchSnapshot) {
+            return StreamBuilder<List<TradingListing>>(
+              stream: _repository.watchActiveListings(),
+              builder: (context, listingSnapshot) {
+                final watches =
+                    watchSnapshot.data ?? const <ArcBlueprintWatch>[];
+                final listings =
+                    listingSnapshot.data ?? const <TradingListing>[];
 
-                  if (watchSnapshot.connectionState ==
-                          ConnectionState.waiting &&
-                      watchSnapshot.data == null) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.neonCyan,
-                      ),
-                    );
-                  }
-                  if (watches.isEmpty) return _emptyState();
+                if (watchSnapshot.connectionState == ConnectionState.waiting &&
+                    watchSnapshot.data == null) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppTheme.neonCyan),
+                  );
+                }
+                if (watches.isEmpty) return _emptyState();
 
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Blueprint Watches',
-                              style: AppTheme.tradingHeading(
-                                fontSize: 22,
-                                color: AppTheme.neonCyan,
-                              ),
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Blueprint Watches',
+                            style: AppTheme.tradingHeading(
+                              fontSize: 22,
+                              color: AppTheme.neonCyan,
                             ),
                           ),
-                          OutlinedButton.icon(
-                            onPressed: _showCreateSheet,
-                            icon: const Icon(Icons.add_rounded),
-                            label: const Text('Add'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      for (final watch in watches) _watchCard(watch, listings),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _showCreateSheet,
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text('Add'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spaceM),
+                    for (final watch in watches) _watchCard(watch, listings),
+                  ],
+                );
+              },
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 

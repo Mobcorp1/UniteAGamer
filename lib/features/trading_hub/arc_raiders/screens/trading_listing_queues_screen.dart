@@ -6,6 +6,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingListingQueuesScreen extends StatefulWidget {
@@ -104,7 +106,7 @@ class _TradingListingQueuesScreenState
   Widget _pill(String label, Color color) {
     return Container(
       padding: AppTheme.pillPadding,
-      decoration: AppTheme.tradingPillDecoration(color: color),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
         style: TextStyle(
@@ -187,14 +189,10 @@ class _TradingListingQueuesScreenState
       activeListing: activeListing,
       state: state,
     );
-    final card = Container(
+    final card = TradingCard(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: canRelease
-            ? AppTheme.tradingSuccess.withValues(alpha: 0.4)
-            : AppTheme.tradingSoftBorder,
-      ),
+      accent: canRelease ? AppTheme.tradingSuccess : AppTheme.neonCyan,
+      selected: canRelease,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -329,69 +327,67 @@ class _TradingListingQueuesScreenState
   }
 
   Widget _buildBody() {
-    return Stack(
-      children: [
-        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-        SafeArea(
-          child: StreamBuilder<List<ArcTradeListingQueueItem>>(
-            stream: _repository.watchListingQueues(),
-            builder: (context, queueSnapshot) {
-              return StreamBuilder<List<TradingListing>>(
-                stream: _repository.watchMyListings(),
-                builder: (context, listingSnapshot) {
-                  return StreamBuilder<Map<String, ArcBlueprintState>>(
-                    stream: _repository.watchBlueprintStates(),
-                    builder: (context, stateSnapshot) {
-                      final queues =
-                          queueSnapshot.data ??
-                          const <ArcTradeListingQueueItem>[];
-                      final listings =
-                          listingSnapshot.data ?? const <TradingListing>[];
-                      final states =
-                          stateSnapshot.data ??
-                          const <String, ArcBlueprintState>{};
+    return ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: StreamBuilder<List<ArcTradeListingQueueItem>>(
+          stream: _repository.watchListingQueues(),
+          builder: (context, queueSnapshot) {
+            return StreamBuilder<List<TradingListing>>(
+              stream: _repository.watchMyListings(),
+              builder: (context, listingSnapshot) {
+                return StreamBuilder<Map<String, ArcBlueprintState>>(
+                  stream: _repository.watchBlueprintStates(),
+                  builder: (context, stateSnapshot) {
+                    final queues =
+                        queueSnapshot.data ??
+                        const <ArcTradeListingQueueItem>[];
+                    final listings =
+                        listingSnapshot.data ?? const <TradingListing>[];
+                    final states =
+                        stateSnapshot.data ??
+                        const <String, ArcBlueprintState>{};
 
-                      if (queueSnapshot.connectionState ==
-                              ConnectionState.waiting &&
-                          queueSnapshot.data == null) {
-                        return const Center(
-                          child: CircularProgressIndicator(
+                    if (queueSnapshot.connectionState ==
+                            ConnectionState.waiting &&
+                        queueSnapshot.data == null) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: AppTheme.neonCyan,
+                        ),
+                      );
+                    }
+                    if (queues.isEmpty) return _emptyState();
+
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                      children: [
+                        Text(
+                          'Listing Queues',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 22,
                             color: AppTheme.neonCyan,
                           ),
-                        );
-                      }
-                      if (queues.isEmpty) return _emptyState();
-
-                      return ListView(
-                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                        children: [
-                          Text(
-                            'Listing Queues',
-                            style: AppTheme.tradingHeading(
-                              fontSize: 22,
-                              color: AppTheme.neonCyan,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        for (final queue in queues)
+                          _queueCard(
+                            queue: queue,
+                            activeListing: _activeListingForQueue(
+                              queue,
+                              listings,
                             ),
+                            state: _stateForQueue(queue, states),
                           ),
-                          const SizedBox(height: AppTheme.spaceM),
-                          for (final queue in queues)
-                            _queueCard(
-                              queue: queue,
-                              activeListing: _activeListingForQueue(
-                                queue,
-                                listings,
-                              ),
-                              state: _stateForQueue(queue, states),
-                            ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          ),
+                      ],
+                    );
+                  },
+                );
+              },
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 

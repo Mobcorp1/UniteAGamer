@@ -16,6 +16,7 @@ import '../screens/arc_away_screen.dart';
 import '../screens/arc_profile_edit_screen.dart';
 import '../screens/arc_profile_setup_screen.dart';
 import '../screens/wall_of_legends_screen.dart';
+import '../widgets/arc_raiders_screen_shell.dart';
 
 class TradingProfileScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile';
@@ -107,7 +108,10 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       return const Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
-        body: Center(child: CircularProgressIndicator()),
+        body: ArcRaidersScreenShell(
+          showAdBanner: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
@@ -122,35 +126,38 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                     'Identity, reputation, availability and match readiness.',
               )
             : null,
-        body: Center(
-          child: Container(
-            margin: const EdgeInsets.all(AppTheme.spaceL),
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spaceM,
-              AppTheme.spaceS,
-              AppTheme.spaceM,
-              AppTheme.spaceL,
-            ),
-            decoration: AppTheme.tradingCardDecoration(
-              borderColor: Colors.redAccent.withValues(alpha: 0.28),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.redAccent,
-                  size: 34,
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                Text(
-                  _initError!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, height: 1.35),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                ElevatedButton(onPressed: _retry, child: const Text('Retry')),
-              ],
+        body: ArcRaidersScreenShell(
+          showAdBanner: false,
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.all(AppTheme.spaceL),
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spaceM,
+                AppTheme.spaceS,
+                AppTheme.spaceM,
+                AppTheme.spaceL,
+              ),
+              decoration: AppTheme.tradingCardDecoration(
+                borderColor: Colors.redAccent.withValues(alpha: 0.28),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.redAccent,
+                    size: 34,
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  Text(
+                    _initError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, height: 1.35),
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  ElevatedButton(onPressed: _retry, child: const Text('Retry')),
+                ],
+              ),
             ),
           ),
         ),
@@ -167,103 +174,107 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   'Identity, reputation, availability and match readiness.',
             )
           : null,
-      body: SafeArea(
-        child: StreamBuilder<ArcTraderProfile>(
-          stream: _repository.watchProfile(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                !snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: StreamBuilder<ArcTraderProfile>(
+            stream: _repository.watchProfile(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            if (snapshot.hasError) {
-              return Center(
-                child: Container(
-                  margin: const EdgeInsets.all(AppTheme.spaceL),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppTheme.spaceM,
-                    AppTheme.spaceS,
-                    AppTheme.spaceM,
-                    AppTheme.spaceL,
+              if (snapshot.hasError) {
+                return Center(
+                  child: Container(
+                    margin: const EdgeInsets.all(AppTheme.spaceL),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppTheme.spaceM,
+                      AppTheme.spaceS,
+                      AppTheme.spaceM,
+                      AppTheme.spaceL,
+                    ),
+                    decoration: AppTheme.tradingCardDecoration(
+                      borderColor: Colors.redAccent.withValues(alpha: 0.28),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Could not load Your Hub Profile data: ${snapshot.error}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        ElevatedButton(
+                          onPressed: _retry,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
                   ),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: Colors.redAccent.withValues(alpha: 0.28),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Could not load Your Hub Profile data: ${snapshot.error}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      ElevatedButton(
-                        onPressed: _retry,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
+                );
+              }
 
-            final profile = snapshot.data;
-            if (profile == null) {
-              return Center(
-                child: ElevatedButton(
-                  onPressed: _openSetupIfNeeded,
-                  child: const Text('Set Up Profile'),
-                ),
-              );
-            }
+              final profile = snapshot.data;
+              if (profile == null) {
+                return Center(
+                  child: ElevatedButton(
+                    onPressed: _openSetupIfNeeded,
+                    child: const Text('Set Up Profile'),
+                  ),
+                );
+              }
 
-            return StreamBuilder<ArcProfileCompletionResult>(
-              stream: _profileCompletionStream,
-              initialData: ArcProfileCompletionResult.completeResult,
-              builder: (context, completionSnapshot) {
-                final profileCompletion =
-                    completionSnapshot.data ??
-                    ArcProfileCompletionResult.completeResult;
-                return StreamBuilder<ArcOperationsUserState>(
-                  stream: _operationsRepository.watchUserState(),
-                  builder: (context, operationsSnapshot) {
-                    final operationsState =
-                        operationsSnapshot.data ?? ArcOperationsUserState.empty;
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        final contentWidth = constraints.maxWidth > 1440
-                            ? 1360.0
-                            : constraints.maxWidth;
-                        return ListView(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppTheme.spaceM,
-                            AppTheme.spaceS,
-                            AppTheme.spaceM,
-                            AppTheme.spaceL,
-                          ),
-                          children: [
-                            Align(
-                              alignment: Alignment.topCenter,
-                              child: SizedBox(
-                                width: contentWidth,
-                                child: _profileDashboard(
-                                  profile,
-                                  operationsState,
-                                  constraints.maxWidth,
-                                  profileCompletion,
+              return StreamBuilder<ArcProfileCompletionResult>(
+                stream: _profileCompletionStream,
+                initialData: ArcProfileCompletionResult.completeResult,
+                builder: (context, completionSnapshot) {
+                  final profileCompletion =
+                      completionSnapshot.data ??
+                      ArcProfileCompletionResult.completeResult;
+                  return StreamBuilder<ArcOperationsUserState>(
+                    stream: _operationsRepository.watchUserState(),
+                    builder: (context, operationsSnapshot) {
+                      final operationsState =
+                          operationsSnapshot.data ??
+                          ArcOperationsUserState.empty;
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final contentWidth = constraints.maxWidth > 1440
+                              ? 1360.0
+                              : constraints.maxWidth;
+                          return ListView(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppTheme.spaceM,
+                              AppTheme.spaceS,
+                              AppTheme.spaceM,
+                              AppTheme.spaceL,
+                            ),
+                            children: [
+                              Align(
+                                alignment: Alignment.topCenter,
+                                child: SizedBox(
+                                  width: contentWidth,
+                                  child: _profileDashboard(
+                                    profile,
+                                    operationsState,
+                                    constraints.maxWidth,
+                                    profileCompletion,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            );
-          },
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

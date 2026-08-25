@@ -407,46 +407,44 @@ class TradingMyOffersScreen extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context, TradingRepository repository) {
-    return Stack(
-      children: [
-        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-        SafeArea(
-          child: StreamBuilder<List<TradingOffer>>(
-            stream: repository.watchMyOffers(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppTheme.neonCyan),
-                );
-              }
+    return ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: StreamBuilder<List<TradingOffer>>(
+          stream: repository.watchMyOffers(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.neonCyan),
+              );
+            }
 
-              final offers = snapshot.data ?? const <TradingOffer>[];
-              if (offers.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                    child: Text(
-                      'No offers yet. Send offers from listing details and manage them here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppTheme.tradingMutedText,
-                        fontSize: 16,
-                      ),
+            final offers = snapshot.data ?? const <TradingOffer>[];
+            if (offers.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                  child: Text(
+                    'No offers yet. Send offers from listing details and manage them here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppTheme.tradingMutedText,
+                      fontSize: 16,
                     ),
                   ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                itemCount: offers.length,
-                itemBuilder: (context, index) =>
-                    _offerCard(context, repository, offers[index]),
+                ),
               );
-            },
-          ),
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+              itemCount: offers.length,
+              itemBuilder: (context, index) =>
+                  _offerCard(context, repository, offers[index]),
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 

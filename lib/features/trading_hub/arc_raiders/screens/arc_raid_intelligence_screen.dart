@@ -27,6 +27,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_marker_detail_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcRaidIntelligenceScreen extends StatefulWidget {
@@ -330,10 +331,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _mapPanel(ArcRaidIntelligenceState intelligence) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
         radius: 20,
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
         backgroundColor: Colors.black.withValues(alpha: 0.22),
+        borderOpacity: 0.24,
+        glow: true,
       ),
       child: Stack(
         children: [
@@ -418,10 +422,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Widget _layerSelector(ArcRaidMap map) {
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
+      decoration: ArcUiTokens.chipDecoration(
+        color: AppTheme.neonCyan,
+        selected: true,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -477,10 +480,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ignoring: false,
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.64),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.18)),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.overlay,
+          accent: AppTheme.neonPink,
+          radius: 16,
+          borderOpacity: 0.18,
         ),
         child: Text(
           route == null
@@ -500,10 +504,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     required List<ArcCommunityIntelReport> communityReports,
   }) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonPink,
         radius: desktop ? 20 : 18,
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.22),
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        borderOpacity: 0.22,
       ),
       child: ListView(
         padding: const EdgeInsets.all(14),
@@ -542,10 +548,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
 
   Widget _collapsedControlRail() {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonCyan,
         radius: 18,
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
         backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        borderOpacity: 0.24,
       ),
       child: Center(
         child: Tooltip(
@@ -979,10 +987,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonCyan,
+        radius: 14,
+        borderOpacity: 0.18,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1138,10 +1147,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Widget _section({required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.035),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: 16,
+        borderOpacity: 0.08,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1183,11 +1192,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
   Widget _pill(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.11),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
         style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_fitted_weapon_bundle_editor.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_seed_bundle_picker.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -172,11 +174,9 @@ class _TradingCreateListingScreenState
     String? subtitle,
     required Widget child,
   }) {
-    return Container(
-      width: double.infinity,
+    return TradingCard(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(),
+      accent: AppTheme.neonPink,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -281,7 +281,7 @@ class _TradingCreateListingScreenState
           .map(
             (item) => Container(
               padding: AppTheme.pillPadding,
-              decoration: AppTheme.tradingPillDecoration(
+              decoration: ArcUiTokens.chipDecoration(
                 color: color ?? AppTheme.neonCyan,
               ),
               child: Text(
@@ -1063,637 +1063,627 @@ class _TradingCreateListingScreenState
               ),
             )
           : null,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: StreamBuilder<Map<String, ArcBlueprintState>>(
-              stream: _blueprintRepository.watchMyBlueprintStates(),
-              builder: (context, stateSnapshot) {
-                _states =
-                    stateSnapshot.data ?? const <String, ArcBlueprintState>{};
-                return FutureBuilder<TradingProfile>(
-                  future: _repository.getTradingProfile(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: AppTheme.neonCyan,
-                        ),
-                      );
-                    }
-
-                    final profile =
-                        snapshot.data ??
-                        TradingProfile.empty(_repository.currentUid ?? '');
-                    final dupeBlueprints = _dupeBlueprints;
-                    final missingBlueprints = _missingBlueprints;
-
-                    return Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: AppTheme.pageMaxWidth,
-                        ),
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                          children: [
-                            _profilePrefillCard(profile),
-                            _sectionCard(
-                              title: 'What You Are Offering',
-                              subtitle:
-                                  'Build a trade package with multiple blueprints, weapons, keys, mods, resources, and seeds.',
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _selectorTile(
-                                    label: 'Offering Blueprints',
-                                    value: _selectionSummary(
-                                      _selectedOfferingBlueprints.length,
-                                      'blueprint',
-                                    ),
-                                    helper: dupeBlueprints.isEmpty
-                                        ? 'You need at least one blueprint with dupes before you can offer blueprints.'
-                                        : '${dupeBlueprints.length} tradeable blueprints available',
-                                    onTap: dupeBlueprints.isEmpty
-                                        ? null
-                                        : () async {
-                                            final picked =
-                                                await _showBlueprintMultiPicker(
-                                                  title:
-                                                      'Select offering blueprints',
-                                                  items: dupeBlueprints,
-                                                  initiallySelected:
-                                                      _selectedOfferingBlueprints,
-                                                );
-                                            if (!mounted || picked == null) {
-                                              return;
-                                            }
-                                            setState(() {
-                                              _selectedOfferingBlueprints
-                                                ..clear()
-                                                ..addAll(picked);
-                                              if (_maxFutureQueueQuantity <=
-                                                  0) {
-                                                _duplicateQueueEnabled = false;
-                                                _selectedQueueQuantity = '1';
-                                              } else if (!_queueQuantityOptions
-                                                  .contains(
-                                                    _selectedQueueQuantity,
-                                                  )) {
-                                                _selectedQueueQuantity = '1';
-                                              }
-                                            });
-                                          },
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceS),
-                                  _chipWrap(
-                                    _selectedOfferingBlueprints
-                                        .map((item) => item.name)
-                                        .toList(growable: false),
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  _selectorTile(
-                                    label: 'Offering Trade Assets',
-                                    value: _selectionSummary(
-                                      _selectedOfferingAssets.length,
-                                      'asset',
-                                    ),
-                                    helper:
-                                        '${_tradeCatalog.length} tradeable weapons, ammo, attachments, ARC components, trinkets, materials, boss drops, and Riven Tides items loaded.',
-                                    onTap: () async {
-                                      final picked =
-                                          await _showAssetMultiPicker(
-                                            title:
-                                                'Select offering trade assets',
-                                            initiallySelected:
-                                                _selectedOfferingAssets,
-                                          );
-                                      if (!mounted || picked == null) return;
-                                      setState(() {
-                                        _selectedOfferingAssets
-                                          ..clear()
-                                          ..addAll(picked);
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceS),
-                                  _chipWrap(
-                                    _selectedOfferingAssets
-                                        .map((item) => item.name)
-                                        .toList(growable: false),
-                                    color: AppTheme.neonPink,
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  TradingSeedBundlePicker(
-                                    smallBundles: _smallBundles,
-                                    mediumBundles: _mediumBundles,
-                                    largeBundles: _largeBundles,
-                                    onSmallChanged: (value) => setState(
-                                      () => _smallBundles = value
-                                          .clamp(0, 999)
-                                          .toInt(),
-                                    ),
-                                    onMediumChanged: (value) => setState(
-                                      () => _mediumBundles = value
-                                          .clamp(0, 999)
-                                          .toInt(),
-                                    ),
-                                    onLargeChanged: (value) => setState(
-                                      () => _largeBundles = value
-                                          .clamp(0, 999)
-                                          .toInt(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _sectionCard(
-                              title: 'What You Want Back',
-                              subtitle:
-                                  'Ask for specific blueprints and assets, or open the door to custom offers.',
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SwitchListTile(
-                                    value: _openToOffers,
-                                    contentPadding: EdgeInsets.zero,
-                                    activeThumbColor: AppTheme.neonPink,
-                                    title: const Text(
-                                      'Open to offers',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    subtitle: const Text(
-                                      'Turn this on if you want people to propose their own mix instead of matching a fixed request.',
-                                      style: TextStyle(color: Colors.white60),
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _openToOffers = value;
-                                        if (value) {
-                                          _selectedWantedBlueprints.clear();
-                                          _selectedWantedAssets.clear();
-                                        }
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceS),
-                                  SwitchListTile(
-                                    value: _wantsNothing,
-                                    contentPadding: EdgeInsets.zero,
-                                    activeThumbColor: AppTheme.neonCyan,
-                                    title: const Text(
-                                      'Free giveaway / nothing wanted back',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    subtitle: const Text(
-                                      'Use this when you are giving the offered items away and only need someone to claim them.',
-                                      style: TextStyle(color: Colors.white60),
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _wantsNothing = value;
-                                        if (value) {
-                                          _openToOffers = true;
-                                          _selectedWantedBlueprints.clear();
-                                          _selectedWantedAssets.clear();
-                                          _acceptsBlueprints = false;
-                                          _acceptsSeeds = false;
-                                          _acceptsResources = false;
-                                        } else {
-                                          _acceptsBlueprints = true;
-                                          _acceptsResources = true;
-                                        }
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceS),
-                                  _selectorTile(
-                                    label: 'Wanted Blueprints',
-                                    value: _wantsNothing
-                                        ? 'Giveaway enabled'
-                                        : _openToOffers
-                                        ? 'Open to offers enabled'
-                                        : _selectionSummary(
-                                            _selectedWantedBlueprints.length,
-                                            'blueprint',
-                                          ),
-                                    helper: _openToOffers || _wantsNothing
-                                        ? 'Disabled while open to offers or giveaway mode is on.'
-                                        : '${missingBlueprints.length} missing blueprints available',
-                                    onTap:
-                                        _openToOffers ||
-                                            _wantsNothing ||
-                                            missingBlueprints.isEmpty
-                                        ? null
-                                        : () async {
-                                            final picked =
-                                                await _showBlueprintMultiPicker(
-                                                  title:
-                                                      'Select wanted blueprints',
-                                                  items: missingBlueprints,
-                                                  initiallySelected:
-                                                      _selectedWantedBlueprints,
-                                                );
-                                            if (!mounted || picked == null) {
-                                              return;
-                                            }
-                                            setState(() {
-                                              _selectedWantedBlueprints
-                                                ..clear()
-                                                ..addAll(picked);
-                                            });
-                                          },
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceS),
-                                  _chipWrap(
-                                    _selectedWantedBlueprints
-                                        .map((item) => item.name)
-                                        .toList(growable: false),
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  _selectorTile(
-                                    label: 'Wanted Trade Assets',
-                                    value: _wantsNothing
-                                        ? 'Giveaway enabled'
-                                        : _openToOffers
-                                        ? 'Open to offers enabled'
-                                        : _selectionSummary(
-                                            _selectedWantedAssets.length,
-                                            'asset',
-                                          ),
-                                    helper: _openToOffers || _wantsNothing
-                                        ? 'Disabled while open to offers or giveaway mode is on.'
-                                        : 'Use this for keys, KCs, reactors, guns, and other resources you want back.',
-                                    onTap: _openToOffers || _wantsNothing
-                                        ? null
-                                        : () async {
-                                            final picked =
-                                                await _showAssetMultiPicker(
-                                                  title:
-                                                      'Select wanted trade assets',
-                                                  initiallySelected:
-                                                      _selectedWantedAssets,
-                                                );
-                                            if (!mounted || picked == null) {
-                                              return;
-                                            }
-                                            setState(() {
-                                              _selectedWantedAssets
-                                                ..clear()
-                                                ..addAll(picked);
-                                            });
-                                          },
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceS),
-                                  _chipWrap(
-                                    _selectedWantedAssets
-                                        .map((item) => item.name)
-                                        .toList(growable: false),
-                                    color: AppTheme.neonPink,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _buildFittedWeaponRequirements(),
-                            _sectionCard(
-                              title: 'Trade Structure',
-                              subtitle:
-                                  'Use both toggles if you want the listing to prefer a full batch while still allowing people to pitch custom or partial make-up offers.',
-                              child: Column(
-                                children: [
-                                  SwitchListTile(
-                                    value: _tradeAsBundle,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _tradeAsBundle = value;
-                                      });
-                                    },
-                                    activeThumbColor: AppTheme.neonPink,
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text(
-                                      'Trade as one batch / bundle',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    subtitle: const Text(
-                                      'Buyer should take the whole offer together instead of picking bits of it apart.',
-                                      style: TextStyle(color: Colors.white60),
-                                    ),
-                                  ),
-                                  SwitchListTile(
-                                    value: _allowPartialOffers,
-                                    onChanged: (value) => setState(
-                                      () => _allowPartialOffers = value,
-                                    ),
-                                    activeThumbColor: AppTheme.neonPink,
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text(
-                                      'Allow partial / custom offers',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    subtitle: Text(
-                                      _tradeAsBundle
-                                          ? 'Keep this on as well if you want to prefer the full bundle but still allow make-up offers.'
-                                          : 'Useful when someone only has part of what you want and wants to make up the rest another way.',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _sectionCard(
-                              title: 'Trade Preferences',
-                              child: Column(
-                                children: [
-                                  CheckboxListTile(
-                                    value: _acceptsBlueprints,
-                                    onChanged: (value) => setState(
-                                      () => _acceptsBlueprints = value ?? false,
-                                    ),
-                                    title: const Text(
-                                      'Accept blueprints',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    activeColor: AppTheme.neonPink,
-                                  ),
-                                  CheckboxListTile(
-                                    value: _acceptsSeeds,
-                                    onChanged: (value) => setState(
-                                      () => _acceptsSeeds = value ?? false,
-                                    ),
-                                    title: const Text(
-                                      'Accept seeds',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    activeColor: AppTheme.neonPink,
-                                  ),
-                                  CheckboxListTile(
-                                    value: _acceptsResources,
-                                    onChanged: (value) => setState(
-                                      () => _acceptsResources = value ?? false,
-                                    ),
-                                    title: const Text(
-                                      'Accept resources / keys / weapons / mods',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    activeColor: AppTheme.neonPink,
-                                  ),
-                                  SwitchListTile(
-                                    value: _seriousOffersOnly,
-                                    onChanged: (value) => setState(
-                                      () => _seriousOffersOnly = value,
-                                    ),
-                                    activeThumbColor: AppTheme.neonPink,
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text(
-                                      'Serious offers only',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  _buildDropdown(
-                                    label: 'Best Play Window',
-                                    value: _selectedPlayWindow,
-                                    options: const [
-                                      'Flexible',
-                                      'Afternoons',
-                                      'Evenings',
-                                      'Late Night',
-                                      'Weekends',
-                                    ],
-                                    onChanged: (value) => setState(
-                                      () => _selectedPlayWindow =
-                                          value ?? 'Evenings',
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  _buildDropdown(
-                                    label: 'Listing Mode',
-                                    value: _wantsNothing
-                                        ? 'Gift'
-                                        : _selectedListingMode,
-                                    options: _listingModeOptions.keys.toList(
-                                      growable: false,
-                                    ),
-                                    onChanged: _wantsNothing
-                                        ? null
-                                        : (value) => setState(
-                                            () => _selectedListingMode =
-                                                value ?? 'Available now',
-                                          ),
-                                  ),
-                                  if (_selectedListingMode ==
-                                      'Scheduled window') ...[
-                                    const SizedBox(height: AppTheme.spaceM),
-                                    _buildDropdown(
-                                      label: 'Scheduled Window',
-                                      value: _selectedScheduledWindow,
-                                      options: const [
-                                        'This evening',
-                                        'Tomorrow',
-                                        'Weekend',
-                                        'Next reset window',
-                                      ],
-                                      onChanged: (value) => setState(
-                                        () => _selectedScheduledWindow =
-                                            value ?? 'This evening',
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  _buildDropdown(
-                                    label: 'Maximum Active Offers',
-                                    value: _selectedMaxActiveOffers,
-                                    options: const ['1', '3', '5', '10'],
-                                    onChanged: (value) => setState(
-                                      () => _selectedMaxActiveOffers =
-                                          value ?? '5',
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  _buildDropdown(
-                                    label: 'Duplicate Queue Release',
-                                    value: _selectedReleasePolicy,
-                                    options: _releasePolicyOptions.keys.toList(
-                                      growable: false,
-                                    ),
-                                    onChanged: (value) => setState(
-                                      () => _selectedReleasePolicy =
-                                          value ?? 'Ask before relisting',
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  SwitchListTile(
-                                    value:
-                                        _duplicateQueueEnabled &&
-                                        _maxFutureQueueQuantity > 0,
-                                    onChanged: _maxFutureQueueQuantity <= 0
-                                        ? null
-                                        : (value) => setState(() {
-                                            _duplicateQueueEnabled = value;
-                                            if (!_queueQuantityOptions.contains(
-                                              _selectedQueueQuantity,
-                                            )) {
-                                              _selectedQueueQuantity = '1';
-                                            }
-                                          }),
-                                    activeThumbColor: AppTheme.neonPink,
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text(
-                                      'Queue future duplicate releases',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    subtitle: Text(
-                                      _maxFutureQueueQuantity <= 0
-                                          ? 'Select one duplicate blueprint with at least two duplicate copies to queue future releases.'
-                                          : 'Keep one copy public now and hold up to $_maxFutureQueueQuantity future duplicate ${_maxFutureQueueQuantity == 1 ? 'copy' : 'copies'} private.',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
-                                      ),
-                                    ),
-                                  ),
-                                  if (_duplicateQueueEnabled &&
-                                      _maxFutureQueueQuantity > 0) ...[
-                                    const SizedBox(height: AppTheme.spaceM),
-                                    _buildDropdown(
-                                      label: 'Future queued copies',
-                                      value:
-                                          _queueQuantityOptions.contains(
-                                            _selectedQueueQuantity,
-                                          )
-                                          ? _selectedQueueQuantity
-                                          : '1',
-                                      options: _queueQuantityOptions,
-                                      onChanged: (value) => setState(
-                                        () => _selectedQueueQuantity =
-                                            value ?? '1',
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  _buildDropdown(
-                                    label: 'Listing Expiry',
-                                    value: _selectedExpiry,
-                                    options: const [
-                                      '24 Hours',
-                                      '72 Hours',
-                                      '7 Days',
-                                    ],
-                                    onChanged: (value) => setState(
-                                      () =>
-                                          _selectedExpiry = value ?? '72 Hours',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            _sectionCard(
-                              title: 'Preview',
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Title: ${_buildTitle()}',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Offering: ${_buildOfferSummary().isEmpty ? 'Nothing selected yet' : _buildOfferSummary()}',
-                                    style: TextStyle(
-                                      color: AppTheme.tradingMutedText,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Looking for: ${_buildWantedSummary().isEmpty ? 'Nothing selected yet' : _buildWantedSummary()}',
-                                    style: TextStyle(
-                                      color: AppTheme.tradingMutedText,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Format: ${_tradeAsBundle ? 'Bundle preferred' : 'Mix and match'}'
-                                    '${_allowPartialOffers ? ' - Partial/custom offers enabled' : ''}',
-                                    style: TextStyle(
-                                      color: AppTheme.tradingMutedText,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Mode: ${_wantsNothing ? 'Gift' : _selectedListingMode}'
-                                    '${_selectedListingMode == 'Scheduled window' ? ' - $_selectedScheduledWindow' : ''}',
-                                    style: TextStyle(
-                                      color: AppTheme.tradingMutedText,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Offers: max $_selectedMaxActiveOffers active - $_selectedReleasePolicy',
-                                    style: TextStyle(
-                                      color: AppTheme.tradingMutedText,
-                                    ),
-                                  ),
-                                  if (_duplicateQueueEnabled &&
-                                      _selectedQueueQuantityValue > 0) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Queue: $_selectedQueueQuantityValue future duplicate ${_selectedQueueQuantityValue == 1 ? 'copy' : 'copies'} private',
-                                      style: TextStyle(
-                                        color: AppTheme.neonCyan,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            _sectionCard(
-                              title: 'Notes',
-                              child: TextFormField(
-                                controller: _notesController,
-                                maxLines: 4,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: AppTheme.tradingInputDecoration(
-                                  label:
-                                      'Optional details, preferred swap setup, level 4 only, exact ratios, etc.',
-                                ),
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: _isSaving ? null : _saveListing,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.neonPink,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: Text(
-                                _isSaving ? 'Saving...' : 'Create Listing',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: StreamBuilder<Map<String, ArcBlueprintState>>(
+            stream: _blueprintRepository.watchMyBlueprintStates(),
+            builder: (context, stateSnapshot) {
+              _states =
+                  stateSnapshot.data ?? const <String, ArcBlueprintState>{};
+              return FutureBuilder<TradingProfile>(
+                future: _repository.getTradingProfile(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.neonCyan,
                       ),
                     );
-                  },
-                );
-              },
-            ),
+                  }
+
+                  final profile =
+                      snapshot.data ??
+                      TradingProfile.empty(_repository.currentUid ?? '');
+                  final dupeBlueprints = _dupeBlueprints;
+                  final missingBlueprints = _missingBlueprints;
+
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppTheme.pageMaxWidth,
+                      ),
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                        children: [
+                          _profilePrefillCard(profile),
+                          _sectionCard(
+                            title: 'What You Are Offering',
+                            subtitle:
+                                'Build a trade package with multiple blueprints, weapons, keys, mods, resources, and seeds.',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _selectorTile(
+                                  label: 'Offering Blueprints',
+                                  value: _selectionSummary(
+                                    _selectedOfferingBlueprints.length,
+                                    'blueprint',
+                                  ),
+                                  helper: dupeBlueprints.isEmpty
+                                      ? 'You need at least one blueprint with dupes before you can offer blueprints.'
+                                      : '${dupeBlueprints.length} tradeable blueprints available',
+                                  onTap: dupeBlueprints.isEmpty
+                                      ? null
+                                      : () async {
+                                          final picked =
+                                              await _showBlueprintMultiPicker(
+                                                title:
+                                                    'Select offering blueprints',
+                                                items: dupeBlueprints,
+                                                initiallySelected:
+                                                    _selectedOfferingBlueprints,
+                                              );
+                                          if (!mounted || picked == null) {
+                                            return;
+                                          }
+                                          setState(() {
+                                            _selectedOfferingBlueprints
+                                              ..clear()
+                                              ..addAll(picked);
+                                            if (_maxFutureQueueQuantity <= 0) {
+                                              _duplicateQueueEnabled = false;
+                                              _selectedQueueQuantity = '1';
+                                            } else if (!_queueQuantityOptions
+                                                .contains(
+                                                  _selectedQueueQuantity,
+                                                )) {
+                                              _selectedQueueQuantity = '1';
+                                            }
+                                          });
+                                        },
+                                ),
+                                const SizedBox(height: AppTheme.spaceS),
+                                _chipWrap(
+                                  _selectedOfferingBlueprints
+                                      .map((item) => item.name)
+                                      .toList(growable: false),
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                _selectorTile(
+                                  label: 'Offering Trade Assets',
+                                  value: _selectionSummary(
+                                    _selectedOfferingAssets.length,
+                                    'asset',
+                                  ),
+                                  helper:
+                                      '${_tradeCatalog.length} tradeable weapons, ammo, attachments, ARC components, trinkets, materials, boss drops, and Riven Tides items loaded.',
+                                  onTap: () async {
+                                    final picked = await _showAssetMultiPicker(
+                                      title: 'Select offering trade assets',
+                                      initiallySelected:
+                                          _selectedOfferingAssets,
+                                    );
+                                    if (!mounted || picked == null) return;
+                                    setState(() {
+                                      _selectedOfferingAssets
+                                        ..clear()
+                                        ..addAll(picked);
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: AppTheme.spaceS),
+                                _chipWrap(
+                                  _selectedOfferingAssets
+                                      .map((item) => item.name)
+                                      .toList(growable: false),
+                                  color: AppTheme.neonPink,
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                TradingSeedBundlePicker(
+                                  smallBundles: _smallBundles,
+                                  mediumBundles: _mediumBundles,
+                                  largeBundles: _largeBundles,
+                                  onSmallChanged: (value) => setState(
+                                    () => _smallBundles = value
+                                        .clamp(0, 999)
+                                        .toInt(),
+                                  ),
+                                  onMediumChanged: (value) => setState(
+                                    () => _mediumBundles = value
+                                        .clamp(0, 999)
+                                        .toInt(),
+                                  ),
+                                  onLargeChanged: (value) => setState(
+                                    () => _largeBundles = value
+                                        .clamp(0, 999)
+                                        .toInt(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _sectionCard(
+                            title: 'What You Want Back',
+                            subtitle:
+                                'Ask for specific blueprints and assets, or open the door to custom offers.',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SwitchListTile(
+                                  value: _openToOffers,
+                                  contentPadding: EdgeInsets.zero,
+                                  activeThumbColor: AppTheme.neonPink,
+                                  title: const Text(
+                                    'Open to offers',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  subtitle: const Text(
+                                    'Turn this on if you want people to propose their own mix instead of matching a fixed request.',
+                                    style: TextStyle(color: Colors.white60),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _openToOffers = value;
+                                      if (value) {
+                                        _selectedWantedBlueprints.clear();
+                                        _selectedWantedAssets.clear();
+                                      }
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: AppTheme.spaceS),
+                                SwitchListTile(
+                                  value: _wantsNothing,
+                                  contentPadding: EdgeInsets.zero,
+                                  activeThumbColor: AppTheme.neonCyan,
+                                  title: const Text(
+                                    'Free giveaway / nothing wanted back',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  subtitle: const Text(
+                                    'Use this when you are giving the offered items away and only need someone to claim them.',
+                                    style: TextStyle(color: Colors.white60),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _wantsNothing = value;
+                                      if (value) {
+                                        _openToOffers = true;
+                                        _selectedWantedBlueprints.clear();
+                                        _selectedWantedAssets.clear();
+                                        _acceptsBlueprints = false;
+                                        _acceptsSeeds = false;
+                                        _acceptsResources = false;
+                                      } else {
+                                        _acceptsBlueprints = true;
+                                        _acceptsResources = true;
+                                      }
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: AppTheme.spaceS),
+                                _selectorTile(
+                                  label: 'Wanted Blueprints',
+                                  value: _wantsNothing
+                                      ? 'Giveaway enabled'
+                                      : _openToOffers
+                                      ? 'Open to offers enabled'
+                                      : _selectionSummary(
+                                          _selectedWantedBlueprints.length,
+                                          'blueprint',
+                                        ),
+                                  helper: _openToOffers || _wantsNothing
+                                      ? 'Disabled while open to offers or giveaway mode is on.'
+                                      : '${missingBlueprints.length} missing blueprints available',
+                                  onTap:
+                                      _openToOffers ||
+                                          _wantsNothing ||
+                                          missingBlueprints.isEmpty
+                                      ? null
+                                      : () async {
+                                          final picked =
+                                              await _showBlueprintMultiPicker(
+                                                title:
+                                                    'Select wanted blueprints',
+                                                items: missingBlueprints,
+                                                initiallySelected:
+                                                    _selectedWantedBlueprints,
+                                              );
+                                          if (!mounted || picked == null) {
+                                            return;
+                                          }
+                                          setState(() {
+                                            _selectedWantedBlueprints
+                                              ..clear()
+                                              ..addAll(picked);
+                                          });
+                                        },
+                                ),
+                                const SizedBox(height: AppTheme.spaceS),
+                                _chipWrap(
+                                  _selectedWantedBlueprints
+                                      .map((item) => item.name)
+                                      .toList(growable: false),
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                _selectorTile(
+                                  label: 'Wanted Trade Assets',
+                                  value: _wantsNothing
+                                      ? 'Giveaway enabled'
+                                      : _openToOffers
+                                      ? 'Open to offers enabled'
+                                      : _selectionSummary(
+                                          _selectedWantedAssets.length,
+                                          'asset',
+                                        ),
+                                  helper: _openToOffers || _wantsNothing
+                                      ? 'Disabled while open to offers or giveaway mode is on.'
+                                      : 'Use this for keys, KCs, reactors, guns, and other resources you want back.',
+                                  onTap: _openToOffers || _wantsNothing
+                                      ? null
+                                      : () async {
+                                          final picked =
+                                              await _showAssetMultiPicker(
+                                                title:
+                                                    'Select wanted trade assets',
+                                                initiallySelected:
+                                                    _selectedWantedAssets,
+                                              );
+                                          if (!mounted || picked == null) {
+                                            return;
+                                          }
+                                          setState(() {
+                                            _selectedWantedAssets
+                                              ..clear()
+                                              ..addAll(picked);
+                                          });
+                                        },
+                                ),
+                                const SizedBox(height: AppTheme.spaceS),
+                                _chipWrap(
+                                  _selectedWantedAssets
+                                      .map((item) => item.name)
+                                      .toList(growable: false),
+                                  color: AppTheme.neonPink,
+                                ),
+                              ],
+                            ),
+                          ),
+                          _buildFittedWeaponRequirements(),
+                          _sectionCard(
+                            title: 'Trade Structure',
+                            subtitle:
+                                'Use both toggles if you want the listing to prefer a full batch while still allowing people to pitch custom or partial make-up offers.',
+                            child: Column(
+                              children: [
+                                SwitchListTile(
+                                  value: _tradeAsBundle,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _tradeAsBundle = value;
+                                    });
+                                  },
+                                  activeThumbColor: AppTheme.neonPink,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text(
+                                    'Trade as one batch / bundle',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  subtitle: const Text(
+                                    'Buyer should take the whole offer together instead of picking bits of it apart.',
+                                    style: TextStyle(color: Colors.white60),
+                                  ),
+                                ),
+                                SwitchListTile(
+                                  value: _allowPartialOffers,
+                                  onChanged: (value) => setState(
+                                    () => _allowPartialOffers = value,
+                                  ),
+                                  activeThumbColor: AppTheme.neonPink,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text(
+                                    'Allow partial / custom offers',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  subtitle: Text(
+                                    _tradeAsBundle
+                                        ? 'Keep this on as well if you want to prefer the full bundle but still allow make-up offers.'
+                                        : 'Useful when someone only has part of what you want and wants to make up the rest another way.',
+                                    style: const TextStyle(
+                                      color: Colors.white60,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _sectionCard(
+                            title: 'Trade Preferences',
+                            child: Column(
+                              children: [
+                                CheckboxListTile(
+                                  value: _acceptsBlueprints,
+                                  onChanged: (value) => setState(
+                                    () => _acceptsBlueprints = value ?? false,
+                                  ),
+                                  title: const Text(
+                                    'Accept blueprints',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  activeColor: AppTheme.neonPink,
+                                ),
+                                CheckboxListTile(
+                                  value: _acceptsSeeds,
+                                  onChanged: (value) => setState(
+                                    () => _acceptsSeeds = value ?? false,
+                                  ),
+                                  title: const Text(
+                                    'Accept seeds',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  activeColor: AppTheme.neonPink,
+                                ),
+                                CheckboxListTile(
+                                  value: _acceptsResources,
+                                  onChanged: (value) => setState(
+                                    () => _acceptsResources = value ?? false,
+                                  ),
+                                  title: const Text(
+                                    'Accept resources / keys / weapons / mods',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  activeColor: AppTheme.neonPink,
+                                ),
+                                SwitchListTile(
+                                  value: _seriousOffersOnly,
+                                  onChanged: (value) => setState(
+                                    () => _seriousOffersOnly = value,
+                                  ),
+                                  activeThumbColor: AppTheme.neonPink,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text(
+                                    'Serious offers only',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                                _buildDropdown(
+                                  label: 'Best Play Window',
+                                  value: _selectedPlayWindow,
+                                  options: const [
+                                    'Flexible',
+                                    'Afternoons',
+                                    'Evenings',
+                                    'Late Night',
+                                    'Weekends',
+                                  ],
+                                  onChanged: (value) => setState(
+                                    () => _selectedPlayWindow =
+                                        value ?? 'Evenings',
+                                  ),
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildDropdown(
+                                  label: 'Listing Mode',
+                                  value: _wantsNothing
+                                      ? 'Gift'
+                                      : _selectedListingMode,
+                                  options: _listingModeOptions.keys.toList(
+                                    growable: false,
+                                  ),
+                                  onChanged: _wantsNothing
+                                      ? null
+                                      : (value) => setState(
+                                          () => _selectedListingMode =
+                                              value ?? 'Available now',
+                                        ),
+                                ),
+                                if (_selectedListingMode ==
+                                    'Scheduled window') ...[
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  _buildDropdown(
+                                    label: 'Scheduled Window',
+                                    value: _selectedScheduledWindow,
+                                    options: const [
+                                      'This evening',
+                                      'Tomorrow',
+                                      'Weekend',
+                                      'Next reset window',
+                                    ],
+                                    onChanged: (value) => setState(
+                                      () => _selectedScheduledWindow =
+                                          value ?? 'This evening',
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildDropdown(
+                                  label: 'Maximum Active Offers',
+                                  value: _selectedMaxActiveOffers,
+                                  options: const ['1', '3', '5', '10'],
+                                  onChanged: (value) => setState(
+                                    () =>
+                                        _selectedMaxActiveOffers = value ?? '5',
+                                  ),
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildDropdown(
+                                  label: 'Duplicate Queue Release',
+                                  value: _selectedReleasePolicy,
+                                  options: _releasePolicyOptions.keys.toList(
+                                    growable: false,
+                                  ),
+                                  onChanged: (value) => setState(
+                                    () => _selectedReleasePolicy =
+                                        value ?? 'Ask before relisting',
+                                  ),
+                                ),
+                                const SizedBox(height: AppTheme.spaceM),
+                                SwitchListTile(
+                                  value:
+                                      _duplicateQueueEnabled &&
+                                      _maxFutureQueueQuantity > 0,
+                                  onChanged: _maxFutureQueueQuantity <= 0
+                                      ? null
+                                      : (value) => setState(() {
+                                          _duplicateQueueEnabled = value;
+                                          if (!_queueQuantityOptions.contains(
+                                            _selectedQueueQuantity,
+                                          )) {
+                                            _selectedQueueQuantity = '1';
+                                          }
+                                        }),
+                                  activeThumbColor: AppTheme.neonPink,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text(
+                                    'Queue future duplicate releases',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  subtitle: Text(
+                                    _maxFutureQueueQuantity <= 0
+                                        ? 'Select one duplicate blueprint with at least two duplicate copies to queue future releases.'
+                                        : 'Keep one copy public now and hold up to $_maxFutureQueueQuantity future duplicate ${_maxFutureQueueQuantity == 1 ? 'copy' : 'copies'} private.',
+                                    style: const TextStyle(
+                                      color: Colors.white60,
+                                    ),
+                                  ),
+                                ),
+                                if (_duplicateQueueEnabled &&
+                                    _maxFutureQueueQuantity > 0) ...[
+                                  const SizedBox(height: AppTheme.spaceM),
+                                  _buildDropdown(
+                                    label: 'Future queued copies',
+                                    value:
+                                        _queueQuantityOptions.contains(
+                                          _selectedQueueQuantity,
+                                        )
+                                        ? _selectedQueueQuantity
+                                        : '1',
+                                    options: _queueQuantityOptions,
+                                    onChanged: (value) => setState(
+                                      () =>
+                                          _selectedQueueQuantity = value ?? '1',
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: AppTheme.spaceM),
+                                _buildDropdown(
+                                  label: 'Listing Expiry',
+                                  value: _selectedExpiry,
+                                  options: const [
+                                    '24 Hours',
+                                    '72 Hours',
+                                    '7 Days',
+                                  ],
+                                  onChanged: (value) => setState(
+                                    () => _selectedExpiry = value ?? '72 Hours',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _sectionCard(
+                            title: 'Preview',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Title: ${_buildTitle()}',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Offering: ${_buildOfferSummary().isEmpty ? 'Nothing selected yet' : _buildOfferSummary()}',
+                                  style: TextStyle(
+                                    color: AppTheme.tradingMutedText,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Looking for: ${_buildWantedSummary().isEmpty ? 'Nothing selected yet' : _buildWantedSummary()}',
+                                  style: TextStyle(
+                                    color: AppTheme.tradingMutedText,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Format: ${_tradeAsBundle ? 'Bundle preferred' : 'Mix and match'}'
+                                  '${_allowPartialOffers ? ' - Partial/custom offers enabled' : ''}',
+                                  style: TextStyle(
+                                    color: AppTheme.tradingMutedText,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Mode: ${_wantsNothing ? 'Gift' : _selectedListingMode}'
+                                  '${_selectedListingMode == 'Scheduled window' ? ' - $_selectedScheduledWindow' : ''}',
+                                  style: TextStyle(
+                                    color: AppTheme.tradingMutedText,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Offers: max $_selectedMaxActiveOffers active - $_selectedReleasePolicy',
+                                  style: TextStyle(
+                                    color: AppTheme.tradingMutedText,
+                                  ),
+                                ),
+                                if (_duplicateQueueEnabled &&
+                                    _selectedQueueQuantityValue > 0) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Queue: $_selectedQueueQuantityValue future duplicate ${_selectedQueueQuantityValue == 1 ? 'copy' : 'copies'} private',
+                                    style: TextStyle(color: AppTheme.neonCyan),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          _sectionCard(
+                            title: 'Notes',
+                            child: TextFormField(
+                              controller: _notesController,
+                              maxLines: 4,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: AppTheme.tradingInputDecoration(
+                                label:
+                                    'Optional details, preferred swap setup, level 4 only, exact ratios, etc.',
+                              ),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: _isSaving ? null : _saveListing,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.neonPink,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              _isSaving ? 'Saving...' : 'Create Listing',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 Color arcCommandStatusAccent(ArcCommandStatus status) {
@@ -35,22 +36,13 @@ class ArcCommandCentreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: padding,
-      decoration:
-          AppTheme.tradingCardDecoration(
-            radius: 20,
-            borderColor: accent.withValues(alpha: 0.30),
-            backgroundColor: AppTheme.cardBackgroundDeep.withValues(
-              alpha: 0.92,
-            ),
-          ).copyWith(
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: 0.10),
-                blurRadius: 22,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: accent,
+        radius: ArcUiTokens.radiusXL,
+        borderOpacity: 0.26,
+        glow: true,
+      ),
       child: child,
     );
   }
@@ -91,10 +83,7 @@ class ArcCommandSectionHeader extends StatelessWidget {
                   subtitle!,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 11,
-                    color: Colors.white60,
-                  ),
+                  style: ArcUiTokens.bodySmall(),
                 ),
               ],
             ],
@@ -121,11 +110,7 @@ class ArcCommandStatusPill extends StatelessWidget {
     final accent = arcCommandStatusAccent(status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: 0.34)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: accent),
       child: Text(
         label.toUpperCase(),
         overflow: TextOverflow.ellipsis,
@@ -196,10 +181,7 @@ class ArcCommandDetailList extends StatelessWidget {
                   detail,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 11,
-                    color: Colors.white60,
-                  ),
+                  style: ArcUiTokens.bodySmall(),
                 ),
               ),
             ],

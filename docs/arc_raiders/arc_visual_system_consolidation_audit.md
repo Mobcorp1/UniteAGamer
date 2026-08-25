@@ -21,3 +21,10 @@ Audited the current ARC Raiders Flutter implementation under `lib/features/tradi
 - Reduce default glow intensity and favor surface contrast, subtle borders, and readable neutral text.
 - Convert empty trading widget stubs into real reusable presentation components and wire them into listing/seed/trade-network surfaces.
 - Keep map, blueprint, loadout, trading, onboarding, Firebase, route, entitlement, and persistence logic unchanged.
+
+## Phase 2 Completion Notes
+
+- Migrated remaining regular ARC user routes onto `ArcRaidersScreenShell` or existing page scaffolds: blueprint grid, raid planner, hunt targets, raid intelligence, favourite loadout, onboarding/profile setup, trader hub child screens, create/listing queues, smart-build draft, trader search, legacy my-listings, referral tools, My Hub, My Intel, Wall of Legends, session planner, Nomadic Trader, Operations, and Play Like A Pro.
+- Centralized repeated card/chip styling through `TradingCard`, `TradingStatChip`, `ArcUiTokens.surfaceDecoration`, and `ArcUiTokens.chipDecoration` across trading, planner, community, profile, command-centre, intel, and session surfaces.
+- Preserved special-purpose full-screen capture/admin/review surfaces as intentional exceptions: live scanner, admin map editor, photo capture/review/delta review, camera diagnostics, and map icon review keep their camera/editor-safe layout stacks.
+- Preserved `TraderHubScreen` as a tab container exception because its child tabs now own the shared shell and wrapping the navigator stack itself would duplicate nested page chrome.

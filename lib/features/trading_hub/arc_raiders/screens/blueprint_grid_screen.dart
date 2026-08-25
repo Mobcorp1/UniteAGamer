@@ -31,6 +31,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_dialogs.dart';
 
@@ -1407,19 +1409,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: AppTheme.neonCyan.withValues(alpha: 0.28),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.neonCyan.withValues(alpha: 0.08),
-                blurRadius: 22,
-                spreadRadius: 1,
-              ),
-            ],
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.raised,
+            accent: AppTheme.neonCyan,
+            radius: 22,
+            borderOpacity: 0.28,
+            glow: true,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1647,11 +1642,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: color.withValues(alpha: 0.42)),
-          ),
+          decoration: ArcUiTokens.chipDecoration(color: color, selected: true),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2452,8 +2443,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     if (filtered.isEmpty) {
       return Container(
         padding: AppTheme.sectionCardPadding,
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          accent: AppTheme.neonCyan,
+          radius: 16,
+          borderOpacity: 0.16,
         ),
         child: Text(
           _searchQuery.trim().isNotEmpty
@@ -2623,8 +2617,11 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             'Rotate your device. The In-Game View needs a wider screen. Turn your device to landscape, or use Full Grid Overview.',
         child: Container(
           padding: AppTheme.sectionCardPadding,
-          decoration: AppTheme.tradingCardDecoration(
-            borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.raised,
+            accent: AppTheme.neonCyan,
+            radius: 16,
+            borderOpacity: 0.28,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2949,65 +2946,64 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         ],
       ),
       bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Track'),
-      body: Stack(
-        children: [
-          SafeArea(
-            child: StreamBuilder<ArcBlueprintStateSnapshot>(
-              stream: _repository.watchMyBlueprintStateSnapshot(),
-              builder: (context, snapshot) {
-                final hydration = snapshot.data;
-                final states =
-                    hydration?.states ?? const <String, ArcBlueprintState>{};
-                if (hydration == null ||
-                    (hydration.isLoading && states.isEmpty)) {
-                  return _buildOwnershipSynchronizingState();
-                }
-                final counts = _buildCounts(allBlueprints, states);
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: StreamBuilder<ArcBlueprintStateSnapshot>(
+            stream: _repository.watchMyBlueprintStateSnapshot(),
+            builder: (context, snapshot) {
+              final hydration = snapshot.data;
+              final states =
+                  hydration?.states ?? const <String, ArcBlueprintState>{};
+              if (hydration == null ||
+                  (hydration.isLoading && states.isEmpty)) {
+                return _buildOwnershipSynchronizingState();
+              }
+              final counts = _buildCounts(allBlueprints, states);
 
-                return StreamBuilder<ArcSavedLoadout?>(
-                  stream: _loadoutRepository.watchFavouriteLoadout(),
-                  builder: (context, loadoutSnapshot) {
-                    final loadout = loadoutSnapshot.data;
-                    final plan = ArcGeneratedLoadoutPlan.fromMap(
-                      loadout?.smartBuildData,
-                    );
-                    final smartBuildHunt = ArcSmartBuildHuntEngine.build(
-                      plan: plan,
-                      blueprintStates: states,
-                    );
-                    final filtered = _applyFilter(
-                      allBlueprints,
-                      states,
-                      smartBuildHunt: smartBuildHunt,
-                    );
-                    return ListView(
-                      padding: EdgeInsets.fromLTRB(
-                        AppTheme.pagePadding.left,
-                        8,
-                        AppTheme.pagePadding.right,
-                        AppTheme.pagePadding.bottom + 82,
+              return StreamBuilder<ArcSavedLoadout?>(
+                stream: _loadoutRepository.watchFavouriteLoadout(),
+                builder: (context, loadoutSnapshot) {
+                  final loadout = loadoutSnapshot.data;
+                  final plan = ArcGeneratedLoadoutPlan.fromMap(
+                    loadout?.smartBuildData,
+                  );
+                  final smartBuildHunt = ArcSmartBuildHuntEngine.build(
+                    plan: plan,
+                    blueprintStates: states,
+                  );
+                  final filtered = _applyFilter(
+                    allBlueprints,
+                    states,
+                    smartBuildHunt: smartBuildHunt,
+                  );
+                  return ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      AppTheme.pagePadding.left,
+                      8,
+                      AppTheme.pagePadding.right,
+                      AppTheme.pagePadding.bottom + 82,
+                    ),
+                    children: [
+                      if (smartBuildHunt != null)
+                        _buildSmartBuildHuntPanel(smartBuildHunt),
+                      _buildOverviewGrid(context, filtered, states, loadout),
+                      const SizedBox(height: 18),
+                      _buildBottomControls(
+                        allBlueprints,
+                        filtered,
+                        states,
+                        counts,
                       ),
-                      children: [
-                        if (smartBuildHunt != null)
-                          _buildSmartBuildHuntPanel(smartBuildHunt),
-                        _buildOverviewGrid(context, filtered, states, loadout),
-                        const SizedBox(height: 18),
-                        _buildBottomControls(
-                          allBlueprints,
-                          filtered,
-                          states,
-                          counts,
-                        ),
-                        const SizedBox(height: 10),
-                        const ArcAdBannerCard(),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
+                      const SizedBox(height: 10),
+                      const ArcAdBannerCard(),
+                    ],
+                  );
+                },
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }

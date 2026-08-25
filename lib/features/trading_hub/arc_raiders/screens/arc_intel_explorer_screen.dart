@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint.dart';
@@ -94,17 +95,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackground,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.35)),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.neonPink.withValues(alpha: 0.10),
-              blurRadius: 18,
-              spreadRadius: 1,
-            ),
-          ],
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          accent: AppTheme.neonCyan,
+          radius: 18,
+          borderOpacity: 0.35,
+          glow: true,
         ),
         child: Row(
           children: [
@@ -139,10 +135,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
   Widget _buildEmptyState(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: 18,
+        borderOpacity: 0.10,
       ),
       child: Text(
         'Select a blueprint and the app will summarise where players most commonly report finding it, plus the best confirmed combinations.',
@@ -161,10 +157,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
     if (!intel.hasReports) {
       return Container(
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          radius: 18,
+          borderOpacity: 0.10,
         ),
         child: Text(
           'No community intel for ${blueprint.name} yet. The first reports will start building the percentages here.',
@@ -263,10 +259,11 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
   ) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonPink,
+        radius: 18,
+        borderOpacity: 0.16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,17 +324,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
 
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.30)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonPink.withValues(alpha: 0.10),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonPink,
+        radius: 18,
+        borderOpacity: 0.30,
+        glow: true,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,11 +400,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: valueColor),
       child: RichText(
         text: TextSpan(
           style: const TextStyle(
@@ -511,10 +499,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
 
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: 18,
+        borderOpacity: 0.08,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,9 +546,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        radius: 14,
+        borderOpacity: 0.08,
       ),
       child: Row(
         children: [
@@ -593,9 +582,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        radius: 14,
+        borderOpacity: 0.08,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

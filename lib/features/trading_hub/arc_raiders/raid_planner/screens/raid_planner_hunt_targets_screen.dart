@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -486,211 +487,209 @@ class _RaidPlannerHuntTargetsScreenState
         foregroundColor: Colors.white,
         title: Text(
           'Active Hunt Targets',
-          style: AppTheme.neonTextStyle(
+          style: AppTheme.tradingHeading(
             fontSize: 22,
             color: AppTheme.neonCyan,
-            isBold: true,
           ),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-          SafeArea(
-            child: StreamBuilder<Map<String, ArcBlueprintState>>(
-              stream: _repository.watchBlueprintStates(),
-              builder: (context, stateSnapshot) {
-                final states = stateSnapshot.data ?? const {};
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: StreamBuilder<Map<String, ArcBlueprintState>>(
+            stream: _repository.watchBlueprintStates(),
+            builder: (context, stateSnapshot) {
+              final states = stateSnapshot.data ?? const {};
 
-                if (!_saving &&
-                    !_syncing &&
-                    !_manualDirty &&
-                    stateSnapshot.hasData) {
-                  final existing = _selectedIds.whereType<String>().toSet();
-                  final incoming = <String>{};
+              if (!_saving &&
+                  !_syncing &&
+                  !_manualDirty &&
+                  stateSnapshot.hasData) {
+                final existing = _selectedIds.whereType<String>().toSet();
+                final incoming = <String>{};
 
-                  for (final entry in states.entries) {
-                    final rank = entry.value.priorityRank;
-                    if (rank >= 1 && rank <= 5) {
-                      incoming.add(entry.key);
-                    }
-                  }
-
-                  if (existing.isEmpty && incoming.isNotEmpty) {
-                    _hydrateFromStates(states);
+                for (final entry in states.entries) {
+                  final rank = entry.value.priorityRank;
+                  if (rank >= 1 && rank <= 5) {
+                    incoming.add(entry.key);
                   }
                 }
 
-                return StreamBuilder<List<TradingListing>>(
-                  stream: _repository.watchActiveListings(),
-                  builder: (context, listingSnapshot) {
-                    final listings =
-                        listingSnapshot.data ?? const <TradingListing>[];
+                if (existing.isEmpty && incoming.isNotEmpty) {
+                  _hydrateFromStates(states);
+                }
+              }
 
-                    if (stateSnapshot.hasData && listingSnapshot.hasData) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (!mounted) {
-                          return;
-                        }
+              return StreamBuilder<List<TradingListing>>(
+                stream: _repository.watchActiveListings(),
+                builder: (context, listingSnapshot) {
+                  final listings =
+                      listingSnapshot.data ?? const <TradingListing>[];
 
-                        unawaited(
-                          _autoSyncHunts(states: states, listings: listings),
-                        );
-                      });
-                    }
+                  if (stateSnapshot.hasData && listingSnapshot.hasData) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) {
+                        return;
+                      }
 
-                    final selectedCount = _selectedIds
-                        .whereType<String>()
-                        .where((id) => id.isNotEmpty)
-                        .length;
+                      unawaited(
+                        _autoSyncHunts(states: states, listings: listings),
+                      );
+                    });
+                  }
 
-                    final ownedRankedCount = _ownedRankedCount(states);
-                    final tradeAvailableIds = _tradeAvailableBlueprintIds(
-                      listings,
-                    );
-                    final selectedTradeAvailable = _selectedIds
-                        .whereType<String>()
-                        .where(tradeAvailableIds.contains)
-                        .length;
+                  final selectedCount = _selectedIds
+                      .whereType<String>()
+                      .where((id) => id.isNotEmpty)
+                      .length;
 
-                    return ListView(
-                      padding: const EdgeInsets.all(AppTheme.spaceM),
-                      children: [
-                        const _ExpeditionResetFocusPanel(),
-                        const SizedBox(height: AppTheme.spaceM),
-                        const _NomadicRiderGuidancePanel(),
-                        const SizedBox(height: AppTheme.spaceM),
-                        ElectricChargeBorder(
-                          active: true,
-                          radius: 18,
-                          child: Container(
-                            padding: const EdgeInsets.all(AppTheme.spaceM),
-                            decoration: AppTheme.tradingCardDecoration(
-                              radius: 18,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Raid Planner Source of Truth',
-                                  style: AppTheme.neonTextStyle(
-                                    fontSize: 24,
-                                    color: AppTheme.neonPink,
-                                    isBold: true,
-                                  ),
+                  final ownedRankedCount = _ownedRankedCount(states);
+                  final tradeAvailableIds = _tradeAvailableBlueprintIds(
+                    listings,
+                  );
+                  final selectedTradeAvailable = _selectedIds
+                      .whereType<String>()
+                      .where(tradeAvailableIds.contains)
+                      .length;
+
+                  return ListView(
+                    padding: const EdgeInsets.all(AppTheme.spaceM),
+                    children: [
+                      const _ExpeditionResetFocusPanel(),
+                      const SizedBox(height: AppTheme.spaceM),
+                      const _NomadicRiderGuidancePanel(),
+                      const SizedBox(height: AppTheme.spaceM),
+                      ElectricChargeBorder(
+                        active: true,
+                        radius: 18,
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.spaceM),
+                          decoration: ArcUiTokens.surfaceDecoration(
+                            role: ArcSurfaceRole.raised,
+                            accent: AppTheme.neonPink,
+                            radius: 18,
+                            glow: true,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Raid Planner Source of Truth',
+                                style: AppTheme.tradingHeading(
+                                  fontSize: 24,
+                                  color: AppTheme.neonPink,
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Hunts now sync with Blueprint Tracker ownership. Owned targets are removed from active hunt slots and replacements are filled automatically.',
-                                  style: AppTheme.bodyTextStyle(
-                                    fontSize: 14,
-                                    color: AppTheme.tradingMutedText,
-                                  ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Hunts now sync with Blueprint Tracker ownership. Owned targets are removed from active hunt slots and replacements are filled automatically.',
+                                style: AppTheme.bodyTextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.tradingMutedText,
                                 ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    _StatusPill(
-                                      label: '$selectedCount / 5 active',
-                                      color: AppTheme.neonCyan,
-                                    ),
-                                    _StatusPill(
-                                      label:
-                                          '$ownedRankedCount owned removed automatically',
-                                      color: AppTheme.neonPink,
-                                    ),
-                                    _StatusPill(
-                                      label:
-                                          '$selectedTradeAvailable trade-linked',
-                                      color: Colors.white70,
-                                    ),
-                                  ],
-                                ),
-                                if (_syncing) ...[
-                                  const SizedBox(height: 12),
-                                  LinearProgressIndicator(
-                                    minHeight: 3,
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  _StatusPill(
+                                    label: '$selectedCount / 5 active',
                                     color: AppTheme.neonCyan,
-                                    backgroundColor: Colors.white.withValues(
-                                      alpha: 0.08,
-                                    ),
+                                  ),
+                                  _StatusPill(
+                                    label:
+                                        '$ownedRankedCount owned removed automatically',
+                                    color: AppTheme.neonPink,
+                                  ),
+                                  _StatusPill(
+                                    label:
+                                        '$selectedTradeAvailable trade-linked',
+                                    color: Colors.white70,
                                   ),
                                 ],
+                              ),
+                              if (_syncing) ...[
+                                const SizedBox(height: 12),
+                                LinearProgressIndicator(
+                                  minHeight: 3,
+                                  color: AppTheme.neonCyan,
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                ),
                               ],
-                            ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        for (var index = 0; index < 5; index++) ...[
-                          _HuntTargetDropdown(
-                            index: index,
-                            value: _selectedIds[index],
-                            options: _optionsForSlot(
-                              slotIndex: index,
-                              states: states,
-                              listings: listings,
-                            ),
-                            tradeAvailableIds: tradeAvailableIds,
-                            onChanged: (value) {
-                              setState(() {
-                                _manualDirty = true;
-                                _selectedIds[index] = value;
-                              });
-                            },
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      for (var index = 0; index < 5; index++) ...[
+                        _HuntTargetDropdown(
+                          index: index,
+                          value: _selectedIds[index],
+                          options: _optionsForSlot(
+                            slotIndex: index,
+                            states: states,
+                            listings: listings,
                           ),
-                          const SizedBox(height: AppTheme.spaceS),
-                        ],
-                        const SizedBox(height: AppTheme.spaceM),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: _saving ? null : _clearAll,
-                                icon: const Icon(Icons.clear_all_rounded),
-                                label: const Text('Clear'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white70,
-                                  side: BorderSide(
-                                    color: AppTheme.neonCyan.withValues(
-                                      alpha: 0.45,
-                                    ),
+                          tradeAvailableIds: tradeAvailableIds,
+                          onChanged: (value) {
+                            setState(() {
+                              _manualDirty = true;
+                              _selectedIds[index] = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: AppTheme.spaceS),
+                      ],
+                      const SizedBox(height: AppTheme.spaceM),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _saving ? null : _clearAll,
+                              icon: const Icon(Icons.clear_all_rounded),
+                              label: const Text('Clear'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white70,
+                                side: BorderSide(
+                                  color: AppTheme.neonCyan.withValues(
+                                    alpha: 0.45,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: AppTheme.spaceS),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: _saving ? null : () => _save(states),
-                                icon: _saving
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.save_rounded),
-                                label: Text(_saving ? 'Saving' : 'Save Hunts'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.neonPink,
-                                  foregroundColor: Colors.white,
-                                ),
+                          ),
+                          const SizedBox(width: AppTheme.spaceS),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _saving ? null : () => _save(states),
+                              icon: _saving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_rounded),
+                              label: Text(_saving ? 'Saving' : 'Save Hunts'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.neonPink,
+                                foregroundColor: Colors.white,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }
@@ -706,7 +705,12 @@ class _ExpeditionResetFocusPanel extends StatelessWidget {
       radius: 18,
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceM),
-        decoration: AppTheme.tradingCardDecoration(radius: 18),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: AppTheme.neonCyan,
+          radius: 18,
+          glow: true,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -788,17 +792,12 @@ class _NomadicRiderGuidancePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.32)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonPink.withValues(alpha: 0.08),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: AppTheme.neonPink,
+        radius: 18,
+        borderOpacity: 0.32,
+        glow: true,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -919,11 +918,7 @@ class _PathChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.neonCyan.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: AppTheme.neonCyan),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -967,11 +962,7 @@ class _StatusPill extends StatelessWidget {
         horizontal: AppTheme.spaceS,
         vertical: 6,
       ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
         style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
@@ -999,10 +990,11 @@ class _HuntTargetDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceS),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.86),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.25)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonCyan,
+        radius: 16,
+        borderOpacity: 0.25,
       ),
       child: DropdownButtonFormField<String?>(
         initialValue: value,

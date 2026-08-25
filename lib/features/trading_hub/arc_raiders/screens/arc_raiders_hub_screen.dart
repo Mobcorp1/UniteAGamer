@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import '../widgets/arc_ad_banner_card.dart';
+import '../widgets/arc_raiders_screen_shell.dart';
 
 import '../../../../screens/build/app_bar.dart';
 import '../../../../build/app_drawer.dart';
@@ -251,107 +252,115 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
         showLogout: true,
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: _ArcHubScreenBackdrop(accent: selected.accent),
-          ),
-          const Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(opacity: 0.30, child: StaticWatermark()),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: _ArcHubScreenBackdrop(accent: selected.accent),
             ),
-          ),
-          Positioned.fill(
-            child: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final bottomReserve = ArcResponsiveChrome.bottomSafePadding(
-                    context,
-                  );
-                  final maxWidth = ArcResponsiveChrome.maxContentWidth(context);
-
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppTheme.spaceS,
-                      AppTheme.spaceS,
-                      AppTheme.spaceS,
-                      bottomReserve,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: maxWidth),
-                        child: Column(
-                          children: [
-                            _HubHeader(selected: selected),
-                            const SizedBox(height: AppTheme.spaceS),
-                            Expanded(
-                              child: Center(
-                                child: _PremiumFeatureCarousel(
-                                  controller: _controller,
-                                  selectedIndex: _selectedIndex,
-                                  features: _features,
-                                  onPageChanged: (index) {
-                                    setState(() => _selectedIndex = index);
-                                  },
-                                  onOpen: _openFeature,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: Opacity(opacity: 0.30, child: StaticWatermark()),
               ),
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              top: false,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: math.max(
-                      ArcResponsiveChrome.dockMaxWidth(context),
-                      ArcResponsiveChrome.adMaxWidth(context),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppTheme.spaceS,
-                      0,
-                      AppTheme.spaceS,
-                      AppTheme.spaceXS,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const _HubAdSlot(),
-                        const SizedBox(height: AppTheme.spaceXS),
-                        _ArcBottomDock(
-                          onMatch: () =>
-                              _openFeature(_featureByTitle('Match a Raider')),
-                          onRaid: () =>
-                              _openFeature(_featureByTitle('Raid Planner')),
-                          onMic: () => UagVoiceArcAssistantSheet.show(context),
-                          onTrading: () =>
-                              _openFeature(_featureByTitle('Trading')),
-                          onIntel: () =>
-                              _openFeature(_featureByTitle('Community Intel')),
+            Positioned.fill(
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final bottomReserve = ArcResponsiveChrome.bottomSafePadding(
+                      context,
+                    );
+                    final maxWidth = ArcResponsiveChrome.maxContentWidth(
+                      context,
+                    );
+
+                    return Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        AppTheme.spaceS,
+                        AppTheme.spaceS,
+                        AppTheme.spaceS,
+                        bottomReserve,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: maxWidth),
+                          child: Column(
+                            children: [
+                              _HubHeader(selected: selected),
+                              const SizedBox(height: AppTheme.spaceS),
+                              Expanded(
+                                child: Center(
+                                  child: _PremiumFeatureCarousel(
+                                    controller: _controller,
+                                    selectedIndex: _selectedIndex,
+                                    features: _features,
+                                    onPageChanged: (index) {
+                                      setState(() => _selectedIndex = index);
+                                    },
+                                    onOpen: _openFeature,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: math.max(
+                        ArcResponsiveChrome.dockMaxWidth(context),
+                        ArcResponsiveChrome.adMaxWidth(context),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        AppTheme.spaceS,
+                        0,
+                        AppTheme.spaceS,
+                        AppTheme.spaceXS,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const _HubAdSlot(),
+                          const SizedBox(height: AppTheme.spaceXS),
+                          _ArcBottomDock(
+                            onMatch: () =>
+                                _openFeature(_featureByTitle('Match a Raider')),
+                            onRaid: () =>
+                                _openFeature(_featureByTitle('Raid Planner')),
+                            onMic: () =>
+                                UagVoiceArcAssistantSheet.show(context),
+                            onTrading: () =>
+                                _openFeature(_featureByTitle('Trading')),
+                            onIntel: () => _openFeature(
+                              _featureByTitle('Community Intel'),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1097,47 +1106,50 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
           ),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: _ArcHubScreenBackdrop(accent: selected.accent),
-          ),
-          const Positioned.fill(
-            child: IgnorePointer(
-              child: Opacity(opacity: 0.30, child: StaticWatermark()),
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: _ArcHubScreenBackdrop(accent: selected.accent),
             ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: AppTheme.spaceM),
-                Expanded(
-                  child: _PremiumFeatureCarousel(
-                    controller: _controller,
-                    selectedIndex: _selectedIndex,
-                    features: _trackingFeatures,
-                    onPageChanged: (index) {
-                      setState(() => _selectedIndex = index);
-                    },
-                    onOpen: _openFeature,
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: Opacity(opacity: 0.30, child: StaticWatermark()),
+              ),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: AppTheme.spaceM),
+                  Expanded(
+                    child: _PremiumFeatureCarousel(
+                      controller: _controller,
+                      selectedIndex: _selectedIndex,
+                      features: _trackingFeatures,
+                      onPageChanged: (index) {
+                        setState(() => _selectedIndex = index);
+                      },
+                      onOpen: _openFeature,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spaceS),
-                const _HubAdSlot(),
-                const SizedBox(height: AppTheme.spaceXS),
-                _ArcBottomDock(
-                  onMatch: () => Navigator.of(context).pop(),
-                  onRaid: () => Navigator.of(context).pop(),
-                  onMic: () => UagVoiceArcAssistantSheet.show(context),
-                  onTrading: () => Navigator.of(context).pop(),
-                  onIntel: () => Navigator.of(context).pop(),
-                ),
-                const SizedBox(height: AppTheme.spaceL),
-              ],
+                  const SizedBox(height: AppTheme.spaceS),
+                  const _HubAdSlot(),
+                  const SizedBox(height: AppTheme.spaceXS),
+                  _ArcBottomDock(
+                    onMatch: () => Navigator.of(context).pop(),
+                    onRaid: () => Navigator.of(context).pop(),
+                    onMic: () => UagVoiceArcAssistantSheet.show(context),
+                    onTrading: () => Navigator.of(context).pop(),
+                    onIntel: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(height: AppTheme.spaceL),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

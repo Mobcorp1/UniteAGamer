@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class EmbarkIdCard extends StatelessWidget {
@@ -11,8 +12,11 @@ class EmbarkIdCard extends StatelessWidget {
     final visible = embarkId.trim().isNotEmpty;
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: AppTheme.neonCyan,
+        radius: 16,
+        borderOpacity: 0.24,
       ),
       child: Row(
         children: [

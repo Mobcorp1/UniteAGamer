@@ -7,6 +7,7 @@ import '../data/arc_player_session_catalog.dart';
 import '../models/arc_profile_social_models.dart';
 import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
+import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
 
 class ArcProfileEditScreen extends StatefulWidget {
@@ -401,7 +402,10 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.transparent,
-        body: Center(child: CircularProgressIndicator()),
+        body: ArcRaidersScreenShell(
+          showAdBanner: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
@@ -497,254 +501,257 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         title: const Text('Edit Your Hub Profile'),
         backgroundColor: Colors.transparent,
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 860),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                children: [
-                  heroCard(),
-                  const SizedBox(height: AppTheme.spaceL),
-                  sectionCard(
-                    title: 'Identity',
-                    icon: Icons.badge_outlined,
-                    children: [
-                      _field(
-                        _uagIdController,
-                        'UAG ID',
-                        helperText: 'Auto-assigned numeric trader ID',
-                        enabled: false,
-                      ),
-                      _field(
-                        _uagNameController,
-                        'UAG Name',
-                        validator: (v) => _required(v, 'UAG Name'),
-                      ),
-                      _field(_embarkIdController, 'Embark ID'),
-                    ],
-                  ),
-                  sectionCard(
-                    title: 'Platform & Server',
-                    icon: Icons.travel_explore_rounded,
-                    children: [
-                      _field(
-                        _regionController,
-                        'Region',
-                        validator: (v) => _required(v, 'Region'),
-                      ),
-                      _dropdown(
-                        label: 'Server Preference',
-                        value: _serverPreference,
-                        values: _serverPreferences,
-                        onChanged: (value) => setState(
-                          () => _serverPreference = value ?? 'Automatic',
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 860),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.all(AppTheme.spaceL),
+                  children: [
+                    heroCard(),
+                    const SizedBox(height: AppTheme.spaceL),
+                    sectionCard(
+                      title: 'Identity',
+                      icon: Icons.badge_outlined,
+                      children: [
+                        _field(
+                          _uagIdController,
+                          'UAG ID',
+                          helperText: 'Auto-assigned numeric trader ID',
+                          enabled: false,
                         ),
-                      ),
-                      _field(
-                        _platformController,
-                        'Preferred Platform',
-                        validator: (v) => _required(v, 'Preferred Platform'),
-                      ),
-                      _field(
-                        _timezoneController,
-                        'Timezone',
-                        validator: (v) => _required(v, 'Timezone'),
-                      ),
-                    ],
-                  ),
-                  sectionCard(
-                    title: 'Archetypes & Match Fit',
-                    icon: Icons.hub_rounded,
-                    children: [
-                      const Text(
-                        'Select everything that applies. These tags drive matchmaking, squad recommendations and public profile fit.',
-                        style: TextStyle(color: Colors.white70, height: 1.35),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        'Player archetypes',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 15,
-                          color: AppTheme.neonCyan,
+                        _field(
+                          _uagNameController,
+                          'UAG Name',
+                          validator: (v) => _required(v, 'UAG Name'),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      _multiSelectChips(
-                        items: _archetypeOptions,
-                        selected: _archetypes,
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        'Play style',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 15,
-                          color: AppTheme.neonCyan,
+                        _field(_embarkIdController, 'Embark ID'),
+                      ],
+                    ),
+                    sectionCard(
+                      title: 'Platform & Server',
+                      icon: Icons.travel_explore_rounded,
+                      children: [
+                        _field(
+                          _regionController,
+                          'Region',
+                          validator: (v) => _required(v, 'Region'),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      _multiSelectChips(
-                        items: _playStyleOptions,
-                        selected: _playStyles,
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        'Communication style',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 15,
-                          color: AppTheme.neonCyan,
+                        _dropdown(
+                          label: 'Server Preference',
+                          value: _serverPreference,
+                          values: _serverPreferences,
+                          onChanged: (value) => setState(
+                            () => _serverPreference = value ?? 'Automatic',
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      _singleSelectChips(
-                        items: _communicationOptions,
-                        selected: _communicationStyle,
-                        onChanged: (value) =>
-                            setState(() => _communicationStyle = value),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        'Squad intent',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 15,
-                          color: AppTheme.neonCyan,
+                        _field(
+                          _platformController,
+                          'Preferred Platform',
+                          validator: (v) => _required(v, 'Preferred Platform'),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      _singleSelectChips(
-                        items: _squadIntentOptions,
-                        selected: _squadIntent,
-                        onChanged: (value) =>
-                            setState(() => _squadIntent = value),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        'What are you doing this session?',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 15,
-                          color: AppTheme.neonCyan,
+                        _field(
+                          _timezoneController,
+                          'Timezone',
+                          validator: (v) => _required(v, 'Timezone'),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      _singleSelectChips(
-                        items: ArcPlayerSessionCatalog.sessionIntents,
-                        selected: _sessionIntent,
-                        onChanged: (value) =>
-                            setState(() => _sessionIntent = value),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        'Current priority',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 15,
-                          color: AppTheme.neonCyan,
+                      ],
+                    ),
+                    sectionCard(
+                      title: 'Archetypes & Match Fit',
+                      icon: Icons.hub_rounded,
+                      children: [
+                        const Text(
+                          'Select everything that applies. These tags drive matchmaking, squad recommendations and public profile fit.',
+                          style: TextStyle(color: Colors.white70, height: 1.35),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      _singleSelectChips(
-                        items: ArcPlayerSessionCatalog.priorities,
-                        selected: _currentPriority,
-                        onChanged: (value) =>
-                            setState(() => _currentPriority = value),
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        'Current energy',
-                        style: AppTheme.tradingHeading(
-                          fontSize: 15,
-                          color: AppTheme.neonCyan,
+                        const SizedBox(height: AppTheme.spaceM),
+                        Text(
+                          'Player archetypes',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonCyan,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      _singleSelectChips(
-                        items: _socialEnergyOptions,
-                        selected: _socialEnergy,
-                        onChanged: (value) =>
-                            setState(() => _socialEnergy = value),
-                      ),
-                    ],
-                  ),
-                  sectionCard(
-                    title: 'Trading Preferences',
-                    icon: Icons.tune_rounded,
-                    children: [
-                      _switchTile(
-                        value: _visibleInSearch,
-                        onChanged: (value) =>
-                            setState(() => _visibleInSearch = value),
-                        title: 'Visible in search',
-                        subtitle: 'Allow other traders to find your profile.',
-                      ),
-                      _switchTile(
-                        value: _micOk,
-                        onChanged: (value) => setState(() => _micOk = value),
-                        title: 'Mic okay',
-                        subtitle: 'Show voice chat availability.',
-                      ),
-                      _switchTile(
-                        value: _crossRegionOk,
-                        onChanged: (value) =>
-                            setState(() => _crossRegionOk = value),
-                        title: 'Cross-region okay',
-                        subtitle:
-                            'Open to switching region for raids, trades and event windows.',
-                      ),
-                      _switchTile(
-                        value: _crossplayEnabled,
-                        onChanged: (value) =>
-                            setState(() => _crossplayEnabled = value),
-                        title: 'Crossplay enabled',
-                        subtitle:
-                            'Used for cross-platform matching and trade planning.',
-                      ),
-                    ],
-                  ),
-                  sectionCard(
-                    title: 'Public Social Links',
-                    icon: Icons.link_rounded,
-                    children: [
-                      ArcSocialLinksEditor(
-                        initialLinks: _socialLinks,
-                        onChanged: (links) => _socialLinks = links,
-                      ),
-                    ],
-                  ),
-                  sectionCard(
-                    title: 'Account',
-                    icon: Icons.account_balance_wallet_outlined,
-                    children: [
-                      _dropdown(
-                        label: 'Preferred payout method',
-                        value: _payoutMethod,
-                        values: _payoutMethods,
-                        onChanged: (value) => setState(
-                          () => _payoutMethod = value ?? 'Bank Transfer',
+                        const SizedBox(height: AppTheme.spaceS),
+                        _multiSelectChips(
+                          items: _archetypeOptions,
+                          selected: _archetypes,
                         ),
-                      ),
-                      _dropdown(
-                        label: 'Subscription status',
-                        value: _subscriptionStatus,
-                        values: _subscriptionOptions,
-                        onChanged: (value) => setState(
-                          () => _subscriptionStatus = value ?? 'inactive',
+                        const SizedBox(height: AppTheme.spaceM),
+                        Text(
+                          'Play style',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonCyan,
+                          ),
                         ),
-                      ),
-                      _switchTile(
-                        value: _affiliateEnabled,
-                        onChanged: (value) =>
-                            setState(() => _affiliateEnabled = value),
-                        title: 'Affiliate programme enabled',
-                      ),
-                    ],
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _isSaving ? null : _save,
-                    icon: const Icon(Icons.save_rounded),
-                    label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
-                  ),
-                ],
+                        const SizedBox(height: AppTheme.spaceS),
+                        _multiSelectChips(
+                          items: _playStyleOptions,
+                          selected: _playStyles,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Text(
+                          'Communication style',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonCyan,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spaceS),
+                        _singleSelectChips(
+                          items: _communicationOptions,
+                          selected: _communicationStyle,
+                          onChanged: (value) =>
+                              setState(() => _communicationStyle = value),
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Text(
+                          'Squad intent',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonCyan,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spaceS),
+                        _singleSelectChips(
+                          items: _squadIntentOptions,
+                          selected: _squadIntent,
+                          onChanged: (value) =>
+                              setState(() => _squadIntent = value),
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Text(
+                          'What are you doing this session?',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonCyan,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spaceS),
+                        _singleSelectChips(
+                          items: ArcPlayerSessionCatalog.sessionIntents,
+                          selected: _sessionIntent,
+                          onChanged: (value) =>
+                              setState(() => _sessionIntent = value),
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Text(
+                          'Current priority',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonCyan,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spaceS),
+                        _singleSelectChips(
+                          items: ArcPlayerSessionCatalog.priorities,
+                          selected: _currentPriority,
+                          onChanged: (value) =>
+                              setState(() => _currentPriority = value),
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Text(
+                          'Current energy',
+                          style: AppTheme.tradingHeading(
+                            fontSize: 15,
+                            color: AppTheme.neonCyan,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spaceS),
+                        _singleSelectChips(
+                          items: _socialEnergyOptions,
+                          selected: _socialEnergy,
+                          onChanged: (value) =>
+                              setState(() => _socialEnergy = value),
+                        ),
+                      ],
+                    ),
+                    sectionCard(
+                      title: 'Trading Preferences',
+                      icon: Icons.tune_rounded,
+                      children: [
+                        _switchTile(
+                          value: _visibleInSearch,
+                          onChanged: (value) =>
+                              setState(() => _visibleInSearch = value),
+                          title: 'Visible in search',
+                          subtitle: 'Allow other traders to find your profile.',
+                        ),
+                        _switchTile(
+                          value: _micOk,
+                          onChanged: (value) => setState(() => _micOk = value),
+                          title: 'Mic okay',
+                          subtitle: 'Show voice chat availability.',
+                        ),
+                        _switchTile(
+                          value: _crossRegionOk,
+                          onChanged: (value) =>
+                              setState(() => _crossRegionOk = value),
+                          title: 'Cross-region okay',
+                          subtitle:
+                              'Open to switching region for raids, trades and event windows.',
+                        ),
+                        _switchTile(
+                          value: _crossplayEnabled,
+                          onChanged: (value) =>
+                              setState(() => _crossplayEnabled = value),
+                          title: 'Crossplay enabled',
+                          subtitle:
+                              'Used for cross-platform matching and trade planning.',
+                        ),
+                      ],
+                    ),
+                    sectionCard(
+                      title: 'Public Social Links',
+                      icon: Icons.link_rounded,
+                      children: [
+                        ArcSocialLinksEditor(
+                          initialLinks: _socialLinks,
+                          onChanged: (links) => _socialLinks = links,
+                        ),
+                      ],
+                    ),
+                    sectionCard(
+                      title: 'Account',
+                      icon: Icons.account_balance_wallet_outlined,
+                      children: [
+                        _dropdown(
+                          label: 'Preferred payout method',
+                          value: _payoutMethod,
+                          values: _payoutMethods,
+                          onChanged: (value) => setState(
+                            () => _payoutMethod = value ?? 'Bank Transfer',
+                          ),
+                        ),
+                        _dropdown(
+                          label: 'Subscription status',
+                          value: _subscriptionStatus,
+                          values: _subscriptionOptions,
+                          onChanged: (value) => setState(
+                            () => _subscriptionStatus = value ?? 'inactive',
+                          ),
+                        ),
+                        _switchTile(
+                          value: _affiliateEnabled,
+                          onChanged: (value) =>
+                              setState(() => _affiliateEnabled = value),
+                          title: 'Affiliate programme enabled',
+                        ),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _isSaving ? null : _save,
+                      icon: const Icon(Icons.save_rounded),
+                      label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

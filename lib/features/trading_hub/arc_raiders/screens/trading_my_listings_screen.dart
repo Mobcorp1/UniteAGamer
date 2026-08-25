@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMyListingsScreen extends StatelessWidget {
@@ -39,151 +40,146 @@ class TradingMyListingsScreen extends StatelessWidget {
       if (listing.allowPartialOffers) 'Partial offers on',
     ];
 
-    return Container(
+    return TradingCard(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(),
-      child: Padding(
-        padding: AppTheme.sectionCardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    listing.title,
-                    style: AppTheme.tradingHeading(
-                      fontSize: 22,
-                      color: AppTheme.neonPink,
-                    ),
+      accent: listing.active ? AppTheme.neonCyan : AppTheme.tradingFaintText,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  listing.title,
+                  style: AppTheme.tradingHeading(
+                    fontSize: 22,
+                    color: AppTheme.neonPink,
                   ),
                 ),
-                const SizedBox(width: 12),
-                _statusChip(listing),
-              ],
+              ),
+              const SizedBox(width: 12),
+              _statusChip(listing),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceS),
+          if (listing.isQueueLinked) ...[
+            Container(
+              padding: AppTheme.pillPadding,
+              decoration: AppTheme.tradingPillDecoration(
+                color: AppTheme.warningAmber,
+              ),
+              child: Text(
+                listing.queueReleaseNumber <= 0
+                    ? 'Queue source listing'
+                    : 'Queue release ${listing.queueReleaseNumber + 1}',
+                style: const TextStyle(
+                  color: AppTheme.warningAmber,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
+              ),
             ),
             const SizedBox(height: AppTheme.spaceS),
-            if (listing.isQueueLinked) ...[
-              Container(
-                padding: AppTheme.pillPadding,
-                decoration: AppTheme.tradingPillDecoration(
-                  color: AppTheme.warningAmber,
-                ),
-                child: Text(
-                  listing.queueReleaseNumber <= 0
-                      ? 'Queue source listing'
-                      : 'Queue release ${listing.queueReleaseNumber + 1}',
-                  style: const TextStyle(
-                    color: AppTheme.warningAmber,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceS),
-            ],
+          ],
+          Text(
+            'Offering: ${listing.offeredSummary}',
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Wanted: ${listing.wantedSummary}',
+            style: TextStyle(color: AppTheme.tradingMutedText),
+          ),
+          if (formatBits.isNotEmpty) ...[
+            const SizedBox(height: 8),
             Text(
-              'Offering: ${listing.offeredSummary}',
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Wanted: ${listing.wantedSummary}',
-              style: TextStyle(color: AppTheme.tradingMutedText),
-            ),
-            if (formatBits.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                formatBits.join(' - '),
-                style: TextStyle(color: AppTheme.tradingFaintText),
-              ),
-            ],
-            if (listing.notes.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                listing.notes,
-                style: TextStyle(color: AppTheme.tradingFaintText),
-              ),
-            ],
-            const SizedBox(height: AppTheme.spaceM),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                TextButton.icon(
-                  onPressed: listing.active
-                      ? () => repository.closeListing(listing.id)
-                      : () => repository.reopenListing(listing.id),
-                  icon: Icon(
-                    listing.active
-                        ? Icons.pause_circle_outline
-                        : Icons.restart_alt_rounded,
-                  ),
-                  label: Text(
-                    listing.active ? 'Close Listing' : 'Reopen Listing',
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () => repository.deleteListing(listing.id),
-                  icon: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.redAccent,
-                  ),
-                  label: const Text(
-                    'Delete',
-                    style: TextStyle(color: Colors.redAccent),
-                  ),
-                ),
-              ],
+              formatBits.join(' - '),
+              style: TextStyle(color: AppTheme.tradingFaintText),
             ),
           ],
-        ),
+          if (listing.notes.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              listing.notes,
+              style: TextStyle(color: AppTheme.tradingFaintText),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spaceM),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              TextButton.icon(
+                onPressed: listing.active
+                    ? () => repository.closeListing(listing.id)
+                    : () => repository.reopenListing(listing.id),
+                icon: Icon(
+                  listing.active
+                      ? Icons.pause_circle_outline
+                      : Icons.restart_alt_rounded,
+                ),
+                label: Text(
+                  listing.active ? 'Close Listing' : 'Reopen Listing',
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => repository.deleteListing(listing.id),
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
+                label: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBody(BuildContext context, TradingRepository repository) {
-    return Stack(
-      children: [
-        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
-        SafeArea(
-          child: StreamBuilder<List<TradingListing>>(
-            stream: repository.watchMyListings(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppTheme.neonCyan),
-                );
-              }
+    return ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: StreamBuilder<List<TradingListing>>(
+          stream: repository.watchMyListings(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.neonCyan),
+              );
+            }
 
-              final items = snapshot.data ?? const <TradingListing>[];
-              if (items.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                    child: Text(
-                      'No listings yet. Create your first listing from the Trader Hub.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppTheme.tradingMutedText,
-                        fontSize: 16,
-                      ),
+            final items = snapshot.data ?? const <TradingListing>[];
+            if (items.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+                  child: Text(
+                    'No listings yet. Create your first listing from the Trader Hub.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppTheme.tradingMutedText,
+                      fontSize: 16,
                     ),
                   ),
-                );
-              }
-
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                children: [
-                  for (final item in items)
-                    _listingCard(context, repository, item),
-                ],
+                ),
               );
-            },
-          ),
+            }
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
+              children: [
+                for (final item in items)
+                  _listingCard(context, repository, item),
+              ],
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 

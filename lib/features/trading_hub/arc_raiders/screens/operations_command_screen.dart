@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_operations_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_stat_chip.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class OperationsCommandScreen extends StatefulWidget {
@@ -3323,29 +3324,13 @@ class _OperationsCommandScreenState extends State<OperationsCommandScreen>
   }
 
   Widget _metric(String label, String value, Color accent) {
-    return Container(
+    return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 112),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: AppTheme.tradingHeading(fontSize: 22, color: accent),
-          ),
-          Text(
-            label.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white60),
-          ),
-        ],
+      child: TradingStatChip(
+        label: label,
+        value: value,
+        color: accent,
+        compact: true,
       ),
     );
   }
