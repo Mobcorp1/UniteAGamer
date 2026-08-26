@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bench_upgrade_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_compact_tracker_card_metrics.dart';
@@ -96,7 +97,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       case ArcScrappyTrackerMode.bench:
         return 'Bench Operations';
       case ArcScrappyTrackerMode.quest:
-        return 'Mission Operations';
+        return 'Quest Tracker';
     }
   }
 
@@ -107,7 +108,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       case ArcScrappyTrackerMode.bench:
         return 'ARC Raiders Bench Operations';
       case ArcScrappyTrackerMode.quest:
-        return 'ARC Raiders Mission Operations';
+        return 'Quest Tracker';
     }
   }
 
@@ -118,7 +119,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       case ArcScrappyTrackerMode.bench:
         return 'Track bench materials by station and tier using swipeable premium cards.';
       case ArcScrappyTrackerMode.quest:
-        return 'Track quest collection items by trader and quest using swipeable premium cards.';
+        return 'Track quest collection items by status using a live progress board.';
     }
   }
 
@@ -1039,6 +1040,189 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     return _buildTrackerCarousel(cards, maxItemCount: maxItemCount);
   }
 
+  Widget _buildQuestKanban(
+    List<ArcScrappyItem> items,
+    Map<String, ArcScrappyState> states,
+  ) {
+    if (items.isEmpty) return _buildEmptyState();
+
+    final needed = <ArcScrappyItem>[];
+    final inProgress = <ArcScrappyItem>[];
+    final complete = <ArcScrappyItem>[];
+
+    for (final item in items) {
+      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+      if (state.ownedFor(item.neededCount)) {
+        complete.add(item);
+      } else if (state.collectedCount > 0) {
+        inProgress.add(item);
+      } else {
+        needed.add(item);
+      }
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final columnWidth = width >= 900
+            ? ((width - 24) / 3).clamp(248.0, 360.0)
+            : 258.0;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _questColumn(
+                title: 'Needed',
+                color: ArcUiTokens.secondaryAccent,
+                items: needed,
+                states: states,
+                width: columnWidth,
+              ),
+              const SizedBox(width: 12),
+              _questColumn(
+                title: 'In Progress',
+                color: ArcUiTokens.primaryAccent,
+                items: inProgress,
+                states: states,
+                width: columnWidth,
+              ),
+              const SizedBox(width: 12),
+              _questColumn(
+                title: 'Complete',
+                color: ArcUiTokens.success,
+                items: complete,
+                states: states,
+                width: columnWidth,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _questColumn({
+    required String title,
+    required Color color,
+    required List<ArcScrappyItem> items,
+    required Map<String, ArcScrappyState> states,
+    required double width,
+  }) {
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: ArcUiTokens.compactPanelPadding,
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          radius: ArcUiTokens.radiusM,
+          accent: color,
+          borderOpacity: 0.20,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title.toUpperCase(),
+                    style: ArcUiTokens.label(color: color),
+                  ),
+                ),
+                Text(
+                  '${items.length}',
+                  style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (items.isEmpty)
+              Text(
+                'No quest items here.',
+                style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+              )
+            else
+              ...items.map((item) {
+                final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+                return _questKanbanCard(item, state, color);
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _questKanbanCard(
+    ArcScrappyItem item,
+    ArcScrappyState state,
+    Color color,
+  ) {
+    final needed = item.neededCount <= 0 ? 1 : item.neededCount;
+    final collected = state.collectedCount.clamp(0, needed);
+    final progress = collected / needed;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+        onTap: () {
+          if (state.collectedCount > 0) {
+            _openItemEditor(item, state);
+          } else {
+            _showMissingItemInfo(item, state);
+          }
+        },
+        onLongPress: () => _openItemEditor(item, state),
+        child: Container(
+          padding: ArcUiTokens.densePanelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.interactive,
+            radius: ArcUiTokens.radiusS,
+            accent: color,
+            borderOpacity: 0.16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ArcUiTokens.cardTitle(fontSize: 12.5),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                '${item.category} - ${_displayGroupTitle(item.category, item.group)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 4,
+                  backgroundColor: Colors.white.withValues(alpha: 0.08),
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '$collected / $needed',
+                style: ArcUiTokens.metadata(color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Color _groupColor(List<ArcScrappyItem> items, String group) {
     final groupItem = items.firstWhere(
       (item) => item.group == group,
@@ -1065,13 +1249,18 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     return Scaffold(
       extendBody: true,
       extendBodyBehindAppBar: true,
-      bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'Scrappy Intel',
+      bottomNavigationBar: ArcCompanionBottomDock(
+        activeLabel: _mode == ArcScrappyTrackerMode.quest
+            ? 'Quest Tracker'
+            : 'Scrappy Intel',
       ),
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(_modeTitle, style: AppTheme.tradingHeading(fontSize: 25)),
+        title: Text(
+          _modeTitle,
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
+        ),
         actions: [ScrappyActionsMenu(onResetGrid: _confirmResetGrid)],
       ),
       body: ArcRaidersScreenShell(
@@ -1123,6 +1312,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   const SizedBox(height: AppTheme.spaceS),
                   _mode == ArcScrappyTrackerMode.scrappy
                       ? _buildScrappyList(filtered, states)
+                      : _mode == ArcScrappyTrackerMode.quest
+                      ? _buildQuestKanban(filtered, states)
                       : _buildGroupedList(filtered, states),
                   const SizedBox(height: AppTheme.spaceS),
                   ScrappyProgressHeader(

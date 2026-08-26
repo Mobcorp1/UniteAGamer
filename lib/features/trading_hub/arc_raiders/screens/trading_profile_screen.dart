@@ -16,6 +16,7 @@ import '../screens/arc_away_screen.dart';
 import '../screens/arc_profile_edit_screen.dart';
 import '../screens/arc_profile_setup_screen.dart';
 import '../screens/wall_of_legends_screen.dart';
+import '../widgets/arc_companion_bottom_dock.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 
 class TradingProfileScreen extends StatefulWidget {
@@ -167,9 +168,12 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
+      bottomNavigationBar: widget.showAppBar
+          ? const ArcCompanionBottomDock(activeLabel: 'profile')
+          : null,
       appBar: widget.showAppBar
           ? const UagAppBar(
-              title: 'Your Hub Profile',
+              title: 'Profile',
               subtitle:
                   'Identity, reputation, availability and match readiness.',
             )

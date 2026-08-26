@@ -1348,6 +1348,180 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
     );
   }
 
+  Widget _scheduleTimelineCard({
+    required List<RaidPlannerOpportunity> opportunities,
+    required DateTime utcNow,
+  }) {
+    final visible = opportunities.take(5).toList();
+
+    return Container(
+      padding: ArcUiTokens.compactPanelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusM,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.timeline_rounded,
+                color: ArcUiTokens.primaryAccent,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Raid Planner',
+                  style: ArcUiTokens.sectionTitle(
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                ),
+              ),
+              Text(
+                _dateLabel(DateTime.now()),
+                style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (visible.isEmpty)
+            Text(
+              'No selected target windows are scheduled in the next 7 days.',
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+            )
+          else
+            ...visible.map(
+              (opportunity) => _timelineOpportunityTile(
+                opportunity: opportunity,
+                utcNow: utcNow,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _timelineOpportunityTile({
+    required RaidPlannerOpportunity opportunity,
+    required DateTime utcNow,
+  }) {
+    final accent = opportunity.isLive
+        ? ArcUiTokens.success
+        : ArcUiTokens.primaryAccent;
+    final status = opportunity.isLive
+        ? 'LIVE'
+        : _durationLabel(opportunity.timeUntil(utcNow));
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 46,
+            child: Text(
+              _timeLabel(opportunity.startUtc),
+              style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
+            ),
+          ),
+          Column(
+            children: [
+              Container(
+                width: 9,
+                height: 9,
+                decoration: BoxDecoration(
+                  color: accent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 58,
+                color: ArcUiTokens.borderMedium.withValues(alpha: 0.70),
+              ),
+            ],
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              padding: ArcUiTokens.densePanelPadding,
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.interactive,
+                radius: ArcUiTokens.radiusS,
+                accent: accent,
+                borderOpacity: opportunity.isLive ? 0.30 : 0.16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          opportunity.rule.blueprintName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: ArcUiTokens.cardTitle(fontSize: 13),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: ArcUiTokens.chipDecoration(
+                          color: accent,
+                          selected: opportunity.isLive,
+                        ),
+                        child: Text(
+                          status,
+                          style: ArcUiTokens.label(
+                            color: accent,
+                          ).copyWith(fontSize: 9),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${opportunity.slot.mapName} - ${opportunity.slot.eventName}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${_timeLabel(opportunity.startUtc)}-${_timeLabel(opportunity.endUtc)} local',
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _timeLabel(DateTime utc) {
+    final local = utc.toLocal();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  String _dateLabel(DateTime local) {
+    return '${local.day}/${local.month}';
+  }
+
   Widget _buildContent({
     required List<RaidBlueprintTarget> targets,
     required RaidPlannerEntitlement entitlement,
@@ -1389,6 +1563,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         UagCarouselPage(
           children: [
             _entitlementCard(entitlement),
+            const SizedBox(height: 14),
+            _scheduleTimelineCard(
+              opportunities: allOpportunities,
+              utcNow: utcNow,
+            ),
             const SizedBox(height: 14),
             _regionalBlueprintPlannerCard(
               states: states,
@@ -1528,8 +1707,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         ],
       ),
       appBar: const UagAppBar(
-        title: 'Raid Timeline',
-        subtitle: 'Regional condition, Blueprint and playtime intelligence.',
+        title: 'Raid Planner',
+        subtitle: 'Schedule view from saved targets and availability.',
       ),
       drawer: const AppDrawer(),
       body: ArcRaidersScreenShell(

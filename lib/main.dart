@@ -169,6 +169,11 @@ class UAGTradersHubApp extends StatefulWidget {
         );
 
       case MyHubScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const MyHubScreen(),
+          settings: settings,
+        );
+
       case ArcCommandCentreScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcCommandCentreScreen(),

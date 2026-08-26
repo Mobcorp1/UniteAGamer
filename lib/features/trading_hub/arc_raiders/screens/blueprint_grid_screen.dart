@@ -2399,10 +2399,10 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     return Row(
       children: [
         Text(
-          'BLUEPRINT INTEL',
-          style: AppTheme.tradingHeading(
-            fontSize: width < 430 ? 20 : 24,
-            color: AppTheme.neonCyan,
+          'Blueprint Tracker',
+          style: ArcUiTokens.pageTitle(
+            fontSize: width < 430 ? 17 : 19,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
         if (showHint) ...[

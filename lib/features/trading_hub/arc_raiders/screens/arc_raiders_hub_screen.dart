@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import '../widgets/arc_ad_banner_card.dart';
+import '../widgets/arc_companion_bottom_dock.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
+import '../widgets/foundation/arc_ui_tokens.dart';
 
-import '../../../../screens/build/app_bar.dart';
 import '../../../../build/app_drawer.dart';
 import '../../../../widgets/electric_charge_border.dart';
 import '../../../../widgets/static_watermark.dart';
@@ -15,11 +16,11 @@ import '../../../../widgets/arc_responsive_chrome.dart';
 import '../raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import '../raid_planner/screens/raid_planner_screen.dart';
 import '../voice/voice_assistant_sheet.dart';
-import 'arc_command_centre_screen.dart';
 import 'arc_market_intelligence_screen.dart';
 import 'arc_profile_edit_screen.dart';
 import 'arc_match_rider_screen.dart';
 import 'blueprint_grid_screen.dart';
+import 'my_hub_screen.dart';
 import 'referral_tools_screen.dart';
 import 'scrappy_grid_screen.dart';
 import 'smart_trade_assist_screen.dart';
@@ -36,7 +37,7 @@ class ArcRaidersHubScreen extends StatefulWidget {
 }
 
 class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
-  final PageController _controller = PageController(viewportFraction: 0.42);
+  final PageController _controller = PageController(viewportFraction: 0.52);
   int _selectedIndex = 0;
 
   late final List<_ArcHubFeature> _features = [
@@ -48,7 +49,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
       assetName: 'my_hub_card.webp',
-      builder: (_) => const ArcCommandCentreScreen(),
+      builder: (_) => const MyHubScreen(),
     ),
     _ArcHubFeature(
       title: 'Profile & Reputation',
@@ -227,31 +228,15 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     }
   }
 
-  _ArcHubFeature _featureByTitle(String title) {
-    return _features.firstWhere((feature) => feature.title == title);
-  }
-
   @override
   Widget build(BuildContext context) {
     final selected = _features[_selectedIndex];
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.small(
-        tooltip: 'Feedback',
-        onPressed: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen()));
-        },
-        child: const Icon(Icons.feedback_outlined),
-      ),
+      extendBody: true,
       backgroundColor: Colors.transparent,
-      appBar: const UagAppBar(
-        title: 'Blueprint Tracker Beta',
-        subtitle: 'Track owned, missing and duplicate blueprints',
-        showLogout: true,
-      ),
       drawer: const AppDrawer(),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'systems'),
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: Stack(
@@ -269,26 +254,29 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final bottomReserve = ArcResponsiveChrome.bottomSafePadding(
-                      context,
-                    );
                     final maxWidth = ArcResponsiveChrome.maxContentWidth(
                       context,
                     );
 
                     return Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppTheme.spaceS,
-                        AppTheme.spaceS,
-                        AppTheme.spaceS,
-                        bottomReserve,
-                      ),
+                      padding: ArcUiTokens.screenPadding,
                       child: Center(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(maxWidth: maxWidth),
                           child: Column(
                             children: [
-                              _HubHeader(selected: selected),
+                              _HubHeader(
+                                selected: selected,
+                                onFeedback: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const FeedbackScreen(),
+                                    ),
+                                  );
+                                },
+                                onAssistant: () =>
+                                    UagVoiceArcAssistantSheet.show(context),
+                              ),
                               const SizedBox(height: AppTheme.spaceS),
                               Expanded(
                                 child: Center(
@@ -309,53 +297,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                       ),
                     );
                   },
-                ),
-              ),
-            ),
-
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SafeArea(
-                top: false,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: math.max(
-                        ArcResponsiveChrome.dockMaxWidth(context),
-                        ArcResponsiveChrome.adMaxWidth(context),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppTheme.spaceS,
-                        0,
-                        AppTheme.spaceS,
-                        AppTheme.spaceXS,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const _HubAdSlot(),
-                          const SizedBox(height: AppTheme.spaceXS),
-                          _ArcBottomDock(
-                            onMatch: () =>
-                                _openFeature(_featureByTitle('Match a Raider')),
-                            onRaid: () =>
-                                _openFeature(_featureByTitle('Raid Planner')),
-                            onMic: () =>
-                                UagVoiceArcAssistantSheet.show(context),
-                            onTrading: () =>
-                                _openFeature(_featureByTitle('Trading')),
-                            onIntel: () => _openFeature(
-                              _featureByTitle('Community Intel'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ),
@@ -700,27 +641,28 @@ class _StaticRingFeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final phone = MediaQuery.sizeOf(context).width < 430;
-    final titleSize = selected ? (phone ? 23.0 : 28.0) : (phone ? 16.0 : 19.0);
-    final bodySize = selected ? (phone ? 12.5 : 15.0) : (phone ? 10.5 : 12.0);
-    final iconSize = selected ? (phone ? 28.0 : 34.0) : 24.0;
+    final titleSize = selected ? (phone ? 19.0 : 22.0) : (phone ? 14.0 : 16.0);
+    final bodySize = selected ? (phone ? 11.5 : 12.5) : (phone ? 9.5 : 10.5);
+    final iconSize = selected ? (phone ? 25.0 : 29.0) : 21.0;
+    final radius = selected ? ArcUiTokens.radiusXL : ArcUiTokens.radiusL;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(selected ? 30 : 22),
+      borderRadius: BorderRadius.circular(radius),
       onTap: onTap,
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(selected ? 30 : 22),
+          color: ArcUiTokens.surfacePanel.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(
             color: feature.accent.withValues(alpha: selected ? 0.88 : 0.58),
-            width: selected ? 1.5 : 1.0,
+            width: selected ? 1.1 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: feature.accent.withValues(alpha: selected ? 0.30 : 0.16),
-              blurRadius: selected ? 30 : 16,
-              offset: const Offset(0, 14),
+              color: feature.accent.withValues(alpha: selected ? 0.18 : 0.10),
+              blurRadius: selected ? 18 : 10,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -743,14 +685,14 @@ class _StaticRingFeatureCard extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: selected ? 16 : 14,
-              left: selected ? 16 : 14,
+              top: selected ? 14 : 12,
+              left: selected ? 14 : 12,
               child: Container(
-                width: selected ? (phone ? 50 : 58) : 44,
-                height: selected ? (phone ? 50 : 58) : 44,
+                width: selected ? (phone ? 44 : 50) : 38,
+                height: selected ? (phone ? 44 : 50) : 38,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+                  color: ArcUiTokens.background.withValues(alpha: 0.46),
                   border: Border.all(
                     color: feature.accent.withValues(alpha: 0.64),
                   ),
@@ -770,14 +712,14 @@ class _StaticRingFeatureCard extends StatelessWidget {
             ),
             if (selected && !phone)
               Positioned(
-                top: 18,
-                right: 18,
+                top: 14,
+                right: 14,
                 child: _ArcHubStatusPill(accent: feature.accent),
               ),
             Positioned(
-              left: selected ? (phone ? 18 : 24) : 16,
-              right: selected ? (phone ? 18 : 24) : 16,
-              bottom: selected ? (phone ? 18 : 24) : 18,
+              left: selected ? (phone ? 16 : 20) : 14,
+              right: selected ? (phone ? 16 : 20) : 14,
+              bottom: selected ? (phone ? 16 : 20) : 16,
               child: Column(
                 crossAxisAlignment: phone && selected
                     ? CrossAxisAlignment.center
@@ -785,7 +727,7 @@ class _StaticRingFeatureCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    feature.title.toUpperCase(),
+                    feature.title,
                     textAlign: phone && selected
                         ? TextAlign.center
                         : TextAlign.start,
@@ -797,17 +739,17 @@ class _StaticRingFeatureCard extends StatelessWidget {
                           color: Colors.white,
                           isBold: true,
                         ).copyWith(
-                          letterSpacing: phone ? 0.35 : 0.8,
+                          letterSpacing: 0,
                           height: 1.02,
                           shadows: [
                             Shadow(
                               color: feature.accent.withValues(alpha: 0.80),
-                              blurRadius: selected ? 18 : 10,
+                              blurRadius: selected ? 10 : 6,
                             ),
                           ],
                         ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   Text(
                     feature.subtitle,
                     textAlign: phone && selected
@@ -821,7 +763,7 @@ class _StaticRingFeatureCard extends StatelessWidget {
                       isBold: true,
                     ).copyWith(height: 1.22),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: phone && selected
                         ? MainAxisAlignment.center
@@ -854,36 +796,92 @@ class _StaticRingFeatureCard extends StatelessWidget {
 }
 
 class _HubHeader extends StatelessWidget {
-  const _HubHeader({required this.selected});
+  const _HubHeader({
+    required this.selected,
+    required this.onFeedback,
+    required this.onAssistant,
+  });
 
   final _ArcHubFeature selected;
+  final VoidCallback onFeedback;
+  final VoidCallback onAssistant;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppTheme.spaceM,
-        ArcResponsiveChrome.width(context) >= 1100
-            ? AppTheme.spaceS
-            : AppTheme.spaceM,
-        AppTheme.spaceM,
-        0,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'UAG ARC Raiders Systems',
-              style: AppTheme.neonTextStyle(
-                fontSize: ArcResponsiveChrome.width(context) >= 1100 ? 21 : 25,
-                color: selected.accent,
-                isBold: true,
+    Widget compactIcon({
+      required IconData icon,
+      required String tooltip,
+      required VoidCallback onPressed,
+      Color? color,
+    }) {
+      return IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        icon: Icon(icon),
+        color: color ?? ArcUiTokens.textSecondary,
+        iconSize: 18,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 42,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 76,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Builder(
+                    builder: (context) => compactIcon(
+                      icon: Icons.menu_rounded,
+                      tooltip: 'Open navigation',
+                      color: ArcUiTokens.primaryAccent,
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              Expanded(
+                child: Text(
+                  'ARC Systems',
+                  textAlign: TextAlign.center,
+                  style: ArcUiTokens.pageTitle(
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 76,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    compactIcon(
+                      icon: Icons.feedback_outlined,
+                      tooltip: 'Feedback',
+                      onPressed: onFeedback,
+                    ),
+                    compactIcon(
+                      icon: Icons.center_focus_strong_rounded,
+                      tooltip: 'Open ARC assistant',
+                      onPressed: onAssistant,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          _TinySystemChip(label: 'BETA', accent: selected.accent),
-        ],
-      ),
+        ),
+        Text(
+          'Your command centre',
+          textAlign: TextAlign.center,
+          style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+        ),
+      ],
     );
   }
 }
@@ -1391,33 +1389,6 @@ class _HubPageIndicator extends StatelessWidget {
           ),
         );
       }),
-    );
-  }
-}
-
-class _TinySystemChip extends StatelessWidget {
-  const _TinySystemChip({required this.label, required this.accent});
-
-  final String label;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.32),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: 0.44)),
-      ),
-      child: Text(
-        label,
-        style: AppTheme.bodyTextStyle(
-          fontSize: 11,
-          color: accent,
-          isBold: true,
-        ),
-      ),
     );
   }
 }

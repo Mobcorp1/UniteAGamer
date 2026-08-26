@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -45,10 +46,13 @@ class _ArcMarketIntelligenceScreenState
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Community Intel',
+      ),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
-          'Intel Snapshot',
+          'Community Intel',
           style: AppTheme.tradingHeading(
             fontSize: 25,
             color: AppTheme.neonCyan,

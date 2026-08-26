@@ -10,9 +10,9 @@ class TradingCard extends StatelessWidget {
     this.onTap,
     this.trailing,
     this.accent,
-    this.padding = AppTheme.sectionCardPadding,
+    this.padding = ArcUiTokens.compactPanelPadding,
     this.margin,
-    this.radius = 16,
+    this.radius = ArcUiTokens.radiusM,
     this.selected = false,
     this.compact = false,
   });
@@ -32,12 +32,12 @@ class TradingCard extends StatelessWidget {
     final content = Container(
       width: double.infinity,
       margin: margin,
-      padding: compact ? const EdgeInsets.all(AppTheme.spaceM) : padding,
+      padding: compact ? ArcUiTokens.densePanelPadding : padding,
       decoration: ArcUiTokens.surfaceDecoration(
         role: selected ? ArcSurfaceRole.interactive : ArcSurfaceRole.panel,
         accent: accent,
         radius: radius,
-        borderOpacity: accent == null ? 0.12 : 0.24,
+        borderOpacity: accent == null ? 0.10 : 0.24,
         selected: selected,
         glow: selected && accent != null,
       ),

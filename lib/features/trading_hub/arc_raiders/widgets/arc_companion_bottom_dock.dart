@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
-import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcCompanionBottomDock extends StatelessWidget {
   final String activeLabel;
@@ -16,110 +15,70 @@ class ArcCompanionBottomDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active = activeLabel.trim().toLowerCase();
+    final active = _normalisedActiveLabel(activeLabel);
+    final width = MediaQuery.sizeOf(context).width;
+    final desktop = width >= 900;
+    final horizontalInset = desktop ? 18.0 : 10.0;
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(14, 0, 14, 0),
-      child: Container(
-        clipBehavior: Clip.none,
-        margin: const EdgeInsets.symmetric(horizontal: 58),
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 0),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.035),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.08)),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.neonCyan.withValues(alpha: 0.13),
-              blurRadius: 2,
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _DockButton(
-                icon: Icons.groups_rounded,
-                label: 'Match',
-                active: active == 'match',
-                onTap: () =>
-                    _go(context, '/trading-hub/arc-raiders/match-a-raider'),
-              ),
-            ),
-            Expanded(
-              child: _DockButton(
-                icon: Icons.route_rounded,
-                label: 'Raid',
-                active: active == 'raid',
-                onTap: () =>
-                    _go(context, '/trading-hub/arc-raiders/raid-planner'),
-              ),
-            ),
-            _ArcMicButton(onTap: () => UagVoiceArcAssistantSheet.show(context)),
-            Expanded(
-              child: _DockButton(
-                icon: Icons.swap_horiz_rounded,
-                label: 'Trade',
-                active: active == 'trade',
-                onTap: () =>
-                    _go(context, '/trading-hub/arc-raiders/trader-hub'),
-              ),
-            ),
-            Expanded(
-              child: _DockButton(
-                icon: Icons.radar_rounded,
-                label: 'Intel',
-                active: active == 'intel',
-                onTap: () => _go(context, '/trading-hub/arc-raiders/market'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ArcMicButton extends StatelessWidget {
-  const _ArcMicButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Transform.translate(
-        offset: const Offset(0, -7),
-        child: ElectricChargeBorder(
-          active: true,
-          radius: 999,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(999),
-            onTap: onTap,
-            child: Container(
-              clipBehavior: Clip.hardEdge,
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppTheme.neonPink.withValues(alpha: 0.22),
-                border: Border.all(
-                  color: AppTheme.neonPink.withValues(alpha: 0.78),
+      minimum: EdgeInsets.fromLTRB(horizontalInset, 0, horizontalInset, 4),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: desktop ? 520 : 420),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: ArcUiTokens.background.withValues(alpha: 0.94),
+              border: Border(
+                top: BorderSide(
+                  color: ArcUiTokens.borderMedium.withValues(alpha: 0.75),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.neonPink.withValues(alpha: 0.22),
-                    blurRadius: 10,
-                    spreadRadius: 0,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 5, 8, 3),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _DockButton(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: 'MY HUB',
+                      active: active == 'my hub',
+                      onTap: () => _go(context, '/my-hub'),
+                    ),
+                  ),
+                  Expanded(
+                    child: _DockButton(
+                      icon: Icons.hexagon_outlined,
+                      activeIcon: Icons.hexagon_rounded,
+                      label: 'SYSTEMS',
+                      active: active == 'systems',
+                      onTap: () => _go(context, '/trading-hub/arc-raiders'),
+                    ),
+                  ),
+                  Expanded(
+                    child: _DockButton(
+                      icon: Icons.mail_outline_rounded,
+                      activeIcon: Icons.mail_rounded,
+                      label: 'MESSAGES',
+                      active: active == 'messages',
+                      onTap: () => _go(
+                        context,
+                        '/trading-hub/arc-raiders/notifications',
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: _DockButton(
+                      icon: Icons.person_outline_rounded,
+                      activeIcon: Icons.person_rounded,
+                      label: 'PROFILE',
+                      active: active == 'profile',
+                      onTap: () =>
+                          _go(context, '/trading-hub/arc-raiders/profile'),
+                    ),
                   ),
                 ],
-              ),
-              child: const Icon(
-                Icons.mic_rounded,
-                color: AppTheme.neonPink,
-                size: 22,
               ),
             ),
           ),
@@ -129,41 +88,62 @@ class _ArcMicButton extends StatelessWidget {
   }
 }
 
+String _normalisedActiveLabel(String value) {
+  final normalised = value.trim().toLowerCase();
+  if (normalised == 'my hub' ||
+      normalised == 'hub' ||
+      normalised == 'home' ||
+      normalised == 'command' ||
+      normalised == 'command centre') {
+    return 'my hub';
+  }
+  if (normalised == 'messages' ||
+      normalised == 'notifications' ||
+      normalised == 'inbox') {
+    return 'messages';
+  }
+  if (normalised == 'profile' ||
+      normalised == 'account' ||
+      normalised == 'reputation') {
+    return 'profile';
+  }
+  return 'systems';
+}
+
 class _DockButton extends StatelessWidget {
   const _DockButton({
     required this.icon,
+    required this.activeIcon,
     required this.label,
     required this.onTap,
     required this.active,
   });
 
   final IconData icon;
+  final IconData activeIcon;
   final String label;
   final VoidCallback onTap;
   final bool active;
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppTheme.neonPink : AppTheme.neonCyan;
+    final color = active ? ArcUiTokens.primaryAccent : ArcUiTokens.textTertiary;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(10),
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 0),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(vertical: 3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 16),
-            const SizedBox(height: 0),
+            Icon(active ? activeIcon : icon, color: color, size: 17),
+            const SizedBox(height: 2),
             Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 8,
-                color: active ? AppTheme.neonPink : Colors.white70,
-                isBold: true,
-              ),
+              style: ArcUiTokens.label(color: color).copyWith(fontSize: 8.5),
             ),
           ],
         ),

@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_s
 import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
@@ -226,12 +227,13 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'profile'),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
-          'Match-a-Raider',
+          'Matchmaking',
           style: AppTheme.neonTextStyle(
-            fontSize: 25,
+            fontSize: 20,
             color: AppTheme.neonCyan,
             isBold: true,
           ),

@@ -21,16 +21,16 @@ enum ArcSemanticTone {
 class ArcUiTokens {
   const ArcUiTokens._();
 
-  static const Color background = Color(0xFF05070D);
-  static const Color backgroundAlt = Color(0xFF081018);
-  static const Color surfaceBase = Color(0xFF0A1118);
-  static const Color surfacePanel = Color(0xFF0D151E);
-  static const Color surfaceRaised = Color(0xFF111B25);
-  static const Color surfaceInteractive = Color(0xFF13212D);
+  static const Color background = Color(0xFF03060A);
+  static const Color backgroundAlt = Color(0xFF060D13);
+  static const Color surfaceBase = Color(0xFF071017);
+  static const Color surfacePanel = Color(0xFF0A141C);
+  static const Color surfaceRaised = Color(0xFF0D1922);
+  static const Color surfaceInteractive = Color(0xFF102330);
   static const Color surfaceOverlay = Color(0xF20A1118);
 
-  static const Color primaryAccent = Color(0xFF22DDF2);
-  static const Color secondaryAccent = Color(0xFFE052B7);
+  static const Color primaryAccent = Color(0xFF19E6F2);
+  static const Color secondaryAccent = Color(0xFFFF3B8D);
   static const Color tertiaryAccent = Color(0xFF9C7CFF);
   static const Color attentionAccent = Color(0xFFFFC857);
 
@@ -44,7 +44,7 @@ class ArcUiTokens {
   static const Color danger = Color(0xFFFF6B6B);
   static const Color info = Color(0xFF7DD3FC);
   static const Color owned = Color(0xFF7CE7AC);
-  static const Color missing = Color(0xFFFF9C66);
+  static const Color missing = Color(0xFFFF3B8D);
   static const Color premium = Color(0xFFE9C46A);
   static const Color admin = Color(0xFFB991FF);
 
@@ -54,32 +54,32 @@ class ArcUiTokens {
 
   static const double radiusXS = 6;
   static const double radiusS = 8;
-  static const double radiusM = 12;
-  static const double radiusL = 16;
-  static const double radiusXL = 20;
-  static const double radiusXXL = 24;
+  static const double radiusM = 10;
+  static const double radiusL = 12;
+  static const double radiusXL = 14;
+  static const double radiusXXL = 16;
 
   static const double gapXS = 4;
   static const double gapS = 8;
   static const double gapM = 12;
-  static const double gapL = 16;
-  static const double gapXL = 20;
-  static const double gapXXL = 24;
-  static const double gapXXXL = 32;
-  static const double gapXXXXL = 40;
-  static const double gapPage = 48;
+  static const double gapL = 14;
+  static const double gapXL = 18;
+  static const double gapXXL = 22;
+  static const double gapXXXL = 28;
+  static const double gapXXXXL = 34;
+  static const double gapPage = 38;
 
-  static const EdgeInsets screenPadding = EdgeInsets.fromLTRB(16, 14, 16, 18);
-  static const EdgeInsets panelPadding = EdgeInsets.all(16);
-  static const EdgeInsets compactPanelPadding = EdgeInsets.all(12);
+  static const EdgeInsets screenPadding = EdgeInsets.fromLTRB(12, 10, 12, 14);
+  static const EdgeInsets panelPadding = EdgeInsets.all(12);
+  static const EdgeInsets compactPanelPadding = EdgeInsets.all(10);
   static const EdgeInsets densePanelPadding = EdgeInsets.all(10);
   static const EdgeInsets chipPadding = EdgeInsets.symmetric(
-    horizontal: 10,
-    vertical: 6,
+    horizontal: 9,
+    vertical: 5,
   );
   static const EdgeInsets buttonPadding = EdgeInsets.symmetric(
-    horizontal: 14,
-    vertical: 11,
+    horizontal: 12,
+    vertical: 9,
   );
 
   static Color get surface => surfacePanel.withValues(alpha: 0.92);
@@ -115,11 +115,11 @@ class ArcUiTokens {
     );
   }
 
-  static TextStyle pageTitle({double fontSize = 26, Color? color}) {
+  static TextStyle pageTitle({double fontSize = 18, Color? color}) {
     return display(fontSize: fontSize, color: color ?? textPrimary);
   }
 
-  static TextStyle sectionTitle({double fontSize = 18, Color? color}) {
+  static TextStyle sectionTitle({double fontSize = 16, Color? color}) {
     return TextStyle(
       fontSize: fontSize,
       fontFamily: AppTheme.headingFontFamily,
@@ -130,12 +130,12 @@ class ArcUiTokens {
     );
   }
 
-  static TextStyle cardTitle({double fontSize = 16, Color? color}) {
+  static TextStyle cardTitle({double fontSize = 14, Color? color}) {
     return sectionTitle(fontSize: fontSize, color: color ?? textPrimary);
   }
 
   static TextStyle body({
-    double fontSize = 14,
+    double fontSize = 13,
     Color color = textSecondary,
     FontWeight weight = FontWeight.w400,
   }) {
@@ -155,7 +155,7 @@ class ArcUiTokens {
 
   static TextStyle label({Color color = textTertiary}) {
     return body(
-      fontSize: 11,
+      fontSize: 10.5,
       color: color,
       weight: FontWeight.w700,
     ).copyWith(height: 1.15);
@@ -188,7 +188,7 @@ class ArcUiTokens {
     return [
       BoxShadow(
         color: color.withValues(alpha: 0.055 * strength),
-        blurRadius: 18 * strength,
+        blurRadius: 12 * strength,
         spreadRadius: 0.4 * strength,
       ),
     ];
@@ -223,7 +223,7 @@ class ArcUiTokens {
     Color? accent,
     Color? backgroundColor,
     double radius = radiusL,
-    double borderOpacity = 0.14,
+    double borderOpacity = 0.12,
     bool selected = false,
     bool glow = false,
   }) {
@@ -234,7 +234,7 @@ class ArcUiTokens {
     return BoxDecoration(
       color: backgroundColor ?? surfaceFor(role).withValues(alpha: 0.92),
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: borderColor, width: selected ? 1.2 : 1),
+      border: Border.all(color: borderColor, width: selected ? 1.1 : 1),
       boxShadow: glow && accent != null ? ArcUiTokens.glow(accent) : null,
     );
   }
@@ -274,7 +274,7 @@ class ArcUiTokens {
       disabledForegroundColor: textDisabled,
       disabledBackgroundColor: Colors.white.withValues(alpha: 0.04),
       padding: buttonPadding,
-      minimumSize: const Size(44, 44),
+      minimumSize: const Size(42, 40),
       textStyle: buttonLabel(color: foreground),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusM),
