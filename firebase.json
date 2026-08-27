@@ -1,6 +1,9 @@
 ﻿{
     "hosting":  {
                     "public":  "build/web",
+                    "predeploy":  [
+                                      "dart run tool/prepare_web_release.dart --output build/web/version.json"
+                                  ],
                     "ignore":  [
                                    "firebase.json",
                                    "**/.*",

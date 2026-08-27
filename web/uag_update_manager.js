@@ -11,6 +11,10 @@
   let pendingVersion = null;
   let updateStarted = false;
   let timer = null;
+  let lastVersionErrorSignature = null;
+  let lastVersionErrorLoggedAt = 0;
+
+  const ERROR_LOG_COOLDOWN_MS = 300000;
 
   function isHeld() {
     return window.localStorage.getItem(HOLD_KEY) === 'true';
@@ -113,27 +117,101 @@
     return overlay;
   }
 
+  function versionError(reason, url, payload, cause) {
+    const error = new Error(reason);
+    error.uagVersionDiagnostics = { reason, url, payload };
+    if (cause) error.cause = cause;
+    return error;
+  }
+
+  function validateVersionPayload(version, url, payload) {
+    if (!version || typeof version.buildId !== 'string' || !version.buildId.trim()) {
+      throw versionError(
+        'version.json does not contain a valid buildId',
+        url,
+        payload,
+      );
+    }
+
+    if (
+      typeof version.builtAt !== 'string' ||
+      !version.builtAt.trim() ||
+      !Number.isFinite(Date.parse(version.builtAt.trim())) ||
+      !/[zZ]$/.test(version.builtAt.trim())
+    ) {
+      throw versionError(
+        'version.json does not contain a valid UTC builtAt',
+        url,
+        payload,
+      );
+    }
+
+    if (typeof version.branch !== 'string' || !version.branch.trim()) {
+      throw versionError('version.json does not contain a valid branch', url, payload);
+    }
+
+    version.buildId = version.buildId.trim();
+    version.builtAt = version.builtAt.trim();
+    version.branch = version.branch.trim();
+    return version;
+  }
+
   async function fetchVersion() {
     const separator = VERSION_URL.includes('?') ? '&' : '?';
-    const response = await fetch(
-      `${VERSION_URL}${separator}t=${Date.now()}`,
-      {
-        cache: 'no-store',
-        credentials: 'same-origin',
-        headers: { 'Cache-Control': 'no-cache' },
-      },
-    );
+    const url = `${VERSION_URL}${separator}t=${Date.now()}`;
+    const response = await fetch(url, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
 
     if (!response.ok) {
-      throw new Error(`Version request failed: ${response.status}`);
+      throw versionError(`Version request failed: ${response.status}`, url, null);
     }
 
-    const version = await response.json();
-    if (!version || typeof version.buildId !== 'string' || !version.buildId.trim()) {
-      throw new Error('version.json does not contain a valid buildId');
+    const contentType = response.headers.get('content-type') || '';
+    const payload = await response.text();
+    if (!contentType.toLowerCase().includes('application/json')) {
+      throw versionError(
+        `version.json returned ${contentType || 'an unknown content type'}; ` +
+        'the release metadata file is missing or was rewritten to index.html',
+        url,
+        payload,
+      );
     }
 
-    return version;
+    let version;
+    try {
+      version = JSON.parse(payload);
+    } catch (error) {
+      throw versionError('version.json is not valid JSON', url, payload, error);
+    }
+
+    return validateVersionPayload(version, url, payload);
+  }
+
+  function logVersionError(error) {
+    const diagnostics = error.uagVersionDiagnostics || {};
+    const reason = diagnostics.reason || error.message || 'Unknown version check failure';
+    const url = diagnostics.url || VERSION_URL;
+    const payload = diagnostics.payload;
+    const signature = `${reason}|${url}|${payload || ''}`;
+    const now = Date.now();
+
+    if (
+      signature === lastVersionErrorSignature &&
+      now - lastVersionErrorLoggedAt < ERROR_LOG_COOLDOWN_MS
+    ) {
+      return;
+    }
+
+    lastVersionErrorSignature = signature;
+    lastVersionErrorLoggedAt = now;
+    console.debug('[UAG update check]', {
+      reason,
+      url,
+      payload,
+    }, error);
   }
 
   function applyUpdate(version) {
@@ -177,7 +255,7 @@
         applyUpdate(version);
       }
     } catch (error) {
-      console.debug('[UAG update check]', error);
+      logVersionError(error);
     }
   }
 
@@ -188,7 +266,16 @@
       const registrations = await navigator.serviceWorker.getRegistrations();
       let removed = false;
       for (const registration of registrations) {
-        if (registration.scope.startsWith(window.location.origin)) {
+        const worker =
+          registration.active || registration.waiting || registration.installing;
+        const scriptUrl = worker && worker.scriptURL ? worker.scriptURL : '';
+
+        // Preserve Firebase Messaging. Only the obsolete Flutter app-cache
+        // service worker should be removed by the update manager.
+        if (
+          registration.scope.startsWith(window.location.origin) &&
+          /flutter_service_worker\.js(?:\?|$)/i.test(scriptUrl)
+        ) {
           removed = (await registration.unregister()) || removed;
         }
       }
