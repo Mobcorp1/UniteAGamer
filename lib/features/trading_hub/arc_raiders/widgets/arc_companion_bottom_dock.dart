@@ -23,6 +23,7 @@ class ArcCompanionBottomDock extends StatelessWidget {
     return SafeArea(
       minimum: EdgeInsets.fromLTRB(horizontalInset, 0, horizontalInset, 4),
       child: Center(
+        heightFactor: 1,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: desktop ? 520 : 420),
           child: DecoratedBox(

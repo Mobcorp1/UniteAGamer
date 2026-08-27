@@ -39,7 +39,21 @@ import 'package:uag_arc_raiders_hub/widgets/uag_dialogs.dart';
 class BlueprintGridScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/blueprints';
 
-  const BlueprintGridScreen({super.key});
+  const BlueprintGridScreen({
+    super.key,
+    this.blueprintStateSnapshotStream,
+    this.favouriteLoadoutStream,
+    this.loadViewMode,
+    this.saveViewMode,
+    this.showFirstRunTutorial = true,
+  });
+
+  final Stream<ArcBlueprintStateSnapshot> Function()?
+  blueprintStateSnapshotStream;
+  final Stream<ArcSavedLoadout?> Function()? favouriteLoadoutStream;
+  final Future<ArcBlueprintGridViewMode> Function()? loadViewMode;
+  final Future<void> Function(ArcBlueprintGridViewMode mode)? saveViewMode;
+  final bool showFirstRunTutorial;
 
   @override
   State<BlueprintGridScreen> createState() => _BlueprintGridScreenState();
@@ -67,9 +81,8 @@ class _BlueprintViewportFrame extends StatelessWidget {
 }
 
 class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
-  final ArcBlueprintRepository _repository = ArcBlueprintRepository();
-  final ArcSavedLoadoutRepository _loadoutRepository =
-      ArcSavedLoadoutRepository();
+  ArcBlueprintRepository? _repository;
+  ArcSavedLoadoutRepository? _loadoutRepository;
   final TextEditingController _searchController = TextEditingController();
   final TransformationController _blueprintGridTransformController =
       TransformationController();
@@ -93,10 +106,29 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   static const int _gridColumns = 10;
   static const double _landscapeSpacing = 6;
 
+  ArcBlueprintRepository get _blueprintRepository =>
+      _repository ??= ArcBlueprintRepository();
+
+  ArcSavedLoadoutRepository get _savedLoadoutRepository =>
+      _loadoutRepository ??= ArcSavedLoadoutRepository();
+
+  Stream<ArcBlueprintStateSnapshot> _watchBlueprintStateSnapshot() {
+    final streamBuilder = widget.blueprintStateSnapshotStream;
+    if (streamBuilder != null) return streamBuilder();
+    return _blueprintRepository.watchMyBlueprintStateSnapshot();
+  }
+
+  Stream<ArcSavedLoadout?> _watchFavouriteLoadout() {
+    final streamBuilder = widget.favouriteLoadoutStream;
+    if (streamBuilder != null) return streamBuilder();
+    return _savedLoadoutRepository.watchFavouriteLoadout();
+  }
+
   @override
   void initState() {
     super.initState();
     _loadViewMode();
+    if (!widget.showFirstRunTutorial) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ArcBetaFirstRun.showOnce(
         context: context,
@@ -114,7 +146,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
   }
 
   Future<void> _loadViewMode() async {
-    final mode = await ArcBlueprintGridViewPreferences.load();
+    final mode =
+        await (widget.loadViewMode?.call() ??
+            ArcBlueprintGridViewPreferences.load());
     if (!mounted) return;
     setState(() {
       _viewMode = mode;
@@ -128,7 +162,12 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       _viewMode = mode;
       _blueprintGridTransformController.value = Matrix4.identity();
     });
-    await ArcBlueprintGridViewPreferences.save(mode);
+    final saveViewMode = widget.saveViewMode;
+    if (saveViewMode != null) {
+      await saveViewMode(mode);
+    } else {
+      await ArcBlueprintGridViewPreferences.save(mode);
+    }
   }
 
   @override
@@ -384,7 +423,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
       updatedAt: DateTime.now(),
     );
 
-    await _repository.saveBlueprintState(ownedState);
+    await _blueprintRepository.saveBlueprintState(ownedState);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -411,7 +450,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     if (!mounted) return;
     if (wantsDupes == true) {
       final refreshed =
-          (await _repository.watchMyBlueprintStates().first)[blueprint.id] ??
+          (await _blueprintRepository
+              .watchMyBlueprintStates()
+              .first)[blueprint.id] ??
           ownedState;
       await _openBlueprintEditor(blueprint, refreshed);
     }
@@ -425,7 +466,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         })
         .toList(growable: false);
 
-    await _repository.saveBlueprintStates(updates);
+    await _blueprintRepository.saveBlueprintStates(updates);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${updates.length} blueprints marked owned.')),
@@ -468,7 +509,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         })
         .toList(growable: false);
 
-    await _repository.saveBlueprintStates(updates);
+    await _blueprintRepository.saveBlueprintStates(updates);
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -509,7 +550,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         })
         .toList(growable: false);
 
-    await _repository.saveBlueprintStates(updates);
+    await _blueprintRepository.saveBlueprintStates(updates);
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -530,7 +571,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         )
         .toList(growable: false);
 
-    await _repository.saveBlueprintStates(updates);
+    await _blueprintRepository.saveBlueprintStates(updates);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${updates.length} blueprints cleared.')),
@@ -557,7 +598,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     if (confirmed != true) return;
 
     try {
-      await _repository.saveBlueprintState(
+      await _blueprintRepository.saveBlueprintState(
         currentState.copyWith(owned: false, dupesOwned: 0),
       );
 
@@ -608,7 +649,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         return ArcBlueprintDropReportSheet(
           blueprint: blueprint,
           initialState: initialState,
-          repository: _repository,
+          repository: _blueprintRepository,
           rarityColor: _rarityColor(blueprint.rarity),
           onSaved: () {
             if (!mounted) return;
@@ -730,7 +771,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         );
       }
 
-      await _loadoutRepository.saveLoadout(nextLoadout);
+      await _savedLoadoutRepository.saveLoadout(nextLoadout);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1575,6 +1616,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
             }
           },
           child: SizedBox(
+            key: const Key('blueprint-filter-barrel'),
             width: barrelWidth,
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -2468,6 +2510,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         width: width,
         height: height,
         child: GridView.builder(
+          key: const Key('blueprint-authoritative-grid-view'),
           itemCount: filtered.length,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
@@ -2743,6 +2786,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   ),
                   SizedBox(width: railGap),
                   SizedBox(
+                    key: const Key('blueprint-authoritative-grid-viewport'),
                     width: layout.viewportWidth,
                     height: layout.viewportHeight,
                     child: Stack(
@@ -2834,6 +2878,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
                   ),
                   SizedBox(width: railGap),
                   SizedBox(
+                    key: const Key('blueprint-authoritative-grid-viewport'),
                     width: fittedWidth,
                     height: viewportHeight,
                     child: ClipRect(
@@ -2879,6 +2924,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         }
 
         return Padding(
+          key: const Key('blueprint-authoritative-grid'),
           padding: const EdgeInsets.only(top: 2),
           child: _viewMode == ArcBlueprintGridViewMode.inGameFramed
               ? buildFramedGrid()
@@ -2950,7 +2996,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
         showAdBanner: false,
         child: SafeArea(
           child: StreamBuilder<ArcBlueprintStateSnapshot>(
-            stream: _repository.watchMyBlueprintStateSnapshot(),
+            stream: _watchBlueprintStateSnapshot(),
             builder: (context, snapshot) {
               final hydration = snapshot.data;
               final states =
@@ -2962,7 +3008,7 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
               final counts = _buildCounts(allBlueprints, states);
 
               return StreamBuilder<ArcSavedLoadout?>(
-                stream: _loadoutRepository.watchFavouriteLoadout(),
+                stream: _watchFavouriteLoadout(),
                 builder: (context, loadoutSnapshot) {
                   final loadout = loadoutSnapshot.data;
                   final plan = ArcGeneratedLoadoutPlan.fromMap(
