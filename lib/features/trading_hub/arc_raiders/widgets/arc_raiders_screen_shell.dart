@@ -3,19 +3,16 @@
 // This file is the official shared ARC Raiders screen architecture layer.
 //
 // LIVE RESPONSIBILITIES:
-// - cinematic ARC backdrop
-// - shared watermark/background visual foundation
 // - shared responsive page content helpers
 // - shared page list spacing helpers
 // - shared section/header/banner card foundations
+// - per-screen ad-slot reservation
 //
-// IMPORTANT:
-// Do not delete this file while live screens import:
-// - ArcRaidersScreenBackdrop
-// - ArcRaidersPageList
-// - ArcRaidersPageHeader
-// - ArcRaidersHeroBanner
-// - ArcRaidersSectionCard
+// GLOBAL BACKDROP OWNERSHIP:
+// ArcGlobalVisualSystem is mounted once above the Navigator in main.dart and is
+// the only normal owner of the cinematic/background layer. ArcRaidersScreenShell
+// must not paint a second backdrop over it. This avoids the former doubled
+// cinematic image, repeated watermark treatment and inconsistent page contrast.
 //
 // Keep blueprint grid rendering, portrait carousel logic, ownership/dupe logic,
 // _buildGrid, and BlueprintTile structure isolated from architecture cleanup passes.
@@ -26,6 +23,9 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_ad_banner_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
+/// Compatibility wrapper for specialist routes/tests that intentionally need
+/// direct access to the canonical background. Normal screens should rely on
+/// ArcGlobalVisualSystem instead of mounting this themselves.
 class ArcRaidersScreenBackdrop extends StatelessWidget {
   const ArcRaidersScreenBackdrop({super.key});
 
@@ -63,17 +63,19 @@ class ArcRaidersScreenShell extends StatelessWidget {
 
     return Stack(
       children: [
-        const Positioned.fill(child: ArcRaidersScreenBackdrop()),
+        // The shared global cinematic/background layer sits below Navigator.
+        // Only page-local atmosphere is added here; no image or watermark.
         Positioned.fill(
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    ArcUiTokens.primaryAccent.withValues(alpha: 0.030),
+                    ArcUiTokens.primaryAccent.withValues(alpha: 0.045),
                     Colors.transparent,
-                    ArcUiTokens.secondaryAccent.withValues(alpha: 0.032),
+                    ArcUiTokens.secondaryAccent.withValues(alpha: 0.040),
                   ],
+                  stops: const [0.0, 0.52, 1.0],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -313,7 +315,8 @@ class ArcRaidersHeroBanner extends StatelessWidget {
         role: ArcSurfaceRole.interactive,
         radius: ArcUiTokens.radiusL,
         accent: accent,
-        borderOpacity: 0.24,
+        borderOpacity: 0.34,
+        glow: true,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,6 +327,12 @@ class ArcRaidersHeroBanner extends StatelessWidget {
             decoration: BoxDecoration(
               color: accent,
               borderRadius: BorderRadius.circular(999),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.44),
+                  blurRadius: 10,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: ArcUiTokens.gapM),
@@ -355,7 +364,7 @@ class ArcRaidersSectionCard extends StatelessWidget {
     required this.child,
     this.accent = ArcUiTokens.primaryAccent,
     this.padding = const EdgeInsets.all(AppTheme.spaceS),
-    this.radius = 18,
+    this.radius = 14,
   });
 
   final Widget child;
@@ -371,7 +380,7 @@ class ArcRaidersSectionCard extends StatelessWidget {
         role: ArcSurfaceRole.panel,
         radius: radius,
         accent: accent,
-        borderOpacity: 0.18,
+        borderOpacity: 0.28,
       ),
       child: child,
     );
