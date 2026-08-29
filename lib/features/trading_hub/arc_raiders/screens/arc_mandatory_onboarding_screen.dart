@@ -168,6 +168,25 @@ class _ArcMandatoryOnboardingScreenState
 
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
+
+    // Admin Console preview is view-only: allow an administrator to inspect
+    // every onboarding page without satisfying player validation or writing
+    // onboarding/account data. The real player journey below remains strict.
+    if (widget.adminPreview) {
+      if (_step >= 3) {
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
+
+      setState(() => _step += 1);
+      await _pageController.animateToPage(
+        _step,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+
     if (_step == 0) {
       if (widget.adminPreview && widget.previewAccountCreation) {
         if (!_validateAccountStep()) return;
