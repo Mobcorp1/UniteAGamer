@@ -64,6 +64,46 @@ class PrivacyPolicyScreen extends StatelessWidget {
           Icons.manage_accounts_outlined,
         ),
         _LegalSection(
+          'Who is responsible for your data',
+          'MobCorp Ltd, company number 16857854, registered office 1711 High Street, Knowle, Solihull, West Midlands, B93 0LN, is the operator of UAG and is responsible for deciding how personal data used by the service is processed, subject to the roles of individual service providers.',
+          Icons.business_outlined,
+        ),
+        _LegalSection(
+          'Why we process data and lawful bases',
+          'We process data to provide accounts and requested features, perform our contract with you, secure and administer the service, prevent fraud and abuse, comply with legal obligations, and pursue legitimate interests such as service security, analytics and product improvement where those interests are not overridden by your rights. Where the law requires consent for a specific activity, we will request it separately and you may withdraw it.',
+          Icons.rule_folder_outlined,
+        ),
+        _LegalSection(
+          'Sharing and processors',
+          'Personal data may be shared with service providers that help us operate authentication, hosting, databases, analytics, communications, advertising, payments, security and support, and with professional advisers, regulators or authorities where legally required. Providers should receive only data reasonably necessary for their role and be subject to appropriate contractual safeguards.',
+          Icons.share_outlined,
+        ),
+        _LegalSection(
+          'International transfers',
+          'Some technology providers may process data outside the United Kingdom. Where UK data-protection law requires safeguards for an international transfer, we will use an applicable adequacy regulation, approved contractual safeguard or another lawful transfer mechanism.',
+          Icons.public_rounded,
+        ),
+        _LegalSection(
+          'How long we keep data',
+          'We keep personal data only for as long as reasonably necessary for the purpose collected, account operation, security, fraud prevention, disputes, legal obligations and establishment or defence of legal claims. Different records may require different periods. We will document and review retention periods before general public launch.',
+          Icons.schedule_outlined,
+        ),
+        _LegalSection(
+          'Your data-protection rights',
+          'Depending on the circumstances, you may have rights of access, rectification, erasure, restriction, objection and data portability, and rights concerning certain automated decisions. Where processing relies on consent you may withdraw that consent without affecting earlier lawful processing. Some rights are subject to legal exemptions.',
+          Icons.manage_accounts_outlined,
+        ),
+        _LegalSection(
+          'Complaints',
+          'Please raise privacy concerns with MobCorp Ltd first so they can be investigated. You also have the right to complain to the UK Information Commissioner’s Office about the handling of your personal data.',
+          Icons.report_outlined,
+        ),
+        _LegalSection(
+          'Automated signals and profiling',
+          'UAG may use rules, scores or automated signals to help rank intel, detect abuse, assess trust or personalise features. These signals may inform moderation or product decisions. We will identify any processing that becomes solely automated decision-making with legal or similarly significant effects and provide the safeguards required by law.',
+          Icons.psychology_outlined,
+        ),
+        _LegalSection(
           'Beta changes',
           'Because the product is still developing, data models, features, providers, reward systems and legal wording may change as the app improves and receives legal review.',
           Icons.science_outlined,

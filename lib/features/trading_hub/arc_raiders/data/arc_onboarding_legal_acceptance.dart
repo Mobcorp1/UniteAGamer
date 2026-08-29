@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 
-const arcOnboardingLegalAcceptanceVersion = 3;
+const arcOnboardingLegalAcceptanceVersion = 4;
 
 Map<String, dynamic> buildOnboardingLegalAcceptedMap({
   required bool traderCodeAccepted,
@@ -53,22 +53,30 @@ Map<String, dynamic> buildOnboardingLegalAcceptedMap({
 
   if (traderCodeAccepted) {
     accepted
-      ..['traderCodeVersion'] = 1
+      ..['traderCodeVersion'] = UagPolicyCatalog.byId(
+        'trader_code_of_conduct',
+      ).version
       ..['traderCodeAcceptedAt'] = FieldValue.serverTimestamp();
   }
   if (termsOfServiceAccepted) {
     accepted
-      ..['termsOfServiceVersion'] = 1
+      ..['termsOfServiceVersion'] = UagPolicyCatalog.byId(
+        'terms_of_use',
+      ).version
       ..['termsOfServiceAcceptedAt'] = FieldValue.serverTimestamp();
   }
   if (dataSecurityAccepted) {
     accepted
-      ..['dataSecurityVersion'] = 1
+      ..['dataSecurityVersion'] = UagPolicyCatalog.byId(
+        'privacy_policy',
+      ).version
       ..['dataSecurityAcceptedAt'] = FieldValue.serverTimestamp();
   }
   if (ageConfirmationAccepted) {
     accepted
-      ..['ageRestrictionVersion'] = 1
+      ..['ageRestrictionVersion'] = UagPolicyCatalog.byId(
+        'age_restriction_policy',
+      ).version
       ..['ageConfirmationAcceptedAt'] = FieldValue.serverTimestamp();
   }
 

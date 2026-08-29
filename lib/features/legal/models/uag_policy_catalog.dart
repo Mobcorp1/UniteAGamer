@@ -41,10 +41,10 @@ class UagFanProjectNotice {
 class UagPolicyCatalog {
   const UagPolicyCatalog._();
 
-  static const currentPolicyVersion = 1;
-  static const effectiveDate = '2026-07-28';
+  static const currentPolicyVersion = 2;
+  static const effectiveDate = '2026-08-28';
   static const legalReviewNotice =
-      'Draft policy text. Requires qualified legal review before launch.';
+      'Operational policy text. Qualified UK legal review is required before general public launch.';
 
   static const documents = <UagPolicyDocument>[
     UagPolicyDocument(
