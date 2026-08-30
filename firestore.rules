@@ -252,7 +252,11 @@ service cloud.firestore {
     }
 
     match /arc_raider_contracts/{contractId} {
-      allow list: if isSignedIn() && resource.data.status == 'available';
+      allow list: if isSignedIn() &&
+        (resource.data.status == 'available' ||
+         resource.data.reporterUid == request.auth.uid ||
+         resource.data.hunterUid == request.auth.uid ||
+         isTrustModerator());
       allow get: if isSignedIn() &&
         (resource.data.status == 'available' ||
          resource.data.reporterUid == request.auth.uid ||
@@ -267,22 +271,38 @@ service cloud.firestore {
         request.resource.data.targetDisplayName == resource.data.targetDisplayName &&
         request.resource.data.rewardItems == resource.data.rewardItems &&
         request.resource.data.rewardSummary == resource.data.rewardSummary &&
+        request.resource.data.blueprintRewardCount == resource.data.blueprintRewardCount &&
+        request.resource.data.blueprintRewardPool == resource.data.blueprintRewardPool &&
         request.resource.data.reputationReward == resource.data.reputationReward &&
         request.resource.data.evidenceRequirements == resource.data.evidenceRequirements &&
         request.resource.data.moderatedByUid == resource.data.moderatedByUid &&
         (
+          (resource.data.hunterUid == request.auth.uid &&
+            request.resource.data.hunterUid == resource.data.hunterUid &&
+            request.resource.data.status == resource.data.status &&
+            (resource.data.status == 'accepted' ||
+             resource.data.status == 'inProgress' ||
+             resource.data.status == 'evidenceSubmitted' ||
+             resource.data.status == 'disputed') &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blueprintRewardSelection', 'updatedAt']) &&
+            request.resource.data.blueprintRewardSelection is list &&
+            request.resource.data.blueprintRewardSelection.size() == resource.data.blueprintRewardCount &&
+            resource.data.blueprintRewardPool.toSet().hasAll(request.resource.data.blueprintRewardSelection.toSet())) ||
           (resource.data.status == 'available' &&
+            request.resource.data.blueprintRewardSelection == resource.data.blueprintRewardSelection &&
             request.resource.data.status == 'accepted' &&
             request.resource.data.hunterUid == request.auth.uid &&
             request.auth.uid != resource.data.reporterUid &&
             request.auth.uid != resource.data.targetUid) ||
           (resource.data.hunterUid == request.auth.uid &&
             request.resource.data.hunterUid == resource.data.hunterUid &&
+            request.resource.data.blueprintRewardSelection == resource.data.blueprintRewardSelection &&
             ((resource.data.status == 'accepted' && request.resource.data.status == 'inProgress') ||
              (resource.data.status == 'inProgress' && request.resource.data.status == 'evidenceSubmitted') ||
              ((resource.data.status == 'inProgress' || resource.data.status == 'evidenceSubmitted') &&
                 request.resource.data.status == 'disputed'))) ||
           (resource.data.reporterUid == request.auth.uid &&
+            request.resource.data.blueprintRewardSelection == resource.data.blueprintRewardSelection &&
             (resource.data.status == 'inProgress' || resource.data.status == 'evidenceSubmitted') &&
             request.resource.data.status == 'disputed')
         ));
