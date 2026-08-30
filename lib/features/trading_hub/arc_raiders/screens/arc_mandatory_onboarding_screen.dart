@@ -781,17 +781,40 @@ class _AccountCreationStep extends StatelessWidget {
       child: AutofillGroup(
         child: Column(
           children: [
-            TextField(
-              controller: riderNameController,
-              autofillHints: UagAuthAutofill.displayName,
-              textInputAction: TextInputAction.next,
-              maxLength: 24,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Raider name',
-                hintText: 'Enter your display name',
-                prefixIcon: const Icon(Icons.person_outline_rounded),
-                errorText: riderNameError,
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+              decoration: BoxDecoration(
+                color: AppTheme.neonCyan.withValues(alpha: 0.045),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.28),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'RAIDER IDENTITY',
+                    style: AppTheme.tradingHeading(
+                      fontSize: 12,
+                      color: AppTheme.neonCyan,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: riderNameController,
+                    autofillHints: UagAuthAutofill.displayName,
+                    textInputAction: TextInputAction.next,
+                    maxLength: 24,
+                    onChanged: (_) => onChanged(),
+                    decoration: InputDecoration(
+                      labelText: 'Raider name',
+                      hintText: 'Choose your callsign',
+                      prefixIcon: const Icon(Icons.badge_outlined),
+                      errorText: riderNameError,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
@@ -822,7 +845,7 @@ class _AccountCreationStep extends StatelessWidget {
                 labelText: 'Password',
                 prefixIcon: const Icon(Icons.lock_outline_rounded),
                 errorText: passwordError,
-                helperText: '6+ characters â€¢ 1 capital â€¢ 1 number',
+                helperText: '6+ characters Ã¢â‚¬Â¢ 1 capital Ã¢â‚¬Â¢ 1 number',
                 helperMaxLines: 2,
                 suffixIcon: IconButton(
                   tooltip: showPassword ? 'Hide password' : 'Show password',
@@ -835,31 +858,109 @@ class _AccountCreationStep extends StatelessWidget {
                 ),
               ),
             ),
-            CheckboxListTile(
-              value: rememberEmail,
-              onChanged: (value) => onRememberEmailChanged(value ?? true),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              activeColor: AppTheme.neonCyan,
-              title: const Text(
-                'Remember email on this device',
-                style: TextStyle(color: Colors.white70),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.fromLTRB(14, 12, 10, 10),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppTheme.neonCyan.withValues(alpha: 0.18),
+                ),
               ),
-            ),
-            SwitchListTile(
-              value: keepSignedIn,
-              onChanged: onKeepSignedInChanged,
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              activeThumbColor: AppTheme.neonCyan,
-              title: const Text(
-                'Keep me signed in on this device',
-                style: TextStyle(color: Colors.white70),
-              ),
-              subtitle: const Text(
-                'Turn off on shared devices. You will still enter Command Centre after setup.',
-                style: TextStyle(color: Colors.white38, fontSize: 11),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Icon(
+                          Icons.security_rounded,
+                          size: 18,
+                          color: AppTheme.neonCyan.withValues(alpha: 0.82),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'THIS DEVICE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              'Choose what this device remembers after setup.',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    value: keepSignedIn,
+                    onChanged: onKeepSignedInChanged,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    activeThumbColor: AppTheme.neonCyan,
+                    title: const Text(
+                      'Keep me signed in',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Recommended on your own device.',
+                      style: TextStyle(color: Colors.white38, fontSize: 11),
+                    ),
+                  ),
+                  AnimatedCrossFade(
+                    firstChild: CheckboxListTile(
+                      value: rememberEmail,
+                      onChanged: (value) =>
+                          onRememberEmailChanged(value ?? true),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      visualDensity: VisualDensity.compact,
+                      activeColor: AppTheme.neonCyan,
+                      title: const Text(
+                        'Remember my email',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                    secondChild: const SizedBox.shrink(),
+                    crossFadeState: keepSignedIn
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 180),
+                  ),
+                  if (!keepSignedIn)
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 4, right: 4, bottom: 2),
+                        child: Text(
+                          'On a shared device, leave both options off.',
+                          style: TextStyle(color: Colors.white38, fontSize: 10),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -1207,7 +1308,7 @@ class _PreviewBanner extends StatelessWidget {
         borderColor: AppTheme.neonPink,
       ),
       child: const Text(
-        'ADMIN PREVIEW â€” no live onboarding data will be changed.',
+        'ADMIN PREVIEW Ã¢â‚¬â€ no live onboarding data will be changed.',
         textAlign: TextAlign.center,
         style: TextStyle(color: AppTheme.neonPink),
       ),
