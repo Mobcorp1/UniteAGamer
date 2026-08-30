@@ -68,18 +68,14 @@ class _ArcMandatoryOnboardingScreenState
     extends State<ArcMandatoryOnboardingScreen> {
   PageController _pageController = PageController();
   final _emailController = TextEditingController();
-  final _confirmEmailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   final _riderNameController = TextEditingController();
   final _profileRepository = ArcTraderProfileRepository();
   final _personalisationRepository = ArcUserPersonalisationRepository();
 
   int _step = 0;
   String? _emailError;
-  String? _confirmEmailError;
   String? _passwordError;
-  String? _confirmPasswordError;
   String? _riderNameError;
   ArcPersonalisationGoal? _primaryGoal;
   _BlueprintSetupChoice _blueprintSetupChoice =
@@ -90,7 +86,6 @@ class _ArcMandatoryOnboardingScreenState
   bool _acceptedAgeConfirmation = false;
   bool _accountCreatedDuringOnboarding = false;
   bool _showPassword = false;
-  bool _showConfirmPassword = false;
   bool _rememberEmail = true;
   bool _keepSignedIn = true;
   bool _saving = false;
@@ -140,9 +135,7 @@ class _ArcMandatoryOnboardingScreenState
   void dispose() {
     _pageController.dispose();
     _emailController.dispose();
-    _confirmEmailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     _riderNameController.dispose();
     super.dispose();
   }
@@ -221,35 +214,21 @@ class _ArcMandatoryOnboardingScreenState
 
   bool _validateAccountStep() {
     final email = _emailController.text;
-    final confirmEmail = _confirmEmailController.text;
     final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
     final riderName = _riderNameController.text;
 
     final emailError = validateArcOnboardingEmail(email);
-    final confirmEmailError = validateArcOnboardingConfirmEmail(
-      email: email,
-      confirmEmail: confirmEmail,
-    );
     final passwordError = validateArcOnboardingPassword(password);
-    final confirmPasswordError = validateArcOnboardingConfirmPassword(
-      password: password,
-      confirmPassword: confirmPassword,
-    );
     final riderNameError = validateArcRiderName(riderName);
 
     setState(() {
       _emailError = emailError;
-      _confirmEmailError = confirmEmailError;
       _passwordError = passwordError;
-      _confirmPasswordError = confirmPasswordError;
       _riderNameError = riderNameError;
     });
 
     return emailError == null &&
-        confirmEmailError == null &&
         passwordError == null &&
-        confirmPasswordError == null &&
         riderNameError == null;
   }
 
@@ -326,9 +305,7 @@ class _ArcMandatoryOnboardingScreenState
       setState(() {
         _accountCreatedDuringOnboarding = true;
         _emailError = null;
-        _confirmEmailError = null;
         _passwordError = null;
-        _confirmPasswordError = null;
         _riderNameError = null;
         _saving = false;
       });
@@ -556,42 +533,27 @@ class _ArcMandatoryOnboardingScreenState
                           showsAccountCreationStep
                               ? _AccountCreationStep(
                                   emailController: _emailController,
-                                  confirmEmailController:
-                                      _confirmEmailController,
                                   passwordController: _passwordController,
-                                  confirmPasswordController:
-                                      _confirmPasswordController,
                                   riderNameController: _riderNameController,
                                   emailError: _emailError,
-                                  confirmEmailError: _confirmEmailError,
                                   passwordError: _passwordError,
-                                  confirmPasswordError: _confirmPasswordError,
                                   riderNameError: _riderNameError,
                                   showPassword: _showPassword,
-                                  showConfirmPassword: _showConfirmPassword,
                                   rememberEmail: _rememberEmail,
                                   keepSignedIn: _keepSignedIn,
                                   onChanged: () {
                                     if (_emailError != null ||
-                                        _confirmEmailError != null ||
                                         _passwordError != null ||
-                                        _confirmPasswordError != null ||
                                         _riderNameError != null) {
                                       setState(() {
                                         _emailError = null;
-                                        _confirmEmailError = null;
                                         _passwordError = null;
-                                        _confirmPasswordError = null;
                                         _riderNameError = null;
                                       });
                                     }
                                   },
                                   onTogglePassword: () => setState(
                                     () => _showPassword = !_showPassword,
-                                  ),
-                                  onToggleConfirmPassword: () => setState(
-                                    () => _showConfirmPassword =
-                                        !_showConfirmPassword,
                                   ),
                                   onRememberEmailChanged: (value) =>
                                       setState(() => _rememberEmail = value),
@@ -782,43 +744,31 @@ class _StepFrame extends StatelessWidget {
 class _AccountCreationStep extends StatelessWidget {
   const _AccountCreationStep({
     required this.emailController,
-    required this.confirmEmailController,
     required this.passwordController,
-    required this.confirmPasswordController,
     required this.riderNameController,
     required this.emailError,
-    required this.confirmEmailError,
     required this.passwordError,
-    required this.confirmPasswordError,
     required this.riderNameError,
     required this.showPassword,
-    required this.showConfirmPassword,
     required this.rememberEmail,
     required this.keepSignedIn,
     required this.onChanged,
     required this.onTogglePassword,
-    required this.onToggleConfirmPassword,
     required this.onRememberEmailChanged,
     required this.onKeepSignedInChanged,
   });
 
   final TextEditingController emailController;
-  final TextEditingController confirmEmailController;
   final TextEditingController passwordController;
-  final TextEditingController confirmPasswordController;
   final TextEditingController riderNameController;
   final String? emailError;
-  final String? confirmEmailError;
   final String? passwordError;
-  final String? confirmPasswordError;
   final String? riderNameError;
   final bool showPassword;
-  final bool showConfirmPassword;
   final bool rememberEmail;
   final bool keepSignedIn;
   final VoidCallback onChanged;
   final VoidCallback onTogglePassword;
-  final VoidCallback onToggleConfirmPassword;
   final ValueChanged<bool> onRememberEmailChanged;
   final ValueChanged<bool> onKeepSignedInChanged;
 
@@ -827,11 +777,24 @@ class _AccountCreationStep extends StatelessWidget {
     return _StepFrame(
       icon: Icons.person_add_alt_1_rounded,
       title: 'CREATE YOUR RAIDER ACCOUNT',
-      subtitle:
-          'Email, confirm email, password, confirm password and Raider name.',
+      subtitle: 'Choose your Raider identity, then secure your account.',
       child: AutofillGroup(
         child: Column(
           children: [
+            TextField(
+              controller: riderNameController,
+              autofillHints: UagAuthAutofill.displayName,
+              textInputAction: TextInputAction.next,
+              maxLength: 24,
+              onChanged: (_) => onChanged(),
+              decoration: InputDecoration(
+                labelText: 'Raider name',
+                hintText: 'Enter your display name',
+                prefixIcon: const Icon(Icons.person_outline_rounded),
+                errorText: riderNameError,
+              ),
+            ),
+            const SizedBox(height: 12),
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
@@ -848,24 +811,9 @@ class _AccountCreationStep extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: confirmEmailController,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: UagAuthAutofill.registrationEmail,
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              enableSuggestions: true,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Confirm email address',
-                prefixIcon: const Icon(Icons.mark_email_read_outlined),
-                errorText: confirmEmailError,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
               controller: passwordController,
               autofillHints: UagAuthAutofill.newPassword,
-              textInputAction: TextInputAction.next,
+              textInputAction: TextInputAction.done,
               obscureText: !showPassword,
               autocorrect: false,
               enableSuggestions: false,
@@ -874,6 +822,8 @@ class _AccountCreationStep extends StatelessWidget {
                 labelText: 'Password',
                 prefixIcon: const Icon(Icons.lock_outline_rounded),
                 errorText: passwordError,
+                helperText: '6+ characters â€¢ 1 capital â€¢ 1 number',
+                helperMaxLines: 2,
                 suffixIcon: IconButton(
                   tooltip: showPassword ? 'Hide password' : 'Show password',
                   onPressed: onTogglePassword,
@@ -883,46 +833,6 @@ class _AccountCreationStep extends StatelessWidget {
                         : Icons.visibility_outlined,
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmPasswordController,
-              autofillHints: UagAuthAutofill.newPassword,
-              textInputAction: TextInputAction.next,
-              obscureText: !showConfirmPassword,
-              autocorrect: false,
-              enableSuggestions: false,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Confirm password',
-                prefixIcon: const Icon(Icons.lock_reset_rounded),
-                errorText: confirmPasswordError,
-                suffixIcon: IconButton(
-                  tooltip: showConfirmPassword
-                      ? 'Hide password'
-                      : 'Show password',
-                  onPressed: onToggleConfirmPassword,
-                  icon: Icon(
-                    showConfirmPassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: riderNameController,
-              autofillHints: UagAuthAutofill.displayName,
-              textInputAction: TextInputAction.done,
-              maxLength: 24,
-              onChanged: (_) => onChanged(),
-              decoration: InputDecoration(
-                labelText: 'Raider name',
-                hintText: 'Enter your display name',
-                prefixIcon: const Icon(Icons.person_outline_rounded),
-                errorText: riderNameError,
               ),
             ),
             CheckboxListTile(
@@ -1297,7 +1207,7 @@ class _PreviewBanner extends StatelessWidget {
         borderColor: AppTheme.neonPink,
       ),
       child: const Text(
-        'ADMIN PREVIEW — no live onboarding data will be changed.',
+        'ADMIN PREVIEW â€” no live onboarding data will be changed.',
         textAlign: TextAlign.center,
         style: TextStyle(color: AppTheme.neonPink),
       ),
