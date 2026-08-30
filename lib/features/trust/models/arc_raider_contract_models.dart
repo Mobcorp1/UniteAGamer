@@ -32,6 +32,7 @@ enum ArcRaiderReportCategory {
   lootRatting,
   pvpThirdParty,
   pveThirdParty,
+  shotInBack,
   falseFriendly,
   repeatedTargeting,
   griefing,
@@ -127,6 +128,16 @@ class ArcRaiderRewardItem {
       );
 }
 
+class ArcRaiderBlueprintRewardCandidate {
+  const ArcRaiderBlueprintRewardCandidate({
+    required this.blueprintId,
+    required this.name,
+  });
+
+  final String blueprintId;
+  final String name;
+}
+
 class ArcRaiderReport {
   const ArcRaiderReport({
     required this.id,
@@ -159,6 +170,8 @@ class ArcRaiderReport {
     this.evidence = const [],
     this.requestContract = false,
     this.rewardItems = const [],
+    this.blueprintRewardCount = 0,
+    this.blueprintRewardPool = const [],
     this.moderationNotes = '',
     this.moderatedByUid = '',
     this.createdAt,
@@ -199,6 +212,8 @@ class ArcRaiderReport {
   final List<ArcRaiderEvidence> evidence;
   final bool requestContract;
   final List<ArcRaiderRewardItem> rewardItems;
+  final int blueprintRewardCount;
+  final List<String> blueprintRewardPool;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? submittedAt;
@@ -214,7 +229,7 @@ class ArcRaiderReport {
       locationY != null &&
       reporterUid != targetUid &&
       (!atExtraction || extractionId.isNotEmpty) &&
-      (!requestContract || rewardItems.isNotEmpty);
+      (!requestContract || rewardItems.isNotEmpty || blueprintRewardCount > 0);
 
   bool get canWithdraw =>
       status == ArcRaiderReportStatus.draft ||
@@ -251,6 +266,8 @@ class ArcRaiderReport {
     'evidence': evidence.map((e) => e.toMap()).toList(),
     'requestContract': requestContract,
     'rewardItems': rewardItems.map((e) => e.toMap()).toList(),
+    'blueprintRewardCount': blueprintRewardCount,
+    'blueprintRewardPool': blueprintRewardPool,
     'status': status.name,
     'moderationNotes': moderationNotes,
     'moderatedByUid': moderatedByUid,
@@ -314,6 +331,13 @@ class ArcRaiderReport {
               )
               .toList(growable: false)
         : const [],
+    blueprintRewardCount: (map['blueprintRewardCount'] as num?)?.toInt() ?? 0,
+    blueprintRewardPool: (map['blueprintRewardPool'] is Iterable)
+        ? (map['blueprintRewardPool'] as Iterable)
+              .map((e) => '$e')
+              .where((e) => e.isNotEmpty)
+              .toList(growable: false)
+        : const <String>[],
     status: _enumValue(
       ArcRaiderReportStatus.values,
       map['status'],
@@ -339,6 +363,9 @@ class ArcRaiderContract {
     this.hunterUid = '',
     this.rewardItems = const [],
     this.rewardSummary = '',
+    this.blueprintRewardCount = 0,
+    this.blueprintRewardPool = const [],
+    this.blueprintRewardSelection = const [],
     this.reputationReward = 10,
     this.evidenceRequirements =
         'Provide clear in-app evidence that identifies the encounter and outcome.',
@@ -363,6 +390,9 @@ class ArcRaiderContract {
   final String hunterUid;
   final List<ArcRaiderRewardItem> rewardItems;
   final String rewardSummary;
+  final int blueprintRewardCount;
+  final List<String> blueprintRewardPool;
+  final List<String> blueprintRewardSelection;
   final String evidenceRequirements;
   final String resolution;
   final String moderationNotes;
@@ -430,6 +460,9 @@ class ArcRaiderContract {
     'status': status.name,
     'rewardItems': rewardItems.map((e) => e.toMap()).toList(),
     'rewardSummary': rewardSummary,
+    'blueprintRewardCount': blueprintRewardCount,
+    'blueprintRewardPool': blueprintRewardPool,
+    'blueprintRewardSelection': blueprintRewardSelection,
     'reputationReward': reputationReward,
     'evidenceRequirements': evidenceRequirements,
     'evidence': evidence.map((e) => e.toMap()).toList(),
@@ -446,50 +479,62 @@ class ArcRaiderContract {
     if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
   };
 
-  factory ArcRaiderContract.fromMap(Map<String, dynamic> map) =>
-      ArcRaiderContract(
-        id: '${map['id'] ?? ''}',
-        reportId: '${map['reportId'] ?? ''}',
-        targetUid: '${map['targetUid'] ?? ''}',
-        targetDisplayName: '${map['targetDisplayName'] ?? ''}',
-        reporterUid: '${map['reporterUid'] ?? ''}',
-        hunterUid: '${map['hunterUid'] ?? ''}',
-        status: _enumValue(
-          ArcRaiderContractStatus.values,
-          map['status'],
-          ArcRaiderContractStatus.available,
-        ),
-        rewardItems: (map['rewardItems'] is Iterable)
-            ? (map['rewardItems'] as Iterable)
-                  .whereType<Map>()
-                  .map(
-                    (e) => ArcRaiderRewardItem.fromMap(
-                      Map<String, dynamic>.from(e),
-                    ),
-                  )
-                  .toList(growable: false)
-            : const [],
-        rewardSummary: '${map['rewardSummary'] ?? ''}',
-        reputationReward: (map['reputationReward'] as num?)?.toInt() ?? 10,
-        evidenceRequirements: '${map['evidenceRequirements'] ?? ''}',
-        evidence: (map['evidence'] is Iterable)
-            ? (map['evidence'] as Iterable)
-                  .whereType<Map>()
-                  .map(
-                    (e) =>
-                        ArcRaiderEvidence.fromMap(Map<String, dynamic>.from(e)),
-                  )
-                  .toList(growable: false)
-            : const [],
-        resolution: '${map['resolution'] ?? ''}',
-        moderationNotes: '${map['moderationNotes'] ?? ''}',
-        moderatedByUid: '${map['moderatedByUid'] ?? ''}',
-        socialContentUrl: '${map['socialContentUrl'] ?? ''}',
-        createdAt: _date(map['createdAt']),
-        updatedAt: _date(map['updatedAt']),
-        acceptedAt: _date(map['acceptedAt']),
-        evidenceSubmittedAt: _date(map['evidenceSubmittedAt']),
-        resolvedAt: _date(map['resolvedAt']),
-        expiresAt: _date(map['expiresAt']),
-      );
+  factory ArcRaiderContract.fromMap(
+    Map<String, dynamic> map,
+  ) => ArcRaiderContract(
+    id: '${map['id'] ?? ''}',
+    reportId: '${map['reportId'] ?? ''}',
+    targetUid: '${map['targetUid'] ?? ''}',
+    targetDisplayName: '${map['targetDisplayName'] ?? ''}',
+    reporterUid: '${map['reporterUid'] ?? ''}',
+    hunterUid: '${map['hunterUid'] ?? ''}',
+    status: _enumValue(
+      ArcRaiderContractStatus.values,
+      map['status'],
+      ArcRaiderContractStatus.available,
+    ),
+    rewardItems: (map['rewardItems'] is Iterable)
+        ? (map['rewardItems'] as Iterable)
+              .whereType<Map>()
+              .map(
+                (e) =>
+                    ArcRaiderRewardItem.fromMap(Map<String, dynamic>.from(e)),
+              )
+              .toList(growable: false)
+        : const [],
+    blueprintRewardCount: (map['blueprintRewardCount'] as num?)?.toInt() ?? 0,
+    blueprintRewardPool: (map['blueprintRewardPool'] is Iterable)
+        ? (map['blueprintRewardPool'] as Iterable)
+              .map((e) => '$e')
+              .where((e) => e.isNotEmpty)
+              .toList(growable: false)
+        : const <String>[],
+    blueprintRewardSelection: (map['blueprintRewardSelection'] is Iterable)
+        ? (map['blueprintRewardSelection'] as Iterable)
+              .map((e) => '$e')
+              .where((e) => e.isNotEmpty)
+              .toList(growable: false)
+        : const <String>[],
+    rewardSummary: '${map['rewardSummary'] ?? ''}',
+    reputationReward: (map['reputationReward'] as num?)?.toInt() ?? 10,
+    evidenceRequirements: '${map['evidenceRequirements'] ?? ''}',
+    evidence: (map['evidence'] is Iterable)
+        ? (map['evidence'] as Iterable)
+              .whereType<Map>()
+              .map(
+                (e) => ArcRaiderEvidence.fromMap(Map<String, dynamic>.from(e)),
+              )
+              .toList(growable: false)
+        : const [],
+    resolution: '${map['resolution'] ?? ''}',
+    moderationNotes: '${map['moderationNotes'] ?? ''}',
+    moderatedByUid: '${map['moderatedByUid'] ?? ''}',
+    socialContentUrl: '${map['socialContentUrl'] ?? ''}',
+    createdAt: _date(map['createdAt']),
+    updatedAt: _date(map['updatedAt']),
+    acceptedAt: _date(map['acceptedAt']),
+    evidenceSubmittedAt: _date(map['evidenceSubmittedAt']),
+    resolvedAt: _date(map['resolvedAt']),
+    expiresAt: _date(map['expiresAt']),
+  );
 }

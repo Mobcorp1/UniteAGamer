@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/arc_raider_contract_models.dart';
+import '../services/arc_raider_blueprint_reward_service.dart';
 
 class ArcRaiderContractsRepository {
   ArcRaiderContractsRepository({
@@ -147,11 +148,23 @@ class ArcRaiderContractsRepository {
     List<ArcRaiderEvidence> evidence = const [],
     bool requestContract = false,
     List<ArcRaiderRewardItem> rewardItems = const [],
+    int blueprintRewardCount = 0,
   }) async {
     final ref = reportId == null || reportId.trim().isEmpty
         ? _reports.doc()
         : _reports.doc(reportId.trim());
     final now = DateTime.now();
+    var blueprintRewardPool = const <String>[];
+    if (requestContract && blueprintRewardCount > 0) {
+      final rewardService = ArcRaiderBlueprintRewardService(firestore: _db);
+      await rewardService.validateOffer(
+        creatorUid: uid,
+        rewardCount: blueprintRewardCount,
+      );
+      blueprintRewardPool = await rewardService.snapshotDuplicateBlueprintIds(
+        uid,
+      );
+    }
     final profile = (await _db.collection('users').doc(uid).get()).data() ?? {};
     final reputation =
         (profile['reputationScore'] as num?)?.toInt() ??
@@ -188,6 +201,8 @@ class ArcRaiderContractsRepository {
       evidence: evidence,
       requestContract: requestContract,
       rewardItems: rewardItems,
+      blueprintRewardCount: blueprintRewardCount,
+      blueprintRewardPool: blueprintRewardPool,
       status: ArcRaiderReportStatus.submitted,
       createdAt: now,
       updatedAt: now,
@@ -269,9 +284,16 @@ class ArcRaiderContractsRepository {
       if (approve && report.requestContract) {
         final contractRef = _contracts.doc();
         contractId = contractRef.id;
-        final rewardSummary = report.rewardItems
+        final itemRewardSummary = report.rewardItems
             .map((e) => '${e.quantity}× ${e.name}')
             .join(' • ');
+        final blueprintRewardSummary = report.blueprintRewardCount > 0
+            ? '${report.blueprintRewardCount}× Blueprint dupe choice'
+            : '';
+        final rewardSummary = [
+          if (itemRewardSummary.isNotEmpty) itemRewardSummary,
+          if (blueprintRewardSummary.isNotEmpty) blueprintRewardSummary,
+        ].join(' • ');
         tx.set(contractRef, {
           'id': contractRef.id,
           'reportId': id,
@@ -282,6 +304,10 @@ class ArcRaiderContractsRepository {
           'status': 'available',
           'rewardItems': report.rewardItems.map((e) => e.toMap()).toList(),
           'rewardSummary': rewardSummary,
+          'blueprintRewardCount': report.blueprintRewardCount,
+          'blueprintRewardPool': report.blueprintRewardPool,
+          'blueprintRewardSelection': <String>[],
+          'blueprintRewardsSettled': false,
           'reputationReward': 10,
           'evidenceRequirements':
               'Provide clear in-app evidence that identifies the encounter and outcome.',
@@ -310,6 +336,78 @@ class ArcRaiderContractsRepository {
       entityId: contractId ?? id,
       type: 'conductReportOutcome',
     );
+  }
+
+  Future<int> maxBlueprintRewardsIcanOffer() => ArcRaiderBlueprintRewardService(
+    firestore: _db,
+  ).maxDistinctBlueprintRewards(uid);
+
+  Future<List<ArcRaiderBlueprintRewardCandidate>> loadEligibleBlueprintRewards(
+    ArcRaiderContract contract,
+  ) async {
+    if (contract.hunterUid != uid) {
+      return const <ArcRaiderBlueprintRewardCandidate>[];
+    }
+    return ArcRaiderBlueprintRewardService(firestore: _db).eligibleCandidates(
+      creatorPool: contract.blueprintRewardPool,
+      claimantUid: uid,
+    );
+  }
+
+  Future<void> saveBlueprintRewardSelection(
+    String contractId,
+    Iterable<String> blueprintIds,
+  ) async {
+    final unique = blueprintIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    final snapshot = await _contracts.doc(contractId).get();
+    final contract = ArcRaiderContract.fromMap(
+      snapshot.data() ?? const <String, dynamic>{},
+    );
+    if (contract.hunterUid != uid) {
+      throw StateError(
+        'Only the contract claimant can choose Blueprint rewards.',
+      );
+    }
+    if (contract.blueprintRewardCount <= 0) {
+      throw StateError('This contract does not offer Blueprint rewards.');
+    }
+    if (!{
+      ArcRaiderContractStatus.accepted,
+      ArcRaiderContractStatus.inProgress,
+      ArcRaiderContractStatus.evidenceSubmitted,
+      ArcRaiderContractStatus.disputed,
+    }.contains(contract.status)) {
+      throw StateError(
+        'Blueprint rewards cannot be changed in this contract state.',
+      );
+    }
+    if (unique.length != contract.blueprintRewardCount) {
+      throw ArgumentError(
+        'Choose exactly ${contract.blueprintRewardCount} Blueprint reward${contract.blueprintRewardCount == 1 ? '' : 's'}.',
+      );
+    }
+    if (!unique.every(contract.blueprintRewardPool.contains)) {
+      throw StateError(
+        'A selected Blueprint is not in the creator duplicate pool.',
+      );
+    }
+    final eligible = await loadEligibleBlueprintRewards(contract);
+    final eligibleIds = eligible
+        .map((candidate) => candidate.blueprintId)
+        .toSet();
+    if (!unique.every(eligibleIds.contains)) {
+      throw StateError(
+        'One or more selected Blueprints are no longer missing from your tracker.',
+      );
+    }
+    await _contracts.doc(contractId).update({
+      'blueprintRewardSelection': unique,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> acceptContract(String id) async {
@@ -414,13 +512,31 @@ class ArcRaiderContractsRepository {
     if (!contract.canTransitionTo(next)) {
       throw StateError('Invalid resolution transition.');
     }
-    await _contracts.doc(id).update({
-      'status': next.name,
-      'resolution': resolution.trim(),
-      'moderatedByUid': uid,
-      'resolvedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    if (completed && contract.blueprintRewardCount > 0) {
+      final authority =
+          (await _db.collection('users').doc(uid).get()).data() ??
+          const <String, dynamic>{};
+      if (authority['isAdmin'] != true && authority['isDev'] != true) {
+        throw StateError(
+          'Blueprint reward settlement requires an admin/dev moderator so both Blueprint inventories can be updated atomically.',
+        );
+      }
+      await ArcRaiderBlueprintRewardService(
+        firestore: _db,
+      ).settleCompletedContract(
+        contractId: id,
+        moderatorUid: uid,
+        resolution: resolution,
+      );
+    } else {
+      await _contracts.doc(id).update({
+        'status': next.name,
+        'resolution': resolution.trim(),
+        'moderatedByUid': uid,
+        'resolvedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
     if (completed && contract.hunterUid.isNotEmpty) {
       await _db.collection('users').doc(contract.hunterUid).set({
         'raiderContractStats': {

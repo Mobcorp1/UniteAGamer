@@ -30,7 +30,7 @@ class _State extends State<ArcRaiderContractsScreen>
   @override
   void initState() {
     super.initState();
-    tabs = TabController(length: 3, vsync: this);
+    tabs = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -60,6 +60,7 @@ class _State extends State<ArcRaiderContractsScreen>
                   Tab(text: 'REPORT A RAT'),
                   Tab(text: 'LIVE CONTRACTS'),
                   Tab(text: 'MY ACTIVITY'),
+                  Tab(text: 'MY REWARDS'),
                 ],
               ),
               Expanded(
@@ -69,6 +70,7 @@ class _State extends State<ArcRaiderContractsScreen>
                     _ProgressiveReport(repo: repo),
                     _Contracts(repo: repo, live: true),
                     _MyActivity(repo: repo),
+                    _BlueprintRewards(repo: repo),
                   ],
                 ),
               ),
@@ -114,6 +116,10 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
   String rewardSearchQuery = '';
   String? selectedRewardItemId;
   int rewardQuantity = 1;
+  bool blueprintDupesReward = false;
+  int blueprintRewardCount = 1;
+  int maxBlueprintRewards = 0;
+  bool loadingBlueprintRewards = false;
   double mapZoom = 1;
   bool busy = false;
   String validationMessage = '';
@@ -180,8 +186,14 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
           message = 'Choose when the incident happened.';
         }
       case 3:
-        if (wantsContract && rewards.isEmpty) {
-          message = 'Add at least one reward item or choose report only.';
+        if (wantsContract && rewards.isEmpty && !blueprintDupesReward) {
+          message =
+              'Add at least one reward item, offer Blueprint dupes, or choose report only.';
+        } else if (wantsContract &&
+            blueprintDupesReward &&
+            blueprintRewardCount > maxBlueprintRewards) {
+          message =
+              'Reduce the Blueprint reward count to your currently available duplicates.';
         }
       case 4:
         return true;
@@ -318,6 +330,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
         evidence: evidenceItems,
         requestContract: wantsContract,
         rewardItems: rewardItems,
+        blueprintRewardCount: blueprintDupesReward ? blueprintRewardCount : 0,
       );
 
       if (!mounted) return;
@@ -349,7 +362,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       (atExtraction != true || extractionId.isNotEmpty) &&
       serverRegion.isNotEmpty &&
       incidentAt != null &&
-      (!wantsContract || rewards.isNotEmpty);
+      (!wantsContract || rewards.isNotEmpty || blueprintDupesReward);
 
   void _reset() {
     setState(() {
@@ -363,13 +376,17 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       extractionId = '';
       extractionName = '';
       serverRegion = '';
-      incidentAt = null;
+      incidentAt = DateTime.now();
       wantsContract = false;
       rewards.clear();
       rewardSearch.clear();
       rewardSearchQuery = '';
       selectedRewardItemId = null;
       rewardQuantity = 1;
+      blueprintDupesReward = false;
+      blueprintRewardCount = 1;
+      maxBlueprintRewards = 0;
+      loadingBlueprintRewards = false;
       mapZoom = 1;
       mapController.value = Matrix4.identity();
       validationMessage = '';
@@ -689,11 +706,75 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       title: const Text('Request a contract if approved'),
       onChanged: (value) => setState(() {
         wantsContract = value;
-        if (!value) rewards.clear();
+        if (!value) {
+          rewards.clear();
+          blueprintDupesReward = false;
+          blueprintRewardCount = 1;
+          maxBlueprintRewards = 0;
+        }
         validationMessage = '';
       }),
     ),
     if (wantsContract) ...[
+      SwitchListTile.adaptive(
+        key: const Key('rat-contract-blueprint-dupes'),
+        contentPadding: EdgeInsets.zero,
+        title: const Text('My Blueprint Dupes'),
+        subtitle: const Text(
+          'Offer a number of duplicate Blueprints. The claimant will only see matches they are missing.',
+        ),
+        value: blueprintDupesReward,
+        onChanged: loadingBlueprintRewards
+            ? null
+            : (enabled) async {
+                if (!enabled) {
+                  setState(() {
+                    blueprintDupesReward = false;
+                    blueprintRewardCount = 1;
+                    validationMessage = '';
+                  });
+                  return;
+                }
+                setState(() {
+                  loadingBlueprintRewards = true;
+                  wantsContract = true;
+                });
+                try {
+                  final max = await widget.repo.maxBlueprintRewardsIcanOffer();
+                  if (!mounted) return;
+                  setState(() {
+                    maxBlueprintRewards = max;
+                    blueprintDupesReward = max > 0;
+                    blueprintRewardCount = max > 0 ? 1 : 0;
+                    validationMessage = max > 0
+                        ? ''
+                        : 'Your Blueprint Tracker currently has no duplicates available to offer.';
+                  });
+                } finally {
+                  if (mounted) setState(() => loadingBlueprintRewards = false);
+                }
+              },
+      ),
+      if (blueprintDupesReward) ...[
+        const SizedBox(height: 8),
+        DropdownButtonFormField<int>(
+          key: const Key('rat-contract-blueprint-reward-count'),
+          initialValue: blueprintRewardCount,
+          decoration: const InputDecoration(
+            labelText: 'Blueprint rewards offered',
+            border: OutlineInputBorder(),
+          ),
+          items: [
+            for (var i = 1; i <= maxBlueprintRewards; i++)
+              DropdownMenuItem(value: i, child: Text('$i')),
+          ],
+          onChanged: (value) => setState(() {
+            blueprintRewardCount = value ?? 1;
+            validationMessage = '';
+          }),
+        ),
+        const SizedBox(height: 12),
+      ],
       const Text(
         'Search for an in-game item, choose the quantity, then add it to the contract. '
         'You can add as many different reward items as required.',
@@ -708,7 +789,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
               title: Text(item.name),
-              subtitle: Text('${entry.value} × ${item.category}'),
+              subtitle: Text('${entry.value} Ã— ${item.category}'),
               trailing: IconButton(
                 tooltip: 'Remove reward',
                 onPressed: () => setState(() => rewards.remove(entry.key)),
@@ -736,19 +817,21 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       ),
       if (rewardSearchQuery.length >= 2) ...[
         const SizedBox(height: 6),
-        ..._rewardMatches.take(8).map(
-          (item) => ListTile(
-            dense: true,
-            selected: selectedRewardItemId == item.id,
-            title: Text(item.name),
-            subtitle: Text('${item.category} • ${item.group}'),
-            onTap: () => setState(() {
-              selectedRewardItemId = item.id;
-              rewardSearch.text = item.name;
-              rewardSearchQuery = item.name;
-            }),
-          ),
-        ),
+        ..._rewardMatches
+            .take(8)
+            .map(
+              (item) => ListTile(
+                dense: true,
+                selected: selectedRewardItemId == item.id,
+                title: Text(item.name),
+                subtitle: Text('${item.category} â€¢ ${item.group}'),
+                onTap: () => setState(() {
+                  selectedRewardItemId = item.id;
+                  rewardSearch.text = item.name;
+                  rewardSearchQuery = item.name;
+                }),
+              ),
+            ),
       ],
       if (selectedRewardItemId != null) ...[
         const SizedBox(height: 10),
@@ -790,7 +873,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       key: const Key('report-rat-submit'),
       onPressed: busy ? null : submit,
       icon: const Icon(Icons.shield_outlined),
-      label: Text(busy ? 'Submitting…' : 'Submit privately for review'),
+      label: Text(busy ? 'Submittingâ€¦' : 'Submit privately for review'),
     ),
   ]);
 
@@ -832,9 +915,9 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
                   final item = ArcTradeCatalog.items.firstWhere(
                     (item) => item.id == e.key,
                   );
-                  return '${e.value}× ${item.name}';
+                  return '${e.value}Ã— ${item.name}';
                 })
-                .join(' • '),
+                .join(' â€¢ '),
           ),
       ],
     );
@@ -853,6 +936,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
     ArcRaiderReportCategory.spawnRatting,
     ArcRaiderReportCategory.pvpThirdParty,
     ArcRaiderReportCategory.pveThirdParty,
+    ArcRaiderReportCategory.shotInBack,
     ArcRaiderReportCategory.falseFriendly,
     ArcRaiderReportCategory.scam,
     ArcRaiderReportCategory.other,
@@ -950,14 +1034,14 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       Expanded(
         child: OutlinedButton(
           onPressed: () => onChanged(true),
-          child: Text(atExtraction == true ? '✓ Yes' : 'Yes'),
+          child: Text(atExtraction == true ? 'âœ“ Yes' : 'Yes'),
         ),
       ),
       const SizedBox(width: 10),
       Expanded(
         child: OutlinedButton(
           onPressed: () => onChanged(false),
-          child: Text(atExtraction == false ? '✓ No' : 'No'),
+          child: Text(atExtraction == false ? 'âœ“ No' : 'No'),
         ),
       ),
     ],
@@ -1012,6 +1096,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
   String _categoryLabel(ArcRaiderReportCategory value) => switch (value) {
     ArcRaiderReportCategory.extractionRatting => 'Extraction camping',
     ArcRaiderReportCategory.spawnRatting => 'Spawn camping',
+    ArcRaiderReportCategory.shotInBack => 'Shot in the back',
     ArcRaiderReportCategory.ambushRatting => 'Camping / ambush',
     ArcRaiderReportCategory.objectiveCamping => 'Objective camping',
     ArcRaiderReportCategory.doorwayCamping => 'Doorway / building camping',
@@ -1226,7 +1311,7 @@ class _MyActivity extends StatelessWidget {
                 (r) => ListTile(
                   title: Text(r.targetDisplayName),
                   subtitle: Text(
-                    '${r.category.name} • ${r.status.name} • ${r.mapDisplayName}',
+                    '${r.category.name} â€¢ ${r.status.name} â€¢ ${r.mapDisplayName}',
                   ),
                   trailing: r.canWithdraw
                       ? TextButton(
@@ -1244,4 +1329,176 @@ class _MyActivity extends StatelessWidget {
       SizedBox(height: 500, child: _Contracts(repo: repo, live: false)),
     ],
   );
+}
+
+class _BlueprintRewards extends StatefulWidget {
+  const _BlueprintRewards({required this.repo});
+  final ArcRaiderContractsRepository repo;
+
+  @override
+  State<_BlueprintRewards> createState() => _BlueprintRewardsState();
+}
+
+class _BlueprintRewardsState extends State<_BlueprintRewards> {
+  final Map<String, Set<String>> selections = <String, Set<String>>{};
+  final Set<String> saving = <String>{};
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<List<ArcRaiderContract>>(
+    stream: widget.repo.watchMyContracts(),
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return Center(
+          child: Text('Unable to load Blueprint rewards: ${snapshot.error}'),
+        );
+      }
+      if (!snapshot.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final contracts = snapshot.data!
+          .where((contract) => contract.blueprintRewardCount > 0)
+          .toList(growable: false);
+      if (contracts.isEmpty) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'No accepted Rat Contracts currently include Blueprint dupe rewards.',
+            ),
+          ),
+        );
+      }
+      return ListView.separated(
+        padding: AppTheme.pagePadding,
+        itemCount: contracts.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) => _contractRewardCard(contracts[index]),
+      );
+    },
+  );
+
+  Widget _contractRewardCard(ArcRaiderContract contract) {
+    final locked = {
+      ArcRaiderContractStatus.completed,
+      ArcRaiderContractStatus.rejected,
+      ArcRaiderContractStatus.cancelled,
+      ArcRaiderContractStatus.expired,
+    }.contains(contract.status);
+    final selected = selections.putIfAbsent(
+      contract.id,
+      () => contract.blueprintRewardSelection.toSet(),
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Blueprint reward â€¢ ${contract.targetDisplayName}',
+              style: AppTheme.tradingHeading(fontSize: 17),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Choose exactly ${contract.blueprintRewardCount} Blueprint${contract.blueprintRewardCount == 1 ? '' : 's'} from the creator\'s dupes that your tracker still shows as missing.',
+            ),
+            const SizedBox(height: 12),
+            FutureBuilder<List<ArcRaiderBlueprintRewardCandidate>>(
+              future: widget.repo.loadEligibleBlueprintRewards(contract),
+              builder: (context, candidatesSnapshot) {
+                if (candidatesSnapshot.hasError) {
+                  return Text(
+                    'Unable to refresh matches: ${candidatesSnapshot.error}',
+                  );
+                }
+                if (!candidatesSnapshot.hasData) {
+                  return const LinearProgressIndicator();
+                }
+                final candidates = candidatesSnapshot.data!;
+                if (candidates.isEmpty) {
+                  return const Text(
+                    'There are currently no useful Blueprint overlaps. The creator inventory and your missing list are rechecked before settlement.',
+                  );
+                }
+                return Column(
+                  children: [
+                    for (final candidate in candidates)
+                      CheckboxListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(candidate.name),
+                        value: selected.contains(candidate.blueprintId),
+                        onChanged: locked
+                            ? null
+                            : (checked) {
+                                setState(() {
+                                  if (checked == true) {
+                                    if (selected.length <
+                                        contract.blueprintRewardCount) {
+                                      selected.add(candidate.blueprintId);
+                                    }
+                                  } else {
+                                    selected.remove(candidate.blueprintId);
+                                  }
+                                });
+                              },
+                      ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton.icon(
+                        key: Key('save-blueprint-rewards-${contract.id}'),
+                        onPressed:
+                            locked ||
+                                saving.contains(contract.id) ||
+                                selected.length != contract.blueprintRewardCount
+                            ? null
+                            : () => _save(contract, selected),
+                        icon: saving.contains(contract.id)
+                            ? const SizedBox.square(
+                                dimension: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.save_outlined),
+                        label: Text(
+                          locked
+                              ? 'Selection locked'
+                              : 'Save ${selected.length}/${contract.blueprintRewardCount}',
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _save(ArcRaiderContract contract, Set<String> selected) async {
+    setState(() => saving.add(contract.id));
+    try {
+      await widget.repo.saveBlueprintRewardSelection(contract.id, selected);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Blueprint reward choices saved. They will be revalidated when the contract is completed.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$error')));
+    } finally {
+      if (mounted) setState(() => saving.remove(contract.id));
+    }
+  }
 }

@@ -93,13 +93,10 @@ void main() {
     }
   });
 
-  test('live contracts have explicit available-list permission', () {
-    expect(
-      rules,
-      contains(
-        "allow list: if isSignedIn() && resource.data.status == 'available';",
-      ),
-    );
+  test('live contracts preserve discovery and participant visibility', () {
+    expect(rules, contains("resource.data.status == 'available'"));
+    expect(rules, contains('resource.data.reporterUid == request.auth.uid'));
+    expect(rules, contains('resource.data.hunterUid == request.auth.uid'));
     expect(repo, contains(".where('status', isEqualTo: 'available')"));
   });
 
