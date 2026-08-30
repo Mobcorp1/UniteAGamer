@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_live_occupancy_stabilizer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_scan_segment_reconciler.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_canonical_grid.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 
 @immutable
@@ -14,7 +14,7 @@ class ArcBlueprintLiveScanDecisionResult {
   final List<String> errors;
   bool get succeeded =>
       errors.isEmpty &&
-      decisions.length == ArcBlueprintCanonicalGrid.totalPositions;
+      decisions.length == ArcBlueprintSeedData.blueprints.length;
 }
 
 class ArcBlueprintLiveScanResultEngine {
@@ -27,57 +27,66 @@ class ArcBlueprintLiveScanResultEngine {
     final errors = <String>[];
     if (!top.sectionStable || top.totalCellCount != 50) {
       errors.add(
-        'Top live scan is incomplete: expected 50 stable cells, received ${top.stableCellCount}/${top.totalCellCount}.',
+        'First live scan is incomplete: expected 50 stable cells, received '
+        '${top.stableCellCount}/${top.totalCellCount}.',
       );
     }
-    if (!bottom.sectionStable || bottom.totalCellCount != 33) {
+    if (!bottom.sectionStable || bottom.totalCellCount != 50) {
       errors.add(
-        'Bottom live scan is incomplete: expected 33 stable cells, received ${bottom.stableCellCount}/${bottom.totalCellCount}.',
+        'Second live scan is incomplete: expected 50 stable cells, received '
+        '${bottom.stableCellCount}/${bottom.totalCellCount}.',
       );
     }
-    final byIndex = <int, ArcBlueprintLiveCellEstimate>{};
-    for (final cell in <ArcBlueprintLiveCellEstimate>[
-      ...top.cells,
-      ...bottom.cells,
-    ]) {
-      final index = (cell.rowIndex * 10) + cell.columnIndex;
-      if (index < 0 || index >= ArcBlueprintCanonicalGrid.totalPositions) {
-        errors.add(
-          'Invalid live grid position R${cell.rowIndex + 1}C${cell.columnIndex + 1}.',
-        );
-      } else if (byIndex.containsKey(index)) {
-        errors.add(
-          'Duplicate live grid position R${cell.rowIndex + 1}C${cell.columnIndex + 1}.',
-        );
-      } else {
-        byIndex[index] = cell;
-      }
-    }
-    if (byIndex.length != ArcBlueprintCanonicalGrid.totalPositions) {
-      errors.add(
-        'Live scan returned ${byIndex.length} unique positions; ${ArcBlueprintCanonicalGrid.totalPositions} are required.',
-      );
-    }
+
     final ids = ArcBlueprintSeedData.blueprints
-        .map((b) => b.id)
+        .map((blueprint) => blueprint.id)
         .toList(growable: false);
-    if (ids.length < ArcBlueprintCanonicalGrid.totalPositions) {
-      errors.add(
-        'Canonical Blueprint seed data contains only ${ids.length} positions.',
-      );
+    final requiredCount = ids.length;
+    if (requiredCount == 0) {
+      errors.add('Canonical Blueprint seed data is empty.');
     }
+
     if (errors.isNotEmpty) {
       return ArcBlueprintLiveScanDecisionResult(
-        decisions: const [],
-        errors: List.unmodifiable(errors),
+        decisions: const <ArcBlueprintPhotoCellDecision>[],
+        errors: List<String>.unmodifiable(errors),
       );
     }
+
+    final reconciled = const ArcBlueprintScanSegmentReconciler().reconcile(
+      first: top,
+      second: bottom,
+    );
+
+    final byIndex = <int, ArcBlueprintLiveCellEstimate>{
+      for (final cell in reconciled.cells)
+        (cell.rowIndex * 10) + cell.columnIndex: cell,
+    };
+
+    final missingPositions = <int>[];
+    for (var index = 0; index < requiredCount; index++) {
+      if (!byIndex.containsKey(index)) {
+        missingPositions.add(index);
+      }
+    }
+
+    if (missingPositions.isNotEmpty) {
+      errors.add(
+        'Live scan returned ${requiredCount - missingPositions.length}/'
+        '$requiredCount required Blueprint positions. Scroll farther and retry '
+        'the second section so no rows are skipped.',
+      );
+    }
+
+    if (errors.isNotEmpty) {
+      return ArcBlueprintLiveScanDecisionResult(
+        decisions: const <ArcBlueprintPhotoCellDecision>[],
+        errors: List<String>.unmodifiable(errors),
+      );
+    }
+
     final decisions = <ArcBlueprintPhotoCellDecision>[];
-    for (
-      var index = 0;
-      index < ArcBlueprintCanonicalGrid.totalPositions;
-      index++
-    ) {
+    for (var index = 0; index < requiredCount; index++) {
       final cell = byIndex[index]!;
       decisions.add(
         ArcBlueprintPhotoCellDecision(
@@ -85,15 +94,18 @@ class ArcBlueprintLiveScanResultEngine {
           blueprintIndex: index,
           state: cell.state,
           confidence: cell.confidence.clamp(0.0, 1.0).toDouble(),
-          sourceCaptureId: 'live-scanner',
+          sourceCaptureId: reconciled.alignment.usedFallback
+              ? 'live-scanner-contiguous'
+              : 'live-scanner-overlap',
           rowIndex: cell.rowIndex,
           columnIndex: cell.columnIndex,
         ),
       );
     }
+
     return ArcBlueprintLiveScanDecisionResult(
-      decisions: List.unmodifiable(decisions),
-      errors: const [],
+      decisions: List<ArcBlueprintPhotoCellDecision>.unmodifiable(decisions),
+      errors: const <String>[],
     );
   }
 }

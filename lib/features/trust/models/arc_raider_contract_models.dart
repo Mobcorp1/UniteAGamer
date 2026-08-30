@@ -29,6 +29,10 @@ enum ArcRaiderReportCategory {
   objectiveCamping,
   doorwayCamping,
   traversalCamping,
+  lootRatting,
+  pvpThirdParty,
+  pveThirdParty,
+  falseFriendly,
   repeatedTargeting,
   griefing,
   harassment,
@@ -203,7 +207,6 @@ class ArcRaiderReport {
   bool get canSubmit =>
       reporterUid.isNotEmpty &&
       targetDisplayName.trim().length >= 2 &&
-      description.trim().length >= 20 &&
       mapId.isNotEmpty &&
       serverRegion.isNotEmpty &&
       incidentAt != null &&

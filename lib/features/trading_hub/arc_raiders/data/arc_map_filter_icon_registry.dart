@@ -7,9 +7,13 @@ class ArcMapFilterIconRegistry {
   static const String assetDirectory = 'assets/arc_raiders/map_filter_icons';
   static const String fallbackIconKey = 'map_filter_unknown';
   static const String communityReportRatIconKey = 'community_report_rat';
+  static const String communityHuntRatIconKey = 'community_hunt_rat';
   static const String fallbackAssetPath = '';
 
-  static const Set<String> uagCommunityIconKeys = {communityReportRatIconKey};
+  static const Set<String> uagCommunityIconKeys = {
+    communityReportRatIconKey,
+    communityHuntRatIconKey,
+  };
 
   // New in-game raster marker artwork. Taxonomy keys stay stable so existing
   // Firestore/admin marker data does not need migration.
@@ -17,6 +21,11 @@ class ArcMapFilterIconRegistry {
     'extract_standard': 'extraction_point.webp',
     'extract_raider_hatch': 'raider_hatch.webp',
     'infra_field_depot': 'field_depot.webp',
+    'infra_button': 'button.webp',
+    'infra_fuel_cell': 'fuel_cell.webp',
+    'infra_supply_station': 'supply_call_station.webp',
+    'infra_raider_camp': 'raider_camp.webp',
+    'infra_player_spawn': 'player_spawn.webp',
     'infra_zipline': 'zipline.webp',
     'loot_weapon_case': 'weapon_case.webp',
     'loot_security_locker': 'security_locker.webp',
@@ -24,7 +33,10 @@ class ArcMapFilterIconRegistry {
     'loot_field_crate': 'field_crate.webp',
     'loot_ammo_case': 'ammo_case.webp',
     'loot_medical_container': 'medical_bag.webp',
+    'loot_combat_supply': 'combat_supply.webp',
     'access_locked_room': 'locked_room.webp',
+    'access_key_room': 'key_room.webp',
+    'access_breach_room': 'breach_room.webp',
     'access_breachable_door': 'breachable_container.webp',
     'arc_assessor': 'arc_assessor.webp',
     'arc_baron_husk': 'arc_baron_husk.webp',
@@ -52,6 +64,8 @@ class ArcMapFilterIconRegistry {
     'arc_turret': 'arc_turret.webp',
     'arc_vaporizer': 'arc_vaporizer.webp',
     'arc_wasp': 'arc_wasp.webp',
+    communityReportRatIconKey: 'rat.webp',
+    communityHuntRatIconKey: 'hunt_a_rat.webp',
   };
 
   static Set<String> get canonicalIconKeys => {

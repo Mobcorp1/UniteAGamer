@@ -45,7 +45,7 @@ void main() {
         'Favourite Loadout',
         'Trading Hub',
         'Match Raider',
-        'Report a Raider',
+        'Report a Rat',
         'My Hub',
         'Settings',
       ]);

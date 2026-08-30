@@ -1,9 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_seed_data.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_conditions.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
@@ -43,9 +43,9 @@ class _State extends State<ArcRaiderContractsScreen>
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.transparent,
     appBar: const UagAppBar(
-      title: 'Report a Raider',
+      title: 'Report a Rat',
       subtitle:
-          'Private reports, Rat Activity intelligence and moderated contracts.',
+          'Report ratting privately, add evidence and optionally request a moderated contract.',
     ),
     drawer: const AppDrawer(),
     body: Stack(
@@ -57,7 +57,7 @@ class _State extends State<ArcRaiderContractsScreen>
               TabBar(
                 controller: tabs,
                 tabs: const [
-                  Tab(text: 'REPORT'),
+                  Tab(text: 'REPORT A RAT'),
                   Tab(text: 'LIVE CONTRACTS'),
                   Tab(text: 'MY ACTIVITY'),
                 ],
@@ -89,19 +89,13 @@ class _ProgressiveReport extends StatefulWidget {
 }
 
 class _ProgressiveReportState extends State<_ProgressiveReport> {
-  final target = TextEditingController();
-  final identity = TextEditingController();
-  final details = TextEditingController();
-  final encounterContextController = TextEditingController();
-  final event = TextEditingController();
-  final evidence = TextEditingController();
-  final social = TextEditingController();
-  final repeatCount = TextEditingController(text: '2');
+  static const _stageCount = 5;
+
+  final screenUsername = TextEditingController();
   final mapController = TransformationController();
 
-  int step = 0;
+  int stage = 0;
   ArcRaiderReportCategory? category;
-  String rattingSubtype = '';
   String mapId = '';
   ArcNormalizedPoint? point;
   String nearestPoiId = '';
@@ -111,10 +105,18 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
   String extractionName = '';
   String serverRegion = '';
   DateTime? incidentAt;
-  ArcRaiderRepeatBehaviour? repeatBehaviour;
-  bool? wantsContract;
+  bool wantsContract = false;
+  String selectedEventId = 'none';
+  XFile? evidenceClip;
+  bool selectingClip = false;
   final Map<String, int> rewards = {};
+  final rewardSearch = TextEditingController();
+  String rewardSearchQuery = '';
+  String? selectedRewardItemId;
+  int rewardQuantity = 1;
+  double mapZoom = 1;
   bool busy = false;
+  String validationMessage = '';
 
   static const servers = [
     'Europe',
@@ -125,42 +127,79 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
     'Other / unknown',
   ];
 
-  static const ratTypes = [
-    'Waiting at extraction',
-    'Hiding near extraction',
-    'Camping a doorway / entrance',
-    'Camping high ground',
-    'Waiting behind cover',
-    'Camping a loot location',
-    'Camping an objective',
-    'Following then ambushing',
-    'Repeatedly returning to the same position',
-    'Other',
-  ];
-
   ArcRaidMap? get selectedMap =>
       mapId.isEmpty ? null : ArcRaidIntelligenceSeedData.mapById(mapId);
 
   @override
+  void initState() {
+    super.initState();
+    // DateTime.now() is device-local, so the incident time opens prefilled
+    // in the player's local timezone and remains editable.
+    incidentAt = DateTime.now();
+  }
+
+  @override
   void dispose() {
-    for (final c in [
-      target,
-      identity,
-      details,
-      encounterContextController,
-      event,
-      evidence,
-      social,
-      repeatCount,
-    ]) {
-      c.dispose();
-    }
+    screenUsername.dispose();
+    rewardSearch.dispose();
     mapController.dispose();
     super.dispose();
   }
 
-  void next() => setState(() => step++);
-  void back() => setState(() => step = math.max(0, step - 1));
+  void _goBack() {
+    if (stage == 0) return;
+    setState(() {
+      validationMessage = '';
+      stage -= 1;
+    });
+  }
+
+  bool _validateStage() {
+    String? message;
+    switch (stage) {
+      case 0:
+        if (screenUsername.text.trim().length < 3) {
+          message = 'Enter the Rat\'s screen username.';
+        }
+      case 1:
+        if (category == null) {
+          message = 'Choose what you are reporting.';
+        }
+      case 2:
+        if (mapId.isEmpty) {
+          message = 'Choose the map.';
+        } else if (point == null) {
+          message = 'Tap the map where the incident happened.';
+        } else if (atExtraction == null) {
+          message = 'Tell us whether this happened at an extraction.';
+        } else if (atExtraction == true && extractionId.isEmpty) {
+          message = 'Choose the extraction point.';
+        } else if (serverRegion.isEmpty) {
+          message = 'Choose the server region.';
+        } else if (incidentAt == null) {
+          message = 'Choose when the incident happened.';
+        }
+      case 3:
+        if (wantsContract && rewards.isEmpty) {
+          message = 'Add at least one reward item or choose report only.';
+        }
+      case 4:
+        return true;
+    }
+
+    if (message != null) {
+      setState(() => validationMessage = message!);
+      return false;
+    }
+    setState(() => validationMessage = '');
+    return true;
+  }
+
+  void _continue() {
+    if (!_validateStage()) return;
+    if (stage >= _stageCount - 1) return;
+    setState(() => stage += 1);
+  }
 
   Future<void> pickIncidentTime() async {
     final now = DateTime.now();
@@ -175,7 +214,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       context: context,
       initialTime: TimeOfDay.fromDateTime(incidentAt ?? now),
     );
-    if (time == null) return;
+    if (time == null || !mounted) return;
     setState(() {
       incidentAt = DateTime(
         date.year,
@@ -184,6 +223,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
         time.hour,
         time.minute,
       );
+      validationMessage = '';
     });
   }
 
@@ -207,23 +247,36 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
         nearestPoiId = '';
         nearestPoiName = '';
       }
+      validationMessage = '';
     });
   }
 
   Future<void> submit() async {
-    final p = point;
-    final map = selectedMap;
-    if (p == null ||
-        map == null ||
-        category == null ||
-        incidentAt == null ||
-        repeatBehaviour == null ||
-        atExtraction == null ||
-        wantsContract == null) {
+    if (stage != 4 || !_allRequiredDataPresent()) {
+      setState(() {
+        validationMessage =
+            'Something required is missing. Go back and check the highlighted steps.';
+      });
       return;
     }
+
+    final p = point!;
+    final map = selectedMap!;
+    final reportedScreenUsername = screenUsername.text.trim();
+
     setState(() => busy = true);
     try {
+      final reportId = widget.repo.newReportId();
+      final evidenceItems = <ArcRaiderEvidence>[];
+      if (evidenceClip != null) {
+        evidenceItems.add(
+          await widget.repo.uploadReportVideoEvidence(
+            reportId: reportId,
+            file: evidenceClip!,
+          ),
+        );
+      }
+
       final rewardItems = rewards.entries
           .map((entry) {
             final item = ArcTradeCatalog.items.firstWhere(
@@ -238,25 +291,13 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
           })
           .toList(growable: false);
 
-      final evidenceItems = evidence.text.trim().isEmpty
-          ? const <ArcRaiderEvidence>[]
-          : [
-              ArcRaiderEvidence(
-                id: DateTime.now().microsecondsSinceEpoch.toString(),
-                submittedByUid: widget.repo.uid,
-                kind: 'link',
-                url: evidence.text.trim(),
-                caption: 'Reporter evidence',
-                createdAt: DateTime.now(),
-              ),
-            ];
-
       await widget.repo.createReport(
-        targetDisplayName: target.text,
-        targetGameIdentity: identity.text,
+        reportId: reportId,
+        targetDisplayName: reportedScreenUsername,
+        targetGameIdentity: '',
         category: category!,
-        description: details.text,
-        encounterContext: encounterContextController.text,
+        description: '',
+        encounterContext: '',
         mapId: map.id,
         mapDisplayName: map.displayName,
         locationX: p.x,
@@ -269,51 +310,23 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
         atExtraction: atExtraction!,
         extractionId: extractionId,
         extractionName: extractionName,
-        rattingSubtype: rattingSubtype,
+        rattingSubtype: '',
         serverRegion: serverRegion,
         incidentAt: incidentAt!,
-        repeatBehaviour: repeatBehaviour!,
-        repeatCount: int.tryParse(repeatCount.text) ?? 1,
-        eventContext: event.text,
-        socialContentUrl: social.text,
+        eventContext: _selectedEventLabel,
+        socialContentUrl: '',
         evidence: evidenceItems,
-        requestContract: wantsContract!,
+        requestContract: wantsContract,
         rewardItems: rewardItems,
       );
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Report submitted privately for moderator review.'),
+          content: Text('Rat report submitted privately for moderator review.'),
         ),
       );
-      setState(() {
-        step = 0;
-        category = null;
-        rattingSubtype = '';
-        mapId = '';
-        point = null;
-        nearestPoiId = '';
-        nearestPoiName = '';
-        atExtraction = null;
-        extractionId = '';
-        extractionName = '';
-        serverRegion = '';
-        incidentAt = null;
-        repeatBehaviour = null;
-        wantsContract = null;
-        rewards.clear();
-        for (final c in [
-          target,
-          identity,
-          details,
-          encounterContextController,
-          event,
-          evidence,
-          social,
-        ]) {
-          c.clear();
-        }
-      });
+      _reset();
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -327,271 +340,456 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
     }
   }
 
+  bool _allRequiredDataPresent() =>
+      screenUsername.text.trim().length >= 3 &&
+      category != null &&
+      mapId.isNotEmpty &&
+      point != null &&
+      atExtraction != null &&
+      (atExtraction != true || extractionId.isNotEmpty) &&
+      serverRegion.isNotEmpty &&
+      incidentAt != null &&
+      (!wantsContract || rewards.isNotEmpty);
+
+  void _reset() {
+    setState(() {
+      stage = 0;
+      category = null;
+      mapId = '';
+      point = null;
+      nearestPoiId = '';
+      nearestPoiName = '';
+      atExtraction = null;
+      extractionId = '';
+      extractionName = '';
+      serverRegion = '';
+      incidentAt = null;
+      wantsContract = false;
+      rewards.clear();
+      rewardSearch.clear();
+      rewardSearchQuery = '';
+      selectedRewardItemId = null;
+      rewardQuantity = 1;
+      mapZoom = 1;
+      mapController.value = Matrix4.identity();
+      validationMessage = '';
+      screenUsername.clear();
+      selectedEventId = 'none';
+      evidenceClip = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) => ListView(
     padding: AppTheme.pagePadding,
     children: [
       _notice(
-        'Reports stay private until moderator review. Public Rat Activity uses aggregated approved incident data, never public accusations.',
+        'Reports stay private until moderator review. Approved reports can contribute to anonymous Rat Activity intelligence; UAG does not publish accusations.',
       ),
       const SizedBox(height: 14),
-      LinearProgressIndicator(value: (step + 1) / 13),
-      const SizedBox(height: 8),
-      Text(
-        'QUESTION ${step + 1} OF 13',
-        style: const TextStyle(color: AppTheme.neonCyan),
-      ),
+      _stageHeader(),
       const SizedBox(height: 14),
       AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
-        child: KeyedSubtree(key: ValueKey(step), child: _question()),
+        duration: const Duration(milliseconds: 180),
+        child: KeyedSubtree(key: ValueKey(stage), child: _stageBody()),
       ),
-      if (step > 0) ...[
+      if (validationMessage.isNotEmpty) ...[
         const SizedBox(height: 12),
-        TextButton.icon(
-          onPressed: back,
+        Text(
+          validationMessage,
+          style: const TextStyle(color: Colors.orangeAccent),
+        ),
+      ],
+      if (stage < 4) ...[
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            if (stage > 0)
+              OutlinedButton.icon(
+                onPressed: _goBack,
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Back'),
+              ),
+            const Spacer(),
+            FilledButton.icon(
+              key: const Key('report-rat-continue'),
+              onPressed: _continue,
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('Continue'),
+            ),
+          ],
+        ),
+      ] else ...[
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: _goBack,
           icon: const Icon(Icons.arrow_back),
-          label: const Text('Previous question'),
+          label: const Text('Back'),
         ),
       ],
     ],
   );
 
-  Widget _question() {
-    switch (step) {
+  Widget _stageHeader() {
+    const labels = ['Rat', 'Incident', 'Where & when', 'Contract', 'Review'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labels[stage], style: AppTheme.tradingHeading(fontSize: 18)),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(value: (stage + 1) / _stageCount),
+      ],
+    );
+  }
+
+  Widget _stageBody() {
+    switch (stage) {
       case 0:
         return _card('Who are you reporting?', [
-          _field(target, 'Raider display name *'),
-          _field(identity, 'Game identity / platform ID'),
-          _continue(() => target.text.trim().length >= 2),
+          const Text(
+            'Enter the screen username exactly as it appears in ARC Raiders.',
+          ),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: screenUsername,
+            builder: (context, value, _) => TextField(
+              key: const Key('report-rat-screen-username'),
+              controller: screenUsername,
+              textInputAction: TextInputAction.done,
+              keyboardType: TextInputType.text,
+              autocorrect: false,
+              enableSuggestions: false,
+              autofillHints: const <String>[],
+              decoration: InputDecoration(
+                labelText: 'Screen username *',
+                hintText: 'Username shown in-game',
+                border: const OutlineInputBorder(),
+                helperText: value.text.trim().length < 3 ? 'Required' : 'Ready',
+              ),
+            ),
+          ),
         ]);
       case 1:
-        return _card('What are you reporting?', [
-          _choices(ArcRaiderReportCategory.values, category, (v) {
-            setState(() => category = v);
-            next();
-          }, (v) => _categoryLabel(v)),
+        return _card('What happened?', [
+          const Text(
+            'Choose the report type that best describes the incident.',
+          ),
+          const SizedBox(height: 10),
+          _choices(
+            _reportCategories,
+            category,
+            (v) => setState(() {
+              category = v;
+              validationMessage = '';
+            }),
+            _categoryLabel,
+          ),
+          const Divider(height: 28),
+          Text(
+            'Evidence clip (optional)',
+            style: AppTheme.tradingHeading(fontSize: 16),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Attach one short MP4 clip (up to 30 seconds / 25 MB). '
+            'This stays private and is visible only to you and moderators.',
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            key: const Key('report-rat-attach-clip'),
+            onPressed: selectingClip ? null : _pickEvidenceClip,
+            icon: const Icon(Icons.video_file_outlined),
+            label: Text(evidenceClip == null ? 'Attach clip' : 'Replace clip'),
+          ),
+          if (evidenceClip != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.check_circle_outline, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    evidenceClip!.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Remove clip',
+                  onPressed: () => setState(() => evidenceClip = null),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ],
         ]);
       case 2:
-        return _card('What were they doing?', [
-          _stringChoices(ratTypes, rattingSubtype, (v) {
-            setState(() => rattingSubtype = v);
-            next();
-          }),
-        ]);
+        return _whereAndWhen();
       case 3:
-        return _card('Which map?', [
-          _stringChoices(
-            ArcRaidIntelligenceSeedData.supportedMapIds,
-            mapId,
-            (v) {
-              setState(() {
-                mapId = v;
-                point = null;
-                nearestPoiId = '';
-                nearestPoiName = '';
-                extractionId = '';
-                extractionName = '';
-              });
-              next();
-            },
-            label: ArcRaidIntelligenceSeedData.displayNameForMapId,
-          ),
-        ]);
+        return _contractChoice();
       case 4:
-        return _mapQuestion();
-      case 5:
-        return _card('Was this at an extraction?', [
-          _yesNo((v) {
-            setState(() => atExtraction = v);
-            if (!v) {
-              extractionId = '';
-              extractionName = '';
-              next();
-            } else {
-              next();
-            }
-          }),
-        ]);
-      case 6:
-        if (atExtraction == true) {
-          return _card('Which extraction point?', [
-            _stringChoices(
-              selectedMap!.extractions.map((e) => e.id).toList(),
-              extractionId,
-              (v) {
-                final extraction = selectedMap!.extractions.firstWhere(
-                  (e) => e.id == v,
-                );
-                setState(() {
-                  extractionId = extraction.id;
-                  extractionName = extraction.name;
-                });
-                next();
-              },
-              label: (id) =>
-                  selectedMap!.extractions.firstWhere((e) => e.id == id).name,
-            ),
-          ]);
-        }
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && step == 6) next();
-        });
-        return const SizedBox.shrink();
-      case 7:
-        return _card('Which server / region?', [
-          _stringChoices(servers, serverRegion, (v) {
-            setState(() => serverRegion = v);
-            next();
-          }),
-        ]);
-      case 8:
-        return _card('When did it happen?', [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              incidentAt == null
-                  ? 'Select date and time'
-                  : incidentAt.toString(),
-            ),
-            trailing: const Icon(Icons.schedule),
-            onTap: pickIncidentTime,
-          ),
-          _continue(() => incidentAt != null),
-        ]);
-      case 9:
-        return _card('Did they repeat the behaviour?', [
-          _choices(
-            ArcRaiderRepeatBehaviour.values,
-            repeatBehaviour,
-            (v) {
-              setState(() => repeatBehaviour = v);
-              next();
-            },
-            (v) => switch (v) {
-              ArcRaiderRepeatBehaviour.no => 'No',
-              ArcRaiderRepeatBehaviour.sameRaid =>
-                'Yes — multiple times in this raid',
-              ArcRaiderRepeatBehaviour.previousEncounter =>
-                'Yes — I have seen them do this before',
-              ArcRaiderRepeatBehaviour.notSure => 'Not sure',
-            },
-          ),
-          if (repeatBehaviour == ArcRaiderRepeatBehaviour.sameRaid)
-            _field(repeatCount, 'How many times?'),
-        ]);
-      case 10:
-        return _card('What happened?', [
-          _field(details, 'Describe the encounter *', lines: 5),
-          _field(
-            encounterContextController,
-            'Extra encounter context',
-            lines: 2,
-          ),
-          _field(event, 'Event / activity'),
-          _field(evidence, 'Evidence URL — screenshot, clip or document'),
-          _field(social, 'Optional TikTok / social post URL'),
-          _continue(() => details.text.trim().length >= 20),
-        ]);
-      case 11:
-        return _card('Create a Raider Contract if approved?', [
-          const Text(
-            'A contract is optional. The report can still contribute to moderated Rat Activity intelligence without one.',
-          ),
-          const SizedBox(height: 12),
-          _yesNo(
-            (v) {
-              setState(() => wantsContract = v);
-              next();
-            },
-            yes: 'Yes — offer an in-game reward',
-            no: 'No — report only',
-          ),
-        ]);
-      case 12:
-        if (wantsContract == true) return _rewardAndReview();
         return _review();
       default:
-        return _review();
+        return const SizedBox.shrink();
     }
   }
 
-  Widget _mapQuestion() {
-    final state = const ArcRaidIntelligenceEngine().build(mapId: mapId);
-    return _card('Where did it happen?', [
-      const Text(
-        'Tap the exact location. Nearby named POIs are linked automatically.',
+  Widget _whereAndWhen() => _card('Where and when?', [
+    Text('Map', style: AppTheme.tradingHeading(fontSize: 16)),
+    _stringChoices(
+      ArcRaidIntelligenceSeedData.supportedMapIds,
+      mapId,
+      (v) {
+        setState(() {
+          mapId = v;
+          selectedEventId = 'none';
+          point = null;
+          nearestPoiId = '';
+          nearestPoiName = '';
+          extractionId = '';
+          extractionName = '';
+          validationMessage = '';
+        });
+      },
+      label: ArcRaidIntelligenceSeedData.displayNameForMapId,
+    ),
+    if (selectedMap != null) ...[
+      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+        key: const Key('report-rat-event-dropdown'),
+        isExpanded: true,
+        initialValue: _availableEvents.any((e) => e.id == selectedEventId)
+            ? selectedEventId
+            : 'none',
+        decoration: const InputDecoration(
+          labelText: 'Map condition / event (optional)',
+          border: OutlineInputBorder(),
+        ),
+        items: _availableEvents
+            .map(
+              (condition) => DropdownMenuItem<String>(
+                value: condition.id,
+                child: Text(
+                  condition.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            )
+            .toList(growable: false),
+        onChanged: (value) => setState(() {
+          selectedEventId = value ?? 'none';
+        }),
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 12),
+      Row(
+        children: [
+          const Expanded(child: Text('Tap the map where it happened.')),
+          IconButton(
+            key: const Key('report-rat-map-zoom-out'),
+            tooltip: 'Zoom out',
+            onPressed: () => _setMapZoom(mapZoom / 1.35),
+            icon: const Icon(Icons.remove_circle_outline),
+          ),
+          IconButton(
+            key: const Key('report-rat-map-reset-zoom'),
+            tooltip: 'Reset map zoom',
+            onPressed: () => _setMapZoom(1),
+            icon: const Icon(Icons.center_focus_strong),
+          ),
+          IconButton(
+            key: const Key('report-rat-map-zoom-in'),
+            tooltip: 'Zoom in',
+            onPressed: () => _setMapZoom(mapZoom * 1.35),
+            icon: const Icon(Icons.add_circle_outline),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
       SizedBox(
-        height: 430,
+        height: 390,
         child: ArcRaidIntelligenceMapRenderer(
-          state: state,
+          state: const ArcRaidIntelligenceEngine().build(mapId: mapId),
           controller: mapController,
+          showBlueprintIntel: false,
           onMapTapped: setPoint,
         ),
       ),
-      if (point != null) ...[
+      if (point != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            nearestPoiName.isEmpty
+                ? 'Location pinned'
+                : 'Nearest POI: $nearestPoiName',
+          ),
+        ),
+      const Divider(height: 28),
+      Text('At an extraction?', style: AppTheme.tradingHeading(fontSize: 16)),
+      _yesNo(
+        (value) => setState(() {
+          atExtraction = value;
+          if (!value) {
+            extractionId = '';
+            extractionName = '';
+          }
+          validationMessage = '';
+        }),
+      ),
+      if (atExtraction == true) ...[
         const SizedBox(height: 8),
-        Text(
-          nearestPoiName.isEmpty
-              ? 'Pinned: ${(point!.x * 100).toStringAsFixed(1)}%, ${(point!.y * 100).toStringAsFixed(1)}%'
-              : 'Nearest POI: $nearestPoiName',
+        _stringChoices(
+          selectedMap!.extractions.map((e) => e.id).toList(),
+          extractionId,
+          (v) {
+            final extraction = selectedMap!.extractions.firstWhere(
+              (e) => e.id == v,
+            );
+            setState(() {
+              extractionId = extraction.id;
+              extractionName = extraction.name;
+              validationMessage = '';
+            });
+          },
+          label: (id) =>
+              selectedMap!.extractions.firstWhere((e) => e.id == id).name,
         ),
       ],
-      _continue(() => point != null),
-    ]);
-  }
-
-  Widget _rewardAndReview() => _card('Choose the contract reward', [
-    const Text(
-      'Rewards are player-promised in-game items. UAG does not hold them in escrow.',
+    ],
+    const Divider(height: 28),
+    Text('Server region', style: AppTheme.tradingHeading(fontSize: 16)),
+    _stringChoices(
+      servers,
+      serverRegion,
+      (v) => setState(() {
+        serverRegion = v;
+        validationMessage = '';
+      }),
     ),
-    const SizedBox(height: 10),
-    ...ArcTradeCatalog.items.map((item) {
-      final qty = rewards[item.id] ?? 0;
-      return ListTile(
-        dense: true,
-        title: Text(item.name),
-        subtitle: Text('${item.category} • ${item.group}'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: qty == 0
-                  ? null
-                  : () => setState(() {
-                      if (qty <= 1) {
-                        rewards.remove(item.id);
-                      } else {
-                        rewards[item.id] = qty - 1;
-                      }
-                    }),
-              icon: const Icon(Icons.remove_circle_outline),
-            ),
-            Text('$qty'),
-            IconButton(
-              onPressed: () => setState(() => rewards[item.id] = qty + 1),
-              icon: const Icon(Icons.add_circle_outline),
-            ),
-          ],
-        ),
-      );
-    }),
-    const Divider(),
-    _reviewBody(),
-    FilledButton.icon(
-      onPressed: rewards.isEmpty || busy ? null : submit,
-      icon: const Icon(Icons.gavel),
-      label: Text(busy ? 'Submitting…' : 'Submit privately for review'),
+    const Divider(height: 28),
+    ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: const Text('When did it happen?'),
+      subtitle: Text(
+        incidentAt == null
+            ? 'Select date and time'
+            : _formatDateTime(incidentAt!),
+      ),
+      trailing: const Icon(Icons.schedule),
+      onTap: pickIncidentTime,
     ),
   ]);
 
-  Widget _review() => _card('Review & submit', [
+  Widget _contractChoice() => _card('Optional Rat Contract', [
+    const Text(
+      'You can submit the report on its own, or request a moderated contract if the report is approved.',
+    ),
+    const SizedBox(height: 12),
+    SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      value: wantsContract,
+      title: const Text('Request a contract if approved'),
+      onChanged: (value) => setState(() {
+        wantsContract = value;
+        if (!value) rewards.clear();
+        validationMessage = '';
+      }),
+    ),
+    if (wantsContract) ...[
+      const Text(
+        'Search for an in-game item, choose the quantity, then add it to the contract. '
+        'You can add as many different reward items as required.',
+      ),
+      const SizedBox(height: 12),
+      if (rewards.isNotEmpty) ...[
+        ...rewards.entries.map((entry) {
+          final item = ArcTradeCatalog.items.firstWhere(
+            (candidate) => candidate.id == entry.key,
+          );
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              title: Text(item.name),
+              subtitle: Text('${entry.value} × ${item.category}'),
+              trailing: IconButton(
+                tooltip: 'Remove reward',
+                onPressed: () => setState(() => rewards.remove(entry.key)),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ),
+          );
+        }),
+        const Divider(height: 24),
+      ],
+      TextField(
+        key: const Key('report-rat-reward-search'),
+        controller: rewardSearch,
+        autocorrect: false,
+        enableSuggestions: false,
+        decoration: const InputDecoration(
+          labelText: 'Search reward item',
+          prefixIcon: Icon(Icons.search),
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (value) => setState(() {
+          rewardSearchQuery = value.trim();
+          selectedRewardItemId = null;
+        }),
+      ),
+      if (rewardSearchQuery.length >= 2) ...[
+        const SizedBox(height: 6),
+        ..._rewardMatches.take(8).map(
+          (item) => ListTile(
+            dense: true,
+            selected: selectedRewardItemId == item.id,
+            title: Text(item.name),
+            subtitle: Text('${item.category} • ${item.group}'),
+            onTap: () => setState(() {
+              selectedRewardItemId = item.id;
+              rewardSearch.text = item.name;
+              rewardSearchQuery = item.name;
+            }),
+          ),
+        ),
+      ],
+      if (selectedRewardItemId != null) ...[
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            const Text('Amount'),
+            const SizedBox(width: 12),
+            IconButton(
+              onPressed: rewardQuantity <= 1
+                  ? null
+                  : () => setState(() => rewardQuantity -= 1),
+              icon: const Icon(Icons.remove_circle_outline),
+            ),
+            Text(
+              '$rewardQuantity',
+              key: const Key('report-rat-reward-quantity'),
+            ),
+            IconButton(
+              onPressed: () => setState(() => rewardQuantity += 1),
+              icon: const Icon(Icons.add_circle_outline),
+            ),
+            const Spacer(),
+            FilledButton.icon(
+              key: const Key('report-rat-add-reward'),
+              onPressed: _addSelectedReward,
+              icon: const Icon(Icons.add),
+              label: const Text('Add reward'),
+            ),
+          ],
+        ),
+      ],
+    ],
+  ]);
+
+  Widget _review() => _card('Review Rat report', [
     _reviewBody(),
+    const SizedBox(height: 14),
     FilledButton.icon(
+      key: const Key('report-rat-submit'),
       onPressed: busy ? null : submit,
-      icon: const Icon(Icons.gavel),
+      icon: const Icon(Icons.shield_outlined),
       label: Text(busy ? 'Submitting…' : 'Submit privately for review'),
     ),
   ]);
@@ -601,51 +799,165 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _summary('Target', target.text),
-        _summary('Type', category == null ? '' : _categoryLabel(category!)),
-        _summary('Behaviour', rattingSubtype),
+        _summary('Screen username', screenUsername.text.trim()),
+        _summary('Report', category == null ? '' : _categoryLabel(category!)),
         _summary('Map', map?.displayName ?? ''),
         _summary(
           'Location',
-          nearestPoiName.isEmpty ? 'Pinned map location' : nearestPoiName,
+          nearestPoiName.isNotEmpty
+              ? nearestPoiName
+              : point == null
+              ? ''
+              : 'Pinned map location',
         ),
-        _summary('Extraction', atExtraction == true ? extractionName : 'No'),
-        _summary('Server', serverRegion),
-        _summary('Time', incidentAt?.toString() ?? ''),
-        _summary('Repeat', repeatBehaviour?.name ?? ''),
-        _summary('Contract', wantsContract == true ? 'Requested' : 'No'),
-        const SizedBox(height: 10),
+        _summary('Region', serverRegion),
+        _summary('Event', _selectedEventLabel),
+        _summary(
+          'When',
+          incidentAt == null ? '' : _formatDateTime(incidentAt!),
+        ),
+        _summary(
+          'Evidence',
+          evidenceClip == null ? 'No clip attached' : evidenceClip!.name,
+        ),
+        _summary(
+          'Contract',
+          wantsContract ? 'Requested if approved' : 'Report only',
+        ),
+        if (wantsContract)
+          _summary(
+            'Reward',
+            rewards.entries
+                .map((e) {
+                  final item = ArcTradeCatalog.items.firstWhere(
+                    (item) => item.id == e.key,
+                  );
+                  return '${e.value}× ${item.name}';
+                })
+                .join(' • '),
+          ),
       ],
     );
   }
 
-  Widget _summary(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 5),
-    child: Text('$label: ${value.isEmpty ? '—' : value}'),
-  );
+  Widget _summary(String label, String value) {
+    if (value.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text('$label: $value'),
+    );
+  }
 
-  Widget _continue(bool Function() enabled) => Padding(
-    padding: const EdgeInsets.only(top: 14),
-    child: FilledButton(
-      onPressed: enabled() ? next : null,
-      child: const Text('Continue'),
-    ),
-  );
+  static const List<ArcRaiderReportCategory> _reportCategories = [
+    ArcRaiderReportCategory.extractionRatting,
+    ArcRaiderReportCategory.spawnRatting,
+    ArcRaiderReportCategory.pvpThirdParty,
+    ArcRaiderReportCategory.pveThirdParty,
+    ArcRaiderReportCategory.falseFriendly,
+    ArcRaiderReportCategory.scam,
+    ArcRaiderReportCategory.other,
+  ];
 
-  Widget _yesNo(
-    ValueChanged<bool> onChanged, {
-    String yes = 'Yes',
-    String no = 'No',
-  }) => Row(
+  Iterable<ArcTradeCatalogItem> get _rewardMatches {
+    final query = rewardSearchQuery.toLowerCase();
+    if (query.length < 2) return const <ArcTradeCatalogItem>[];
+    return ArcTradeCatalog.items.where((item) {
+      if (rewards.containsKey(item.id)) return false;
+      return item.name.toLowerCase().contains(query) ||
+          item.category.toLowerCase().contains(query) ||
+          item.group.toLowerCase().contains(query) ||
+          item.tags.any((tag) => tag.toLowerCase().contains(query));
+    });
+  }
+
+  void _addSelectedReward() {
+    final itemId = selectedRewardItemId;
+    if (itemId == null) return;
+    setState(() {
+      rewards[itemId] = rewardQuantity.clamp(1, 999);
+      selectedRewardItemId = null;
+      rewardQuantity = 1;
+      rewardSearchQuery = '';
+      rewardSearch.clear();
+      validationMessage = '';
+    });
+  }
+
+  void _setMapZoom(double value) {
+    final next = value.clamp(1.0, 4.0);
+    setState(() => mapZoom = next);
+    mapController.value = Matrix4.diagonal3Values(next, next, 1);
+  }
+
+  List<ArcMapCondition> get _availableEvents {
+    final map = selectedMap;
+    if (map == null) return const [ArcMapConditions.noSpecialCondition];
+    return ArcMapConditions.combinedOptionsForMap(map.displayName);
+  }
+
+  String get _selectedEventLabel {
+    final match = _availableEvents.where((e) => e.id == selectedEventId);
+    return match.isEmpty
+        ? ArcMapConditions.noSpecialCondition.label
+        : match.first.label;
+  }
+
+  Future<void> _pickEvidenceClip() async {
+    if (selectingClip) return;
+    setState(() => selectingClip = true);
+    try {
+      final clip = await ImagePicker().pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: const Duration(seconds: 30),
+      );
+      if (clip == null || !mounted) return;
+
+      final name = clip.name.toLowerCase();
+      if (!name.endsWith('.mp4')) {
+        setState(
+          () => validationMessage =
+              'Evidence clips must be MP4 so moderators can review them reliably.',
+        );
+        return;
+      }
+
+      final bytes = await clip.length();
+      if (bytes > 25 * 1024 * 1024) {
+        setState(
+          () => validationMessage =
+              'That clip is larger than 25 MB. Trim it to 30 seconds or less and try again.',
+        );
+        return;
+      }
+
+      setState(() {
+        evidenceClip = clip;
+        validationMessage = '';
+      });
+    } finally {
+      if (mounted) setState(() => selectingClip = false);
+    }
+  }
+
+  String _formatDateTime(DateTime value) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(value.day)}/${two(value.month)}/${value.year} '
+        '${two(value.hour)}:${two(value.minute)}';
+  }
+
+  Widget _yesNo(ValueChanged<bool> onChanged) => Row(
     children: [
       Expanded(
-        child: FilledButton(onPressed: () => onChanged(true), child: Text(yes)),
+        child: OutlinedButton(
+          onPressed: () => onChanged(true),
+          child: Text(atExtraction == true ? '✓ Yes' : 'Yes'),
+        ),
       ),
       const SizedBox(width: 10),
       Expanded(
         child: OutlinedButton(
           onPressed: () => onChanged(false),
-          child: Text(no),
+          child: Text(atExtraction == false ? '✓ No' : 'No'),
         ),
       ),
     ],
@@ -660,6 +972,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
     children: values
         .map(
           (v) => ListTile(
+            dense: true,
             title: Text(label(v)),
             leading: Icon(
               v == selected
@@ -682,6 +995,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
     children: values
         .map(
           (v) => ListTile(
+            dense: true,
             title: Text(label?.call(v) ?? v),
             leading: Icon(
               v == selected
@@ -696,36 +1010,24 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
   );
 
   String _categoryLabel(ArcRaiderReportCategory value) => switch (value) {
-    ArcRaiderReportCategory.extractionRatting => 'Extraction ratting',
-    ArcRaiderReportCategory.ambushRatting => 'Camping / ambush ratting',
-    ArcRaiderReportCategory.spawnRatting => 'Spawn ratting',
-    ArcRaiderReportCategory.lootCamping => 'Loot / location camping',
-    ArcRaiderReportCategory.objectiveCamping => 'Quest / objective camping',
+    ArcRaiderReportCategory.extractionRatting => 'Extraction camping',
+    ArcRaiderReportCategory.spawnRatting => 'Spawn camping',
+    ArcRaiderReportCategory.ambushRatting => 'Camping / ambush',
+    ArcRaiderReportCategory.objectiveCamping => 'Objective camping',
     ArcRaiderReportCategory.doorwayCamping => 'Doorway / building camping',
     ArcRaiderReportCategory.traversalCamping => 'Zipline / traversal camping',
+    ArcRaiderReportCategory.lootRatting => 'Loot ratted',
+    ArcRaiderReportCategory.pvpThirdParty => 'PvP third partying',
+    ArcRaiderReportCategory.pveThirdParty => 'PvE third partying',
+    ArcRaiderReportCategory.falseFriendly => 'False friendly',
+    ArcRaiderReportCategory.scam => 'Scam / trade misconduct',
+    ArcRaiderReportCategory.lootCamping => 'Loot / location camping',
     ArcRaiderReportCategory.repeatedTargeting => 'Repeated targeting',
     ArcRaiderReportCategory.griefing => 'Griefing',
     ArcRaiderReportCategory.harassment => 'Harassment',
-    ArcRaiderReportCategory.scam => 'Scam / trade misconduct',
     ArcRaiderReportCategory.other => 'Other',
   };
 }
-
-Widget _field(
-  TextEditingController controller,
-  String label, {
-  int lines = 1,
-}) => Padding(
-  padding: const EdgeInsets.only(top: 12),
-  child: TextField(
-    controller: controller,
-    maxLines: lines,
-    decoration: InputDecoration(
-      labelText: label,
-      border: const OutlineInputBorder(),
-    ),
-  ),
-);
 
 Widget _notice(String text) => Container(
   padding: AppTheme.sectionCardPadding,

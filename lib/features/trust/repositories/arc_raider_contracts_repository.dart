@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/arc_raider_contract_models.dart';
 
@@ -7,11 +9,14 @@ class ArcRaiderContractsRepository {
   ArcRaiderContractsRepository({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
+    FirebaseStorage? storage,
   }) : _db = firestore ?? FirebaseFirestore.instance,
-       _auth = auth ?? FirebaseAuth.instance;
+       _auth = auth ?? FirebaseAuth.instance,
+       _storage = storage ?? FirebaseStorage.instance;
 
   final FirebaseFirestore _db;
   final FirebaseAuth _auth;
+  final FirebaseStorage _storage;
 
   String get uid {
     final value = _auth.currentUser?.uid ?? '';
@@ -36,11 +41,17 @@ class ArcRaiderContractsRepository {
 
   Stream<List<ArcRaiderContract>> watchLiveContracts() => _contracts
       .where('status', isEqualTo: 'available')
-      .orderBy('createdAt', descending: true)
       .snapshots()
-      .map(
-        (s) => s.docs.map((d) => ArcRaiderContract.fromMap(d.data())).toList(),
-      );
+      .map((snapshot) {
+        final values = snapshot.docs
+            .map((doc) => ArcRaiderContract.fromMap(doc.data()))
+            .toList(growable: true);
+        values.sort(
+          (a, b) => (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
+              .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        );
+        return values;
+      });
 
   Stream<List<ArcRaiderContract>> watchMyContracts() => _contracts
       .where('hunterUid', isEqualTo: uid)
@@ -66,7 +77,50 @@ class ArcRaiderContractsRepository {
         (s) => s.docs.map((d) => ArcRaiderContract.fromMap(d.data())).toList(),
       );
 
+  String newReportId() => _reports.doc().id;
+
+  Future<ArcRaiderEvidence> uploadReportVideoEvidence({
+    required String reportId,
+    required XFile file,
+  }) async {
+    if (reportId.trim().isEmpty) {
+      throw ArgumentError('A report ID is required before evidence upload.');
+    }
+
+    final lowerName = file.name.toLowerCase();
+    if (!lowerName.endsWith('.mp4')) {
+      throw ArgumentError('Evidence clip must be an MP4 file.');
+    }
+
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) {
+      throw ArgumentError('The selected evidence clip is empty.');
+    }
+    if (bytes.length > 25 * 1024 * 1024) {
+      throw ArgumentError('Evidence clip must be 25 MB or smaller.');
+    }
+
+    final safeName = file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final storagePath = 'conduct_evidence/$reportId/$uid/${stamp}_$safeName';
+    final ref = _storage.ref(storagePath);
+
+    await ref.putData(bytes, SettableMetadata(contentType: 'video/mp4'));
+    final url = await ref.getDownloadURL();
+
+    return ArcRaiderEvidence(
+      id: '$stamp',
+      submittedByUid: uid,
+      kind: 'video',
+      url: url,
+      storagePath: storagePath,
+      caption: 'Reporter evidence clip',
+      createdAt: DateTime.now(),
+    );
+  }
+
   Future<String> createReport({
+    String? reportId,
     required String targetDisplayName,
     String targetUid = '',
     String targetGameIdentity = '',
@@ -94,7 +148,9 @@ class ArcRaiderContractsRepository {
     bool requestContract = false,
     List<ArcRaiderRewardItem> rewardItems = const [],
   }) async {
-    final ref = _reports.doc();
+    final ref = reportId == null || reportId.trim().isEmpty
+        ? _reports.doc()
+        : _reports.doc(reportId.trim());
     final now = DateTime.now();
     final profile = (await _db.collection('users').doc(uid).get()).data() ?? {};
     final reputation =
@@ -149,13 +205,19 @@ class ArcRaiderContractsRepository {
       'updatedAt': FieldValue.serverTimestamp(),
       'submittedAt': FieldValue.serverTimestamp(),
     });
-    await _notify(
-      targetUid: uid,
-      title: 'Report received',
-      body: 'Your Raider report is private and queued for moderator review.',
-      entityId: ref.id,
-      type: 'conductReportReceived',
-    );
+    try {
+      await _notify(
+        targetUid: uid,
+        title: 'Report received',
+        body: 'Your Rat report is private and queued for moderator review.',
+        entityId: ref.id,
+        type: 'conductReportReceived',
+      );
+    } on FirebaseException {
+      // The report is already safely stored. A notification permission or
+      // transient messaging failure must never make the UI report submission
+      // look unsuccessful or encourage duplicate reports.
+    }
     return ref.id;
   }
 

@@ -203,6 +203,48 @@ class ArcAdminMapMarkerSubtypeCatalog {
       groupLabel: 'ARC',
     ),
     ArcAdminMapMarkerSubtype(
+      id: 'comet',
+      label: 'Comet',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'arc_courier',
+      label: 'ARC Courier',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'firefly',
+      label: 'Firefly',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'arc_harvester',
+      label: 'ARC Harvester',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'shredder',
+      label: 'Shredder',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'turbine',
+      label: 'Turbine',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'vaporizer',
+      label: 'Vaporizer',
+      kind: ArcAdminMapMarkerKind.arcSpawn,
+      groupLabel: 'ARC',
+    ),
+    ArcAdminMapMarkerSubtype(
       id: 'queen',
       label: 'The Queen',
       kind: ArcAdminMapMarkerKind.arcSpawn,
@@ -307,6 +349,12 @@ class ArcAdminMapMarkerSubtypeCatalog {
     ArcAdminMapMarkerSubtype(
       id: 'puzzle_console',
       label: 'Puzzle Console',
+      kind: ArcAdminMapMarkerKind.poi,
+      groupLabel: 'Locations',
+    ),
+    ArcAdminMapMarkerSubtype(
+      id: 'raider_camp',
+      label: 'Raider Camp',
       kind: ArcAdminMapMarkerKind.poi,
       groupLabel: 'Locations',
     ),

@@ -23,8 +23,8 @@ void main() {
     expect(result.samples.last.columnIndex, 9);
   });
 
-  test('bottom live section maps 33 cells onto global rows 6 to 9', () {
-    final image = img.Image(width: 1000, height: 400);
+  test('bottom live section produces a local 5-row scan segment', () {
+    final image = img.Image(width: 1000, height: 500);
     img.fill(image, color: img.ColorRgb8(10, 12, 16));
 
     final result = const ArcBlueprintLiveOccupancyEngine().analyzeFrame(
@@ -35,10 +35,10 @@ void main() {
     );
 
     expect(result.succeeded, isTrue, reason: result.error);
-    expect(result.samples, hasLength(33));
-    expect(result.samples.first.rowIndex, 5);
-    expect(result.samples.last.rowIndex, 8);
-    expect(result.samples.last.columnIndex, 2);
+    expect(result.samples, hasLength(50));
+    expect(result.samples.first.rowIndex, 0);
+    expect(result.samples.last.rowIndex, 4);
+    expect(result.samples.last.columnIndex, 9);
   });
 }
 
@@ -65,15 +65,17 @@ ArcBlueprintGridDetection _bottomDetection() {
   return ArcBlueprintGridDetection(
     topLeft: const Offset(0, 0),
     topRight: const Offset(1, 0),
-    bottomLeft: const Offset(0, 0.75),
-    bottomRight: const Offset(1, 0.75),
+    bottomLeft: const Offset(0, 1),
+    bottomRight: const Offset(1, 1),
     confidence: 0.95,
     message: 'locked',
     columns: 10,
-    rows: 3,
+    rows: 5,
     verticalDividers: <double>[
       for (var index = 0; index <= 10; index++) index / 10,
     ],
-    horizontalDividers: const <double>[0, 0.25, 0.5, 0.75],
+    horizontalDividers: <double>[
+      for (var index = 0; index <= 5; index++) index / 5,
+    ],
   );
 }

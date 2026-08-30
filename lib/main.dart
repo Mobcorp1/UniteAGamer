@@ -150,7 +150,7 @@ class UAGTradersHubApp extends StatefulWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.raiderContracts,
-            title: 'Report a Raider',
+            title: 'Report a Rat',
             child: ArcRaiderContractsScreen(),
           ),
           settings: settings,

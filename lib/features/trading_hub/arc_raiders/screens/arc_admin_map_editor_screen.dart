@@ -854,6 +854,15 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     );
   }
 
+  void _beginExtractionPlacement() {
+    _beginMarkerPlacement(
+      kind: ArcAdminMapMarkerKind.extraction,
+      label: 'extraction',
+      sourceLabel: 'UAG Verified Extraction',
+      dialogTitle: 'Create / Place Extraction',
+    );
+  }
+
   void _beginHistoricalBlueprintPlacement() {
     _beginMarkerPlacement(
       kind: ArcAdminMapMarkerKind.blueprint,
@@ -1451,6 +1460,12 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                   onPressed: _saving ? null : _beginPoiPlacement,
                   icon: const Icon(Icons.add_location_alt_rounded),
                   label: const Text('Add Map Point'),
+                ),
+                OutlinedButton.icon(
+                  key: const Key('admin-map-add-extraction'),
+                  onPressed: _saving ? null : _beginExtractionPlacement,
+                  icon: const Icon(Icons.exit_to_app_rounded),
+                  label: const Text('Add Extraction'),
                 ),
                 OutlinedButton.icon(
                   onPressed: _saving

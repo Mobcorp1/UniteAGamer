@@ -104,6 +104,7 @@ class _ArcBlueprintLiveScannerScreenState
   bool _lifecycleTransitionInProgress = false;
   bool _cameraHealthy = false;
   bool _controllerErrorRecoveryInFlight = false;
+  bool _scannerClosing = false;
   DateTime? _controllerReadyAt;
   final ArcCameraOperationQueue _cameraOperations = ArcCameraOperationQueue();
 
@@ -122,6 +123,7 @@ class _ArcBlueprintLiveScannerScreenState
   int _previewFramesSeen = 0;
   int _previewFramesProcessed = 0;
   int _previewFramesDropped = 0;
+  DateTime? _lastDetectorTelemetryAt;
   DateTime _lastPreviewStatsLog = DateTime.fromMillisecondsSinceEpoch(0);
   final ArcBlueprintLiveOccupancyEngine _liveOccupancyEngine =
       const ArcBlueprintLiveOccupancyEngine();
@@ -159,6 +161,7 @@ class _ArcBlueprintLiveScannerScreenState
 
   @override
   void dispose() {
+    _scannerClosing = true;
     WidgetsBinding.instance.removeObserver(this);
 
     // Detach widget ownership synchronously before the asynchronous platform
@@ -181,24 +184,20 @@ class _ArcBlueprintLiveScannerScreenState
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _debugLog('Lifecycle $state');
 
-    // Android can emit transient inactive/hidden states while camera surfaces,
-    // system overlays, navigation and focus are changing. Disposing the native
-    // Camera2 session during those transient states races the plugin's own
-    // onClosed callback. Only tear down when the app is genuinely paused or
-    // detached.
+    // PASS 353: relinquish Camera2 ownership whenever UAG loses foreground
+    // camera ownership. Holding ImageAnalysis through inactive/hidden can leave
+    // Android camera resources unavailable to QR scanners and other apps.
     if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.hidden) {
-      _debugLog('Lifecycle transient state ignored for camera ownership');
-      return;
-    }
-
-    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       unawaited(_pauseCameraForLifecycle());
       return;
     }
 
-    if (state == AppLifecycleState.resumed && _description != null) {
+    if (state == AppLifecycleState.resumed &&
+        _description != null &&
+        !_scannerClosing) {
       unawaited(_resumeCameraForLifecycle());
     }
   }
@@ -243,7 +242,8 @@ class _ArcBlueprintLiveScannerScreenState
       if (_lifecycleTransitionInProgress ||
           _controller != null ||
           _cameraInitializing ||
-          !mounted) {
+          !mounted ||
+          _scannerClosing) {
         return;
       }
 
@@ -281,6 +281,7 @@ class _ArcBlueprintLiveScannerScreenState
   }
 
   Future<void> _initializeUnlocked({CameraDescription? description}) async {
+    if (_scannerClosing || !mounted) return;
     if (_cameraInitializing) {
       _debugLog('Camera initialization already in progress; skipping');
       return;
@@ -312,7 +313,7 @@ class _ArcBlueprintLiveScannerScreenState
       _debugLog('Controller created');
       final controller = CameraController(
         selected,
-        ResolutionPreset.medium,
+        ResolutionPreset.high,
         enableAudio: false,
       );
 
@@ -407,7 +408,7 @@ class _ArcBlueprintLiveScannerScreenState
   }
 
   Future<void> _schedulePreviewStreamStart(CameraController controller) async {
-    if (!_liveAnalysisEnabled) return;
+    if (!_liveAnalysisEnabled || _scannerClosing) return;
     if (_previewStreamPending) return;
     _previewStreamPending = true;
     await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -429,7 +430,7 @@ class _ArcBlueprintLiveScannerScreenState
   }
 
   Future<void> _recoverCameraSessionUnlocked() async {
-    if (!mounted) return;
+    if (!mounted || _scannerClosing) return;
     _debugLog('Recovering camera session');
     _cameraHealthy = false;
     _controllerReadyAt = null;
@@ -451,9 +452,9 @@ class _ArcBlueprintLiveScannerScreenState
       await _disposeController(activeController);
     }
 
-    if (!mounted) return;
+    if (!mounted || _scannerClosing) return;
     await Future<void>.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
+    if (!mounted || _scannerClosing) return;
     await _initializeUnlocked(description: description);
   }
 
@@ -473,7 +474,7 @@ class _ArcBlueprintLiveScannerScreenState
   }
 
   Future<void> _startPreviewStream() async {
-    if (!_liveAnalysisEnabled) return;
+    if (!_liveAnalysisEnabled || _scannerClosing) return;
 
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
@@ -540,18 +541,29 @@ class _ArcBlueprintLiveScannerScreenState
     final stopwatch = Stopwatch()..start();
 
     try {
-      final detectionRows = _capturingBottom ? 3 : 5;
+      final detectionRows = 5;
       final frameImage = _convertCameraImage(image);
       if (frameImage == null) {
         _previewFramesDropped += 1;
         return;
       }
 
-      final detection = ArcBlueprintGridDetector(
+      final rawDetection = ArcBlueprintGridDetector(
         columns: 10,
         rows: detectionRows,
-        analysisWidth: 320,
+        analysisWidth: 640,
       ).detectImage(frameImage);
+      final detection = _isLiveFrameLargeEnough(rawDetection)
+          ? rawDetection
+          : ArcBlueprintGridDetection.notFound(
+              message: rawDetection.isValid
+                  ? 'Move closer so the Blueprint grid fills the screen.'
+                  : rawDetection.message,
+              columns: 10,
+              rows: detectionRows,
+            );
+
+      _logDetectorTelemetry(detection);
 
       _previewFramesProcessed += 1;
       _updateLockState(detection);
@@ -571,6 +583,43 @@ class _ArcBlueprintLiveScannerScreenState
       }
       _logPreviewStatsIfDue();
     }
+  }
+
+  void _logDetectorTelemetry(ArcBlueprintGridDetection detection) {
+    if (!kDebugMode) return;
+    final now = DateTime.now();
+    final last = _lastDetectorTelemetryAt;
+    if (last != null && now.difference(last) < const Duration(seconds: 1)) {
+      return;
+    }
+    _lastDetectorTelemetryAt = now;
+
+    if (!detection.isValid) {
+      _debugLog('Grid detector: no lock - ${detection.message}');
+      return;
+    }
+
+    final width = (detection.topRight.dx - detection.topLeft.dx).abs();
+    final height = (detection.bottomLeft.dy - detection.topLeft.dy).abs();
+    _debugLog(
+      'Grid detector: confidence=${detection.confidence.toStringAsFixed(3)} '
+      'frame=${width.toStringAsFixed(3)}x${height.toStringAsFixed(3)} '
+      'rows=${detection.rows} cols=${detection.columns} '
+      'message=${detection.message}',
+    );
+  }
+
+  bool _isLiveFrameLargeEnough(ArcBlueprintGridDetection detection) {
+    if (!detection.isValid) return false;
+
+    final width = (detection.topRight.dx - detection.topLeft.dx).abs();
+    final height = (detection.bottomLeft.dy - detection.topLeft.dy).abs();
+
+    // The scanner is intended to frame the Blueprint panel, not a small
+    // regular sub-grid elsewhere in the camera image. Bottom rows naturally
+    // occupy less vertical space, so width is the stronger invariant.
+    final minimumHeight = _capturingBottom ? 0.20 : 0.34;
+    return width >= 0.68 && height >= minimumHeight;
   }
 
   void _processLiveOccupancy(
@@ -656,7 +705,7 @@ class _ArcBlueprintLiveScannerScreenState
           _latestDetection = const ArcBlueprintGridDetection.notFound();
         });
         _showMessage(
-          'Rows 1-5 scanned. Scroll the in-game Blueprint list until Row 6 is at the top, then continue.',
+          'First section scanned. Scroll down until the next Blueprint section is visible. Keeping one repeated row in view helps UAG verify the join, but exact overlap is not required.',
         );
         return;
       }
@@ -674,12 +723,14 @@ class _ArcBlueprintLiveScannerScreenState
           _restartLiveScan();
           return;
         }
-        Navigator.of(context).pop(
-          ArcBlueprintScannerResult(
-            topImageBytes: result.topFrameBytes,
-            bottomImageBytes: result.bottomFrameBytes,
-            decisions: decisionResult.decisions,
-            uncertainIgnoredCount: 0,
+        unawaited(
+          _closeScanner(
+            ArcBlueprintScannerResult(
+              topImageBytes: result.topFrameBytes,
+              bottomImageBytes: result.bottomFrameBytes,
+              decisions: decisionResult.decisions,
+              uncertainIgnoredCount: 0,
+            ),
           ),
         );
       }
@@ -734,7 +785,7 @@ class _ArcBlueprintLiveScannerScreenState
     // Live detection does not need capture-resolution RGB conversion.
     // 360px keeps enough structure for grid lock while cutting per-frame
     // conversion work by roughly 75% versus the previous 720px path.
-    const maxPreviewWidth = 360;
+    const maxPreviewWidth = 720;
     final srcWidth = image.width;
     final srcHeight = image.height;
     final targetWidth = srcWidth > maxPreviewWidth ? maxPreviewWidth : srcWidth;
@@ -1022,7 +1073,7 @@ class _ArcBlueprintLiveScannerScreenState
           _latestDetection = const ArcBlueprintGridDetection.notFound();
         });
         _showMessage(
-          'Rows 1-5 captured. Scroll to row 6 for the second capture.',
+          'First section captured. Scroll down to the next Blueprint section. A repeated row is helpful but not required.',
         );
         if (mounted && _liveAnalysisEnabled) {
           await _startPreviewStream();
@@ -1037,7 +1088,7 @@ class _ArcBlueprintLiveScannerScreenState
 
       setState(() => _captureSession = completed);
       didNavigateAway = true;
-      Navigator.of(context).pop(
+      await _closeScanner(
         ArcBlueprintScannerResult(
           topImageBytes: top,
           bottomImageBytes: bottom,
@@ -1086,6 +1137,54 @@ class _ArcBlueprintLiveScannerScreenState
     }
   }
 
+  Future<void> _releaseCameraForNavigation() {
+    return _cameraOperations.run<void>(() async {
+      if (_scannerClosing) return;
+      _scannerClosing = true;
+      _previewStreamPending = false;
+
+      final controller = _controller;
+      if (controller == null) return;
+
+      if (mounted) {
+        setState(() {
+          if (identical(_controller, controller)) {
+            _controller = null;
+          }
+        });
+        await WidgetsBinding.instance.endOfFrame;
+      } else if (identical(_controller, controller)) {
+        _controller = null;
+      }
+
+      await _disposeController(controller);
+    });
+  }
+
+  Future<void> _closeScanner([ArcBlueprintScannerResult? result]) async {
+    await _releaseCameraForNavigation();
+    if (!mounted) return;
+    Navigator.of(context).pop(result);
+  }
+
+  Future<void> _openCameraDiagnostic() async {
+    final description = _description;
+    await _releaseCameraForNavigation();
+    if (!mounted) return;
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const ArcCameraDiagnosticScreen(),
+      ),
+    );
+
+    if (!mounted) return;
+    _scannerClosing = false;
+    if (description != null) {
+      await _initialize(description: description);
+    }
+  }
+
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -1104,7 +1203,7 @@ class _ArcBlueprintLiveScannerScreenState
           ? _ErrorState(
               message: _error ?? 'Camera unavailable.',
               onRetry: _initialize,
-              onCancel: () => Navigator.of(context).pop(),
+              onCancel: () => unawaited(_closeScanner()),
             )
           : LayoutBuilder(
               builder: (context, constraints) {
@@ -1114,19 +1213,19 @@ class _ArcBlueprintLiveScannerScreenState
                     _liveScanFlow.phase ==
                     ArcBlueprintLiveScanPhase.awaitingBottomScroll;
                 final scanStep = _capturingBottom
-                    ? 'Live scan - rows 6-9'
+                    ? 'Live scan - next section'
                     : awaitingBottom
                     ? 'Top section complete'
                     : 'Live scan - rows 1-5';
                 final scanInstructions = awaitingBottom
-                    ? 'Scroll the in-game Blueprint list until Row 6 is at the top, then continue. No photo is required.'
-                    : 'Keep the complete outer edge of the Blueprint cell grid in view. UAG frames the grid automatically. No manual alignment or photo capture is required.';
+                    ? 'Scroll down to the next Blueprint section. A little overlap is ideal because UAG can verify the repeated row, but exact overlap is not required.'
+                    : 'Fill the large guide with the complete Blueprint grid. UAG will shrink the guide onto the detected outer grid automatically. No photo capture is required.';
                 final liveOccupancySuffix =
                     _liveOccupancySnapshot.totalCellCount > 0
                     ? ' - Live ${_liveOccupancySnapshot.stableCellCount}/${_liveOccupancySnapshot.totalCellCount} stable'
                     : '';
                 final lockStatusText = awaitingBottom
-                    ? 'Rows 1-5 scanned - scroll to Row 6'
+                    ? 'First section scanned - scroll to the next section'
                     : _lockState == _BlueprintLockState.searching
                     ? 'Finding the outer Blueprint grid edges...'
                     : _lockState == _BlueprintLockState.detected
@@ -1169,7 +1268,7 @@ class _ArcBlueprintLiveScannerScreenState
                               IconButton.filledTonal(
                                 onPressed: _capturing
                                     ? null
-                                    : () => Navigator.of(context).pop(),
+                                    : () => unawaited(_closeScanner()),
                                 icon: const Icon(Icons.close),
                               ),
                               const SizedBox(width: 8),
@@ -1199,14 +1298,7 @@ class _ArcBlueprintLiveScannerScreenState
                                 tooltip: 'Open minimal camera diagnostic',
                                 onPressed: _capturing
                                     ? null
-                                    : () async {
-                                        await Navigator.of(context).push<void>(
-                                          MaterialPageRoute<void>(
-                                            builder: (_) =>
-                                                const ArcCameraDiagnosticScreen(),
-                                          ),
-                                        );
-                                      },
+                                    : _openCameraDiagnostic,
                                 icon: const Icon(Icons.videocam_outlined),
                               ),
                               const SizedBox(width: 6),
@@ -1443,7 +1535,23 @@ class _BlueprintAutoFramePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (!detection.isValid) return;
+    if (!detection.isValid) {
+      final guide = Rect.fromLTWH(
+        size.width * 0.05,
+        size.height * 0.16,
+        size.width * 0.90,
+        size.height * 0.68,
+      );
+      final guidePaint = Paint()
+        ..color = AppTheme.neonCyan.withValues(alpha: 0.72)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(guide, const Radius.circular(14)),
+        guidePaint,
+      );
+      return;
+    }
 
     final topLeft = _point(detection.topLeft, size);
     final topRight = _point(detection.topRight, size);

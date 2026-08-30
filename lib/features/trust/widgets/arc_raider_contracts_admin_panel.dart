@@ -13,7 +13,7 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Raider Reports & Contracts',
+          'Rat Reports & Contracts',
           style: AppTheme.tradingHeading(fontSize: 24),
         ),
         const SizedBox(height: 8),

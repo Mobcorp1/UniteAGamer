@@ -64,8 +64,14 @@ class ArcBlueprintGridDetector {
     );
 
     if (vertical == null || horizontal == null) {
+      final panelFallback = _detectFromBlueprintPanel(resized);
+      if (panelFallback != null) {
+        return panelFallback;
+      }
       return ArcBlueprintGridDetection.notFound(
-        message: 'The Blueprint grid divider lines could not be isolated.',
+        message:
+            'No Blueprint panel/grid lock. Keep the dark Blueprint panel inside '
+            'the guide and reduce strong reflections if possible.',
         columns: columns,
         rows: rows,
       );
@@ -101,6 +107,8 @@ class ArcBlueprintGridDetector {
     );
 
     if (!detection.isValid || !detection.hasSegmentedGrid) {
+      final panelFallback = _detectFromBlueprintPanel(resized);
+      if (panelFallback != null) return panelFallback;
       return ArcBlueprintGridDetection.notFound(
         message: 'The detected Blueprint panel is not a valid grid.',
         columns: columns,
@@ -108,7 +116,464 @@ class ArcBlueprintGridDetector {
       );
     }
 
+    final detectedWidth = (detection.topRight.dx - detection.topLeft.dx).abs();
+    final detectedHeight = (detection.bottomLeft.dy - detection.topLeft.dy)
+        .abs();
+
+    // PASS 353A-FIX5: if the strict detector has already produced the exact
+    // expected divider counts, a large credible span and highly regular cell
+    // spacing, the geometry itself is strong independent evidence. TV glare
+    // can depress edge strength without changing spacing. This path is kept
+    // separate from the panel fallback, so a featureless rectangle still
+    // cannot invent 11 x 6 recurring divider positions.
+    if (detection.confidence < minimumConfidence &&
+        detection.verticalDividers.length == columns + 1 &&
+        detection.horizontalDividers.length == rows + 1 &&
+        detectedWidth >= 0.50 &&
+        detectedHeight >= (rows >= 5 ? 0.24 : 0.16) &&
+        _dividerSpacingRegularity(detection.verticalDividers) >= 0.74 &&
+        _dividerSpacingRegularity(detection.horizontalDividers) >= 0.68) {
+      return ArcBlueprintGridDetection(
+        topLeft: detection.topLeft,
+        topRight: detection.topRight,
+        bottomLeft: detection.bottomLeft,
+        bottomRight: detection.bottomRight,
+        confidence: math.max(minimumConfidence, detection.confidence),
+        message: 'Grid locked (verified regular spacing)',
+        columns: columns,
+        rows: rows,
+        verticalDividers: detection.verticalDividers,
+        horizontalDividers: detection.horizontalDividers,
+      );
+    }
+
+    // PASS 353A-FIX4: on a television, glare/moiré can lower the strict
+    // regular-line confidence even when the detector has found the correct
+    // 10-column geometry. Verify that geometry with the independent periodic
+    // internal-grid evidence gate before falling back to panel detection.
+    //
+    // This does NOT allow a plain rectangle to become a lock: the same FIX2
+    // evidence guard must prove recurring internal Blueprint boundaries.
+    if (detectedWidth >= 0.50 &&
+        detectedHeight >= (rows >= 5 ? 0.24 : 0.16) &&
+        detection.confidence < minimumConfidence) {
+      final verifiedEvidence = _internalGridEvidence(
+        resized,
+        topLeft: detection.topLeft,
+        topRight: detection.topRight,
+        bottomLeft: detection.bottomLeft,
+        bottomRight: detection.bottomRight,
+      );
+
+      if (verifiedEvidence.isCredible) {
+        return ArcBlueprintGridDetection(
+          topLeft: detection.topLeft,
+          topRight: detection.topRight,
+          bottomLeft: detection.bottomLeft,
+          bottomRight: detection.bottomRight,
+          confidence: math.max(minimumConfidence, detection.confidence),
+          message: 'Grid locked (verified internal evidence)',
+          columns: columns,
+          rows: rows,
+          verticalDividers: detection.verticalDividers,
+          horizontalDividers: detection.horizontalDividers,
+        );
+      }
+    }
+
+    if (detectedWidth < 0.50 ||
+        detectedHeight < (rows >= 5 ? 0.24 : 0.16) ||
+        detection.confidence < minimumConfidence) {
+      final panelFallback = _detectFromBlueprintPanel(resized);
+      // PASS 353A-FIX3: the strict divider detector and TV-panel fallback use
+      // different confidence scales. Once FIX2 has proven recurring internal
+      // grid evidence, a credible TV fallback is safer than retaining a
+      // low-confidence strict detection merely because its numeric score is a
+      // little higher.
+      if (panelFallback != null) {
+        return panelFallback;
+      }
+    }
+
     return detection;
+  }
+
+  ArcBlueprintGridDetection? _detectFromBlueprintPanel(img.Image image) {
+    // PASS 353A fallback for a phone camera looking at a television.
+    // Instead of requiring every thin cell divider to survive moire/reflection,
+    // first isolate the large dark/navy Blueprint panel, then use the stable
+    // relative grid geometry inside that panel.
+    final topSearch = (image.height * 0.08).round();
+    final bottomSearch = (image.height * 0.94).round();
+    final leftSearch = (image.width * 0.04).round();
+    final rightSearch = (image.width * 0.97).round();
+
+    final samples = <_PanelRowSample>[];
+    for (var y = topSearch; y <= bottomSearch; y += 3) {
+      final row = _panelSpanForRow(
+        image,
+        y,
+        leftSearch: leftSearch,
+        rightSearch: rightSearch,
+      );
+      if (row != null && row.width >= image.width * 0.42) {
+        samples.add(row);
+      }
+    }
+
+    if (samples.length < math.max(12, image.height ~/ 35)) return null;
+
+    final grouped = _largestContiguousPanelGroup(samples);
+    if (grouped.length < 10) return null;
+
+    final topY = grouped.first.y.toDouble();
+    final bottomY = grouped.last.y.toDouble();
+    final panelHeight = bottomY - topY;
+    if (panelHeight < image.height * 0.34) return null;
+
+    // Median/trimmed rows resist a bright blind reflection cutting through the
+    // middle of the panel.
+    final topBand = grouped.take(math.max(3, grouped.length ~/ 5)).toList();
+    final bottomBand = grouped
+        .skip(math.max(0, grouped.length - math.max(3, grouped.length ~/ 5)))
+        .toList();
+
+    final leftTop = _median(topBand.map((e) => e.left.toDouble()).toList());
+    final rightTop = _median(topBand.map((e) => e.right.toDouble()).toList());
+    final leftBottom = _median(
+      bottomBand.map((e) => e.left.toDouble()).toList(),
+    );
+    final rightBottom = _median(
+      bottomBand.map((e) => e.right.toDouble()).toList(),
+    );
+
+    final panelTopLeft = Offset(leftTop / image.width, topY / image.height);
+    final panelTopRight = Offset(rightTop / image.width, topY / image.height);
+    final panelBottomLeft = Offset(
+      leftBottom / image.width,
+      bottomY / image.height,
+    );
+    final panelBottomRight = Offset(
+      rightBottom / image.width,
+      bottomY / image.height,
+    );
+
+    // ARC's Blueprint screen keeps the grid at a stable relative position
+    // inside the panel. These are structural proportions, not a screenshot
+    // pixel template, so ownership patterns and future Blueprint art can vary.
+    const gridLeft = 0.065;
+    const gridRight = 0.945;
+    const gridTop = 0.205;
+    const gridBottom = 0.905;
+
+    Offset bilinear(double u, double v) {
+      final left = Offset.lerp(panelTopLeft, panelBottomLeft, v)!;
+      final right = Offset.lerp(panelTopRight, panelBottomRight, v)!;
+      return Offset.lerp(left, right, u)!;
+    }
+
+    final topLeft = bilinear(gridLeft, gridTop);
+    final topRight = bilinear(gridRight, gridTop);
+    final bottomLeft = bilinear(gridLeft, gridBottom);
+    final bottomRight = bilinear(gridRight, gridBottom);
+
+    final gridWidth = (topRight.dx - topLeft.dx).abs();
+    final gridHeight = (bottomLeft.dy - topLeft.dy).abs();
+    if (gridWidth < 0.44 || gridHeight < (rows >= 5 ? 0.24 : 0.16)) {
+      return null;
+    }
+
+    // PASS 353A-FIX2: a large dark rectangle is not enough to prove that this
+    // is ARC's Blueprint grid. Require periodic internal divider evidence near
+    // the geometry where Blueprint cell boundaries should be. This remains
+    // deliberately tolerant: glare/moiré may erase several lines, but an
+    // arbitrary menu panel / TV bezel must not become a false lock.
+    final evidence = _internalGridEvidence(
+      image,
+      topLeft: topLeft,
+      topRight: topRight,
+      bottomLeft: bottomLeft,
+      bottomRight: bottomRight,
+    );
+    if (!evidence.isCredible) {
+      return null;
+    }
+
+    final verticalDividers = List<double>.generate(
+      columns + 1,
+      (index) => topLeft.dx + ((topRight.dx - topLeft.dx) * index / columns),
+      growable: false,
+    );
+    final horizontalDividers = List<double>.generate(
+      rows + 1,
+      (index) => topLeft.dy + ((bottomLeft.dy - topLeft.dy) * index / rows),
+      growable: false,
+    );
+
+    final panelCoverage =
+        (((rightTop - leftTop) + (rightBottom - leftBottom)) /
+                (2 * image.width))
+            .clamp(0.0, 1.0);
+    final confidence = (0.58 + ((panelCoverage - 0.45).clamp(0.0, 0.40) * 0.65))
+        .clamp(0.0, 0.86)
+        .toDouble();
+
+    return ArcBlueprintGridDetection(
+      topLeft: topLeft,
+      topRight: topRight,
+      bottomLeft: bottomLeft,
+      bottomRight: bottomRight,
+      confidence: confidence,
+      message: 'TV Blueprint panel locked',
+      columns: columns,
+      rows: rows,
+      verticalDividers: verticalDividers,
+      horizontalDividers: horizontalDividers,
+    );
+  }
+
+  double _dividerSpacingRegularity(List<double> dividers) {
+    if (dividers.length < 3) return 0;
+
+    final gaps = <double>[];
+    for (var i = 1; i < dividers.length; i++) {
+      final gap = (dividers[i] - dividers[i - 1]).abs();
+      if (gap <= 0) return 0;
+      gaps.add(gap);
+    }
+
+    final mean = gaps.reduce((a, b) => a + b) / gaps.length;
+    if (mean <= 0) return 0;
+
+    var deviation = 0.0;
+    for (final gap in gaps) {
+      deviation += (gap - mean).abs();
+    }
+    deviation /= gaps.length;
+
+    // 1.0 = perfectly even spacing. Values remain comparable across image
+    // sizes because divider positions are normalized.
+    return (1.0 - (deviation / mean)).clamp(0.0, 1.0);
+  }
+
+  _InternalGridEvidence _internalGridEvidence(
+    img.Image image, {
+    required Offset topLeft,
+    required Offset topRight,
+    required Offset bottomLeft,
+    required Offset bottomRight,
+  }) {
+    Offset pointAt(double u, double v) {
+      final left = Offset.lerp(topLeft, bottomLeft, v)!;
+      final right = Offset.lerp(topRight, bottomRight, v)!;
+      return Offset.lerp(left, right, u)!;
+    }
+
+    var credibleVertical = 0;
+    final verticalTotal = math.max(1, columns - 1);
+
+    for (var column = 1; column < columns; column++) {
+      final u = column / columns;
+      var hits = 0;
+      var samples = 0;
+
+      // Avoid the outer panel/header/footer and horizontal divider crossings.
+      for (var sample = 1; sample <= 11; sample++) {
+        final v = 0.08 + (sample * 0.07);
+        final p = pointAt(u, v);
+        final x = (p.dx * image.width).round();
+        final y = (p.dy * image.height).round();
+
+        if (x < 8 || x >= image.width - 8 || y < 4 || y >= image.height - 4) {
+          continue;
+        }
+
+        samples += 1;
+        if (_hasLocalDividerRidge(image, x, y, vertical: true)) {
+          hits += 1;
+        }
+      }
+
+      if (samples > 0 && hits / samples >= 0.27) {
+        credibleVertical += 1;
+      }
+    }
+
+    var credibleHorizontal = 0;
+    final horizontalTotal = math.max(1, rows - 1);
+
+    for (var row = 1; row < rows; row++) {
+      final v = row / rows;
+      var hits = 0;
+      var samples = 0;
+
+      for (var sample = 1; sample <= 13; sample++) {
+        final u = 0.05 + (sample * 0.065);
+        final p = pointAt(u, v);
+        final x = (p.dx * image.width).round();
+        final y = (p.dy * image.height).round();
+
+        if (x < 4 || x >= image.width - 4 || y < 8 || y >= image.height - 8) {
+          continue;
+        }
+
+        samples += 1;
+        if (_hasLocalDividerRidge(image, x, y, vertical: false)) {
+          hits += 1;
+        }
+      }
+
+      if (samples > 0 && hits / samples >= 0.25) {
+        credibleHorizontal += 1;
+      }
+    }
+
+    final verticalRatio = credibleVertical / verticalTotal;
+    final horizontalRatio = credibleHorizontal / horizontalTotal;
+
+    return _InternalGridEvidence(
+      credibleVertical: credibleVertical,
+      credibleHorizontal: credibleHorizontal,
+      verticalRatio: verticalRatio,
+      horizontalRatio: horizontalRatio,
+    );
+  }
+
+  bool _hasLocalDividerRidge(
+    img.Image image,
+    int x,
+    int y, {
+    required bool vertical,
+  }) {
+    // Search a small band around the expected divider. TV perspective,
+    // resampling and moiré can shift a visible line by a few pixels.
+    for (var offset = -7; offset <= 7; offset++) {
+      final sx = vertical ? x + offset : x;
+      final sy = vertical ? y : y + offset;
+
+      final center = image.getPixelSafe(sx, sy);
+      final a = vertical
+          ? image.getPixelSafe(sx - 5, sy)
+          : image.getPixelSafe(sx, sy - 5);
+      final b = vertical
+          ? image.getPixelSafe(sx + 5, sy)
+          : image.getPixelSafe(sx, sy + 5);
+
+      final centreLuma = _luma(center);
+      final sideLuma = (_luma(a) + _luma(b)) * 0.5;
+      final ridgeContrast = (centreLuma - sideLuma).abs();
+
+      final colourContrast =
+          (_colourDistance(center, a) + _colourDistance(center, b)) * 0.5;
+
+      final nearA = vertical
+          ? image.getPixelSafe(sx - 2, sy)
+          : image.getPixelSafe(sx, sy - 2);
+      final nearB = vertical
+          ? image.getPixelSafe(sx + 2, sy)
+          : image.getPixelSafe(sx, sy + 2);
+      final crossGradient = (_luma(nearA) - _luma(nearB)).abs();
+
+      if (ridgeContrast >= 6.0 ||
+          colourContrast >= 13.0 ||
+          crossGradient >= 10.0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  double _colourDistance(img.Pixel a, img.Pixel b) {
+    final dr = a.r.toDouble() - b.r.toDouble();
+    final dg = a.g.toDouble() - b.g.toDouble();
+    final db = a.b.toDouble() - b.b.toDouble();
+    return math.sqrt((dr * dr) + (dg * dg) + (db * db));
+  }
+
+  _PanelRowSample? _panelSpanForRow(
+    img.Image image,
+    int y, {
+    required int leftSearch,
+    required int rightSearch,
+  }) {
+    var bestLeft = -1;
+    var bestRight = -1;
+    var runLeft = -1;
+    var misses = 0;
+
+    bool panelLike(img.Pixel pixel) {
+      final r = pixel.r.toDouble();
+      final g = pixel.g.toDouble();
+      final b = pixel.b.toDouble();
+      final luma = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+      final navyBias = b + 28 >= r && b + 24 >= g;
+      return luma <= 92 && navyBias;
+    }
+
+    for (var x = leftSearch; x <= rightSearch; x += 2) {
+      if (panelLike(image.getPixelSafe(x, y))) {
+        if (runLeft < 0) runLeft = x;
+        misses = 0;
+      } else if (runLeft >= 0) {
+        // Small bright gaps are often grid lines or reflections.
+        misses += 1;
+        if (misses > 4) {
+          final runRight = x - (misses * 2);
+          if (runRight - runLeft > bestRight - bestLeft) {
+            bestLeft = runLeft;
+            bestRight = runRight;
+          }
+          runLeft = -1;
+          misses = 0;
+        }
+      }
+    }
+
+    if (runLeft >= 0) {
+      final runRight = rightSearch;
+      if (runRight - runLeft > bestRight - bestLeft) {
+        bestLeft = runLeft;
+        bestRight = runRight;
+      }
+    }
+
+    if (bestLeft < 0 || bestRight <= bestLeft) return null;
+    return _PanelRowSample(y: y, left: bestLeft, right: bestRight);
+  }
+
+  List<_PanelRowSample> _largestContiguousPanelGroup(
+    List<_PanelRowSample> samples,
+  ) {
+    if (samples.isEmpty) return const <_PanelRowSample>[];
+    final groups = <List<_PanelRowSample>>[];
+    var current = <_PanelRowSample>[samples.first];
+
+    for (var index = 1; index < samples.length; index++) {
+      if (samples[index].y - current.last.y <= 9) {
+        current.add(samples[index]);
+      } else {
+        groups.add(current);
+        current = <_PanelRowSample>[samples[index]];
+      }
+    }
+    groups.add(current);
+    groups.sort((a, b) {
+      final aScore =
+          a.length * (a.map((e) => e.width).reduce((x, y) => x + y) / a.length);
+      final bScore =
+          b.length * (b.map((e) => e.width).reduce((x, y) => x + y) / b.length);
+      return bScore.compareTo(aScore);
+    });
+    return groups.first;
+  }
+
+  double _median(List<double> values) {
+    if (values.isEmpty) return 0;
+    values.sort();
+    final middle = values.length ~/ 2;
+    if (values.length.isOdd) return values[middle];
+    return (values[middle - 1] + values[middle]) / 2;
   }
 
   img.Image? _decode(Uint8List bytes) {
@@ -407,4 +872,40 @@ class _AxisSegmentation {
 
   final List<int> positions;
   final double confidence;
+}
+
+class _InternalGridEvidence {
+  const _InternalGridEvidence({
+    required this.credibleVertical,
+    required this.credibleHorizontal,
+    required this.verticalRatio,
+    required this.horizontalRatio,
+  });
+
+  final int credibleVertical;
+  final int credibleHorizontal;
+  final double verticalRatio;
+  final double horizontalRatio;
+
+  bool get isCredible {
+    // At least three recurring vertical boundaries are required. Horizontal
+    // evidence can compensate when glare removes additional verticals, but a
+    // featureless rectangle can never satisfy this contract.
+    if (credibleVertical >= 4) return true;
+    return credibleVertical >= 3 &&
+        credibleHorizontal >= 1 &&
+        (verticalRatio >= 0.28 || horizontalRatio >= 0.25);
+  }
+}
+
+class _PanelRowSample {
+  const _PanelRowSample({
+    required this.y,
+    required this.left,
+    required this.right,
+  });
+  final int y;
+  final int left;
+  final int right;
+  int get width => right - left;
 }

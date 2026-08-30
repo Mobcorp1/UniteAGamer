@@ -80,6 +80,22 @@ class ArcMapFilterTaxonomy {
 
   static const List<ArcMapFilterTaxonomyEntry> infrastructure = [
     ArcMapFilterTaxonomyEntry(
+      id: 'button',
+      label: 'Button',
+      groupId: 'infrastructure',
+      groupLabel: 'Raider Infrastructure',
+      kind: ArcAdminMapMarkerKind.poi,
+      iconKey: 'infra_button',
+    ),
+    ArcMapFilterTaxonomyEntry(
+      id: 'fuel_cell',
+      label: 'Fuel Cell',
+      groupId: 'infrastructure',
+      groupLabel: 'Raider Infrastructure',
+      kind: ArcAdminMapMarkerKind.poi,
+      iconKey: 'infra_fuel_cell',
+    ),
+    ArcMapFilterTaxonomyEntry(
       id: 'field_depot',
       label: 'Field Depot',
       groupId: 'infrastructure',
@@ -89,7 +105,7 @@ class ArcMapFilterTaxonomy {
     ),
     ArcMapFilterTaxonomyEntry(
       id: 'supply_station',
-      label: 'Supply Station',
+      label: 'Supply Call Station',
       groupId: 'infrastructure',
       groupLabel: 'Raider Infrastructure',
       kind: ArcAdminMapMarkerKind.poi,
@@ -219,6 +235,14 @@ class ArcMapFilterTaxonomy {
       iconKey: 'loot_medical_container',
     ),
     ArcMapFilterTaxonomyEntry(
+      id: 'combat_supply',
+      label: 'Combat Supply',
+      groupId: 'loot',
+      groupLabel: 'Loot & Containers',
+      kind: ArcAdminMapMarkerKind.lootContainer,
+      iconKey: 'loot_combat_supply',
+    ),
+    ArcMapFilterTaxonomyEntry(
       id: 'mechanical_crate',
       label: 'Mechanical Crate',
       groupId: 'loot',
@@ -292,6 +316,14 @@ class ArcMapFilterTaxonomy {
       groupLabel: 'Locked & Access Areas',
       kind: ArcAdminMapMarkerKind.keyRequiredLocation,
       iconKey: 'access_key_room',
+    ),
+    ArcMapFilterTaxonomyEntry(
+      id: 'breach_room',
+      label: 'Breach Room',
+      groupId: 'access',
+      groupLabel: 'Locked & Access Areas',
+      kind: ArcAdminMapMarkerKind.lockedRoom,
+      iconKey: 'access_breach_room',
     ),
     ArcMapFilterTaxonomyEntry(
       id: 'breachable_door',
@@ -632,6 +664,27 @@ class ArcMapFilterTaxonomy {
     ),
   ];
 
+  static const List<ArcMapFilterTaxonomyEntry> community = [
+    ArcMapFilterTaxonomyEntry(
+      id: 'reported_rat',
+      label: 'Reported Rat',
+      groupId: 'community',
+      groupLabel: 'UAG Community Intel',
+      kind: ArcAdminMapMarkerKind.customIntel,
+      iconKey: 'community_report_rat',
+      description: 'A Rat has been reported at this location.',
+    ),
+    ArcMapFilterTaxonomyEntry(
+      id: 'hunt_a_rat',
+      label: 'Hunt a Rat Contract',
+      groupId: 'community',
+      groupLabel: 'UAG Community Intel',
+      kind: ArcAdminMapMarkerKind.customIntel,
+      iconKey: 'community_hunt_rat',
+      description: 'An active Rat contract is available at this location.',
+    ),
+  ];
+
   static const List<ArcMapFilterTaxonomyEntry> all = [
     ...extraction,
     ...infrastructure,
@@ -640,6 +693,7 @@ class ArcMapFilterTaxonomy {
     ...arc,
     ...nature,
     ...objectives,
+    ...community,
   ];
 
   static const List<ArcMapFilterTaxonomyGroup> groups = [
@@ -677,6 +731,11 @@ class ArcMapFilterTaxonomy {
       id: 'objectives',
       label: 'Quests & Objectives',
       entries: objectives,
+    ),
+    ArcMapFilterTaxonomyGroup(
+      id: 'community',
+      label: 'UAG Community Intel',
+      entries: community,
     ),
   ];
 

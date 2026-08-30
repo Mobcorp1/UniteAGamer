@@ -16,6 +16,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
     this.onMarkerSelected,
     this.onMapTapped,
     this.onIntelReportRequested,
+    this.showBlueprintIntel = true,
   });
 
   final ArcRaidIntelligenceState state;
@@ -24,6 +25,14 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
   final ValueChanged<ArcRaidMapMarker>? onMarkerSelected;
   final ValueChanged<ArcNormalizedPoint>? onMapTapped;
   final ValueChanged<ArcNormalizedPoint>? onIntelReportRequested;
+  final bool showBlueprintIntel;
+
+  Iterable<ArcRaidMapMarker> get _renderableMarkers => showBlueprintIntel
+      ? state.visibleMarkers
+      : state.visibleMarkers.where(
+          (marker) =>
+              marker.category != ArcRaidMapMarkerCategory.blueprintOpportunity,
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +106,7 @@ class ArcRaidIntelligenceMapRenderer extends StatelessWidget {
                             top: 12,
                             child: _modeBadge(state.map),
                           ),
-                          for (final marker in state.visibleMarkers)
+                          for (final marker in _renderableMarkers)
                             _markerButton(marker, mapSize),
                         ],
                       ),

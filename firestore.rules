@@ -252,7 +252,12 @@ service cloud.firestore {
     }
 
     match /arc_raider_contracts/{contractId} {
-      allow read: if isSignedIn() && (resource.data.status == 'available' || resource.data.reporterUid == request.auth.uid || resource.data.hunterUid == request.auth.uid || isTrustModerator());
+      allow list: if isSignedIn() && resource.data.status == 'available';
+      allow get: if isSignedIn() &&
+        (resource.data.status == 'available' ||
+         resource.data.reporterUid == request.auth.uid ||
+         resource.data.hunterUid == request.auth.uid ||
+         isTrustModerator());
       allow create: if isTrustModerator();
       allow update: if isTrustModerator() || (isSignedIn() &&
         request.resource.data.id == resource.data.id &&

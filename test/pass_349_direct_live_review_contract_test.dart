@@ -23,6 +23,6 @@ void main() {
     ).readAsStringSync();
     expect(s, isNot(contains('Ã')));
     expect(s, contains('Live scan - rows 1-5'));
-    expect(s, contains('Live scan - rows 6-9'));
+    expect(s, contains('Live scan - next section'));
   });
 }

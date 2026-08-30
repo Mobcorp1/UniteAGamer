@@ -4,6 +4,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_poi_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_known_extraction_catalog.dart';
 class ArcRaidIntelligenceSeedData {
   const ArcRaidIntelligenceSeedData._();
 
@@ -257,19 +258,17 @@ class ArcRaidIntelligenceSeedData {
   }
 
   static List<ArcRaidExtraction> _extractions(String mapId) {
-    return const [
-          ('north_extraction', 'North Standard Extraction', 0.86, 0.12),
-          ('southwest_extraction', 'Southwest Standard Extraction', 0.12, 0.86),
-          ('southeast_extraction', 'Southeast Standard Extraction', 0.86, 0.86),
-        ]
+    final known = ArcKnownExtractionCatalog.forMap(mapId);
+    if (known.isEmpty) return const <ArcRaidExtraction>[];
+
+    return known
         .map(
           (item) => ArcRaidExtraction(
-            id: '${mapId}_${item.$1}',
+            id: '${mapId}_${item.id}',
             mapId: mapId,
-            name: item.$2,
-            point: ArcNormalizedPoint(x: item.$3, y: item.$4),
-            notes:
-                'Configured schematic extraction. Live extraction timers must be chosen by the player.',
+            name: item.name,
+            point: ArcNormalizedPoint(x: item.x, y: item.y),
+            notes: '${item.type}. ${item.sourceNote}',
           ),
         )
         .toList(growable: false);
