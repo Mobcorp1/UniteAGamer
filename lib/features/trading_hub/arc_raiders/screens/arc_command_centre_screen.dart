@@ -48,6 +48,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nom
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -157,25 +158,28 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     super.build(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: const UagAppBar(
+      appBar: UagAppBar(
         title: 'Command Centre',
-        subtitle: 'Your next ARC Raiders move',
+        subtitle: 'Intelligence feed + actions',
         showLogout: true,
+        actions: [
+          IconButton(
+            tooltip: 'Send closed-beta feedback',
+            onPressed: () {
+              Navigator.of(context).pushNamed(
+                ArcBetaFeedbackScreen.routeName,
+                arguments: const ArcBetaFeedbackScreenArgs(
+                  sourceRoute: ArcCommandCentreScreen.routeName,
+                ),
+              );
+            },
+            icon: const Icon(Icons.bug_report_outlined),
+          ),
+        ],
       ),
       drawer: const AppDrawer(),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'closed-beta-feedback',
-        tooltip: 'Send closed-beta feedback',
-        onPressed: () {
-          Navigator.of(context).pushNamed(
-            ArcBetaFeedbackScreen.routeName,
-            arguments: const ArcBetaFeedbackScreenArgs(
-              sourceRoute: ArcCommandCentreScreen.routeName,
-            ),
-          );
-        },
-        icon: const Icon(Icons.bug_report_rounded),
-        label: const Text('Beta feedback'),
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'command centre',
       ),
       body: ArcRaidersScreenShell(
         showAdBanner: true,

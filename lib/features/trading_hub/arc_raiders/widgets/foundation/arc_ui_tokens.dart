@@ -22,11 +22,11 @@ class ArcUiTokens {
   const ArcUiTokens._();
 
   static const Color background = Color(0xFF03060A);
-  static const Color backgroundAlt = Color(0xFF060D13);
-  static const Color surfaceBase = Color(0xFF071017);
-  static const Color surfacePanel = Color(0xFF0A141C);
-  static const Color surfaceRaised = Color(0xFF0D1922);
-  static const Color surfaceInteractive = Color(0xFF102330);
+  static const Color backgroundAlt = Color(0xFF050A0F);
+  static const Color surfaceBase = Color(0xFF071016);
+  static const Color surfacePanel = Color(0xFF09131A);
+  static const Color surfaceRaised = Color(0xFF0B1820);
+  static const Color surfaceInteractive = Color(0xFF0D2028);
   static const Color surfaceOverlay = Color(0xF20A1118);
 
   static const Color primaryAccent = Color(0xFF19E6F2);
@@ -55,9 +55,9 @@ class ArcUiTokens {
   static const double radiusXS = 6;
   static const double radiusS = 8;
   static const double radiusM = 10;
-  static const double radiusL = 12;
-  static const double radiusXL = 14;
-  static const double radiusXXL = 16;
+  static const double radiusL = 10;
+  static const double radiusXL = 12;
+  static const double radiusXXL = 14;
 
   static const double gapXS = 4;
   static const double gapS = 8;
@@ -69,7 +69,7 @@ class ArcUiTokens {
   static const double gapXXXXL = 34;
   static const double gapPage = 38;
 
-  static const EdgeInsets screenPadding = EdgeInsets.fromLTRB(12, 10, 12, 14);
+  static const EdgeInsets screenPadding = EdgeInsets.fromLTRB(10, 8, 10, 12);
   static const EdgeInsets panelPadding = EdgeInsets.all(12);
   static const EdgeInsets compactPanelPadding = EdgeInsets.all(10);
   static const EdgeInsets densePanelPadding = EdgeInsets.all(10);
@@ -232,7 +232,7 @@ class ArcUiTokens {
         : accent.withValues(alpha: selected ? 0.54 : borderOpacity);
 
     return BoxDecoration(
-      color: backgroundColor ?? surfaceFor(role).withValues(alpha: 0.92),
+      color: backgroundColor ?? surfaceFor(role).withValues(alpha: 0.96),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: borderColor, width: selected ? 1.1 : 1),
       boxShadow: glow && accent != null ? ArcUiTokens.glow(accent) : null,

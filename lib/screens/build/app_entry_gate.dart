@@ -7,8 +7,7 @@ import 'package:uag_arc_raiders_hub/features/legal/services/legal_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
-
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_loading_screen.dart';
 
 bool arcHasExplicitIncompleteOnboarding(Map<String, dynamic> data) {
   return data['arcMandatoryOnboardingComplete'] == false ||
@@ -239,11 +238,6 @@ class _GateLoadingScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: const Center(
-        child: CircularProgressIndicator(color: AppTheme.neonCyan),
-      ),
-    );
+    return const UagCinematicLoadingScreen();
   }
 }

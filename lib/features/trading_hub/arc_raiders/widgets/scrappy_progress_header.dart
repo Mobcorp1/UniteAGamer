@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ScrappyProgressHeader extends StatelessWidget {
@@ -14,7 +14,6 @@ class ScrappyProgressHeader extends StatelessWidget {
     this.footer,
     this.accentColor = AppTheme.neonPink,
   });
-
   final double completion;
   final int ownedCount;
   final int totalCount;
@@ -23,58 +22,81 @@ class ScrappyProgressHeader extends StatelessWidget {
   final String? description;
   final String? footer;
   final Color accentColor;
-
   @override
   Widget build(BuildContext context) {
+    final percent = (completion.clamp(0.0, 1.0) * 100).round();
     return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: accentColor.withValues(alpha: 0.22),
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusM,
+        accent: accentColor,
+        borderOpacity: 0.20,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: AppTheme.tradingHeading(
-              fontSize: 26,
-              color: AppTheme.neonCyan,
+          Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.interactive,
+              radius: ArcUiTokens.radiusS,
+              accent: accentColor,
+              borderOpacity: 0.28,
+            ),
+            child: Text(
+              '$percent%',
+              style: ArcUiTokens.cardTitle(color: accentColor, fontSize: 13),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            description ??
-                (landscape
-                    ? 'Track your scrappy materials the same way as the blueprint grid. Tap a missing item for the requirement, tap or hold an owned item to edit dupes.'
-                    : 'Portrait is supported, but landscape gives you a roomier tracker view for quick updates.'),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            footer ??
-                'Use this to log collection progress and extras you could trade later once the wider resource system is added.',
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-              height: 1.35,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.label(color: accentColor),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description ?? 'Live tracker intelligence',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+                ),
+                const SizedBox(height: 7),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: completion.clamp(0.0, 1.0),
+                    minHeight: 3,
+                    backgroundColor: Colors.white.withValues(alpha: 0.06),
+                    valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
-          LinearProgressIndicator(
-            value: completion.clamp(0.0, 1.0),
-            minHeight: 10,
-            borderRadius: BorderRadius.circular(999),
-            backgroundColor: Colors.white.withValues(alpha: 0.07),
-            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$ownedCount / $totalCount items complete',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$ownedCount / $totalCount',
+                style: ArcUiTokens.cardTitle(
+                  color: ArcUiTokens.textPrimary,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                'COMPLETE',
+                style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+              ),
+            ],
           ),
         ],
       ),

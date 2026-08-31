@@ -18,17 +18,19 @@ class ArcCompanionBottomDock extends StatelessWidget {
     final active = _normalisedActiveLabel(activeLabel);
     final width = MediaQuery.sizeOf(context).width;
     final desktop = width >= 900;
-    final horizontalInset = desktop ? 18.0 : 10.0;
+    final horizontalInset = desktop ? 18.0 : 0.0;
 
     return SafeArea(
-      minimum: EdgeInsets.fromLTRB(horizontalInset, 0, horizontalInset, 4),
+      minimum: EdgeInsets.fromLTRB(horizontalInset, 0, horizontalInset, 0),
       child: Center(
         heightFactor: 1,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: desktop ? 520 : 420),
+          constraints: BoxConstraints(
+            maxWidth: desktop ? 560 : double.infinity,
+          ),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: ArcUiTokens.background.withValues(alpha: 0.94),
+              color: ArcUiTokens.background.withValues(alpha: 0.98),
               border: Border(
                 top: BorderSide(
                   color: ArcUiTokens.borderMedium.withValues(alpha: 0.75),

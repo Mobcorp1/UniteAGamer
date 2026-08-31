@@ -348,10 +348,10 @@ class _PremiumFeatureCarousel extends StatelessWidget {
             : math.min(constraints.maxHeight, isTablet ? 620.0 : 510.0);
 
         final centreCardHeight = isWide
-            ? (isCompactHeight ? 278.0 : 304.0)
+            ? (isCompactHeight ? 336.0 : 388.0)
             : isTablet
-            ? 350.0
-            : 356.0;
+            ? 408.0
+            : 418.0;
 
         final dotsTop = centreCardHeight + (isPhone ? 14.0 : 16.0);
         final stripTop = dotsTop + (isPhone ? 24.0 : 24.0);
@@ -471,15 +471,15 @@ class _StaticRingFeatureSlot extends StatelessWidget {
     final distance = slot.abs();
 
     final centerWidth = isWide
-        ? (isCompactHeight ? 274.0 : 298.0)
+        ? (isCompactHeight ? 300.0 : 332.0)
         : isTablet
-        ? 316.0
-        : math.min(canvasWidth - 56.0, 312.0);
+        ? 332.0
+        : math.min(canvasWidth - 58.0, 322.0);
     final centerHeight = isWide
-        ? (isCompactHeight ? 278.0 : 304.0)
+        ? (isCompactHeight ? 336.0 : 388.0)
         : isTablet
-        ? 350.0
-        : 356.0;
+        ? 408.0
+        : 418.0;
 
     final nearWidth = isWide
         ? (isCompactHeight ? 196.0 : 214.0)
@@ -907,8 +907,8 @@ class _HubQuickStrip extends StatelessWidget {
           AppTheme.spaceM,
         ),
         decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),
-          borderRadius: BorderRadius.circular(phone ? 24 : 28),
+          color: ArcUiTokens.surfacePanel.withValues(alpha: 0.96),
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
           border: Border.all(color: selected.accent.withValues(alpha: 0.36)),
           boxShadow: [
             BoxShadow(

@@ -433,19 +433,23 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
   }
 
   Widget _desktopBody(BoxConstraints constraints) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(22, 34, 22, 28),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: constraints.maxHeight - 112),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _carousel(constraints),
-            const SizedBox(height: 26),
-            _hero(constraints),
-            const SizedBox(height: 24),
-            _trustPanel(false),
-          ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: constraints.maxWidth - 44,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _carousel(constraints),
+              const SizedBox(height: 18),
+              _hero(constraints),
+              const SizedBox(height: 16),
+              _trustPanel(false),
+            ],
+          ),
         ),
       ),
     );

@@ -572,7 +572,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 92,
+          height: 120,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: featured.length,
@@ -583,7 +583,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
                 borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                 onTap: () => _openFeature(feature),
                 child: Container(
-                  width: 108,
+                  width: 132,
                   padding: ArcUiTokens.densePanelPadding,
                   decoration: ArcUiTokens.surfaceDecoration(
                     role: ArcSurfaceRole.interactive,

@@ -115,9 +115,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   String get _headerDescription {
     switch (_mode) {
       case ArcScrappyTrackerMode.scrappy:
-        return 'Track Scrappy upgrade items by tier using swipeable premium cards.';
+        return 'Track Scrappy upgrade items by tier in a compact operations board.';
       case ArcScrappyTrackerMode.bench:
-        return 'Track bench materials by station and tier using swipeable premium cards.';
+        return 'Track bench materials by station and tier in a compact operations board.';
       case ArcScrappyTrackerMode.quest:
         return 'Track quest collection items by status using a live progress board.';
     }
@@ -968,6 +968,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildScrappyList(
     List<ArcScrappyItem> filtered,
     Map<String, ArcScrappyState> states,
@@ -997,6 +998,232 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
 
     return _buildTrackerCarousel(cards, maxItemCount: maxItemCount);
+  }
+
+  Widget _buildScrappyBoard(
+    List<ArcScrappyItem> filtered,
+    Map<String, ArcScrappyState> states,
+  ) {
+    if (filtered.isEmpty) return _buildEmptyState();
+
+    final tierGroups = <ArcScrappyTier, List<ArcScrappyItem>>{};
+    for (final item in filtered) {
+      tierGroups.putIfAbsent(item.tier, () => <ArcScrappyItem>[]).add(item);
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final desktop = width >= 1040;
+        final tablet = width >= 700;
+        final columnWidth = desktop
+            ? (width - 36) / 4
+            : tablet
+            ? (width - 12) / 2
+            : width;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final tier in ArcScrappyTier.values)
+              if ((tierGroups[tier] ?? const <ArcScrappyItem>[]).isNotEmpty)
+                SizedBox(
+                  width: columnWidth,
+                  child: _scrappyTierColumn(
+                    tier: tier,
+                    items: tierGroups[tier] ?? const <ArcScrappyItem>[],
+                    states: states,
+                  ),
+                ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _scrappyTierColumn({
+    required ArcScrappyTier tier,
+    required List<ArcScrappyItem> items,
+    required Map<String, ArcScrappyState> states,
+  }) {
+    final color = _tierColor(tier);
+    final complete = _completedCount(items, states);
+    final totalNeeded = items.fold<int>(
+      0,
+      (sum, item) => sum + item.neededCount,
+    );
+    final totalCollected = items.fold<int>(0, (sum, item) {
+      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+      return sum + state.collectedCount.clamp(0, item.neededCount);
+    });
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusM,
+        accent: color,
+        borderOpacity: 0.24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: ArcUiTokens.surfaceDecoration(
+                  role: ArcSurfaceRole.interactive,
+                  radius: ArcUiTokens.radiusS,
+                  accent: color,
+                  borderOpacity: 0.34,
+                ),
+                child: Text(
+                  '${tier.index + 1}',
+                  style: ArcUiTokens.cardTitle(color: color, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _tierLabel(tier).toUpperCase(),
+                      style: ArcUiTokens.label(color: color),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$complete/${items.length} upgrades ready',
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _ProgressPill(text: '$totalCollected/$totalNeeded', color: color),
+            ],
+          ),
+          const SizedBox(height: 9),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: totalNeeded == 0 ? 0 : totalCollected / totalNeeded,
+              minHeight: 3,
+              backgroundColor: Colors.white.withValues(alpha: 0.06),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (final item in items)
+            _scrappyInventoryRow(
+              item,
+              states[item.id] ?? ArcScrappyState.empty(item.id),
+              color,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _scrappyInventoryRow(
+    ArcScrappyItem item,
+    ArcScrappyState state,
+    Color color,
+  ) {
+    final needed = item.neededCount <= 0 ? 1 : item.neededCount;
+    final collected = state.collectedCount.clamp(0, needed);
+    final complete = state.ownedFor(item.neededCount);
+    final surplus = state.surplusFor(item.neededCount);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+        onTap: () => state.collectedCount > 0
+            ? _openItemEditor(item, state)
+            : _showMissingItemInfo(item, state),
+        onLongPress: () => _openItemEditor(item, state),
+        child: Container(
+          padding: const EdgeInsets.all(7),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.interactive,
+            radius: ArcUiTokens.radiusS,
+            accent: complete ? ArcUiTokens.success : color,
+            borderOpacity: complete ? 0.28 : 0.12,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: ArcUiTokens.surfaceRaised,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: color.withValues(alpha: 0.20)),
+                ),
+                child: Image.asset(
+                  item.imageAsset,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => Icon(
+                    Icons.inventory_2_rounded,
+                    color: color.withValues(alpha: 0.65),
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.cardTitle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      complete ? 'READY' : 'NEED ${needed - collected}',
+                      style: ArcUiTokens.metadata(
+                        color: complete
+                            ? ArcUiTokens.success
+                            : ArcUiTokens.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$collected/$needed',
+                    style: ArcUiTokens.label(
+                      color: complete ? ArcUiTokens.success : color,
+                    ),
+                  ),
+                  if (surplus > 0)
+                    Text(
+                      '+$surplus spare',
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.attentionAccent,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildGroupedList(
@@ -1032,12 +1259,29 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         ),
     ];
 
-    final maxItemCount = grouped.values.fold<int>(
-      0,
-      (max, items) => items.length > max ? items.length : max,
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final columns = width >= 1080
+            ? 3
+            : width >= 700
+            ? 2
+            : 1;
+        final cardWidth = columns == 1
+            ? width
+            : (width - ((columns - 1) * 10)) / columns;
 
-    return _buildTrackerCarousel(cards, maxItemCount: maxItemCount);
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final card in cards) SizedBox(width: cardWidth, child: card),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildQuestKanban(
@@ -1164,57 +1408,102 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     final needed = item.neededCount <= 0 ? 1 : item.neededCount;
     final collected = state.collectedCount.clamp(0, needed);
     final progress = collected / needed;
+    final complete = state.ownedFor(item.neededCount);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
-        onTap: () {
-          if (state.collectedCount > 0) {
-            _openItemEditor(item, state);
-          } else {
-            _showMissingItemInfo(item, state);
-          }
-        },
+        onTap: () => state.collectedCount > 0
+            ? _openItemEditor(item, state)
+            : _showMissingItemInfo(item, state),
         onLongPress: () => _openItemEditor(item, state),
         child: Container(
-          padding: ArcUiTokens.densePanelPadding,
+          padding: const EdgeInsets.all(8),
           decoration: ArcUiTokens.surfaceDecoration(
             role: ArcSurfaceRole.interactive,
             radius: ArcUiTokens.radiusS,
-            accent: color,
-            borderOpacity: 0.16,
+            accent: complete ? ArcUiTokens.success : color,
+            borderOpacity: complete ? 0.26 : 0.14,
           ),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                item.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ArcUiTokens.cardTitle(fontSize: 12.5),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                '${item.category} - ${_displayGroupTitle(item.category, item.group)}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 4,
-                  backgroundColor: Colors.white.withValues(alpha: 0.08),
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
+              Container(
+                width: 46,
+                height: 46,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: ArcUiTokens.surfaceRaised,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: color.withValues(alpha: 0.18)),
+                ),
+                child: Image.asset(
+                  item.imageAsset,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => Icon(
+                    Icons.assignment_rounded,
+                    color: color.withValues(alpha: 0.65),
+                    size: 21,
+                  ),
                 ),
               ),
-              const SizedBox(height: 5),
-              Text(
-                '$collected / $needed',
-                style: ArcUiTokens.metadata(color: color),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.cardTitle(fontSize: 12.5),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _displayGroupTitle(item.category, item.group),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 3,
+                        backgroundColor: Colors.white.withValues(alpha: 0.07),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          complete ? ArcUiTokens.success : color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          '$collected / $needed',
+                          style: ArcUiTokens.metadata(
+                            color: complete ? ArcUiTokens.success : color,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          complete
+                              ? 'COMPLETE'
+                              : collected > 0
+                              ? 'ACTIVE'
+                              : 'BLOCKED',
+                          style: ArcUiTokens.metadata(
+                            color: complete ? ArcUiTokens.success : color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1280,6 +1569,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 MediaQuery.of(context).orientation == Orientation.landscape;
 
             return ArcRaidersPageList(
+              maxWidth: 1220,
               children: [
                 _buildScrappyFeedTabs(),
                 if (_mode == ArcScrappyTrackerMode.scrappy)
@@ -1311,7 +1601,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   ),
                   const SizedBox(height: AppTheme.spaceS),
                   _mode == ArcScrappyTrackerMode.scrappy
-                      ? _buildScrappyList(filtered, states)
+                      ? _buildScrappyBoard(filtered, states)
                       : _mode == ArcScrappyTrackerMode.quest
                       ? _buildQuestKanban(filtered, states)
                       : _buildGroupedList(filtered, states),
@@ -1327,7 +1617,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       ArcScrappyTrackerMode.scrappy =>
                         'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
                       ArcScrappyTrackerMode.bench =>
-                        'Bench materials are grouped into carousel cards by station and tier.',
+                        'Bench materials are grouped into compact station and tier boards.',
                       ArcScrappyTrackerMode.quest =>
                         'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
                     },

@@ -91,6 +91,7 @@ flutter:
     - assets/arc_raiders/maps/stella_montis/
 
     - assets/arc_raiders/hero_cards/
+    - assets/arc_raiders/loading/
   fonts:
     - family: VT323
       fonts:
