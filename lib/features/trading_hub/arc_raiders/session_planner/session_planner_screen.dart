@@ -96,7 +96,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
       ..writeln()
       ..writeln(payload.icsText);
 
-    await Share.share(text.toString().trim());
+    await SharePlus.instance.share(ShareParams(text: text.toString().trim()));
   }
 
   @override

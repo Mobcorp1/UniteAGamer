@@ -445,7 +445,9 @@ class _TradingTradeSessionsScreenState
   }
 
   Future<void> _shareInvite(TradingSession session) async {
-    await Share.share(_repository.buildSessionInviteText(session));
+    await SharePlus.instance.share(
+      ShareParams(text: _repository.buildSessionInviteText(session)),
+    );
   }
 
   UagSessionCalendarPayload? _calendarPayload(TradingSession session) {
