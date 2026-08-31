@@ -56,10 +56,12 @@ class _BlueprintVoiceSearchButtonState
 
     setState(() => _listening = true);
     await _speech.listen(
-      localeId: 'en_GB',
-      listenFor: const Duration(seconds: 8),
-      pauseFor: const Duration(seconds: 2),
-      listenOptions: stt.SpeechListenOptions(listenMode: stt.ListenMode.search),
+      listenOptions: stt.SpeechListenOptions(
+        localeId: 'en_GB',
+        listenFor: const Duration(seconds: 8),
+        pauseFor: const Duration(seconds: 2),
+        listenMode: stt.ListenMode.search,
+      ),
       onResult: (result) {
         final words = result.recognizedWords.trim();
         if (words.isEmpty) return;
