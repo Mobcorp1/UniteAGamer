@@ -288,20 +288,20 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
             notifyListeners();
           }
         },
+        listenFor:
+            _handsFreeEnabled &&
+                !_wakeCommandMode &&
+                _pendingIntelReport == null
+            ? const Duration(seconds: 45)
+            : const Duration(seconds: 24),
+        pauseFor:
+            _handsFreeEnabled &&
+                !_wakeCommandMode &&
+                _pendingIntelReport == null
+            ? const Duration(seconds: 5)
+            : const Duration(seconds: 4),
+        localeId: 'en_GB',
         listenOptions: stt.SpeechListenOptions(
-          listenFor:
-              _handsFreeEnabled &&
-                  !_wakeCommandMode &&
-                  _pendingIntelReport == null
-              ? const Duration(seconds: 45)
-              : const Duration(seconds: 24),
-          pauseFor:
-              _handsFreeEnabled &&
-                  !_wakeCommandMode &&
-                  _pendingIntelReport == null
-              ? const Duration(seconds: 5)
-              : const Duration(seconds: 4),
-          localeId: 'en_GB',
           listenMode:
               _handsFreeEnabled &&
                   !_wakeCommandMode &&
