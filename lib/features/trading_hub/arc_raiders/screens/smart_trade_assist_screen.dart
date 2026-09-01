@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_bottom_action_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_intelligence_engine.dart';
@@ -437,8 +439,10 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
                 );
 
                 return ListView(
-                  padding: const EdgeInsets.all(AppTheme.spaceM),
+                  padding: const EdgeInsets.all(12),
                   children: [
+                    const _SmartTradeVisualLead(),
+                    const SizedBox(height: AppTheme.spaceM),
                     _IntroCard(
                       opportunityCount: opportunities.length,
                       duplicateTotal: duplicateTotal,
@@ -503,6 +507,23 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   }
 }
 
+class _SmartTradeVisualLead extends StatelessWidget {
+  const _SmartTradeVisualLead();
+  @override
+  Widget build(BuildContext context) => const ArcReferenceSectionFrame(
+    title: 'Trade Assist',
+    subtitle:
+        'Match intelligence, duplicate value and next-best trade actions.',
+    accent: ArcUiTokens.secondaryAccent,
+    child: ArcArtworkPlaceholder(
+      assetPath:
+          'assets/images/arc_raiders/trading/smart_trade_assist_hero.webp',
+      height: 104,
+      accent: ArcUiTokens.secondaryAccent,
+    ),
+  );
+}
+
 class _IntroCard extends StatelessWidget {
   final int opportunityCount;
   final int duplicateTotal;
@@ -522,7 +543,7 @@ class _IntroCard extends StatelessWidget {
       active: true,
       radius: 18,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spaceM),
+        padding: const EdgeInsets.all(12),
         decoration: AppTheme.tradingCardDecoration(radius: 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,7 +599,7 @@ class _EmptyStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(12),
       decoration: AppTheme.tradingCardDecoration(radius: 16),
       child: Text(
         'No smart trade opportunities yet. Mark duplicate blueprints in the tracker and set your 5 active hunt targets in Raid Planner.',
@@ -616,7 +637,7 @@ class _SummaryCard extends StatelessWidget {
         .length;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(12),
       decoration: AppTheme.tradingCardDecoration(radius: 16),
       child: Wrap(
         spacing: AppTheme.spaceS,
@@ -649,7 +670,7 @@ class _TradeIntelligenceSummaryCard extends StatelessWidget {
         : summary.wantedScores.first;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(12),
       decoration: AppTheme.tradingCardDecoration(
         radius: 16,
         borderColor: summary.hasSuggestions
@@ -808,7 +829,7 @@ class _OpportunityCard extends StatelessWidget {
     final hasDirectMatch = directMatches.isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),

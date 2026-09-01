@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_pl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_reference_visuals.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_invite.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_match_rider_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_match_rider_repository.dart';
@@ -23,6 +24,19 @@ class ArcMatchRiderScreen extends StatefulWidget {
 
   @override
   State<ArcMatchRiderScreen> createState() => _ArcMatchRiderScreenState();
+}
+
+class _MatchRaiderVisualLead extends StatelessWidget {
+  const _MatchRaiderVisualLead();
+  @override
+  Widget build(BuildContext context) => const ArcReferenceSectionFrame(
+    title: 'Match Raider',
+    subtitle: 'Squad compatibility, session intent and live Raider discovery.',
+    child: ArcArtworkPlaceholder(
+      assetPath: 'assets/images/arc_raiders/matchmaking/match_raider_hero.webp',
+      height: 104,
+    ),
+  );
 }
 
 class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
@@ -268,6 +282,8 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                     child: ListView(
                       padding: const EdgeInsets.all(AppTheme.spaceL),
                       children: [
+                        const _MatchRaiderVisualLead(),
+                        const SizedBox(height: 12),
                         _buildHeroCard(profile),
                         const SizedBox(height: AppTheme.spaceM),
                         LayoutBuilder(

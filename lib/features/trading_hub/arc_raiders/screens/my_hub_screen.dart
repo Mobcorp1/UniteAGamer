@@ -89,7 +89,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.inventory_2_outlined,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.targets,
-      assetName: 'arc_hub_hunt_targets.webp',
+      assetName: 'arc_hub_favourite_loadout.webp',
       builder: (_) => const FavouriteLoadoutScreen(),
     ),
     _ArcHubFeature(
@@ -144,7 +144,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.psychology_outlined,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
-      assetName: 'arc_hub_profile_reputation.webp',
+      assetName: 'arc_hub_play_like_a_pro.webp',
       builder: (_) => const PlayLikeAProScreen(),
     ),
     _ArcHubFeature(
@@ -153,7 +153,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.emoji_events_outlined,
       accent: Colors.amberAccent,
       art: _ArcHubArtKind.smart,
-      assetName: 'arc_hub_community_intel.webp',
+      assetName: 'arc_hub_wall_of_legends.webp',
       builder: (_) => const WallOfLegendsScreen(),
     ),
     _ArcHubFeature(
@@ -180,7 +180,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       icon: Icons.assignment_turned_in_outlined,
       accent: Colors.amberAccent,
       art: _ArcHubArtKind.raid,
-      assetName: 'arc_hub_quest_tracker.webp',
+      assetName: 'arc_hub_operations.webp',
       builder: (_) => const OperationsCommandScreen(),
     ),
   ];
