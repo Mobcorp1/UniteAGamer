@@ -9,9 +9,11 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_legal_acceptance.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_archetype_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_player_session_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_adaptive_card_deck.dart';
 
@@ -635,38 +637,6 @@ class _OnboardingBasicProfileScreenState
     );
   }
 
-  Widget _background() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Image.asset(
-            'assets/images/auth_bg_landscape.webp',
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const StaticWatermark(),
-          ),
-        ),
-        Container(color: Colors.black.withValues(alpha: 0.54)),
-        const StaticWatermark(),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                Colors.black.withValues(alpha: 0.84),
-                AppTheme.darkBackground.withValues(alpha: 0.46),
-                Colors.black.withValues(alpha: 0.82),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _logoMark({double size = 82}) {
     return Image.asset(
       'assets/icon/uag_traders_icon_transparent.webp',
@@ -740,23 +710,13 @@ class _OnboardingBasicProfileScreenState
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 700 ? 18 : 28),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.48),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.46),
-            blurRadius: 34,
-            offset: const Offset(0, 18),
-          ),
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.12),
-            blurRadius: 30,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusL,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.28,
       ),
-      child: SingleChildScrollView(child: child),
+      child: child,
     );
   }
 
@@ -1922,59 +1882,50 @@ class _OnboardingBasicProfileScreenState
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            Positioned.fill(child: StaticWatermark()),
-            Center(child: CircularProgressIndicator(color: AppTheme.neonCyan)),
-          ],
+        body: ArcTacticalPageBody(
+          width: ArcPageWidth.form,
+          scrollable: false,
+          child: Center(
+            child: CircularProgressIndicator(color: AppTheme.neonCyan),
+          ),
         ),
       );
     }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          Positioned.fill(child: _background()),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: EdgeInsets.all(constraints.maxWidth < 700 ? 14 : 24),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 960),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              if (_stepIndex > 0 && _stepIndex < _stepCount - 1)
-                                IconButton(
-                                  tooltip: 'Back',
-                                  onPressed: () => _back(),
-                                  icon: const Icon(
-                                    Icons.arrow_back_rounded,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              const Spacer(),
-                              _stepDots(),
-                              const Spacer(),
-                              const SizedBox(width: 48),
-                            ],
-                          ),
-                          const SizedBox(height: 18),
-                          _mainLayout(constraints),
-                        ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return ArcTacticalPageBody(
+            controller: _scrollController,
+            width: ArcPageWidth.standard,
+            maxWidth: 960,
+            padding: EdgeInsets.all(constraints.maxWidth < 700 ? 14 : 24),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    if (_stepIndex > 0 && _stepIndex < _stepCount - 1)
+                      IconButton(
+                        tooltip: 'Back',
+                        onPressed: () => _back(),
+                        icon: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    const Spacer(),
+                    _stepDots(),
+                    const Spacer(),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                _mainLayout(constraints),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

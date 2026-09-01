@@ -3,7 +3,9 @@ import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dar
 import 'package:uag_arc_raiders_hub/features/legal/screens/arc_data_attribution_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class LegalHubScreen extends StatelessWidget {
   const LegalHubScreen({super.key});
@@ -18,11 +20,25 @@ class LegalHubScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Legal'),
+        elevation: 0,
+        title: Text(
+          'Legal',
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
+      body: ArcTacticalPageList(
+        width: ArcPageWidth.standard,
+        maxWidth: 980,
+        padding: ArcLayoutTokens.pagePadding(context),
         children: [
+          const ArcTacticalPanel(
+            icon: Icons.policy_outlined,
+            title: 'Policy Command',
+            subtitle:
+                'Operational terms, privacy controls and source attribution for the UAG ARC Raiders Hub.',
+            accent: ArcUiTokens.primaryAccent,
+            child: SizedBox.shrink(),
+          ),
           _LegalTile(
             title: 'Terms of Use',
             subtitle: 'Trading rules, account rules, and platform terms.',
@@ -42,15 +58,13 @@ class LegalHubScreen extends StatelessWidget {
             icon: Icons.dataset_linked_outlined,
             onTap: () => _open(context, const ArcDataAttributionScreen()),
           ),
-          const SizedBox(height: AppTheme.spaceM),
-          Text(
-            'Policy Catalogue',
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.neonCyan,
-            ),
+          const ArcTacticalPanel(
+            icon: Icons.folder_copy_outlined,
+            title: 'Policy Catalogue',
+            subtitle: 'Additional operational policy records and beta notices.',
+            accent: ArcUiTokens.secondaryAccent,
+            child: SizedBox.shrink(),
           ),
-          const SizedBox(height: AppTheme.spaceS),
           for (final policy in UagPolicyCatalog.documents.where(
             (document) => !const <String>{
               'terms_of_use',
@@ -66,15 +80,13 @@ class LegalHubScreen extends StatelessWidget {
                   : Icons.verified_user_outlined,
               onTap: () => _open(context, _PolicyDocumentScreen(policy)),
             ),
-          const SizedBox(height: AppTheme.spaceM),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            decoration: AppTheme.tradingCardDecoration(
-              borderColor: AppTheme.neonPink.withValues(alpha: 0.14),
-            ),
-            child: const Text(
+          ArcTacticalPanel(
+            icon: Icons.info_outline_rounded,
+            title: 'Fan Project Notice',
+            accent: ArcUiTokens.secondaryAccent,
+            child: Text(
               UagFanProjectNotice.text,
-              style: TextStyle(color: Colors.white70, height: 1.45),
+              style: ArcUiTokens.body(fontSize: 13),
             ),
           ),
         ],
@@ -94,43 +106,43 @@ class _PolicyDocumentScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(policy.title),
+        elevation: 0,
+        title: Text(
+          policy.title,
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
+      body: ArcTacticalPageList(
+        width: ArcPageWidth.standard,
+        maxWidth: 920,
+        padding: ArcLayoutTokens.pagePadding(context),
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spaceL),
-            decoration: AppTheme.tradingCardDecoration(
-              borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
-            ),
+          ArcTacticalPanel(
+            icon: policy.requiresLegalReview
+                ? Icons.gavel_outlined
+                : Icons.verified_user_outlined,
+            title: policy.title,
+            subtitle:
+                'Version ${policy.version} - Effective ${policy.effectiveDate}',
+            accent: policy.requiresLegalReview
+                ? ArcUiTokens.warning
+                : ArcUiTokens.primaryAccent,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Version ${policy.version} - Effective ${policy.effectiveDate}',
-                  style: const TextStyle(color: Colors.white60),
-                ),
-                const SizedBox(height: AppTheme.spaceM),
-                Text(
                   policy.summary,
-                  style: AppTheme.tradingHeading(
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
+                  style: ArcUiTokens.sectionTitle(fontSize: 18),
                 ),
-                const SizedBox(height: AppTheme.spaceM),
-                Text(
-                  policy.body,
-                  style: const TextStyle(color: Colors.white70, height: 1.45),
-                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+                Text(policy.body, style: ArcUiTokens.body(fontSize: 13)),
                 if (policy.requiresLegalReview) ...[
-                  const SizedBox(height: AppTheme.spaceM),
+                  const SizedBox(height: ArcUiTokens.gapM),
                   Text(
                     UagPolicyCatalog.legalReviewNotice,
-                    style: TextStyle(
-                      color: AppTheme.neonPink.withValues(alpha: 0.9),
-                      height: 1.35,
+                    style: ArcUiTokens.body(
+                      color: ArcUiTokens.warning,
+                      weight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -158,43 +170,33 @@ class _LegalTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(AppTheme.spaceM),
-          decoration: AppTheme.tradingCardDecoration(
-            borderColor: AppTheme.neonCyan.withValues(alpha: 0.14),
+          padding: const EdgeInsets.all(ArcUiTokens.gapL),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.interactive,
+            accent: ArcUiTokens.primaryAccent,
+            borderOpacity: 0.18,
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppTheme.neonCyan),
-              const SizedBox(width: AppTheme.spaceM),
+              Icon(icon, color: ArcUiTokens.primaryAccent, size: 22),
+              const SizedBox(width: ArcUiTokens.gapM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: AppTheme.tradingHeading(
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        height: 1.35,
-                      ),
-                    ),
+                    Text(title, style: ArcUiTokens.cardTitle(fontSize: 16)),
+                    const SizedBox(height: ArcUiTokens.gapXS),
+                    Text(subtitle, style: ArcUiTokens.bodySmall()),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.white54),
+              const Icon(Icons.chevron_right, color: ArcUiTokens.textTertiary),
             ],
           ),
         ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class TraderCodeOfConductScreen extends StatelessWidget {
   const TraderCodeOfConductScreen({super.key});
@@ -67,87 +68,36 @@ class TraderCodeOfConductScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           'Trader Code of Conduct',
-          style: AppTheme.tradingHeading(
-            fontSize: 22,
-            color: AppTheme.neonCyan,
-          ),
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
         ),
       ),
-      body: Stack(
-        fit: StackFit.expand,
+      body: ArcTacticalPageList(
+        width: ArcPageWidth.standard,
+        maxWidth: 940,
+        padding: ArcLayoutTokens.pagePadding(context),
         children: [
-          Image.asset(
-            'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const StaticWatermark(),
-          ),
-          Container(color: Colors.black.withValues(alpha: 0.72)),
-          const StaticWatermark(),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 700;
-                return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    compact ? 14 : 28,
-                    compact ? 16 : 28,
-                    compact ? 14 : 28,
-                    32,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 940),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: AppTheme.tradingCardDecoration(
-                              borderColor: AppTheme.neonCyan.withValues(
-                                alpha: 0.32,
-                              ),
-                            ),
-                            child: const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'TRADE WITH TRUST',
-                                  style: TextStyle(
-                                    color: AppTheme.neonCyan,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.8,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'These rules protect fair trades, reliable coordination and a community where reputation means something.',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    height: 1.45,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          for (final section in sections) ...[
-                            _ConductCard(section: section),
-                            const SizedBox(height: 12),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+          ArcTacticalPanel(
+            icon: Icons.shield_outlined,
+            title: 'TRADE WITH TRUST',
+            subtitle:
+                'These rules protect fair trades, reliable coordination and a community where reputation means something.',
+            accent: ArcUiTokens.primaryAccent,
+            child: Wrap(
+              spacing: ArcUiTokens.gapS,
+              runSpacing: ArcUiTokens.gapS,
+              children: const [
+                _ConductChip(label: 'NO REAL-MONEY SALES'),
+                _ConductChip(label: 'HONEST REPORTING'),
+                _ConductChip(label: 'ADULT COMMUNITY'),
+              ],
             ),
           ),
+          for (final section in sections) _ConductCard(section: section),
         ],
       ),
     );
@@ -173,37 +123,61 @@ class _ConductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
-      ),
+    final compact = MediaQuery.sizeOf(context).width < 520;
+    return ArcTacticalPanel(
+      accent: ArcUiTokens.primaryAccent,
+      padding: EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(section.icon, color: AppTheme.neonCyan, size: 24),
-          const SizedBox(width: 14),
+          Container(
+            width: compact ? 34 : 38,
+            height: compact ? 34 : 38,
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.interactive,
+              accent: ArcUiTokens.primaryAccent,
+              radius: ArcUiTokens.radiusS,
+              borderOpacity: 0.34,
+            ),
+            child: Icon(
+              section.icon,
+              color: ArcUiTokens.primaryAccent,
+              size: compact ? 18 : 21,
+            ),
+          ),
+          const SizedBox(width: ArcUiTokens.gapM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   section.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: ArcUiTokens.cardTitle(fontSize: compact ? 14 : 16),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  section.body,
-                  style: const TextStyle(color: Colors.white70, height: 1.45),
-                ),
+                const SizedBox(height: ArcUiTokens.gapS),
+                Text(section.body, style: ArcUiTokens.body(fontSize: 13)),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConductChip extends StatelessWidget {
+  const _ConductChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: ArcUiTokens.chipPadding,
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.primaryAccent),
+      child: Text(
+        label,
+        style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
       ),
     );
   }

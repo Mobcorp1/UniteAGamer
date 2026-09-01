@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -123,39 +124,6 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
       MaterialPageRoute(
         builder: (_) => const AuthScreen(initialIsLogin: false),
       ),
-    );
-  }
-
-  Widget _background() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Image.asset(
-            'assets/images/auth_bg_landscape.webp',
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) =>
-                const ColoredBox(color: Color(0xFF090529)),
-          ),
-        ),
-        Container(color: Colors.black.withValues(alpha: 0.48)),
-
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: 0.76),
-                Colors.transparent,
-                Colors.black.withValues(alpha: 0.92),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -459,34 +427,31 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 720;
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 720;
 
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              _background(),
-              SafeArea(
-                child: Column(
-                  children: [
-                    Align(alignment: Alignment.topLeft, child: _brand(compact)),
-                    Container(
-                      height: 1,
-                      margin: EdgeInsets.only(top: compact ? 10 : 14),
-                      color: AppTheme.neonCyan.withValues(alpha: 0.42),
-                    ),
-                    Expanded(
-                      child: compact
-                          ? _mobileBody(constraints)
-                          : _desktopBody(constraints),
-                    ),
-                  ],
-                ),
+            return SafeArea(
+              child: Column(
+                children: [
+                  Align(alignment: Alignment.topLeft, child: _brand(compact)),
+                  Container(
+                    height: 1,
+                    margin: EdgeInsets.only(top: compact ? 10 : 14),
+                    color: AppTheme.neonCyan.withValues(alpha: 0.42),
+                  ),
+                  Expanded(
+                    child: compact
+                        ? _mobileBody(constraints)
+                        : _desktopBody(constraints),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_drawer_nav_tile.dart';
@@ -154,15 +155,14 @@ class _AppDrawerState extends State<AppDrawer>
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: dynamicColor.withValues(alpha: 0.65),
-                    blurRadius: 20,
-                    spreadRadius: 4,
+                    color: dynamicColor.withValues(alpha: 0.18),
+                    blurRadius: 12,
                   ),
                 ],
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                 child: Image.asset(
                   'assets/icon/uag_traders_icon_transparent.webp',
                   width: 56,
@@ -373,13 +373,15 @@ class _AppDrawerState extends State<AppDrawer>
           child: Container(
             width: widget.drawerWidth,
             decoration: BoxDecoration(
-              border: Border.all(color: dynamicColor, width: 3),
-              borderRadius: BorderRadius.circular(12),
+              color: ArcUiTokens.background.withValues(alpha: 0.96),
+              border: Border(
+                right: BorderSide(color: dynamicColor.withValues(alpha: 0.32)),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: dynamicColor.withValues(alpha: 0.7),
-                  blurRadius: 25,
-                  spreadRadius: 5,
+                  color: Colors.black.withValues(alpha: 0.34),
+                  blurRadius: 18,
+                  offset: const Offset(10, 0),
                 ),
               ],
             ),
@@ -388,8 +390,8 @@ class _AppDrawerState extends State<AppDrawer>
                 children: [
                   _buildDrawerHeader(dynamicColor),
                   Divider(
-                    color: dynamicColor.withValues(alpha: 0.7),
-                    thickness: 1.5,
+                    color: dynamicColor.withValues(alpha: 0.22),
+                    thickness: 1,
                   ),
                   Expanded(child: _buildNavigationList(currentRoute)),
                   if (showAdminLoading)

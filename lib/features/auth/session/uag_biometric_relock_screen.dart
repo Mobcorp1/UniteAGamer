@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagBiometricRelockScreen extends StatefulWidget {
@@ -102,87 +105,39 @@ class _UagBiometricRelockScreenState extends State<UagBiometricRelockScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: _ArcAuthBackdrop()),
-          if (_checking || _unlocking)
-            const Center(
-              child: CircularProgressIndicator(color: AppTheme.neonCyan),
-            )
-          else
-            Positioned(
-              left: AppTheme.spaceL,
-              right: AppTheme.spaceL,
-              bottom: AppTheme.spaceXL,
-              child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+      body: ArcTacticalPageBody(
+        width: ArcPageWidth.form,
+        scrollable: false,
+        child: _checking || _unlocking
+            ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.neonCyan),
+              )
+            : ArcTacticalStatePanel(
+                icon: Icons.fingerprint_rounded,
+                title: 'Session Locked',
+                message:
+                    'Confirm your device biometric unlock or return to password sign in.',
+                accent: ArcUiTokens.primaryAccent,
+                action: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (_canUseBiometrics)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _unlockWithBiometrics,
-                          icon: const Icon(Icons.fingerprint_rounded),
-                          label: const Text('Unlock with biometrics'),
-                        ),
+                    if (_canUseBiometrics) ...[
+                      ElevatedButton.icon(
+                        onPressed: _unlockWithBiometrics,
+                        icon: const Icon(Icons.fingerprint_rounded),
+                        label: const Text('Unlock with biometrics'),
                       ),
-                    const SizedBox(height: AppTheme.spaceS),
-                    TextButton(
+                      const SizedBox(height: ArcUiTokens.gapS),
+                    ],
+                    OutlinedButton.icon(
                       onPressed: _signOutToPasswordLogin,
-                      child: const Text('Use password sign in'),
+                      icon: const Icon(Icons.login_rounded),
+                      label: const Text('Use password sign in'),
                     ),
                   ],
                 ),
               ),
-            ),
-        ],
       ),
-    );
-  }
-}
-
-class _ArcAuthBackdrop extends StatelessWidget {
-  const _ArcAuthBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-        ),
-        Container(color: Colors.black.withValues(alpha: 0.62)),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha: 0.82),
-                Colors.transparent,
-                Colors.black.withValues(alpha: 0.92),
-              ],
-            ),
-          ),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0.0, -0.08),
-              radius: 0.82,
-              colors: [
-                AppTheme.neonCyan.withValues(alpha: 0.10),
-                AppTheme.neonPink.withValues(alpha: 0.07),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

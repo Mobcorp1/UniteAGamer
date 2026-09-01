@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 import '../models/uag_subscription_plan.dart';
 import '../models/uag_subscription_tier.dart';
@@ -60,95 +61,91 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
         subtitle: 'Free, Essential, Premium, referrals and wallet.',
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: StreamBuilder(
-              stream: _entitlementService.watchMyEntitlement(),
-              builder: (context, snapshot) {
-                final entitlement = snapshot.data;
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    entitlement == null) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppTheme.neonCyan),
-                  );
-                }
+      body: StreamBuilder(
+        stream: _entitlementService.watchMyEntitlement(),
+        builder: (context, snapshot) {
+          final entitlement = snapshot.data;
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              entitlement == null) {
+            return const ArcTacticalPageBody(
+              width: ArcPageWidth.form,
+              scrollable: false,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: ArcUiTokens.primaryAccent,
+                ),
+              ),
+            );
+          }
 
-                return ListView(
-                  padding: AppTheme.pagePadding,
-                  children: [
-                    if (entitlement != null)
-                      _CurrentPlanCard(
-                        tier: entitlement.tier,
-                        subscriptionStatus: entitlement.subscriptionStatus,
-                        referralCode: entitlement.referralCode,
-                        pendingPence: entitlement.pendingBalancePence,
-                        availablePence: entitlement.availableBalancePence,
-                        totalEarnedPence: entitlement.totalEarnedPence,
-                        hasAdminBypass: entitlement.hasAdminBypass,
-                        onGenerateReferralCode: _ensureReferralCode,
-                        onRequestPayout:
-                            entitlement.availableBalancePence >=
-                                entitlement.limits.payoutThresholdPence
-                            ? () => _requestPayout(
-                                entitlement.availableBalancePence,
-                              )
-                            : null,
-                      ),
-                    const SizedBox(height: AppTheme.spaceL),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final wide = constraints.maxWidth >= 880;
-                        final cards = UagSubscriptionPlan.plans
-                            .map(
-                              (plan) => _PlanCard(
-                                plan: plan,
-                                activeTier:
-                                    entitlement?.tier ??
-                                    UagSubscriptionTier.free,
-                              ),
-                            )
-                            .toList(growable: false);
-                        if (!wide) {
-                          return Column(
-                            children: cards
-                                .map(
-                                  (card) => Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: AppTheme.spaceM,
-                                    ),
-                                    child: card,
-                                  ),
-                                )
-                                .toList(growable: false),
-                          );
-                        }
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: cards
-                              .map(
-                                (card) => Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 12),
-                                    child: card,
-                                  ),
-                                ),
-                              )
-                              .toList(growable: false),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppTheme.spaceL),
-                    const UagMatchIntelligenceComparisonCard(),
-                    const SizedBox(height: AppTheme.spaceL),
-                    _LaunchNotesCard(),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+          return ArcTacticalPageList(
+            width: ArcPageWidth.wide,
+            maxWidth: 1180,
+            padding: ArcLayoutTokens.pagePadding(context),
+            children: [
+              const ArcTacticalPanel(
+                icon: Icons.workspace_premium_outlined,
+                title: 'Access Command',
+                subtitle:
+                    'Plan limits, referrals, wallet state and launch entitlement controls.',
+                accent: ArcUiTokens.primaryAccent,
+                child: SizedBox.shrink(),
+              ),
+              if (entitlement != null)
+                _CurrentPlanCard(
+                  tier: entitlement.tier,
+                  subscriptionStatus: entitlement.subscriptionStatus,
+                  referralCode: entitlement.referralCode,
+                  pendingPence: entitlement.pendingBalancePence,
+                  availablePence: entitlement.availableBalancePence,
+                  totalEarnedPence: entitlement.totalEarnedPence,
+                  hasAdminBypass: entitlement.hasAdminBypass,
+                  onGenerateReferralCode: _ensureReferralCode,
+                  onRequestPayout:
+                      entitlement.availableBalancePence >=
+                          entitlement.limits.payoutThresholdPence
+                      ? () => _requestPayout(entitlement.availableBalancePence)
+                      : null,
+                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 880;
+                  final cards = UagSubscriptionPlan.plans
+                      .map(
+                        (plan) => _PlanCard(
+                          plan: plan,
+                          activeTier:
+                              entitlement?.tier ?? UagSubscriptionTier.free,
+                        ),
+                      )
+                      .toList(growable: false);
+                  if (!wide) {
+                    return Column(
+                      children: [
+                        for (var index = 0; index < cards.length; index++) ...[
+                          if (index > 0)
+                            const SizedBox(height: ArcUiTokens.gapM),
+                          cards[index],
+                        ],
+                      ],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var index = 0; index < cards.length; index++) ...[
+                        if (index > 0) const SizedBox(width: ArcUiTokens.gapM),
+                        Expanded(child: cards[index]),
+                      ],
+                    ],
+                  );
+                },
+              ),
+              const UagMatchIntelligenceComparisonCard(),
+              _LaunchNotesCard(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -179,29 +176,20 @@ class _CurrentPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
-      ),
+    return ArcTacticalPanel(
+      icon: Icons.account_balance_wallet_outlined,
+      title: 'Current Access',
+      accent: ArcUiTokens.primaryAccent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Current Access',
-            style: AppTheme.tradingHeading(
-              fontSize: 24,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceS),
-          Text(
             hasAdminBypass
                 ? 'Admin/dev bypass active. You can access everything while testing.'
                 : '${tier.label} - $subscriptionStatus',
-            style: const TextStyle(color: Colors.white70, height: 1.35),
+            style: ArcUiTokens.body(fontSize: 13),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: ArcUiTokens.gapM),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -212,7 +200,7 @@ class _CurrentPlanCard extends StatelessWidget {
               _Pill('Total Earned', _money(totalEarnedPence)),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: ArcUiTokens.gapM),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -245,60 +233,52 @@ class _PlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final active = plan.tier == activeTier;
     final highlight = plan.tier == UagSubscriptionTier.premium;
-    final borderColor = active
-        ? AppTheme.warningAmber
+    final accent = active
+        ? ArcUiTokens.warning
         : highlight
-        ? AppTheme.neonPink.withValues(alpha: 0.36)
-        : AppTheme.neonCyan.withValues(alpha: 0.24);
+        ? ArcUiTokens.secondaryAccent
+        : ArcUiTokens.primaryAccent;
 
-    return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(borderColor: borderColor),
+    return ArcTacticalPanel(
+      accent: accent,
+      padding: const EdgeInsets.all(ArcUiTokens.gapL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             plan.name,
-            style: AppTheme.tradingHeading(
-              fontSize: 24,
-              color: highlight ? AppTheme.neonPink : AppTheme.neonCyan,
-            ),
+            style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: ArcUiTokens.gapXS),
           Text(
             '${plan.monthlyPriceLabel} - ${plan.yearlyPriceLabel}',
-            style: AppTheme.bodyTextStyle(
+            style: ArcUiTokens.body(
               fontSize: 15,
-              color: Colors.white,
-              isBold: true,
+              color: ArcUiTokens.textPrimary,
+              weight: FontWeight.w700,
             ),
           ),
           if (plan.creatorOnboardingDiscountPercent > 0) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: ArcUiTokens.gapXS),
             Text(
               '${plan.creatorOnboardingDiscountPercent}% creator onboarding discount available for approved early creators.',
-              style: const TextStyle(color: Colors.white60, height: 1.35),
+              style: ArcUiTokens.bodySmall(),
             ),
           ],
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: ArcUiTokens.gapM),
           ...plan.features.map(
             (feature) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.check_circle_outline,
-                    size: 18,
-                    color: highlight ? AppTheme.neonPink : AppTheme.neonCyan,
-                  ),
+                  Icon(Icons.check_circle_outline, size: 18, color: accent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       feature,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        height: 1.25,
+                      style: ArcUiTokens.bodySmall(
+                        color: ArcUiTokens.textSecondary,
                       ),
                     ),
                   ),
@@ -306,7 +286,7 @@ class _PlanCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: ArcUiTokens.gapM),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -333,14 +313,13 @@ class _PlanCard extends StatelessWidget {
 class _LaunchNotesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.warningAmber.withValues(alpha: 0.24),
-      ),
-      child: const Text(
+    return ArcTacticalPanel(
+      icon: Icons.campaign_outlined,
+      title: 'Launch Model',
+      accent: ArcUiTokens.warning,
+      child: Text(
         'Launch model: Free users get strict weekly limits and ads. Essential users get 5x weekly limits, no ads, 10% follower discounts and 10% recurring referral commission. Premium users get unlimited access, no ads, 20% follower discounts and 20% recurring referral commission. Referral payouts stay pending for 30 days and become withdrawable after refund risk has passed.',
-        style: TextStyle(color: Colors.white70, height: 1.4),
+        style: ArcUiTokens.body(fontSize: 13),
       ),
     );
   }
@@ -355,18 +334,14 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: AppTheme.tradingPillDecoration(color: AppTheme.neonCyan),
+      padding: ArcUiTokens.chipPadding,
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.primaryAccent),
       child: Text(
         '$label: $value',
-        style: AppTheme.bodyTextStyle(
-          fontSize: 12,
-          color: AppTheme.neonCyan,
-          isBold: true,
-        ),
+        style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
       ),
     );
   }
 }
 
-String _money(int pence) => '£${(pence / 100).toStringAsFixed(2)}';
+String _money(int pence) => 'GBP ${(pence / 100).toStringAsFixed(2)}';

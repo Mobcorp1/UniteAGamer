@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class FeatureAccessFlag {
@@ -342,56 +343,18 @@ class FeatureLockedScreen extends StatelessWidget {
         subtitle: availability.isHidden ? 'Unavailable.' : 'Coming soon.',
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Padding(
-                padding: AppTheme.pagePadding,
-                child: Container(
-                  width: double.infinity,
-                  padding: AppTheme.sectionCardPadding,
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: AppTheme.neonPink.withValues(alpha: 0.28),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        availability.isHidden
-                            ? Icons.visibility_off_outlined
-                            : Icons.lock_outline_rounded,
-                        size: 38,
-                        color: availability.isHidden
-                            ? Colors.white60
-                            : AppTheme.neonPink,
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      Text(
-                        availability.isHidden ? 'Unavailable' : 'Coming Soon',
-                        textAlign: TextAlign.center,
-                        style: AppTheme.tradingHeading(fontSize: 26),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      Text(
-                        availability.isHidden
-                            ? '$title is currently hidden from closed beta users.'
-                            : '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+      body: ArcTacticalPageBody(
+        width: ArcPageWidth.form,
+        child: ArcTacticalStatePanel(
+          icon: availability.isHidden
+              ? Icons.visibility_off_outlined
+              : Icons.lock_outline_rounded,
+          title: availability.isHidden ? 'Unavailable' : 'Coming Soon',
+          message: availability.isHidden
+              ? '$title is currently hidden from closed beta users.'
+              : '$title is coming soon. Available in a future beta release. The Blueprint Tracker beta is currently the focus.',
+          accent: availability.isHidden ? Colors.white60 : AppTheme.neonPink,
+        ),
       ),
     );
   }
@@ -424,135 +387,83 @@ class FeatureComingSoonScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       appBar: UagAppBar(title: title, subtitle: 'Coming soon.'),
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: AppTheme.pagePadding,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 720),
-                  child: Container(
-                    width: double.infinity,
-                    padding: AppTheme.sectionCardPadding,
-                    decoration: AppTheme.tradingCardDecoration(
-                      borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: Image.asset(
-                                'assets/icon/uag_traders_icon_transparent.webp',
-                                width: 72,
-                                height: 72,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spaceM),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: AppTheme.tradingHeading(
-                                      fontSize: 28,
-                                    ),
-                                  ),
-                                  const SizedBox(height: AppTheme.spaceS),
-                                  Text(
-                                    'Closed Beta Status: Coming Soon',
-                                    style: AppTheme.bodyTextStyle(
-                                      fontSize: 12,
-                                      color: AppTheme.neonCyan,
-                                      isBold: true,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppTheme.spaceL),
-                        Text(
-                          description?.trim().isNotEmpty == true
-                              ? description!.trim()
-                              : '$title is visible during closed beta, but it is not ready to launch yet.',
+      body: ArcTacticalPageBody(
+        width: ArcPageWidth.form,
+        child: ArcTacticalPanel(
+          title: title,
+          subtitle: 'Closed Beta Status: Coming Soon',
+          icon: Icons.hourglass_top_rounded,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                description?.trim().isNotEmpty == true
+                    ? description!.trim()
+                    : '$title is visible during closed beta, but it is not ready to launch yet.',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 15,
+                  color: Colors.white70,
+                ).copyWith(height: 1.35),
+              ),
+              if (purpose?.trim().isNotEmpty == true) ...[
+                const SizedBox(height: AppTheme.spaceM),
+                Text(
+                  purpose!.trim(),
+                  style: AppTheme.bodyTextStyle(
+                    fontSize: 14,
+                    color: AppTheme.tradingMutedText,
+                  ).copyWith(height: 1.35),
+                ),
+              ],
+              const SizedBox(height: AppTheme.spaceM),
+              for (final benefit in resolvedBenefits)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.bolt_rounded,
+                        size: 16,
+                        color: AppTheme.neonPink,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          benefit,
                           style: AppTheme.bodyTextStyle(
-                            fontSize: 15,
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ).copyWith(height: 1.3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: AppTheme.spaceM),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Use Personalisation in Settings to register interest. Feature-live notifications are queued only when supported.',
+                          style: AppTheme.bodyTextStyle(
+                            fontSize: 12,
                             color: Colors.white70,
                           ),
                         ),
-                        if (purpose?.trim().isNotEmpty == true) ...[
-                          const SizedBox(height: AppTheme.spaceM),
-                          Text(
-                            purpose!.trim(),
-                            style: AppTheme.bodyTextStyle(
-                              fontSize: 14,
-                              color: AppTheme.tradingMutedText,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: AppTheme.spaceM),
-                        for (final benefit in resolvedBenefits)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.bolt_rounded,
-                                  size: 16,
-                                  color: AppTheme.neonPink,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    benefit,
-                                    style: AppTheme.bodyTextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        const SizedBox(height: AppTheme.spaceM),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Use Personalisation in Settings to register interest. Feature-live notifications are queued only when supported.',
-                                    style: AppTheme.bodyTextStyle(
-                                      fontSize: 12,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.bookmark_add_outlined),
-                            label: const Text('Register Interest'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: const Text('Register Interest'),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

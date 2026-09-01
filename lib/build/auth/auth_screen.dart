@@ -14,7 +14,8 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.d
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_form_dropdown_field.dart';
@@ -1452,102 +1453,28 @@ class _AuthScreenState extends State<AuthScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const _UagAuthBackdrop(),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                primary: false,
-                padding: EdgeInsets.fromLTRB(
-                  phone ? 16 : 34,
-                  phone ? 18 : 32,
-                  phone ? 16 : 34,
-                  28,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: phone ? 430 : 560,
-                    minHeight: size.height - 72,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildTopBrand(phone),
-                      SizedBox(height: phone ? 18 : 28),
-                      _buildAuthCard(phone),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+      body: ArcTacticalPageBody(
+        width: ArcPageWidth.form,
+        maxWidth: phone ? 430 : 560,
+        padding: EdgeInsets.fromLTRB(
+          phone ? 16 : 34,
+          phone ? 18 : 32,
+          phone ? 16 : 34,
+          28,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: size.height - 72),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildTopBrand(phone),
+              SizedBox(height: phone ? 18 : 28),
+              _buildAuthCard(phone),
+            ],
           ),
-        ],
+        ),
       ),
-    );
-  }
-}
-
-class _UagAuthBackdrop extends StatelessWidget {
-  const _UagAuthBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
-          filterQuality: FilterQuality.high,
-          errorBuilder: (_, _, _) => const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF02030B),
-                  AppTheme.cardBackgroundDeep,
-                  Color(0xFF050014),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.black.withValues(alpha: 0.28),
-                AppTheme.cardBackgroundDeep.withValues(alpha: 0.56),
-                Colors.black.withValues(alpha: 0.88),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0.12, -0.42),
-                  radius: 0.86,
-                  colors: [
-                    AppTheme.neonCyan.withValues(alpha: 0.20),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        const Positioned.fill(child: StaticWatermark()),
-      ],
     );
   }
 }

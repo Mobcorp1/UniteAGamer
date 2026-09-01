@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import '../repositories/legal_repository.dart';
 
 class FanDisclaimerDialog extends StatelessWidget {
@@ -9,19 +9,24 @@ class FanDisclaimerDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: AppTheme.neonPink.withValues(alpha: 0.24)),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+        side: BorderSide(
+          color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.28),
+        ),
       ),
       title: Text(
         'Fan Project Notice',
-        style: AppTheme.tradingHeading(fontSize: 24, color: AppTheme.neonPink),
+        style: ArcUiTokens.sectionTitle(
+          fontSize: 18,
+          color: ArcUiTokens.secondaryAccent,
+        ),
       ),
-      content: const SingleChildScrollView(
+      content: SingleChildScrollView(
         child: Text(
           UagFanProjectNotice.text,
-          style: TextStyle(color: Colors.white70, height: 1.45),
+          style: ArcUiTokens.body(fontSize: 13),
         ),
       ),
       actions: [

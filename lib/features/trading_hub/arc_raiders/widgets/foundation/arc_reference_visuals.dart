@@ -70,19 +70,47 @@ class ArcArtworkPlaceholder extends StatelessWidget {
         child: Image.asset(
           assetPath,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            alignment: Alignment.center,
+          errorBuilder: (context, error, stackTrace) => DecoratedBox(
             decoration: BoxDecoration(
-              color: ArcUiTokens.surfaceRaised,
+              color: ArcUiTokens.surfaceRaised.withValues(alpha: 0.74),
               border: Border.all(color: accent.withValues(alpha: 0.20)),
             ),
-            child: Text(
-              'ARTWORK PENDING',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 9,
-                color: ArcUiTokens.textTertiary,
-                isBold: true,
-              ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          accent.withValues(alpha: 0.055),
+                          Colors.transparent,
+                          ArcUiTokens.surfaceBase.withValues(alpha: 0.28),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 10,
+                  right: 10,
+                  top: 10,
+                  child: Container(
+                    height: 1,
+                    color: accent.withValues(alpha: 0.16),
+                  ),
+                ),
+                Positioned(
+                  left: 10,
+                  right: 10,
+                  bottom: 10,
+                  child: Container(
+                    height: 1,
+                    color: Colors.white.withValues(alpha: 0.06),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

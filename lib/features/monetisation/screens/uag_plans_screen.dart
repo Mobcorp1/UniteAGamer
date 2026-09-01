@@ -6,8 +6,9 @@ import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisatio
 import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_match_intelligence_comparison_card.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class UagPlansScreen extends StatelessWidget {
   static const routeName = '/monetisation/plans';
@@ -24,135 +25,78 @@ class UagPlansScreen extends StatelessWidget {
         subtitle: 'Free, Essential and Premium access.',
       ),
       drawer: const AppDrawer(),
-      body: Stack(
+      body: ArcTacticalPageList(
+        width: ArcPageWidth.wide,
+        maxWidth: 1180,
+        padding: ArcLayoutTokens.pagePadding(context),
         children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1180),
-                child: ListView(
-                  padding: AppTheme.pagePadding,
-                  children: [
-                    _hero(context),
-                    const SizedBox(height: AppTheme.spaceL),
-                    const UagImpactPotsPanel(showAdminDetail: false),
-                    const SizedBox(height: AppTheme.spaceL),
-                    StreamBuilder<UagEntitlement>(
-                      stream: repository.watchMyEntitlement(),
-                      builder: (context, snapshot) {
-                        final entitlement = snapshot.data;
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isWide = constraints.maxWidth >= 900;
-                            final cards = UagPlans.all
-                                .map(
-                                  (plan) => _PlanCard(
-                                    plan: plan,
-                                    isCurrentPlan:
-                                        entitlement?.tier == plan.tier,
-                                  ),
-                                )
-                                .toList(growable: false);
-                            if (isWide) {
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: cards
-                                    .map(
-                                      (card) => Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: AppTheme.spaceM,
-                                          ),
-                                          child: card,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(growable: false),
-                              );
-                            }
-                            return Column(
-                              children: cards
-                                  .map(
-                                    (card) => Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: AppTheme.spaceM,
-                                      ),
-                                      child: card,
-                                    ),
-                                  )
-                                  .toList(growable: false),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppTheme.spaceL),
-                    const UagMatchIntelligenceComparisonCard(),
-                    const SizedBox(height: AppTheme.spaceXL),
-                    _paymentsNote(),
-                  ],
-                ),
-              ),
-            ),
+          _hero(context),
+          const UagImpactPotsPanel(showAdminDetail: false),
+          StreamBuilder<UagEntitlement>(
+            stream: repository.watchMyEntitlement(),
+            builder: (context, snapshot) {
+              final entitlement = snapshot.data;
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth >= 900;
+                  final cards = UagPlans.all
+                      .map(
+                        (plan) => _PlanCard(
+                          plan: plan,
+                          isCurrentPlan: entitlement?.tier == plan.tier,
+                        ),
+                      )
+                      .toList(growable: false);
+                  if (isWide) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var index = 0; index < cards.length; index++) ...[
+                          if (index > 0)
+                            const SizedBox(width: ArcUiTokens.gapM),
+                          Expanded(child: cards[index]),
+                        ],
+                      ],
+                    );
+                  }
+                  return Column(
+                    children: [
+                      for (var index = 0; index < cards.length; index++) ...[
+                        if (index > 0) const SizedBox(height: ArcUiTokens.gapM),
+                        cards[index],
+                      ],
+                    ],
+                  );
+                },
+              );
+            },
           ),
+          const UagMatchIntelligenceComparisonCard(),
+          _paymentsNote(),
         ],
       ),
     );
   }
 
   Widget _hero(BuildContext context) {
-    return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
-        radius: 22,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Choose how hard you want UAG to work for you.',
-            style: AppTheme.tradingHeading(
-              fontSize: 26,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceS),
-          Text(
-            'Free keeps the app open to every player. Essential gives regular users enough weekly power to trade and match properly. Premium removes limits, removes ads and unlocks full creator earnings.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 15,
-              color: AppTheme.tradingMutedText,
-            ),
-          ),
-        ],
-      ),
+    return const ArcTacticalPanel(
+      icon: Icons.workspace_premium_outlined,
+      title: 'Choose how hard you want UAG to work for you.',
+      subtitle:
+          'Free keeps the app open to every player. Essential gives regular users enough weekly power to trade and match properly. Premium removes limits, removes ads and unlocks full creator earnings.',
+      accent: ArcUiTokens.primaryAccent,
+      child: SizedBox.shrink(),
     );
   }
 
   Widget _paymentsNote() {
-    return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.warningAmber.withValues(alpha: 0.22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Payment setup',
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.warningAmber,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceS),
-          Text(
-            'Stripe Checkout is wired for cards, Apple Pay, Google Pay and Bacs Direct Debit-ready subscriptions. PayPal is intentionally not active in this pass so subscriptions, referrals and webhook entitlements stay clean at launch.',
-            style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
-          ),
-        ],
+    return ArcTacticalPanel(
+      icon: Icons.payments_outlined,
+      title: 'Payment setup',
+      accent: ArcUiTokens.warning,
+      child: Text(
+        'Stripe Checkout is wired for cards, Apple Pay, Google Pay and Bacs Direct Debit-ready subscriptions. PayPal is intentionally not active in this pass so subscriptions, referrals and webhook entitlements stay clean at launch.',
+        style: ArcUiTokens.body(fontSize: 13),
       ),
     );
   }
@@ -166,17 +110,16 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final highlight = plan.tier == UagPlanTier.premium
-        ? AppTheme.neonPink
+    final accent = isCurrentPlan
+        ? ArcUiTokens.warning
+        : plan.tier == UagPlanTier.premium
+        ? ArcUiTokens.secondaryAccent
         : plan.tier == UagPlanTier.essential
-        ? AppTheme.neonCyan
-        : Colors.white70;
-    return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: highlight.withValues(alpha: isCurrentPlan ? 0.5 : 0.22),
-        radius: 20,
-      ),
+        ? ArcUiTokens.primaryAccent
+        : ArcUiTokens.textTertiary;
+    return ArcTacticalPanel(
+      accent: accent,
+      padding: const EdgeInsets.all(ArcUiTokens.gapL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -185,41 +128,34 @@ class _PlanCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   plan.tier.label,
-                  style: AppTheme.tradingHeading(
-                    fontSize: 24,
-                    color: highlight,
-                  ),
+                  style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
                 ),
               ),
               if (isCurrentPlan)
                 Container(
-                  padding: AppTheme.pillPadding,
-                  decoration: AppTheme.tradingPillDecoration(color: highlight),
+                  padding: ArcUiTokens.chipPadding,
+                  decoration: ArcUiTokens.chipDecoration(
+                    color: accent,
+                    selected: true,
+                  ),
                   child: Text(
                     'CURRENT',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 11,
-                      color: highlight,
-                      isBold: true,
-                    ),
+                    style: ArcUiTokens.label(color: accent),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: ArcUiTokens.gapS),
           Text(
             '${plan.monthlyPriceLabel}/month',
-            style: AppTheme.tradingHeading(fontSize: 28, color: Colors.white),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${plan.yearlyPriceLabel}/year',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 13,
-              color: AppTheme.tradingMutedText,
+            style: ArcUiTokens.numeric(
+              fontSize: 24,
+              color: ArcUiTokens.textPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: ArcUiTokens.gapXS),
+          Text('${plan.yearlyPriceLabel}/year', style: ArcUiTokens.bodySmall()),
+          const SizedBox(height: ArcUiTokens.gapM),
           _metric(
             'Trades',
             plan.isUnlimited ? 'Unlimited' : '${plan.weeklyTrades}/week',
@@ -251,21 +187,20 @@ class _PlanCard extends StatelessWidget {
                 ? 'Not allocated'
                 : '${plan.charityProfitPercent}% of net profit',
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: ArcUiTokens.gapM),
           ...plan.benefits.map(
             (benefit) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.check_circle_outline, size: 17, color: highlight),
+                  Icon(Icons.check_circle_outline, size: 17, color: accent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       benefit,
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
+                      style: ArcUiTokens.bodySmall(
+                        color: ArcUiTokens.textSecondary,
                       ),
                     ),
                   ),
@@ -273,7 +208,7 @@ class _PlanCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: ArcUiTokens.gapM),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -295,21 +230,13 @@ class _PlanCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 13,
-                color: AppTheme.tradingMutedText,
-              ),
-            ),
-          ),
+          Expanded(child: Text(label, style: ArcUiTokens.bodySmall())),
           Text(
             value,
-            style: AppTheme.bodyTextStyle(
+            style: ArcUiTokens.body(
               fontSize: 13,
-              color: Colors.white,
-              isBold: true,
+              color: ArcUiTokens.textPrimary,
+              weight: FontWeight.w700,
             ),
           ),
         ],

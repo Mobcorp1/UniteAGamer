@@ -404,8 +404,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               Icon(
                 icon,
                 size: 16,
@@ -456,8 +454,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       ),
       child: Row(
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           CircleAvatar(
             radius: 15,
             backgroundColor: _tierColor(target.tier).withValues(alpha: 0.16),
@@ -475,8 +471,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _RaidPlannerVisualLead(),
-                const SizedBox(height: 12),
                 Text(
                   blueprint?.name ?? target.blueprintId,
                   style: AppTheme.tradingHeading(fontSize: 17),
@@ -543,8 +537,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           Text(
             _tierHelp(tier, entitlement),
             style: AppTheme.bodyTextStyle(
@@ -599,8 +591,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           Icon(
             live ? Icons.flash_on_rounded : Icons.schedule_rounded,
             color: live ? AppTheme.neonPink : AppTheme.neonCyan,
@@ -610,8 +600,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _RaidPlannerVisualLead(),
-                const SizedBox(height: 12),
                 Text(
                   '${opportunity.rule.blueprintName} - ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
                   style: AppTheme.tradingHeading(fontSize: 17),
@@ -687,12 +675,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           Row(
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               Expanded(
                 child: Text(
                   opportunity.target.label,
@@ -783,8 +767,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               Text(
                 'UAG reads your missing Blueprint Tracker entries, your saved playtime and the regional ARC schedule. If your home region misses the window, it recommends the earliest server you can switch to.',
                 style: AppTheme.bodyTextStyle(
@@ -795,8 +777,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const _RaidPlannerVisualLead(),
-                  const SizedBox(height: 12),
                   Expanded(
                     child: DropdownButtonFormField<ArcServerRegion>(
                       initialValue: _selectedServerRegion,
@@ -892,8 +872,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               Text(
                 'Choose an in-game objective and UAG will resolve the condition, map window and best regional server against your playtime.',
                 style: AppTheme.bodyTextStyle(
@@ -975,8 +953,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               Text(
                 'Search a condition or map. UAG compares Europe, North America, Brazil, East Asia and Oceania and shows the earliest opportunities in your local time.',
                 style: AppTheme.bodyTextStyle(
@@ -1037,8 +1013,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const _RaidPlannerVisualLead(),
-                        const SizedBox(height: 12),
                         Text(
                           '${row.entry.conditionName} - ${row.entry.mapDisplayName}',
                           style: AppTheme.tradingHeading(fontSize: 15),
@@ -1196,8 +1170,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           Text(
             windows.isEmpty
                 ? 'No active play windows found in your availability. Set your availability in Your Hub Profile to unlock playtime planning.'
@@ -1290,12 +1262,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               Row(
                 children: [
-                  const _RaidPlannerVisualLead(),
-                  const SizedBox(height: 12),
                   const Icon(
                     Icons.radar_rounded,
                     color: AppTheme.neonCyan,
@@ -1372,8 +1340,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           Text(
             'Every Active Operations target now starts with seeded blueprint rules. Community reports only override the baseline when real player intel exists.',
             style: AppTheme.bodyTextStyle(
@@ -1414,12 +1380,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           Row(
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               const Icon(
                 Icons.timeline_rounded,
                 color: ArcUiTokens.primaryAccent,
@@ -1474,8 +1436,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           SizedBox(
             width: 46,
             child: Text(
@@ -1485,8 +1445,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           ),
           Column(
             children: [
-              const _RaidPlannerVisualLead(),
-              const SizedBox(height: 12),
               Container(
                 width: 9,
                 height: 9,
@@ -1515,12 +1473,8 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _RaidPlannerVisualLead(),
-                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      const _RaidPlannerVisualLead(),
-                      const SizedBox(height: 12),
                       Expanded(
                         child: Text(
                           opportunity.rule.blueprintName,
@@ -1619,103 +1573,97 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       RaidTargetTier.later,
     );
 
-    return UagPageCarousel(
-      pages: [
-        UagCarouselPage(
-          children: [
-            const _RaidPlannerVisualLead(),
-            const SizedBox(height: 12),
-            _entitlementCard(entitlement),
-            const SizedBox(height: 14),
-            _scheduleTimelineCard(
-              opportunities: allOpportunities,
-              utcNow: utcNow,
-            ),
-            const SizedBox(height: 14),
-            _regionalBlueprintPlannerCard(
-              states: states,
-              availability: availability,
-              utcNow: utcNow,
-            ),
-            const SizedBox(height: 14),
-            _regionalItemPlannerCard(
-              availability: availability,
-              utcNow: utcNow,
-            ),
-            const SizedBox(height: 14),
-            _availabilityPlannerCard(
-              allOpportunities: allOpportunities,
-              availability: availability,
-              utcNow: utcNow,
-            ),
-          ],
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1180),
+            child: const _RaidPlannerVisualLead(),
+          ),
         ),
-        UagCarouselPage(
-          children: [
-            const _RaidPlannerVisualLead(),
-            const SizedBox(height: 12),
-            _eventFinderCard(utcNow),
-          ],
-        ),
-        UagCarouselPage(
-          children: [
-            const _RaidPlannerVisualLead(),
-            const SizedBox(height: 12),
-            _communityIntelCard(intelTargets),
-          ],
-        ),
-        UagCarouselPage(
-          children: [
-            const _RaidPlannerVisualLead(),
-            const SizedBox(height: 12),
-            _targetTierCard(
-              tier: RaidTargetTier.activeHunt,
-              displayTargets: activeTargets,
-              storedTargets: syncedTargets,
-              entitlement: entitlement,
-              states: states,
-              initiallyExpanded: true,
-            ),
-          ],
-        ),
-        UagCarouselPage(
-          children: [
-            const _RaidPlannerVisualLead(),
-            const SizedBox(height: 12),
-            _targetTierCard(
-              tier: RaidTargetTier.nextUp,
-              displayTargets: nextTargets,
-              storedTargets: syncedTargets,
-              entitlement: entitlement,
-              states: states,
-              initiallyExpanded: true,
-            ),
-          ],
-        ),
-        UagCarouselPage(
-          children: [
-            const _RaidPlannerVisualLead(),
-            const SizedBox(height: 12),
-            _targetTierCard(
-              tier: RaidTargetTier.later,
-              displayTargets: laterTargets,
-              storedTargets: syncedTargets,
-              entitlement: entitlement,
-              states: states,
-              initiallyExpanded: true,
-            ),
-            const SizedBox(height: 14),
-            if (syncedTargets.isNotEmpty)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: _smallButton(
-                  label: 'Clear Planner Targets',
-                  icon: Icons.clear_all_rounded,
-                  color: Colors.redAccent,
-                  onTap: () => _clearTargets(states),
-                ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: UagPageCarousel(
+            pages: [
+              UagCarouselPage(
+                children: [
+                  _entitlementCard(entitlement),
+                  const SizedBox(height: 14),
+                  _scheduleTimelineCard(
+                    opportunities: allOpportunities,
+                    utcNow: utcNow,
+                  ),
+                  const SizedBox(height: 14),
+                  _regionalBlueprintPlannerCard(
+                    states: states,
+                    availability: availability,
+                    utcNow: utcNow,
+                  ),
+                  const SizedBox(height: 14),
+                  _regionalItemPlannerCard(
+                    availability: availability,
+                    utcNow: utcNow,
+                  ),
+                  const SizedBox(height: 14),
+                  _availabilityPlannerCard(
+                    allOpportunities: allOpportunities,
+                    availability: availability,
+                    utcNow: utcNow,
+                  ),
+                ],
               ),
-          ],
+              UagCarouselPage(children: [_eventFinderCard(utcNow)]),
+              UagCarouselPage(children: [_communityIntelCard(intelTargets)]),
+              UagCarouselPage(
+                children: [
+                  _targetTierCard(
+                    tier: RaidTargetTier.activeHunt,
+                    displayTargets: activeTargets,
+                    storedTargets: syncedTargets,
+                    entitlement: entitlement,
+                    states: states,
+                    initiallyExpanded: true,
+                  ),
+                ],
+              ),
+              UagCarouselPage(
+                children: [
+                  _targetTierCard(
+                    tier: RaidTargetTier.nextUp,
+                    displayTargets: nextTargets,
+                    storedTargets: syncedTargets,
+                    entitlement: entitlement,
+                    states: states,
+                    initiallyExpanded: true,
+                  ),
+                ],
+              ),
+              UagCarouselPage(
+                children: [
+                  _targetTierCard(
+                    tier: RaidTargetTier.later,
+                    displayTargets: laterTargets,
+                    storedTargets: syncedTargets,
+                    entitlement: entitlement,
+                    states: states,
+                    initiallyExpanded: true,
+                  ),
+                  const SizedBox(height: 14),
+                  if (syncedTargets.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: _smallButton(
+                        label: 'Clear Planner Targets',
+                        icon: Icons.clear_all_rounded,
+                        color: Colors.redAccent,
+                        onTap: () => _clearTargets(states),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1733,8 +1681,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       ),
       child: Row(
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           const Icon(
             Icons.workspace_premium_outlined,
             color: AppTheme.neonPink,
@@ -1763,8 +1709,6 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const _RaidPlannerVisualLead(),
-          const SizedBox(height: 12),
           const ArcCompanionBottomDock(activeLabel: 'Raid Timeline'),
           ArcBottomActionDock(
             actions: [
@@ -1911,12 +1855,8 @@ class _BlueprintSearchSheetState extends State<_BlueprintSearchSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _RaidPlannerVisualLead(),
-            const SizedBox(height: 12),
             Row(
               children: [
-                const _RaidPlannerVisualLead(),
-                const SizedBox(height: 12),
                 Expanded(
                   child: Text(
                     'Add ${widget.tier.label} Target',
