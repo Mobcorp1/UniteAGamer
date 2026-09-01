@@ -816,7 +816,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Operator',
-          price: '£4.99/month',
+          price: 'Â£4.99/month',
           summary:
               'More listings, more offers, monthly operations and progression.',
           commission: 'Starts at 5% commission path, can progress toward 15%.',
@@ -825,7 +825,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         _tierOption(
           tier: 'Overseer',
-          price: '£8.99/month',
+          price: 'Â£8.99/month',
           summary:
               'Priority trading, stronger referral tools and future smart assist.',
           commission: 'Starts at 10% commission path, can progress toward 25%.',
@@ -1459,6 +1459,7 @@ class _AuthScreenState extends State<AuthScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
+                primary: false,
                 padding: EdgeInsets.fromLTRB(
                   phone ? 16 : 34,
                   phone ? 18 : 32,

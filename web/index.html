@@ -108,21 +108,15 @@
       -webkit-backdrop-filter: blur(4px);
     }
 
-    .uag-boot-mark {
-      width: 62px;
-      height: 62px;
+    .uag-boot-logo {
+      display: block;
+      width: 190px;
+      height: 190px;
       margin: 0 auto 16px;
-      display: grid;
-      place-items: center;
-      border: 2px solid var(--uag-cyan);
-      border-radius: 50%;
-      color: var(--uag-cyan);
-      font-weight: 800;
-      font-size: 19px;
-      letter-spacing: -1px;
-      box-shadow:
-        0 0 16px rgba(16, 231, 243, .42),
-        inset 0 0 14px rgba(16, 231, 243, .12);
+      object-fit: contain;
+      filter:
+        drop-shadow(0 0 12px rgba(16, 231, 243, .48))
+        drop-shadow(0 0 24px rgba(213, 43, 213, .20));
     }
 
     .uag-boot-title {
@@ -195,10 +189,9 @@
         padding: 28px 22px 24px;
       }
 
-      .uag-boot-mark {
-        width: 54px;
-        height: 54px;
-        font-size: 16px;
+      .uag-boot-logo {
+        width: 142px;
+        height: 142px;
       }
 
       .uag-boot-status {
@@ -238,7 +231,7 @@
 <body>
   <div id="uag-boot" aria-label="Loading UAG ARC Raiders Hub">
     <div class="uag-boot-panel">
-      <div class="uag-boot-mark" aria-hidden="true">UA</div>
+      <img class="uag-boot-logo" src="assets/assets/icon/uag_traders_icon_transparent.webp" alt="" aria-hidden="true">
       <h1 class="uag-boot-title">UAG ARC RAIDERS HUB</h1>
       <div class="uag-boot-status">Initialising systems</div>
       <div class="uag-loader-shell" aria-hidden="true">

@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trust/screens/arc_raider_contracts_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/wall_of_legends_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_system_detail_mapper.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_widgets.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
-import 'package:uag_arc_raiders_hub/widgets/uag_page_carousel.dart';
 
 class ArcCommandCentreContent extends StatefulWidget {
   const ArcCommandCentreContent({
@@ -40,19 +48,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget build(BuildContext context) {
     final commandState = widget.commandState;
     final carouselTiles = _systemCarouselTiles(commandState);
-    final selectedSystemTile = carouselTiles.isEmpty
-        ? null
-        : carouselTiles[_safeSystemIndex(carouselTiles.length)];
-    final selectedSystemPanel = selectedSystemTile == null
-        ? null
-        : ArcCommandSystemDetailMapper.panelFor(
-            state: commandState,
-            title: selectedSystemTile.title,
-            value: selectedSystemTile.value,
-            detail: selectedSystemTile.detail,
-            status: selectedSystemTile.status,
-            action: selectedSystemTile.action,
-          );
     final commandMoves = _commandMoves(commandState).take(6).toList();
 
     return ArcRaidersPageList(
@@ -91,11 +86,11 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           ),
           const SizedBox(height: 8),
         ],
-        _topCommandDeck(commandState, commandMoves),
+        _commandHero(commandState, commandMoves),
         const SizedBox(height: 8),
-        _systemCarousel(carouselTiles),
+        _topCommandDeck(commandState, commandMoves, carouselTiles),
         const SizedBox(height: 8),
-        _lowerUtilityDeck(commandState, selectedSystemPanel),
+        _featuresUtilityDeck(carouselTiles),
       ],
     );
   }
@@ -105,9 +100,149 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return _systemsIndex.clamp(0, tileCount - 1).toInt();
   }
 
+  Widget _commandHero(
+    ArcCommandCentreState commandState,
+    List<_CommandMoveData> commandMoves,
+  ) {
+    final checklist = commandState.checklist.take(9).toList(growable: false);
+    final completedChecks = checklist.where((item) {
+      return widget.checklistState[item.id] ?? item.doneByDefault;
+    }).length;
+    final openChecks = checklist.length - completedChecks;
+    final focus = commandMoves.isEmpty ? null : commandMoves.first;
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 154),
+      padding: const EdgeInsets.all(18),
+      decoration: _imageDecoration(
+        _operationAsset('claim_operations_card.webp'),
+        AppTheme.neonCyan,
+        radius: 16,
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 700;
+          const title = 'RAIDER COMMAND CENTRE';
+          final subtitle = focus == null
+              ? 'Live ARC intelligence, priorities and daily operations in one place.'
+              : 'Priority: ${_cleanText(focus.title)}';
+
+          final copy = Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ARC OPERATIONS',
+                style: AppTheme.bodyTextStyle(
+                  fontSize: 10,
+                  color: AppTheme.neonCyan,
+                  isBold: true,
+                ).copyWith(letterSpacing: 1.4),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                title,
+                maxLines: compact ? 2 : 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.tradingHeading(
+                  fontSize: compact ? 22 : 28,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.bodyTextStyle(
+                  fontSize: compact ? 11 : 12,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          );
+
+          final status = Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.end,
+            children: [
+              _heroMetric(
+                label: 'NEXT MOVES',
+                value: '${commandMoves.length}',
+                accent: AppTheme.neonCyan,
+              ),
+              _heroMetric(
+                label: 'DAILY OPEN',
+                value: '$openChecks',
+                accent: openChecks == 0
+                    ? Colors.lightGreenAccent
+                    : AppTheme.neonPink,
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                copy,
+                const SizedBox(height: 14),
+                Align(alignment: Alignment.centerLeft, child: status),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: copy),
+              const SizedBox(width: 18),
+              status,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _heroMetric({
+    required String label,
+    required String value,
+    required Color accent,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 86),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.34)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: AppTheme.tradingHeading(fontSize: 19, color: accent),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            style: AppTheme.bodyTextStyle(
+              fontSize: 8,
+              color: Colors.white60,
+              isBold: true,
+            ).copyWith(letterSpacing: .7),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _topCommandDeck(
     ArcCommandCentreState commandState,
     List<_CommandMoveData> commandMoves,
+    List<_CommandTileData> carouselTiles,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -116,10 +251,7 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [_actionConsole(commandMoves)],
         );
-        final secondary = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [_dailyChecklist(commandState.checklist)],
-        );
+        final secondary = _dailyChecklist(commandState.checklist);
 
         if (!desktop) {
           return Column(
@@ -140,48 +272,26 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     );
   }
 
-  Widget _lowerUtilityDeck(
-    ArcCommandCentreState commandState,
-    ArcCommandSummaryPanel? selectedSystemPanel,
-  ) {
-    final detail = _detailAccordion(
-      title: 'System Detail',
-      subtitle: selectedSystemPanel == null
-          ? 'Select a system to inspect its current status.'
-          : '${selectedSystemPanel.title} status and supporting checks.',
-      accent: AppTheme.neonCyan,
-      initiallyExpanded: false,
-      children: [
-        if (selectedSystemPanel == null)
-          _quietLine('Select a system to inspect its current status.')
-        else ...[
-          _summaryPanel(selectedSystemPanel),
-          const SizedBox(height: 8),
-          _systemDetailGrid([
-            for (final panel in ArcCommandSystemDetailMapper.overviewPanels(
-              commandState,
-              selectedSystemPanel,
-            ))
-              _summaryPanel(panel),
-            _resourceSummary(commandState.resources),
-          ]),
-        ],
-      ],
-    );
-
+  Widget _featuresUtilityDeck(List<_CommandTileData> carouselTiles) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 760) {
+        if (constraints.maxWidth < 900) {
           return Column(
-            children: [_seasonResetEntry(), const SizedBox(height: 8), detail],
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _systemCarousel(carouselTiles),
+              const SizedBox(height: 8),
+              _seasonResetEntry(),
+            ],
           );
         }
+
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _seasonResetEntry()),
+            Expanded(flex: 9, child: _systemCarousel(carouselTiles)),
             const SizedBox(width: 10),
-            Expanded(child: detail),
+            Expanded(flex: 3, child: _seasonResetEntry()),
           ],
         );
       },
@@ -257,58 +367,152 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
   Widget _systemCarousel(List<_CommandTileData> tiles) {
     if (tiles.isEmpty) return const SizedBox.shrink();
 
+    final activeIndex = _safeSystemIndex(tiles.length);
+
+    void rotate(int delta) {
+      if (tiles.length <= 1) return;
+      setState(() {
+        _systemsIndex = (_systemsIndex + delta) % tiles.length;
+        if (_systemsIndex < 0) _systemsIndex += tiles.length;
+      });
+    }
+
+    final previousIndex = tiles.length <= 1
+        ? activeIndex
+        : (activeIndex - 1 + tiles.length) % tiles.length;
+    final nextIndex = tiles.length <= 1
+        ? activeIndex
+        : (activeIndex + 1) % tiles.length;
+
     return ArcCommandCentreCard(
       accent: AppTheme.neonCyan,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final desktop = constraints.maxWidth >= 760;
-          final deckHeight = desktop ? 132.0 : 128.0;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          final compact = constraints.maxWidth < 620;
+          final ringHeight = compact ? 150.0 : 172.0;
+
+          Widget sideCard(_CommandTileData tile) {
+            return Opacity(
+              opacity: 0.54,
+              child: Transform.scale(
+                scale: compact ? 0.78 : 0.82,
+                child: _carouselCard(tile, active: false),
+              ),
+            );
+          }
+
+          final ring = SizedBox(
+            height: ringHeight,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragEnd: (details) {
+                final velocity = details.primaryVelocity ?? 0;
+                if (velocity.abs() < 120) return;
+                rotate(velocity < 0 ? 1 : -1);
+              },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Expanded(
-                    child: ArcCommandSectionHeader(
-                      title: 'FEATURES',
-                      subtitle: 'Swipe to explore your ARC systems.',
-                      accent: AppTheme.neonCyan,
+                  Expanded(
+                    flex: compact ? 2 : 3,
+                    child: sideCard(tiles[previousIndex]),
+                  ),
+                  const SizedBox(width: 2),
+                  _featureArrow(
+                    icon: Icons.chevron_left_rounded,
+                    tooltip: 'Previous feature',
+                    onPressed: () => rotate(-1),
+                  ),
+                  SizedBox(width: compact ? 3 : 6),
+                  Expanded(
+                    flex: compact ? 5 : 6,
+                    child: Transform.scale(
+                      scale: compact ? 1.02 : 1.08,
+                      child: _carouselCard(tiles[activeIndex], active: true),
                     ),
+                  ),
+                  SizedBox(width: compact ? 3 : 6),
+                  _featureArrow(
+                    icon: Icons.chevron_right_rounded,
+                    tooltip: 'Next feature',
+                    onPressed: () => rotate(1),
+                  ),
+                  const SizedBox(width: 2),
+                  Expanded(
+                    flex: compact ? 2 : 3,
+                    child: sideCard(tiles[nextIndex]),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: deckHeight,
-                child: UagPageCarousel(
-                  key: ValueKey('command-systems-${tiles.length}'),
-                  viewportFraction: 0.58,
-                  tabletViewportFraction: 0.34,
-                  webViewportFraction: 0.225,
-                  showIndicator: true,
-                  indicatorPadding: EdgeInsets.zero,
-                  onPageChanged: (index) {
-                    setState(() => _systemsIndex = index);
-                  },
-                  enable3d: true,
-                  pages: [
-                    for (var i = 0; i < tiles.length; i++)
-                      Padding(
-                        padding: EdgeInsets.only(
-                          right: i == tiles.length - 1 ? 0 : 10,
-                        ),
-                        child: _carouselCard(
-                          tiles[i],
-                          active: i == _safeSystemIndex(tiles.length),
-                        ),
-                      ),
-                  ],
-                ),
+            ),
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ArcCommandSectionHeader(
+                title: 'FEATURES',
+                subtitle: 'Rotate through your ARC systems.',
+                accent: AppTheme.neonCyan,
               ),
+              const SizedBox(height: 7),
+              ring,
+              const SizedBox(height: 5),
+              _featureRingIndicator(tiles.length, activeIndex),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _featureRingIndicator(int count, int activeIndex) {
+    if (count <= 1) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (index) {
+        final active = index == activeIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: active ? 18 : 5,
+          height: 5,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: active
+                ? AppTheme.neonCyan
+                : Colors.white.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(99),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: AppTheme.neonCyan.withValues(alpha: 0.42),
+                      blurRadius: 8,
+                    ),
+                  ]
+                : null,
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _featureArrow({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon, size: 27),
+      style: IconButton.styleFrom(
+        foregroundColor: AppTheme.neonCyan,
+        backgroundColor: Colors.black.withValues(alpha: 0.52),
+        side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.52)),
+        minimumSize: const Size(42, 42),
+        padding: EdgeInsets.zero,
       ),
     );
   }
@@ -636,34 +840,53 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
 
   List<_CommandTileData> _systemCarouselTiles(ArcCommandCentreState state) {
     final loadout = _snapshotByLabel(state.snapshots, 'Favourite Loadout');
+
+    _CommandTileData routeTile({
+      required String title,
+      required String detail,
+      required String routeName,
+      required String image,
+      String value = 'Open',
+      ArcCommandStatus status = ArcCommandStatus.active,
+    }) {
+      return _CommandTileData(
+        title: title,
+        value: value,
+        detail: detail,
+        status: status,
+        action: ArcCommandAction(label: 'Open $title', routeName: routeName),
+        image: image,
+      );
+    }
+
     return [
       _tileFromPanel(
         state.blueprintSummary,
         image: _operationAsset('complete_blueprint_collection_card.webp'),
+      ),
+      routeTile(
+        title: 'Scrappy Tracker',
+        detail: 'Track Scrappy upgrade resources and requirements.',
+        routeName: ScrappyGridScreen.routeName,
+        image: _operationAsset('missing_resources_card.webp'),
       ),
       _tileFromPanel(
         state.benchSummary,
         image: _operationAsset('upgrade_gunsmith_card.webp'),
       ),
       _tileFromPanel(
-        state.resourceSummary,
-        image: _operationAsset('missing_resources_card.webp'),
+        state.questSummary,
+        image: _operationAsset('track_quests_card.webp'),
       ),
       _tileFromPanel(
         state.raidIntelligenceSummary,
         image: _imageForAction(state.raidIntelligenceSummary.action),
       ),
-      _tileFromPanel(
-        state.questSummary,
-        image: _operationAsset('track_quests_card.webp'),
-      ),
-      _tileFromPanel(
-        state.operationsSummary,
-        image: _operationAsset('claim_operations_card.webp'),
-      ),
-      _tileFromPanel(
-        state.weeklyTraderSummary,
-        image: _operationAsset('check_nomadic_trader_card.webp'),
+      routeTile(
+        title: 'Raid Planner',
+        detail: 'Plan raid objectives, routes and targets.',
+        routeName: RaidPlannerScreen.routeName,
+        image: _operationAsset('weekly_raid_card.webp'),
       ),
       _tileFromMetric(
         loadout ??
@@ -679,6 +902,58 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         ),
         image: _operationAsset('finish_favourite_loadout_card.webp'),
       ),
+      routeTile(
+        title: 'Trading Hub',
+        detail: 'Listings, offers, watches and trade sessions.',
+        routeName: TraderHubScreen.routeName,
+        image: _operationAsset('review_trade_activity_card.webp'),
+      ),
+      routeTile(
+        title: 'Smart Trade Assist',
+        detail: 'Turn inventory needs into smarter trade decisions.',
+        routeName: SmartTradeAssistScreen.routeName,
+        image: _operationAsset('review_trade_activity_card.webp'),
+      ),
+      routeTile(
+        title: 'Match Raider',
+        detail: 'Find compatible Raiders and squad connections.',
+        routeName: ArcMatchRiderScreen.routeName,
+        image: _operationAsset('arc_command_centre_background.webp'),
+      ),
+      routeTile(
+        title: 'Report a Rat',
+        detail: 'Community reports, evidence and Raider contracts.',
+        routeName: ArcRaiderContractsScreen.routeName,
+        image: _operationAsset('arc_command_centre_background.webp'),
+      ),
+      routeTile(
+        title: 'Play Like a Pro',
+        detail: 'Expert tactics, guidance and advanced play.',
+        routeName: PlayLikeAProScreen.routeName,
+        image: _operationAsset('weekly_raid_card.webp'),
+      ),
+      routeTile(
+        title: 'Communications',
+        detail: 'Notifications, invites and trading updates.',
+        routeName: TradingNotificationsScreen.routeName,
+        image: _operationAsset('arc_command_centre_background.webp'),
+      ),
+      routeTile(
+        title: 'Wall of Legends',
+        detail: 'Community recognition and Raider achievements.',
+        routeName: WallOfLegendsScreen.routeName,
+        image: _operationAsset('arc_command_centre_background.webp'),
+      ),
+      _tileFromPanel(
+        state.operationsSummary,
+        image: _operationAsset('claim_operations_card.webp'),
+      ),
+      routeTile(
+        title: 'Nomadic Trader',
+        detail: 'Review the current weekly trader rotation.',
+        routeName: NomadicTraderScreen.routeName,
+        image: _operationAsset('check_nomadic_trader_card.webp'),
+      ),
       _CommandTileData(
         title: 'Tool Deck',
         value: 'All tools',
@@ -693,160 +968,13 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     ];
   }
 
-  Widget _systemDetailGrid(List<Widget> children) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final safeMaxWidth =
-            constraints.maxWidth.isFinite && constraints.maxWidth > 0
-            ? constraints.maxWidth
-            : 320.0;
-        final columns = safeMaxWidth >= 620 ? 2 : 1;
-        const spacing = 8.0;
-        final width = (safeMaxWidth - (spacing * (columns - 1))) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final child in children) SizedBox(width: width, child: child),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _summaryPanel(ArcCommandSummaryPanel panel) {
-    final accent = arcCommandStatusAccent(panel.status);
-    return _tapSurface(
-      action: panel.action,
-      child: ArcCommandCentreCard(
-        accent: accent,
-        padding: const EdgeInsets.all(8),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 118),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(_statusIcon(panel.status), color: accent, size: 17),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _cleanText(panel.title).toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.tradingHeading(
-                        fontSize: 13,
-                        color: accent,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  ArcCommandStatusPill(
-                    label: panel.statusLabel,
-                    status: panel.status,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _panelSubtitle(panel),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 10,
-                  color: Colors.white70,
-                  isBold: true,
-                ),
-              ),
-              const SizedBox(height: 6),
-              ArcCommandDetailList(
-                details: _shortDetails(panel).take(2).toList(growable: false),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'TAP TO OPEN',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 8,
-                  color: accent,
-                  isBold: true,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _resourceSummary(List<ArcCommandResourceStatus> resources) {
-    return ArcCommandCentreCard(
-      accent: Colors.lightGreenAccent,
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ArcCommandSectionHeader(
-            title: 'Resource Summary',
-            subtitle: 'Resource readiness.',
-            accent: Colors.lightGreenAccent,
-          ),
-          const SizedBox(height: 8),
-          if (resources.isEmpty)
-            _quietLine(
-              'No resource signal yet. Keep tracking inventory and this panel will surface shortages.',
-            )
-          else
-            for (final resource in resources.take(4)) ...[
-              _resourceRow(resource),
-              if (resource != resources.take(4).last) const SizedBox(height: 6),
-            ],
-        ],
-      ),
-    );
-  }
-
-  Widget _resourceRow(ArcCommandResourceStatus resource) {
-    final accent = arcCommandStatusAccent(resource.status);
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: _innerDecoration(accent),
-      child: Row(
-        children: [
-          Icon(_statusIcon(resource.status), color: accent, size: 15),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _cleanText(resource.name),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 11,
-                color: Colors.white,
-                isBold: true,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '${resource.ownedLabel} / ${resource.requiredLabel}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white54),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _dailyChecklist(List<ArcCommandChecklistItem> checklist) {
     final items = checklist.take(9).toList(growable: false);
     return _detailAccordion(
       title: 'Daily Mission Board',
       subtitle: 'Fast daily checks. Tap a tile.',
       accent: AppTheme.neonCyan,
-      initiallyExpanded: false,
+      initiallyExpanded: true,
       children: items.isEmpty
           ? [_quietLine('No checklist items are waiting.')]
           : [
@@ -1047,26 +1175,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     if (!active) return surface;
 
     return ArcElectricActionBorder(active: active, radius: 20, child: surface);
-  }
-
-  String _panelSubtitle(ArcCommandSummaryPanel panel) {
-    final title = _cleanText(panel.title).toLowerCase();
-    if (title.contains('decision')) return 'Primary command signal.';
-    if (title.contains('operation')) return 'Operations and vault status.';
-    if (title.contains('quest')) return 'Quest tracker state.';
-    if (title.contains('nomadic')) return 'Trader reset and stock state.';
-    return _shortActionText(panel.body);
-  }
-
-  List<String> _shortDetails(ArcCommandSummaryPanel panel) {
-    final title = _cleanText(panel.title).toLowerCase();
-    if (title.contains('decision')) {
-      return panel.details
-          .where((detail) => !detail.toLowerCase().contains('ranked from'))
-          .map(_shortActionText)
-          .toList(growable: false);
-    }
-    return panel.details.map(_shortActionText).toList(growable: false);
   }
 
   Widget _quietLine(String text) {
@@ -1382,14 +1490,6 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           accent.withValues(alpha: 0.10),
         ],
       ),
-    );
-  }
-
-  BoxDecoration _innerDecoration(Color accent) {
-    return BoxDecoration(
-      color: Colors.black.withValues(alpha: 0.20),
-      borderRadius: BorderRadius.circular(15),
-      border: Border.all(color: accent.withValues(alpha: 0.20)),
     );
   }
 

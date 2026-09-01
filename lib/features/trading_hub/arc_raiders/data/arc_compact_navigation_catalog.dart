@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
@@ -99,6 +100,25 @@ class ArcCompactNavigationCatalog {
           personalisationFeature: ArcPersonalisationFeature.blueprintTracker,
         ),
         ArcCompactNavigationItem(
+          label: 'Scrappy Tracker',
+          icon: Icons.recycling_rounded,
+          routeName: ScrappyGridScreen.routeName,
+          accessFlag: FeatureAccessFlag.scrappyTracker,
+          personalisationFeature: ArcPersonalisationFeature.scrappyTracker,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Bench Tracker',
+          icon: Icons.handyman_outlined,
+          routeName: ScrappyGridScreen.benchRouteName,
+          accessFlag: FeatureAccessFlag.benchTracker,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Quest Tracker',
+          icon: Icons.assignment_turned_in_outlined,
+          routeName: ScrappyGridScreen.questRouteName,
+          accessFlag: FeatureAccessFlag.questTracker,
+        ),
+        ArcCompactNavigationItem(
           label: 'Progress Trackers',
           icon: Icons.track_changes_rounded,
           routeName: ArcProgressTrackersScreen.routeName,
@@ -167,6 +187,19 @@ class ArcCompactNavigationCatalog {
           ],
         ),
         ArcCompactNavigationItem(
+          label: 'Smart Trade Assist',
+          icon: Icons.auto_awesome_outlined,
+          routeName: SmartTradeAssistScreen.routeName,
+          accessFlag: FeatureAccessFlag.smartTradeAssist,
+          personalisationFeature: ArcPersonalisationFeature.trading,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Nomadic Trader',
+          icon: Icons.local_shipping_outlined,
+          routeName: NomadicTraderScreen.routeName,
+          personalisationFeature: ArcPersonalisationFeature.trading,
+        ),
+        ArcCompactNavigationItem(
           label: 'Match Raider',
           icon: Icons.groups_2_outlined,
           routeName: ArcMatchRiderScreen.routeName,
@@ -186,6 +219,22 @@ class ArcCompactNavigationCatalog {
           routeName: ArcRaiderContractsScreen.routeName,
           accessFlag: FeatureAccessFlag.raiderContracts,
           personalisationFeature: ArcPersonalisationFeature.profile,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Play Like a Pro',
+          icon: Icons.school_outlined,
+          routeName: PlayLikeAProScreen.routeName,
+          accessFlag: FeatureAccessFlag.playLockerPro,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Wall of Legends',
+          icon: Icons.emoji_events_outlined,
+          routeName: WallOfLegendsScreen.routeName,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Operations',
+          icon: Icons.military_tech_outlined,
+          routeName: OperationsCommandScreen.routeName,
         ),
         ArcCompactNavigationItem(
           label: 'My Hub',

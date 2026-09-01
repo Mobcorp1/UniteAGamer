@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_help_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
 import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart';
 
 class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -31,6 +33,20 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 600;
     final baseActions = <Widget>[
+      IconButton(
+        tooltip: 'Communications',
+        icon: const Icon(Icons.notifications_none_rounded, size: 19),
+        onPressed: () => Navigator.of(
+          context,
+        ).pushNamed(TradingNotificationsScreen.routeName),
+      ),
+      if (!compact)
+        IconButton(
+          tooltip: 'Help Centre',
+          icon: const Icon(Icons.help_outline_rounded, size: 19),
+          onPressed: () =>
+              Navigator.of(context).pushNamed(ArcHelpCentreScreen.routeName),
+        ),
       ...(actions ?? const <Widget>[]),
       if (showLogout)
         IconButton(
