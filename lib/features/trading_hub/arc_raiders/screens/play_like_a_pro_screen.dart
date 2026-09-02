@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/widgets/dose_action_button.dart';
 import 'package:uag_arc_raiders_hub/widgets/dose_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class PlayLikeAProScreen extends StatefulWidget {
@@ -522,8 +523,8 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    ' ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ',
-                    style: TextStyle(color: color, fontSize: 18),
+                    '- ',
+                    style: ArcUiTokens.body(fontSize: 18, color: color, weight: FontWeight.w700),
                   ),
                   Expanded(
                     child: Text(
@@ -551,9 +552,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
         backgroundColor: Colors.transparent,
         title: Text(
           'Play Like a Pro',
-          style: AppTheme.tradingHeading(
+          style: ArcUiTokens.sectionTitle(
             fontSize: 25,
-            color: AppTheme.neonCyan,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
         bottom: PreferredSize(
@@ -601,7 +602,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: ArcUiTokens.primaryAccent),
+            );
           }
 
           if (snapshot.hasError) {
@@ -609,13 +612,16 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
               child: Container(
                 margin: const EdgeInsets.all(AppTheme.spaceL),
                 padding: const EdgeInsets.all(AppTheme.spaceL),
-                decoration: AppTheme.tradingCardDecoration(
-                  borderColor: Colors.redAccent.withValues(alpha: 0.30),
+                decoration: ArcUiTokens.surfaceDecoration(
+                  role: ArcSurfaceRole.warning,
+                  accent: ArcUiTokens.danger,
+                  radius: ArcUiTokens.radiusXL,
+                  borderOpacity: 0.30,
                 ),
                 child: Text(
                   'Could not load Play Like a Pro: ${snapshot.error}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70),
+                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
                 ),
               ),
             );
@@ -630,7 +636,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
           final latestDate = state.history.isEmpty
               ? null
               : DateFormat(
-                  'dd MMM ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ HH:mm',
+                  'dd MMM - HH:mm',
                 ).format(state.history.first.createdAt);
 
           return SafeArea(
@@ -642,26 +648,27 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spaceL),
-                      decoration: AppTheme.tradingCardDecoration(
-                        borderColor: AppTheme.neonCyan.withValues(alpha: 0.26),
-                        radius: 22,
+                      decoration: ArcUiTokens.surfaceDecoration(
+                        role: ArcSurfaceRole.raised,
+                        accent: ArcUiTokens.primaryAccent,
+                        radius: ArcUiTokens.radiusXL,
+                        borderOpacity: 0.26,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Esports-style session prep without the cringe.',
-                            style: AppTheme.tradingHeading(
+                            style: ArcUiTokens.sectionTitle(
                               fontSize: 22,
-                              color: AppTheme.neonCyan,
+                              color: ArcUiTokens.primaryAccent,
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceS),
-                          const Text(
+                          Text(
                             'Track how you feel before you queue, reset yourself when the session starts slipping, and log how you actually performed after the raid. The app then turns that into cleaner prep and fewer throwaway sessions.',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              height: 1.4,
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textSecondary,
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
@@ -674,15 +681,15 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                   horizontal: AppTheme.spaceM,
                                   vertical: AppTheme.spaceS,
                                 ),
-                                decoration: AppTheme.tradingPillDecoration(
-                                  color: AppTheme.neonCyan,
+                                decoration: ArcUiTokens.chipDecoration(
+                                  color: ArcUiTokens.primaryAccent,
                                 ),
                                 child: Text(
                                   'Goal: ${_goalLabel(_goal)}',
-                                  style: AppTheme.bodyTextStyle(
+                                  style: ArcUiTokens.body(
                                     fontSize: 13,
-                                    color: AppTheme.neonCyan,
-                                    isBold: true,
+                                    color: ArcUiTokens.primaryAccent,
+                                    weight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -691,15 +698,15 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                   horizontal: AppTheme.spaceM,
                                   vertical: AppTheme.spaceS,
                                 ),
-                                decoration: AppTheme.tradingPillDecoration(
-                                  color: AppTheme.neonPink,
+                                decoration: ArcUiTokens.chipDecoration(
+                                  color: ArcUiTokens.secondaryAccent,
                                 ),
                                 child: Text(
                                   'Default Reset: ${_resetLabel(_preferredResetStyle)}',
-                                  style: AppTheme.bodyTextStyle(
+                                  style: ArcUiTokens.body(
                                     fontSize: 13,
-                                    color: AppTheme.neonPink,
-                                    isBold: true,
+                                    color: ArcUiTokens.secondaryAccent,
+                                    weight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -709,15 +716,15 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                     horizontal: AppTheme.spaceM,
                                     vertical: AppTheme.spaceS,
                                   ),
-                                  decoration: AppTheme.tradingPillDecoration(
-                                    color: AppTheme.tradingSuccess,
+                                  decoration: ArcUiTokens.chipDecoration(
+                                    color: ArcUiTokens.success,
                                   ),
                                   child: Text(
                                     'Latest Review: $latestDate',
-                                    style: AppTheme.bodyTextStyle(
+                                    style: ArcUiTokens.body(
                                       fontSize: 13,
-                                      color: AppTheme.tradingSuccess,
-                                      isBold: true,
+                                      color: ArcUiTokens.success,
+                                      weight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
@@ -735,15 +742,21 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                         children: [
                           TextField(
                             controller: _preferredGameController,
-                            decoration: AppTheme.tradingInputDecoration(
-                              label: 'Primary Game / Mode',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                            decoration: ArcUiTokens.inputDecoration(
+                              labelText: 'Primary Game / Mode',
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
                           TextField(
                             controller: _musicTriggerController,
-                            decoration: AppTheme.tradingInputDecoration(
-                              label: 'Music Trigger (optional)',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                            decoration: ArcUiTokens.inputDecoration(
+                              labelText: 'Music Trigger (optional)',
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
@@ -775,7 +788,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                           ),
                           Text(
                             '$_preferredSessionMinutes minutes',
-                            style: const TextStyle(color: Colors.white70),
+                            style: ArcUiTokens.bodySmall(
+                              color: ArcUiTokens.textSecondary,
+                            ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
                           Align(
@@ -856,8 +871,11 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                           TextField(
                             controller: _preNotesController,
                             maxLines: 3,
-                            decoration: AppTheme.tradingInputDecoration(
-                              label: 'Pre-session notes',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                            decoration: ArcUiTokens.inputDecoration(
+                              labelText: 'Pre-session notes',
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
@@ -923,21 +941,29 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                             value: _needsBreak,
                             onChanged: (value) =>
                                 setState(() => _needsBreak = value),
-                            title: const Text(
+                            title: Text(
                               'I need a proper break before the next run.',
-                              style: TextStyle(color: Colors.white),
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                                weight: FontWeight.w700,
+                              ),
                             ),
-                            subtitle: const Text(
+                            subtitle: Text(
                               'Use this when you know you are forcing it.',
-                              style: TextStyle(color: Colors.white60),
+                              style: ArcUiTokens.bodySmall(
+                                color: ArcUiTokens.textTertiary,
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
                           TextField(
                             controller: _midNotesController,
                             maxLines: 3,
-                            decoration: AppTheme.tradingInputDecoration(
-                              label: 'What is going wrong?',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                            decoration: ArcUiTokens.inputDecoration(
+                              labelText: 'What is going wrong?',
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
@@ -1000,8 +1026,11 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                           TextField(
                             controller: _postNotesController,
                             maxLines: 4,
-                            decoration: AppTheme.tradingInputDecoration(
-                              label: 'Post-session notes',
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                            decoration: ArcUiTokens.inputDecoration(
+                              labelText: 'Post-session notes',
                             ),
                           ),
                           const SizedBox(height: AppTheme.spaceM),
@@ -1080,7 +1109,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${_goalLabel(entry.goal)}',
+                                            '',
                                             style: AppTheme.bodyTextStyle(
                                               fontSize: 14,
                                               color: AppTheme.neonCyan,
@@ -1089,7 +1118,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            'Perf ${entry.performance}/5 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Enjoyment ${entry.enjoyment}/5 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Tilt Control ${entry.tiltControl}/5',
+                                            'Perf /5 - Enjoyment /5 - Tilt Control /5',
                                             style: const TextStyle(
                                               color: Colors.white60,
                                             ),
