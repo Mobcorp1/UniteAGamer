@@ -484,12 +484,12 @@ class _RaidPlannerHuntTargetsScreenState
       ),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: ArcUiTokens.textPrimary,
         title: Text(
           'Active Hunt Targets',
-          style: AppTheme.tradingHeading(
+          style: ArcUiTokens.sectionTitle(
             fontSize: 22,
-            color: AppTheme.neonCyan,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
       ),
@@ -566,8 +566,8 @@ class _RaidPlannerHuntTargetsScreenState
                           padding: const EdgeInsets.all(AppTheme.spaceM),
                           decoration: ArcUiTokens.surfaceDecoration(
                             role: ArcSurfaceRole.raised,
-                            accent: AppTheme.neonPink,
-                            radius: 18,
+                            accent: ArcUiTokens.secondaryAccent,
+                            radius: ArcUiTokens.radiusL,
                             glow: true,
                           ),
                           child: Column(
@@ -575,9 +575,9 @@ class _RaidPlannerHuntTargetsScreenState
                             children: [
                               Text(
                                 'Raid Planner Source of Truth',
-                                style: AppTheme.tradingHeading(
+                                style: ArcUiTokens.sectionTitle(
                                   fontSize: 24,
-                                  color: AppTheme.neonPink,
+                                  color: ArcUiTokens.secondaryAccent,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -585,7 +585,7 @@ class _RaidPlannerHuntTargetsScreenState
                                 'Hunts now sync with Blueprint Tracker ownership. Owned targets are removed from active hunt slots and replacements are filled automatically.',
                                 style: AppTheme.bodyTextStyle(
                                   fontSize: 14,
-                                  color: AppTheme.tradingMutedText,
+                                  color: ArcUiTokens.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -595,17 +595,17 @@ class _RaidPlannerHuntTargetsScreenState
                                 children: [
                                   _StatusPill(
                                     label: '$selectedCount / 5 active',
-                                    color: AppTheme.neonCyan,
+                                    color: ArcUiTokens.primaryAccent,
                                   ),
                                   _StatusPill(
                                     label:
                                         '$ownedRankedCount owned removed automatically',
-                                    color: AppTheme.neonPink,
+                                    color: ArcUiTokens.secondaryAccent,
                                   ),
                                   _StatusPill(
                                     label:
                                         '$selectedTradeAvailable trade-linked',
-                                    color: Colors.white70,
+                                    color: ArcUiTokens.textSecondary,
                                   ),
                                 ],
                               ),
@@ -613,10 +613,8 @@ class _RaidPlannerHuntTargetsScreenState
                                 const SizedBox(height: 12),
                                 LinearProgressIndicator(
                                   minHeight: 3,
-                                  color: AppTheme.neonCyan,
-                                  backgroundColor: Colors.white.withValues(
-                                    alpha: 0.08,
-                                  ),
+                                  color: ArcUiTokens.primaryAccent,
+                                  backgroundColor: ArcUiTokens.surfaceRaised,
                                 ),
                               ],
                             ],
@@ -648,22 +646,19 @@ class _RaidPlannerHuntTargetsScreenState
                         children: [
                           Expanded(
                             child: OutlinedButton.icon(
+                              style: ArcUiTokens.textButtonStyle(),
                               onPressed: _saving ? null : _clearAll,
                               icon: const Icon(Icons.clear_all_rounded),
                               label: const Text('Clear'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white70,
-                                side: BorderSide(
-                                  color: AppTheme.neonCyan.withValues(
-                                    alpha: 0.45,
-                                  ),
-                                ),
-                              ),
                             ),
                           ),
                           const SizedBox(width: AppTheme.spaceS),
                           Expanded(
                             child: ElevatedButton.icon(
+                              style: ArcUiTokens.textButtonStyle(
+                                accent: ArcUiTokens.secondaryAccent,
+                                primary: true,
+                              ),
                               onPressed: _saving ? null : () => _save(states),
                               icon: _saving
                                   ? const SizedBox(
@@ -671,14 +666,11 @@ class _RaidPlannerHuntTargetsScreenState
                                       height: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
+                                        color: ArcUiTokens.background,
                                       ),
                                     )
                                   : const Icon(Icons.save_rounded),
                               label: Text(_saving ? 'Saving' : 'Save Hunts'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.neonPink,
-                                foregroundColor: Colors.white,
-                              ),
                             ),
                           ),
                         ],
@@ -702,13 +694,13 @@ class _ExpeditionResetFocusPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElectricChargeBorder(
       active: true,
-      radius: 18,
+      radius: ArcUiTokens.radiusXL,
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceM),
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.raised,
-          accent: AppTheme.neonCyan,
-          radius: 18,
+          accent: ArcUiTokens.primaryAccent,
+          radius: ArcUiTokens.radiusXL,
           glow: true,
         ),
         child: Column(
@@ -718,17 +710,16 @@ class _ExpeditionResetFocusPanel extends StatelessWidget {
               children: [
                 Icon(
                   Icons.route_rounded,
-                  color: AppTheme.neonCyan.withValues(alpha: 0.95),
+                  color: ArcUiTokens.primaryAccent.withValues(alpha: 0.95),
                   size: 22,
                 ),
                 const SizedBox(width: AppTheme.spaceS),
                 Expanded(
                   child: Text(
                     'Expedition Reset Focus',
-                    style: AppTheme.neonTextStyle(
+                    style: ArcUiTokens.sectionTitle(
                       fontSize: 22,
-                      color: AppTheme.neonCyan,
-                      isBold: true,
+                      color: ArcUiTokens.primaryAccent,
                     ),
                   ),
                 ),
@@ -737,9 +728,9 @@ class _ExpeditionResetFocusPanel extends StatelessWidget {
             const SizedBox(height: AppTheme.spaceS),
             Text(
               'Early wipe guidance without extra XP, stash or currency admin.',
-              style: AppTheme.bodyTextStyle(
+              style: ArcUiTokens.body(
                 fontSize: 13,
-                color: AppTheme.tradingMutedText,
+                color: ArcUiTokens.textSecondary,
               ),
             ),
             const SizedBox(height: AppTheme.spaceM),
@@ -748,35 +739,35 @@ class _ExpeditionResetFocusPanel extends StatelessWidget {
               title: 'Complete quests first',
               body:
                   'Contracts move progression forward and can reward items, blueprints and useful unlock momentum.',
-              color: AppTheme.neonCyan,
+              color: ArcUiTokens.primaryAccent,
             ),
             const _GuidanceStep(
               icon: Icons.security_rounded,
               title: 'Build your Favourite Loadout',
               body:
                   'Lock in a reliable setup before chasing higher-risk routes or ARC kills.',
-              color: AppTheme.neonPink,
+              color: ArcUiTokens.secondaryAccent,
             ),
             const _GuidanceStep(
               icon: Icons.construction_rounded,
               title: 'Upgrade benches as resources allow',
               body:
                   'Bench progress makes later raids more efficient without turning the hub into a spreadsheet.',
-              color: Colors.amber,
+              color: ArcUiTokens.warning,
             ),
             const _GuidanceStep(
               icon: Icons.inventory_2_rounded,
               title: 'Loot consistently',
               body:
                   'If your weapons are not ready for ARC fights, extract value and build resources first.',
-              color: Colors.white70,
+              color: ArcUiTokens.textSecondary,
             ),
             const _GuidanceStep(
               icon: Icons.bolt_rounded,
               title: 'Kill ARC when your gear supports it',
               body:
                   'Once the loadout is ready, ARC kills can accelerate resource, sell-value and upgrade progress.',
-              color: AppTheme.neonCyan,
+              color: ArcUiTokens.primaryAccent,
             ),
           ],
         ),
@@ -794,8 +785,8 @@ class _NomadicRiderGuidancePanel extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spaceM),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonPink,
-        radius: 18,
+        accent: ArcUiTokens.secondaryAccent,
+        radius: ArcUiTokens.radiusXL,
         borderOpacity: 0.32,
         glow: true,
       ),
@@ -806,29 +797,31 @@ class _NomadicRiderGuidancePanel extends StatelessWidget {
             children: [
               Icon(
                 Icons.explore_rounded,
-                color: AppTheme.neonPink.withValues(alpha: 0.95),
+                color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.95),
                 size: 22,
               ),
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
                   'Nomadic Raider Path',
-                  style: AppTheme.neonTextStyle(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 22,
-                    color: AppTheme.neonPink,
-                    isBold: true,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                 ),
               ),
-              const _StatusPill(label: 'Guidance', color: AppTheme.neonPink),
+              const _StatusPill(
+                label: 'Guidance',
+                color: ArcUiTokens.secondaryAccent,
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
             'When Nomadic Raider rewards are the long-term target, start by improving storage and raid efficiency before chasing high-value cash-ins.',
-            style: AppTheme.bodyTextStyle(
+            style: ArcUiTokens.body(
               fontSize: 13,
-              color: AppTheme.tradingMutedText,
+              color: ArcUiTokens.textSecondary,
             ),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -885,18 +878,18 @@ class _GuidanceStep extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTheme.bodyTextStyle(
+                  style: ArcUiTokens.body(
                     fontSize: 14,
-                    color: Colors.white,
-                    isBold: true,
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   body,
-                  style: AppTheme.bodyTextStyle(
+                  style: ArcUiTokens.body(
                     fontSize: 12,
-                    color: AppTheme.tradingMutedText,
+                    color: ArcUiTokens.textTertiary,
                   ),
                 ),
               ],
@@ -918,29 +911,29 @@ class _PathChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: ArcUiTokens.chipDecoration(color: AppTheme.neonCyan),
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.primaryAccent),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           CircleAvatar(
             radius: 10,
-            backgroundColor: AppTheme.neonCyan.withValues(alpha: 0.16),
+            backgroundColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.16),
             child: Text(
               order,
-              style: AppTheme.bodyTextStyle(
+              style: ArcUiTokens.body(
                 fontSize: 11,
-                color: AppTheme.neonCyan,
-                isBold: true,
+                color: ArcUiTokens.primaryAccent,
+                weight: FontWeight.w700,
               ),
             ),
           ),
           const SizedBox(width: 7),
           Text(
             label,
-            style: AppTheme.bodyTextStyle(
+            style: ArcUiTokens.body(
               fontSize: 12,
-              color: Colors.white,
-              isBold: true,
+              color: ArcUiTokens.textPrimary,
+              weight: FontWeight.w700,
             ),
           ),
         ],
@@ -965,7 +958,11 @@ class _StatusPill extends StatelessWidget {
       decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
-        style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
+        style: ArcUiTokens.body(
+          fontSize: 12,
+          color: color,
+          weight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -992,26 +989,25 @@ class _HuntTargetDropdown extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spaceS),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
-        accent: AppTheme.neonCyan,
-        radius: 16,
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.25,
       ),
       child: DropdownButtonFormField<String?>(
         initialValue: value,
         isExpanded: true,
-        dropdownColor: AppTheme.cardBackgroundDeep,
-        decoration: InputDecoration(
+        dropdownColor: ArcUiTokens.surfaceOverlay,
+        decoration: ArcUiTokens.inputDecoration(
           labelText: 'Priority ${index + 1}',
-          labelStyle: TextStyle(
-            color: AppTheme.neonCyan.withValues(alpha: 0.85),
-          ),
-          border: InputBorder.none,
         ),
-        style: const TextStyle(color: Colors.white),
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
         items: [
-          const DropdownMenuItem<String?>(
+          DropdownMenuItem<String?>(
             value: null,
-            child: Text('Not set', style: TextStyle(color: Colors.white70)),
+            child: Text(
+              'Not set',
+              style: ArcUiTokens.body(color: ArcUiTokens.textTertiary),
+            ),
           ),
           ...options.map((blueprint) {
             final tradeLinked = tradeAvailableIds.contains(blueprint.id);
@@ -1024,7 +1020,9 @@ class _HuntTargetDropdown extends StatelessWidget {
                     : '${blueprint.name} - ${blueprint.rarityLabel}',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: tradeLinked ? AppTheme.neonCyan : Colors.white,
+                  color: tradeLinked
+                      ? ArcUiTokens.primaryAccent
+                      : ArcUiTokens.textPrimary,
                 ),
               ),
             );

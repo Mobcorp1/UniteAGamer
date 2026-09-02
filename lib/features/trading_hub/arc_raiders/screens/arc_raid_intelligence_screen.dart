@@ -333,9 +333,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Container(
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonCyan,
-        radius: 20,
-        backgroundColor: Colors.black.withValues(alpha: 0.22),
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusXL,
+        backgroundColor: ArcUiTokens.background.withValues(alpha: 0.42),
         borderOpacity: 0.24,
         glow: true,
       ),
@@ -423,7 +423,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: ArcUiTokens.chipDecoration(
-        color: AppTheme.neonCyan,
+        color: ArcUiTokens.primaryAccent,
         selected: true,
       ),
       child: Row(
@@ -436,6 +436,27 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 selected: layer == _activeLayer,
                 showCheckmark: false,
                 label: Text(layer.label),
+                selectedColor: ArcUiTokens.primaryAccent.withValues(
+                  alpha: 0.22,
+                ),
+                backgroundColor: ArcUiTokens.surfaceInteractive.withValues(
+                  alpha: 0.82,
+                ),
+                labelStyle: ArcUiTokens.label(
+                  color: layer == _activeLayer
+                      ? ArcUiTokens.primaryAccent
+                      : ArcUiTokens.textSecondary,
+                ),
+                side: BorderSide(
+                  color:
+                      (layer == _activeLayer
+                              ? ArcUiTokens.primaryAccent
+                              : ArcUiTokens.borderSubtle)
+                          .withValues(alpha: 0.62),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+                ),
                 avatar: Icon(
                   layer == ArcRaidMapLayer.surface
                       ? Icons.public_rounded
@@ -465,10 +486,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       child: IconButton.filledTonal(
         onPressed: onTap,
         icon: Icon(icon, size: 18),
-        color: AppTheme.neonCyan,
+        color: ArcUiTokens.primaryAccent,
         style: IconButton.styleFrom(
-          backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
-          disabledForegroundColor: Colors.white24,
+          backgroundColor: ArcUiTokens.surfaceOverlay.withValues(alpha: 0.84),
+          disabledForegroundColor: ArcUiTokens.textDisabled,
         ),
       ),
     );
@@ -482,8 +503,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         padding: const EdgeInsets.all(10),
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.overlay,
-          accent: AppTheme.neonPink,
-          radius: 16,
+          accent: ArcUiTokens.secondaryAccent,
+          radius: ArcUiTokens.radiusM,
           borderOpacity: 0.18,
         ),
         child: Text(
@@ -492,7 +513,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               : '${route.summary} ${route.approximate ? 'Area-to-area route, approximate.' : ''}',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
         ),
       ),
     );
@@ -506,9 +527,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Container(
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonPink,
-        radius: desktop ? 20 : 18,
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        accent: ArcUiTokens.secondaryAccent,
+        radius: desktop ? ArcUiTokens.radiusXL : ArcUiTokens.radiusL,
+        backgroundColor: ArcUiTokens.surfaceOverlay,
         borderOpacity: 0.22,
       ),
       child: ListView(
@@ -524,7 +545,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                   onPressed: () =>
                       setState(() => _controlPanelCollapsed = true),
                   icon: const Icon(Icons.chevron_right_rounded),
-                  color: AppTheme.neonCyan,
+                  color: ArcUiTokens.primaryAccent,
                 ),
               ),
             ),
@@ -550,9 +571,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Container(
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonCyan,
-        radius: 18,
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.94),
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusL,
+        backgroundColor: ArcUiTokens.surfaceOverlay,
         borderOpacity: 0.24,
       ),
       child: Center(
@@ -561,7 +582,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           child: IconButton(
             onPressed: () => setState(() => _controlPanelCollapsed = false),
             icon: const Icon(Icons.chevron_left_rounded),
-            color: AppTheme.neonCyan,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
       ),
@@ -574,15 +595,15 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       children: [
         Text(
           'GENERATE BLUEPRINT RUN',
-          style: AppTheme.tradingHeading(
+          style: ArcUiTokens.sectionTitle(
             fontSize: 24,
-            color: AppTheme.neonCyan,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
         const SizedBox(height: 6),
         Text(
-          '${intelligence.map.displayName} • ${intelligence.statusLabel} • ${intelligence.activeConditionLabel}',
-          style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white60),
+          '${intelligence.map.displayName} - ${intelligence.statusLabel} - ${intelligence.activeConditionLabel}',
+          style: ArcUiTokens.bodySmall(),
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -591,11 +612,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           children: [
             _pill(
               '${intelligence.opportunityClusters.length} clusters',
-              AppTheme.neonPink,
+              ArcUiTokens.secondaryAccent,
             ),
             _pill(
               '${intelligence.visibleMarkers.length} markers',
-              AppTheme.neonCyan,
+              ArcUiTokens.primaryAccent,
             ),
             _pill(
               intelligence.map.hasCalibratedLayer(intelligence.activeLayer)
@@ -618,16 +639,18 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         children: [
           DropdownButtonFormField<String>(
             initialValue: _mapId,
-            dropdownColor: AppTheme.cardBackgroundAlt,
-            decoration: AppTheme.tradingInputDecoration(label: 'Map'),
+            dropdownColor: ArcUiTokens.surfaceOverlay,
+            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+            iconEnabledColor: ArcUiTokens.primaryAccent,
+            decoration: ArcUiTokens.inputDecoration(labelText: 'Map'),
             items: [
               for (final map in ArcRaidIntelligenceSeedData.maps)
                 DropdownMenuItem(
                   value: map.id,
                   child: Text(
                     ArcMapAssetRegistry.hasRegisteredAsset(map.id)
-                        ? '${map.displayName} • ${ArcMapAssetRegistry.statusFor(map.id)}'
-                        : '${map.displayName} • Schematic',
+                        ? '${map.displayName} - ${ArcMapAssetRegistry.statusFor(map.id)}'
+                        : '${map.displayName} - Schematic',
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -679,11 +702,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             }),
             title: const Text(
               'Use Raider Hatch',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: ArcUiTokens.textPrimary),
             ),
             subtitle: const Text(
               'Requires player-confirmed hatch key.',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: ArcUiTokens.textTertiary),
             ),
           ),
           if (_usesHatch)
@@ -695,11 +718,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                   setState(() => _hatchKeyConfirmed = value ?? false),
               title: const Text(
                 'Raider Hatch Key confirmed',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: ArcUiTokens.textPrimary),
               ),
             ),
           const SizedBox(height: 10),
           ElevatedButton.icon(
+            style: ArcUiTokens.textButtonStyle(primary: true),
             onPressed: () => _generateRoute(intelligence),
             icon: const Icon(Icons.auto_awesome_rounded),
             label: const Text('Generate Best Loot Run'),
@@ -716,9 +740,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           initialValue: map.spawnRegions.any((spawn) => spawn.id == _spawn?.id)
               ? _spawn!.id
               : null,
-          dropdownColor: AppTheme.cardBackgroundAlt,
-          decoration: AppTheme.tradingInputDecoration(
-            label: 'Spawn Region or tap map',
+          dropdownColor: ArcUiTokens.surfaceOverlay,
+          style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+          iconEnabledColor: ArcUiTokens.primaryAccent,
+          decoration: ArcUiTokens.inputDecoration(
+            labelText: 'Spawn Region or tap map',
           ),
           items: [
             for (final spawn in map.spawnRegions)
@@ -735,9 +761,11 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
           initialValue: _extraction?.id,
-          dropdownColor: AppTheme.cardBackgroundAlt,
-          decoration: AppTheme.tradingInputDecoration(
-            label: _usesHatch ? 'Raider Hatch' : 'Standard Extraction',
+          dropdownColor: ArcUiTokens.surfaceOverlay,
+          style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+          iconEnabledColor: ArcUiTokens.primaryAccent,
+          decoration: ArcUiTokens.inputDecoration(
+            labelText: _usesHatch ? 'Raider Hatch' : 'Standard Extraction',
           ),
           items: [
             if (_usesHatch)
@@ -806,7 +834,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         children: [
           Text(
             'Long-press the map on mobile or right-click on desktop to report a location.',
-            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white60),
+            style: ArcUiTokens.bodySmall(),
           ),
           const SizedBox(height: 10),
           SizedBox(
@@ -828,15 +856,23 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
                   radius: 16,
+                  backgroundColor: ArcUiTokens.primaryAccent.withValues(
+                    alpha: 0.16,
+                  ),
                   child: Text(report.confirmationCount.toString()),
                 ),
                 title: Text(
                   report.displayLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
+                  ),
                 ),
                 subtitle: Text(
-                  '${report.confidence.label} • ${report.layer.label}',
+                  '${report.confidence.label} - ${report.layer.label}',
+                  style: ArcUiTokens.bodySmall(),
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -870,7 +906,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
+      ),
       builder: (context) => ArcCommunityIntelReportSheet(
         map: map,
         layer: _activeLayer,
@@ -931,9 +973,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return _section(
       title: 'Selected Intel',
       child: marker == null
-          ? const Text(
+          ? Text(
               'Select a marker or Blueprint Opportunity cluster.',
-              style: TextStyle(color: Colors.white60),
+              style: ArcUiTokens.bodySmall(),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -989,8 +1031,8 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       padding: const EdgeInsets.all(10),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
-        accent: AppTheme.neonCyan,
-        radius: 14,
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusM,
         borderOpacity: 0.18,
       ),
       child: Column(
@@ -998,11 +1040,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         children: [
           Text(
             '${stack.length} MARKERS AT THIS LOCATION',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: AppTheme.neonCyan,
-              isBold: true,
-            ),
+            style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
           ),
           const SizedBox(height: 8),
           for (final marker in stack)
@@ -1014,19 +1052,19 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                     ? Icons.radio_button_checked_rounded
                     : Icons.radio_button_unchecked_rounded,
                 color: marker.id == _selectedMarker?.id
-                    ? AppTheme.neonCyan
-                    : Colors.white54,
+                    ? ArcUiTokens.primaryAccent
+                    : ArcUiTokens.textTertiary,
               ),
               title: Text(
                 marker.label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+                style: ArcUiTokens.body(
+                  color: ArcUiTokens.textPrimary,
+                  weight: FontWeight.w800,
                 ),
               ),
               subtitle: Text(
                 marker.category.label,
-                style: const TextStyle(color: Colors.white54),
+                style: ArcUiTokens.bodySmall(),
               ),
               trailing: IconButton(
                 tooltip: 'View this marker',
@@ -1049,15 +1087,12 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
               _usesHatch && !_hatchKeyConfirmed
                   ? 'Confirm Raider Hatch Key before generating a hatch route.'
                   : 'Choose a spawn. UAG can select the best extraction automatically.',
-              style: const TextStyle(color: Colors.white60),
+              style: ArcUiTokens.bodySmall(),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  route.summary,
-                  style: const TextStyle(color: Colors.white70),
-                ),
+                Text(route.summary, style: ArcUiTokens.body()),
                 if (route.metrics.hasData) ...[
                   const SizedBox(height: 10),
                   Wrap(
@@ -1070,7 +1105,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                       ),
                       _pill(
                         '${route.metrics.blueprintTargetCount} targets',
-                        AppTheme.neonPink,
+                        ArcUiTokens.secondaryAccent,
                       ),
                       _pill(
                         '${route.metrics.efficiencyScore}% efficiency',
@@ -1091,17 +1126,20 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
                       ),
                       child: Text(
                         '${stop.order + 1}',
-                        style: const TextStyle(color: Colors.white),
+                        style: ArcUiTokens.body(
+                          color: ArcUiTokens.textPrimary,
+                          weight: FontWeight.w700,
+                        ),
                       ),
                     ),
                     title: Text(
                       stop.label,
-                      style: const TextStyle(color: Colors.white),
+                      style: ArcUiTokens.body(
+                        color: ArcUiTokens.textPrimary,
+                        weight: FontWeight.w700,
+                      ),
                     ),
-                    subtitle: Text(
-                      stop.reason,
-                      style: const TextStyle(color: Colors.white54),
-                    ),
+                    subtitle: Text(stop.reason, style: ArcUiTokens.bodySmall()),
                     trailing: stop.clusterId == null
                         ? null
                         : PopupMenuButton<String>(
@@ -1149,7 +1187,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       padding: const EdgeInsets.all(12),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
-        radius: 16,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.08,
       ),
       child: Column(
@@ -1157,9 +1195,9 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
         children: [
           Text(
             title.toUpperCase(),
-            style: AppTheme.tradingHeading(
+            style: ArcUiTokens.sectionTitle(
               fontSize: 15,
-              color: AppTheme.neonPink,
+              color: ArcUiTokens.secondaryAccent,
             ),
           ),
           const SizedBox(height: 10),
@@ -1183,6 +1221,26 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
           ChoiceChip(
             label: Text(label(value)),
             selected: value == selected,
+            showCheckmark: false,
+            selectedColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.18),
+            backgroundColor: ArcUiTokens.surfaceInteractive.withValues(
+              alpha: 0.74,
+            ),
+            side: BorderSide(
+              color:
+                  (value == selected
+                          ? ArcUiTokens.primaryAccent
+                          : ArcUiTokens.borderSubtle)
+                      .withValues(alpha: 0.62),
+            ),
+            labelStyle: ArcUiTokens.label(
+              color: value == selected
+                  ? ArcUiTokens.primaryAccent
+                  : ArcUiTokens.textSecondary,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+            ),
             onSelected: (_) => onSelected(value),
           ),
       ],
@@ -1193,15 +1251,13 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: ArcUiTokens.chipDecoration(color: color),
-      child: Text(
-        label,
-        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
-      ),
+      child: Text(label, style: ArcUiTokens.label(color: color)),
     );
   }
 
   Widget _smallButton(String label, IconData icon, VoidCallback onPressed) {
     return OutlinedButton.icon(
+      style: ArcUiTokens.textButtonStyle(),
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
       label: Text(label),

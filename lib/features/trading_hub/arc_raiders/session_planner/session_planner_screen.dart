@@ -10,6 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_pla
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class SessionPlannerScreen extends StatefulWidget {
@@ -115,8 +116,8 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppTheme.neonPink.withValues(alpha: 0.92),
-        foregroundColor: AppTheme.darkBackground,
+        backgroundColor: ArcUiTokens.secondaryAccent.withValues(alpha: 0.92),
+        foregroundColor: ArcUiTokens.background,
         onPressed: () => SessionCreationSheet.show(context, _repository),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Session'),
@@ -130,7 +131,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
               return Center(
                 child: Text(
                   'Could not load sessions: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.white70),
+                  style: ArcUiTokens.body(),
                 ),
               );
             }
@@ -172,20 +173,24 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
                         color: AppTheme.neonPink,
                         shape: BoxShape.circle,
                       ),
-                      defaultTextStyle: const TextStyle(color: Colors.white),
-                      weekendTextStyle: const TextStyle(color: Colors.white70),
+                      defaultTextStyle: const TextStyle(
+                        color: ArcUiTokens.textPrimary,
+                      ),
+                      weekendTextStyle: const TextStyle(
+                        color: ArcUiTokens.textSecondary,
+                      ),
                     ),
                     headerStyle: const HeaderStyle(
                       titleCentered: true,
                       formatButtonVisible: false,
                       titleTextStyle: TextStyle(
-                        color: Colors.white,
+                        color: ArcUiTokens.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     daysOfWeekStyle: const DaysOfWeekStyle(
-                      weekdayStyle: TextStyle(color: Colors.white70),
-                      weekendStyle: TextStyle(color: Colors.white54),
+                      weekdayStyle: TextStyle(color: ArcUiTokens.textSecondary),
+                      weekendStyle: TextStyle(color: ArcUiTokens.textTertiary),
                     ),
                     onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
@@ -198,9 +203,9 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
                 const SizedBox(height: AppTheme.spaceL),
                 Text(
                   'Sessions',
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 22,
-                    color: AppTheme.neonPink,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceM),
@@ -209,10 +214,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
                     accent: AppTheme.neonCyan,
                     child: Text(
                       'No sessions on this day.',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
+                      style: ArcUiTokens.body(),
                     ),
                   )
                 else
@@ -256,7 +258,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
           const SizedBox(height: AppTheme.spaceS),
           Text(
             session.scheduledAt.toString(),
-            style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: AppTheme.spaceM),
           EmbarkIdCard(
@@ -267,7 +269,7 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
             const SizedBox(height: AppTheme.spaceS),
             Text(
               session.notes!,
-              style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white),
+              style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
             ),
           ],
           const SizedBox(height: AppTheme.spaceM),
@@ -276,26 +278,33 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
             runSpacing: AppTheme.spaceS,
             children: [
               OutlinedButton.icon(
+                style: ArcUiTokens.textButtonStyle(),
                 onPressed: () => _repository.toggleReady(session),
                 icon: const Icon(Icons.check_circle_outline_rounded),
                 label: const Text('Ready'),
               ),
               OutlinedButton.icon(
+                style: ArcUiTokens.textButtonStyle(),
                 onPressed: () => _repository.markComplete(session),
                 icon: const Icon(Icons.done_all_rounded),
                 label: const Text('Complete'),
               ),
               OutlinedButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.attentionAccent,
+                ),
                 onPressed: () => _repository.markNoShow(session),
                 icon: const Icon(Icons.report_gmailerrorred_rounded),
                 label: const Text('No-show'),
               ),
               OutlinedButton.icon(
+                style: ArcUiTokens.textButtonStyle(),
                 onPressed: () => _addToCalendar(session),
                 icon: const Icon(Icons.event_rounded),
                 label: const Text('Calendar'),
               ),
               OutlinedButton.icon(
+                style: ArcUiTokens.textButtonStyle(),
                 onPressed: () => _share(session),
                 icon: const Icon(Icons.ios_share_rounded),
                 label: const Text('Share'),

@@ -14,6 +14,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_stat_chip.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -109,7 +110,9 @@ class _ArcMarketIntelligenceScreenState
     required bool loading,
   }) {
     if (loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: ArcUiTokens.primaryAccent),
+      );
     }
 
     final blueprints = [...ArcBlueprintSeedData.blueprints]
@@ -161,10 +164,7 @@ class _ArcMarketIntelligenceScreenState
             children: [
               Text(
                 'Pin up to five missing blueprints and this screen will keep the snapshot focused on the items you actually want next.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white70,
-                  height: 1.35,
-                ),
+                style: ArcUiTokens.body(),
               ),
               const SizedBox(height: AppTheme.spaceM),
               Align(
@@ -174,6 +174,7 @@ class _ArcMarketIntelligenceScreenState
                   runSpacing: 8,
                   children: [
                     OutlinedButton.icon(
+                      style: ArcUiTokens.textButtonStyle(),
                       onPressed: () => _openPriorityManager(
                         blueprints: blueprints,
                         states: blueprintStates,
@@ -183,6 +184,9 @@ class _ArcMarketIntelligenceScreenState
                     ),
                     if (priorityBlueprints.isNotEmpty)
                       OutlinedButton.icon(
+                        style: ArcUiTokens.textButtonStyle(
+                          accent: ArcUiTokens.secondaryAccent,
+                        ),
                         onPressed: () => _clearPriorities(
                           blueprintStates,
                           priorityBlueprints,
@@ -232,10 +236,7 @@ class _ArcMarketIntelligenceScreenState
             children: [
               Text(
                 'Recommended targets based on your missing collection, wanted priorities and recent community discoveries.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white70,
-                  height: 1.35,
-                ),
+                style: ArcUiTokens.body(),
               ),
               const SizedBox(height: AppTheme.spaceM),
               if (missingBlueprints.isEmpty)
@@ -278,10 +279,7 @@ class _ArcMarketIntelligenceScreenState
             children: [
               Text(
                 'Resources do not use the same drop-intel report system yet, so this section stays focused on what you still need rather than showing noisy generic map spam.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white70,
-                  height: 1.35,
-                ),
+                style: ArcUiTokens.body(),
               ),
               const SizedBox(height: AppTheme.spaceM),
               if (wantedResources.isEmpty)
@@ -462,9 +460,9 @@ class _ArcMarketIntelligenceScreenState
             ),
           ),
           const SizedBox(height: AppTheme.spaceS),
-          const Text(
+          Text(
             'This replaces the old split between Market Intel and Intel Explorer. It now leads with what you still need, what you most want, and where the community is actually seeing those targets.',
-            style: TextStyle(color: Colors.white70, height: 1.4),
+            style: ArcUiTokens.body(),
           ),
           const SizedBox(height: AppTheme.spaceM),
           Wrap(
@@ -538,11 +536,13 @@ class _ArcMarketIntelligenceScreenState
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: state.isPrioritized
-            ? AppTheme.warningAmber.withValues(alpha: 0.34)
-            : AppTheme.neonPink.withValues(alpha: 0.24),
-        radius: 18,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: state.isPrioritized
+            ? ArcUiTokens.attentionAccent
+            : ArcUiTokens.secondaryAccent,
+        borderOpacity: state.isPrioritized ? 0.34 : 0.22,
+        radius: ArcUiTokens.radiusL,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,15 +556,15 @@ class _ArcMarketIntelligenceScreenState
                   children: [
                     Text(
                       blueprint.name,
-                      style: AppTheme.tradingHeading(
+                      style: ArcUiTokens.sectionTitle(
                         fontSize: 20,
-                        color: AppTheme.neonPink,
+                        color: ArcUiTokens.secondaryAccent,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${blueprint.category}  ${blueprint.rarityLabel}',
-                      style: const TextStyle(color: Colors.white60),
+                      '${blueprint.category} - ${blueprint.rarityLabel}',
+                      style: ArcUiTokens.bodySmall(),
                     ),
                   ],
                 ),
@@ -575,15 +575,13 @@ class _ArcMarketIntelligenceScreenState
                     horizontal: 10,
                     vertical: 6,
                   ),
-                  decoration: AppTheme.tradingPillDecoration(
-                    color: AppTheme.warningAmber,
+                  decoration: ArcUiTokens.chipDecoration(
+                    color: ArcUiTokens.attentionAccent,
                   ),
                   child: Text(
                     'Priority ${state.priorityRank}',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 12,
-                      color: AppTheme.warningAmber,
-                      isBold: true,
+                    style: ArcUiTokens.label(
+                      color: ArcUiTokens.attentionAccent,
                     ),
                   ),
                 ),
@@ -618,6 +616,7 @@ class _ArcMarketIntelligenceScreenState
             Align(
               alignment: Alignment.centerLeft,
               child: OutlinedButton.icon(
+                style: ArcUiTokens.textButtonStyle(),
                 onPressed: reportsForBlueprint.isEmpty
                     ? null
                     : () => _showBlueprintReportDrilldown(
@@ -631,14 +630,11 @@ class _ArcMarketIntelligenceScreenState
               ),
             ),
           ] else ...[
-            Text(
-              blueprint.intelHint,
-              style: const TextStyle(color: Colors.white70, height: 1.35),
-            ),
+            Text(blueprint.intelHint, style: ArcUiTokens.body()),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'No community reports yet. This target stays in your snapshot so you can decide what to chase next even before data builds up.',
-              style: TextStyle(color: Colors.white54, height: 1.35),
+              style: ArcUiTokens.bodySmall(),
             ),
           ],
         ],
@@ -657,9 +653,12 @@ class _ArcMarketIntelligenceScreenState
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -678,16 +677,16 @@ class _ArcMarketIntelligenceScreenState
                       Expanded(
                         child: Text(
                           blueprint.name,
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 25,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(sheetContext).pop(),
                         icon: const Icon(Icons.close_rounded),
-                        color: Colors.white70,
+                        color: ArcUiTokens.textSecondary,
                       ),
                     ],
                   ),
@@ -787,9 +786,11 @@ class _ArcMarketIntelligenceScreenState
     return Container(
       width: double.infinity,
       padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.18),
-        radius: 16,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -819,9 +820,11 @@ class _ArcMarketIntelligenceScreenState
     return Container(
       width: double.infinity,
       padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.18),
-        radius: 16,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.secondaryAccent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -874,9 +877,11 @@ class _ArcMarketIntelligenceScreenState
   Widget _buildScrappyCard(BuildContext context, _WantedScrappyTarget target) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.warningAmber.withValues(alpha: 0.24),
-        radius: 18,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: ArcUiTokens.attentionAccent,
+        borderOpacity: 0.24,
+        radius: ArcUiTokens.radiusL,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -886,9 +891,9 @@ class _ArcMarketIntelligenceScreenState
               Expanded(
                 child: Text(
                   target.item.name,
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 18,
-                    color: AppTheme.warningAmber,
+                    color: ArcUiTokens.attentionAccent,
                   ),
                 ),
               ),
@@ -897,16 +902,12 @@ class _ArcMarketIntelligenceScreenState
                   horizontal: 10,
                   vertical: 6,
                 ),
-                decoration: AppTheme.tradingPillDecoration(
-                  color: AppTheme.warningAmber,
+                decoration: ArcUiTokens.chipDecoration(
+                  color: ArcUiTokens.attentionAccent,
                 ),
                 child: Text(
                   '${target.state.collectedCount}/${target.item.neededCount}',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: AppTheme.warningAmber,
-                    isBold: true,
-                  ),
+                  style: ArcUiTokens.label(color: ArcUiTokens.attentionAccent),
                 ),
               ),
             ],
@@ -914,13 +915,13 @@ class _ArcMarketIntelligenceScreenState
           const SizedBox(height: 14),
           Text(
             'Need ${target.remainingNeeded} more  ${target.item.tierLabel}',
-            style: const TextStyle(color: Colors.white70),
+            style: ArcUiTokens.body(),
           ),
           if ((target.item.locationHint?.trim().isNotEmpty ?? false)) ...[
             const SizedBox(height: 14),
             Text(
               target.item.locationHint!.trim(),
-              style: const TextStyle(color: Colors.white54),
+              style: ArcUiTokens.bodySmall(),
             ),
           ],
         ],
@@ -932,35 +933,31 @@ class _ArcMarketIntelligenceScreenState
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackgroundDeep,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        radius: ArcUiTokens.radiusL,
+        borderOpacity: 0.10,
       ),
-      child: Text(
-        message,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: Colors.white70, height: 1.35),
-      ),
+      child: Text(message, style: ArcUiTokens.body()),
     );
   }
 
   Widget _buildPulseRow(BuildContext context, _PulseRow row) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(20),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.10,
       ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               row.label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w600,
               ),
             ),
           ),
@@ -1061,22 +1058,15 @@ class _ArcMarketIntelligenceScreenState
         children: [
           SizedBox(
             width: 112,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Text(label, style: ArcUiTokens.metadata()),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                height: 1.35,
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w700,
               ),
             ),
           ),
@@ -1143,9 +1133,12 @@ class _ArcMarketIntelligenceScreenState
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (sheetContext) {
         return StatefulBuilder(
@@ -1183,24 +1176,23 @@ class _ArcMarketIntelligenceScreenState
                   children: [
                     Text(
                       'Set Priority 5',
-                      style: AppTheme.tradingHeading(
+                      style: ArcUiTokens.sectionTitle(
                         fontSize: 22,
-                        color: AppTheme.neonCyan,
+                        color: ArcUiTokens.primaryAccent,
                       ),
                     ),
                     const SizedBox(height: 14),
                     Text(
                       'Pick up to five missing blueprints in the order you want to chase them next.',
-                      style: Theme.of(sheetContext).textTheme.bodyMedium
-                          ?.copyWith(color: Colors.white70, height: 1.35),
+                      style: ArcUiTokens.body(),
                     ),
                     const SizedBox(height: 18),
                     TextField(
                       controller: _prioritySearchController,
-                      style: const TextStyle(color: Colors.white),
+                      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                       onChanged: (value) => setModalState(() => search = value),
-                      decoration: AppTheme.tradingInputDecoration(
-                        label: 'Search missing blueprints',
+                      decoration: ArcUiTokens.inputDecoration(
+                        labelText: 'Search missing blueprints',
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -1220,14 +1212,12 @@ class _ArcMarketIntelligenceScreenState
                                 vertical: 8,
                               ),
                               decoration: AppTheme.tradingPillDecoration(
-                                color: AppTheme.warningAmber,
+                                color: ArcUiTokens.attentionAccent,
                               ),
                               child: Text(
                                 '${entry.key + 1}. ${blueprint.name}',
-                                style: AppTheme.bodyTextStyle(
-                                  fontSize: 12,
-                                  color: AppTheme.warningAmber,
-                                  isBold: true,
+                                style: ArcUiTokens.label(
+                                  color: ArcUiTokens.attentionAccent,
                                 ),
                               ),
                             );
@@ -1240,7 +1230,7 @@ class _ArcMarketIntelligenceScreenState
                         shrinkWrap: true,
                         itemCount: filtered.length,
                         separatorBuilder: (_, _) =>
-                            const Divider(height: 1, color: Colors.white12),
+                            Divider(height: 1, color: ArcUiTokens.borderSubtle),
                         itemBuilder: (context, index) {
                           final blueprint = filtered[index];
                           final isSelected = selectedIds.contains(blueprint.id);
@@ -1252,16 +1242,19 @@ class _ArcMarketIntelligenceScreenState
                             leading: Icon(
                               blueprint.icon,
                               color: isSelected
-                                  ? AppTheme.warningAmber
-                                  : AppTheme.neonCyan,
+                                  ? ArcUiTokens.attentionAccent
+                                  : ArcUiTokens.primaryAccent,
                             ),
                             title: Text(
                               blueprint.name,
-                              style: const TextStyle(color: Colors.white),
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                                weight: FontWeight.w700,
+                              ),
                             ),
                             subtitle: Text(
-                              '${blueprint.category}  ${blueprint.rarityLabel}',
-                              style: const TextStyle(color: Colors.white60),
+                              '${blueprint.category} - ${blueprint.rarityLabel}',
+                              style: ArcUiTokens.bodySmall(),
                             ),
                             trailing: isSelected
                                 ? CircleAvatar(
@@ -1269,16 +1262,14 @@ class _ArcMarketIntelligenceScreenState
                                     backgroundColor: AppTheme.warningAmber,
                                     child: Text(
                                       '$order',
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
+                                      style: ArcUiTokens.label(
+                                        color: ArcUiTokens.background,
                                       ),
                                     ),
                                   )
                                 : const Icon(
                                     Icons.add_circle_outline,
-                                    color: Colors.white54,
+                                    color: ArcUiTokens.textTertiary,
                                   ),
                           );
                         },
@@ -1289,6 +1280,7 @@ class _ArcMarketIntelligenceScreenState
                       children: [
                         Expanded(
                           child: OutlinedButton(
+                            style: ArcUiTokens.textButtonStyle(),
                             onPressed: () =>
                                 Navigator.of(sheetContext).pop(false),
                             child: const Text('Cancel'),
@@ -1297,6 +1289,7 @@ class _ArcMarketIntelligenceScreenState
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
+                            style: ArcUiTokens.textButtonStyle(primary: true),
                             onPressed: () async {
                               final currentPriorityIds = states.values
                                   .where((state) => state.priorityRank > 0)

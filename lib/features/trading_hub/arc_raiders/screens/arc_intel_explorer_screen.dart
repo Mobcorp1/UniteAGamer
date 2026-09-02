@@ -57,10 +57,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           children: [
             Text(
               'Pick a blueprint to see the strongest player-confirmed signals instead of scrolling through individual reports.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white70,
-                height: 1.35,
-              ),
+              style: ArcUiTokens.body(),
             ),
             const SizedBox(height: AppTheme.spaceM),
             _buildBlueprintSelector(context),
@@ -92,13 +89,13 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         if (!mounted || picked == null) return;
         setState(() => _selectedBlueprint = picked);
       },
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.interactive,
-          accent: AppTheme.neonCyan,
-          radius: 18,
+          accent: ArcUiTokens.primaryAccent,
+          radius: ArcUiTokens.radiusL,
           borderOpacity: 0.35,
           glow: true,
         ),
@@ -108,24 +105,19 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Blueprint',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelLarge?.copyWith(color: Colors.white70),
-                  ),
+                  Text('Blueprint', style: ArcUiTokens.label()),
                   const SizedBox(height: 6),
                   Text(
                     _selectedBlueprint?.name ?? 'Select Blueprint',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                    style: ArcUiTokens.body(
+                      color: ArcUiTokens.textPrimary,
+                      weight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.search_rounded, color: Colors.white70),
+            const Icon(Icons.search_rounded, color: ArcUiTokens.textSecondary),
           ],
         ),
       ),
@@ -137,14 +129,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       padding: const EdgeInsets.all(18),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
-        radius: 18,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.10,
       ),
       child: Text(
         'Select a blueprint and the app will summarise where players most commonly report finding it, plus the best confirmed combinations.',
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: Colors.white70, height: 1.4),
+        style: ArcUiTokens.body(),
       ),
     );
   }
@@ -159,14 +149,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         padding: const EdgeInsets.all(18),
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.panel,
-          radius: 18,
+          radius: ArcUiTokens.radiusL,
           borderOpacity: 0.10,
         ),
         child: Text(
           'No community intel for ${blueprint.name} yet. The first reports will start building the percentages here.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: Colors.white70, height: 1.4),
+          style: ArcUiTokens.body(),
         ),
       );
     }
@@ -261,8 +249,8 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       padding: const EdgeInsets.all(18),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonPink,
-        radius: 18,
+        accent: ArcUiTokens.secondaryAccent,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.16,
       ),
       child: Column(
@@ -270,17 +258,15 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         children: [
           Text(
             blueprint.name,
-            style: AppTheme.tradingHeading(
+            style: ArcUiTokens.sectionTitle(
               fontSize: 24,
-              color: AppTheme.neonPink,
+              color: ArcUiTokens.secondaryAccent,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Based on ${intel.totalReports} player confirmation${intel.totalReports == 1 ? '' : 's'}.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+            style: ArcUiTokens.body(),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -295,7 +281,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
               _buildMetaPill(
                 label: 'Last Reported',
                 value: _lastReportedLabel(intel.lastReportedAt),
-                valueColor: Colors.white,
+                valueColor: ArcUiTokens.textPrimary,
               ),
             ],
           ),
@@ -326,8 +312,8 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       padding: const EdgeInsets.all(18),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonPink,
-        radius: 18,
+        accent: ArcUiTokens.secondaryAccent,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.30,
         glow: true,
       ),
@@ -336,10 +322,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         children: [
           Text(
             'Fast read of the strongest current signal for this blueprint.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white60,
-              height: 1.35,
-            ),
+            style: ArcUiTokens.bodySmall(),
           ),
           const SizedBox(height: AppTheme.spaceM),
           _buildBestChanceRow(context, 'Map', mapLabel),
@@ -349,11 +332,8 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           if (topCombo != null) ...[
             const SizedBox(height: AppTheme.spaceS),
             Text(
-              'Top combo strength: ${topCombo.percentageLabel}  ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
-              ),
+              'Top combo strength: ${topCombo.percentageLabel} - ${topCombo.reportCount} confirmation${topCombo.reportCount == 1 ? '' : 's'}',
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
           ],
         ],
@@ -369,22 +349,15 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         children: [
           SizedBox(
             width: 92,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white60,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Text(label, style: ArcUiTokens.metadata()),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                height: 1.35,
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w700,
               ),
             ),
           ),
@@ -403,11 +376,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       decoration: ArcUiTokens.chipDecoration(color: valueColor),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
+          style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
           children: [
             TextSpan(text: '$label: '),
             TextSpan(
@@ -440,13 +409,13 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
   Color _confidenceColor(ArcDropIntel intel) {
     switch (_confidenceLabel(intel)) {
       case 'High':
-        return AppTheme.neonCyan;
+        return ArcUiTokens.primaryAccent;
       case 'Medium':
-        return Colors.amberAccent;
+        return ArcUiTokens.attentionAccent;
       case 'Low':
-        return AppTheme.neonPink;
+        return ArcUiTokens.secondaryAccent;
       default:
-        return Colors.white70;
+        return ArcUiTokens.textSecondary;
     }
   }
 
@@ -501,7 +470,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       padding: const EdgeInsets.all(18),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
-        radius: 18,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.08,
       ),
       child: Column(
@@ -510,9 +479,9 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           if (showTitle) ...[
             Text(
               title,
-              style: AppTheme.tradingHeading(
+              style: ArcUiTokens.sectionTitle(
                 fontSize: 20,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
               ),
             ),
             const SizedBox(height: AppTheme.spaceM),
@@ -548,7 +517,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       padding: const EdgeInsets.all(14),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
-        radius: 14,
+        radius: ArcUiTokens.radiusM,
         borderOpacity: 0.08,
       ),
       child: Row(
@@ -556,19 +525,16 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
           Expanded(
             child: Text(
               row.label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w600,
               ),
             ),
           ),
           const SizedBox(width: 12),
           Text(
-            '${row.percentage.toStringAsFixed(0)}%  ${row.count}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.neonPink,
-              fontWeight: FontWeight.w700,
-            ),
+            '${row.percentage.toStringAsFixed(0)}% - ${row.count}',
+            style: ArcUiTokens.label(color: ArcUiTokens.secondaryAccent),
           ),
         ],
       ),
@@ -584,7 +550,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       padding: const EdgeInsets.all(14),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
-        radius: 14,
+        radius: ArcUiTokens.radiusM,
         borderOpacity: 0.08,
       ),
       child: Column(
@@ -592,19 +558,15 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         children: [
           Text(
             combo.summaryLabel,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              height: 1.35,
+            style: ArcUiTokens.body(
+              color: ArcUiTokens.textPrimary,
+              weight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '${combo.percentageLabel} ${combo.reportCount} confirmation${combo.reportCount == 1 ? '' : 's'}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.neonPink,
-              fontWeight: FontWeight.w700,
-            ),
+            style: ArcUiTokens.label(color: ArcUiTokens.secondaryAccent),
           ),
         ],
       ),
@@ -618,9 +580,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
     return showModalBottomSheet<ArcBlueprint>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -644,10 +609,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
                   children: [
                     TextField(
                       controller: controller,
-                      style: const TextStyle(color: Colors.white),
+                      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                       onChanged: updateFilter,
-                      decoration: AppTheme.tradingInputDecoration(
-                        label: 'Search Blueprints',
+                      decoration: ArcUiTokens.inputDecoration(
+                        labelText: 'Search Blueprints',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -656,7 +621,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
                         shrinkWrap: true,
                         itemCount: filtered.length,
                         separatorBuilder: (_, _) =>
-                            const Divider(height: 1, color: Colors.white12),
+                            Divider(height: 1, color: ArcUiTokens.borderSubtle),
                         itemBuilder: (context, index) {
                           final blueprint = filtered[index];
                           return ListTile(
@@ -666,11 +631,14 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
                             ),
                             title: Text(
                               blueprint.name,
-                              style: const TextStyle(color: Colors.white),
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                                weight: FontWeight.w700,
+                              ),
                             ),
                             subtitle: Text(
                               blueprint.category,
-                              style: const TextStyle(color: Colors.white60),
+                              style: ArcUiTokens.bodySmall(),
                             ),
                             onTap: () => Navigator.of(context).pop(blueprint),
                           );
