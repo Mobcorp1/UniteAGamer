@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_item.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_scrappy_state.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_scrappy_repository.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class MissingScrappyDialog extends StatefulWidget {
   const MissingScrappyDialog({
@@ -56,14 +56,15 @@ class _MissingScrappyDialogState extends State<MissingScrappyDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: AppTheme.neonPink.withValues(alpha: 0.28)),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+        side: BorderSide(color: widget.tierColor.withValues(alpha: 0.30)),
       ),
       title: Text(
         widget.item.name,
-        style: AppTheme.tradingHeading(fontSize: 24, color: widget.tierColor),
+        style: ArcUiTokens.sectionTitle(fontSize: 18, color: widget.tierColor),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -71,16 +72,16 @@ class _MissingScrappyDialogState extends State<MissingScrappyDialog> {
           children: [
             Text(
               '${widget.item.category} - ${widget.item.group} - ${widget.item.tierLabel}',
-              style: const TextStyle(color: Colors.white70),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
             const SizedBox(height: 14),
 
             TextField(
               controller: _collectedController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: AppTheme.tradingInputDecoration(
-                label: 'Collected Amount',
+              style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+              decoration: ArcUiTokens.inputDecoration(
+                labelText: 'Collected Amount',
               ),
               onChanged: (_) => setState(() {}),
             ),
@@ -89,25 +90,30 @@ class _MissingScrappyDialogState extends State<MissingScrappyDialog> {
 
             Text(
               'Total Needed: ${widget.item.neededCount}',
-              style: const TextStyle(color: Colors.white70),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
             Text(
               'Still Needed: $_neededRemaining',
-              style: const TextStyle(color: Colors.orangeAccent),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.warning),
             ),
             Text(
               'Surplus (Tradeable): $_surplus',
-              style: const TextStyle(color: Colors.lightGreenAccent),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.success),
             ),
           ],
         ),
       ),
       actions: [
         TextButton(
+          style: ArcUiTokens.textButtonStyle(accent: widget.tierColor),
           onPressed: _saving ? null : () => Navigator.of(context).pop(false),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
+        TextButton(
+          style: ArcUiTokens.textButtonStyle(
+            accent: widget.tierColor,
+            primary: true,
+          ),
           onPressed: _saving ? null : _save,
           child: Text(_saving ? 'Saving...' : 'Save'),
         ),

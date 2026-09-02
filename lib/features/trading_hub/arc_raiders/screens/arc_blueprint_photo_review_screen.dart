@@ -80,16 +80,38 @@ class _ArcBlueprintPhotoReviewScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Apply Blueprint ownership?'),
-        content: const Text(
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+          ),
+        ),
+        title: Text(
+          'Apply Blueprint ownership?',
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.primaryAccent,
+          ),
+        ),
+        content: Text(
           'This updates owned or missing status for the full in-game grid. Duplicate counts, priorities and other Blueprint data are preserved.',
+          style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
         ),
         actions: [
           TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
+            ),
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          FilledButton(
+          TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
+              primary: true,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Apply Import'),
           ),
@@ -109,13 +131,32 @@ class _ArcBlueprintPhotoReviewScreenState
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Blueprint grid imported'),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.success.withValues(alpha: 0.30),
+            ),
+          ),
+          title: Text(
+            'Blueprint grid imported',
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.success,
+            ),
+          ),
           content: Text(
             '${summary.ownedCount} owned and ${summary.missingCount} missing slots were confirmed. '
             '${summary.preservedDuplicateCount} duplicate records were preserved.',
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           actions: [
-            FilledButton(
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.success,
+                primary: true,
+              ),
               onPressed: () => Navigator.pop(context),
               child: const Text('Done'),
             ),

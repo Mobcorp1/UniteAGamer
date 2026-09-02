@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -313,17 +314,11 @@ class _ArcProfileCompletionCardState extends State<ArcProfileCompletionCard> {
 
     return Container(
       padding: EdgeInsets.all(widget.compact ? 12 : 14),
-      decoration: BoxDecoration(
-        color: AppTheme.tradingCardBackground.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.38)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.10),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.32,
+        glow: true,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,23 +328,23 @@ class _ArcProfileCompletionCardState extends State<ArcProfileCompletionCard> {
             children: [
               const Icon(
                 Icons.verified_user_outlined,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Complete Your Profile',
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: widget.compact ? 15 : 18,
-                    color: AppTheme.neonCyan,
+                    color: ArcUiTokens.primaryAccent,
                   ),
                 ),
               ),
               Text(
                 '${summary.percent}%',
-                style: AppTheme.tradingHeading(
+                style: ArcUiTokens.numeric(
                   fontSize: 18,
-                  color: AppTheme.neonPink,
+                  color: ArcUiTokens.secondaryAccent,
                 ),
               ),
             ],
@@ -362,43 +357,40 @@ class _ArcProfileCompletionCardState extends State<ArcProfileCompletionCard> {
               minHeight: 8,
               backgroundColor: Colors.white.withValues(alpha: 0.08),
               valueColor: const AlwaysStoppedAnimation<Color>(
-                AppTheme.neonCyan,
+                ArcUiTokens.primaryAccent,
               ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Profile Strength: ${summary.strengthLabel} • ${summary.completed}/${summary.total} essentials complete',
-            style: AppTheme.bodyTextStyle(fontSize: 11, color: Colors.white70),
+            'Profile Strength: ${summary.strengthLabel} - ${summary.completed}/${summary.total} essentials complete',
+            style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
           ),
           if (nextTask != null) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppTheme.neonPink.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: AppTheme.neonPink.withValues(alpha: 0.28),
-                ),
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.interactive,
+                accent: ArcUiTokens.secondaryAccent,
+                borderOpacity: 0.28,
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(
                     Icons.bolt_rounded,
-                    color: AppTheme.neonPink,
+                    color: ArcUiTokens.secondaryAccent,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Next: ${nextTask.action}',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        isBold: true,
+                      style: ArcUiTokens.body(
+                        color: ArcUiTokens.textPrimary,
+                        weight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -427,16 +419,12 @@ class _CompletionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = task.complete ? AppTheme.neonCyan : Colors.white54;
+    final color = task.complete
+        ? ArcUiTokens.primaryAccent
+        : ArcUiTokens.textTertiary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: task.complete ? 0.12 : 0.06),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color.withValues(alpha: task.complete ? 0.42 : 0.24),
-        ),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -448,14 +436,7 @@ class _CompletionChip extends StatelessWidget {
             size: 14,
           ),
           const SizedBox(width: 5),
-          Text(
-            task.label,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 10,
-              color: color,
-              isBold: task.complete,
-            ),
-          ),
+          Text(task.label, style: ArcUiTokens.label(color: color)),
         ],
       ),
     );
@@ -612,17 +593,10 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(widget.compact ? 10 : 14),
-      decoration: BoxDecoration(
-        color: AppTheme.tradingCardBackground.withValues(alpha: 0.90),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.34)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonPink.withValues(alpha: 0.08),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.secondaryAccent,
+        borderOpacity: 0.30,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -633,15 +607,15 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
               Icon(
                 Icons.developer_mode_rounded,
                 size: widget.compact ? 17 : 20,
-                color: AppTheme.neonPink,
+                color: ArcUiTokens.secondaryAccent,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Closed Beta Tools',
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: widget.compact ? 14 : 17,
-                    color: AppTheme.neonPink,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                 ),
               ),
@@ -656,10 +630,7 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
           const SizedBox(height: 8),
           Text(
             'Preview each onboarding path, reset your own onboarding, or mark it complete for testing.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: widget.compact ? 10 : 12,
-              color: Colors.white.withValues(alpha: 0.72),
-            ),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -703,25 +674,17 @@ class _ArcBetaDevChip extends StatelessWidget {
         opacity: disabled ? 0.45 : 1,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-          decoration: BoxDecoration(
-            color: AppTheme.neonPink.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: AppTheme.neonPink.withValues(alpha: 0.28),
-            ),
+          decoration: ArcUiTokens.chipDecoration(
+            color: ArcUiTokens.secondaryAccent,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(action.icon, color: AppTheme.neonPink, size: 14),
+              Icon(action.icon, color: ArcUiTokens.secondaryAccent, size: 14),
               const SizedBox(width: 5),
               Text(
                 action.label,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 10,
-                  color: Colors.white.withValues(alpha: 0.86),
-                  isBold: true,
-                ),
+                style: ArcUiTokens.label(color: ArcUiTokens.textPrimary),
               ),
             ],
           ),
@@ -748,17 +711,10 @@ class ArcBetaAnnouncementCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(compact ? 10 : 14),
-      decoration: BoxDecoration(
-        color: AppTheme.tradingCardBackground.withValues(alpha: 0.90),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.32)),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.neonCyan.withValues(alpha: 0.08),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.28,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -768,31 +724,27 @@ class ArcBetaAnnouncementCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.campaign_rounded,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
                 size: compact ? 17 : 20,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Closed Beta Comms',
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: compact ? 14 : 17,
-                    color: AppTheme.neonCyan,
+                    color: ArcUiTokens.primaryAccent,
                   ),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: AppTheme.tradingPillDecoration(
-                  color: AppTheme.neonPink,
+                decoration: ArcUiTokens.chipDecoration(
+                  color: ArcUiTokens.secondaryAccent,
                 ),
                 child: Text(
                   'LIVE',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 10,
-                    color: AppTheme.neonPink,
-                    isBold: true,
-                  ),
+                  style: ArcUiTokens.label(color: ArcUiTokens.secondaryAccent),
                 ),
               ),
             ],
@@ -800,10 +752,7 @@ class ArcBetaAnnouncementCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Notifications now support beta announcements, trade reminders and session action prompts.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: compact ? 10 : 12,
-              color: Colors.white.withValues(alpha: 0.72),
-            ),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -817,19 +766,15 @@ class ArcBetaAnnouncementCard extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.neonCyan.withValues(alpha: 0.08),
+                    color: ArcUiTokens.primaryAccent.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: AppTheme.neonCyan.withValues(alpha: 0.28),
+                      color: ArcUiTokens.primaryAccent.withValues(alpha: 0.28),
                     ),
                   ),
                   child: Text(
                     item,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
-                      color: Colors.white.withValues(alpha: 0.86),
-                      isBold: true,
-                    ),
+                    style: ArcUiTokens.label(color: ArcUiTokens.textPrimary),
                   ),
                 ),
             ],
@@ -891,11 +836,7 @@ class ArcNotificationActionStrip extends StatelessWidget {
                   const SizedBox(width: 5),
                   Text(
                     action.label,
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
-                      color: Colors.white.withValues(alpha: 0.86),
-                      isBold: true,
-                    ),
+                    style: ArcUiTokens.label(color: ArcUiTokens.textPrimary),
                   ),
                 ],
               ),
@@ -935,17 +876,12 @@ class _ArcFirstRunDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 420),
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppTheme.darkBackground.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: accent.withValues(alpha: 0.55)),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withValues(alpha: 0.18),
-              blurRadius: 28,
-              spreadRadius: 2,
-            ),
-          ],
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.overlay,
+          accent: accent,
+          radius: ArcUiTokens.radiusXL,
+          borderOpacity: 0.48,
+          glow: true,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -953,7 +889,7 @@ class _ArcFirstRunDialog extends StatelessWidget {
           children: [
             Text(
               title,
-              style: AppTheme.tradingHeading(fontSize: 23, color: accent),
+              style: ArcUiTokens.sectionTitle(fontSize: 18, color: accent),
             ),
             const SizedBox(height: 14),
             for (var i = 0; i < steps.length; i++)
@@ -962,20 +898,12 @@ class _ArcFirstRunDialog extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${i + 1}. ',
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 13,
-                        color: accent,
-                        isBold: true,
-                      ),
-                    ),
+                    Text('${i + 1}. ', style: ArcUiTokens.label(color: accent)),
                     Expanded(
                       child: Text(
                         steps[i],
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.86),
+                        style: ArcUiTokens.body(
+                          color: ArcUiTokens.textSecondary,
                         ),
                       ),
                     ),
@@ -986,9 +914,17 @@ class _ArcFirstRunDialog extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: onDone, child: const Text('Skip')),
+                TextButton(
+                  style: ArcUiTokens.textButtonStyle(accent: accent),
+                  onPressed: onDone,
+                  child: const Text('Skip'),
+                ),
                 const SizedBox(width: 8),
-                ElevatedButton(
+                TextButton(
+                  style: ArcUiTokens.textButtonStyle(
+                    accent: accent,
+                    primary: true,
+                  ),
                   onPressed: () async {
                     if (onShowMe != null) {
                       await onShowMe!();

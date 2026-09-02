@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/arc_beta_feedback.dart';
@@ -74,17 +75,31 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.cardBackground,
-          title: const Text(
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.success.withValues(alpha: 0.30),
+            ),
+          ),
+          title: Text(
             'Feedback received',
-            style: TextStyle(color: Colors.white),
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.success,
+            ),
           ),
           content: Text(
             'Report ${id.substring(0, 8).toUpperCase()} was sent with screen and device context.',
-            style: const TextStyle(color: Colors.white70),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.success,
+                primary: true,
+              ),
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Done'),
             ),

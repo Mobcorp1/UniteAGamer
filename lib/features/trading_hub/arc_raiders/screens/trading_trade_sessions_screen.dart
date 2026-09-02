@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/notifications/models/uag_session_sc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_session.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
@@ -123,11 +124,11 @@ class _TradingTradeSessionsScreenState
       builder: (sheetContext) {
         return Container(
           margin: const EdgeInsets.all(AppTheme.spaceM),
-          padding: AppTheme.sectionCardPadding,
-          decoration: AppTheme.tradingCardDecoration(
-            backgroundColor: AppTheme.tradingCardBackground,
-            borderColor: AppTheme.neonPink.withValues(alpha: 0.35),
-            radius: 22,
+          padding: ArcUiTokens.panelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.overlay,
+            accent: ArcUiTokens.secondaryAccent,
+            borderOpacity: 0.32,
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -136,18 +137,15 @@ class _TradingTradeSessionsScreenState
               children: [
                 Text(
                   'Session readiness',
-                  style: AppTheme.tradingHeading(
-                    fontSize: 22,
-                    color: AppTheme.neonPink,
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 18,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${session.traderOneName} / ${session.traderTwoName}',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 14,
-                    color: AppTheme.tradingMutedText,
-                  ),
+                  '${session.traderOneName} vs ${session.traderTwoName}',
+                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
                 ),
                 const SizedBox(height: AppTheme.spaceM),
                 _sessionReadinessRow(
@@ -274,38 +272,30 @@ class _TradingTradeSessionsScreenState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          shape: AppTheme.tradingDialogShape(),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(color: confirmColor.withValues(alpha: 0.30)),
+          ),
           title: Text(
             title,
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+            style: ArcUiTokens.sectionTitle(fontSize: 18, color: confirmColor),
           ),
           content: Text(
             message,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 14,
-              color: AppTheme.tradingMutedText,
-            ),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(accent: confirmColor),
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Back',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 14,
-                  color: AppTheme.tradingFaintText,
-                ),
-              ),
+              child: const Text('Back'),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: confirmColor.withValues(alpha: 0.15),
-                foregroundColor: confirmColor,
-                side: BorderSide(color: confirmColor.withValues(alpha: 0.50)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: confirmColor,
+                primary: true,
               ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(confirmText),
@@ -330,45 +320,49 @@ class _TradingTradeSessionsScreenState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          shape: AppTheme.tradingDialogShape(),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+            ),
+          ),
           title: Text(
             'Share Embark ID',
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.primaryAccent,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-                decoration: AppTheme.tradingInputDecoration(label: 'Embark ID'),
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(labelText: 'Embark ID'),
               ),
               const SizedBox(height: 10),
               Text(
                 'Loaded from Your Hub Profile if saved there already.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: AppTheme.tradingFaintText,
-                ),
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
               ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Cancel',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 14,
-                  color: AppTheme.tradingFaintText,
-                ),
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
               ),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
             ),
-            ElevatedButton(
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
+                primary: true,
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Save'),
             ),
@@ -396,11 +390,20 @@ class _TradingTradeSessionsScreenState
         ];
 
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          shape: AppTheme.tradingDialogShape(),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+            ),
+          ),
           title: Text(
             'Assign First Drop',
-            style: AppTheme.tradingHeading(fontSize: 22, color: Colors.white),
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.primaryAccent,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -408,21 +411,19 @@ class _TradingTradeSessionsScreenState
                 .map(
                   (entry) => ListTile(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                     ),
                     title: Text(
                       entry.value,
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
-                        isBold: true,
+                      style: ArcUiTokens.body(
+                        color: ArcUiTokens.textPrimary,
+                        weight: FontWeight.w700,
                       ),
                     ),
                     subtitle: Text(
                       entry.key,
-                      style: AppTheme.bodyTextStyle(
-                        fontSize: 12,
-                        color: AppTheme.tradingFaintText,
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.textTertiary,
                       ),
                     ),
                     onTap: () => Navigator.of(dialogContext).pop(entry.key),
@@ -1139,7 +1140,7 @@ class _TradingTradeSessionsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${session.traderOneName} ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬‚Â ${session.traderTwoName}',
+            '${session.traderOneName} vs ${session.traderTwoName}',
             style: AppTheme.tradingHeading(fontSize: 22),
           ),
           const SizedBox(height: 10),
@@ -1376,7 +1377,7 @@ class _TradingTradeSessionsScreenState
           Divider(color: AppTheme.tradingDivider),
           const SizedBox(height: 10),
           Text(
-            'Flow: accept offer ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ propose 3 days †â€™ƒÂ¢¢â€šÂ¬¢â‚¬Â 3 times ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ other trader confirms one slot ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ share Embark IDs ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ assign first drop ‚€šÂ¬‚Â ƒÂ¢¢â€šÂ¬¢â€žÂ¢ both mark ready.',
+            'Flow: accept offer -> propose 3 days x 3 -> other trader confirms one slot -> share Embark IDs -> assign first drop -> both mark ready.',
             style: AppTheme.bodyTextStyle(
               fontSize: 13,
               color: AppTheme.tradingMutedText,

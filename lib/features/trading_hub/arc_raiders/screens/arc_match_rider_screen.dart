@@ -159,29 +159,43 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     final shouldSend = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackgroundAlt,
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+          ),
+        ),
         title: Text(
           'Invite ${candidate.profile.title}',
-          style: AppTheme.titleTextStyle(
-            fontSize: 22,
-            color: AppTheme.neonCyan,
-            isBold: true,
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
         content: TextField(
           controller: _inviteNoteController,
           maxLines: 3,
-          decoration: const InputDecoration(
+          style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+          decoration: ArcUiTokens.inputDecoration(
             labelText: 'Quick note',
             hintText: 'Say what run you want to do.',
           ),
         ),
         actions: [
           TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
+            ),
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
+              primary: true,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Send invite'),
           ),

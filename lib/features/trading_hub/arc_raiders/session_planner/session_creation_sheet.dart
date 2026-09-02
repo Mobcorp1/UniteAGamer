@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class SessionCreationSheet extends StatefulWidget {
@@ -15,9 +16,12 @@ class SessionCreationSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (_) => SessionCreationSheet(repository: repository),
     );
@@ -157,16 +161,16 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
               const SizedBox(height: AppTheme.spaceL),
               Text(
                 'Schedule Session',
-                style: AppTheme.tradingHeading(
-                  fontSize: 24,
-                  color: AppTheme.neonPink,
+                style: ArcUiTokens.sectionTitle(
+                  fontSize: 18,
+                  color: ArcUiTokens.secondaryAccent,
                 ),
               ),
               const SizedBox(height: AppTheme.spaceM),
               DropdownButtonFormField<String>(
                 initialValue: _type,
-                decoration: AppTheme.tradingInputDecoration(label: 'Type'),
-                dropdownColor: AppTheme.cardBackgroundAlt,
+                decoration: ArcUiTokens.inputDecoration(labelText: 'Type'),
+                dropdownColor: ArcUiTokens.surfaceRaised,
                 items: const [
                   DropdownMenuItem(value: 'trade', child: Text('Trade')),
                   DropdownMenuItem(
@@ -182,27 +186,27 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
               TextField(
                 controller: _uidController,
                 enabled: !_saving,
-                style: const TextStyle(color: Colors.white),
-                decoration: AppTheme.tradingInputDecoration(
-                  label: 'Other player UID',
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(
+                  labelText: 'Other player UID',
                 ),
               ),
               const SizedBox(height: AppTheme.spaceM),
               TextField(
                 controller: _nameController,
                 enabled: !_saving,
-                style: const TextStyle(color: Colors.white),
-                decoration: AppTheme.tradingInputDecoration(
-                  label: 'Other player display name',
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(
+                  labelText: 'Other player display name',
                 ),
               ),
               const SizedBox(height: AppTheme.spaceM),
               TextField(
                 controller: _embarkController,
                 enabled: !_saving,
-                style: const TextStyle(color: Colors.white),
-                decoration: AppTheme.tradingInputDecoration(
-                  label: 'Other player Embark ID',
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(
+                  labelText: 'Other player Embark ID',
                 ),
               ),
               const SizedBox(height: AppTheme.spaceM),
@@ -210,6 +214,19 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ArcUiTokens.primaryAccent,
+                        side: BorderSide(
+                          color: ArcUiTokens.primaryAccent.withValues(
+                            alpha: 0.34,
+                          ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            ArcUiTokens.radiusM,
+                          ),
+                        ),
+                      ),
                       onPressed: _saving ? null : _pickDate,
                       icon: const Icon(Icons.calendar_month_rounded),
                       label: Text('${_date.day}/${_date.month}/${_date.year}'),
@@ -218,6 +235,19 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
                   const SizedBox(width: AppTheme.spaceS),
                   Expanded(
                     child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ArcUiTokens.primaryAccent,
+                        side: BorderSide(
+                          color: ArcUiTokens.primaryAccent.withValues(
+                            alpha: 0.34,
+                          ),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            ArcUiTokens.radiusM,
+                          ),
+                        ),
+                      ),
                       onPressed: _saving ? null : _pickTime,
                       icon: const Icon(Icons.schedule_rounded),
                       label: Text(_time.format(context)),
@@ -231,11 +261,15 @@ class _SessionCreationSheetState extends State<SessionCreationSheet> {
                 enabled: !_saving,
                 minLines: 2,
                 maxLines: 4,
-                style: const TextStyle(color: Colors.white),
-                decoration: AppTheme.tradingInputDecoration(label: 'Notes'),
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(labelText: 'Notes'),
               ),
               const SizedBox(height: AppTheme.spaceL),
-              ElevatedButton.icon(
+              TextButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.secondaryAccent,
+                  primary: true,
+                ),
                 onPressed: _saving ? null : _save,
                 icon: _saving
                     ? const SizedBox(

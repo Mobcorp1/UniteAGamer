@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_service.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagVoiceArcAssistantSheet extends StatefulWidget {
@@ -13,7 +14,12 @@ class UagVoiceArcAssistantSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
+      ),
       builder: (_) => UagVoiceArcAssistantSheet(autoStart: autoStart),
     );
   }
@@ -140,7 +146,11 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
 
     return Row(
       children: [
-        const Icon(Icons.mic_rounded, color: AppTheme.neonPink, size: 30),
+        const Icon(
+          Icons.mic_rounded,
+          color: ArcUiTokens.secondaryAccent,
+          size: 30,
+        ),
         const SizedBox(width: AppTheme.spaceS),
         Expanded(
           child: Column(
@@ -148,18 +158,14 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
             children: [
               Text(
                 'ARC Assistant',
-                style: AppTheme.neonTextStyle(
-                  fontSize: 24,
-                  color: AppTheme.neonCyan,
-                  isBold: true,
+                style: ArcUiTokens.sectionTitle(
+                  fontSize: 18,
+                  color: ArcUiTokens.primaryAccent,
                 ),
               ),
               Text(
                 status,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
-                  color: AppTheme.tradingMutedText,
-                ),
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
               ),
             ],
           ),
@@ -172,22 +178,18 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
     return SwitchListTile.adaptive(
       value: _service.raidCompanionMode,
       onChanged: _service.initialising ? null : _toggleCompanionMode,
-      activeThumbColor: AppTheme.neonCyan,
-      activeTrackColor: AppTheme.neonCyan.withValues(alpha: 0.32),
+      activeThumbColor: ArcUiTokens.primaryAccent,
+      activeTrackColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.32),
       title: Text(
         'Raid Companion Mode',
-        style: AppTheme.bodyTextStyle(
-          fontSize: 15,
-          color: Colors.white,
-          isBold: true,
+        style: ArcUiTokens.body(
+          color: ArcUiTokens.textPrimary,
+          weight: FontWeight.w700,
         ),
       ),
       subtitle: Text(
         'Keeps the mic ready while this assistant is open.',
-        style: AppTheme.bodyTextStyle(
-          fontSize: 12,
-          color: AppTheme.tradingMutedText,
-        ),
+        style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
       ),
     );
   }
@@ -203,7 +205,11 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
 
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton.icon(
+      child: TextButton.icon(
+        style: ArcUiTokens.textButtonStyle(
+          accent: ArcUiTokens.primaryAccent,
+          primary: true,
+        ),
         onPressed: _service.initialising
             ? null
             : _service.speaking
@@ -229,8 +235,9 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
         Expanded(
           child: TextField(
             controller: _textController,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
+            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+            decoration: ArcUiTokens.inputDecoration(
+              labelText: 'Command',
               hintText: 'Type a command if voice misses it...',
             ),
             onSubmitted: (_) => _submitText(),
@@ -239,7 +246,10 @@ class _UagVoiceArcAssistantSheetState extends State<UagVoiceArcAssistantSheet> {
         const SizedBox(width: AppTheme.spaceS),
         IconButton(
           onPressed: _submitText,
-          icon: const Icon(Icons.send_rounded, color: AppTheme.neonCyan),
+          icon: const Icon(
+            Icons.send_rounded,
+            color: ArcUiTokens.primaryAccent,
+          ),
         ),
       ],
     );
@@ -259,32 +269,27 @@ class _InfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = warning ? AppTheme.neonPink : AppTheme.neonCyan;
+    final color = warning
+        ? ArcUiTokens.secondaryAccent
+        : ArcUiTokens.primaryAccent;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: color,
+        borderOpacity: 0.28,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: AppTheme.neonTextStyle(
-              fontSize: 18,
-              color: color,
-              isBold: true,
-            ),
+            style: ArcUiTokens.sectionTitle(fontSize: 15, color: color),
           ),
           const SizedBox(height: 6),
-          Text(
-            body,
-            style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
-          ),
+          Text(body, style: ArcUiTokens.body(color: ArcUiTokens.textSecondary)),
         ],
       ),
     );

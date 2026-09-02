@@ -7,7 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_community_intel_report.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_community_intel_repository.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 typedef ArcCommunityIntelSubmitter =
     Future<String> Function({
@@ -199,26 +199,35 @@ class _ArcCommunityIntelReportSheetState
           children: [
             Row(
               children: [
-                const Icon(Icons.add_location_alt_rounded),
+                const Icon(
+                  Icons.add_location_alt_rounded,
+                  color: ArcUiTokens.primaryAccent,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'REPORT COMMUNITY INTEL',
-                    style: AppTheme.tradingHeading(fontSize: 22),
+                    style: ArcUiTokens.sectionTitle(
+                      fontSize: 18,
+                      color: ArcUiTokens.primaryAccent,
+                    ),
                   ),
                 ),
                 IconButton(
                   tooltip: 'Close',
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: ArcUiTokens.textSecondary,
+                  ),
                 ),
               ],
             ),
             Text(
-              '${widget.map.displayName} • ${widget.layer.label} • '
+              '${widget.map.displayName} - ${widget.layer.label} - '
               '${(widget.point.x * 100).toStringAsFixed(1)}, '
               '${(widget.point.y * 100).toStringAsFixed(1)}',
-              style: const TextStyle(color: Colors.white60),
+              style: ArcUiTokens.bodySmall(),
             ),
             const SizedBox(height: 12),
             Row(
@@ -228,12 +237,14 @@ class _ArcCommunityIntelReportSheetState
                     value: progress,
                     minHeight: 5,
                     borderRadius: BorderRadius.circular(999),
+                    color: ArcUiTokens.primaryAccent,
+                    backgroundColor: ArcUiTokens.surfaceRaised,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  '${_step + 1}/$_totalSteps • $_stepLabel',
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                  '${_step + 1}/$_totalSteps - $_stepLabel',
+                  style: ArcUiTokens.metadata(),
                 ),
               ],
             ),
@@ -267,6 +278,7 @@ class _ArcCommunityIntelReportSheetState
             Row(
               children: [
                 TextButton.icon(
+                  style: ArcUiTokens.textButtonStyle(),
                   onPressed: _step == 0 || _saving
                       ? null
                       : () => _goTo(_step - 1),
@@ -276,20 +288,25 @@ class _ArcCommunityIntelReportSheetState
                 const Spacer(),
                 if (_step < _totalSteps - 1)
                   ElevatedButton.icon(
+                    style: ArcUiTokens.textButtonStyle(primary: true),
                     onPressed: _canContinue ? _advance : null,
                     icon: const Icon(Icons.arrow_forward_rounded),
                     label: const Text('Next'),
                   )
                 else
                   ElevatedButton.icon(
+                    style: ArcUiTokens.textButtonStyle(primary: true),
                     onPressed: _saving ? null : _submit,
                     icon: _saving
                         ? const SizedBox.square(
                             dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: ArcUiTokens.background,
+                            ),
                           )
                         : const Icon(Icons.send_rounded),
-                    label: Text(_saving ? 'Submitting…' : 'Submit Intel'),
+                    label: Text(_saving ? 'Submitting...' : 'Submit Intel'),
                   ),
               ],
             ),
@@ -335,14 +352,19 @@ class _ArcCommunityIntelReportSheetState
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: AppTheme.tradingCardDecoration(),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.16,
+        radius: ArcUiTokens.radiusL,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTheme.tradingHeading(fontSize: 20)),
+          Text(title, style: ArcUiTokens.sectionTitle(fontSize: 17)),
           if (subtitle != null) ...[
             const SizedBox(height: 5),
-            Text(subtitle, style: const TextStyle(color: Colors.white60)),
+            Text(subtitle, style: ArcUiTokens.bodySmall()),
           ],
           const SizedBox(height: 14),
           child,
@@ -364,6 +386,25 @@ class _ArcCommunityIntelReportSheetState
               selected: _category == category,
               showCheckmark: false,
               label: Text(category.shortLabel),
+              selectedColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.18),
+              backgroundColor: ArcUiTokens.surfaceInteractive.withValues(
+                alpha: 0.76,
+              ),
+              side: BorderSide(
+                color:
+                    (_category == category
+                            ? ArcUiTokens.primaryAccent
+                            : ArcUiTokens.borderSubtle)
+                        .withValues(alpha: 0.62),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+              ),
+              labelStyle: ArcUiTokens.label(
+                color: _category == category
+                    ? ArcUiTokens.primaryAccent
+                    : ArcUiTokens.textSecondary,
+              ),
               onSelected: (_) => _selectCategory(category),
             ),
         ],
@@ -378,14 +419,15 @@ class _ArcCommunityIntelReportSheetState
       child: DropdownButtonFormField<String>(
         initialValue: _blueprint?.id,
         isExpanded: true,
-        dropdownColor: AppTheme.cardBackgroundAlt,
-        decoration: AppTheme.tradingInputDecoration(label: 'Blueprint found'),
+        dropdownColor: ArcUiTokens.surfaceOverlay,
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+        decoration: ArcUiTokens.inputDecoration(labelText: 'Blueprint found'),
         items: [
           for (final blueprint in ArcBlueprintSeedData.blueprints)
             DropdownMenuItem(
               value: blueprint.id,
               child: Text(
-                '${blueprint.name} • ${blueprint.rarityLabel}',
+                '${blueprint.name} - ${blueprint.rarityLabel}',
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -415,9 +457,9 @@ class _ArcCommunityIntelReportSheetState
           _locationChoiceTile(
             key: const ValueKey<String>('intel-location-exact-pin'),
             selected: _locationChoice == _IntelLocationChoice.exactPin,
-            title: 'No listed POI — use exact dropped pin',
+            title: 'No listed POI - use exact dropped pin',
             subtitle:
-                'X ${(widget.point.x * 100).toStringAsFixed(1)} • '
+                'X ${(widget.point.x * 100).toStringAsFixed(1)} - '
                 'Y ${(widget.point.y * 100).toStringAsFixed(1)}',
             onTap: () =>
                 setState(() => _locationChoice = _IntelLocationChoice.exactPin),
@@ -433,10 +475,23 @@ class _ArcCommunityIntelReportSheetState
               ),
             )
           else
-            const ListTile(
-              leading: Icon(Icons.location_off_outlined),
-              title: Text('No nearby named POI'),
-              subtitle: Text('This report will remain coordinate-based.'),
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+              leading: const Icon(
+                Icons.location_off_outlined,
+                color: ArcUiTokens.textTertiary,
+              ),
+              title: Text(
+                'No nearby named POI',
+                style: ArcUiTokens.body(
+                  color: ArcUiTokens.textPrimary,
+                  weight: FontWeight.w700,
+                ),
+              ),
+              subtitle: Text(
+                'This report will remain coordinate-based.',
+                style: ArcUiTokens.bodySmall(),
+              ),
             ),
         ],
       ),
@@ -454,14 +509,21 @@ class _ArcCommunityIntelReportSheetState
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         key: key,
-        color: selected
-            ? AppTheme.neonCyan.withValues(alpha: 0.12)
-            : Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
           onTap: onTap,
-          child: Padding(
+          child: Ink(
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.interactive,
+              accent: selected
+                  ? ArcUiTokens.primaryAccent
+                  : ArcUiTokens.textTertiary,
+              borderOpacity: selected ? 0.46 : 0.14,
+              selected: selected,
+              radius: ArcUiTokens.radiusM,
+            ),
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
@@ -469,22 +531,24 @@ class _ArcCommunityIntelReportSheetState
                   selected
                       ? Icons.radio_button_checked_rounded
                       : Icons.radio_button_off_rounded,
-                  color: selected ? AppTheme.neonCyan : Colors.white54,
+                  color: selected
+                      ? ArcUiTokens.primaryAccent
+                      : ArcUiTokens.textTertiary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title),
-                      const SizedBox(height: 3),
                       Text(
-                        subtitle,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 12,
+                        title,
+                        style: ArcUiTokens.body(
+                          color: ArcUiTokens.textPrimary,
+                          weight: FontWeight.w700,
                         ),
                       ),
+                      const SizedBox(height: 3),
+                      Text(subtitle, style: ArcUiTokens.bodySmall()),
                     ],
                   ),
                 ),
@@ -504,7 +568,8 @@ class _ArcCommunityIntelReportSheetState
         controller: _notesController,
         maxLength: 280,
         maxLines: 4,
-        decoration: AppTheme.tradingInputDecoration(label: 'Optional notes'),
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+        decoration: ArcUiTokens.inputDecoration(labelText: 'Optional notes'),
       ),
     );
   }
@@ -523,7 +588,7 @@ class _ArcCommunityIntelReportSheetState
           if (_blueprint != null) _reviewRow('Blueprint', _blueprint!.name),
           _reviewRow(
             'Map',
-            '${widget.map.displayName} • ${widget.layer.label}',
+            '${widget.map.displayName} - ${widget.layer.label}',
           ),
           _reviewRow(
             'Location',
@@ -546,9 +611,14 @@ class _ArcCommunityIntelReportSheetState
         children: [
           SizedBox(
             width: 82,
-            child: Text(label, style: const TextStyle(color: Colors.white54)),
+            child: Text(label, style: ArcUiTokens.metadata()),
           ),
-          Expanded(child: Text(value)),
+          Expanded(
+            child: Text(
+              value,
+              style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+            ),
+          ),
         ],
       ),
     );

@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_make_offer_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class TradingMyOffersScreen extends StatelessWidget {
@@ -33,13 +34,13 @@ class TradingMyOffersScreen extends StatelessWidget {
   String _bundleText(TradingOffer offer) {
     final parts = <String>[];
     if (offer.smallBundles > 0) {
-      parts.add('${offer.smallBundles}†â€™ƒâ€ ¢â‚¬â„¢‚‚¬Å¡‚Â¬ƒÂ¢¢â€šÂ¬‚Â10');
+      parts.add('${offer.smallBundles}x10');
     }
     if (offer.mediumBundles > 0) {
-      parts.add('${offer.mediumBundles}†â€™ƒâ€ ¢â‚¬â„¢‚‚¬Å¡‚Â¬ƒÂ¢¢â€šÂ¬‚Â50');
+      parts.add('${offer.mediumBundles}x50');
     }
     if (offer.largeBundles > 0) {
-      parts.add('${offer.largeBundles}†â€™ƒâ€ ¢â‚¬â„¢‚‚¬Å¡‚Â¬ƒÂ¢¢â€šÂ¬‚Â100');
+      parts.add('${offer.largeBundles}x100');
     }
     if (parts.isEmpty) return 'No seed bundles';
     return '${parts.join(' - ')} (${offer.seedTotal} total)';
@@ -56,21 +57,30 @@ class TradingMyOffersScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.tradingCardBackground,
-          title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: Text(message, style: const TextStyle(color: Colors.white70)),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(color: confirmColor.withValues(alpha: 0.30)),
+          ),
+          title: Text(
+            title,
+            style: ArcUiTokens.sectionTitle(fontSize: 18, color: confirmColor),
+          ),
+          content: Text(
+            message,
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+          ),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(accent: confirmColor),
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text(
-                'Back',
-                style: TextStyle(color: Colors.white70),
-              ),
+              child: const Text('Back'),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: confirmColor,
-                foregroundColor: Colors.black,
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: confirmColor,
+                primary: true,
               ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(confirmText),

@@ -23,9 +23,9 @@ class MyIntelScreen extends StatelessWidget {
         elevation: 0,
         title: Text(
           'My Intel',
-          style: AppTheme.tradingHeading(
-            fontSize: 24,
-            color: AppTheme.neonCyan,
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
       ),
@@ -36,7 +36,7 @@ class MyIntelScreen extends StatelessWidget {
               ? const Center(
                   child: Text(
                     'Log in to view your intel reports.',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: ArcUiTokens.textSecondary),
                   ),
                 )
               : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -56,7 +56,11 @@ class MyIntelScreen extends StatelessWidget {
                     }
 
                     if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: ArcUiTokens.primaryAccent,
+                        ),
+                      );
                     }
 
                     final docs = snapshot.data!.docs.toList()
@@ -126,14 +130,18 @@ class _IntelHero extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
-        accent: AppTheme.neonCyan,
-        radius: 24,
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.24,
         glow: true,
       ),
       child: Row(
         children: [
-          const Icon(Icons.radar_rounded, color: AppTheme.neonCyan, size: 34),
+          const Icon(
+            Icons.radar_rounded,
+            color: ArcUiTokens.primaryAccent,
+            size: 30,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -141,15 +149,12 @@ class _IntelHero extends StatelessWidget {
               children: [
                 Text(
                   'Your Latest Intel',
-                  style: AppTheme.tradingHeading(
-                    fontSize: 26,
-                    color: Colors.white,
-                  ),
+                  style: ArcUiTokens.sectionTitle(fontSize: 17),
                 ),
                 const SizedBox(height: 5),
-                const Text(
+                Text(
                   'Review, correct or delete your last 5 submitted reports.',
-                  style: TextStyle(color: Colors.white70, height: 1.3),
+                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
                 ),
               ],
             ),
@@ -204,8 +209,8 @@ class _IntelReportCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
-        accent: AppTheme.neonCyan,
-        radius: 22,
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusL,
         borderOpacity: 0.18,
       ),
       child: Column(
@@ -213,14 +218,17 @@ class _IntelReportCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.article_outlined, color: AppTheme.neonCyan),
+              const Icon(
+                Icons.article_outlined,
+                color: ArcUiTokens.primaryAccent,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   blueprintId,
-                  style: AppTheme.tradingHeading(
-                    fontSize: 22,
-                    color: AppTheme.neonCyan,
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 16,
+                    color: ArcUiTokens.primaryAccent,
                   ),
                 ),
               ),
@@ -242,7 +250,7 @@ class _IntelReportCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               notes,
-              style: const TextStyle(color: Colors.white70, height: 1.3),
+              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
             ),
           ],
           const SizedBox(height: 12),
@@ -250,6 +258,15 @@ class _IntelReportCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ArcUiTokens.primaryAccent,
+                    side: BorderSide(
+                      color: ArcUiTokens.primaryAccent.withValues(alpha: 0.38),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+                    ),
+                  ),
                   onPressed: () => _editReport(context, doc),
                   icon: const Icon(Icons.edit_outlined),
                   label: const Text('Edit'),
@@ -262,9 +279,14 @@ class _IntelReportCard extends StatelessWidget {
                   icon: const Icon(Icons.delete_outline),
                   label: const Text('Delete'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.neonPink,
+                    foregroundColor: ArcUiTokens.secondaryAccent,
                     side: BorderSide(
-                      color: AppTheme.neonPink.withValues(alpha: 0.45),
+                      color: ArcUiTokens.secondaryAccent.withValues(
+                        alpha: 0.45,
+                      ),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                     ),
                   ),
                 ),
@@ -309,12 +331,19 @@ class _IntelReportCard extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.28),
+            ),
+          ),
           title: Text(
             'Edit Intel Report',
-            style: AppTheme.tradingHeading(
-              fontSize: 24,
-              color: AppTheme.neonCyan,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.primaryAccent,
             ),
           ),
           content: SingleChildScrollView(
@@ -331,10 +360,17 @@ class _IntelReportCard extends StatelessWidget {
           ),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
-            ElevatedButton.icon(
+            TextButton.icon(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
+                primary: true,
+              ),
               onPressed: () async {
                 await doc.reference.set({
                   'blueprintId': blueprint.text.trim(),
@@ -383,23 +419,8 @@ class _IntelReportCard extends StatelessWidget {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white70),
-          filled: true,
-          fillColor: Colors.black.withValues(alpha: 0.28),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(
-              color: AppTheme.neonCyan.withValues(alpha: 0.28),
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppTheme.neonPink),
-          ),
-        ),
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+        decoration: ArcUiTokens.inputDecoration(labelText: label),
       ),
     );
   }
@@ -411,24 +432,38 @@ class _IntelReportCard extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.cardBackgroundDeep,
-        title: Text(
-          'Delete Intel Report?',
-          style: AppTheme.tradingHeading(
-            fontSize: 24,
-            color: AppTheme.neonPink,
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.30),
           ),
         ),
-        content: const Text(
+        title: Text(
+          'Delete Intel Report?',
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.secondaryAccent,
+          ),
+        ),
+        content: Text(
           'This removes your report from community intel. Use this if you submitted the wrong item, map, source or condition.',
-          style: TextStyle(color: Colors.white70, height: 1.35),
+          style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
         ),
         actions: [
           TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
-          ElevatedButton.icon(
+          TextButton.icon(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+              primary: true,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             icon: const Icon(Icons.delete_outline),
             label: const Text('Delete'),
