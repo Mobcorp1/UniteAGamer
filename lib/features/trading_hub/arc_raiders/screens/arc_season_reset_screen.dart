@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcSeasonResetScreen extends StatefulWidget {
@@ -75,7 +76,9 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                child: CircularProgressIndicator(color: AppTheme.neonCyan),
+                child: CircularProgressIndicator(
+                  color: ArcUiTokens.primaryAccent,
+                ),
               );
             }
             if (snapshot.hasError) {
@@ -87,15 +90,15 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                     title: 'EXPEDITION RESET',
                     subtitle: 'Preview unavailable',
                     icon: Icons.warning_amber_rounded,
-                    accent: AppTheme.tradingDanger,
+                    accent: ArcUiTokens.danger,
                   ),
                   ArcRaidersSectionCard(
-                    accent: AppTheme.tradingDanger,
+                    accent: ArcUiTokens.danger,
                     child: Text(
                       'Reset preview could not load: ${snapshot.error}',
-                      style: AppTheme.bodyTextStyle(
+                      style: ArcUiTokens.body(
                         fontSize: 14,
-                        color: Colors.white70,
+                        color: ArcUiTokens.textSecondary,
                       ),
                     ),
                   ),
@@ -127,33 +130,33 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
           subtitle:
               'Archive the current season and begin ${preview.nextSeasonId}. No changes happen until you confirm.',
           icon: Icons.restart_alt_rounded,
-          accent: AppTheme.neonPink,
+          accent: ArcUiTokens.secondaryAccent,
         ),
         _statusCard(state, preview),
         _impactSection(
           title: 'WHAT RESETS',
           impacts: preview.impactsFor(ArcSeasonResetClassification.reset),
-          accent: AppTheme.neonPink,
+          accent: ArcUiTokens.secondaryAccent,
         ),
         _staticPolicySection(
           title: 'WHAT PERSISTS',
           items: ArcSeasonResetPolicy.persistentSystems,
-          accent: AppTheme.neonCyan,
+          accent: ArcUiTokens.primaryAccent,
         ),
         _impactSection(
           title: 'WHAT RECALCULATES',
           impacts: preview.impactsFor(
             ArcSeasonResetClassification.recalculated,
           ),
-          accent: Colors.amberAccent,
+          accent: ArcUiTokens.warning,
         ),
         _staticPolicySection(
           title: 'MANUAL RECONFIRMATION',
           items: ArcSeasonResetPolicy.manualReconfirmSystems,
-          accent: Colors.orangeAccent,
+          accent: ArcUiTokens.attentionAccent,
         ),
         ArcRaidersSectionCard(
-          accent: AppTheme.neonPink,
+          accent: ArcUiTokens.secondaryAccent,
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,15 +166,15 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                 onChanged: blocked
                     ? null
                     : (value) => setState(() => _confirmed = value == true),
-                activeColor: AppTheme.neonPink,
-                checkColor: Colors.black,
+                activeColor: ArcUiTokens.secondaryAccent,
+                checkColor: ArcUiTokens.background,
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   'I understand this archives blueprint, tracker and current-season Operation progress. Profile, reputation, legal consent and permanent rewards remain.',
-                  style: AppTheme.bodyTextStyle(
+                  style: ArcUiTokens.body(
                     fontSize: 13,
-                    color: Colors.white70,
-                    isBold: true,
+                    color: ArcUiTokens.textSecondary,
+                    weight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -180,6 +183,9 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
+                      style: ArcUiTokens.textButtonStyle(
+                        accent: ArcUiTokens.primaryAccent,
+                      ),
                       onPressed: _applying
                           ? null
                           : () => Navigator.pop(context),
@@ -189,6 +195,10 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                   const SizedBox(width: AppTheme.spaceM),
                   Expanded(
                     child: ElevatedButton.icon(
+                      style: ArcUiTokens.textButtonStyle(
+                        accent: ArcUiTokens.secondaryAccent,
+                        primary: true,
+                      ),
                       onPressed: blocked || !_confirmed || _applying
                           ? null
                           : () => _apply(preview),
@@ -196,7 +206,10 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: ArcUiTokens.background,
+                              ),
                             )
                           : const Icon(Icons.restart_alt_rounded),
                       label: Text(
@@ -223,10 +236,10 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
           subtitle:
               '${result.archivedSeasonId} archived. ${result.currentSeasonId} is now active.',
           icon: Icons.task_alt_rounded,
-          accent: AppTheme.neonCyan,
+          accent: ArcUiTokens.primaryAccent,
         ),
         ArcRaidersSectionCard(
-          accent: AppTheme.neonCyan,
+          accent: ArcUiTokens.primaryAccent,
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,13 +267,17 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
               const SizedBox(height: AppTheme.spaceM),
               Text(
                 'Next: rebuild early-season quest, Scrappy, bench and Operation progress from Command Centre.',
-                style: AppTheme.bodyTextStyle(
+                style: ArcUiTokens.body(
                   fontSize: 13,
-                  color: Colors.white70,
+                  color: ArcUiTokens.textSecondary,
                 ),
               ),
               const SizedBox(height: AppTheme.spaceM),
               ElevatedButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.primaryAccent,
+                  primary: true,
+                ),
                 onPressed: _returnToCommandCentre,
                 icon: const Icon(Icons.dashboard_customize_rounded),
                 label: const Text('Return To Command Centre'),
@@ -274,7 +291,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
 
   Widget _statusCard(ArcSeasonState state, ArcSeasonResetPreview preview) {
     return ArcRaidersSectionCard(
-      accent: AppTheme.neonCyan,
+      accent: ArcUiTokens.primaryAccent,
       padding: const EdgeInsets.all(14),
       child: Wrap(
         spacing: AppTheme.spaceM,
@@ -308,7 +325,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
         children: [
           Text(
             title,
-            style: AppTheme.tradingHeading(fontSize: 20, color: accent),
+            style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
           ),
           const SizedBox(height: AppTheme.spaceM),
           for (final impact in impacts) _impactRow(impact, accent),
@@ -330,7 +347,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
         children: [
           Text(
             title,
-            style: AppTheme.tradingHeading(fontSize: 20, color: accent),
+            style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
           ),
           const SizedBox(height: AppTheme.spaceM),
           Wrap(
@@ -340,9 +357,11 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
               for (final item in items)
                 Chip(
                   label: Text(item),
-                  backgroundColor: Colors.black.withValues(alpha: 0.28),
+                  backgroundColor: ArcUiTokens.surfaceInteractive,
                   side: BorderSide(color: accent.withValues(alpha: 0.28)),
-                  labelStyle: const TextStyle(color: Colors.white70),
+                  labelStyle: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textSecondary,
+                  ),
                 ),
             ],
           ),
@@ -367,18 +386,18 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                   impact.itemCount > 0
                       ? '${impact.label} (${impact.itemCount})'
                       : impact.label,
-                  style: AppTheme.bodyTextStyle(
+                  style: ArcUiTokens.body(
                     fontSize: 13,
-                    color: Colors.white,
-                    isBold: true,
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   impact.reason,
-                  style: AppTheme.bodyTextStyle(
+                  style: ArcUiTokens.body(
                     fontSize: 12,
-                    color: Colors.white60,
+                    color: ArcUiTokens.textTertiary,
                   ),
                 ),
               ],
@@ -394,8 +413,10 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
       constraints: const BoxConstraints(minWidth: 140, maxWidth: 210),
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceM),
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.16),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          accent: ArcUiTokens.primaryAccent,
+          borderOpacity: 0.16,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,18 +424,17 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
           children: [
             Text(
               label.toUpperCase(),
-              style: AppTheme.bodyTextStyle(
-                fontSize: 10,
-                color: Colors.white54,
-                isBold: true,
-              ),
+              style: ArcUiTokens.label(color: ArcUiTokens.textTertiary),
             ),
             const SizedBox(height: 4),
             Text(
               value,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: AppTheme.tradingHeading(fontSize: 16, color: Colors.white),
+              style: ArcUiTokens.cardTitle(
+                fontSize: 16,
+                color: ArcUiTokens.textPrimary,
+              ),
             ),
           ],
         ),
@@ -430,9 +450,9 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
           Expanded(
             child: Text(
               label,
-              style: AppTheme.bodyTextStyle(
+              style: ArcUiTokens.body(
                 fontSize: 13,
-                color: Colors.white60,
+                color: ArcUiTokens.textTertiary,
               ),
             ),
           ),
@@ -441,10 +461,10 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
               value,
               textAlign: TextAlign.right,
               overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodyTextStyle(
+              style: ArcUiTokens.body(
                 fontSize: 13,
-                color: Colors.white,
-                isBold: true,
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w700,
               ),
             ),
           ),

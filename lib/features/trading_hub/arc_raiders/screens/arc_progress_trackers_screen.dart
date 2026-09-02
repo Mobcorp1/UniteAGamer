@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scrappy_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -37,10 +38,10 @@ class ArcProgressTrackersScreen extends StatelessWidget {
               subtitle:
                   'Open the focused tracker for the system you are updating.',
               icon: Icons.track_changes_rounded,
-              accent: AppTheme.neonCyan,
+              accent: ArcUiTokens.primaryAccent,
             ),
             ArcRaidersSectionCard(
-              accent: AppTheme.neonCyan,
+              accent: ArcUiTokens.primaryAccent,
               padding: const EdgeInsets.all(12),
               child: StreamBuilder<Map<String, FeatureAvailability>>(
                 stream: FeatureAccess.watchAvailabilityMap(
@@ -51,7 +52,9 @@ class ArcProgressTrackersScreen extends StatelessWidget {
                       !snapshot.hasData) {
                     return const Padding(
                       padding: EdgeInsets.all(8),
-                      child: LinearProgressIndicator(color: AppTheme.neonCyan),
+                      child: LinearProgressIndicator(
+                        color: ArcUiTokens.primaryAccent,
+                      ),
                     );
                   }
                   final availability =
@@ -125,7 +128,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     title: 'Scrappy Tracker',
     subtitle: 'Track Scrappy upgrade materials and resource progress.',
     icon: Icons.egg_alt_rounded,
-    accent: AppTheme.neonPink,
+    accent: ArcUiTokens.secondaryAccent,
     routeName: ScrappyGridScreen.routeName,
     accessFlag: FeatureAccessFlag.scrappyTracker,
   ),
@@ -133,7 +136,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     title: 'Bench Tracker',
     subtitle: 'Review bench tiers, material gaps and upgrade readiness.',
     icon: Icons.build_rounded,
-    accent: AppTheme.neonCyan,
+    accent: ArcUiTokens.primaryAccent,
     routeName: ScrappyGridScreen.benchRouteName,
     accessFlag: FeatureAccessFlag.benchTracker,
   ),
@@ -141,7 +144,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     title: 'Quest Tracker',
     subtitle: 'Track trader quest items, hand-ins and blocker items.',
     icon: Icons.assignment_rounded,
-    accent: Colors.amberAccent,
+    accent: ArcUiTokens.warning,
     routeName: ScrappyGridScreen.questRouteName,
     accessFlag: FeatureAccessFlag.questTracker,
   ),
@@ -149,7 +152,7 @@ const _trackerLinks = <_TrackerLinkDefinition>[
     title: 'Hunt Targets',
     subtitle: 'Open Raid Planner targets for focused collection routes.',
     icon: Icons.my_location_rounded,
-    accent: Colors.lightGreenAccent,
+    accent: ArcUiTokens.success,
     routeName: RaidPlannerHuntTargetsScreen.routeName,
     accessFlag: FeatureAccessFlag.raidPlanner,
   ),
@@ -205,17 +208,17 @@ class _TrackerLinkCard extends StatelessWidget {
                     link.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.tradingHeading(fontSize: 17, color: accent),
+                    style: ArcUiTokens.cardTitle(fontSize: 17, color: accent),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     link.subtitle,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
+                    style: ArcUiTokens.body(
                       fontSize: 12,
-                      color: AppTheme.tradingMutedText,
-                    ).copyWith(height: 1.3),
+                      color: ArcUiTokens.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -248,11 +251,8 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: AppTheme.tradingPillDecoration(color: color),
-      child: Text(
-        label.toUpperCase(),
-        style: AppTheme.bodyTextStyle(fontSize: 9, color: color, isBold: true),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
+      child: Text(label.toUpperCase(), style: ArcUiTokens.label(color: color)),
     );
   }
 }
@@ -264,18 +264,21 @@ class _TrackerEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return TradingCard(
       compact: true,
-      accent: AppTheme.neonPink,
+      accent: ArcUiTokens.secondaryAccent,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.visibility_off_rounded, color: AppTheme.neonPink),
+          const Icon(
+            Icons.visibility_off_rounded,
+            color: ArcUiTokens.secondaryAccent,
+          ),
           const SizedBox(width: AppTheme.spaceS),
           Expanded(
             child: Text(
               'Progress trackers are hidden for this beta configuration. Adjust Feature Access in Admin Console to reopen them.',
-              style: AppTheme.bodyTextStyle(
+              style: ArcUiTokens.body(
                 fontSize: 13,
-                color: AppTheme.tradingMutedText,
+                color: ArcUiTokens.textSecondary,
               ),
             ),
           ),

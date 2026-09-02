@@ -21,6 +21,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scrappy_progress_header.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/scrappy_tile.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_dialogs.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_page_carousel.dart';
 
 enum ArcScrappyTrackerMode { scrappy, bench, quest }
@@ -255,42 +256,16 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     ArcScrappyItem item,
     ArcScrappyState currentState,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await UagDialogs.confirm(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.32)),
-          ),
-          title: Text(
-            'Clear ${item.name}?',
-            style: AppTheme.tradingHeading(
-              fontSize: 20,
-              color: Colors.redAccent,
-            ),
-          ),
-          content: Text(
-            'This will remove the collected amount for this ${_modeWord()} item and reset it back to zero.',
-            style: const TextStyle(color: Colors.white70, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.black,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Clear'),
-            ),
-          ],
-        );
-      },
+      title: 'Clear ${item.name}?',
+      message:
+          'This will remove the collected amount for this ${_modeWord()} item and reset it back to zero.',
+      titleColor: ArcUiTokens.danger,
+      confirmLabel: 'Clear',
+      confirmBackgroundColor: ArcUiTokens.danger,
+      confirmForegroundColor: ArcUiTokens.background,
+      borderColor: ArcUiTokens.danger,
     );
 
     if (confirmed != true) return;
@@ -326,46 +301,22 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
 
   Future<void> _confirmResetGrid() async {
     final items = _allItems;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await UagDialogs.confirm(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.32)),
-          ),
-          title: Text(
-            'Reset $_modeTitle?',
-            style: AppTheme.tradingHeading(
-              fontSize: 24,
-              color: Colors.redAccent,
-            ),
-          ),
-          content: Text(switch (_mode) {
-            ArcScrappyTrackerMode.scrappy =>
-              'This will remove all collected Scrappy progress and surplus from the Scrappy Intel only.',
-            ArcScrappyTrackerMode.bench =>
-              'This will remove all collected bench upgrade material progress from the Bench Operations only.',
-            ArcScrappyTrackerMode.quest =>
-              'This will remove all collected quest item progress from the Mission Operations only.',
-          }, style: const TextStyle(color: Colors.white70, height: 1.45)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.black,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Confirm Reset'),
-            ),
-          ],
-        );
+      title: 'Reset $_modeTitle?',
+      message: switch (_mode) {
+        ArcScrappyTrackerMode.scrappy =>
+          'This will remove all collected Scrappy progress and surplus from the Scrappy Intel only.',
+        ArcScrappyTrackerMode.bench =>
+          'This will remove all collected bench upgrade material progress from the Bench Operations only.',
+        ArcScrappyTrackerMode.quest =>
+          'This will remove all collected quest item progress from the Mission Operations only.',
       },
+      titleColor: ArcUiTokens.danger,
+      confirmLabel: 'Confirm Reset',
+      confirmBackgroundColor: ArcUiTokens.danger,
+      confirmForegroundColor: ArcUiTokens.background,
+      borderColor: ArcUiTokens.danger,
     );
 
     if (confirmed != true) return;
@@ -635,39 +586,16 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         .toList(growable: false);
     if (incompleteItems.isEmpty) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await UagDialogs.confirm(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: _modeAccent().withValues(alpha: 0.32)),
-          ),
-          title: Text(
-            'Complete $title?',
-            style: AppTheme.tradingHeading(fontSize: 22, color: _modeAccent()),
-          ),
-          content: Text(
-            'This will set ${incompleteItems.length} unfinished ${_modeWord()} item${incompleteItems.length == 1 ? '' : 's'} to their required target and persist the confirmation for this season.',
-            style: const TextStyle(color: Colors.white70, height: 1.45),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _modeAccent(),
-                foregroundColor: Colors.black,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Confirm Complete'),
-            ),
-          ],
-        );
-      },
+      title: 'Complete $title?',
+      message:
+          'This will set ${incompleteItems.length} unfinished ${_modeWord()} item${incompleteItems.length == 1 ? '' : 's'} to their required target and persist the confirmation for this season.',
+      titleColor: _modeAccent(),
+      confirmLabel: 'Confirm Complete',
+      confirmBackgroundColor: _modeAccent(),
+      confirmForegroundColor: ArcUiTokens.background,
+      borderColor: _modeAccent(),
     );
 
     if (confirmed != true) return;
@@ -723,12 +651,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         child: Container(
           margin: EdgeInsets.zero,
           padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
-          decoration: AppTheme.tradingCardDecoration(
-            radius: 22,
-            borderColor: color.withValues(alpha: 0.34),
-            backgroundColor: AppTheme.cardBackgroundDeep.withValues(
-              alpha: 0.94,
-            ),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.raised,
+            accent: color,
+            radius: ArcUiTokens.radiusXL,
+            borderOpacity: 0.34,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -742,7 +669,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       maxLines: 1,
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTheme.tradingHeading(
+                      style: ArcUiTokens.sectionTitle(
                         fontSize: 18,
                         color: color,
                       ),
@@ -761,11 +688,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white60,
-                  fontSize: 11,
-                  height: 1.25,
-                ),
+                style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
               ),
               const SizedBox(height: 6),
               ConstrainedBox(
@@ -778,16 +701,16 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                     _ProgressPill(text: 'Need $neededTotal', color: color),
                     _ProgressPill(
                       text: 'Got $gotTotal',
-                      color: Colors.greenAccent,
+                      color: ArcUiTokens.success,
                     ),
                     _ProgressPill(
                       text: 'Wanted $wantedTotal',
-                      color: AppTheme.neonPink,
+                      color: ArcUiTokens.secondaryAccent,
                     ),
                     if (duplicateTotal > 0)
                       _ProgressPill(
                         text: 'Dupes $duplicateTotal',
-                        color: Colors.amberAccent,
+                        color: ArcUiTokens.warning,
                       ),
                   ],
                 ),
@@ -813,15 +736,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       size: 17,
                     ),
                     label: Text(wantedTotal == 0 ? 'DONE' : 'COMPLETE'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: color,
-                      side: BorderSide(color: color.withValues(alpha: 0.58)),
-                      padding: EdgeInsets.zero,
-                      textStyle: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                      ),
+                    style: ArcUiTokens.textButtonStyle(accent: color).copyWith(
+                      padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                     ),
                   ),
                 ),
@@ -846,11 +762,13 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       required VoidCallback onTap,
       required IconData icon,
     }) {
-      final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
+      final color = selected
+          ? ArcUiTokens.secondaryAccent
+          : ArcUiTokens.primaryAccent;
 
       return Expanded(
         child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
@@ -858,12 +776,14 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
               horizontal: AppTheme.spaceM,
               vertical: AppTheme.spaceS,
             ),
-            decoration: AppTheme.tradingCardDecoration(
-              radius: 18,
-              borderColor: color.withValues(alpha: selected ? 0.62 : 0.30),
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.interactive,
+              accent: color,
+              radius: ArcUiTokens.radiusXL,
+              selected: selected,
               backgroundColor: selected
                   ? color.withValues(alpha: 0.13)
-                  : AppTheme.cardBackgroundDeep.withValues(alpha: 0.74),
+                  : ArcUiTokens.surfaceInteractive.withValues(alpha: 0.74),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

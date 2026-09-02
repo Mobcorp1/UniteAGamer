@@ -359,7 +359,8 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
     final plan = await showModalBottomSheet<ArcGeneratedLoadoutPlan>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF091116),
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -395,10 +396,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   label.toUpperCase(),
-                  style: AppTheme.tradingHeading(
-                    fontSize: 15,
-                    color: Colors.white70,
-                  ),
+                  style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
                 ),
               );
             }
@@ -414,14 +412,19 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                 onSelected: (_) => onSelected(),
                 avatar: icon == null ? null : Icon(icon, size: 17),
                 label: Text(label),
-                selectedColor: AppTheme.neonCyan.withValues(alpha: 0.22),
+                selectedColor: ArcUiTokens.primaryAccent.withValues(
+                  alpha: 0.22,
+                ),
+                backgroundColor: ArcUiTokens.surfaceInteractive,
                 side: BorderSide(
                   color: selected
-                      ? AppTheme.neonCyan
-                      : Colors.white.withValues(alpha: 0.18),
+                      ? ArcUiTokens.primaryAccent
+                      : ArcUiTokens.borderMedium,
                 ),
                 labelStyle: TextStyle(
-                  color: selected ? AppTheme.neonCyan : Colors.white70,
+                  color: selected
+                      ? ArcUiTokens.primaryAccent
+                      : ArcUiTokens.textSecondary,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               );
@@ -434,29 +437,27 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     horizontal: 10,
                     vertical: 12,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+                  decoration: ArcUiTokens.surfaceDecoration(
+                    role: ArcSurfaceRole.interactive,
+                    accent: ArcUiTokens.primaryAccent,
+                    radius: ArcUiTokens.radiusM,
+                    borderOpacity: 0.12,
                   ),
                   child: Column(
                     children: [
                       Text(
                         value,
-                        style: AppTheme.tradingHeading(
+                        style: ArcUiTokens.numeric(
                           fontSize: 20,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         label,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
+                        style: ArcUiTokens.metadata(
+                          color: ArcUiTokens.textTertiary,
                         ),
                       ),
                     ],
@@ -486,17 +487,16 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               children: [
                                 Text(
                                   'SMART LOADOUT BUILDER',
-                                  style: AppTheme.tradingHeading(
+                                  style: ArcUiTokens.sectionTitle(
                                     fontSize: 24,
-                                    color: AppTheme.neonCyan,
+                                    color: ArcUiTokens.primaryAccent,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                const Text(
+                                Text(
                                   'Pick your weapon and intent. Preview the complete pairing before applying it.',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    height: 1.3,
+                                  style: ArcUiTokens.body(
+                                    color: ArcUiTokens.textSecondary,
                                   ),
                                 ),
                               ],
@@ -518,9 +518,13 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               sectionLabel('Primary weapon'),
                               DropdownButtonFormField<String>(
                                 initialValue: weaponName,
-                                decoration: const InputDecoration(
-                                  prefixIcon: Icon(Icons.gps_fixed_rounded),
+                                dropdownColor: ArcUiTokens.surfaceOverlay,
+                                decoration: ArcUiTokens.inputDecoration(
+                                  prefixIcon: Icons.gps_fixed_rounded,
                                   labelText: 'Build around',
+                                ),
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
                                 ),
                                 items: ArcLoadoutSeedData.weapons
                                     .map(
@@ -591,12 +595,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               ),
                               const SizedBox(height: 18),
                               sectionLabel('Recommended secondary'),
-                              const Text(
-                                'UAG ranks these weapons to cover the primary weapon’s range, sustain or target weakness.',
-                                style: TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 12,
-                                  height: 1.3,
+                              Text(
+                                "UAG ranks these weapons to cover the primary weapon's range, sustain or target weakness.",
+                                style: ArcUiTokens.bodySmall(
+                                  color: ArcUiTokens.textTertiary,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -619,36 +621,29 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                               Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppTheme.neonCyan.withValues(alpha: 0.10),
-                                      AppTheme.neonPink.withValues(alpha: 0.05),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: AppTheme.neonCyan.withValues(
-                                      alpha: 0.28,
-                                    ),
-                                  ),
+                                decoration: ArcUiTokens.surfaceDecoration(
+                                  role: ArcSurfaceRole.raised,
+                                  accent: ArcUiTokens.primaryAccent,
+                                  radius: ArcUiTokens.radiusXL,
+                                  borderOpacity: 0.28,
+                                  glow: true,
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.auto_awesome_rounded,
-                                          color: AppTheme.neonCyan,
+                                          color: ArcUiTokens.primaryAccent,
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             preview.displayName,
-                                            style: AppTheme.tradingHeading(
+                                            style: ArcUiTokens.sectionTitle(
                                               fontSize: 19,
-                                              color: Colors.white,
+                                              color: ArcUiTokens.textPrimary,
                                             ),
                                           ),
                                         ),
@@ -657,9 +652,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                                     const SizedBox(height: 8),
                                     Text(
                                       '${preview.primaryWeapon} + ${preview.secondaryWeapon}',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontWeight: FontWeight.w700,
+                                      style: ArcUiTokens.body(
+                                        color: ArcUiTokens.textSecondary,
+                                        weight: FontWeight.w700,
                                       ),
                                     ),
                                     const SizedBox(height: 12),
@@ -683,32 +678,25 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Primary: ${preview.primaryAttachments.where((item) => item != 'Empty Slot').join(' • ')}',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
-                                        fontSize: 12,
-                                        height: 1.35,
+                                      'Primary: ${preview.primaryAttachments.where((item) => item != 'Empty Slot').join(' - ')}',
+                                      style: ArcUiTokens.bodySmall(
+                                        color: ArcUiTokens.textTertiary,
                                       ),
                                     ),
                                     const SizedBox(height: 5),
                                     Text(
-                                      'Secondary: ${preview.secondaryAttachments.where((item) => item != 'Empty Slot').join(' • ')}',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
-                                        fontSize: 12,
-                                        height: 1.35,
+                                      'Secondary: ${preview.secondaryAttachments.where((item) => item != 'Empty Slot').join(' - ')}',
+                                      style: ArcUiTokens.bodySmall(
+                                        color: ArcUiTokens.textTertiary,
                                       ),
                                     ),
                                     if (preview.rationale.isNotEmpty) ...[
                                       const SizedBox(height: 10),
                                       Text(
                                         preview.rationale.first,
-                                        style: const TextStyle(
-                                          color: Colors.white54,
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                          height: 1.35,
-                                        ),
+                                        style: ArcUiTokens.bodySmall(
+                                          color: ArcUiTokens.textTertiary,
+                                        ).copyWith(fontStyle: FontStyle.italic),
                                       ),
                                     ],
                                   ],
@@ -722,6 +710,10 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton.icon(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.primaryAccent,
+                            primary: true,
+                          ),
                           onPressed: () =>
                               Navigator.of(sheetContext).pop(preview),
                           icon: const Icon(Icons.check_circle_outline_rounded),
@@ -836,7 +828,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                   ? 'Bench craftable'
                   : 'Gunsmith Level ${weapon.gunsmithLevel}'
             : 'Available / bench source';
-        return '$availability • ${weapon.category} • ${weapon.role}';
+        return '$availability - ${weapon.category} - ${weapon.role}';
       },
       leadingBuilder: (weapon) {
         final owned = _isOwnedOrNotBlueprint(
@@ -1096,17 +1088,16 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
           padding: const EdgeInsets.all(14),
           child: ElectricChargeBorder(
             active: true,
-            radius: 24,
+            radius: ArcUiTokens.radiusXL,
             child: Container(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.82,
               ),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.98),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.32),
-                ),
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.overlay,
+                accent: ArcUiTokens.primaryAccent,
+                radius: ArcUiTokens.radiusXL,
+                borderOpacity: 0.32,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1118,9 +1109,9 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                         Expanded(
                           child: Text(
                             title.toUpperCase(),
-                            style: AppTheme.tradingHeading(
+                            style: ArcUiTokens.sectionTitle(
                               fontSize: 20,
-                              color: AppTheme.neonCyan,
+                              color: ArcUiTokens.primaryAccent,
                             ),
                           ),
                         ),
@@ -1128,7 +1119,7 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                           onPressed: () => Navigator.of(sheetContext).pop(),
                           icon: const Icon(
                             Icons.close_rounded,
-                            color: Colors.white70,
+                            color: ArcUiTokens.textSecondary,
                           ),
                         ),
                       ],
@@ -1143,21 +1134,17 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                           horizontal: 12,
                           vertical: 9,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.neonCyan.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppTheme.neonCyan.withValues(alpha: 0.20),
-                          ),
+                        decoration: ArcUiTokens.surfaceDecoration(
+                          role: ArcSurfaceRole.interactive,
+                          accent: ArcUiTokens.primaryAccent,
+                          radius: ArcUiTokens.radiusM,
+                          borderOpacity: 0.20,
                         ),
                         child: Text(
                           footerText,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.68),
-                            fontSize: 12,
-                            height: 1.25,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: ArcUiTokens.bodySmall(
+                            color: ArcUiTokens.textSecondary,
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -1165,39 +1152,38 @@ class _FavouriteLoadoutScreenState extends State<FavouriteLoadoutScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: items.length,
-                      separatorBuilder: (_, _) => Divider(
-                        height: 1,
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
+                      separatorBuilder: (_, _) =>
+                          Divider(height: 1, color: ArcUiTokens.borderSubtle),
                       itemBuilder: (context, index) {
                         final item = items[index];
                         final selected = selectedBuilder?.call(item) ?? false;
                         return ListTile(
                           selected: selected,
-                          selectedTileColor: AppTheme.neonCyan.withValues(
-                            alpha: 0.08,
-                          ),
+                          selectedTileColor: ArcUiTokens.primaryAccent
+                              .withValues(alpha: 0.08),
                           leading: leadingBuilder?.call(item),
                           title: Text(
                             labelBuilder(item),
                             style: TextStyle(
                               color: selected
-                                  ? AppTheme.neonCyan
-                                  : Colors.white,
+                                  ? ArcUiTokens.primaryAccent
+                                  : ArcUiTokens.textPrimary,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           subtitle: Text(
                             subtitleBuilder(item),
-                            style: const TextStyle(color: Colors.white60),
+                            style: ArcUiTokens.bodySmall(
+                              color: ArcUiTokens.textTertiary,
+                            ),
                           ),
                           trailing: Icon(
                             selected
                                 ? Icons.check_circle_rounded
                                 : Icons.chevron_right_rounded,
                             color: selected
-                                ? Colors.lightGreenAccent
-                                : AppTheme.neonCyan,
+                                ? ArcUiTokens.success
+                                : ArcUiTokens.primaryAccent,
                           ),
                           onTap: () => Navigator.of(sheetContext).pop(item),
                         );

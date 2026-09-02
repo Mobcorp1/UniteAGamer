@@ -50,8 +50,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/sma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/command_centre/arc_command_centre_content.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcCommandCentreScreen extends StatefulWidget {
   const ArcCommandCentreScreen({super.key});
@@ -252,7 +252,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         content: Text(
           action.placeholderMessage ??
               '${action.label} is not available in this beta build.',
-          style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
         ),
       ),
     );
@@ -544,7 +544,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
           onAction: _handleAction,
           onChecklistChanged: _handleChecklistChanged,
           fallbackNotice:
-              'Restoring your account state… the Command Centre will appear as soon as your tracker data is ready.',
+              'Restoring your account state... the Command Centre will appear as soon as your tracker data is ready.',
         ),
       );
     }
@@ -587,18 +587,18 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
     )!;
     final nextMission = missionSnapshot.nextMission;
     final accent = integration.complete
-        ? Colors.lightGreenAccent
-        : Colors.amberAccent;
+        ? ArcUiTokens.success
+        : ArcUiTokens.warning;
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
           child: Material(
-            color: const Color(0xFF091116).withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(16),
+            color: ArcUiTokens.surfaceRaised.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
             child: InkWell(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const FavouriteLoadoutScreen(),
@@ -607,9 +607,11 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: accent.withValues(alpha: 0.45)),
+                decoration: ArcUiTokens.surfaceDecoration(
+                  role: ArcSurfaceRole.raised,
+                  accent: accent,
+                  radius: ArcUiTokens.radiusXL,
+                  borderOpacity: 0.45,
                 ),
                 child: Row(
                   children: [
@@ -622,7 +624,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                           CircularProgressIndicator(
                             value: missionSnapshot.completionPercent / 100,
                             color: accent,
-                            backgroundColor: Colors.white12,
+                            backgroundColor: ArcUiTokens.surfaceInteractive,
                             strokeWidth: 5,
                           ),
                           Text(
@@ -645,10 +647,10 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                             plan.displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTheme.bodyTextStyle(
+                            style: ArcUiTokens.body(
                               fontSize: 13,
-                              color: Colors.white,
-                              isBold: true,
+                              color: ArcUiTokens.textPrimary,
+                              weight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -656,10 +658,8 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                             nextMission?.detail ?? integration.nextMove,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                              height: 1.2,
+                            style: ArcUiTokens.metadata(
+                              color: ArcUiTokens.textSecondary,
                             ),
                           ),
                         ],
@@ -714,7 +714,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
                       ),
                       icon: const Icon(
                         Icons.tune_rounded,
-                        color: AppTheme.neonCyan,
+                        color: ArcUiTokens.primaryAccent,
                       ),
                     ),
                   ],
