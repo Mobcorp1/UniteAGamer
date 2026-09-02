@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class UagDialogs {
   static Future<bool?> confirm({
     required BuildContext context,
     required String title,
     required String message,
-    Color titleColor = AppTheme.neonCyan,
+    Color titleColor = ArcUiTokens.primaryAccent,
     String cancelLabel = 'Cancel',
     String confirmLabel = 'Confirm',
     Color? confirmBackgroundColor,
@@ -16,35 +16,35 @@ class UagDialogs {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final accent = borderColor ?? titleColor;
         return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: (borderColor ?? titleColor).withValues(alpha: 0.32),
-            ),
-          ),
-          title: Text(
-            title,
-            style: AppTheme.tradingHeading(fontSize: 22, color: titleColor),
-          ),
-          content: Text(
-            message,
-            style: const TextStyle(color: Colors.white70, height: 1.4),
-          ),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: _dialogShape(accent),
+          title: Text(title, style: _titleStyle(titleColor)),
+          content: Text(message, style: _contentStyle()),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(accent: accent),
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(cancelLabel),
             ),
-            ElevatedButton(
-              style:
-                  confirmBackgroundColor == null &&
-                      confirmForegroundColor == null
-                  ? null
-                  : ElevatedButton.styleFrom(
+            TextButton(
+              style: confirmBackgroundColor == null
+                  ? ArcUiTokens.textButtonStyle(accent: accent, primary: true)
+                  : TextButton.styleFrom(
                       backgroundColor: confirmBackgroundColor,
-                      foregroundColor: confirmForegroundColor,
+                      foregroundColor:
+                          confirmForegroundColor ?? ArcUiTokens.background,
+                      padding: ArcUiTokens.buttonPadding,
+                      textStyle: ArcUiTokens.buttonLabel(
+                        color: confirmForegroundColor ?? ArcUiTokens.background,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          ArcUiTokens.radiusM,
+                        ),
+                      ),
                     ),
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(confirmLabel),
@@ -65,19 +65,22 @@ class UagDialogs {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          title: Text(
-            title,
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.neonCyan,
-            ),
-          ),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: _dialogShape(ArcUiTokens.primaryAccent),
+          title: Text(title, style: _titleStyle(ArcUiTokens.primaryAccent)),
           content: Wrap(
             spacing: 8,
             runSpacing: 8,
             children: List.generate(itemCount, (index) {
               return ActionChip(
+                backgroundColor: ArcUiTokens.surfaceRaised,
+                side: BorderSide(
+                  color: ArcUiTokens.primaryAccent.withValues(alpha: 0.24),
+                ),
+                labelStyle: ArcUiTokens.buttonLabel(
+                  color: ArcUiTokens.textPrimary,
+                ),
                 label: Text(labelBuilder(index)),
                 onPressed: () => Navigator.of(dialogContext).pop(index),
               );
@@ -98,24 +101,17 @@ class UagDialogs {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.cardBackgroundDeep,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.20)),
-          ),
-          title: Text(
-            title,
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.neonCyan,
-            ),
-          ),
-          content: Text(
-            message,
-            style: const TextStyle(color: Colors.white70, height: 1.4),
-          ),
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: _dialogShape(ArcUiTokens.primaryAccent),
+          title: Text(title, style: _titleStyle(ArcUiTokens.primaryAccent)),
+          content: Text(message, style: _contentStyle()),
           actions: [
-            ElevatedButton(
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
+                primary: true,
+              ),
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(buttonLabel),
             ),
@@ -123,5 +119,20 @@ class UagDialogs {
         );
       },
     );
+  }
+
+  static ShapeBorder _dialogShape(Color accent) {
+    return RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+      side: BorderSide(color: accent.withValues(alpha: 0.28)),
+    );
+  }
+
+  static TextStyle _titleStyle(Color color) {
+    return ArcUiTokens.sectionTitle(fontSize: 18, color: color);
+  }
+
+  static TextStyle _contentStyle() {
+    return ArcUiTokens.body(color: ArcUiTokens.textSecondary);
   }
 }

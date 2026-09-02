@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification_repository.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/trading_push_service.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagNotificationPreferencesPanel extends StatefulWidget {
@@ -95,9 +96,11 @@ class _UagNotificationPreferencesPanelState
 
         return Container(
           width: double.infinity,
-          padding: AppTheme.sectionCardPadding,
-          decoration: AppTheme.tradingCardDecoration(
-            borderColor: AppTheme.neonCyan.withValues(alpha: 0.24),
+          padding: ArcUiTokens.panelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            accent: ArcUiTokens.primaryAccent,
+            borderOpacity: 0.24,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,13 +109,16 @@ class _UagNotificationPreferencesPanelState
                 children: [
                   const Icon(
                     Icons.notifications_active_outlined,
-                    color: AppTheme.neonCyan,
+                    color: ArcUiTokens.primaryAccent,
                   ),
                   const SizedBox(width: AppTheme.spaceS),
                   Expanded(
                     child: Text(
                       'Notification Control',
-                      style: AppTheme.tradingHeading(fontSize: 20),
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 16,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
                     ),
                   ),
                 ],
@@ -120,10 +126,7 @@ class _UagNotificationPreferencesPanelState
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 'Control this device and the alert categories UAG can send you.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
-                  color: AppTheme.tradingMutedText,
-                ),
+                style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
               ),
               const SizedBox(height: AppTheme.spaceM),
               Wrap(
@@ -146,11 +149,7 @@ class _UagNotificationPreferencesPanelState
                 const SizedBox(height: AppTheme.spaceS),
                 Text(
                   'Chrome push needs --dart-define=UAG_WEB_PUSH_VAPID_KEY=YOUR_PUBLIC_KEY before this browser can register.',
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: AppTheme.warningAmber,
-                    isBold: true,
-                  ),
+                  style: ArcUiTokens.bodySmall(color: ArcUiTokens.warning),
                 ),
               ],
               const SizedBox(height: AppTheme.spaceM),
@@ -158,17 +157,27 @@ class _UagNotificationPreferencesPanelState
                 spacing: AppTheme.spaceS,
                 runSpacing: AppTheme.spaceS,
                 children: [
-                  ElevatedButton.icon(
+                  TextButton.icon(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.primaryAccent,
+                      primary: true,
+                    ),
                     onPressed: _busy ? null : _enableNotifications,
                     icon: const Icon(Icons.notifications_active_rounded),
                     label: const Text('Enable Notifications'),
                   ),
-                  OutlinedButton.icon(
+                  TextButton.icon(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.primaryAccent,
+                    ),
                     onPressed: _busy ? null : _sendLocalTest,
                     icon: const Icon(Icons.notification_add_outlined),
                     label: const Text('Test Notification'),
                   ),
-                  OutlinedButton.icon(
+                  TextButton.icon(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.primaryAccent,
+                    ),
                     onPressed: _busy ? null : _refreshStatus,
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('Refresh Status'),
@@ -179,10 +188,8 @@ class _UagNotificationPreferencesPanelState
                 const SizedBox(height: AppTheme.spaceS),
                 Text(
                   _message,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: AppTheme.tradingMutedText,
-                    isBold: true,
+                  style: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textSecondary,
                   ),
                 ),
               ],
@@ -219,14 +226,10 @@ class _UagNotificationPreferencesPanelState
   Widget _statusPill(String label, String value) {
     return Container(
       padding: AppTheme.pillPadding,
-      decoration: AppTheme.tradingPillDecoration(color: AppTheme.neonCyan),
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.primaryAccent),
       child: Text(
         '$label: $value',
-        style: AppTheme.bodyTextStyle(
-          fontSize: 12,
-          color: AppTheme.neonCyan,
-          isBold: true,
-        ),
+        style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
       ),
     );
   }
@@ -237,23 +240,20 @@ class _UagNotificationPreferencesPanelState
     bool value,
   ) {
     return Container(
-      decoration: AppTheme.tradingCardDecoration(
-        radius: 16,
-        borderColor: value
-            ? AppTheme.neonCyan.withValues(alpha: 0.24)
-            : Colors.white.withValues(alpha: 0.08),
-        backgroundColor: Colors.black.withValues(alpha: 0.28),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: value ? ArcUiTokens.primaryAccent : ArcUiTokens.textTertiary,
+        borderOpacity: value ? 0.26 : 0.10,
       ),
       child: SwitchListTile.adaptive(
         value: value,
-        activeThumbColor: AppTheme.neonCyan,
+        activeThumbColor: ArcUiTokens.primaryAccent,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         title: Text(
           category.label,
-          style: AppTheme.bodyTextStyle(
-            fontSize: 13,
-            color: Colors.white,
-            isBold: true,
+          style: ArcUiTokens.body(
+            color: ArcUiTokens.textPrimary,
+            weight: FontWeight.w700,
           ),
         ),
         onChanged: (next) => _toggle(preferences, category, next),

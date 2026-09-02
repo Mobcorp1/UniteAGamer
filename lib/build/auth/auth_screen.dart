@@ -13,6 +13,7 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_mandatory_onboarding_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_entry_gate.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
@@ -380,21 +381,31 @@ class _AuthScreenState extends State<AuthScreen> {
         await showDialog<void>(
           context: context,
           builder: (dialogContext) => AlertDialog(
-            backgroundColor: AppTheme.cardBackground,
-            title: Text(
-              'Thanks for joining the beta',
-              style: AppTheme.neonTextStyle(
-                fontSize: 24,
-                color: AppTheme.neonCyan,
-                isBold: true,
+            backgroundColor: ArcUiTokens.surfaceOverlay,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+              side: BorderSide(
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.28),
               ),
             ),
-            content: const Text(
+            title: Text(
+              'Thanks for joining the beta',
+              style: ArcUiTokens.sectionTitle(
+                fontSize: 18,
+                color: ArcUiTokens.primaryAccent,
+              ),
+            ),
+            content: Text(
               'This beta build does not reflect the full finished app yet. Thanks for testing and helping shape the final launch version.',
-              style: TextStyle(color: Colors.white70, height: 1.4),
+              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
             ),
             actions: [
-              ElevatedButton(
+              TextButton(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.primaryAccent,
+                  primary: true,
+                ),
                 onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text('Got it'),
               ),
@@ -518,13 +529,19 @@ class _AuthScreenState extends State<AuthScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          backgroundColor: AppTheme.cardBackground,
+          backgroundColor: ArcUiTokens.surfaceOverlay,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+            side: BorderSide(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.28),
+            ),
+          ),
           title: Text(
             'Reset password',
-            style: AppTheme.neonTextStyle(
-              fontSize: 26,
-              color: AppTheme.neonCyan,
-              isBold: true,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 18,
+              color: ArcUiTokens.primaryAccent,
             ),
           ),
           content: AutofillGroup(
@@ -541,10 +558,17 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           actions: [
             TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
+              ),
               onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('Cancel'),
             ),
-            ElevatedButton(
+            TextButton(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.primaryAccent,
+                primary: true,
+              ),
               onPressed: () async {
                 final email = _resetEmailController.text.trim();
                 if (email.isEmpty) return;

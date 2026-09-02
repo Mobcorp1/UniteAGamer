@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_feature_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
@@ -55,9 +56,15 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
             width: double.infinity,
-            padding: AppTheme.sectionCardPadding,
-            decoration: AppTheme.tradingCardDecoration(),
-            child: const LinearProgressIndicator(color: AppTheme.neonCyan),
+            padding: ArcUiTokens.panelPadding,
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.panel,
+              accent: ArcUiTokens.primaryAccent,
+              borderOpacity: 0.18,
+            ),
+            child: const LinearProgressIndicator(
+              color: ArcUiTokens.primaryAccent,
+            ),
           );
         }
 
@@ -67,9 +74,11 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
         final summary = snapshot.data?.summary;
         return Container(
           width: double.infinity,
-          padding: AppTheme.sectionCardPadding,
-          decoration: AppTheme.tradingCardDecoration(
-            borderColor: AppTheme.neonPink.withValues(alpha: 0.24),
+          padding: ArcUiTokens.panelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            accent: ArcUiTokens.admin,
+            borderOpacity: 0.24,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,13 +87,16 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.rule_folder_outlined,
-                    color: AppTheme.neonPink,
+                    color: ArcUiTokens.admin,
                   ),
                   const SizedBox(width: AppTheme.spaceS),
                   Expanded(
                     child: Text(
                       'Feature Visibility Diagnostics',
-                      style: AppTheme.tradingHeading(fontSize: 22),
+                      style: ArcUiTokens.sectionTitle(
+                        fontSize: 16,
+                        color: ArcUiTokens.admin,
+                      ),
                     ),
                   ),
                 ],
@@ -92,10 +104,7 @@ class ArcFeatureVisibilityDiagnosticsPanel extends StatelessWidget {
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 'Read-only view of feature access, personalisation, lifecycle and final visibility. Dormant future systems remain hidden even when named in the registry.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
-                  color: AppTheme.tradingMutedText,
-                ),
+                style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
               ),
               const SizedBox(height: AppTheme.spaceM),
               if (summary != null) ...[
@@ -138,20 +147,19 @@ class _ConfigurationSummary extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Closed Beta Configuration',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 13,
-              color: Colors.white,
-              isBold: true,
+            style: ArcUiTokens.body(
+              color: ArcUiTokens.textPrimary,
+              weight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: AppTheme.spaceS),
@@ -162,17 +170,17 @@ class _ConfigurationSummary extends StatelessWidget {
               _CountPill(
                 label: 'Live',
                 value: summary.liveCount,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
               ),
               _CountPill(
                 label: 'Coming Soon',
                 value: summary.comingSoonCount,
-                color: Colors.amberAccent,
+                color: ArcUiTokens.warning,
               ),
               _CountPill(
                 label: 'Hidden',
                 value: summary.hiddenCount,
-                color: AppTheme.neonPink,
+                color: ArcUiTokens.secondaryAccent,
               ),
             ],
           ),
@@ -195,16 +203,15 @@ class _ConfigurationSummary extends StatelessWidget {
                   children: [
                     const Icon(
                       Icons.warning_amber_rounded,
-                      color: Colors.amberAccent,
+                      color: ArcUiTokens.warning,
                       size: 16,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         warning,
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
+                        style: ArcUiTokens.bodySmall(
+                          color: ArcUiTokens.textSecondary,
                         ),
                       ),
                     ),
@@ -233,11 +240,8 @@ class _CountPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: AppTheme.tradingPillDecoration(color: color),
-      child: Text(
-        '$label: $value',
-        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
+      child: Text('$label: $value', style: ArcUiTokens.label(color: color)),
     );
   }
 }
@@ -250,21 +254,17 @@ class _CoreStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = status.warning
-        ? AppTheme.neonPink
+        ? ArcUiTokens.secondaryAccent
         : status.status == FeatureAvailability.comingSoon.label
-        ? Colors.amberAccent
-        : AppTheme.neonCyan;
+        ? ArcUiTokens.warning
+        : ArcUiTokens.primaryAccent;
     return Container(
       constraints: const BoxConstraints(minHeight: 34),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         '${status.label}: ${status.status}',
-        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
+        style: ArcUiTokens.label(color: color),
       ),
     );
   }
@@ -279,16 +279,15 @@ class _DiagnosticTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final entry = diagnostic.entry;
     final visible = diagnostic.visible;
+    final accent = visible
+        ? ArcUiTokens.primaryAccent
+        : ArcUiTokens.secondaryAccent;
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.24),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: visible
-              ? AppTheme.neonCyan.withValues(alpha: 0.22)
-              : AppTheme.neonPink.withValues(alpha: 0.2),
-        ),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: accent,
+        borderOpacity: 0.22,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,10 +297,9 @@ class _DiagnosticTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   entry.label,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                    isBold: true,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -324,10 +322,7 @@ class _DiagnosticTile extends StatelessWidget {
           const SizedBox(height: AppTheme.spaceS),
           Text(
             diagnostic.reason,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: AppTheme.tradingMutedText,
-            ),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
         ],
       ),
@@ -337,15 +332,17 @@ class _DiagnosticTile extends StatelessWidget {
   Widget _pill(String label, bool positive) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: AppTheme.tradingPillDecoration(
-        color: positive ? AppTheme.neonCyan : AppTheme.neonPink,
+      decoration: ArcUiTokens.chipDecoration(
+        color: positive
+            ? ArcUiTokens.primaryAccent
+            : ArcUiTokens.secondaryAccent,
       ),
       child: Text(
         label.toUpperCase(),
-        style: AppTheme.bodyTextStyle(
-          fontSize: 10,
-          color: positive ? AppTheme.neonCyan : AppTheme.neonPink,
-          isBold: true,
+        style: ArcUiTokens.label(
+          color: positive
+              ? ArcUiTokens.primaryAccent
+              : ArcUiTokens.secondaryAccent,
         ),
       ),
     );
@@ -354,18 +351,10 @@ class _DiagnosticTile extends StatelessWidget {
   Widget _textPill(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.textTertiary),
       child: Text(
         label,
-        style: AppTheme.bodyTextStyle(
-          fontSize: 10,
-          color: Colors.white70,
-          isBold: true,
-        ),
+        style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/notifications/data/uag_notification
 import 'package:uag_arc_raiders_hub/features/notifications/models/uag_notification_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_notifications_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagAdminBroadcastPanel extends StatefulWidget {
@@ -192,25 +193,38 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.cardBackgroundDeep,
-        shape: AppTheme.tradingDialogShape(),
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.30),
+          ),
+        ),
         title: Text(
           'Send broadcast?',
-          style: AppTheme.tradingHeading(fontSize: 22),
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.secondaryAccent,
+          ),
         ),
         content: Text(
           'This queues the broadcast for secure Cloud Function delivery. It does not send from the app client.',
-          style: AppTheme.bodyTextStyle(
-            fontSize: 14,
-            color: AppTheme.tradingMutedText,
-          ),
+          style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
         ),
         actions: [
           TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+              primary: true,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('Queue Broadcast'),
           ),
@@ -281,24 +295,35 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
 
     return Container(
       width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.26),
+      padding: ArcUiTokens.panelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: ArcUiTokens.secondaryAccent,
+        borderOpacity: 0.24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.campaign_outlined, color: AppTheme.neonPink),
+              const Icon(
+                Icons.campaign_outlined,
+                color: ArcUiTokens.secondaryAccent,
+              ),
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
                   'Communications Centre Broadcast',
-                  style: AppTheme.tradingHeading(fontSize: 22),
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 16,
+                    color: ArcUiTokens.secondaryAccent,
+                  ),
                 ),
               ),
-              OutlinedButton.icon(
+              TextButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.secondaryAccent,
+                ),
                 onPressed: _busy
                     ? null
                     : () => setState(() => _applyOpenBetaPreset()),
@@ -310,10 +335,7 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
           const SizedBox(height: AppTheme.spaceS),
           Text(
             'Send durable inbox messages and optional push alerts to all eligible users, platform audiences, or a selected user. Always test-send before the final broadcast.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 13,
-              color: AppTheme.tradingMutedText,
-            ),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: AppTheme.spaceM),
           _textField(_titleController, 'Title'),
@@ -413,25 +435,30 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
           const SizedBox(height: AppTheme.spaceM),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppTheme.spaceM),
-            decoration: AppTheme.tradingCardDecoration(
-              radius: 16,
-              borderColor: AppTheme.neonCyan.withValues(alpha: 0.2),
-              backgroundColor: Colors.black.withValues(alpha: 0.28),
+            padding: ArcUiTokens.panelPadding,
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.raised,
+              accent: ArcUiTokens.primaryAccent,
+              borderOpacity: 0.20,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Preview', style: AppTheme.tradingHeading(fontSize: 18)),
+                Text(
+                  'Preview',
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 15,
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                ),
                 const SizedBox(height: AppTheme.spaceS),
                 Text(
                   _titleController.text.trim().isEmpty
                       ? 'No title yet.'
                       : _titleController.text.trim(),
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 15,
-                    color: Colors.white,
-                    isBold: true,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -439,20 +466,13 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
                   _bodyController.text.trim().isEmpty
                       ? 'No body yet.'
                       : _bodyController.text.trim(),
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 13,
-                    color: AppTheme.tradingMutedText,
-                  ),
+                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
                 ),
                 if (estimate != null) ...[
                   const SizedBox(height: AppTheme.spaceS),
                   Text(
                     'Estimated eligible: ${estimate.eligibleUsers} users / ${estimate.eligibleDevices} devices${estimate.limited ? ' (sampled)' : ''}',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 12,
-                      color: AppTheme.neonCyan,
-                      isBold: true,
-                    ),
+                    style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
                   ),
                 ],
               ],
@@ -463,23 +483,35 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
             spacing: AppTheme.spaceS,
             runSpacing: AppTheme.spaceS,
             children: [
-              OutlinedButton.icon(
+              TextButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.primaryAccent,
+                ),
                 onPressed: _busy ? null : _estimateAudience,
                 icon: const Icon(Icons.groups_2_outlined),
                 label: const Text('Estimate Audience'),
               ),
-              OutlinedButton.icon(
+              TextButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.primaryAccent,
+                ),
                 onPressed: _busy ? null : _testSend,
                 icon: const Icon(Icons.send_to_mobile_outlined),
                 label: const Text('Test Send To Me'),
               ),
-              OutlinedButton.icon(
+              TextButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.primaryAccent,
+                ),
                 onPressed: _busy ? null : _createInboxTest,
                 icon: const Icon(Icons.mark_email_unread_outlined),
                 label: const Text('Inbox Test Target'),
               ),
               if (_lastInboxPath.isNotEmpty)
-                OutlinedButton.icon(
+                TextButton.icon(
+                  style: ArcUiTokens.textButtonStyle(
+                    accent: ArcUiTokens.primaryAccent,
+                  ),
                   onPressed: _busy ? null : _openCommunications,
                   icon: const Icon(Icons.inbox_outlined),
                   label: const Text('Open Communications'),
@@ -492,22 +524,26 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
                         : Icons.info_outline,
                     size: 16,
                     color: _lastInboxReadable == true
-                        ? AppTheme.tradingSuccess
-                        : AppTheme.tradingWarning,
+                        ? ArcUiTokens.success
+                        : ArcUiTokens.warning,
                   ),
                   label: Text(
                     'Target: ${_lastInboxTargetUid.isEmpty ? 'current user' : _lastInboxTargetUid}',
                   ),
-                  backgroundColor: Colors.black.withValues(alpha: 0.28),
+                  backgroundColor: ArcUiTokens.surfaceRaised,
                   side: BorderSide(
                     color:
                         (_lastInboxReadable == true
-                                ? AppTheme.tradingSuccess
-                                : AppTheme.tradingWarning)
+                                ? ArcUiTokens.success
+                                : ArcUiTokens.warning)
                             .withValues(alpha: 0.42),
                   ),
                 ),
-              ElevatedButton.icon(
+              TextButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.secondaryAccent,
+                  primary: true,
+                ),
                 onPressed: _busy ? null : _sendBroadcast,
                 icon: const Icon(Icons.campaign_rounded),
                 label: const Text('Queue Broadcast'),
@@ -518,11 +554,7 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
             const SizedBox(height: AppTheme.spaceS),
             Text(
               _message,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: AppTheme.tradingMutedText,
-                isBold: true,
-              ),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
           ],
         ],

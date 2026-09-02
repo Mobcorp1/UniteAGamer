@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisatio
 import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -20,18 +21,15 @@ class AdminMonetisationDashboard extends StatelessWidget {
       children: [
         Text(
           'Monetisation',
-          style: AppTheme.tradingHeading(
-            fontSize: 26,
-            color: AppTheme.neonCyan,
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.admin,
           ),
         ),
         const SizedBox(height: AppTheme.spaceS),
         Text(
           'Private admin view for users, subscription mix, referral exposure, revenue, platform fees and impact pot allocation.',
-          style: AppTheme.bodyTextStyle(
-            fontSize: 14,
-            color: AppTheme.tradingMutedText,
-          ),
+          style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
         ),
         const SizedBox(height: AppTheme.spaceL),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -107,18 +105,20 @@ class AdminMonetisationDashboard extends StatelessWidget {
                 const <QueryDocumentSnapshot<Map<String, dynamic>>>[];
             final stats = _RevenueStats.fromDocs(docs);
             return Container(
-              padding: AppTheme.sectionCardPadding,
-              decoration: AppTheme.tradingCardDecoration(
-                borderColor: AppTheme.neonCyan.withValues(alpha: 0.22),
+              padding: ArcUiTokens.panelPadding,
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.panel,
+                accent: ArcUiTokens.primaryAccent,
+                borderOpacity: 0.22,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Revenue Snapshot',
-                    style: AppTheme.tradingHeading(
-                      fontSize: 22,
-                      color: AppTheme.neonCyan,
+                    style: ArcUiTokens.sectionTitle(
+                      fontSize: 16,
+                      color: ArcUiTokens.primaryAccent,
                     ),
                   ),
                   const SizedBox(height: AppTheme.spaceM),
@@ -156,18 +156,14 @@ class AdminMonetisationDashboard extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-              ),
+              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
             ),
           ),
           Text(
-            '£${(pence / 100).toStringAsFixed(2)}',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              isBold: true,
+            'GBP ${(pence / 100).toStringAsFixed(2)}',
+            style: ArcUiTokens.body(
+              color: ArcUiTokens.textPrimary,
+              weight: FontWeight.w700,
             ),
           ),
         ],
@@ -310,23 +306,28 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
     final reachedLevel25 = !_isFreshOrReset && _reachedLevel25;
     return Container(
       width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonPink.withValues(alpha: 0.28),
+      padding: ArcUiTokens.panelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: ArcUiTokens.secondaryAccent,
+        borderOpacity: 0.24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.science_rounded, color: AppTheme.neonPink),
+              const Icon(
+                Icons.science_rounded,
+                color: ArcUiTokens.secondaryAccent,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Onboarding Simulator',
-                  style: AppTheme.tradingHeading(
-                    fontSize: 22,
-                    color: AppTheme.neonPink,
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 16,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                 ),
               ),
@@ -335,10 +336,7 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
           const SizedBox(height: AppTheme.spaceS),
           Text(
             'Admin-only onboarding preview. Applies simulated state to your admin account and opens the real onboarding flow without creating or deleting test accounts.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 14,
-              color: AppTheme.tradingMutedText,
-            ),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: AppTheme.spaceM),
           _sectionLabel('Profile State'),
@@ -381,11 +379,7 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
             const SizedBox(height: 8),
             Text(
               'Fresh starts and expedition resets force this to No because Raider Level returns to 0.',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: Colors.amberAccent,
-                isBold: true,
-              ),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.warning),
             ),
           ],
           const SizedBox(height: AppTheme.spaceM),
@@ -412,11 +406,7 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
             const SizedBox(height: 8),
             Text(
               'Blueprint ownership, quests and benches reset. Favourite Loadouts are retained.',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: AppTheme.tradingMutedText,
-                isBold: true,
-              ),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
           ],
           const SizedBox(height: AppTheme.spaceL),
@@ -463,11 +453,7 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         label.toUpperCase(),
-        style: AppTheme.bodyTextStyle(
-          fontSize: 12,
-          color: AppTheme.neonCyan,
-          isBold: true,
-        ).copyWith(letterSpacing: 1.1),
+        style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
       ),
     );
   }
@@ -480,14 +466,19 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        foregroundColor: selected ? Colors.black : Colors.white,
+        foregroundColor: selected
+            ? ArcUiTokens.background
+            : ArcUiTokens.textPrimary,
         backgroundColor: selected
-            ? AppTheme.neonCyan.withValues(alpha: 0.92)
-            : Colors.black.withValues(alpha: 0.24),
+            ? ArcUiTokens.primaryAccent
+            : ArcUiTokens.surfaceRaised.withValues(alpha: 0.84),
         side: BorderSide(
           color: selected
-              ? AppTheme.neonCyan
-              : Colors.white.withValues(alpha: 0.18),
+              ? ArcUiTokens.primaryAccent
+              : ArcUiTokens.borderMedium,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
         ),
       ),
       child: Text(label),
@@ -499,8 +490,12 @@ class _OnboardingSimulatorCardState extends State<_OnboardingSimulatorCard> {
     required IconData icon,
     required VoidCallback? onPressed,
   }) {
-    return ElevatedButton.icon(
+    return TextButton.icon(
       onPressed: onPressed,
+      style: ArcUiTokens.textButtonStyle(
+        accent: ArcUiTokens.primaryAccent,
+        primary: true,
+      ),
       icon: _isWriting
           ? const SizedBox(
               width: 16,
@@ -518,27 +513,26 @@ class _PaymentMethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.warningAmber.withValues(alpha: 0.22),
+      padding: ArcUiTokens.panelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: ArcUiTokens.warning,
+        borderOpacity: 0.22,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Payment Channels',
-            style: AppTheme.tradingHeading(
-              fontSize: 22,
-              color: AppTheme.warningAmber,
+            style: ArcUiTokens.sectionTitle(
+              fontSize: 16,
+              color: ArcUiTokens.warning,
             ),
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
             'Active launch route: Stripe Checkout and Stripe Customer Portal. Card wallets are handled by Stripe. Bacs Direct Debit is enabled in the function payment method config. PayPal is not enabled in this pass to avoid splitting subscription authority, webhook logic and payout reporting across two providers.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 14,
-              color: AppTheme.tradingMutedText,
-            ),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
         ],
       ),
@@ -560,27 +554,21 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: color.withValues(alpha: 0.22),
-        radius: 18,
+      padding: ArcUiTokens.panelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: color,
+        borderOpacity: 0.22,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 13,
-              color: AppTheme.tradingMutedText,
-              isBold: true,
-            ),
+            style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: AppTheme.tradingHeading(fontSize: 28, color: color),
-          ),
+          Text(value, style: ArcUiTokens.numeric(fontSize: 28, color: color)),
         ],
       ),
     );

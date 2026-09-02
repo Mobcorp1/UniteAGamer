@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class AdminBusinessMetricsPanel extends StatelessWidget {
   const AdminBusinessMetricsPanel({super.key});
@@ -29,7 +29,7 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                     telemetrySnapshot.hasError) {
                   return _messageCard(
                     'Could not load business metrics.',
-                    AppTheme.tradingDanger,
+                    ArcUiTokens.danger,
                   );
                 }
 
@@ -37,7 +37,9 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                     !revenueSnapshot.hasData &&
                     !telemetrySnapshot.hasData) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppTheme.neonCyan),
+                    child: CircularProgressIndicator(
+                      color: ArcUiTokens.primaryAccent,
+                    ),
                   );
                 }
 
@@ -71,7 +73,7 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                           value: '${metrics.monthlyActiveUsers}',
                           caption: 'Active in the last 30 days',
                           icon: Icons.groups_rounded,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                         _BusinessMetricCard(
                           width: cardWidth,
@@ -79,7 +81,7 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                           value: _money(metrics.adRevenuePence),
                           caption: 'Logged ad events',
                           icon: Icons.ads_click_rounded,
-                          color: Colors.lightGreenAccent,
+                          color: ArcUiTokens.success,
                         ),
                         _BusinessMetricCard(
                           width: cardWidth,
@@ -87,7 +89,7 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                           value: _money(metrics.revenuePerActiveUserPence),
                           caption: 'Gross revenue / active users',
                           icon: Icons.account_balance_wallet_outlined,
-                          color: AppTheme.warningAmber,
+                          color: ArcUiTokens.warning,
                         ),
                         _BusinessMetricCard(
                           width: cardWidth,
@@ -95,7 +97,7 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                           value: _money(metrics.lifetimeValuePence),
                           caption: 'Gross revenue / total users',
                           icon: Icons.timeline_rounded,
-                          color: AppTheme.neonPink,
+                          color: ArcUiTokens.secondaryAccent,
                         ),
                         _BusinessMetricCard(
                           width: cardWidth,
@@ -103,7 +105,7 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                           value: _duration(metrics.averageSessionTime),
                           caption: 'Fills as sessions are tracked',
                           icon: Icons.timer_outlined,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                         _BusinessMetricCard(
                           width: cardWidth,
@@ -113,7 +115,7 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
                           ),
                           caption: '${metrics.totalSessions} tracked sessions',
                           icon: Icons.repeat_rounded,
-                          color: Colors.white70,
+                          color: ArcUiTokens.textSecondary,
                         ),
                       ],
                     );
@@ -140,13 +142,15 @@ class AdminBusinessMetricsPanel extends StatelessWidget {
   static Widget _messageCard(String text, Color color) {
     return Container(
       width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: color.withValues(alpha: 0.35),
+      padding: ArcUiTokens.panelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.warning,
+        accent: color,
+        borderOpacity: 0.35,
       ),
       child: Text(
         text,
-        style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
+        style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
       ),
     );
   }
@@ -393,9 +397,10 @@ class _BusinessMetricCard extends StatelessWidget {
       width: width,
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: color.withValues(alpha: 0.24),
-          backgroundColor: Colors.black.withValues(alpha: 0.34),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          accent: color,
+          borderOpacity: 0.24,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,24 +411,17 @@ class _BusinessMetricCard extends StatelessWidget {
               value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTheme.tradingHeading(fontSize: 25, color: Colors.white),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 13,
-                color: color,
-                isBold: true,
+              style: ArcUiTokens.numeric(
+                fontSize: 25,
+                color: ArcUiTokens.textPrimary,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(label, style: ArcUiTokens.label(color: color)),
             const SizedBox(height: 3),
             Text(
               caption,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: AppTheme.tradingMutedText,
-              ),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
           ],
         ),

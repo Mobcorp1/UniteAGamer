@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/release/models/uag_release_runtime_diagnostics.dart';
 import 'package:uag_arc_raiders_hub/features/release/models/uag_release_readiness_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UagReleaseReadinessPanel extends StatelessWidget {
@@ -17,12 +18,15 @@ class UagReleaseReadinessPanel extends StatelessWidget {
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
         final readiness = UagReleaseReadinessSnapshot.fromMap(data);
+        final accent = readiness.blockerCount > 0
+            ? ArcUiTokens.danger
+            : ArcUiTokens.primaryAccent;
         return Container(
-          padding: AppTheme.sectionCardPadding,
-          decoration: AppTheme.tradingCardDecoration(
-            borderColor: readiness.blockerCount > 0
-                ? AppTheme.tradingDanger.withValues(alpha: 0.42)
-                : AppTheme.neonCyan.withValues(alpha: 0.32),
+          padding: ArcUiTokens.panelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            accent: accent,
+            borderOpacity: readiness.blockerCount > 0 ? 0.34 : 0.24,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,9 +38,7 @@ class UagReleaseReadinessPanel extends StatelessWidget {
                     readiness.blockerCount > 0
                         ? Icons.warning_amber_rounded
                         : Icons.verified_outlined,
-                    color: readiness.blockerCount > 0
-                        ? AppTheme.tradingDanger
-                        : AppTheme.neonCyan,
+                    color: accent,
                   ),
                   const SizedBox(width: AppTheme.spaceM),
                   Expanded(
@@ -45,9 +47,9 @@ class UagReleaseReadinessPanel extends StatelessWidget {
                       children: [
                         Text(
                           'Release Readiness',
-                          style: AppTheme.tradingHeading(
-                            fontSize: 22,
-                            color: AppTheme.neonCyan,
+                          style: ArcUiTokens.sectionTitle(
+                            fontSize: 16,
+                            color: accent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceXS),
@@ -55,9 +57,8 @@ class UagReleaseReadinessPanel extends StatelessWidget {
                           readiness.canCallClosedBetaReady
                               ? 'Repository checks are release-candidate shaped. Remaining items are configuration or device QA.'
                               : 'Release blockers remain. Do not call this production-ready until the blocked rows are cleared.',
-                          style: AppTheme.bodyTextStyle(
-                            fontSize: 14,
-                            color: AppTheme.tradingMutedText,
+                          style: ArcUiTokens.body(
+                            color: ArcUiTokens.textSecondary,
                           ),
                         ),
                       ],
@@ -119,14 +120,10 @@ class _MetricPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.24)),
-        color: Colors.black.withValues(alpha: 0.26),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.primaryAccent),
       child: Text(
         '$label: $value',
-        style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white),
+        style: ArcUiTokens.label(color: ArcUiTokens.textPrimary),
       ),
     );
   }
@@ -144,35 +141,29 @@ class _ReleaseRuntimeDiagnosticsCard extends StatelessWidget {
         if (diagnostics == null) {
           return Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.black.withValues(alpha: 0.20),
-              border: Border.all(
-                color: AppTheme.neonCyan.withValues(alpha: 0.18),
-              ),
+            padding: ArcUiTokens.panelPadding,
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.raised,
+              accent: ArcUiTokens.primaryAccent,
+              borderOpacity: 0.18,
             ),
             child: Text(
               'Loading runtime diagnostics...',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 12,
-                color: AppTheme.tradingMutedText,
-              ),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
           );
         }
 
+        final accent = diagnostics.hasBlocked
+            ? ArcUiTokens.danger
+            : ArcUiTokens.primaryAccent;
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.black.withValues(alpha: 0.20),
-            border: Border.all(
-              color: diagnostics.hasBlocked
-                  ? AppTheme.tradingDanger.withValues(alpha: 0.34)
-                  : AppTheme.neonCyan.withValues(alpha: 0.20),
-            ),
+          padding: ArcUiTokens.panelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.raised,
+            accent: accent,
+            borderOpacity: diagnostics.hasBlocked ? 0.32 : 0.20,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,23 +174,20 @@ class _ReleaseRuntimeDiagnosticsCard extends StatelessWidget {
                     diagnostics.hasBlocked
                         ? Icons.report_problem_outlined
                         : Icons.query_stats_rounded,
-                    color: diagnostics.hasBlocked
-                        ? AppTheme.tradingDanger
-                        : AppTheme.neonCyan,
+                    color: accent,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Runtime Diagnostics',
-                      style: AppTheme.tradingHeading(fontSize: 16),
+                      style: ArcUiTokens.sectionTitle(fontSize: 15),
                     ),
                   ),
                   Text(
                     diagnostics.generatedAt.toLocal().toString(),
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 10,
-                      color: Colors.white54,
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textTertiary,
                     ),
                   ),
                 ],
@@ -242,10 +230,10 @@ class _ReleaseDiagnosticTile extends StatelessWidget {
     final color = _levelColor(entry.level);
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.black.withValues(alpha: 0.18),
-        border: Border.all(color: color.withValues(alpha: 0.26)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: color,
+        borderOpacity: 0.24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,11 +247,7 @@ class _ReleaseDiagnosticTile extends StatelessWidget {
                   entry.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 11,
-                    color: Colors.white70,
-                    isBold: true,
-                  ),
+                  style: ArcUiTokens.label(color: ArcUiTokens.textSecondary),
                 ),
               ),
             ],
@@ -273,7 +257,7 @@ class _ReleaseDiagnosticTile extends StatelessWidget {
             entry.value,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textPrimary),
           ),
           if (entry.detail.trim().isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -281,10 +265,7 @@ class _ReleaseDiagnosticTile extends StatelessWidget {
               entry.detail,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: AppTheme.bodyTextStyle(
-                fontSize: 10,
-                color: Colors.white54,
-              ),
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
             ),
           ],
         ],
@@ -329,10 +310,10 @@ class _ReadinessCheckTile extends StatelessWidget {
     final color = _stateColor(check.state);
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.black.withValues(alpha: 0.22),
-        border: Border.all(color: color.withValues(alpha: 0.32)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: color,
+        borderOpacity: 0.28,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,31 +326,22 @@ class _ReadinessCheckTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   check.label,
-                  style: AppTheme.tradingHeading(fontSize: 15),
+                  style: ArcUiTokens.sectionTitle(fontSize: 14),
                 ),
               ),
-              Text(
-                check.state.label,
-                style: AppTheme.bodyTextStyle(fontSize: 11, color: color),
-              ),
+              Text(check.state.label, style: ArcUiTokens.label(color: color)),
             ],
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
             check.detail,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: AppTheme.tradingMutedText,
-            ),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
           if (check.owner.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spaceXS),
             Text(
               'Owner: ${check.owner}',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 11,
-                color: Colors.white60,
-              ),
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
             ),
           ],
         ],

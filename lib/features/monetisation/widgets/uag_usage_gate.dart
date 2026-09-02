@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 import '../models/uag_match_intelligence_copy.dart';
 import '../models/uag_subscription_tier.dart';
@@ -22,25 +22,38 @@ class UagUsageGate {
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.cardBackgroundDeep,
-        shape: AppTheme.tradingDialogShape(),
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.30),
+          ),
+        ),
         title: Text(
           'Upgrade for more ${action.label.toLowerCase()}s',
-          style: AppTheme.tradingHeading(
+          style: ArcUiTokens.sectionTitle(
             fontSize: 22,
-            color: AppTheme.neonPink,
+            color: ArcUiTokens.secondaryAccent,
           ),
         ),
         content: Text(
           _upgradeBody(action, result.reason),
-          style: const TextStyle(color: Colors.white70, height: 1.4),
+          style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
         ),
         actions: [
           TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Close'),
           ),
-          ElevatedButton(
+          TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+              primary: true,
+            ),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               Navigator.of(context).pushNamed(MonetisationScreen.routeName);

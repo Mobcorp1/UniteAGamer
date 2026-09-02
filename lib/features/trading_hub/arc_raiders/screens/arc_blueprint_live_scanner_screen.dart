@@ -24,6 +24,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_camera_health_guard.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_camera_operation_queue.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_camera_diagnostic_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 bool canStartCapture({
   required bool controllerInitialized,
@@ -1678,34 +1679,43 @@ class _RotateToLandscapePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
+      color: ArcUiTokens.background,
       padding: const EdgeInsets.symmetric(horizontal: 32),
       alignment: Alignment.center,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.screen_rotation_rounded,
-            color: Colors.white,
-            size: 68,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: DecoratedBox(
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.overlay,
+            accent: ArcUiTokens.primaryAccent,
+            borderOpacity: 0.30,
           ),
-          const SizedBox(height: 20),
-          const Text(
-            'Rotate your phone to landscape',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.screen_rotation_rounded,
+                  color: ArcUiTokens.primaryAccent,
+                  size: 54,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Rotate your phone to landscape',
+                  textAlign: TextAlign.center,
+                  style: ArcUiTokens.sectionTitle(fontSize: 20),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'The Blueprint Scanner is designed for landscape mode. Rotate your phone and continue.',
+                  textAlign: TextAlign.center,
+                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 14),
-          const Text(
-            'The Blueprint Scanner is designed for landscape mode.\nRotate your phone and continue.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1727,35 +1737,57 @@ class _ErrorState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.no_photography_outlined,
-              color: Colors.white70,
-              size: 54,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: DecoratedBox(
+            decoration: ArcUiTokens.surfaceDecoration(
+              role: ArcSurfaceRole.warning,
+              accent: ArcUiTokens.warning,
+              borderOpacity: 0.30,
             ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white),
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.no_photography_outlined,
+                    color: ArcUiTokens.warning,
+                    size: 46,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                  ),
+                  const SizedBox(height: 18),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      TextButton(
+                        style: ArcUiTokens.textButtonStyle(
+                          accent: ArcUiTokens.warning,
+                        ),
+                        onPressed: onCancel,
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        style: ArcUiTokens.textButtonStyle(
+                          accent: ArcUiTokens.warning,
+                          primary: true,
+                        ),
+                        onPressed: onRetry,
+                        child: const Text('Retry Camera'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 18),
-            Wrap(
-              spacing: 10,
-              children: [
-                OutlinedButton(
-                  onPressed: onCancel,
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: onRetry,
-                  child: const Text('Retry Camera'),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

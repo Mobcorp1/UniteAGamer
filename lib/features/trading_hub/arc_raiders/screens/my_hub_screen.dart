@@ -26,7 +26,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
-import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_background.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_responsive_chrome.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 
@@ -340,16 +339,17 @@ class _MyHubScreenState extends State<MyHubScreen> {
   }
 
   Widget _identityHero() {
-    final compact = MediaQuery.sizeOf(context).width < 600;
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 640;
 
     return Container(
       clipBehavior: Clip.hardEdge,
-      constraints: BoxConstraints(minHeight: compact ? 306 : 342),
+      constraints: BoxConstraints(minHeight: compact ? 154 : 126),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
         radius: ArcUiTokens.radiusL,
-        accent: ArcUiTokens.primaryAccent,
-        borderOpacity: 0.18,
+        accent: ArcUiTokens.secondaryAccent,
+        borderOpacity: 0.30,
       ),
       child: Stack(
         children: [
@@ -365,41 +365,69 @@ class _MyHubScreenState extends State<MyHubScreen> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                   colors: [
-                    ArcUiTokens.background.withValues(alpha: 0.42),
+                    ArcUiTokens.background.withValues(alpha: 0.93),
+                    ArcUiTokens.background.withValues(alpha: 0.70),
                     ArcUiTokens.background.withValues(alpha: 0.86),
                   ],
+                  stops: const [0.0, 0.48, 1.0],
                 ),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$_periodGreeting, $_displayName',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ArcUiTokens.sectionTitle(fontSize: 17),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'ARC systems, trades, hunts and profile actions are ready.',
-                  style: ArcUiTokens.bodySmall(
-                    color: ArcUiTokens.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _nextBestAction(_featureByTitle('Blueprint Tracker')),
-              ],
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 14 : 18,
+              vertical: compact ? 12 : 14,
             ),
+            child: compact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _heroGreeting(compact: true),
+                      const SizedBox(height: 10),
+                      _nextBestAction(_featureByTitle('Blueprint Tracker')),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(flex: 4, child: _heroGreeting(compact: false)),
+                      const SizedBox(width: 18),
+                      Expanded(
+                        flex: 6,
+                        child: _nextBestAction(
+                          _featureByTitle('Blueprint Tracker'),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _heroGreeting({required bool compact}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$_periodGreeting, $_displayName',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: ArcUiTokens.sectionTitle(fontSize: compact ? 16 : 18),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'ARC systems, trades, hunts and profile actions are ready.',
+          maxLines: compact ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+        ),
+      ],
     );
   }
 
@@ -476,7 +504,279 @@ class _MyHubScreenState extends State<MyHubScreen> {
     );
   }
 
-  Widget _alertFeed() {
+  Widget _alertRow(IconData icon, String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hubPanel({
+    required String title,
+    required Widget child,
+    String? subtitle,
+    Color accent = ArcUiTokens.primaryAccent,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        radius: ArcUiTokens.radiusL,
+        accent: accent,
+        borderOpacity: 0.18,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title.toUpperCase(), style: ArcUiTokens.label(color: accent)),
+          if (subtitle != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
+            ),
+          ],
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _hubOverview() {
+    return StreamBuilder<Map<String, ArcBlueprintState>>(
+      stream: _blueprintRepository.watchMyBlueprintStates(),
+      builder: (context, snapshot) {
+        final states = snapshot.data ?? const <String, ArcBlueprintState>{};
+        final blueprints = ArcBlueprintSeedData.blueprints;
+        var owned = 0;
+        var dupes = 0;
+
+        for (final blueprint in blueprints) {
+          final state =
+              states[blueprint.id] ?? ArcBlueprintState.empty(blueprint.id);
+          if (state.owned) owned++;
+          dupes += state.dupesOwned;
+        }
+
+        final total = blueprints.length;
+        final missing = total - owned;
+
+        final metrics =
+            <({String label, String value, IconData icon, Color color})>[
+              (
+                label: 'Collected',
+                value: '$owned / $total',
+                icon: Icons.grid_view_rounded,
+                color: ArcUiTokens.primaryAccent,
+              ),
+              (
+                label: 'Missing',
+                value: '$missing',
+                icon: Icons.track_changes_rounded,
+                color: ArcUiTokens.secondaryAccent,
+              ),
+              (
+                label: 'Duplicates',
+                value: '$dupes',
+                icon: Icons.swap_horiz_rounded,
+                color: ArcUiTokens.success,
+              ),
+              (
+                label: 'Blueprints',
+                value: '$total',
+                icon: Icons.inventory_2_outlined,
+                color: ArcUiTokens.warning,
+              ),
+            ];
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 720
+                ? 4
+                : constraints.maxWidth >= 390
+                ? 2
+                : 1;
+            final gap = 10.0;
+            final tileWidth =
+                (constraints.maxWidth - (gap * (columns - 1))) / columns;
+
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final metric in metrics)
+                  SizedBox(
+                    width: tileWidth,
+                    child: _overviewTile(
+                      label: metric.label,
+                      value: metric.value,
+                      icon: metric.icon,
+                      color: metric.color,
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _overviewTile({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 96),
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        radius: ArcUiTokens.radiusM,
+        accent: color,
+        borderOpacity: 0.20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.label(color: color).copyWith(fontSize: 10),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ArcUiTokens.sectionTitle(fontSize: 22, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _personalTools() {
+    final tools = [
+      _featureByTitle('My Loadout'),
+      _featureByTitle('My Intel'),
+      _featureByTitle('Profile & Reputation'),
+      _featureByTitle('Referral Tools'),
+      _featureByTitle('Play Like a Pro'),
+      _featureByTitle('Operation Rewards'),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 760
+            ? 3
+            : constraints.maxWidth >= 430
+            ? 2
+            : 1;
+        final gap = 10.0;
+        final cardWidth =
+            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final feature in tools)
+              SizedBox(width: cardWidth, child: _personalToolCard(feature)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _personalToolCard(_ArcHubFeature feature) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+      onTap: () => _openFeature(feature),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 92),
+        padding: const EdgeInsets.all(12),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          radius: ArcUiTokens.radiusM,
+          accent: feature.accent,
+          borderOpacity: 0.18,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.overlay,
+                radius: ArcUiTokens.radiusS,
+                accent: feature.accent,
+                borderOpacity: 0.26,
+              ),
+              child: Icon(feature.icon, size: 18, color: feature.accent),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    feature.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.cardTitle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    feature.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.metadata(
+                      color: ArcUiTokens.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: feature.accent.withValues(alpha: 0.76),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _alertFeedBody() {
     return StreamBuilder<Map<String, ArcBlueprintState>>(
       stream: _blueprintRepository.watchMyBlueprintStates(),
       builder: (context, snapshot) {
@@ -494,13 +794,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
         final missing = total - owned;
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'ALERTS',
-              style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
-            ),
-            const SizedBox(height: 8),
             _alertRow(
               Icons.grid_view_rounded,
               '$owned / $total blueprints collected.',
@@ -529,27 +823,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
     );
   }
 
-  Widget _alertRow(IconData icon, String text, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 7),
-      child: Row(
-        children: [
-          Icon(icon, size: 15, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _featureStrip() {
+  Widget _featureStripBody() {
     final featured = [
       _featureByTitle('Blueprint Tracker'),
       _featureByTitle('Smart Trade Assist'),
@@ -558,99 +832,177 @@ class _MyHubScreenState extends State<MyHubScreen> {
       _featureByTitle('Profile & Reputation'),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'FEATURES',
-          style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          'Swipe to explore',
-          style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 120,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: featured.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final feature = featured[index];
-              return InkWell(
-                borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-                onTap: () => _openFeature(feature),
-                child: Container(
-                  width: 132,
-                  padding: ArcUiTokens.densePanelPadding,
-                  decoration: ArcUiTokens.surfaceDecoration(
-                    role: ArcSurfaceRole.interactive,
-                    radius: ArcUiTokens.radiusM,
-                    accent: feature.accent,
-                    borderOpacity: index == 0 ? 0.46 : 0.20,
-                    selected: index == 0,
+    return SizedBox(
+      height: 118,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: featured.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final feature = featured[index];
+          return InkWell(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+            onTap: () => _openFeature(feature),
+            child: Container(
+              width: 118,
+              padding: ArcUiTokens.densePanelPadding,
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.interactive,
+                radius: ArcUiTokens.radiusM,
+                accent: feature.accent,
+                borderOpacity: index == 0 ? 0.42 : 0.18,
+                selected: index == 0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(feature.icon, size: 19, color: feature.accent),
+                  const Spacer(),
+                  Text(
+                    feature.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.buttonLabel(
+                      color: ArcUiTokens.textPrimary,
+                    ).copyWith(fontSize: 10.5),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(feature.icon, size: 19, color: feature.accent),
-                      const Spacer(),
-                      Text(
-                        feature.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: ArcUiTokens.buttonLabel(
-                          color: ArcUiTokens.textPrimary,
-                        ).copyWith(fontSize: 11),
-                      ),
-                    ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _quickActionsBody() {
+    final actions = [
+      ('Report Drop', _featureByTitle('My Intel'), Icons.inventory_outlined),
+      (
+        'Start Hunt',
+        _featureByTitle('Blueprint Tracker'),
+        Icons.track_changes_rounded,
+      ),
+      (
+        'Create Trade',
+        _featureByTitle('Trading Overview'),
+        Icons.handshake_outlined,
+      ),
+      ('My Loadout', _featureByTitle('My Loadout'), Icons.inventory_2_outlined),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoColumns = constraints.maxWidth >= 330;
+        final gap = 8.0;
+        final width = twoColumns
+            ? (constraints.maxWidth - gap) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final action in actions)
+              SizedBox(
+                width: width,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: action.$2.accent,
+                    side: BorderSide(
+                      color: action.$2.accent.withValues(alpha: 0.36),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 11,
+                    ),
+                    minimumSize: const Size(0, 42),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+                    ),
+                  ),
+                  onPressed: () => _openFeature(action.$2),
+                  icon: Icon(action.$3, size: 17),
+                  label: Text(
+                    action.$1,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.buttonLabel(color: action.$2.accent),
                   ),
                 ),
-              );
-            },
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _desktopDashboard() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 7,
+          child: Column(
+            children: [
+              _hubPanel(
+                title: 'Hub Overview',
+                subtitle: 'Your live Blueprint collection snapshot',
+                child: _hubOverview(),
+              ),
+              const SizedBox(height: 12),
+              _hubPanel(
+                title: 'Personal Tools',
+                subtitle:
+                    'Your loadout, intel, profile and progression shortcuts',
+                child: _personalTools(),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 4,
+          child: Column(
+            children: [
+              _hubPanel(title: 'Alerts', child: _alertFeedBody()),
+              const SizedBox(height: 12),
+              _hubPanel(title: 'Features', child: _featureStripBody()),
+              const SizedBox(height: 12),
+              _hubPanel(
+                title: 'Quick Actions',
+                accent: ArcUiTokens.secondaryAccent,
+                child: _quickActionsBody(),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _quickActions() {
+  Widget _mobileDashboard() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'QUICK ACTIONS',
-          style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+        _hubPanel(
+          title: 'Hub Overview',
+          subtitle: 'Your live Blueprint collection snapshot',
+          child: _hubOverview(),
         ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _quickAction('Report Drop', _featureByTitle('My Intel')),
-            _quickAction('Start Hunt', _featureByTitle('Blueprint Tracker')),
-            _quickAction('Create Trade', _featureByTitle('Trading Overview')),
-          ],
+        const SizedBox(height: 12),
+        _hubPanel(title: 'Alerts', child: _alertFeedBody()),
+        const SizedBox(height: 12),
+        _hubPanel(title: 'Personal Tools', child: _personalTools()),
+        const SizedBox(height: 12),
+        _hubPanel(title: 'Features', child: _featureStripBody()),
+        const SizedBox(height: 12),
+        _hubPanel(
+          title: 'Quick Actions',
+          accent: ArcUiTokens.secondaryAccent,
+          child: _quickActionsBody(),
         ),
       ],
-    );
-  }
-
-  Widget _quickAction(String label, _ArcHubFeature feature) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: feature.accent,
-        side: BorderSide(color: feature.accent.withValues(alpha: 0.38)),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        minimumSize: const Size(0, 40),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
-        ),
-      ),
-      onPressed: () => _openFeature(feature),
-      child: Text(label, style: ArcUiTokens.buttonLabel(color: feature.accent)),
     );
   }
 
@@ -664,47 +1016,18 @@ class _MyHubScreenState extends State<MyHubScreen> {
         showAdBanner: false,
         child: SafeArea(
           child: ArcRaidersPageList(
-            maxWidth: 1180,
+            maxWidth: 1240,
             bottomPadding: 14,
             children: [
               _referenceHeader(),
               const SizedBox(height: 8),
+              _identityHero(),
+              const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  if (constraints.maxWidth >= 900) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 6, child: _identityHero()),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 5,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _alertFeed(),
-                              const SizedBox(height: 14),
-                              _featureStrip(),
-                              const SizedBox(height: 14),
-                              _quickActions(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _identityHero(),
-                      const SizedBox(height: 14),
-                      _alertFeed(),
-                      const SizedBox(height: 14),
-                      _featureStrip(),
-                      const SizedBox(height: 14),
-                      _quickActions(),
-                    ],
-                  );
+                  return constraints.maxWidth >= 940
+                      ? _desktopDashboard()
+                      : _mobileDashboard();
                 },
               ),
             ],
@@ -1484,49 +1807,37 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       ),
       body: ArcRaidersScreenShell(
         showAdBanner: false,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(
-              child: UagCinematicBackground(
-                accent: selected.accent,
-                showWatermark: true,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const _MyHubDividerSpacer(
+                label: 'Personal Systems',
+                color: AppTheme.neonCyan,
               ),
-            ),
-
-            SafeArea(
-              child: Column(
-                children: [
-                  const _MyHubDividerSpacer(
-                    label: 'Personal Systems',
-                    color: AppTheme.neonCyan,
-                  ),
-                  Expanded(
-                    child: _PremiumFeatureCarousel(
-                      controller: _controller,
-                      selectedIndex: _selectedIndex,
-                      features: _trackingFeatures,
-                      onPageChanged: (index) {
-                        setState(() => _selectedIndex = index);
-                      },
-                      onOpen: _openFeature,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceS),
-                  const _HubAdSlot(),
-                  const SizedBox(height: AppTheme.spaceXS),
-                  _ArcBottomDock(
-                    onMatch: () => Navigator.of(context).pop(),
-                    onRaid: () => Navigator.of(context).pop(),
-                    onMic: () => UagVoiceArcAssistantSheet.show(context),
-                    onTrading: () => Navigator.of(context).pop(),
-                    onIntel: () => Navigator.of(context).pop(),
-                  ),
-                  const SizedBox(height: AppTheme.spaceL),
-                ],
+              Expanded(
+                child: _PremiumFeatureCarousel(
+                  controller: _controller,
+                  selectedIndex: _selectedIndex,
+                  features: _trackingFeatures,
+                  onPageChanged: (index) {
+                    setState(() => _selectedIndex = index);
+                  },
+                  onOpen: _openFeature,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: AppTheme.spaceS),
+              const _HubAdSlot(),
+              const SizedBox(height: AppTheme.spaceXS),
+              _ArcBottomDock(
+                onMatch: () => Navigator.of(context).pop(),
+                onRaid: () => Navigator.of(context).pop(),
+                onMic: () => UagVoiceArcAssistantSheet.show(context),
+                onTrading: () => Navigator.of(context).pop(),
+                onIntel: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(height: AppTheme.spaceL),
+            ],
+          ),
         ),
       ),
     );

@@ -1258,17 +1258,36 @@ Future<void> _evidenceDialog(
   await showDialog<void>(
     context: context,
     builder: (d) => AlertDialog(
-      title: const Text('Submit contract evidence'),
+      backgroundColor: ArcUiTokens.surfaceOverlay,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+        side: BorderSide(
+          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.28),
+        ),
+      ),
+      title: Text(
+        'Submit contract evidence',
+        style: ArcUiTokens.sectionTitle(
+          fontSize: 18,
+          color: ArcUiTokens.primaryAccent,
+        ),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: url,
-            decoration: const InputDecoration(labelText: 'Evidence URL *'),
+            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+            decoration: ArcUiTokens.inputDecoration(
+              labelText: 'Evidence URL *',
+            ),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: social,
-            decoration: const InputDecoration(
+            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+            decoration: ArcUiTokens.inputDecoration(
               labelText: 'Optional TikTok / social URL',
             ),
           ),
@@ -1276,10 +1295,15 @@ Future<void> _evidenceDialog(
       ),
       actions: [
         TextButton(
+          style: ArcUiTokens.textButtonStyle(accent: ArcUiTokens.primaryAccent),
           onPressed: () => Navigator.pop(d),
           child: const Text('Cancel'),
         ),
-        FilledButton(
+        TextButton(
+          style: ArcUiTokens.textButtonStyle(
+            accent: ArcUiTokens.primaryAccent,
+            primary: true,
+          ),
           onPressed: () async {
             if (url.text.trim().isEmpty) {
               return;
