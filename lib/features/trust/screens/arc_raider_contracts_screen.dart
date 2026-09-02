@@ -8,7 +8,8 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_tr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/arc_raider_contract_models.dart';
@@ -48,14 +49,30 @@ class _State extends State<ArcRaiderContractsScreen>
           'Report ratting privately, add evidence and optionally request a moderated contract.',
     ),
     drawer: const AppDrawer(),
-    body: Stack(
-      children: [
-        const Positioned.fill(child: StaticWatermark()),
-        SafeArea(
-          child: Column(
-            children: [
-              TabBar(
+    body: ArcRaidersScreenShell(
+      showAdBanner: false,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.fromLTRB(
+                ArcUiTokens.gapM,
+                ArcUiTokens.gapS,
+                ArcUiTokens.gapM,
+                ArcUiTokens.gapS,
+              ),
+              padding: const EdgeInsets.all(ArcUiTokens.gapXS),
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.panel,
+                accent: ArcUiTokens.secondaryAccent,
+                borderOpacity: 0.24,
+              ),
+              child: TabBar(
                 controller: tabs,
+                isScrollable: true,
+                labelColor: ArcUiTokens.secondaryAccent,
+                unselectedLabelColor: ArcUiTokens.textSecondary,
+                indicatorColor: ArcUiTokens.secondaryAccent,
                 tabs: const [
                   Tab(text: 'REPORT A RAT'),
                   Tab(text: 'LIVE CONTRACTS'),
@@ -63,21 +80,21 @@ class _State extends State<ArcRaiderContractsScreen>
                   Tab(text: 'MY REWARDS'),
                 ],
               ),
-              Expanded(
-                child: TabBarView(
-                  controller: tabs,
-                  children: [
-                    _ProgressiveReport(repo: repo),
-                    _Contracts(repo: repo, live: true),
-                    _MyActivity(repo: repo),
-                    _BlueprintRewards(repo: repo),
-                  ],
-                ),
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: tabs,
+                children: [
+                  _ProgressiveReport(repo: repo),
+                  _Contracts(repo: repo, live: true),
+                  _MyActivity(repo: repo),
+                  _BlueprintRewards(repo: repo),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     ),
   );
 }

@@ -3,7 +3,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_bl
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_photo_capture_session_repository.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class ArcBlueprintPhotoReviewScreen extends StatefulWidget {
   const ArcBlueprintPhotoReviewScreen({
@@ -142,16 +144,24 @@ class _ArcBlueprintPhotoReviewScreenState
         : _decisions;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('REVIEW BLUEPRINT IMPORT'),
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        title: Text(
+          'REVIEW BLUEPRINT IMPORT',
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: SafeArea(
+      body: ArcTacticalPageBody(
+        width: ArcPageWidth.standard,
+        maxWidth: 960,
+        padding: EdgeInsets.zero,
+        scrollable: false,
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: ArcLayoutTokens.pagePadding(context).copyWith(bottom: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -168,7 +178,10 @@ class _ArcBlueprintPhotoReviewScreenState
                       ),
                       child: Text(
                         widget.analysisWarnings.join('\n'),
-                        style: const TextStyle(color: Colors.amberAccent),
+                        style: ArcUiTokens.body(
+                          color: ArcUiTokens.warning,
+                          weight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   Row(
@@ -178,7 +191,7 @@ class _ArcBlueprintPhotoReviewScreenState
                           uncertainCount == 0
                               ? 'All ${_decisions.length} slots are ready to confirm.'
                               : '$uncertainCount uncertain slots need your decision.',
-                          style: const TextStyle(color: Colors.white70),
+                          style: ArcUiTokens.body(fontSize: 13),
                         ),
                       ),
                       FilterChip(
@@ -200,7 +213,7 @@ class _ArcBlueprintPhotoReviewScreenState
                       child: Text(
                         'No uncertain slots remain. Turn off the filter to review the full import.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(color: ArcUiTokens.textSecondary),
                       ),
                     )
                   : ListView.builder(
@@ -231,19 +244,24 @@ class _ArcBlueprintPhotoReviewScreenState
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.all(16),
-        child: FilledButton.icon(
-          key: const Key('blueprint-review-apply'),
-          onPressed: _saving ? null : _apply,
-          icon: _saving
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.check_circle_outline),
-          label: Text(
-            uncertainCount == 0
-                ? 'Confirm and Apply Ownership'
-                : 'Review $uncertainCount Remaining',
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: FilledButton.icon(
+              key: const Key('blueprint-review-apply'),
+              onPressed: _saving ? null : _apply,
+              icon: _saving
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_circle_outline),
+              label: Text(
+                uncertainCount == 0
+                    ? 'Confirm and Apply Ownership'
+                    : 'Review $uncertainCount Remaining',
+              ),
+            ),
           ),
         ),
       ),
@@ -272,29 +290,29 @@ class _DecisionCard extends StatelessWidget {
     final selectedMissing =
         decision.state == ArcBlueprintPhotoCellState.missing;
     return Card(
-      color: AppTheme.cardBackgroundDeep,
+      color: ArcUiTokens.surfacePanel,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+        side: BorderSide(color: ArcUiTokens.borderMedium),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(ArcUiTokens.gapM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: Text(name, style: ArcUiTokens.cardTitle(fontSize: 14)),
                 ),
                 Text(
                   decision.needsReview ? 'Needs review' : '$confidence%',
                   style: TextStyle(
                     color: decision.needsReview
-                        ? Colors.amberAccent
-                        : Colors.white54,
+                        ? ArcUiTokens.warning
+                        : ArcUiTokens.textTertiary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],

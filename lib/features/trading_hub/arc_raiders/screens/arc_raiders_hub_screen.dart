@@ -10,7 +10,6 @@ import '../widgets/foundation/arc_ui_tokens.dart';
 
 import '../../../../build/app_drawer.dart';
 import '../../../../widgets/electric_charge_border.dart';
-import '../../../../widgets/static_watermark.dart';
 import '../../../../widgets/theme.dart';
 import '../../../../widgets/arc_responsive_chrome.dart';
 import '../raid_planner/screens/raid_planner_hunt_targets_screen.dart';
@@ -242,14 +241,6 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Positioned.fill(
-              child: _ArcHubScreenBackdrop(accent: selected.accent),
-            ),
-            const Positioned.fill(
-              child: IgnorePointer(
-                child: Opacity(opacity: 0.30, child: StaticWatermark()),
-              ),
-            ),
             Positioned.fill(
               child: SafeArea(
                 child: LayoutBuilder(
@@ -1109,14 +1100,6 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Positioned.fill(
-              child: _ArcHubScreenBackdrop(accent: selected.accent),
-            ),
-            const Positioned.fill(
-              child: IgnorePointer(
-                child: Opacity(opacity: 0.30, child: StaticWatermark()),
-              ),
-            ),
             SafeArea(
               child: Column(
                 children: [
@@ -1427,17 +1410,6 @@ class _ArcHubStatusPill extends StatelessWidget {
   }
 }
 
-class _ArcHubScreenBackdrop extends StatelessWidget {
-  const _ArcHubScreenBackdrop({required this.accent});
-
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _ArcHubScreenBackdropPainter(accent: accent));
-  }
-}
-
 class _ArcHubArtBackdrop extends StatelessWidget {
   const _ArcHubArtBackdrop({required this.accent, required this.kind});
 
@@ -1449,52 +1421,6 @@ class _ArcHubArtBackdrop extends StatelessWidget {
     return CustomPaint(
       painter: _ArcHubArtPainter(accent: accent, kind: kind),
     );
-  }
-}
-
-class _ArcHubScreenBackdropPainter extends CustomPainter {
-  const _ArcHubScreenBackdropPainter({required this.accent});
-
-  final Color accent;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final bg = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFF040514),
-          Color.lerp(accent, const Color(0xFF050612), 0.86)!,
-          const Color(0xFF020208),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, bg);
-
-    final glow = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [
-              accent.withValues(alpha: 0.18),
-              accent.withValues(alpha: 0.0),
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.50, size.height * 0.32),
-              radius: math.max(size.width, size.height) * 0.42,
-            ),
-          );
-
-    canvas.drawCircle(
-      Offset(size.width * 0.50, size.height * 0.32),
-      math.max(size.width, size.height) * 0.42,
-      glow,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _ArcHubScreenBackdropPainter oldDelegate) {
-    return oldDelegate.accent != accent;
   }
 }
 

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_photo_import_service.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_blueprint_photo_import_models.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class ArcBlueprintPhotoDeltaReviewScreen extends StatefulWidget {
   const ArcBlueprintPhotoDeltaReviewScreen({
@@ -114,26 +116,30 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
     final selectedCount = _selectedIds.length;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('REVIEW NEW BLUEPRINTS'),
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        title: Text(
+          'REVIEW NEW BLUEPRINTS',
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: SafeArea(
+      body: ArcTacticalPageBody(
+        width: ArcPageWidth.standard,
+        maxWidth: 960,
+        padding: EdgeInsets.zero,
+        scrollable: false,
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBackgroundDeep,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: Colors.cyanAccent.withValues(alpha: 0.35),
-                  ),
-                ),
+              padding: ArcLayoutTokens.pagePadding(
+                context,
+              ).copyWith(bottom: 10),
+              child: ArcTacticalPanel(
+                icon: Icons.playlist_add_check_circle_outlined,
+                title: 'Detected Blueprint Additions',
+                accent: ArcUiTokens.primaryAccent,
                 child: Text(
                   '${widget.proposedAdditions.length} confidently detected '
                   'Blueprint${widget.proposedAdditions.length == 1 ? '' : 's'} '
@@ -141,7 +147,7 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
                   'got wrong. ${widget.uncertainIgnoredCount} uncertain slot'
                   '${widget.uncertainIgnoredCount == 1 ? '' : 's'} will be '
                   'ignored and left exactly as they are.',
-                  style: const TextStyle(color: Colors.white70),
+                  style: ArcUiTokens.body(fontSize: 13),
                 ),
               ),
             ),
@@ -153,7 +159,15 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
                   final decision = widget.proposedAdditions[index];
                   final selected = _selectedIds.contains(decision.blueprintId);
                   return Card(
-                    color: AppTheme.cardBackgroundDeep,
+                    color: ArcUiTokens.surfacePanel,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+                      side: BorderSide(
+                        color: selected
+                            ? ArcUiTokens.primaryAccent.withValues(alpha: 0.42)
+                            : ArcUiTokens.borderMedium,
+                      ),
+                    ),
                     child: CheckboxListTile(
                       key: ValueKey('delta-${decision.blueprintId}'),
                       value: selected,
@@ -163,19 +177,16 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
                               decision.blueprintId,
                               value == true,
                             ),
-                      activeColor: Colors.cyanAccent,
+                      activeColor: ArcUiTokens.primaryAccent,
                       checkColor: Colors.black,
                       title: Text(
                         _nameFor(decision.blueprintId),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: ArcUiTokens.cardTitle(fontSize: 14),
                       ),
                       subtitle: Text(
-                        '${_positionFor(decision)} • '
+                        '${_positionFor(decision)} - '
                         '${(decision.confidence * 100).round()}% confidence',
-                        style: const TextStyle(color: Colors.white54),
+                        style: ArcUiTokens.bodySmall(),
                       ),
                     ),
                   );
@@ -187,19 +198,24 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.all(16),
-        child: FilledButton.icon(
-          key: const Key('blueprint-delta-apply'),
-          onPressed: _saving ? null : _apply,
-          icon: _saving
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.playlist_add_check_circle_outlined),
-          label: Text(
-            selectedCount == 0
-                ? 'Keep Tracker Unchanged'
-                : 'Update Blueprint Grid',
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: FilledButton.icon(
+              key: const Key('blueprint-delta-apply'),
+              onPressed: _saving ? null : _apply,
+              icon: _saving
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.playlist_add_check_circle_outlined),
+              label: Text(
+                selectedCount == 0
+                    ? 'Keep Tracker Unchanged'
+                    : 'Update Blueprint Grid',
+              ),
+            ),
           ),
         ),
       ),

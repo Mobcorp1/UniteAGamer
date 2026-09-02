@@ -1325,7 +1325,7 @@ class _ArcBlueprintLiveScannerScreenState
                                 vertical: 10,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 184.0),
+                                color: Colors.black.withValues(alpha: 0.72),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Text(
@@ -1347,7 +1347,7 @@ class _ArcBlueprintLiveScannerScreenState
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 184.0),
+                              color: Colors.black.withValues(alpha: 0.72),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: AppTheme.neonCyan),
                             ),

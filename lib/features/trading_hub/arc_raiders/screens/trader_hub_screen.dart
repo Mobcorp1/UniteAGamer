@@ -10,7 +10,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_notification.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class TraderHubScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/trader-hub';
@@ -107,12 +107,8 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
     setState(() => _currentIndex = index);
   }
 
-  NavigationDestination _destination({
-    required IconData icon,
-    required String label,
-    int badgeCount = 0,
-  }) {
-    final iconWidget = badgeCount <= 0
+  Widget _navigationIcon({required IconData icon, int badgeCount = 0}) {
+    return badgeCount <= 0
         ? Icon(icon)
         : Stack(
             clipBehavior: Clip.none,
@@ -128,10 +124,10 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
                   ),
                   constraints: const BoxConstraints(minWidth: 18),
                   decoration: BoxDecoration(
-                    color: AppTheme.neonPink,
-                    borderRadius: BorderRadius.circular(999),
+                    color: ArcUiTokens.secondaryAccent,
+                    borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
                     border: Border.all(
-                      color: AppTheme.darkBackground,
+                      color: ArcUiTokens.background,
                       width: 1.4,
                     ),
                   ),
@@ -139,7 +135,7 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
                     badgeCount > 99 ? '99+' : '$badgeCount',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: AppTheme.darkBackground,
+                      color: ArcUiTokens.background,
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                     ),
@@ -148,7 +144,28 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
               ),
             ],
           );
-    return NavigationDestination(icon: iconWidget, label: label);
+  }
+
+  NavigationDestination _destination({
+    required IconData icon,
+    required String label,
+    int badgeCount = 0,
+  }) {
+    return NavigationDestination(
+      icon: _navigationIcon(icon: icon, badgeCount: badgeCount),
+      label: label,
+    );
+  }
+
+  NavigationRailDestination _railDestination({
+    required IconData icon,
+    required String label,
+    int badgeCount = 0,
+  }) {
+    return NavigationRailDestination(
+      icon: _navigationIcon(icon: icon, badgeCount: badgeCount),
+      label: Text(label),
+    );
   }
 
   Widget _tabNavigator(int index) {
@@ -168,6 +185,17 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
       builder: (context, snapshot) {
         final notifications = snapshot.data ?? const <TradingNotification>[];
         final unreadCount = notifications.where((item) => !item.read).length;
+        final useRail = MediaQuery.sizeOf(context).width >= 1100;
+        final content = IndexedStack(
+          index: _currentIndex,
+          children: List.generate(
+            _titles.length,
+            (index) => Offstage(
+              offstage: _currentIndex != index,
+              child: _tabNavigator(index),
+            ),
+          ),
+        );
 
         return PopScope(
           canPop: false,
@@ -211,36 +239,116 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
               ],
             ),
             drawer: const AppDrawer(),
-            body: IndexedStack(
-              index: _currentIndex,
-              children: List.generate(
-                _titles.length,
-                (index) => Offstage(
-                  offstage: _currentIndex != index,
-                  child: _tabNavigator(index),
-                ),
-              ),
-            ),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: _currentIndex,
-              onDestinationSelected: _onTap,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              destinations: [
-                _destination(icon: Icons.storefront_rounded, label: 'Market'),
-                _destination(icon: Icons.add_circle_outline, label: 'Create'),
-                _destination(icon: Icons.swap_horiz_rounded, label: 'Activity'),
-                _destination(icon: Icons.handshake_outlined, label: 'Sessions'),
-                _destination(
-                  icon: Icons.notifications_active_outlined,
-                  label: 'Alerts',
-                  badgeCount: unreadCount,
-                ),
-                _destination(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Profile',
-                ),
-              ],
-            ),
+            body: useRail
+                ? SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: MediaQuery.sizeOf(context).width >= 1320
+                              ? 220
+                              : 92,
+                          margin: const EdgeInsets.fromLTRB(
+                            ArcUiTokens.gapM,
+                            ArcUiTokens.gapS,
+                            ArcUiTokens.gapM,
+                            ArcUiTokens.gapM,
+                          ),
+                          decoration: ArcUiTokens.surfaceDecoration(
+                            role: ArcSurfaceRole.panel,
+                            accent: ArcUiTokens.primaryAccent,
+                            borderOpacity: 0.20,
+                          ),
+                          child: NavigationRail(
+                            selectedIndex: _currentIndex,
+                            onDestinationSelected: _onTap,
+                            extended: MediaQuery.sizeOf(context).width >= 1320,
+                            backgroundColor: Colors.transparent,
+                            indicatorColor: ArcUiTokens.primaryAccent
+                                .withValues(alpha: 0.12),
+                            selectedIconTheme: const IconThemeData(
+                              color: ArcUiTokens.primaryAccent,
+                            ),
+                            unselectedIconTheme: const IconThemeData(
+                              color: ArcUiTokens.textTertiary,
+                            ),
+                            selectedLabelTextStyle: ArcUiTokens.label(
+                              color: ArcUiTokens.primaryAccent,
+                            ),
+                            unselectedLabelTextStyle: ArcUiTokens.label(),
+                            destinations: [
+                              _railDestination(
+                                icon: Icons.storefront_rounded,
+                                label: 'Market',
+                              ),
+                              _railDestination(
+                                icon: Icons.add_circle_outline,
+                                label: 'Create',
+                              ),
+                              _railDestination(
+                                icon: Icons.swap_horiz_rounded,
+                                label: 'Activity',
+                              ),
+                              _railDestination(
+                                icon: Icons.handshake_outlined,
+                                label: 'Sessions',
+                              ),
+                              _railDestination(
+                                icon: Icons.notifications_active_outlined,
+                                label: 'Alerts',
+                                badgeCount: unreadCount,
+                              ),
+                              _railDestination(
+                                icon: Icons.person_outline_rounded,
+                                label: 'Profile',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(child: content),
+                      ],
+                    ),
+                  )
+                : content,
+            bottomNavigationBar: useRail
+                ? null
+                : NavigationBar(
+                    selectedIndex: _currentIndex,
+                    onDestinationSelected: _onTap,
+                    labelBehavior:
+                        NavigationDestinationLabelBehavior.alwaysShow,
+                    backgroundColor: ArcUiTokens.surfaceOverlay,
+                    indicatorColor: ArcUiTokens.primaryAccent.withValues(
+                      alpha: 0.14,
+                    ),
+                    destinations: [
+                      _destination(
+                        icon: Icons.storefront_rounded,
+                        label: 'Market',
+                      ),
+                      _destination(
+                        icon: Icons.add_circle_outline,
+                        label: 'Create',
+                      ),
+                      _destination(
+                        icon: Icons.swap_horiz_rounded,
+                        label: 'Activity',
+                      ),
+                      _destination(
+                        icon: Icons.handshake_outlined,
+                        label: 'Sessions',
+                      ),
+                      _destination(
+                        icon: Icons.notifications_active_outlined,
+                        label: 'Alerts',
+                        badgeCount: unreadCount,
+                      ),
+                      _destination(
+                        icon: Icons.person_outline_rounded,
+                        label: 'Profile',
+                      ),
+                    ],
+                  ),
           ),
         );
       },

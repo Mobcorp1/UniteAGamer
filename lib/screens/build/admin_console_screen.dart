@@ -14,9 +14,12 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_map_filter_icon_review_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_beta_first_run.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_feature_visibility_diagnostics_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/admin_business_metrics_panel.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_precision_scroll_view.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -37,10 +40,14 @@ class AdminConsoleScreen extends StatelessWidget {
           subtitle: 'Sign in required.',
         ),
         drawer: const AppDrawer(),
-        body: const Center(
-          child: Text(
-            'Sign in to access admin tools.',
-            style: TextStyle(color: Colors.white70),
+        body: const ArcTacticalPageBody(
+          width: ArcPageWidth.form,
+          scrollable: false,
+          child: ArcTacticalStatePanel(
+            icon: Icons.login_rounded,
+            title: 'Sign In Required',
+            message: 'Sign in to access admin tools.',
+            accent: ArcUiTokens.warning,
           ),
         ),
       );
@@ -61,47 +68,16 @@ class AdminConsoleScreen extends StatelessWidget {
               subtitle: 'Restricted to admin and dev accounts.',
             ),
             drawer: const AppDrawer(),
-            body: Stack(
-              children: [
-                const Positioned.fill(child: StaticWatermark()),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: Padding(
-                      padding: AppTheme.pagePadding,
-                      child: Container(
-                        width: double.infinity,
-                        padding: AppTheme.sectionCardPadding,
-                        decoration: AppTheme.tradingCardDecoration(),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.lock_outline_rounded,
-                              color: AppTheme.neonPink,
-                              size: 36,
-                            ),
-                            const SizedBox(height: AppTheme.spaceM),
-                            Text(
-                              'Access Restricted',
-                              style: AppTheme.tradingHeading(fontSize: 26),
-                            ),
-                            const SizedBox(height: AppTheme.spaceS),
-                            Text(
-                              'This area is only available to admin or dev accounts.',
-                              textAlign: TextAlign.center,
-                              style: AppTheme.bodyTextStyle(
-                                fontSize: 15,
-                                color: AppTheme.tradingMutedText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            body: const ArcTacticalPageBody(
+              width: ArcPageWidth.form,
+              scrollable: false,
+              child: ArcTacticalStatePanel(
+                icon: Icons.lock_outline_rounded,
+                title: 'Access Restricted',
+                message:
+                    'This area is only available to admin or dev accounts.',
+                accent: ArcUiTokens.secondaryAccent,
+              ),
             ),
           );
         }
@@ -224,242 +200,240 @@ class _AdminConsoleBody extends StatelessWidget {
         subtitle: 'Feature releases, tester feedback and beta controls.',
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: UagPrecisionScrollView(
-                  key: const Key('admin-console-precision-scroll'),
-                  scrollScale: 0.25,
-                  showScrollbar: true,
-                  scrollbarThickness: 10,
-                  padding: AppTheme.pagePadding,
-                  children: [
-                    _AdminExpandableSection(
-                      key: const Key('admin-section-feature-access'),
-                      header: _sectionHeader(
-                        title: 'Feature Access',
-                        subtitle:
-                            'Turn modules on or off live without redeploying. Use this for soft-launch control and staged testing.',
-                      ),
-                      children: [
-                        StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                          stream: configRef.snapshots(),
-                          builder: (context, snapshot) {
-                            final data = snapshot.data?.data() ?? {};
-                            return Wrap(
-                              spacing: AppTheme.spaceM,
-                              runSpacing: AppTheme.spaceM,
-                              children: [
-                                for (final feature in _featureToggles)
-                                  SizedBox(
-                                    width: 520,
-                                    child: _FeatureToggleCard(
-                                      feature: feature,
-                                      value:
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1120),
+              child: UagPrecisionScrollView(
+                key: const Key('admin-console-precision-scroll'),
+                scrollScale: 0.25,
+                showScrollbar: true,
+                scrollbarThickness: 10,
+                padding: ArcLayoutTokens.pagePadding(context),
+                children: [
+                  _AdminExpandableSection(
+                    key: const Key('admin-section-feature-access'),
+                    header: _sectionHeader(
+                      title: 'Feature Access',
+                      subtitle:
+                          'Turn modules on or off live without redeploying. Use this for soft-launch control and staged testing.',
+                    ),
+                    children: [
+                      StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        stream: configRef.snapshots(),
+                        builder: (context, snapshot) {
+                          final data = snapshot.data?.data() ?? {};
+                          return Wrap(
+                            spacing: AppTheme.spaceM,
+                            runSpacing: AppTheme.spaceM,
+                            children: [
+                              for (final feature in _featureToggles)
+                                SizedBox(
+                                  width: 520,
+                                  child: _FeatureToggleCard(
+                                    feature: feature,
+                                    value:
+                                        FeatureAccess.availabilityFromConfigData(
+                                          data,
+                                          feature.key,
+                                        ),
+                                    onChanged: (value) async {
+                                      final previous =
                                           FeatureAccess.availabilityFromConfigData(
                                             data,
                                             feature.key,
-                                          ),
-                                      onChanged: (value) async {
-                                        final previous =
-                                            FeatureAccess.availabilityFromConfigData(
-                                              data,
-                                              feature.key,
-                                            );
-                                        await configRef.set(
-                                          FeatureAccess.updatePayloadForAvailability(
-                                            globalField: feature.key,
-                                            availability: value,
-                                          ),
-                                          SetOptions(merge: true),
-                                        );
-                                        if (FeatureAccess.shouldNotifyComingSoonToLive(
-                                          previous: previous,
-                                          next: value,
-                                        )) {
-                                          await FirebaseFirestore.instance
-                                              .collection(
-                                                'feature_live_notification_intents',
-                                              )
-                                              .doc(feature.key)
-                                              .set({
-                                                'featureKey': feature.key,
-                                                'featureTitle': feature.title,
-                                                'message':
-                                                    '${feature.title} is now available.',
-                                                'dedupeKey':
-                                                    '${feature.key}_coming_soon_live',
-                                                'status': 'pending',
-                                                'createdAt':
-                                                    FieldValue.serverTimestamp(),
-                                                'updatedAt':
-                                                    FieldValue.serverTimestamp(),
-                                              }, SetOptions(merge: true));
-                                        }
-                                      },
-                                    ),
+                                          );
+                                      await configRef.set(
+                                        FeatureAccess.updatePayloadForAvailability(
+                                          globalField: feature.key,
+                                          availability: value,
+                                        ),
+                                        SetOptions(merge: true),
+                                      );
+                                      if (FeatureAccess.shouldNotifyComingSoonToLive(
+                                        previous: previous,
+                                        next: value,
+                                      )) {
+                                        await FirebaseFirestore.instance
+                                            .collection(
+                                              'feature_live_notification_intents',
+                                            )
+                                            .doc(feature.key)
+                                            .set({
+                                              'featureKey': feature.key,
+                                              'featureTitle': feature.title,
+                                              'message':
+                                                  '${feature.title} is now available.',
+                                              'dedupeKey':
+                                                  '${feature.key}_coming_soon_live',
+                                              'status': 'pending',
+                                              'createdAt':
+                                                  FieldValue.serverTimestamp(),
+                                              'updatedAt':
+                                                  FieldValue.serverTimestamp(),
+                                            }, SetOptions(merge: true));
+                                      }
+                                    },
                                   ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    _AdminExpandableSection(
-                      key: const Key('admin-section-business-metrics'),
-                      header: _sectionHeader(
-                        title: 'Business Metrics',
-                        subtitle:
-                            'Monthly active users, revenue and session health from live user, monetisation and operations telemetry.',
+                                ),
+                            ],
+                          );
+                        },
                       ),
-                      children: [const AdminBusinessMetricsPanel()],
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  _AdminExpandableSection(
+                    key: const Key('admin-section-business-metrics'),
+                    header: _sectionHeader(
+                      title: 'Business Metrics',
+                      subtitle:
+                          'Monthly active users, revenue and session health from live user, monetisation and operations telemetry.',
                     ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    _AdminExpandableSection(
-                      key: const Key('admin-section-arc-rollout-controls'),
-                      header: _sectionHeader(
-                        title: 'ARC Rollout Controls',
-                        subtitle:
-                            'Manage rollout, maintenance posture, read-only safety, beta-only access, and per-map availability from one place.',
+                    children: [const AdminBusinessMetricsPanel()],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  _AdminExpandableSection(
+                    key: const Key('admin-section-arc-rollout-controls'),
+                    header: _sectionHeader(
+                      title: 'ARC Rollout Controls',
+                      subtitle:
+                          'Manage rollout, maintenance posture, read-only safety, beta-only access, and per-map availability from one place.',
+                    ),
+                    children: [
+                      const _ArcAdminControlPanel(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      _AdminMapIntelEditorCard(
+                        onOpen: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const ArcAdminMapEditorScreen(),
+                            ),
+                          );
+                        },
                       ),
+                      const SizedBox(height: AppTheme.spaceL),
+                      ArcMapFilterIconReviewLaunchCard(
+                        onOpen: () {
+                          Navigator.of(
+                            context,
+                          ).pushNamed(ArcMapFilterIconReviewScreen.routeName);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  _AdminExpandableSection(
+                    key: const Key('admin-section-closed-beta-tools'),
+                    header: _sectionHeader(
+                      title: 'Onboarding & Beta Testing',
+                      subtitle:
+                          'Preview, reset and verify the complete player onboarding flow.',
+                    ),
+                    initiallyExpanded: true,
+                    children: [
+                      const ArcBetaDeveloperToolsCard(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      _ClosedBetaDiagnosticsCard(uid: uid),
+                      const SizedBox(height: AppTheme.spaceL),
+                      const ArcFeatureVisibilityDiagnosticsPanel(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      const UagReleaseReadinessPanel(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      const _OperationsTuningAdminCard(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      const ArcRaiderContractsAdminPanel(),
+                      const SizedBox(height: AppTheme.spaceL),
+                      const UagAdminBroadcastPanel(),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  _AdminExpandableSection(
+                    key: const Key('admin-section-latest-feedback'),
+                    header: Row(
                       children: [
-                        const _ArcAdminControlPanel(),
-                        const SizedBox(height: AppTheme.spaceL),
-                        _AdminMapIntelEditorCard(
-                          onOpen: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const ArcAdminMapEditorScreen(),
+                        Expanded(
+                          child: _sectionHeader(
+                            title: 'Latest Feedback',
+                            subtitle:
+                                'Action, reopen or delete tester feedback without leaving the admin console.',
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pushNamed(
+                              FeedbackScreen.routeName,
+                              arguments: const FeedbackScreenArgs(
+                                initialTabIndex: 2,
                               ),
                             );
                           },
-                        ),
-                        const SizedBox(height: AppTheme.spaceL),
-                        ArcMapFilterIconReviewLaunchCard(
-                          onOpen: () {
-                            Navigator.of(
-                              context,
-                            ).pushNamed(ArcMapFilterIconReviewScreen.routeName);
-                          },
+                          icon: const Icon(Icons.inbox_outlined),
+                          label: const Text('Open Full Inbox'),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    _AdminExpandableSection(
-                      key: const Key('admin-section-closed-beta-tools'),
-                      header: _sectionHeader(
-                        title: 'Onboarding & Beta Testing',
-                        subtitle:
-                            'Preview, reset and verify the complete player onboarding flow.',
-                      ),
-                      initiallyExpanded: true,
-                      children: [
-                        const ArcBetaDeveloperToolsCard(),
-                        const SizedBox(height: AppTheme.spaceL),
-                        _ClosedBetaDiagnosticsCard(uid: uid),
-                        const SizedBox(height: AppTheme.spaceL),
-                        const ArcFeatureVisibilityDiagnosticsPanel(),
-                        const SizedBox(height: AppTheme.spaceL),
-                        const UagReleaseReadinessPanel(),
-                        const SizedBox(height: AppTheme.spaceL),
-                        const _OperationsTuningAdminCard(),
-                        const SizedBox(height: AppTheme.spaceL),
-                        const ArcRaiderContractsAdminPanel(),
-                        const SizedBox(height: AppTheme.spaceL),
-                        const UagAdminBroadcastPanel(),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    _AdminExpandableSection(
-                      key: const Key('admin-section-latest-feedback'),
-                      header: Row(
-                        children: [
-                          Expanded(
-                            child: _sectionHeader(
-                              title: 'Latest Feedback',
-                              subtitle:
-                                  'Action, reopen or delete tester feedback without leaving the admin console.',
-                            ),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).pushNamed(
-                                FeedbackScreen.routeName,
-                                arguments: const FeedbackScreenArgs(
-                                  initialTabIndex: 2,
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.inbox_outlined),
-                            label: const Text('Open Full Inbox'),
-                          ),
-                        ],
-                      ),
-                      children: [
-                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                          stream: feedbackQuery.snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppTheme.neonCyan,
-                                ),
-                              );
-                            }
-
-                            if (snapshot.hasError) {
-                              return _messageCard(
-                                'Could not load feedback overview.',
-                                AppTheme.tradingDanger,
-                              );
-                            }
-
-                            final docs = snapshot.data?.docs ?? [];
-
-                            if (docs.isEmpty) {
-                              return _messageCard(
-                                'No feedback has been submitted yet.',
-                                AppTheme.neonCyan,
-                              );
-                            }
-
-                            return Column(
-                              children: [
-                                for (final doc in docs)
-                                  _FeedbackAdminCard(
-                                    id: doc.id,
-                                    data: doc.data(),
-                                    onActioned: () => _updateFeedbackStatus(
-                                      context,
-                                      doc.reference,
-                                      'actioned',
-                                    ),
-                                    onReopen: () => _updateFeedbackStatus(
-                                      context,
-                                      doc.reference,
-                                      'new',
-                                    ),
-                                    onDelete: () =>
-                                        _deleteFeedback(context, doc.reference),
-                                  ),
-                              ],
+                    children: [
+                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: feedbackQuery.snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: AppTheme.neonCyan,
+                              ),
                             );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                          }
+
+                          if (snapshot.hasError) {
+                            return _messageCard(
+                              'Could not load feedback overview.',
+                              AppTheme.tradingDanger,
+                            );
+                          }
+
+                          final docs = snapshot.data?.docs ?? [];
+
+                          if (docs.isEmpty) {
+                            return _messageCard(
+                              'No feedback has been submitted yet.',
+                              AppTheme.neonCyan,
+                            );
+                          }
+
+                          return Column(
+                            children: [
+                              for (final doc in docs)
+                                _FeedbackAdminCard(
+                                  id: doc.id,
+                                  data: doc.data(),
+                                  onActioned: () => _updateFeedbackStatus(
+                                    context,
+                                    doc.reference,
+                                    'actioned',
+                                  ),
+                                  onReopen: () => _updateFeedbackStatus(
+                                    context,
+                                    doc.reference,
+                                    'new',
+                                  ),
+                                  onDelete: () =>
+                                      _deleteFeedback(context, doc.reference),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -471,30 +445,17 @@ class _AdminConsoleBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppTheme.tradingHeading(fontSize: 26)),
-        const SizedBox(height: AppTheme.spaceS),
-        Text(
-          subtitle,
-          style: AppTheme.bodyTextStyle(
-            fontSize: 14,
-            color: AppTheme.tradingMutedText,
-          ),
-        ),
+        Text(title, style: ArcUiTokens.sectionTitle(fontSize: 20)),
+        const SizedBox(height: ArcUiTokens.gapS),
+        Text(subtitle, style: ArcUiTokens.body(fontSize: 13)),
       ],
     );
   }
 
   static Widget _messageCard(String text, Color color) {
-    return Container(
-      width: double.infinity,
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: color.withValues(alpha: 0.35),
-      ),
-      child: Text(
-        text,
-        style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
-      ),
+    return ArcTacticalPanel(
+      accent: color,
+      child: Text(text, style: ArcUiTokens.body(fontSize: 13)),
     );
   }
 

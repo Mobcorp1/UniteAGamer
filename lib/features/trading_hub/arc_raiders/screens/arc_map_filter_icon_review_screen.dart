@@ -5,8 +5,9 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcMapFilterIconReviewScreen extends StatelessWidget {
@@ -23,18 +24,16 @@ class ArcMapFilterIconReviewScreen extends StatelessWidget {
         subtitle: 'Admin diagnostic icon atlas.',
       ),
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          ListView(
-            children: [
-              const ArcPageViewport(
-                width: ArcPageWidth.wide,
-                child: ArcMapFilterIconReviewAtlas(),
-              ),
-            ],
-          ),
-        ],
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: ListView(
+          children: [
+            const ArcPageViewport(
+              width: ArcPageWidth.wide,
+              child: ArcMapFilterIconReviewAtlas(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -92,7 +91,7 @@ class ArcMapFilterIconReviewAtlas extends StatelessWidget {
               'at marker, menu, cluster, review and audit sizes.',
           leading: const Icon(
             Icons.travel_explore_rounded,
-            color: AppTheme.neonCyan,
+            color: ArcUiTokens.primaryAccent,
             size: 34,
           ),
         ),

@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/screens/build/admin_console_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class FeedbackScreenArgs {
@@ -151,14 +153,16 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       selected: selected,
       label: Text(label),
       onSelected: (_) => _onTabSelected(index),
-      selectedColor: AppTheme.neonPink.withValues(alpha: 0.16),
-      backgroundColor: AppTheme.cardBackground,
+      selectedColor: ArcUiTokens.secondaryAccent.withValues(alpha: 0.16),
+      backgroundColor: ArcUiTokens.surfaceInteractive,
       labelStyle: TextStyle(
-        color: selected ? AppTheme.neonPink : Colors.white,
+        color: selected ? ArcUiTokens.secondaryAccent : ArcUiTokens.textPrimary,
         fontWeight: FontWeight.w700,
       ),
       side: BorderSide(
-        color: selected ? AppTheme.neonPink : AppTheme.tradingSoftBorder,
+        color: selected
+            ? ArcUiTokens.secondaryAccent
+            : ArcUiTokens.borderMedium,
       ),
     );
   }
@@ -188,15 +192,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.neonCyan,
-                    borderRadius: BorderRadius.circular(999),
+                    color: ArcUiTokens.primaryAccent,
+                    borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
                   ),
                   child: Text(
                     unreadCount > 99 ? '99+' : '$unreadCount',
-                    style: AppTheme.bodyTextStyle(
+                    style: ArcUiTokens.body(
                       fontSize: 11,
-                      color: Colors.black,
-                      isBold: true,
+                      color: ArcUiTokens.background,
+                      weight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -204,14 +208,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             ],
           ),
           onSelected: (_) => _onTabSelected(1),
-          selectedColor: AppTheme.neonPink.withValues(alpha: 0.16),
-          backgroundColor: AppTheme.cardBackground,
+          selectedColor: ArcUiTokens.secondaryAccent.withValues(alpha: 0.16),
+          backgroundColor: ArcUiTokens.surfaceInteractive,
           labelStyle: TextStyle(
-            color: selected ? AppTheme.neonPink : Colors.white,
+            color: selected
+                ? ArcUiTokens.secondaryAccent
+                : ArcUiTokens.textPrimary,
             fontWeight: FontWeight.w700,
           ),
           side: BorderSide(
-            color: selected ? AppTheme.neonPink : AppTheme.tradingSoftBorder,
+            color: selected
+                ? ArcUiTokens.secondaryAccent
+                : ArcUiTokens.borderMedium,
           ),
         );
       },
@@ -219,24 +227,17 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 
   Widget _buildComposer() {
-    return Container(
-      padding: AppTheme.sectionCardPadding,
-      decoration: AppTheme.tradingCardDecoration(),
+    return ArcTacticalPanel(
+      icon: Icons.send_rounded,
+      title: 'Thanks for testing the beta',
+      subtitle:
+          'Tell us what feels broken, confusing or worth improving before wider launch.',
+      accent: ArcUiTokens.primaryAccent,
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Thanks for testing the beta',
-              style: AppTheme.tradingHeading(fontSize: 24),
-            ),
-            const SizedBox(height: AppTheme.spaceS),
-            Text(
-              'Tell us what feels broken, confusing or worth improving before wider launch.',
-              style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
-            ),
-            const SizedBox(height: AppTheme.spaceL),
             DropdownButtonFormField<String>(
               initialValue: _category,
               items: _categories
@@ -250,7 +251,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               onChanged: (value) => setState(() => _category = value ?? 'Bug'),
               decoration: AppTheme.tradingInputDecoration(label: 'Category'),
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: ArcUiTokens.gapM),
             TextFormField(
               controller: _summaryController,
               decoration: AppTheme.tradingInputDecoration(
@@ -263,7 +264,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: ArcUiTokens.gapM),
             TextFormField(
               controller: _detailsController,
               minLines: 5,
@@ -276,7 +277,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: AppTheme.spaceL),
+            const SizedBox(height: ArcUiTokens.gapL),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -304,18 +305,19 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       stream: query.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: ArcUiTokens.primaryAccent),
+          );
         }
 
         if (snapshot.hasError) {
-          return Container(
-            padding: AppTheme.sectionCardPadding,
-            decoration: AppTheme.tradingCardDecoration(
-              borderColor: Colors.redAccent.withValues(alpha: 0.25),
-            ),
+          return ArcTacticalPanel(
+            icon: Icons.error_outline_rounded,
+            title: 'Feedback Unavailable',
+            accent: ArcUiTokens.danger,
             child: Text(
               'Could not load feedback: ${snapshot.error}',
-              style: const TextStyle(color: Colors.white70),
+              style: ArcUiTokens.body(fontSize: 13),
             ),
           );
         }
@@ -325,14 +327,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             <QueryDocumentSnapshot<Map<String, dynamic>>>[];
 
         if (docs.isEmpty) {
-          return Container(
-            padding: AppTheme.sectionCardPadding,
-            decoration: AppTheme.tradingCardDecoration(),
+          return ArcTacticalPanel(
+            icon: Icons.inbox_outlined,
+            title: adminMode ? 'No Feedback Yet' : 'No Feedback Sent',
+            accent: ArcUiTokens.primaryAccent,
             child: Text(
               adminMode
                   ? 'No feedback submitted yet.'
                   : 'You have not sent any feedback yet.',
-              style: const TextStyle(color: Colors.white70),
+              style: ArcUiTokens.body(fontSize: 13),
             ),
           );
         }
@@ -360,10 +363,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     if (uid == null) {
       return Scaffold(
         backgroundColor: Colors.transparent,
-        body: const Center(
-          child: Text(
-            'Sign in to use feedback.',
-            style: TextStyle(color: Colors.white70),
+        body: const ArcTacticalPageBody(
+          width: ArcPageWidth.form,
+          scrollable: false,
+          child: ArcTacticalStatePanel(
+            icon: Icons.login_rounded,
+            title: 'Sign In Required',
+            message: 'Sign in to use feedback.',
+            accent: ArcUiTokens.warning,
           ),
         ),
       );
@@ -384,51 +391,43 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 'Send issues, review your submissions, and access the inbox if you are admin.',
           ),
           drawer: const AppDrawer(),
-          body: Stack(
+          body: ArcTacticalPageList(
+            width: ArcPageWidth.standard,
+            maxWidth: 900,
+            padding: ArcLayoutTokens.pagePadding(context),
             children: [
-              const Positioned.fill(child: StaticWatermark()),
-              SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 900),
-                    child: ListView(
-                      padding: AppTheme.pagePadding,
-                      children: [
-                        if (adminMode) ...[
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: OutlinedButton.icon(
-                              onPressed: () => Navigator.of(
-                                context,
-                              ).pushNamed(AdminConsoleScreen.routeName),
-                              icon: const Icon(
-                                Icons.admin_panel_settings_outlined,
-                              ),
-                              label: const Text('Open Admin Console'),
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spaceM),
-                        ],
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: [
-                            _buildStandardChip('Send Feedback', 0),
-                            _buildFeedbackChip(uid),
-                            if (adminMode) _buildStandardChip('Inbox', 2),
-                          ],
-                        ),
-                        const SizedBox(height: AppTheme.spaceL),
-                        if (_selectedTab == 0) _buildComposer(),
-                        if (_selectedTab == 1)
-                          _buildFeedbackList(adminMode: false, uid: uid),
-                        if (_selectedTab == 2 && adminMode)
-                          _buildFeedbackList(adminMode: true, uid: uid),
-                      ],
-                    ),
+              if (adminMode)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pushNamed(AdminConsoleScreen.routeName),
+                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                    label: const Text('Open Admin Console'),
                   ),
                 ),
+              ArcTacticalPanel(
+                icon: Icons.feedback_outlined,
+                title: 'Feedback Channel',
+                subtitle:
+                    'Send beta issues, review replies and manage the inbox when admin access is available.',
+                accent: ArcUiTokens.primaryAccent,
+                child: Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _buildStandardChip('Send Feedback', 0),
+                    _buildFeedbackChip(uid),
+                    if (adminMode) _buildStandardChip('Inbox', 2),
+                  ],
+                ),
               ),
+              if (_selectedTab == 0) _buildComposer(),
+              if (_selectedTab == 1)
+                _buildFeedbackList(adminMode: false, uid: uid),
+              if (_selectedTab == 2 && adminMode)
+                _buildFeedbackList(adminMode: true, uid: uid),
             ],
           ),
         );

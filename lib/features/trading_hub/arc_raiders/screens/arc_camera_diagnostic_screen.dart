@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_camera_operation_queue.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcCameraDiagnosticScreen extends StatefulWidget {
   const ArcCameraDiagnosticScreen({super.key});
@@ -302,30 +303,30 @@ class _ArcCameraDiagnosticScreenState extends State<ArcCameraDiagnosticScreen>
               bottom: 12,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white24),
+                  color: ArcUiTokens.surfaceOverlay,
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+                  border: Border.all(
+                    color: ArcUiTokens.primaryAccent.withValues(alpha: 0.26),
+                  ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(ArcUiTokens.gapM),
                   child: Row(
                     children: [
                       Expanded(
                         child: DefaultTextStyle(
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
+                          style: ArcUiTokens.bodySmall(
+                            color: ArcUiTokens.textSecondary,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text(
+                              Text(
                                 'MINIMAL CAMERA DIAGNOSTIC',
-                                style: TextStyle(
-                                  fontFamily: 'VT323',
-                                  fontSize: 20,
-                                  color: Colors.white,
+                                style: ArcUiTokens.sectionTitle(
+                                  fontSize: 17,
+                                  color: ArcUiTokens.primaryAccent,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -342,7 +343,7 @@ class _ArcCameraDiagnosticScreenState extends State<ArcCameraDiagnosticScreen>
                                 Text(
                                   'Camera: ${_description!.name}  '
                                   '${_description!.lensDirection}  '
-                                  'Sensor: ${_description!.sensorOrientation}°',
+                                  'Sensor: ${_description!.sensorOrientation} deg',
                                 ),
                               if (_lastCapturePath != null)
                                 Text(
@@ -354,7 +355,7 @@ class _ArcCameraDiagnosticScreenState extends State<ArcCameraDiagnosticScreen>
                                 Text(
                                   'ERROR: $_error',
                                   style: const TextStyle(
-                                    color: Colors.redAccent,
+                                    color: ArcUiTokens.danger,
                                   ),
                                 ),
                             ],

@@ -23,7 +23,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_world_intel_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_admin_map_editor_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
-import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_precision_scroll_view.dart';
 
@@ -1146,40 +1148,42 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
             title: 'Admin Map & Intel Editor',
             subtitle: 'Calibrate existing markers and publish custom Intel.',
           ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: StaticWatermark()),
-          SafeArea(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide = constraints.maxWidth >= 1000;
-                      final mapPanel = _buildMapPanel();
-                      final sidePanel = _buildSidePanel();
-                      return Padding(
-                        padding: AppTheme.pagePadding,
-                        child: wide
-                            ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(flex: 7, child: mapPanel),
-                                  const SizedBox(width: AppTheme.spaceM),
-                                  SizedBox(width: 360, child: sidePanel),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  Expanded(flex: 6, child: mapPanel),
-                                  const SizedBox(height: AppTheme.spaceM),
-                                  Expanded(flex: 4, child: sidePanel),
-                                ],
-                              ),
-                      );
-                    },
+      body: ArcRaidersScreenShell(
+        showAdBanner: false,
+        child: SafeArea(
+          child: _loading
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: ArcUiTokens.primaryAccent,
                   ),
-          ),
-        ],
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final wide = constraints.maxWidth >= 1000;
+                    final mapPanel = _buildMapPanel();
+                    final sidePanel = _buildSidePanel();
+                    return Padding(
+                      padding: ArcLayoutTokens.pagePadding(context),
+                      child: wide
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(flex: 7, child: mapPanel),
+                                const SizedBox(width: ArcUiTokens.gapM),
+                                SizedBox(width: 360, child: sidePanel),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                Expanded(flex: 6, child: mapPanel),
+                                const SizedBox(height: ArcUiTokens.gapM),
+                                Expanded(flex: 4, child: sidePanel),
+                              ],
+                            ),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
@@ -1231,11 +1235,23 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                                       assetPath,
                                       fit: BoxFit.fill,
                                       filterQuality: FilterQuality.high,
-                                      errorBuilder: (_, _, _) => const Center(
-                                        child: Icon(
-                                          Icons.broken_image_outlined,
-                                          color: Colors.white54,
-                                          size: 48,
+                                      errorBuilder: (_, _, _) => Center(
+                                        child: Container(
+                                          width: 180,
+                                          height: 120,
+                                          alignment: Alignment.center,
+                                          decoration:
+                                              ArcUiTokens.surfaceDecoration(
+                                                role: ArcSurfaceRole.raised,
+                                                accent:
+                                                    ArcUiTokens.primaryAccent,
+                                                borderOpacity: 0.28,
+                                              ),
+                                          child: const Icon(
+                                            Icons.map_outlined,
+                                            color: ArcUiTokens.primaryAccent,
+                                            size: 42,
+                                          ),
                                         ),
                                       ),
                                     ),

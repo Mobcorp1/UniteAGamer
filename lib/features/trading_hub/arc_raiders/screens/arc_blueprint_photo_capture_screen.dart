@@ -21,7 +21,9 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_blueprint_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_delta_review_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_blueprint_live_scanner_screen.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_layout_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 class ArcBlueprintPhotoCaptureScreen extends StatefulWidget {
   const ArcBlueprintPhotoCaptureScreen({super.key});
@@ -513,17 +515,28 @@ class _ArcBlueprintPhotoCaptureScreenState
     final bytes = _bytesFor(_activeSection);
     final complete = _draft.isComplete;
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('IMPORT BLUEPRINT GRID'),
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        title: Text(
+          'IMPORT BLUEPRINT GRID',
+          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      body: ArcTacticalPageBody(
+        width: ArcPageWidth.standard,
+        maxWidth: 920,
+        padding: ArcLayoutTokens.pagePadding(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_busy) ...[
-              const LinearProgressIndicator(minHeight: 3),
+              const LinearProgressIndicator(
+                minHeight: 3,
+                color: ArcUiTokens.primaryAccent,
+                backgroundColor: Colors.white12,
+              ),
               const SizedBox(height: 12),
             ],
             _ProgressHeader(
@@ -533,9 +546,9 @@ class _ArcBlueprintPhotoCaptureScreenState
             const SizedBox(height: 16),
             Text(
               _stepTitle,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-                fontFamily: 'VT323',
+              style: ArcUiTokens.sectionTitle(
+                fontSize: 18,
+                color: ArcUiTokens.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
@@ -543,7 +556,7 @@ class _ArcBlueprintPhotoCaptureScreenState
               _activeSection == ArcBlueprintCaptureSection.top
                   ? 'Fit the outer edges of the first five Blueprint rows inside the boundary. Keep the full left, right, top and bottom edges visible.'
                   : 'Start at row 6. Do not include row 5 again. Keep rows 6-8 fully visible and include the final three Blueprint slots beneath them.',
-              style: const TextStyle(color: Colors.white70),
+              style: ArcUiTokens.body(fontSize: 13),
             ),
             const SizedBox(height: 14),
             AspectRatio(
@@ -551,7 +564,7 @@ class _ArcBlueprintPhotoCaptureScreenState
                   ? 10 / 5
                   : 10 / 4,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -573,11 +586,15 @@ class _ArcBlueprintPhotoCaptureScreenState
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: bytes == null
-                                  ? AppTheme.neonCyan.withValues(alpha: 0.45)
+                                  ? ArcUiTokens.primaryAccent.withValues(
+                                      alpha: 0.45,
+                                    )
                                   : Colors.greenAccent,
                               width: 2,
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              ArcUiTokens.radiusL,
+                            ),
                           ),
                         ),
                       ),
@@ -630,20 +647,15 @@ class _ArcBlueprintPhotoCaptureScreenState
               onRetake: _retake,
             ),
             const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackgroundDeep,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.35),
-                ),
-              ),
+            ArcTacticalPanel(
+              icon: Icons.privacy_tip_outlined,
+              title: 'Local Import Privacy',
+              accent: ArcUiTokens.primaryAccent,
               child: Text(
                 _cameraSupported
                     ? 'Privacy: photos are held only for this import session and are analysed locally. Confident matches import automatically. Uncertain slots are left unchanged. Duplicate counts are never read or changed.'
                     : 'This device uses screenshot upload rather than direct camera capture. Images are analysed locally. Confident matches import automatically and uncertain slots are left unchanged. Duplicate counts are never changed.',
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
               ),
             ),
             const SizedBox(height: 18),
@@ -674,13 +686,15 @@ class _ProgressHeader extends StatelessWidget {
           child: LinearProgressIndicator(
             value: completed / 2,
             minHeight: 8,
-            borderRadius: BorderRadius.circular(8),
+            color: ArcUiTokens.primaryAccent,
+            backgroundColor: Colors.white12,
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
           ),
         ),
         const SizedBox(width: 12),
         Text(
           '${activeSection.index + 1}/2',
-          style: const TextStyle(color: Colors.white70),
+          style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
         ),
       ],
     );
@@ -695,16 +709,19 @@ class _SectionBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(20),
+        color: ArcUiTokens.surfaceOverlay,
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+        border: Border.all(
+          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.34),
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: ArcUiTokens.chipPadding,
         child: Text(
           section == ArcBlueprintCaptureSection.top
               ? 'TOP GRID'
               : 'BOTTOM GRID',
-          style: const TextStyle(color: AppTheme.neonCyan),
+          style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
         ),
       ),
     );
@@ -737,7 +754,15 @@ class _CaptureSummary extends StatelessWidget {
                 ? draft.hasTop
                 : draft.hasBottom;
             return Card(
-              color: AppTheme.cardBackgroundDeep,
+              color: ArcUiTokens.surfacePanel,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
+                side: BorderSide(
+                  color: captured
+                      ? ArcUiTokens.success.withValues(alpha: 0.38)
+                      : ArcUiTokens.borderMedium,
+                ),
+              ),
               child: ListTile(
                 onTap: busy
                     ? null
@@ -749,14 +774,20 @@ class _CaptureSummary extends StatelessWidget {
                       },
                 leading: Icon(
                   captured ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: captured ? Colors.lightGreenAccent : Colors.white38,
+                  color: captured
+                      ? ArcUiTokens.success
+                      : ArcUiTokens.textTertiary,
                 ),
                 title: Text(
                   section == ArcBlueprintCaptureSection.top
                       ? 'Top grid image'
                       : 'Bottom grid image',
+                  style: ArcUiTokens.cardTitle(fontSize: 14),
                 ),
-                subtitle: Text(captured ? 'Captured' : 'Still required'),
+                subtitle: Text(
+                  captured ? 'Captured' : 'Still required',
+                  style: ArcUiTokens.bodySmall(),
+                ),
                 trailing: captured
                     ? IconButton(
                         tooltip: 'Retake',
