@@ -9,6 +9,7 @@ import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
+import '../widgets/foundation/arc_ui_tokens.dart';
 
 class ArcProfileSetupScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile/setup';
@@ -245,12 +246,23 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
         return FilterChip(
           selected: active,
           label: Text(item),
-          selectedColor: AppTheme.neonCyan.withValues(alpha: 0.18),
-          checkmarkColor: AppTheme.neonCyan,
+          selectedColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.18),
+          backgroundColor: ArcUiTokens.surfaceInteractive.withValues(
+            alpha: 0.74,
+          ),
+          checkmarkColor: ArcUiTokens.primaryAccent,
           side: BorderSide(
-            color: (active ? AppTheme.neonCyan : Colors.white24).withValues(
-              alpha: 0.62,
-            ),
+            color:
+                (active ? ArcUiTokens.primaryAccent : ArcUiTokens.borderSubtle)
+                    .withValues(alpha: 0.62),
+          ),
+          labelStyle: ArcUiTokens.label(
+            color: active
+                ? ArcUiTokens.primaryAccent
+                : ArcUiTokens.textSecondary,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
           ),
           onSelected: (_) => setState(() {
             if (active) {
@@ -277,11 +289,24 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
         return ChoiceChip(
           selected: active,
           label: Text(item),
-          selectedColor: AppTheme.neonPink.withValues(alpha: 0.18),
+          selectedColor: ArcUiTokens.secondaryAccent.withValues(alpha: 0.18),
+          backgroundColor: ArcUiTokens.surfaceInteractive.withValues(
+            alpha: 0.74,
+          ),
           side: BorderSide(
-            color: (active ? AppTheme.neonPink : Colors.white24).withValues(
-              alpha: 0.62,
-            ),
+            color:
+                (active
+                        ? ArcUiTokens.secondaryAccent
+                        : ArcUiTokens.borderSubtle)
+                    .withValues(alpha: 0.62),
+          ),
+          labelStyle: ArcUiTokens.label(
+            color: active
+                ? ArcUiTokens.secondaryAccent
+                : ArcUiTokens.textSecondary,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
           ),
           onSelected: (_) => onChanged(item),
         );
@@ -294,9 +319,11 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
     Widget heroCard() {
       return Container(
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 24,
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: ArcUiTokens.primaryAccent,
+          borderOpacity: 0.24,
+          radius: ArcUiTokens.radiusXL,
         ),
         child: Row(
           children: [
@@ -305,14 +332,14 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
               height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.neonCyan.withValues(alpha: 0.10),
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
                 border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.45),
+                  color: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
                 ),
               ),
               child: const Icon(
                 Icons.person_add_alt_1_rounded,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
               ),
             ),
             const SizedBox(width: AppTheme.spaceM),
@@ -322,15 +349,15 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                 children: [
                   Text(
                     'Set Up Your Hub Profile',
-                    style: AppTheme.tradingHeading(
+                    style: ArcUiTokens.pageTitle(
                       fontSize: 24,
-                      color: AppTheme.neonCyan,
+                      color: ArcUiTokens.primaryAccent,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Build the public ARC Raiders profile that carries into your UAG trader identity.',
-                    style: TextStyle(color: Colors.white70, height: 1.35),
+                    style: ArcUiTokens.body(),
                   ),
                 ],
               ),
@@ -348,19 +375,24 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
       return Container(
         margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(radius: 22),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          accent: ArcUiTokens.secondaryAccent,
+          borderOpacity: 0.18,
+          radius: ArcUiTokens.radiusL,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: AppTheme.neonPink),
+                Icon(icon, color: ArcUiTokens.secondaryAccent),
                 const SizedBox(width: AppTheme.spaceS),
                 Text(
                   title,
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 20,
-                    color: AppTheme.neonPink,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                 ),
               ],
@@ -436,6 +468,11 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                       children: [
                         DropdownButtonFormField<String>(
                           initialValue: _payoutMethod,
+                          dropdownColor: ArcUiTokens.surfaceOverlay,
+                          style: ArcUiTokens.body(
+                            color: ArcUiTokens.textPrimary,
+                          ),
+                          iconEnabledColor: ArcUiTokens.primaryAccent,
                           items: _payoutMethods
                               .map(
                                 (method) => DropdownMenuItem(
@@ -447,8 +484,8 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                           onChanged: (value) => setState(() {
                             _payoutMethod = value ?? 'Bank Transfer';
                           }),
-                          decoration: AppTheme.tradingInputDecoration(
-                            label: 'Preferred payout method',
+                          decoration: ArcUiTokens.inputDecoration(
+                            labelText: 'Preferred payout method',
                           ),
                         ),
                       ],
@@ -457,16 +494,16 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                       title: 'Archetypes & Match Fit',
                       icon: Icons.hub_rounded,
                       children: [
-                        const Text(
+                        Text(
                           'Select everything that applies. These tags drive matchmaking, squad recommendations and public profile fit.',
-                          style: TextStyle(color: Colors.white70, height: 1.35),
+                          style: ArcUiTokens.body(),
                         ),
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Player archetypes',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -477,9 +514,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Play style',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -490,9 +527,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Communication style',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -505,9 +542,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Squad intent',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -520,9 +557,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'What are you doing this session?',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -535,9 +572,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Current priority',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -550,9 +587,9 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Current energy',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -610,6 +647,7 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
                       ],
                     ),
                     ElevatedButton.icon(
+                      style: ArcUiTokens.textButtonStyle(primary: true),
                       onPressed: _isSaving ? null : _save,
                       icon: const Icon(Icons.save_rounded),
                       label: Text(_isSaving ? 'Saving...' : 'Save Profile'),
@@ -637,7 +675,11 @@ class _ArcProfileSetupScreenState extends State<ArcProfileSetupScreen> {
         controller: controller,
         enabled: enabled,
         validator: validator,
-        decoration: InputDecoration(labelText: label, helperText: helperText),
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+        decoration: ArcUiTokens.inputDecoration(labelText: label).copyWith(
+          helperText: helperText,
+          helperStyle: ArcUiTokens.bodySmall(),
+        ),
       ),
     );
   }

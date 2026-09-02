@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcPersonalisationPreferencesPanel extends StatefulWidget {
@@ -63,8 +64,11 @@ class _ArcPersonalisationPreferencesPanelState
         return Container(
           width: double.infinity,
           padding: AppTheme.sectionCardPadding,
-          decoration: AppTheme.tradingCardDecoration(
-            borderColor: AppTheme.neonPink.withValues(alpha: 0.24),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            accent: ArcUiTokens.secondaryAccent,
+            borderOpacity: 0.18,
+            radius: ArcUiTokens.radiusL,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,13 +77,13 @@ class _ArcPersonalisationPreferencesPanelState
                 children: [
                   const Icon(
                     Icons.auto_awesome_rounded,
-                    color: AppTheme.neonPink,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                   const SizedBox(width: AppTheme.spaceS),
                   Expanded(
                     child: Text(
                       'Command Centre Personalisation',
-                      style: AppTheme.tradingHeading(fontSize: 20),
+                      style: ArcUiTokens.sectionTitle(fontSize: 20),
                     ),
                   ),
                 ],
@@ -87,10 +91,7 @@ class _ArcPersonalisationPreferencesPanelState
               const SizedBox(height: AppTheme.spaceS),
               Text(
                 'These preferences rank your home priorities, drawer shortcuts and alert categories. Access gates still control locked beta features.',
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
-                  color: AppTheme.tradingMutedText,
-                ),
+                style: ArcUiTokens.body(),
               ),
               const SizedBox(height: AppTheme.spaceL),
               _sectionLabel('Primary goals'),
@@ -102,6 +103,21 @@ class _ArcPersonalisationPreferencesPanelState
                     FilterChip(
                       selected: profile.goals.contains(goal),
                       label: Text(goal.label),
+                      selectedColor: ArcUiTokens.primaryAccent.withValues(
+                        alpha: 0.18,
+                      ),
+                      backgroundColor: ArcUiTokens.surfaceInteractive
+                          .withValues(alpha: 0.74),
+                      checkmarkColor: ArcUiTokens.primaryAccent,
+                      side: _preferenceChipSide(
+                        profile.goals.contains(goal),
+                        ArcUiTokens.primaryAccent,
+                      ),
+                      labelStyle: _preferenceChipLabel(
+                        profile.goals.contains(goal),
+                        ArcUiTokens.primaryAccent,
+                      ),
+                      shape: _preferenceChipShape,
                       onSelected: (selected) {
                         _updateDraft(
                           profile.copyWith(
@@ -122,6 +138,20 @@ class _ArcPersonalisationPreferencesPanelState
                     ChoiceChip(
                       selected: profile.commandCentre.density == density,
                       label: Text(_densityLabel(density)),
+                      selectedColor: ArcUiTokens.secondaryAccent.withValues(
+                        alpha: 0.18,
+                      ),
+                      backgroundColor: ArcUiTokens.surfaceInteractive
+                          .withValues(alpha: 0.74),
+                      side: _preferenceChipSide(
+                        profile.commandCentre.density == density,
+                        ArcUiTokens.secondaryAccent,
+                      ),
+                      labelStyle: _preferenceChipLabel(
+                        profile.commandCentre.density == density,
+                        ArcUiTokens.secondaryAccent,
+                      ),
+                      shape: _preferenceChipShape,
                       onSelected: (_) {
                         _updateDraft(
                           profile.copyWith(
@@ -144,6 +174,20 @@ class _ArcPersonalisationPreferencesPanelState
                     ChoiceChip(
                       selected: profile.squadPreference == preference,
                       label: Text(_squadLabel(preference)),
+                      selectedColor: ArcUiTokens.secondaryAccent.withValues(
+                        alpha: 0.18,
+                      ),
+                      backgroundColor: ArcUiTokens.surfaceInteractive
+                          .withValues(alpha: 0.74),
+                      side: _preferenceChipSide(
+                        profile.squadPreference == preference,
+                        ArcUiTokens.secondaryAccent,
+                      ),
+                      labelStyle: _preferenceChipLabel(
+                        profile.squadPreference == preference,
+                        ArcUiTokens.secondaryAccent,
+                      ),
+                      shape: _preferenceChipShape,
                       onSelected: (_) {
                         _updateDraft(
                           profile.copyWith(squadPreference: preference),
@@ -164,6 +208,21 @@ class _ArcPersonalisationPreferencesPanelState
                         category,
                       ),
                       label: Text(_notificationLabel(category)),
+                      selectedColor: ArcUiTokens.primaryAccent.withValues(
+                        alpha: 0.18,
+                      ),
+                      backgroundColor: ArcUiTokens.surfaceInteractive
+                          .withValues(alpha: 0.74),
+                      checkmarkColor: ArcUiTokens.primaryAccent,
+                      side: _preferenceChipSide(
+                        profile.notificationCategories.contains(category),
+                        ArcUiTokens.primaryAccent,
+                      ),
+                      labelStyle: _preferenceChipLabel(
+                        profile.notificationCategories.contains(category),
+                        ArcUiTokens.primaryAccent,
+                      ),
+                      shape: _preferenceChipShape,
                       onSelected: (selected) {
                         _updateDraft(
                           profile.copyWith(
@@ -185,6 +244,7 @@ class _ArcPersonalisationPreferencesPanelState
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   ElevatedButton.icon(
+                    style: ArcUiTokens.textButtonStyle(primary: true),
                     onPressed: _saving || _draft == null
                         ? null
                         : () => _save(profile),
@@ -192,13 +252,19 @@ class _ArcPersonalisationPreferencesPanelState
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: ArcUiTokens.background,
+                            ),
                           )
                         : const Icon(Icons.save_outlined),
                     label: const Text('Save Personalisation'),
                   ),
                   if (_draft != null)
                     TextButton(
+                      style: ArcUiTokens.textButtonStyle(
+                        accent: ArcUiTokens.secondaryAccent,
+                      ),
                       onPressed: _saving
                           ? null
                           : () => setState(() {
@@ -211,14 +277,7 @@ class _ArcPersonalisationPreferencesPanelState
               ),
               if (_message.isNotEmpty) ...[
                 const SizedBox(height: AppTheme.spaceS),
-                Text(
-                  _message,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
-                    color: AppTheme.tradingMutedText,
-                    isBold: true,
-                  ),
-                ),
+                Text(_message, style: ArcUiTokens.metadata()),
               ],
             ],
           ),
@@ -276,12 +335,28 @@ class _ArcPersonalisationPreferencesPanelState
       padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
       child: Text(
         label.toUpperCase(),
-        style: AppTheme.bodyTextStyle(
-          fontSize: 11,
-          color: AppTheme.neonCyan,
-          isBold: true,
-        ),
+        style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
       ),
+    );
+  }
+
+  BorderSide _preferenceChipSide(bool selected, Color accent) {
+    return BorderSide(
+      color: (selected ? accent : ArcUiTokens.borderSubtle).withValues(
+        alpha: 0.62,
+      ),
+    );
+  }
+
+  TextStyle _preferenceChipLabel(bool selected, Color accent) {
+    return ArcUiTokens.label(
+      color: selected ? accent : ArcUiTokens.textSecondary,
+    );
+  }
+
+  OutlinedBorder get _preferenceChipShape {
+    return RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
     );
   }
 

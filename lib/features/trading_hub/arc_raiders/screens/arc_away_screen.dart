@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/arc_away_status.dart';
 import '../repositories/arc_trader_profile_repository.dart';
@@ -102,9 +103,11 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
     Widget heroCard() {
       return Container(
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 24,
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: ArcUiTokens.primaryAccent,
+          borderOpacity: 0.24,
+          radius: ArcUiTokens.radiusXL,
         ),
         child: Row(
           children: [
@@ -113,14 +116,14 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
               height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.neonCyan.withValues(alpha: 0.10),
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
                 border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.45),
+                  color: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
                 ),
               ),
               child: const Icon(
                 Icons.do_not_disturb_on_outlined,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
               ),
             ),
             const SizedBox(width: AppTheme.spaceM),
@@ -130,15 +133,15 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                 children: [
                   Text(
                     'Away Mode',
-                    style: AppTheme.tradingHeading(
+                    style: ArcUiTokens.pageTitle(
                       fontSize: 24,
-                      color: AppTheme.neonCyan,
+                      color: ArcUiTokens.primaryAccent,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Pause trade requests while you are away, working, travelling or taking a break.',
-                    style: TextStyle(color: Colors.white70, height: 1.35),
+                    style: ArcUiTokens.body(),
                   ),
                 ],
               ),
@@ -151,7 +154,12 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
     Widget actionCard({required List<Widget> children}) {
       return Container(
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(radius: 22),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          accent: ArcUiTokens.secondaryAccent,
+          borderOpacity: 0.18,
+          radius: ArcUiTokens.radiusL,
+        ),
         child: Column(children: children),
       );
     }
@@ -166,7 +174,11 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
       body: ArcRaidersScreenShell(
         useSafeArea: false,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: ArcUiTokens.primaryAccent,
+                ),
+              )
             : SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -187,25 +199,56 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                                   );
                                 });
                               },
-                              activeThumbColor: AppTheme.neonPink,
-                              title: const Text('Set yourself away'),
-                              subtitle: const Text(
+                              activeThumbColor: ArcUiTokens.secondaryAccent,
+                              title: Text(
+                                'Set yourself away',
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
+                                  weight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
                                 'Hide from search and pause new trade requests while away.',
+                                style: ArcUiTokens.bodySmall(),
                               ),
                             ),
-                            const Divider(color: Colors.white12),
+                            Divider(color: ArcUiTokens.borderSubtle),
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: const Text('Away from'),
-                              subtitle: Text(_format(_awayStatus.from)),
-                              trailing: const Icon(Icons.calendar_month),
+                              title: Text(
+                                'Away from',
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
+                                  weight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                _format(_awayStatus.from),
+                                style: ArcUiTokens.bodySmall(),
+                              ),
+                              trailing: const Icon(
+                                Icons.calendar_month,
+                                color: ArcUiTokens.primaryAccent,
+                              ),
                               onTap: () => _pickDateTime(isFrom: true),
                             ),
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: const Text('Away to'),
-                              subtitle: Text(_format(_awayStatus.to)),
-                              trailing: const Icon(Icons.calendar_month),
+                              title: Text(
+                                'Away to',
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
+                                  weight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                _format(_awayStatus.to),
+                                style: ArcUiTokens.bodySmall(),
+                              ),
+                              trailing: const Icon(
+                                Icons.calendar_month,
+                                color: ArcUiTokens.primaryAccent,
+                              ),
                               onTap: () => _pickDateTime(isFrom: false),
                             ),
                           ],
@@ -213,13 +256,17 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         TextField(
                           controller: _noteController,
-                          decoration: AppTheme.tradingInputDecoration(
-                            label: 'Note',
+                          style: ArcUiTokens.body(
+                            color: ArcUiTokens.textPrimary,
+                          ),
+                          decoration: ArcUiTokens.inputDecoration(
+                            labelText: 'Note',
                           ),
                           maxLines: 3,
                         ),
                         const SizedBox(height: AppTheme.spaceM),
                         ElevatedButton.icon(
+                          style: ArcUiTokens.textButtonStyle(primary: true),
                           onPressed: _isSaving ? null : _save,
                           icon: const Icon(Icons.save_rounded),
                           label: Text(

@@ -9,6 +9,7 @@ import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
+import '../widgets/foundation/arc_ui_tokens.dart';
 
 class ArcProfileEditScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders/profile/edit';
@@ -235,13 +236,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   }
 
   InputDecoration _inputDecoration(String label, {String? helperText}) {
-    return AppTheme.tradingInputDecoration(label: label).copyWith(
-      helperText: helperText,
-      helperStyle: AppTheme.bodyTextStyle(
-        fontSize: 12,
-        color: AppTheme.tradingMutedText,
-      ),
-    );
+    return ArcUiTokens.inputDecoration(
+      labelText: label,
+    ).copyWith(helperText: helperText, helperStyle: ArcUiTokens.bodySmall());
   }
 
   Widget _sectionTitle(String label) {
@@ -252,7 +249,10 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
       ),
       child: Text(
         label,
-        style: AppTheme.tradingHeading(fontSize: 18, color: AppTheme.neonCyan),
+        style: ArcUiTokens.sectionTitle(
+          fontSize: 18,
+          color: ArcUiTokens.primaryAccent,
+        ),
       ),
     );
   }
@@ -270,7 +270,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         controller: controller,
         validator: validator,
         enabled: enabled,
-        style: const TextStyle(color: Colors.white),
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
         decoration: _inputDecoration(label, helperText: helperText),
       ),
     );
@@ -287,9 +287,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
       child: DropdownButtonFormField<String>(
         initialValue: values.contains(value) ? value : values.first,
         isExpanded: true,
-        dropdownColor: AppTheme.cardBackground,
-        style: const TextStyle(color: Colors.white),
-        iconEnabledColor: AppTheme.neonCyan,
+        dropdownColor: ArcUiTokens.surfaceOverlay,
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+        iconEnabledColor: ArcUiTokens.primaryAccent,
         decoration: _inputDecoration(label),
         items: values
             .map(
@@ -312,31 +312,26 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.tradingSoftBorder,
-        radius: 14,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.14,
+        radius: ArcUiTokens.radiusM,
       ),
       child: SwitchListTile.adaptive(
         value: value,
         onChanged: onChanged,
-        activeThumbColor: AppTheme.neonCyan,
+        activeThumbColor: ArcUiTokens.primaryAccent,
         title: Text(
           title,
-          style: AppTheme.bodyTextStyle(
-            fontSize: 14,
-            color: Colors.white,
-            isBold: true,
+          style: ArcUiTokens.body(
+            color: ArcUiTokens.textPrimary,
+            weight: FontWeight.w700,
           ),
         ),
         subtitle: subtitle == null
             ? null
-            : Text(
-                subtitle,
-                style: AppTheme.bodyTextStyle(
-                  fontSize: 12,
-                  color: AppTheme.tradingMutedText,
-                ),
-              ),
+            : Text(subtitle, style: ArcUiTokens.bodySmall()),
       ),
     );
   }
@@ -353,12 +348,23 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         return FilterChip(
           selected: active,
           label: Text(item),
-          selectedColor: AppTheme.neonCyan.withValues(alpha: 0.18),
-          checkmarkColor: AppTheme.neonCyan,
+          selectedColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.18),
+          backgroundColor: ArcUiTokens.surfaceInteractive.withValues(
+            alpha: 0.74,
+          ),
+          checkmarkColor: ArcUiTokens.primaryAccent,
           side: BorderSide(
-            color: (active ? AppTheme.neonCyan : Colors.white24).withValues(
-              alpha: 0.62,
-            ),
+            color:
+                (active ? ArcUiTokens.primaryAccent : ArcUiTokens.borderSubtle)
+                    .withValues(alpha: 0.62),
+          ),
+          labelStyle: ArcUiTokens.label(
+            color: active
+                ? ArcUiTokens.primaryAccent
+                : ArcUiTokens.textSecondary,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
           ),
           onSelected: (_) => setState(() {
             if (active) {
@@ -385,11 +391,24 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         return ChoiceChip(
           selected: active,
           label: Text(item),
-          selectedColor: AppTheme.neonPink.withValues(alpha: 0.18),
+          selectedColor: ArcUiTokens.secondaryAccent.withValues(alpha: 0.18),
+          backgroundColor: ArcUiTokens.surfaceInteractive.withValues(
+            alpha: 0.74,
+          ),
           side: BorderSide(
-            color: (active ? AppTheme.neonPink : Colors.white24).withValues(
-              alpha: 0.62,
-            ),
+            color:
+                (active
+                        ? ArcUiTokens.secondaryAccent
+                        : ArcUiTokens.borderSubtle)
+                    .withValues(alpha: 0.62),
+          ),
+          labelStyle: ArcUiTokens.label(
+            color: active
+                ? ArcUiTokens.secondaryAccent
+                : ArcUiTokens.textSecondary,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
           ),
           onSelected: (_) => onChanged(item),
         );
@@ -404,7 +423,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
         backgroundColor: Colors.transparent,
         body: ArcRaidersScreenShell(
           showAdBanner: false,
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(
+            child: CircularProgressIndicator(color: ArcUiTokens.primaryAccent),
+          ),
         ),
       );
     }
@@ -412,9 +433,11 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
     Widget heroCard() {
       return Container(
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 24,
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: ArcUiTokens.primaryAccent,
+          borderOpacity: 0.24,
+          radius: ArcUiTokens.radiusXL,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,14 +449,14 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.neonCyan.withValues(alpha: 0.10),
+                    color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
                     border: Border.all(
-                      color: AppTheme.neonCyan.withValues(alpha: 0.45),
+                      color: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
                     ),
                   ),
                   child: const Icon(
                     Icons.manage_accounts_rounded,
-                    color: AppTheme.neonCyan,
+                    color: ArcUiTokens.primaryAccent,
                   ),
                 ),
                 const SizedBox(width: AppTheme.spaceM),
@@ -443,15 +466,15 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                     children: [
                       Text(
                         'Trader Identity + Reputation',
-                        style: AppTheme.tradingHeading(
+                        style: ArcUiTokens.pageTitle(
                           fontSize: 24,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Keep your profile focused on reputation, badges, archetypes and squad fit.',
-                        style: TextStyle(color: Colors.white70, height: 1.35),
+                        style: ArcUiTokens.body(),
                       ),
                     ],
                   ),
@@ -471,19 +494,24 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
       return Container(
         margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(radius: 22),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          accent: ArcUiTokens.secondaryAccent,
+          borderOpacity: 0.18,
+          radius: ArcUiTokens.radiusL,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: AppTheme.neonPink, size: 22),
+                Icon(icon, color: ArcUiTokens.secondaryAccent, size: 22),
                 const SizedBox(width: AppTheme.spaceS),
                 Text(
                   title,
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 20,
-                    color: AppTheme.neonPink,
+                    color: ArcUiTokens.secondaryAccent,
                   ),
                 ),
               ],
@@ -565,16 +593,16 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                       title: 'Archetypes & Match Fit',
                       icon: Icons.hub_rounded,
                       children: [
-                        const Text(
+                        Text(
                           'Select everything that applies. These tags drive matchmaking, squad recommendations and public profile fit.',
-                          style: TextStyle(color: Colors.white70, height: 1.35),
+                          style: ArcUiTokens.body(),
                         ),
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Player archetypes',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -585,9 +613,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Play style',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -598,9 +626,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Communication style',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -613,9 +641,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Squad intent',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -628,9 +656,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'What are you doing this session?',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -643,9 +671,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Current priority',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -658,9 +686,9 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Text(
                           'Current energy',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 15,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceS),
@@ -746,6 +774,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                       ],
                     ),
                     ElevatedButton.icon(
+                      style: ArcUiTokens.textButtonStyle(primary: true),
                       onPressed: _isSaving ? null : _save,
                       icon: const Icon(Icons.save_rounded),
                       label: Text(_isSaving ? 'Saving...' : 'Save Changes'),

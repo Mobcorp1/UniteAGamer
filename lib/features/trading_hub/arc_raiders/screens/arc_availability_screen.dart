@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../models/arc_availability.dart';
 import '../repositories/arc_trader_profile_repository.dart';
@@ -96,9 +97,11 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
     Widget heroCard() {
       return Container(
         padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: AppTheme.tradingCardDecoration(
-          radius: 24,
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.28),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.raised,
+          accent: ArcUiTokens.primaryAccent,
+          borderOpacity: 0.24,
+          radius: ArcUiTokens.radiusXL,
         ),
         child: Row(
           children: [
@@ -107,14 +110,14 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
               height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.neonCyan.withValues(alpha: 0.10),
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
                 border: Border.all(
-                  color: AppTheme.neonCyan.withValues(alpha: 0.45),
+                  color: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
                 ),
               ),
               child: const Icon(
                 Icons.schedule_rounded,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
               ),
             ),
             const SizedBox(width: AppTheme.spaceM),
@@ -124,15 +127,15 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                 children: [
                   Text(
                     'Set Availability',
-                    style: AppTheme.tradingHeading(
+                    style: ArcUiTokens.pageTitle(
                       fontSize: 24,
-                      color: AppTheme.neonCyan,
+                      color: ArcUiTokens.primaryAccent,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Let traders know your real raid windows without changing the data you already capture.',
-                    style: TextStyle(color: Colors.white70, height: 1.35),
+                    style: ArcUiTokens.body(),
                   ),
                 ],
               ),
@@ -152,7 +155,11 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
       body: ArcRaidersScreenShell(
         useSafeArea: false,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: ArcUiTokens.primaryAccent,
+                ),
+              )
             : SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -164,13 +171,21 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                         const SizedBox(height: AppTheme.spaceM),
                         Container(
                           padding: const EdgeInsets.all(AppTheme.spaceL),
-                          decoration: AppTheme.tradingCardDecoration(
-                            radius: 22,
+                          decoration: ArcUiTokens.surfaceDecoration(
+                            role: ArcSurfaceRole.panel,
+                            accent: ArcUiTokens.primaryAccent,
+                            borderOpacity: 0.18,
+                            radius: ArcUiTokens.radiusL,
                           ),
                           child: DropdownButtonFormField<String>(
                             initialValue: _availability.scheduleType,
-                            decoration: AppTheme.tradingInputDecoration(
-                              label: 'Schedule Type',
+                            dropdownColor: ArcUiTokens.surfaceOverlay,
+                            style: ArcUiTokens.body(
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                            iconEnabledColor: ArcUiTokens.primaryAccent,
+                            decoration: ArcUiTokens.inputDecoration(
+                              labelText: 'Schedule Type',
                             ),
                             items: const [
                               DropdownMenuItem(
@@ -200,6 +215,7 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                           return _weekCard(week, weekIndex);
                         }),
                         ElevatedButton.icon(
+                          style: ArcUiTokens.textButtonStyle(primary: true),
                           onPressed: _isSaving ? null : _save,
                           icon: const Icon(Icons.save_rounded),
                           label: Text(
@@ -219,69 +235,125 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
       padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(radius: 18),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: ArcUiTokens.secondaryAccent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusL,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             week.label,
-            style: AppTheme.tradingHeading(
+            style: ArcUiTokens.sectionTitle(
               fontSize: 20,
-              color: AppTheme.neonCyan,
+              color: ArcUiTokens.primaryAccent,
             ),
           ),
           const SizedBox(height: AppTheme.spaceM),
           ...List.generate(week.slots.length, (slotIndex) {
             final slot = week.slots[slotIndex];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 52,
-                    child: Text(
-                      _dayLabels[slot.dayKey] ?? slot.dayKey.toUpperCase(),
-                    ),
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 520;
+                final dayLabel =
+                    _dayLabels[slot.dayKey] ?? slot.dayKey.toUpperCase();
+                final enabledSwitch = Switch(
+                  value: slot.enabled,
+                  activeThumbColor: ArcUiTokens.primaryAccent,
+                  onChanged: (value) {
+                    _updateWeekSlot(
+                      weekIndex,
+                      slotIndex,
+                      slot.copyWith(enabled: value),
+                    );
+                  },
+                );
+                final fromField = TextFormField(
+                  initialValue: slot.fromTime,
+                  style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                  decoration: ArcUiTokens.inputDecoration(labelText: 'From'),
+                  onChanged: (value) {
+                    _updateWeekSlot(
+                      weekIndex,
+                      slotIndex,
+                      slot.copyWith(fromTime: value),
+                    );
+                  },
+                );
+                final toField = TextFormField(
+                  initialValue: slot.toTime,
+                  style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                  decoration: ArcUiTokens.inputDecoration(labelText: 'To'),
+                  onChanged: (value) {
+                    _updateWeekSlot(
+                      weekIndex,
+                      slotIndex,
+                      slot.copyWith(toTime: value),
+                    );
+                  },
+                );
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
+                  padding: const EdgeInsets.all(AppTheme.spaceS),
+                  decoration: ArcUiTokens.surfaceDecoration(
+                    role: ArcSurfaceRole.interactive,
+                    accent: slot.enabled
+                        ? ArcUiTokens.primaryAccent
+                        : ArcUiTokens.textTertiary,
+                    borderOpacity: slot.enabled ? 0.22 : 0.10,
+                    radius: ArcUiTokens.radiusM,
                   ),
-                  Switch(
-                    value: slot.enabled,
-                    onChanged: (value) {
-                      _updateWeekSlot(
-                        weekIndex,
-                        slotIndex,
-                        slot.copyWith(enabled: value),
-                      );
-                    },
-                  ),
-                  Expanded(
-                    child: TextFormField(
-                      initialValue: slot.fromTime,
-                      decoration: const InputDecoration(labelText: 'From'),
-                      onChanged: (value) {
-                        _updateWeekSlot(
-                          weekIndex,
-                          slotIndex,
-                          slot.copyWith(fromTime: value),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spaceS),
-                  Expanded(
-                    child: TextFormField(
-                      initialValue: slot.toTime,
-                      decoration: const InputDecoration(labelText: 'To'),
-                      onChanged: (value) {
-                        _updateWeekSlot(
-                          weekIndex,
-                          slotIndex,
-                          slot.copyWith(toTime: value),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                  child: compact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    dayLabel,
+                                    style: ArcUiTokens.sectionTitle(
+                                      fontSize: 15,
+                                      color: ArcUiTokens.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                enabledSwitch,
+                              ],
+                            ),
+                            const SizedBox(height: AppTheme.spaceS),
+                            Row(
+                              children: [
+                                Expanded(child: fromField),
+                                const SizedBox(width: AppTheme.spaceS),
+                                Expanded(child: toField),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            SizedBox(
+                              width: 52,
+                              child: Text(
+                                dayLabel,
+                                style: ArcUiTokens.sectionTitle(
+                                  fontSize: 15,
+                                  color: ArcUiTokens.textPrimary,
+                                ),
+                              ),
+                            ),
+                            enabledSwitch,
+                            Expanded(child: fromField),
+                            const SizedBox(width: AppTheme.spaceS),
+                            Expanded(child: toField),
+                          ],
+                        ),
+                );
+              },
             );
           }),
         ],

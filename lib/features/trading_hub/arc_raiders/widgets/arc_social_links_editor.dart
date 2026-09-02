@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_profile_social_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcSocialLinksEditor extends StatefulWidget {
@@ -80,10 +81,7 @@ class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
       children: [
         Text(
           'Add only links you want associated with your public UAG identity. Hidden links are saved for later but excluded from public profile output.',
-          style: AppTheme.bodyTextStyle(
-            fontSize: 13,
-            color: AppTheme.tradingMutedText,
-          ),
+          style: ArcUiTokens.body(),
         ),
         const SizedBox(height: AppTheme.spaceM),
         ...ArcSocialPlatform.values.map(_platformField),
@@ -96,24 +94,27 @@ class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceS),
       padding: const EdgeInsets.all(AppTheme.spaceS),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.tradingSoftBorder,
-        radius: 14,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.12,
+        radius: ArcUiTokens.radiusM,
       ),
       child: Column(
         children: [
           TextFormField(
             controller: _controllers[platform],
-            style: const TextStyle(color: Colors.white),
+            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
             validator: (_) => _linkFor(platform).validationError,
             decoration:
-                AppTheme.tradingInputDecoration(
-                  label: '${platform.label} username or URL',
+                ArcUiTokens.inputDecoration(
+                  labelText: '${platform.label} username or URL',
                 ).copyWith(
                   helperText: link.destinationUrl.isEmpty
                       ? 'Optional'
                       : link.destinationUrl,
                   helperMaxLines: 2,
+                  helperStyle: ArcUiTokens.bodySmall(),
                 ),
             onChanged: (_) {
               setState(() {});
@@ -124,17 +125,16 @@ class _ArcSocialLinksEditorState extends State<ArcSocialLinksEditor> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             value: _hidden[platform] ?? false,
-            activeThumbColor: AppTheme.neonPink,
+            activeThumbColor: ArcUiTokens.secondaryAccent,
             onChanged: (value) {
               setState(() => _hidden[platform] = value);
               _emitChanged();
             },
             title: Text(
               'Hide ${platform.label} from public profile',
-              style: AppTheme.bodyTextStyle(
-                fontSize: 13,
-                color: Colors.white,
-                isBold: true,
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w700,
               ),
             ),
           ),
