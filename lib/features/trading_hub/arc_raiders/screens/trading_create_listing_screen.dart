@@ -176,22 +176,22 @@ class _TradingCreateListingScreenState
   }) {
     return TradingCard(
       margin: const EdgeInsets.only(bottom: 16),
-      accent: AppTheme.neonPink,
+      accent: ArcUiTokens.secondaryAccent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: AppTheme.tradingHeading(
+            style: ArcUiTokens.sectionTitle(
               fontSize: 21,
-              color: AppTheme.neonPink,
+              color: ArcUiTokens.secondaryAccent,
             ),
           ),
           if (subtitle != null && subtitle.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               subtitle,
-              style: TextStyle(color: AppTheme.tradingMutedText, height: 1.3),
+              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
             ),
           ],
           const SizedBox(height: AppTheme.spaceM),
@@ -209,9 +209,9 @@ class _TradingCreateListingScreenState
   }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
-      dropdownColor: const Color(0xFF111827),
-      style: const TextStyle(color: Colors.white),
-      decoration: AppTheme.tradingInputDecoration(label: label),
+      dropdownColor: ArcUiTokens.surfaceOverlay,
+      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+      decoration: ArcUiTokens.inputDecoration(labelText: label),
       items: options
           .map(
             (item) => DropdownMenuItem<String>(value: item, child: Text(item)),
@@ -229,9 +229,9 @@ class _TradingCreateListingScreenState
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
       child: InputDecorator(
-        decoration: AppTheme.tradingInputDecoration(label: label),
+        decoration: ArcUiTokens.inputDecoration(labelText: label),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -240,13 +240,13 @@ class _TradingCreateListingScreenState
                 Expanded(
                   child: Text(
                     value,
-                    style: const TextStyle(color: Colors.white),
+                    style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                   ),
                 ),
                 const SizedBox(width: 12),
                 const Icon(
                   Icons.arrow_drop_down_rounded,
-                  color: Colors.white70,
+                  color: ArcUiTokens.textSecondary,
                 ),
               ],
             ),
@@ -254,10 +254,7 @@ class _TradingCreateListingScreenState
               const SizedBox(height: 6),
               Text(
                 helper,
-                style: TextStyle(
-                  color: AppTheme.tradingFaintText,
-                  fontSize: 12,
-                ),
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
               ),
             ],
           ],
@@ -316,9 +313,12 @@ class _TradingCreateListingScreenState
     return showModalBottomSheet<List<ArcBlueprint>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -352,18 +352,18 @@ class _TradingCreateListingScreenState
                     children: [
                       Text(
                         title,
-                        style: AppTheme.tradingHeading(
+                        style: ArcUiTokens.sectionTitle(
                           fontSize: 22,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       TextField(
                         controller: controller,
-                        style: const TextStyle(color: Colors.white),
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                         onChanged: updateFilter,
-                        decoration: AppTheme.tradingInputDecoration(
-                          label: 'Search blueprints',
+                        decoration: ArcUiTokens.inputDecoration(
+                          labelText: 'Search blueprints',
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
@@ -371,16 +371,20 @@ class _TradingCreateListingScreenState
                         alignment: Alignment.centerLeft,
                         child: Text(
                           _selectionSummary(selectedIds.length, 'blueprint'),
-                          style: TextStyle(color: AppTheme.tradingMutedText),
+                          style: ArcUiTokens.bodySmall(
+                            color: ArcUiTokens.textSecondary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceS),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Text(
                                   'No matching blueprints.',
-                                  style: TextStyle(color: Colors.white60),
+                                  style: ArcUiTokens.bodySmall(
+                                    color: ArcUiTokens.textTertiary,
+                                  ),
                                 ),
                               )
                             : ListView.builder(
@@ -395,21 +399,21 @@ class _TradingCreateListingScreenState
                                   );
                                   return CheckboxListTile(
                                     value: isSelected,
-                                    activeColor: AppTheme.neonPink,
+                                    activeColor: ArcUiTokens.secondaryAccent,
                                     controlAffinity:
                                         ListTileControlAffinity.leading,
                                     title: Text(
                                       blueprint.name,
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: ArcUiTokens.body(
+                                        color: ArcUiTokens.textPrimary,
                                       ),
                                     ),
                                     subtitle: Text(
                                       state.hasDuplicates
                                           ? 'Dupes: ${state.dupesOwned} - ${blueprint.category}'
                                           : '${blueprint.rarityLabel} - ${blueprint.category}',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
+                                      style: ArcUiTokens.bodySmall(
+                                        color: ArcUiTokens.textTertiary,
                                       ),
                                     ),
                                     onChanged: (_) {
@@ -429,20 +433,16 @@ class _TradingCreateListingScreenState
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.secondaryAccent,
+                            primary: true,
+                          ),
                           onPressed: () {
                             final selected = items
                                 .where((item) => selectedIds.contains(item.id))
                                 .toList(growable: false);
                             Navigator.of(context).pop(selected);
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.neonPink,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
                           child: const Text('Done'),
                         ),
                       ),
@@ -473,9 +473,12 @@ class _TradingCreateListingScreenState
     return showModalBottomSheet<List<ArcTradeItem>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -521,18 +524,18 @@ class _TradingCreateListingScreenState
                     children: [
                       Text(
                         title,
-                        style: AppTheme.tradingHeading(
+                        style: ArcUiTokens.sectionTitle(
                           fontSize: 22,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       TextField(
                         controller: controller,
-                        style: const TextStyle(color: Colors.white),
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                         onChanged: (_) => updateFilter(),
-                        decoration: AppTheme.tradingInputDecoration(
-                          label: 'Search weapons, keys, mods, materials',
+                        decoration: ArcUiTokens.inputDecoration(
+                          labelText: 'Search weapons, keys, mods, materials',
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
@@ -545,22 +548,23 @@ class _TradingCreateListingScreenState
                               padding: const EdgeInsets.only(right: 8),
                               child: FilterChip(
                                 selected: selected,
-                                selectedColor: AppTheme.neonPink.withValues(
-                                  alpha: 0.25,
-                                ),
-                                checkmarkColor: AppTheme.neonPink,
+                                selectedColor: ArcUiTokens.secondaryAccent
+                                    .withValues(alpha: 0.25),
+                                checkmarkColor: ArcUiTokens.secondaryAccent,
                                 label: Text(category),
                                 labelStyle: TextStyle(
                                   color: selected
-                                      ? AppTheme.neonPink
-                                      : AppTheme.neonCyan,
+                                      ? ArcUiTokens.secondaryAccent
+                                      : ArcUiTokens.primaryAccent,
                                   fontWeight: FontWeight.w700,
                                 ),
-                                backgroundColor: AppTheme.tradingCardBackground,
+                                backgroundColor: ArcUiTokens.surfaceInteractive,
                                 side: BorderSide(
                                   color: selected
-                                      ? AppTheme.neonPink.withValues(alpha: 0.7)
-                                      : AppTheme.neonCyan.withValues(
+                                      ? ArcUiTokens.secondaryAccent.withValues(
+                                          alpha: 0.7,
+                                        )
+                                      : ArcUiTokens.primaryAccent.withValues(
                                           alpha: 0.25,
                                         ),
                                 ),
@@ -576,15 +580,19 @@ class _TradingCreateListingScreenState
                       const SizedBox(height: AppTheme.spaceM),
                       Text(
                         _selectionSummary(selectedIds.length, 'asset'),
-                        style: TextStyle(color: AppTheme.tradingMutedText),
+                        style: ArcUiTokens.bodySmall(
+                          color: ArcUiTokens.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: AppTheme.spaceS),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Text(
                                   'No matching trade assets.',
-                                  style: TextStyle(color: Colors.white60),
+                                  style: ArcUiTokens.bodySmall(
+                                    color: ArcUiTokens.textTertiary,
+                                  ),
                                 ),
                               )
                             : ListView.builder(
@@ -596,7 +604,7 @@ class _TradingCreateListingScreenState
                                   );
                                   return CheckboxListTile(
                                     value: isSelected,
-                                    activeColor: AppTheme.neonPink,
+                                    activeColor: ArcUiTokens.secondaryAccent,
                                     controlAffinity:
                                         ListTileControlAffinity.leading,
                                     title: Row(
@@ -604,8 +612,8 @@ class _TradingCreateListingScreenState
                                         Expanded(
                                           child: Text(
                                             item.name,
-                                            style: const TextStyle(
-                                              color: Colors.white,
+                                            style: ArcUiTokens.body(
+                                              color: ArcUiTokens.textPrimary,
                                             ),
                                           ),
                                         ),
@@ -619,15 +627,15 @@ class _TradingCreateListingScreenState
                                               vertical: 4,
                                             ),
                                             decoration:
-                                                AppTheme.tradingPillDecoration(
-                                                  color: AppTheme.neonPink,
+                                                ArcUiTokens.chipDecoration(
+                                                  color: ArcUiTokens
+                                                      .secondaryAccent,
                                                 ),
-                                            child: const Text(
+                                            child: Text(
                                               'HOT',
-                                              style: TextStyle(
-                                                color: AppTheme.neonPink,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 11,
+                                              style: ArcUiTokens.label(
+                                                color:
+                                                    ArcUiTokens.secondaryAccent,
                                               ),
                                             ),
                                           ),
@@ -635,8 +643,8 @@ class _TradingCreateListingScreenState
                                     ),
                                     subtitle: Text(
                                       '${item.categoryLabel} - ${item.rarityLabel} - ${item.tradeValueLabel} value',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
+                                      style: ArcUiTokens.bodySmall(
+                                        color: ArcUiTokens.textTertiary,
                                       ),
                                     ),
                                     onChanged: (_) {
@@ -656,20 +664,16 @@ class _TradingCreateListingScreenState
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.secondaryAccent,
+                            primary: true,
+                          ),
                           onPressed: () {
                             final selected = _tradeCatalog
                                 .where((item) => selectedIds.contains(item.id))
                                 .toList(growable: false);
                             Navigator.of(context).pop(selected);
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.neonPink,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
                           child: const Text('Done'),
                         ),
                       ),
@@ -835,17 +839,28 @@ class _TradingCreateListingScreenState
                             : slot.value;
                         return '${slot.key}: $value';
                       })
-                      .join(' • ');
-            return Card(
-              color: Colors.white.withValues(alpha: 0.04),
+                      .join(' - ');
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.interactive,
+                accent: ArcUiTokens.primaryAccent,
+                radius: ArcUiTokens.radiusL,
+                borderOpacity: 0.12,
+              ),
               child: ListTile(
                 title: Text(
-                  '${component.quantity}× ${component.itemName}',
-                  style: const TextStyle(color: Colors.white),
+                  '${component.quantity}x ${component.itemName}',
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
+                  ),
                 ),
                 subtitle: Text(
                   summary,
-                  style: TextStyle(color: AppTheme.tradingMutedText),
+                  style: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textSecondary,
+                  ),
                 ),
                 onTap: () async {
                   final updated = await ArcFittedWeaponBundleEditor.show(
@@ -1650,23 +1665,21 @@ class _TradingCreateListingScreenState
                             child: TextFormField(
                               controller: _notesController,
                               maxLines: 4,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: AppTheme.tradingInputDecoration(
-                                label:
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                              ),
+                              decoration: ArcUiTokens.inputDecoration(
+                                labelText:
                                     'Optional details, preferred swap setup, level 4 only, exact ratios, etc.',
                               ),
                             ),
                           ),
                           ElevatedButton(
-                            onPressed: _isSaving ? null : _saveListing,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.neonPink,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
+                            style: ArcUiTokens.textButtonStyle(
+                              accent: ArcUiTokens.secondaryAccent,
+                              primary: true,
                             ),
+                            onPressed: _isSaving ? null : _saveListing,
                             child: Text(
                               _isSaving ? 'Saving...' : 'Create Listing',
                               style: const TextStyle(

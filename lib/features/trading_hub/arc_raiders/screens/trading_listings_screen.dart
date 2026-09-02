@@ -15,6 +15,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_trade_network_panel.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/widgets/collapsible_section_card.dart';
@@ -626,9 +627,11 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
                                 TextField(
                                   controller: _searchController,
                                   onChanged: (_) => setState(() {}),
-                                  style: const TextStyle(color: Colors.white),
-                                  decoration: AppTheme.tradingInputDecoration(
-                                    label:
+                                  style: ArcUiTokens.body(
+                                    color: ArcUiTokens.textPrimary,
+                                  ),
+                                  decoration: ArcUiTokens.inputDecoration(
+                                    labelText:
                                         'Search blueprints, keys, weapons, mods, traders',
                                   ),
                                 ),

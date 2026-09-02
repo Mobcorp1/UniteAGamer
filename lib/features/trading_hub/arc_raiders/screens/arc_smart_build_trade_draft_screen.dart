@@ -126,7 +126,7 @@ class _ArcSmartBuildTradeDraftScreenState
                               for (final item in integration.missingBlueprints)
                                 _requirementRow(
                                   '${item.itemName} Blueprint',
-                                  '${item.slotLabel} • Priority ${item.priorityRank}',
+                                  '${item.slotLabel} - Priority ${item.priorityRank}',
                                   AppTheme.neonPink,
                                 ),
                             ],

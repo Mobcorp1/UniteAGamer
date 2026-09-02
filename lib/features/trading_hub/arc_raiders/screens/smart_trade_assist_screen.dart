@@ -355,8 +355,11 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
   void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: AppTheme.cardBackgroundDeep,
+        content: Text(
+          message,
+          style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+        ),
+        backgroundColor: ArcUiTokens.surfaceOverlay,
       ),
     );
   }

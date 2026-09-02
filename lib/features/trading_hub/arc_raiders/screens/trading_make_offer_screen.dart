@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_cosmetic_identity_strip.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_seed_bundle_picker.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -123,9 +124,9 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
         children: [
           Text(
             title,
-            style: AppTheme.tradingHeading(
+            style: ArcUiTokens.sectionTitle(
               fontSize: 21,
-              color: AppTheme.neonPink,
+              color: ArcUiTokens.secondaryAccent,
             ),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -147,8 +148,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
       enabled: enabled,
       maxLines: maxLines,
       validator: validator,
-      style: const TextStyle(color: Colors.white),
-      decoration: AppTheme.tradingInputDecoration(label: label),
+      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+      decoration: ArcUiTokens.inputDecoration(labelText: label),
     );
   }
 
@@ -162,7 +163,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     if (items.isEmpty) {
       return Text(
         'Nothing selected yet.',
-        style: TextStyle(color: AppTheme.tradingFaintText),
+        style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
       );
     }
     return Wrap(
@@ -172,16 +173,14 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           .map(
             (item) => Container(
               padding: AppTheme.pillPadding,
-              decoration: AppTheme.tradingPillDecoration(
-                color: AppTheme.neonPink,
+              decoration: ArcUiTokens.chipDecoration(
+                color: ArcUiTokens.secondaryAccent,
               ),
               child: Text(
                 item,
-                style: const TextStyle(
-                  color: AppTheme.neonPink,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
+                style: ArcUiTokens.bodySmall(
+                  color: ArcUiTokens.secondaryAccent,
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
             ),
           )
@@ -231,17 +230,17 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
         const SizedBox(height: AppTheme.spaceM),
         Text(
           score.summary,
-          style: AppTheme.bodyTextStyle(
+          style: ArcUiTokens.body(
             fontSize: 13,
-            color: Colors.white70,
-            isBold: true,
+            color: ArcUiTokens.textSecondary,
+            weight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: AppTheme.spaceS),
         for (final hint in score.hints) ...[
           Text(
             '- $hint',
-            style: TextStyle(color: AppTheme.tradingMutedText, height: 1.3),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
           ),
           const SizedBox(height: 4),
         ],
@@ -252,14 +251,12 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   Widget _scorePill(String label, Color color) {
     return Container(
       padding: AppTheme.pillPadding,
-      decoration: AppTheme.tradingPillDecoration(color: color),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
-        style: TextStyle(
+        style: ArcUiTokens.bodySmall(
           color: color,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
-        ),
+        ).copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -277,9 +274,12 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
     return showModalBottomSheet<List<ArcTradeItem>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -325,18 +325,18 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                     children: [
                       Text(
                         'Select trade items',
-                        style: AppTheme.tradingHeading(
+                        style: ArcUiTokens.sectionTitle(
                           fontSize: 22,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       TextField(
                         controller: controller,
-                        style: const TextStyle(color: Colors.white),
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                         onChanged: (_) => updateFilter(),
-                        decoration: AppTheme.tradingInputDecoration(
-                          label:
+                        decoration: ArcUiTokens.inputDecoration(
+                          labelText:
                               'Search weapons, ammo, attachments, materials, trinkets',
                         ),
                       ),
@@ -351,27 +351,24 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                   padding: const EdgeInsets.only(right: 8),
                                   child: FilterChip(
                                     selected: selected,
-                                    selectedColor: AppTheme.neonPink.withValues(
-                                      alpha: 0.25,
-                                    ),
-                                    checkmarkColor: AppTheme.neonPink,
+                                    selectedColor: ArcUiTokens.secondaryAccent
+                                        .withValues(alpha: 0.25),
+                                    checkmarkColor: ArcUiTokens.secondaryAccent,
                                     label: Text(category),
                                     labelStyle: TextStyle(
                                       color: selected
-                                          ? AppTheme.neonPink
-                                          : AppTheme.neonCyan,
+                                          ? ArcUiTokens.secondaryAccent
+                                          : ArcUiTokens.primaryAccent,
                                       fontWeight: FontWeight.w700,
                                     ),
                                     backgroundColor:
-                                        AppTheme.tradingCardBackground,
+                                        ArcUiTokens.surfaceInteractive,
                                     side: BorderSide(
                                       color: selected
-                                          ? AppTheme.neonPink.withValues(
-                                              alpha: 0.7,
-                                            )
-                                          : AppTheme.neonCyan.withValues(
-                                              alpha: 0.25,
-                                            ),
+                                          ? ArcUiTokens.secondaryAccent
+                                                .withValues(alpha: 0.7)
+                                          : ArcUiTokens.primaryAccent
+                                                .withValues(alpha: 0.25),
                                     ),
                                     onSelected: (_) {
                                       categoryFilter = category;
@@ -386,15 +383,19 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                       const SizedBox(height: AppTheme.spaceM),
                       Text(
                         _selectionSummary(selectedIds.length, 'item'),
-                        style: TextStyle(color: AppTheme.tradingMutedText),
+                        style: ArcUiTokens.bodySmall(
+                          color: ArcUiTokens.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: AppTheme.spaceS),
                       Expanded(
                         child: filtered.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Text(
                                   'No matching trade items.',
-                                  style: TextStyle(color: Colors.white60),
+                                  style: ArcUiTokens.bodySmall(
+                                    color: ArcUiTokens.textTertiary,
+                                  ),
                                 ),
                               )
                             : ListView.builder(
@@ -406,19 +407,19 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                   );
                                   return CheckboxListTile(
                                     value: isSelected,
-                                    activeColor: AppTheme.neonPink,
+                                    activeColor: ArcUiTokens.secondaryAccent,
                                     controlAffinity:
                                         ListTileControlAffinity.leading,
                                     title: Text(
                                       item.name,
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: ArcUiTokens.body(
+                                        color: ArcUiTokens.textPrimary,
                                       ),
                                     ),
                                     subtitle: Text(
                                       '${item.categoryLabel} - ${item.rarityLabel} - ${item.tradeValueLabel} value',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
+                                      style: ArcUiTokens.bodySmall(
+                                        color: ArcUiTokens.textTertiary,
                                       ),
                                     ),
                                     onChanged: (_) {
@@ -438,20 +439,16 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.secondaryAccent,
+                            primary: true,
+                          ),
                           onPressed: () {
                             final selected = _tradeItems
                                 .where((item) => selectedIds.contains(item.id))
                                 .toList(growable: false);
                             Navigator.of(context).pop(selected);
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.neonPink,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
                           child: const Text('Done'),
                         ),
                       ),
@@ -492,7 +489,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
   String _bundleComponentSummary(ArcTradeBundleComponent component) {
     final config = component.fittedWeapon;
     if (config == null) {
-      return '${component.quantity}× ${component.itemName}';
+      return '${component.quantity}x ${component.itemName}';
     }
     final slots = config.attachmentsBySlot.entries
         .map((entry) {
@@ -504,7 +501,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           return '${entry.key}: $value';
         })
         .join(', ');
-    return '${component.quantity}× ${component.itemName}${slots.isEmpty ? '' : ' ($slots)'}';
+    return '${component.quantity}x ${component.itemName}${slots.isEmpty ? '' : ' ($slots)'}';
   }
 
   Widget _buildAcceptedBundlePicker() {
@@ -521,7 +518,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
         children: [
           Text(
             'Choose one seller-approved bundle. The offer is validated before submission.',
-            style: TextStyle(color: AppTheme.tradingMutedText),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: 12),
           ...bundles.map((bundle) {
@@ -533,7 +530,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                 selected: selected,
                 label: 'Select accepted bundle ${bundle.name}',
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
                   onTap: () {
                     setState(() {
                       _selectedAcceptedBundleId = bundle.id;
@@ -542,17 +539,16 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      color: selected
-                          ? AppTheme.neonCyan.withValues(alpha: 0.10)
-                          : Colors.white.withValues(alpha: 0.035),
-                      border: Border.all(
-                        color: selected
-                            ? AppTheme.neonCyan
-                            : Colors.white.withValues(alpha: 0.14),
-                        width: selected ? 1.5 : 1,
-                      ),
+                    decoration: ArcUiTokens.surfaceDecoration(
+                      role: ArcSurfaceRole.interactive,
+                      accent: ArcUiTokens.primaryAccent,
+                      radius: ArcUiTokens.radiusXL,
+                      selected: selected,
+                      backgroundColor: selected
+                          ? ArcUiTokens.primaryAccent.withValues(alpha: 0.10)
+                          : ArcUiTokens.surfaceInteractive.withValues(
+                              alpha: 0.74,
+                            ),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,8 +558,8 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                               ? Icons.radio_button_checked
                               : Icons.radio_button_off,
                           color: selected
-                              ? AppTheme.neonCyan
-                              : AppTheme.tradingMutedText,
+                              ? ArcUiTokens.primaryAccent
+                              : ArcUiTokens.textTertiary,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -572,18 +568,18 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                             children: [
                               Text(
                                 bundle.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
+                                  weight: FontWeight.w700,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 bundle.components
                                     .map(_bundleComponentSummary)
-                                    .join(' • '),
-                                style: TextStyle(
-                                  color: AppTheme.tradingMutedText,
+                                    .join(' - '),
+                                style: ArcUiTokens.bodySmall(
+                                  color: ArcUiTokens.textSecondary,
                                 ),
                               ),
                             ],
@@ -598,15 +594,18 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
           }),
           SwitchListTile.adaptive(
             value: _preparingExactBundle,
-            activeThumbColor: AppTheme.neonCyan,
-            activeTrackColor: AppTheme.neonCyan.withValues(alpha: 0.45),
-            title: const Text(
+            activeThumbColor: ArcUiTokens.primaryAccent,
+            activeTrackColor: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
+            title: Text(
               'I am preparing this bundle',
-              style: TextStyle(color: Colors.white),
+              style: ArcUiTokens.body(
+                color: ArcUiTokens.textPrimary,
+                weight: FontWeight.w700,
+              ),
             ),
             subtitle: Text(
               'The seller can see that you intend to farm or assemble the requested items.',
-              style: TextStyle(color: AppTheme.tradingMutedText),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
             onChanged: (value) => setState(() => _preparingExactBundle = value),
           ),
@@ -848,10 +847,12 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                         ..addAll(picked);
                                     });
                                   },
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(
+                              ArcUiTokens.radiusL,
+                            ),
                             child: InputDecorator(
-                              decoration: AppTheme.tradingInputDecoration(
-                                label: 'Trade Items You Are Offering',
+                              decoration: ArcUiTokens.inputDecoration(
+                                labelText: 'Trade Items You Are Offering',
                               ),
                               child: Row(
                                 children: [
@@ -863,14 +864,14 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                                               _selectedTradeItems.length,
                                               'item',
                                             ),
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      style: ArcUiTokens.body(
+                                        color: ArcUiTokens.textPrimary,
                                       ),
                                     ),
                                   ),
                                   const Icon(
                                     Icons.arrow_drop_down_rounded,
-                                    color: Colors.white70,
+                                    color: ArcUiTokens.textSecondary,
                                   ),
                                 ],
                               ),
@@ -887,10 +888,12 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
                             value: listing.wantsNothing
                                 ? false
                                 : _includesResources,
-                            activeThumbColor: AppTheme.neonPink,
-                            title: const Text(
+                            activeThumbColor: ArcUiTokens.secondaryAccent,
+                            title: Text(
                               'Include Resources',
-                              style: TextStyle(color: Colors.white),
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                              ),
                             ),
                             onChanged: listing.wantsNothing
                                 ? null

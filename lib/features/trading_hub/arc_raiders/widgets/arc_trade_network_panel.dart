@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_blueprint_watches_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_stat_chip.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -278,45 +279,55 @@ class _NextActionCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: AppTheme.tradingCardDecoration(
-        radius: 16,
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.44),
-        backgroundColor: AppTheme.cardBackgroundDeep.withValues(alpha: 0.84),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusXL,
+        borderOpacity: 0.44,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.assistant_direction, color: AppTheme.neonCyan),
+              const Icon(
+                Icons.assistant_direction,
+                color: ArcUiTokens.primaryAccent,
+              ),
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: Text(
                   'Smart Trade Next Action',
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 18,
-                    color: AppTheme.neonCyan,
+                    color: ArcUiTokens.primaryAccent,
                   ),
                 ),
               ),
-              _pill('${nextAction.confidence}% confidence', AppTheme.neonPink),
+              _pill(
+                '${nextAction.confidence}% confidence',
+                ArcUiTokens.secondaryAccent,
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
             nextAction.title,
-            style: AppTheme.tradingHeading(fontSize: 16, color: Colors.white),
+            style: ArcUiTokens.cardTitle(
+              fontSize: 16,
+              color: ArcUiTokens.textPrimary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             nextAction.detail,
-            style: TextStyle(color: AppTheme.tradingMutedText, height: 1.3),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           if (opportunity.progressionHint.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               opportunity.progressionHint,
-              style: TextStyle(color: AppTheme.tradingFaintText, height: 1.3),
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textTertiary),
             ),
           ],
           const SizedBox(height: AppTheme.spaceS),
@@ -334,9 +345,9 @@ class _NextActionCard extends StatelessWidget {
                       : Icons.open_in_new_rounded,
                 ),
                 label: Text(primaryLabel),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.neonPink,
-                  foregroundColor: Colors.white,
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.secondaryAccent,
+                  primary: true,
                 ),
               ),
               if (nextAction.requiresPreparationWatch)
@@ -344,9 +355,8 @@ class _NextActionCard extends StatelessWidget {
                   onPressed: onOpenListing,
                   icon: const Icon(Icons.open_in_new_rounded),
                   label: const Text('Open listing'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.neonCyan,
-                    side: const BorderSide(color: AppTheme.neonCyan),
+                  style: ArcUiTokens.textButtonStyle(
+                    accent: ArcUiTokens.primaryAccent,
                   ),
                 ),
             ],
@@ -359,15 +369,8 @@ class _NextActionCard extends StatelessWidget {
   Widget _pill(String label, Color color) {
     return Container(
       padding: AppTheme.pillPadding,
-      decoration: AppTheme.tradingPillDecoration(color: color),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w800,
-          fontSize: 11,
-        ),
-      ),
+      decoration: ArcUiTokens.chipDecoration(color: color),
+      child: Text(label, style: ArcUiTokens.metadata(color: color)),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_fitted_weapon_trade_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_trade_bundle_models.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 class ArcFittedWeaponBundleEditor {
   const ArcFittedWeaponBundleEditor._();
@@ -35,7 +35,8 @@ class ArcFittedWeaponBundleEditor {
     return showModalBottomSheet<ArcTradeBundleComponent>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0B111B),
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -64,22 +65,27 @@ class ArcFittedWeaponBundleEditor {
                       children: [
                         Text(
                           'Fully Kitted Weapon',
-                          style: AppTheme.tradingHeading(
+                          style: ArcUiTokens.sectionTitle(
                             fontSize: 24,
-                            color: AppTheme.neonCyan,
+                            color: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Set the exact weapon and what is required in each real attachment slot.',
-                          style: TextStyle(color: AppTheme.tradingMutedText),
+                          style: ArcUiTokens.body(
+                            color: ArcUiTokens.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 18),
                         DropdownButtonFormField<String>(
                           initialValue: weaponName,
-                          dropdownColor: const Color(0xFF111827),
-                          decoration: AppTheme.tradingInputDecoration(
-                            label: 'Weapon',
+                          dropdownColor: ArcUiTokens.surfaceOverlay,
+                          decoration: ArcUiTokens.inputDecoration(
+                            labelText: 'Weapon',
+                          ),
+                          style: ArcUiTokens.body(
+                            color: ArcUiTokens.textPrimary,
                           ),
                           items: weapons
                               .map(
@@ -100,12 +106,12 @@ class ArcFittedWeaponBundleEditor {
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Quantity',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
+                                  weight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -117,9 +123,9 @@ class ArcFittedWeaponBundleEditor {
                             ),
                             Text(
                               '$quantity',
-                              style: AppTheme.tradingHeading(
+                              style: ArcUiTokens.numeric(
                                 fontSize: 22,
-                                color: AppTheme.neonCyan,
+                                color: ArcUiTokens.primaryAccent,
                               ),
                             ),
                             IconButton(
@@ -135,8 +141,8 @@ class ArcFittedWeaponBundleEditor {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Text(
                               '$weaponName has no attachment slots.',
-                              style: TextStyle(
-                                color: AppTheme.tradingMutedText,
+                              style: ArcUiTokens.bodySmall(
+                                color: ArcUiTokens.textSecondary,
                               ),
                             ),
                           ),
@@ -153,9 +159,12 @@ class ArcFittedWeaponBundleEditor {
                             padding: const EdgeInsets.only(top: 12),
                             child: DropdownButtonFormField<String>(
                               initialValue: value,
-                              dropdownColor: const Color(0xFF111827),
-                              decoration: AppTheme.tradingInputDecoration(
-                                label: slot,
+                              dropdownColor: ArcUiTokens.surfaceOverlay,
+                              decoration: ArcUiTokens.inputDecoration(
+                                labelText: slot,
+                              ),
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
                               ),
                               items: <DropdownMenuItem<String>>[
                                 const DropdownMenuItem<String>(
@@ -186,7 +195,9 @@ class ArcFittedWeaponBundleEditor {
                               padding: const EdgeInsets.only(bottom: 4),
                               child: Text(
                                 error,
-                                style: const TextStyle(color: Colors.orange),
+                                style: ArcUiTokens.bodySmall(
+                                  color: ArcUiTokens.warning,
+                                ),
                               ),
                             ),
                           ),
@@ -196,6 +207,9 @@ class ArcFittedWeaponBundleEditor {
                           children: [
                             Expanded(
                               child: OutlinedButton(
+                                style: ArcUiTokens.textButtonStyle(
+                                  accent: ArcUiTokens.primaryAccent,
+                                ),
                                 onPressed: () => Navigator.of(context).pop(),
                                 child: const Text('Cancel'),
                               ),
@@ -203,6 +217,10 @@ class ArcFittedWeaponBundleEditor {
                             const SizedBox(width: 12),
                             Expanded(
                               child: FilledButton(
+                                style: ArcUiTokens.textButtonStyle(
+                                  accent: ArcUiTokens.secondaryAccent,
+                                  primary: true,
+                                ),
                                 onPressed: errors.isNotEmpty
                                     ? null
                                     : () {

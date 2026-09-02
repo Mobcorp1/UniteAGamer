@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import '../widgets/foundation/arc_bottom_action_dock.dart';
+import '../widgets/foundation/arc_ui_tokens.dart';
 import '../widgets/arc_ad_banner_card.dart';
 import '../widgets/arc_asset_thumbnail.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
@@ -1707,9 +1708,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkBackground,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (_) => StatefulBuilder(
         builder: (context, setSheetState) {
@@ -2032,21 +2036,24 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                       if (existing != null)
                         Expanded(
                           child: OutlinedButton.icon(
+                            style: ArcUiTokens.textButtonStyle(
+                              accent: ArcUiTokens.danger,
+                            ),
                             onPressed: () {
                               Navigator.pop(context);
                               _deleteNomadicPurchase(existing.id);
                             },
                             icon: const Icon(Icons.delete_outline_rounded),
                             label: const Text('Delete'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.redAccent,
-                              side: const BorderSide(color: Colors.redAccent),
-                            ),
                           ),
                         ),
                       if (existing != null) const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.primaryAccent,
+                            primary: true,
+                          ),
                           onPressed: () {
                             final name = nameController.text.trim();
                             final requiredQty =
@@ -2108,9 +2115,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkBackground,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (_) => StatefulBuilder(
         builder: (context, setSheetState) => DraggableScrollableSheet(
@@ -2207,6 +2217,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.primaryAccent,
+                      primary: true,
+                    ),
                     onPressed: () {
                       _saveGoal();
                       Navigator.pop(context);
@@ -2227,9 +2241,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkBackground,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (_) => StatefulBuilder(
         builder: (context, setSheetState) => DraggableScrollableSheet(
@@ -2281,6 +2298,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.primaryAccent,
+                      primary: true,
+                    ),
                     onPressed: () {
                       _saveGoal();
                       Navigator.pop(context);
@@ -2300,10 +2321,11 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   Widget _sheetResourceRow(_NomadicTraderResource resource) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.045),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: ArcUiTokens.primaryAccent,
+        radius: ArcUiTokens.radiusXL,
+        borderOpacity: 0.12,
       ),
       child: _compactResourceRow(resource),
     );
@@ -2314,7 +2336,7 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
       width: 48,
       height: 5,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.22),
+        color: ArcUiTokens.borderMedium,
         borderRadius: BorderRadius.circular(99),
       ),
     );
@@ -2323,9 +2345,12 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
   void _openFeedbackSheet() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppTheme.darkBackground,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (_) => Padding(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
@@ -2361,10 +2386,10 @@ class _NomadicTraderScreenState extends State<NomadicTraderScreen> {
             SnackBar(content: Text('$label captured for beta feedback')),
           );
         },
-        tileColor: Colors.white.withValues(alpha: 0.045),
+        tileColor: ArcUiTokens.surfaceInteractive,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(color: ArcUiTokens.borderSubtle),
         ),
         leading: Icon(icon, color: _accent),
         title: Text(

@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trad
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -80,9 +81,12 @@ class _TradingBlueprintWatchesScreenState
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (sheetContext) {
         return StatefulBuilder(
@@ -117,18 +121,18 @@ class _TradingBlueprintWatchesScreenState
                     children: [
                       Text(
                         'Add Blueprint Watch',
-                        style: AppTheme.tradingHeading(
+                        style: ArcUiTokens.sectionTitle(
                           fontSize: 22,
-                          color: AppTheme.neonCyan,
+                          color: ArcUiTokens.primaryAccent,
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
                       TextField(
                         controller: controller,
                         onChanged: updateFilter,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: AppTheme.tradingInputDecoration(
-                          label: 'Search blueprints',
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                        decoration: ArcUiTokens.inputDecoration(
+                          labelText: 'Search blueprints',
                         ),
                       ),
                       const SizedBox(height: AppTheme.spaceM),
@@ -141,17 +145,19 @@ class _TradingBlueprintWatchesScreenState
                               contentPadding: EdgeInsets.zero,
                               title: Text(
                                 blueprint.name,
-                                style: const TextStyle(color: Colors.white),
+                                style: ArcUiTokens.body(
+                                  color: ArcUiTokens.textPrimary,
+                                ),
                               ),
                               subtitle: Text(
                                 '${blueprint.rarityLabel} - ${blueprint.category}',
-                                style: TextStyle(
-                                  color: AppTheme.tradingMutedText,
+                                style: ArcUiTokens.bodySmall(
+                                  color: ArcUiTokens.textTertiary,
                                 ),
                               ),
                               trailing: const Icon(
                                 Icons.add_alert_outlined,
-                                color: AppTheme.neonPink,
+                                color: ArcUiTokens.secondaryAccent,
                               ),
                               onTap: () async {
                                 Navigator.of(sheetContext).pop();
@@ -182,9 +188,12 @@ class _TradingBlueprintWatchesScreenState
     final updated = await showModalBottomSheet<ArcBlueprintWatch>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackgroundDeep,
+      useSafeArea: true,
+      backgroundColor: ArcUiTokens.surfaceOverlay,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(ArcUiTokens.radiusXL),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -203,19 +212,19 @@ class _TradingBlueprintWatchesScreenState
                   children: [
                     Text(
                       watch.displayName,
-                      style: AppTheme.tradingHeading(
+                      style: ArcUiTokens.sectionTitle(
                         fontSize: 22,
-                        color: AppTheme.neonCyan,
+                        color: ArcUiTokens.primaryAccent,
                       ),
                     ),
                     const SizedBox(height: AppTheme.spaceM),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: notificationsEnabled,
-                      activeThumbColor: AppTheme.neonPink,
-                      title: const Text(
+                      activeThumbColor: ArcUiTokens.secondaryAccent,
+                      title: Text(
                         'Notifications enabled',
-                        style: TextStyle(color: Colors.white),
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                       ),
                       onChanged: (value) =>
                           setModalState(() => notificationsEnabled = value),
@@ -223,10 +232,10 @@ class _TradingBlueprintWatchesScreenState
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       value: favouriteRidersOnly,
-                      activeThumbColor: AppTheme.neonPink,
-                      title: const Text(
+                      activeThumbColor: ArcUiTokens.secondaryAccent,
+                      title: Text(
                         'Favourite Raiders only',
-                        style: TextStyle(color: Colors.white),
+                        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                       ),
                       onChanged: (value) =>
                           setModalState(() => favouriteRidersOnly = value),
@@ -236,10 +245,11 @@ class _TradingBlueprintWatchesScreenState
                       ArcBlueprintWatchNotificationPreference
                     >(
                       initialValue: notificationPreference,
-                      dropdownColor: const Color(0xFF111827),
-                      decoration: AppTheme.tradingInputDecoration(
-                        label: 'Notification preference',
+                      dropdownColor: ArcUiTokens.surfaceOverlay,
+                      decoration: ArcUiTokens.inputDecoration(
+                        labelText: 'Notification preference',
                       ),
+                      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
                       items: ArcBlueprintWatchNotificationPreference.values
                           .map(
                             (preference) => DropdownMenuItem(
@@ -256,14 +266,16 @@ class _TradingBlueprintWatchesScreenState
                     const SizedBox(height: AppTheme.spaceM),
                     Text(
                       'Minimum match score: ${minimumMatchScore.round()}',
-                      style: TextStyle(color: AppTheme.tradingMutedText),
+                      style: ArcUiTokens.bodySmall(
+                        color: ArcUiTokens.textSecondary,
+                      ),
                     ),
                     Slider(
                       value: minimumMatchScore,
                       min: 0,
                       max: 100,
                       divisions: 10,
-                      activeColor: AppTheme.neonPink,
+                      activeColor: ArcUiTokens.secondaryAccent,
                       onChanged: (value) =>
                           setModalState(() => minimumMatchScore = value),
                     ),
@@ -271,6 +283,10 @@ class _TradingBlueprintWatchesScreenState
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
+                        style: ArcUiTokens.textButtonStyle(
+                          accent: ArcUiTokens.secondaryAccent,
+                          primary: true,
+                        ),
                         onPressed: () {
                           Navigator.of(context).pop(
                             watch.copyWith(
@@ -286,10 +302,6 @@ class _TradingBlueprintWatchesScreenState
                         },
                         icon: const Icon(Icons.save_outlined),
                         label: const Text('Save Watch'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.neonPink,
-                          foregroundColor: Colors.white,
-                        ),
                       ),
                     ),
                   ],
@@ -349,14 +361,12 @@ class _TradingBlueprintWatchesScreenState
   Widget _pill(String label, Color color) {
     return Container(
       padding: AppTheme.pillPadding,
-      decoration: AppTheme.tradingPillDecoration(color: color),
+      decoration: ArcUiTokens.chipDecoration(color: color),
       child: Text(
         label,
-        style: TextStyle(
+        style: ArcUiTokens.bodySmall(
           color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
+        ).copyWith(fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -368,13 +378,15 @@ class _TradingBlueprintWatchesScreenState
     final matches = _matchesForWatch(watch, activeListings);
     final topMatch = matches.isEmpty ? null : matches.first;
     final statusColor = !watch.active
-        ? AppTheme.tradingFaintText
+        ? ArcUiTokens.textDisabled
         : matches.isNotEmpty
-        ? AppTheme.tradingSuccess
-        : AppTheme.neonCyan;
+        ? ArcUiTokens.success
+        : ArcUiTokens.primaryAccent;
     return TradingCard(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceM),
-      accent: matches.isNotEmpty ? AppTheme.tradingSuccess : AppTheme.neonCyan,
+      accent: matches.isNotEmpty
+          ? ArcUiTokens.success
+          : ArcUiTokens.primaryAccent,
       onTap: topMatch == null
           ? null
           : () {
@@ -392,9 +404,9 @@ class _TradingBlueprintWatchesScreenState
               Expanded(
                 child: Text(
                   watch.displayName,
-                  style: AppTheme.tradingHeading(
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 20,
-                    color: Colors.white,
+                    color: ArcUiTokens.textPrimary,
                   ),
                 ),
               ),
@@ -412,19 +424,24 @@ class _TradingBlueprintWatchesScreenState
                 : watch.active
                 ? 'No current live listing match. This watch remains active.'
                 : 'Paused watches do not trigger match alerts.',
-            style: TextStyle(color: AppTheme.tradingMutedText, height: 1.3),
+            style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           const SizedBox(height: AppTheme.spaceS),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _pill('Min ${watch.minimumMatchScore}', AppTheme.neonCyan),
+              _pill(
+                'Min ${watch.minimumMatchScore}',
+                ArcUiTokens.primaryAccent,
+              ),
               if (watch.favouriteRidersOnly)
-                _pill('Favourite Raiders', AppTheme.neonPink),
+                _pill('Favourite Raiders', ArcUiTokens.secondaryAccent),
               _pill(
                 watch.shouldNotify ? 'Notify' : 'Muted',
-                watch.shouldNotify ? AppTheme.neonPink : Colors.white54,
+                watch.shouldNotify
+                    ? ArcUiTokens.secondaryAccent
+                    : ArcUiTokens.textTertiary,
               ),
             ],
           ),
@@ -481,32 +498,32 @@ class _TradingBlueprintWatchesScreenState
           children: [
             Icon(
               Icons.add_alert_outlined,
-              color: AppTheme.neonCyan.withValues(alpha: 0.72),
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.72),
               size: 42,
             ),
             const SizedBox(height: AppTheme.spaceM),
             Text(
               'NO ACTIVE WATCHES',
-              style: AppTheme.tradingHeading(
+              style: ArcUiTokens.sectionTitle(
                 fontSize: 22,
-                color: AppTheme.neonCyan,
+                color: ArcUiTokens.primaryAccent,
               ),
             ),
             const SizedBox(height: AppTheme.spaceS),
             Text(
               'Add a blueprint watch to surface matching traders, listings and Intel.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
+              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
             ),
             const SizedBox(height: AppTheme.spaceM),
             ElevatedButton.icon(
+              style: ArcUiTokens.textButtonStyle(
+                accent: ArcUiTokens.secondaryAccent,
+                primary: true,
+              ),
               onPressed: _showCreateSheet,
               icon: const Icon(Icons.add_rounded),
               label: const Text('Add Watch'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.neonPink,
-                foregroundColor: Colors.white,
-              ),
             ),
           ],
         ),
@@ -532,7 +549,9 @@ class _TradingBlueprintWatchesScreenState
                 if (watchSnapshot.connectionState == ConnectionState.waiting &&
                     watchSnapshot.data == null) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppTheme.neonCyan),
+                    child: CircularProgressIndicator(
+                      color: ArcUiTokens.primaryAccent,
+                    ),
                   );
                 }
                 if (watches.isEmpty) return _emptyState();
@@ -545,13 +564,16 @@ class _TradingBlueprintWatchesScreenState
                         Expanded(
                           child: Text(
                             'Blueprint Watches',
-                            style: AppTheme.tradingHeading(
+                            style: ArcUiTokens.sectionTitle(
                               fontSize: 22,
-                              color: AppTheme.neonCyan,
+                              color: ArcUiTokens.primaryAccent,
                             ),
                           ),
                         ),
                         OutlinedButton.icon(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.primaryAccent,
+                          ),
                           onPressed: _showCreateSheet,
                           icon: const Icon(Icons.add_rounded),
                           label: const Text('Add'),
@@ -581,7 +603,10 @@ class _TradingBlueprintWatchesScreenState
         backgroundColor: Colors.transparent,
         title: Text(
           'Blueprint Watches',
-          style: AppTheme.tradingHeading(fontSize: 25),
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 25,
+            color: ArcUiTokens.primaryAccent,
+          ),
         ),
       ),
       body: _buildBody(),

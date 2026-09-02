@@ -9,6 +9,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -317,10 +318,10 @@ class _TradingNotificationsScreenState
                           children: [
                             Expanded(
                               child: Text(
-                                '$unread unread • ${all.length} total',
-                                style: AppTheme.bodyTextStyle(
+                                '$unread unread - ${all.length} total',
+                                style: ArcUiTokens.body(
                                   fontSize: 13,
-                                  color: AppTheme.tradingMutedText,
+                                  color: ArcUiTokens.textSecondary,
                                 ),
                               ),
                             ),
