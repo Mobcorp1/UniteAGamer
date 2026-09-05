@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_ad_admin_controls_card.dart';
 import 'package:uag_arc_raiders_hub/features/release/widgets/uag_release_readiness_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trust/widgets/arc_raider_contracts_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
@@ -293,6 +294,16 @@ class _AdminConsoleBody extends StatelessWidget {
                           'Monthly active users, revenue and session health from live user, monetisation and operations telemetry.',
                     ),
                     children: [const AdminBusinessMetricsPanel()],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  _AdminExpandableSection(
+                    key: const Key('admin-section-advertising-controls'),
+                    header: _sectionHeader(
+                      title: 'Advertising Controls',
+                      subtitle:
+                          'Control banner, App Open and navigation interstitial delivery without a new app build.',
+                    ),
+                    children: [const UagAdAdminControlsCard()],
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _AdminExpandableSection(

@@ -5,6 +5,7 @@ class UagAdPolicy {
     required this.tier,
     required this.showBannerAds,
     required this.showInterstitialAds,
+    required this.showAppOpenAds,
     required this.showRewardedAds,
     required this.allowVoiceAssistantAds,
     required this.allowMidSessionAds,
@@ -15,22 +16,25 @@ class UagAdPolicy {
   final UagSubscriptionTier tier;
   final bool showBannerAds;
   final bool showInterstitialAds;
+  final bool showAppOpenAds;
   final bool showRewardedAds;
   final bool allowVoiceAssistantAds;
   final bool allowMidSessionAds;
   final String bannerPlacement;
   final List<String> rewardedBoosts;
 
-  bool get hasAnyAds => showBannerAds || showInterstitialAds || showRewardedAds;
+  bool get hasAnyAds =>
+      showBannerAds || showInterstitialAds || showAppOpenAds || showRewardedAds;
 
   static const free = UagAdPolicy(
     tier: UagSubscriptionTier.free,
     showBannerAds: true,
-    showInterstitialAds: false,
+    showInterstitialAds: true,
+    showAppOpenAds: true,
     showRewardedAds: true,
     allowVoiceAssistantAds: false,
     allowMidSessionAds: false,
-    bannerPlacement: 'Bottom banner only on non-critical screens.',
+    bannerPlacement: 'Bottom banner on eligible non-critical screens.',
     rewardedBoosts: [
       'Unlock Premium Intel Snapshot for 12 hours',
       'Unlock one extra trade listing for 24 hours',
@@ -40,12 +44,13 @@ class UagAdPolicy {
 
   static const essential = UagAdPolicy(
     tier: UagSubscriptionTier.essential,
-    showBannerAds: false,
+    showBannerAds: true,
     showInterstitialAds: false,
+    showAppOpenAds: false,
     showRewardedAds: false,
     allowVoiceAssistantAds: false,
     allowMidSessionAds: false,
-    bannerPlacement: 'No ads.',
+    bannerPlacement: 'Light advertising: bottom banner only.',
     rewardedBoosts: <String>[],
   );
 
@@ -53,6 +58,7 @@ class UagAdPolicy {
     tier: UagSubscriptionTier.premium,
     showBannerAds: false,
     showInterstitialAds: false,
+    showAppOpenAds: false,
     showRewardedAds: false,
     allowVoiceAssistantAds: false,
     allowMidSessionAds: false,

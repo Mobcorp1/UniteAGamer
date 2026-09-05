@@ -1000,6 +1000,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdminOrDev();
     }
 
+    match /app_config/{configId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdminOrDev();
+    }
+
     match /monetisation_events/{eventId} {
       allow read: if isAdminOrDev();
       allow create, update, delete: if isAdminOrDev();

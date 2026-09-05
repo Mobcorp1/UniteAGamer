@@ -127,8 +127,8 @@ class UagPlans {
 
   static const essential = UagPlanDefinition(
     tier: UagPlanTier.essential,
-    monthlyPricePence: 499,
-    yearlyPricePence: 4999,
+    monthlyPricePence: 799,
+    yearlyPricePence: 7999,
     weeklyTrades: 50,
     weeklyMatchSearches: 50,
     weeklyIntelHints: 40,
@@ -136,7 +136,7 @@ class UagPlans {
     creatorDiscountPercent: 10,
     creatorCommissionPercent: 10,
     charityProfitPercent: 10,
-    adsLabel: 'No ads',
+    adsLabel: 'Light ads: banner only',
     benefits: [
       UagMatchIntelligenceCopy.essentialDescription,
       '10 active trade listings and 25 daily offers',
@@ -146,15 +146,15 @@ class UagPlans {
       'Smart trade, item and session alerts',
       'Raid Companion presets and enhanced voice profiles',
       '10% follower discounts and 10% recurring creator commission',
-      'No advertising',
+      'Light advertising: banner only',
       '10% of net platform profit goes into the Essential Impact Pot',
     ],
   );
 
   static const premium = UagPlanDefinition(
     tier: UagPlanTier.premium,
-    monthlyPricePence: 799,
-    yearlyPricePence: 7999,
+    monthlyPricePence: 999,
+    yearlyPricePence: 9999,
     weeklyTrades: -1,
     weeklyMatchSearches: -1,
     weeklyIntelHints: -1,

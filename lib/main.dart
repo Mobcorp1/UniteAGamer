@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'features/monetisation/ads/uag_ad_consent_controller.dart';
+import 'features/monetisation/ads/uag_ad_service.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_app_scroll_behavior.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
@@ -74,18 +73,16 @@ Future<void> main() async {
 
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     try {
-      if (!kIsWeb) {
-        await MobileAds.instance.initialize();
-      }
+      await UagAdConsentController.instance.initialiseForDevelopment();
     } catch (e, st) {
-      debugPrint('MobileAds init failed: $e');
+      debugPrint('Consent init failed: $e');
       debugPrintStack(stackTrace: st);
     }
 
     try {
-      await UagAdConsentController.instance.initialiseForDevelopment();
+      await UagAdService.instance.initialise();
     } catch (e, st) {
-      debugPrint('Consent init failed: $e');
+      debugPrint('UagAdService init failed: $e');
       debugPrintStack(stackTrace: st);
     }
 
@@ -662,6 +659,9 @@ class _UAGTradersHubAppState extends State<UAGTradersHubApp>
       navigatorKey: widget.testMode
           ? null
           : TradingPushService.instance.navigatorKey,
+      navigatorObservers: widget.testMode
+          ? const <NavigatorObserver>[]
+          : <NavigatorObserver>[UagAdNavigationObserver.instance],
       onGenerateRoute: widget._buildRoute,
       // PASS 343: AppEntryGate is the single production entry authority.
       // Test mode stays Firebase-independent for widget smoke tests.

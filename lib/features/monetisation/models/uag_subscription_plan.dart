@@ -75,8 +75,8 @@ class UagSubscriptionPlan {
       shortName: 'Essential',
       positioning:
           'The regular-player tier: higher limits, cleaner experience, smart alerts and stronger voice tools.',
-      monthlyPricePence: 499,
-      yearlyPricePence: 4999,
+      monthlyPricePence: 799,
+      yearlyPricePence: 7999,
       creatorOnboardingDiscountPercent: 20,
       limits: UagPlanLimits.essential,
       features: [
@@ -87,14 +87,14 @@ class UagSubscriptionPlan {
         'Unlimited advanced voice commands',
         'Smart item, trade and session alerts',
         'Raid Companion presets and 6 voice profiles',
-        'No advertising',
+        'Light advertising: banner only',
         '10% follower discounts and 10% recurring creator commission',
       ],
       bestFor: [
         'regular players',
         'squad organisers',
         'active traders',
-        'users who want no ads',
+        'users who want no disruptive full-screen ads',
       ],
     ),
     UagSubscriptionPlan(
@@ -103,8 +103,8 @@ class UagSubscriptionPlan {
       shortName: 'Premium',
       positioning:
           'The power-user tier: unlimited systems, no ads, Trader Pro analytics and full automation.',
-      monthlyPricePence: 799,
-      yearlyPricePence: 7999,
+      monthlyPricePence: 999,
+      yearlyPricePence: 9999,
       creatorOnboardingDiscountPercent: 25,
       limits: UagPlanLimits.premium,
       features: [
