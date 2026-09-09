@@ -26,6 +26,7 @@ dependencies:
   http: ^1.5.0
   youtube_player_iframe: ^6.0.2
   url_launcher: ^6.3.2
+  app_links: ^7.0.0
   speech_to_text: 7.3.0
   flutter_tts: ^4.0.2
   table_calendar: ^3.2.1
@@ -73,9 +74,9 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/arc_raiders/hub/
-    - assets/images/arc_raiders/loadouts/weapons/
+    - assets/arc_raiders/
     - assets/icon/
+    - assets/uag/avatars/
     - assets/arc_raiders/banners/
     - assets/arc_raiders/blueprints/
     - assets/arc_raiders/scrappy_resources/
@@ -91,7 +92,9 @@ flutter:
     - assets/arc_raiders/maps/stella_montis/
 
     - assets/arc_raiders/hero_cards/
+    - assets/arc_raiders/hub/
     - assets/arc_raiders/loading/
+    - assets/arc_raiders/loadouts/weapons/
   fonts:
     - family: VT323
       fonts:
@@ -110,3 +113,6 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
+
+
+

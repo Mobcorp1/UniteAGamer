@@ -275,14 +275,14 @@ class _RaidPlannerHuntTargetsScreenState
           ),
         );
       }
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not auto-sync hunts: $error'),
+          content: Text('Could not auto-sync hunts. Try again.'),
           backgroundColor: AppTheme.cardBackgroundDeep,
         ),
       );
@@ -422,14 +422,14 @@ class _RaidPlannerHuntTargetsScreenState
           backgroundColor: AppTheme.cardBackgroundDeep,
         ),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not save hunt targets: $error'),
+          content: Text('Could not save hunt targets. Try again.'),
           backgroundColor: AppTheme.cardBackgroundDeep,
         ),
       );

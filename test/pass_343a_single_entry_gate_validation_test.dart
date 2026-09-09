@@ -30,7 +30,11 @@ void main() {
       gateSource,
       contains('return const ArcMandatoryOnboardingScreen();'),
     );
-    expect(gateSource, contains('return const ArcCommandCentreScreen();'));
+    expect(gateSource, contains('return const ArcRaidersHubScreen();'));
+    expect(
+      gateSource,
+      isNot(contains('return const ArcCommandCentreScreen();')),
+    );
   });
 
   test(

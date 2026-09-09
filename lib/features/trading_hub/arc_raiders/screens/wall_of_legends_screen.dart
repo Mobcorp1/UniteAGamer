@@ -50,7 +50,7 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
               return _statePanel(
                 icon: Icons.error_outline_rounded,
                 title: 'Could not load legends',
-                copy: '${snapshot.error}',
+                copy: 'Could not load legends right now.',
                 accent: Colors.redAccent,
               );
             }

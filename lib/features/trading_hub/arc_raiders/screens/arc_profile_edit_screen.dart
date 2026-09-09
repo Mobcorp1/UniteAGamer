@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 import '../data/arc_player_archetype_catalog.dart';
@@ -9,6 +10,7 @@ import '../models/arc_trader_profile.dart';
 import '../repositories/arc_trader_profile_repository.dart';
 import '../widgets/arc_raiders_screen_shell.dart';
 import '../widgets/arc_social_links_editor.dart';
+import '../widgets/foundation/arc_form_surface.dart';
 import '../widgets/foundation/arc_ui_tokens.dart';
 
 class ArcProfileEditScreen extends StatefulWidget {
@@ -430,107 +432,15 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
       );
     }
 
-    Widget heroCard() {
-      return Container(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.raised,
-          accent: ArcUiTokens.primaryAccent,
-          borderOpacity: 0.24,
-          radius: ArcUiTokens.radiusXL,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
-                    border: Border.all(
-                      color: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.manage_accounts_rounded,
-                    color: ArcUiTokens.primaryAccent,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spaceM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Trader Identity + Reputation',
-                        style: ArcUiTokens.pageTitle(
-                          fontSize: 24,
-                          color: ArcUiTokens.primaryAccent,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Keep your profile focused on reputation, badges, archetypes and squad fit.',
-                        style: ArcUiTokens.body(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-
-    Widget sectionCard({
-      required String title,
-      required IconData icon,
-      required List<Widget> children,
-    }) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
-        padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.panel,
-          accent: ArcUiTokens.secondaryAccent,
-          borderOpacity: 0.18,
-          radius: ArcUiTokens.radiusL,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: ArcUiTokens.secondaryAccent, size: 22),
-                const SizedBox(width: AppTheme.spaceS),
-                Text(
-                  title,
-                  style: ArcUiTokens.sectionTitle(
-                    fontSize: 20,
-                    color: ArcUiTokens.secondaryAccent,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            ...children,
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('Edit Your Hub Profile'),
-        backgroundColor: Colors.transparent,
+      appBar: const UagAppBar(
+        title: 'Edit Raider Profile',
+        subtitle: 'Identity, match fit, preferences and public links.',
+        showLogout: false,
       ),
       body: ArcRaidersScreenShell(
-        showAdBanner: false,
+        showAdBanner: true,
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -538,11 +448,18 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
               child: Form(
                 key: _formKey,
                 child: ListView(
-                  padding: const EdgeInsets.all(AppTheme.spaceL),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 22),
                   children: [
-                    heroCard(),
-                    const SizedBox(height: AppTheme.spaceL),
-                    sectionCard(
+                    const ArcFormPageLead(
+                      icon: Icons.manage_accounts_rounded,
+                      title: 'Raider Identity',
+                      subtitle:
+                          'Keep the details that power your profile and squad fit current.',
+                    ),
+                    const SizedBox(height: 12),
+                    ArcExpandableFormSection(
+                      initiallyExpanded: true,
+                      summary: 'Core UAG identity and account details',
                       title: 'Identity',
                       icon: Icons.badge_outlined,
                       children: [
@@ -560,7 +477,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         _field(_embarkIdController, 'Embark ID'),
                       ],
                     ),
-                    sectionCard(
+                    ArcExpandableFormSection(
                       title: 'Platform & Server',
                       icon: Icons.travel_explore_rounded,
                       children: [
@@ -589,12 +506,12 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         ),
                       ],
                     ),
-                    sectionCard(
+                    ArcExpandableFormSection(
                       title: 'Archetypes & Match Fit',
                       icon: Icons.hub_rounded,
                       children: [
                         Text(
-                          'Select everything that applies. These tags drive matchmaking, squad recommendations and public profile fit.',
+                          'Choose the tags that best describe how you play.',
                           style: ArcUiTokens.body(),
                         ),
                         const SizedBox(height: AppTheme.spaceM),
@@ -700,8 +617,8 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         ),
                       ],
                     ),
-                    sectionCard(
-                      title: 'Trading Preferences',
+                    ArcExpandableFormSection(
+                      title: 'Preferences',
                       icon: Icons.tune_rounded,
                       children: [
                         _switchTile(
@@ -709,7 +626,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                           onChanged: (value) =>
                               setState(() => _visibleInSearch = value),
                           title: 'Visible in search',
-                          subtitle: 'Allow other traders to find your profile.',
+                          subtitle: 'Allow other Raiders to find your profile.',
                         ),
                         _switchTile(
                           value: _micOk,
@@ -723,7 +640,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                               setState(() => _crossRegionOk = value),
                           title: 'Cross-region okay',
                           subtitle:
-                              'Open to switching region for raids, trades and event windows.',
+                              'Open to switching region for squads and events.',
                         ),
                         _switchTile(
                           value: _crossplayEnabled,
@@ -735,7 +652,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         ),
                       ],
                     ),
-                    sectionCard(
+                    ArcExpandableFormSection(
                       title: 'Public Social Links',
                       icon: Icons.link_rounded,
                       children: [
@@ -745,7 +662,7 @@ class _ArcProfileEditScreenState extends State<ArcProfileEditScreen> {
                         ),
                       ],
                     ),
-                    sectionCard(
+                    ArcExpandableFormSection(
                       title: 'Account',
                       icon: Icons.account_balance_wallet_outlined,
                       children: [

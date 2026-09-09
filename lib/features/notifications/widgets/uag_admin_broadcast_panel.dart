@@ -106,9 +106,9 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
       );
       if (!mounted) return;
       setState(() => _estimate = estimate);
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      setState(() => _message = 'Could not estimate audience: $error');
+      setState(() => _message = 'Could not estimate audience. Try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -177,9 +177,9 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
             ? '$successPrefix and readable in Communications: $path'
             : '$successPrefix but could not be read back: $path';
       });
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      setState(() => _message = 'Could not create inbox test: $error');
+      setState(() => _message = 'Could not create inbox test. Try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -281,9 +281,9 @@ class _UagAdminBroadcastPanelState extends State<UagAdminBroadcastPanel> {
             ? 'Admin test notification queued: $broadcastId'
             : 'Broadcast queued for Cloud Function delivery: $broadcastId';
       });
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      setState(() => _message = 'Could not queue broadcast: $error');
+      setState(() => _message = 'Could not queue broadcast. Try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

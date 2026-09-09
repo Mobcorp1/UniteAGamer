@@ -33,7 +33,7 @@ class _MatchRaiderVisualLead extends StatelessWidget {
     title: 'Match Raider',
     subtitle: 'Squad compatibility, session intent and live Raider discovery.',
     child: ArcArtworkPlaceholder(
-      assetPath: 'assets/images/arc_raiders/matchmaking/match_raider_hero.webp',
+      assetPath: 'assets/arc_raiders/hub/arc_hub_match_a_raider.webp',
       height: 104,
     ),
   );
@@ -113,10 +113,10 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         _notesController.text = profile.notes;
         _loading = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = 'Could not load Match Raider.';
         _loading = false;
       });
     }
@@ -144,12 +144,12 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Match-a-Raider profile saved.')),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Could not save profile: $e')));
+      ).showSnackBar(const SnackBar(content: Text('Could not save profile.')));
     }
   }
 
@@ -215,11 +215,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invite sent to ${candidate.profile.title}.')),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Could not send invite: $e')));
+      ).showSnackBar(const SnackBar(content: Text('Could not send invite.')));
     }
   }
 
@@ -241,11 +241,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Could not update invite: $e')));
+      ).showSnackBar(const SnackBar(content: Text('Could not update invite.')));
     }
   }
 
@@ -255,11 +255,13 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'profile'),
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'Match Raider',
+      ),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
-          'Matchmaking',
+          'Match Raider',
           style: AppTheme.neonTextStyle(
             fontSize: 20,
             color: AppTheme.neonCyan,
@@ -294,7 +296,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1080),
                     child: ListView(
-                      padding: const EdgeInsets.all(AppTheme.spaceL),
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 96),
                       children: [
                         const _MatchRaiderVisualLead(),
                         const SizedBox(height: 12),
@@ -341,30 +343,30 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   Widget _buildHeroCard(ArcMatchRiderProfile profile) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      padding: const EdgeInsets.all(14),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
         accent: AppTheme.neonCyan,
-        radius: 20,
+        radius: ArcUiTokens.radiusL,
         glow: true,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Find the right raider for the right run.',
+            'MATCH RAIDER',
             style: AppTheme.neonTextStyle(
-              fontSize: 28,
+              fontSize: 22,
               color: AppTheme.neonCyan,
               isBold: true,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 6),
           Text(
-            'Set your current ARC Raiders vibe, filter by shared goals, and send quick squad-up requests without bolting on a giant social layer.',
-            style: AppTheme.bodyTextStyle(fontSize: 15, color: Colors.white70),
+            'Compatible squads, session intent and quick invites.',
+            style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -414,24 +416,24 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
         accent: AppTheme.neonCyan,
         radius: 20,
       ),
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'My Match Profile',
             style: AppTheme.neonTextStyle(
-              fontSize: 24,
+              fontSize: 18,
               color: AppTheme.neonCyan,
               isBold: true,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 5),
           Text(
-            'Choose the kind of run you want so the feed can surface raiders that actually fit what you are trying to do.',
-            style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
+            'Tune the run you want now.',
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           _buildSection(
             'Archetypes',
             _archetypeOptions,
@@ -496,15 +498,15 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             title: Text(
               'Looking now',
               style: AppTheme.titleTextStyle(
-                fontSize: 18,
+                fontSize: 15,
                 color: AppTheme.neonCyan,
                 isBold: true,
               ),
             ),
             subtitle: Text(
-              'Turn this on when you want to surface near the top of the feed.',
+              'Prioritise me in the feed.',
               style: AppTheme.bodyTextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: Colors.white70,
               ),
             ),
@@ -518,15 +520,15 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             title: Text(
               'Visible in search',
               style: AppTheme.titleTextStyle(
-                fontSize: 18,
+                fontSize: 15,
                 color: AppTheme.neonCyan,
                 isBold: true,
               ),
             ),
             subtitle: Text(
-              'Hide yourself when you do not want fresh invites.',
+              'Allow fresh invites.',
               style: AppTheme.bodyTextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: Colors.white70,
               ),
             ),
@@ -585,7 +587,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 child: Text(
                   'Live Match Feed',
                   style: AppTheme.neonTextStyle(
-                    fontSize: 24,
+                    fontSize: 18,
                     color: AppTheme.neonCyan,
                     isBold: true,
                   ),
@@ -595,8 +597,8 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           ),
           const SizedBox(height: AppTheme.spaceS),
           Text(
-            'Sorted by private compatibility. Cards show only the protected match percentage, broad label and safe tags.',
-            style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
+            'Sorted by compatibility and session fit.',
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
           ),
           const SizedBox(height: AppTheme.spaceM),
           StreamBuilder<UagUserEntitlement>(
@@ -637,7 +639,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text(
-            'Could not load feed: ${snapshot.error}',
+            'Could not load match feed.',
             style: AppTheme.bodyTextStyle(
               fontSize: 14,
               color: AppTheme.dangerRed,
@@ -667,7 +669,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                     candidate,
                     isFavourite: favouriteIds.contains(candidate.profile.uid),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 10),
                 ],
               ],
             );
@@ -708,16 +710,18 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
               _buildStatusPill('Profile $completeness%', Colors.white70),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 8),
           Text(
             tierCopy.description,
-            style: AppTheme.bodyTextStyle(fontSize: 13, color: Colors.white70),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 6),
           Text(
-            'Private inventory and exact scoring weights stay hidden from other players.',
+            'Exact scoring stays private.',
             style: AppTheme.bodyTextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: AppTheme.tradingMutedText,
             ),
           ),
@@ -789,16 +793,16 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
   }) {
     final profile = candidate.profile;
     return ElectricChargeBorder(
-      active: false,
-      radius: 18,
+      active: isFavourite,
+      radius: 16,
       child: Container(
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.panel,
           accent: AppTheme.neonCyan,
-          radius: 18,
+          radius: 16,
           borderOpacity: 0.18,
         ),
-        padding: const EdgeInsets.all(AppTheme.spaceL),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -811,17 +815,21 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                     children: [
                       Text(
                         profile.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: AppTheme.neonTextStyle(
-                          fontSize: 22,
+                          fontSize: 18,
                           color: AppTheme.neonCyan,
                           isBold: true,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         candidate.publicExplanation,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: AppTheme.bodyTextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.white70,
                         ),
                       ),
@@ -856,7 +864,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -868,13 +876,13 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                   _buildStatusPill(tag, AppTheme.warningAmber),
               ],
             ),
-            const SizedBox(height: AppTheme.spaceM),
+            const SizedBox(height: 10),
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton.icon(
                 onPressed: () => _showInviteDialog(candidate),
                 icon: const Icon(Icons.send_rounded),
-                label: const Text('Invite to team up'),
+                label: const Text('Invite'),
               ),
             ),
           ],
@@ -947,7 +955,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Text(
-                  'Could not load requests: ${snapshot.error}',
+                  'Could not load requests.',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 14,
                     color: AppTheme.dangerRed,
@@ -1076,18 +1084,18 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     ValueChanged<String> onChanged,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: AppTheme.tradingHeading(
-              fontSize: 15,
+              fontSize: 13,
               color: AppTheme.neonCyan,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 6),
           Wrap(
             spacing: AppTheme.spaceS,
             runSpacing: AppTheme.spaceS,
@@ -1113,22 +1121,22 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
     ValueChanged<List<String>> onChanged,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spaceL),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: AppTheme.titleTextStyle(
-              fontSize: 18,
+              fontSize: 14,
               color: AppTheme.neonPink,
               isBold: true,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 6),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               for (final option in options)
                 FilterChip(
@@ -1137,7 +1145,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
                   selectedColor: AppTheme.neonPink.withValues(alpha: 0.18),
                   checkmarkColor: AppTheme.neonCyan,
                   labelStyle: AppTheme.bodyTextStyle(
-                    fontSize: 13,
+                    fontSize: 11,
                     color: selected.contains(option)
                         ? AppTheme.neonCyan
                         : Colors.white70,
@@ -1171,19 +1179,21 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
 
   Widget _buildStatusPill(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: ArcUiTokens.chipDecoration(color: color, selected: true),
       child: Text(
         text,
-        style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
       ),
     );
   }
 
   Widget _buildScoreBadge(int score) {
     return Container(
-      width: 82,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      width: 68,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
         accent: AppTheme.neonPink,
@@ -1195,7 +1205,7 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           Text(
             '$score%',
             style: AppTheme.neonTextStyle(
-              fontSize: 24,
+              fontSize: 20,
               color: AppTheme.neonPink,
               isBold: true,
             ),
@@ -1254,11 +1264,11 @@ class _ArcMatchRiderScreenState extends State<ArcMatchRiderScreen> {
           ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not update favourite: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update favourite.')),
+      );
     }
   }
 }

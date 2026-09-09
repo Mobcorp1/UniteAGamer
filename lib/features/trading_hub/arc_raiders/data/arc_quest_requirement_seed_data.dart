@@ -405,7 +405,7 @@ class ArcQuestRequirementSeedData {
       itemName: 'Coffee Pot',
       quantity: 1,
       sourceHint:
-          'Best intel: kitchens, cafÃƒÂ©s, residential counters, commercial interiors and shelves.',
+          'Best intel: kitchens, cafes, residential counters, commercial interiors and shelves.',
     ),
     ArcQuestRequirement(
       questName: 'A New Type Of Plant',

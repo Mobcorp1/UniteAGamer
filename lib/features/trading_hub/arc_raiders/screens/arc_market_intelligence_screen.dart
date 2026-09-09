@@ -146,6 +146,7 @@ class _ArcMarketIntelligenceScreenState
     }).length;
 
     return ArcRaidersPageList(
+      bottomPadding: 92,
       children: [
         _buildHeroCard(
           context,
@@ -163,7 +164,7 @@ class _ArcMarketIntelligenceScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Pin up to five missing blueprints and this screen will keep the snapshot focused on the items you actually want next.',
+                'Pin five missing blueprints to keep intel focused.',
                 style: ArcUiTokens.body(),
               ),
               const SizedBox(height: AppTheme.spaceM),
@@ -199,10 +200,7 @@ class _ArcMarketIntelligenceScreenState
               ),
               const SizedBox(height: AppTheme.spaceM),
               if (priorityBlueprints.isEmpty)
-                _buildEmptyPanel(
-                  context,
-                  'No manual priorities set yet. Your next best missing blueprints are shown below automatically.',
-                )
+                _buildEmptyPanel(context, 'No manual priorities set.')
               else
                 ...priorityBlueprints.map(
                   (blueprint) => Padding(
@@ -235,14 +233,14 @@ class _ArcMarketIntelligenceScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Recommended targets based on your missing collection, wanted priorities and recent community discoveries.',
+                'Recommended from missing collection and recent reports.',
                 style: ArcUiTokens.body(),
               ),
               const SizedBox(height: AppTheme.spaceM),
               if (missingBlueprints.isEmpty)
                 _buildEmptyPanel(
                   context,
-                  'You have no remaining missing blueprints in the current tracker.',
+                  'No missing blueprints in the current tracker.',
                 )
               else
                 ...missingBlueprints
@@ -278,15 +276,12 @@ class _ArcMarketIntelligenceScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Resources do not use the same drop-intel report system yet, so this section stays focused on what you still need rather than showing noisy generic map spam.',
+                'Wanted resources from Scrappy progress.',
                 style: ArcUiTokens.body(),
               ),
               const SizedBox(height: AppTheme.spaceM),
               if (wantedResources.isEmpty)
-                _buildEmptyPanel(
-                  context,
-                  'No wanted scrappy resources right now. Your current scrappy tracker looks complete.',
-                )
+                _buildEmptyPanel(context, 'No wanted Scrappy resources.')
               else
                 ...wantedResources
                     .take(6)
@@ -305,10 +300,7 @@ class _ArcMarketIntelligenceScreenState
           initiallyExpanded: false,
           titleColor: AppTheme.neonCyan,
           child: reports.isEmpty
-              ? _buildEmptyPanel(
-                  context,
-                  'No community blueprint reports have been logged yet, so confidence is still building.',
-                )
+              ? _buildEmptyPanel(context, 'No community reports yet.')
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -449,22 +441,23 @@ class _ArcMarketIntelligenceScreenState
   }) {
     return TradingCard(
       accent: AppTheme.neonCyan,
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your personal Arc Raiders intel snapshot.',
+            'LIVE INTEL SNAPSHOT',
             style: AppTheme.tradingHeading(
-              fontSize: 22,
+              fontSize: 18,
               color: AppTheme.neonCyan,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceS),
+          const SizedBox(height: 6),
           Text(
-            'This replaces the old split between Market Intel and Intel Explorer. It now leads with what you still need, what you most want, and where the community is actually seeing those targets.',
-            style: ArcUiTokens.body(),
+            'Missing blueprints, priority targets and community confidence.',
+            style: ArcUiTokens.bodySmall(),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -535,7 +528,7 @@ class _ArcMarketIntelligenceScreenState
         : intel.topCombinations.first;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      padding: const EdgeInsets.all(12),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
         accent: state.isPrioritized
@@ -556,8 +549,10 @@ class _ArcMarketIntelligenceScreenState
                   children: [
                     Text(
                       blueprint.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: ArcUiTokens.sectionTitle(
-                        fontSize: 20,
+                        fontSize: 16,
                         color: ArcUiTokens.secondaryAccent,
                       ),
                     ),
@@ -630,12 +625,14 @@ class _ArcMarketIntelligenceScreenState
               ),
             ),
           ] else ...[
-            Text(blueprint.intelHint, style: ArcUiTokens.body()),
-            const SizedBox(height: 10),
             Text(
-              'No community reports yet. This target stays in your snapshot so you can decide what to chase next even before data builds up.',
+              blueprint.intelHint,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: ArcUiTokens.bodySmall(),
             ),
+            const SizedBox(height: 6),
+            Text('Awaiting community reports.', style: ArcUiTokens.bodySmall()),
           ],
         ],
       ),
@@ -876,7 +873,7 @@ class _ArcMarketIntelligenceScreenState
 
   Widget _buildScrappyCard(BuildContext context, _WantedScrappyTarget target) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      padding: const EdgeInsets.all(12),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
         accent: ArcUiTokens.attentionAccent,
@@ -891,8 +888,10 @@ class _ArcMarketIntelligenceScreenState
               Expanded(
                 child: Text(
                   target.item.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: ArcUiTokens.sectionTitle(
-                    fontSize: 18,
+                    fontSize: 16,
                     color: ArcUiTokens.attentionAccent,
                   ),
                 ),
@@ -912,15 +911,17 @@ class _ArcMarketIntelligenceScreenState
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Text(
-            'Need ${target.remainingNeeded} more  ${target.item.tierLabel}',
-            style: ArcUiTokens.body(),
+            'Need ${target.remainingNeeded} more - ${target.item.tierLabel}',
+            style: ArcUiTokens.bodySmall(),
           ),
           if ((target.item.locationHint?.trim().isNotEmpty ?? false)) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
             Text(
               target.item.locationHint!.trim(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: ArcUiTokens.bodySmall(),
             ),
           ],
@@ -932,19 +933,19 @@ class _ArcMarketIntelligenceScreenState
   Widget _buildEmptyPanel(BuildContext context, String message) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      padding: const EdgeInsets.all(12),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.raised,
         radius: ArcUiTokens.radiusL,
         borderOpacity: 0.10,
       ),
-      child: Text(message, style: ArcUiTokens.body()),
+      child: Text(message, style: ArcUiTokens.bodySmall()),
     );
   }
 
   Widget _buildPulseRow(BuildContext context, _PulseRow row) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceM),
+      padding: const EdgeInsets.all(10),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
         radius: ArcUiTokens.radiusM,
@@ -1057,13 +1058,15 @@ class _ArcMarketIntelligenceScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 112,
+            width: 96,
             child: Text(label, style: ArcUiTokens.metadata()),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: ArcUiTokens.body(
                 color: ArcUiTokens.textPrimary,
                 weight: FontWeight.w700,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -22,77 +22,77 @@ class _AuthLandingScreenState extends State<AuthLandingScreen>
     _FeatureSlide(
       title: 'My Hub',
       subtitle: 'Track rewards, referrals, reputation and hunt priorities.',
-      image: 'assets/images/arc_raiders/hub/my_hub_card.webp',
+      image: 'assets/arc_raiders/hub/my_hub_card.webp',
       icon: Icons.dashboard_customize_outlined,
       accent: AppTheme.neonCyan,
     ),
     _FeatureSlide(
       title: 'Tracking',
       subtitle: 'Blueprint grid, ownership, dupes and wanted progress.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_tracking.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_tracking.webp',
       icon: Icons.track_changes_rounded,
       accent: AppTheme.neonCyan,
     ),
     _FeatureSlide(
       title: 'Trading',
       subtitle: 'Create listings, browse offers and plan safer swaps.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_trading.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_trading.webp',
       icon: Icons.handshake_rounded,
       accent: AppTheme.neonPink,
     ),
     _FeatureSlide(
       title: 'Match a Raider',
       subtitle: 'Find raiders by focus, playstyle and availability.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_match_a_raider.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_match_a_raider.webp',
       icon: Icons.groups_2_rounded,
       accent: Colors.orangeAccent,
     ),
     _FeatureSlide(
       title: 'Smart Trade',
       subtitle: 'Use inventory intelligence to spot better trades.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_smart_trade.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_smart_trade.webp',
       icon: Icons.auto_awesome_rounded,
       accent: Colors.lightGreenAccent,
     ),
     _FeatureSlide(
       title: 'Raid Planner',
       subtitle: 'Plan raid windows, hunt targets and extraction routes.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_raid_planner.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_raid_planner.webp',
       icon: Icons.map_outlined,
       accent: Colors.amberAccent,
     ),
     _FeatureSlide(
       title: 'Blueprint Grid',
       subtitle: 'Track the complete ARC blueprint collection visually.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_blueprint_grid.webp',
       icon: Icons.grid_view_rounded,
       accent: AppTheme.neonCyan,
     ),
     _FeatureSlide(
       title: 'Community Intel',
       subtitle: 'Use drop reports and community sightings to hunt smarter.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_community_intel.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_community_intel.webp',
       icon: Icons.radar_rounded,
       accent: Colors.cyanAccent,
     ),
     _FeatureSlide(
       title: 'Scrappy Tracker',
       subtitle: 'Track resources, upgrade needs and tradable extras.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
       icon: Icons.inventory_2_outlined,
       accent: Colors.deepPurpleAccent,
     ),
     _FeatureSlide(
       title: 'Market Watch',
       subtitle: 'See demand, supply and trading opportunities.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_market_watch.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_market_watch.webp',
       icon: Icons.show_chart_rounded,
       accent: AppTheme.neonPink,
     ),
     _FeatureSlide(
       title: 'Hunt Targets',
       subtitle: 'Focus high-value targets and routes before raids.',
-      image: 'assets/images/arc_raiders/hub/arc_hub_hunt_targets.webp',
+      image: 'assets/arc_raiders/hub/arc_hub_hunt_targets.webp',
       icon: Icons.my_location_rounded,
       accent: Colors.redAccent,
     ),
@@ -629,3 +629,4 @@ class _TrustBadge extends StatelessWidget {
     );
   }
 }
+

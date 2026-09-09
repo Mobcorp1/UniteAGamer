@@ -44,9 +44,9 @@ class _UagNotificationPreferencesPanelState
       await _refreshStatus();
       if (!mounted) return;
       setState(() => _message = 'Notification device registration updated.');
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      setState(() => _message = 'Could not enable notifications: $error');
+      setState(() => _message = 'Could not enable notifications. Try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -66,9 +66,9 @@ class _UagNotificationPreferencesPanelState
             ? 'Local Android test notification displayed.'
             : 'Use Admin Console test-send for Chrome/web delivery.';
       });
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      setState(() => _message = 'Could not send test notification: $error');
+      setState(() => _message = 'Could not send test notification. Try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

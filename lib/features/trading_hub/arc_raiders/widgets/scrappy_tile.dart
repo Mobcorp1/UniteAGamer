@@ -25,10 +25,6 @@ class ScrappyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final owned = state.ownedFor(item.neededCount);
-    final surplus = state.surplusFor(item.neededCount);
-    final remainingNeeded = state.remainingNeededFor(item.neededCount);
-    final tradeable = state.availableToTradeFor(item.neededCount);
-    final wanted = state.wantedFor(item.neededCount);
     final accent = owned ? tierColor : Colors.white24;
 
     return InkWell(
@@ -39,24 +35,25 @@ class ScrappyTile extends StatelessWidget {
         decoration: AppTheme.tradingCardDecoration(
           radius: 12,
           borderColor: accent.withValues(alpha: owned ? 0.52 : 0.14),
-          backgroundColor: owned
-              ? AppTheme.cardBackgroundAlt
-              : AppTheme.cardBackgroundDeep,
+          backgroundColor:
+              owned ? AppTheme.cardBackgroundAlt : AppTheme.cardBackgroundDeep,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               AspectRatio(
-                aspectRatio: 1,
+                aspectRatio: 0.92,
                 child: Container(
                   width: double.infinity,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(9),
-                    border: Border.all(color: accent.withValues(alpha: 0.22)),
+                    border: Border.all(
+                      color: accent.withValues(alpha: 0.22),
+                    ),
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -67,12 +64,12 @@ class ScrappyTile extends StatelessWidget {
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(3),
                     child: Image.asset(
                       item.imageAsset,
                       width: double.infinity,
                       height: double.infinity,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       alignment: Alignment.center,
                       filterQuality: FilterQuality.high,
                       isAntiAlias: true,
@@ -82,7 +79,7 @@ class ScrappyTile extends StatelessWidget {
                           child: Icon(
                             Icons.inventory_2_rounded,
                             color: owned ? accent : Colors.white38,
-                            size: landscape ? 22 : 26,
+                            size: landscape ? 28 : 34,
                           ),
                         );
                       },
@@ -90,96 +87,19 @@ class ScrappyTile extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 7),
               Text(
                 item.name,
                 maxLines: 2,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: AppTheme.tradingHeading(
-                  fontSize: landscape ? 10 : 11,
+                  fontSize: landscape ? 10.5 : 11.5,
                   color: owned ? Colors.white : Colors.white70,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                _compactGroupLabel(item.group),
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: tierColor.withValues(alpha: 0.84),
-                  fontSize: landscape ? 8 : 9,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 4,
-                runSpacing: 4,
-                children: [
-                  _MiniTag(
-                    text: 'Need $remainingNeeded',
-                    color: remainingNeeded > 0
-                        ? Colors.white54
-                        : Colors.lightGreenAccent,
-                  ),
-                  if (surplus > 0)
-                    _MiniTag(text: '$surplus spare', color: Colors.amberAccent)
-                  else
-                    _MiniTag(
-                      text: 'Got ${state.collectedCount}',
-                      color: owned ? AppTheme.neonCyan : Colors.white54,
-                    ),
-                  if (wanted)
-                    const _MiniTag(text: 'Wanted', color: AppTheme.neonPink),
-                  if (tradeable)
-                    const _MiniTag(
-                      text: 'Trade',
-                      color: Colors.lightGreenAccent,
-                    ),
-                ],
-              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  String _compactGroupLabel(String group) {
-    final tierMatch = RegExp(
-      r'Tier\s+(\d+)',
-      caseSensitive: false,
-    ).firstMatch(group);
-    if (tierMatch != null) return 'Tier ${tierMatch.group(1)}';
-    final levelMatch = RegExp(
-      r'Lv\.?\s*(\d+)',
-      caseSensitive: false,
-    ).firstMatch(group);
-    if (levelMatch != null) return 'Tier ${levelMatch.group(1)}';
-    return group;
-  }
-}
-
-class _MiniTag extends StatelessWidget {
-  const _MiniTag({required this.text, required this.color});
-
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-      decoration: AppTheme.tradingPillDecoration(color: color),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );

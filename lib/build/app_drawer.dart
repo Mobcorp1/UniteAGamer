@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +20,7 @@ import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import 'package:uag_arc_raiders_hub/widgets/uag_drawer_nav_tile.dart';
 
 class AppDrawer extends StatefulWidget {
-  const AppDrawer({super.key, this.drawerWidth = 300});
+  const AppDrawer({super.key, this.drawerWidth = 276});
 
   final double drawerWidth;
 
@@ -51,6 +50,7 @@ class _AppDrawerState extends State<AppDrawer>
   StreamSubscription<User?>? _authSubscription;
   bool _isAdmin = false;
   bool _isAdminResolved = false;
+  String? _expandedGroup;
   ArcUserPersonalisationProfile _cachedPersonalisation =
       ArcUserPersonalisationProfile.defaults;
 
@@ -148,45 +148,73 @@ class _AppDrawerState extends State<AppDrawer>
     return SafeArea(
       minimum: const EdgeInsets.only(top: 8),
       child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: dynamicColor.withValues(alpha: 0.18),
-                    blurRadius: 12,
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compactBrand = constraints.maxWidth < 340;
+            final brandStyle = ArcUiTokens.pageTitle(
+              fontSize: compactBrand ? 14.5 : 17,
+              color: ArcUiTokens.primaryAccent,
+            ).copyWith(height: 1.0);
+
+            return Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: dynamicColor.withValues(alpha: 0.18),
+                        blurRadius: 12,
+                      ),
+                    ],
+                    borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                   ),
-                ],
-                borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
-                child: Image.asset(
-                  'assets/icon/uag_traders_icon_transparent.webp',
-                  width: 56,
-                  height: 56,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AnimatedTextKit(
-                animatedTexts: [
-                  AppTheme.animatedText(
-                    'UAG Arc Raiders Hub',
-                    AppTheme.heroTextStyle(
-                      fontSize: 24,
-                      color: AppTheme.neonCyan,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+                    child: Image.asset(
+                      'assets/icon/uag_traders_icon_transparent.webp',
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                ],
-                isRepeatingAnimation: false,
-              ),
-            ),
-          ],
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: compactBrand
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'UAG ARC',
+                              maxLines: 1,
+                              overflow: TextOverflow.fade,
+                              softWrap: false,
+                              style: brandStyle,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'RAIDERS HUB',
+                              maxLines: 1,
+                              overflow: TextOverflow.fade,
+                              softWrap: false,
+                              style: brandStyle.copyWith(
+                                color: ArcUiTokens.textPrimary,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          'UAG ARC RAIDERS HUB',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: brandStyle,
+                        ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -203,6 +231,8 @@ class _AppDrawerState extends State<AppDrawer>
             ArcCompactNavigationCatalog.groupsForPersonalisation(
               _cachedPersonalisation,
             );
+        final activeGroup = _activeGroupLabel(navigationGroups, currentRoute);
+        final expandedGroup = _expandedGroup ?? activeGroup ?? 'DISCOVER & RUN';
         final accessFlags = <String>{
           for (final group in navigationGroups)
             for (final item in group.items)
@@ -242,47 +272,77 @@ class _AppDrawerState extends State<AppDrawer>
                             bottom: MediaQuery.paddingOf(context).bottom + 12,
                           ),
                           children: [
-                            _DrawerGroupLabel(label: 'COMMUNICATIONS'),
-                            UagDrawerNavTile(
-                              title: 'Communications Centre',
-                              icon: Icons.notifications_active_outlined,
-                              selected:
-                                  currentRoute ==
-                                  TradingNotificationsScreen.routeName,
-                              badgeCount: counts.tradingHub,
-                              onTap: () {
-                                Navigator.of(context).pop();
-                                if (currentRoute ==
-                                    TradingNotificationsScreen.routeName) {
-                                  return;
-                                }
-                                Navigator.of(context).pushNamedAndRemoveUntil(
-                                  TradingNotificationsScreen.routeName,
-                                  (route) => route.isFirst,
-                                );
-                              },
+                            _CollapsibleDrawerGroup(
+                              label: 'COMMUNICATIONS',
+                              expanded: expandedGroup == 'COMMUNICATIONS',
+                              onToggle: () => setState(
+                                () => _expandedGroup =
+                                    _expandedGroup == 'COMMUNICATIONS'
+                                    ? null
+                                    : 'COMMUNICATIONS',
+                              ),
+                              children: [
+                                UagDrawerNavTile(
+                                  title: 'Communications Centre',
+                                  icon: Icons.notifications_active_outlined,
+                                  selected:
+                                      currentRoute ==
+                                      TradingNotificationsScreen.routeName,
+                                  badgeCount: counts.tradingHub,
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    if (currentRoute !=
+                                        TradingNotificationsScreen.routeName) {
+                                      Navigator.of(
+                                        context,
+                                      ).pushNamedAndRemoveUntil(
+                                        TradingNotificationsScreen.routeName,
+                                        (route) => route.isFirst,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 6),
-                            for (final group in navigationGroups) ...[
-                              if (group.label == 'PROFILE') ...[
-                                _DrawerGroupLabel(label: group.label),
-                                for (final item in group.items.where(
-                                  (item) => !_availabilityForItem(
-                                    item,
-                                    availabilityByFlag,
-                                  ).isHidden,
-                                ))
-                                  UagDrawerNavTile(
-                                    title: item.label,
-                                    icon: item.icon,
-                                    selected: item.isSelected(currentRoute),
-                                    badgeCount: counts.countFor(
-                                      item.badgeTarget,
+                            for (final group in navigationGroups)
+                              _CollapsibleDrawerGroup(
+                                label: group.label,
+                                expanded: expandedGroup == group.label,
+                                onToggle: () => setState(
+                                  () => _expandedGroup =
+                                      _expandedGroup == group.label
+                                      ? null
+                                      : group.label,
+                                ),
+                                children: [
+                                  for (final item in group.items.where(
+                                    (item) => !_availabilityForItem(
+                                      item,
+                                      availabilityByFlag,
+                                    ).isHidden,
+                                  ))
+                                    UagDrawerNavTile(
+                                      title: item.label,
+                                      icon: item.icon,
+                                      selected: item.isSelected(currentRoute),
+                                      badgeCount: counts.countFor(
+                                        item.badgeTarget,
+                                      ),
+                                      onTap: () => _openItem(context, item),
                                     ),
-                                    onTap: () => _openItem(context, item),
-                                  ),
-                                if (_isAdminResolved && _isAdmin) ...[
-                                  _DrawerGroupLabel(label: 'ADMIN'),
+                                ],
+                              ),
+                            if (_isAdminResolved && _isAdmin)
+                              _CollapsibleDrawerGroup(
+                                label: 'ADMIN',
+                                expanded: expandedGroup == 'ADMIN',
+                                onToggle: () => setState(
+                                  () =>
+                                      _expandedGroup = _expandedGroup == 'ADMIN'
+                                      ? null
+                                      : 'ADMIN',
+                                ),
+                                children: [
                                   UagDrawerNavTile(
                                     title: 'Admin Console',
                                     icon: Icons.admin_panel_settings_outlined,
@@ -295,27 +355,7 @@ class _AppDrawerState extends State<AppDrawer>
                                     },
                                   ),
                                 ],
-                                const SizedBox(height: 6),
-                              ] else ...[
-                                _DrawerGroupLabel(label: group.label),
-                                for (final item in group.items.where(
-                                  (item) => !_availabilityForItem(
-                                    item,
-                                    availabilityByFlag,
-                                  ).isHidden,
-                                ))
-                                  UagDrawerNavTile(
-                                    title: item.label,
-                                    icon: item.icon,
-                                    selected: item.isSelected(currentRoute),
-                                    badgeCount: counts.countFor(
-                                      item.badgeTarget,
-                                    ),
-                                    onTap: () => _openItem(context, item),
-                                  ),
-                                const SizedBox(height: 6),
-                              ],
-                            ],
+                              ),
                           ],
                         );
                       },
@@ -328,6 +368,23 @@ class _AppDrawerState extends State<AppDrawer>
         );
       },
     );
+  }
+
+  String? _activeGroupLabel(
+    List<ArcCompactNavigationGroup> groups,
+    String? currentRoute,
+  ) {
+    if (currentRoute == null || currentRoute.isEmpty) return null;
+    if (currentRoute == TradingNotificationsScreen.routeName) {
+      return 'COMMUNICATIONS';
+    }
+    if (currentRoute == '/admin-console') return 'ADMIN';
+    for (final group in groups) {
+      if (group.items.any((item) => item.isSelected(currentRoute))) {
+        return group.label;
+      }
+    }
+    return null;
   }
 
   FeatureAvailability _availabilityForItem(
@@ -363,6 +420,17 @@ class _AppDrawerState extends State<AppDrawer>
     final isLoggedIn = user != null;
     final currentRoute = ModalRoute.of(context)?.settings.name;
     final showAdminLoading = user != null && !_isAdminResolved;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    // Keep the mobile drawer compact and content-led instead of allowing it
+    // to dominate the Sony-width layout. 276px comfortably fits the longest
+    // production navigation labels while preserving useful page context.
+    var drawerWidth = widget.drawerWidth.clamp(248.0, 276.0);
+    if (screenWidth < drawerWidth + 64) {
+      final constrainedWidth = screenWidth - 48;
+      drawerWidth = constrainedWidth < 248
+          ? screenWidth * 0.82
+          : constrainedWidth.clamp(248.0, 276.0);
+    }
 
     return AnimatedBuilder(
       animation: _colorAnimation,
@@ -371,7 +439,7 @@ class _AppDrawerState extends State<AppDrawer>
         return Align(
           alignment: Alignment.centerLeft,
           child: Container(
-            width: widget.drawerWidth,
+            width: drawerWidth,
             decoration: BoxDecoration(
               color: ArcUiTokens.background.withValues(alpha: 0.96),
               border: Border(
@@ -398,11 +466,10 @@ class _AppDrawerState extends State<AppDrawer>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                       child: Text(
-                        'Resolving access…',
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 12,
-                          color: AppTheme.tradingMutedText,
-                        ),
+                        'Resolving access...',
+                        style: ArcUiTokens.bodySmall(
+                          color: ArcUiTokens.textTertiary,
+                        ).copyWith(fontSize: 12),
                       ),
                     ),
                   if (isLoggedIn)
@@ -432,23 +499,73 @@ class _AppDrawerState extends State<AppDrawer>
   }
 }
 
-class _DrawerGroupLabel extends StatelessWidget {
-  const _DrawerGroupLabel({required this.label});
-
+class _CollapsibleDrawerGroup extends StatelessWidget {
+  const _CollapsibleDrawerGroup({
+    required this.label,
+    required this.expanded,
+    required this.onToggle,
+    required this.children,
+  });
   final String label;
-
+  final bool expanded;
+  final VoidCallback onToggle;
+  final List<Widget> children;
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-      child: Text(
-        label,
-        style: AppTheme.bodyTextStyle(
-          fontSize: 10,
-          color: AppTheme.neonCyan.withValues(alpha: 0.72),
-          isBold: true,
+  Widget build(BuildContext context) => Column(
+    children: [
+      InkWell(
+        onTap: onToggle,
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          margin: const EdgeInsets.fromLTRB(8, 2, 8, 1),
+          padding: const EdgeInsets.fromLTRB(10, 8, 8, 7),
+          decoration: BoxDecoration(
+            color: expanded
+                ? ArcUiTokens.surfacePanel.withValues(alpha: 0.72)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+            border: Border.all(
+              color: expanded
+                  ? ArcUiTokens.secondaryAccent.withValues(alpha: 0.26)
+                  : Colors.transparent,
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: ArcUiTokens.label(
+                    color: expanded
+                        ? ArcUiTokens.secondaryAccent
+                        : ArcUiTokens.primaryAccent,
+                  ).copyWith(fontSize: 11),
+                ),
+              ),
+              AnimatedRotation(
+                turns: expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 160),
+                curve: Curves.easeOutCubic,
+                child: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: ArcUiTokens.primaryAccent,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
+      AnimatedCrossFade(
+        firstChild: const SizedBox(width: double.infinity),
+        secondChild: Column(children: children),
+        crossFadeState: expanded
+            ? CrossFadeState.showSecond
+            : CrossFadeState.showFirst,
+        duration: const Duration(milliseconds: 180),
+      ),
+      const SizedBox(height: 2),
+    ],
+  );
 }

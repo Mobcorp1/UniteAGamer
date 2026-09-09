@@ -109,11 +109,11 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
 
       if (!mounted) return;
       Navigator.of(context).pop();
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not send feedback: $error'),
+          content: Text('Could not send feedback. Try again.'),
           action: SnackBarAction(label: 'Retry', onPressed: _submit),
         ),
       );

@@ -36,6 +36,7 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 600;
+    final fullBrandTitle = title.trim().toUpperCase() == 'UAG ARC RAIDERS HUB';
     final user = FirebaseAuth.instance.currentUser;
 
     final baseActions = <Widget>[
@@ -85,7 +86,7 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       leading: leading,
-      toolbarHeight: compact ? 54 : 60,
+      toolbarHeight: fullBrandTitle && compact ? 58 : (compact ? 54 : 60),
       elevation: 0,
       scrolledUnderElevation: 0,
       titleSpacing: compact ? 6 : 10,
@@ -107,37 +108,67 @@ class UagAppBar extends StatelessWidget implements PreferredSizeWidget {
           color: ArcUiTokens.primaryAccent.withValues(alpha: 0.14),
         ),
       ),
-      title: Column(
-        crossAxisAlignment: centerTitle
-            ? CrossAxisAlignment.center
-            : CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ArcUiTokens.pageTitle(
-              fontSize: compact ? 17 : 19,
-              color: ArcUiTokens.primaryAccent,
+      title: fullBrandTitle && compact
+          ? Column(
+              crossAxisAlignment: centerTitle
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'UAG ARC',
+                  maxLines: 1,
+                  overflow: TextOverflow.fade,
+                  softWrap: false,
+                  style: ArcUiTokens.pageTitle(
+                    fontSize: 13.5,
+                    color: ArcUiTokens.primaryAccent,
+                  ).copyWith(height: 1.0),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'RAIDERS HUB',
+                  maxLines: 1,
+                  overflow: TextOverflow.fade,
+                  softWrap: false,
+                  style: ArcUiTokens.pageTitle(
+                    fontSize: 13.5,
+                    color: ArcUiTokens.textPrimary,
+                  ).copyWith(height: 1.0),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: centerTitle
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  fullBrandTitle ? 'UAG ARC RAIDERS HUB' : title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.pageTitle(
+                    fontSize: compact ? 17 : 19,
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                ),
+                if (subtitle != null && subtitle!.trim().isNotEmpty && !compact)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.body(
+                        fontSize: 10.5,
+                        color: ArcUiTokens.textTertiary,
+                        weight: FontWeight.w500,
+                      ).copyWith(height: 1.05),
+                    ),
+                  ),
+              ],
             ),
-          ),
-          if (subtitle != null && subtitle!.trim().isNotEmpty && !compact)
-            Padding(
-              padding: const EdgeInsets.only(top: 1),
-              child: Text(
-                subtitle!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ArcUiTokens.body(
-                  fontSize: 10.5,
-                  color: ArcUiTokens.textTertiary,
-                  weight: FontWeight.w500,
-                ).copyWith(height: 1.05),
-              ),
-            ),
-        ],
-      ),
       actions: baseActions,
     );
   }

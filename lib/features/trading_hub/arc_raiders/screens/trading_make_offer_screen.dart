@@ -674,7 +674,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
       );
 
       navigator.pop();
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
 
       setState(() {
@@ -683,7 +683,7 @@ class _TradingMakeOfferScreenState extends State<TradingMakeOfferScreen> {
 
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Could not send offer: $error'),
+          content: Text('Could not send offer. Try again.'),
           backgroundColor: AppTheme.dangerRed,
         ),
       );

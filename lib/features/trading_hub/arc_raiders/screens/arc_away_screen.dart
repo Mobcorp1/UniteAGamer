@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_form_surface.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -100,60 +102,9 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget heroCard() {
-      return Container(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.raised,
-          accent: ArcUiTokens.primaryAccent,
-          borderOpacity: 0.24,
-          radius: ArcUiTokens.radiusXL,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
-                border: Border.all(
-                  color: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
-                ),
-              ),
-              child: const Icon(
-                Icons.do_not_disturb_on_outlined,
-                color: ArcUiTokens.primaryAccent,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spaceM),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Away Mode',
-                    style: ArcUiTokens.pageTitle(
-                      fontSize: 24,
-                      color: ArcUiTokens.primaryAccent,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Pause trade requests while you are away, working, travelling or taking a break.',
-                    style: ArcUiTokens.body(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     Widget actionCard({required List<Widget> children}) {
       return Container(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
+        padding: ArcUiTokens.compactPanelPadding,
         decoration: ArcUiTokens.surfaceDecoration(
           role: ArcSurfaceRole.panel,
           accent: ArcUiTokens.secondaryAccent,
@@ -167,9 +118,10 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Away Mode'),
+      appBar: const UagAppBar(
+        title: 'Away Mode',
+        subtitle: 'Temporarily pause discovery and new trade requests.',
+        showLogout: false,
       ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
@@ -184,10 +136,15 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 820),
                     child: ListView(
-                      padding: const EdgeInsets.all(AppTheme.spaceL),
+                      padding: ArcUiTokens.compactPanelPadding,
                       children: [
-                        heroCard(),
-                        const SizedBox(height: AppTheme.spaceM),
+                        const ArcFormPageLead(
+                          icon: Icons.do_not_disturb_on_outlined,
+                          title: 'Away Mode',
+                          subtitle:
+                              'Pause discovery while you are unavailable.',
+                        ),
+                        const SizedBox(height: 12),
                         actionCard(
                           children: [
                             SwitchListTile(
@@ -208,7 +165,7 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                                 ),
                               ),
                               subtitle: Text(
-                                'Hide from search and pause new trade requests while away.',
+                                'Hide from discovery and pause new trade requests.',
                                 style: ArcUiTokens.bodySmall(),
                               ),
                             ),

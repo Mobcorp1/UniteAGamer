@@ -211,10 +211,12 @@ class _ArcBlueprintDropReportSheetState
       if (!mounted) return;
       Navigator.of(context).pop(true);
       widget.onSaved?.call();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save ${widget.blueprint.name}: $e')),
+        SnackBar(
+          content: Text('Could not save ${widget.blueprint.name}. Try again.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -379,10 +381,12 @@ class _ArcBlueprintDropReportSheetState
       if (!mounted) return;
       Navigator.of(context).pop(true);
       widget.onSaved?.call();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save ${widget.blueprint.name}: $e')),
+        SnackBar(
+          content: Text('Could not save ${widget.blueprint.name}. Try again.'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);

@@ -49,10 +49,7 @@ void main() {
           kind: ArcLoadoutAssetKind.attachment,
         );
 
-        expect(
-          hairpin,
-          'assets/images/arc_raiders/loadouts/weapons/hairpin.webp',
-        );
+        expect(hairpin, 'assets/arc_raiders/loadouts/weapons/hairpin.webp');
         expect(blueprintHairpin, 'assets/arc_raiders/blueprints/hairpin.webp');
         expect(kinetic, 'assets/arc_raiders/blueprints/kinetic-converter.webp');
         expect(splitter, 'assets/arc_raiders/blueprints/anvil-splitter.webp');

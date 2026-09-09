@@ -284,8 +284,7 @@ class ArcMatchRiderRepository {
   ArcMatchIntelligenceTier _matchTierForEntitlement(
     UagUserEntitlement entitlement,
   ) {
-    if (entitlement.hasAdminBypass) return ArcMatchIntelligenceTier.advanced;
-    switch (entitlement.tier) {
+    switch (entitlement.effectiveTier) {
       case UagSubscriptionTier.free:
         return ArcMatchIntelligenceTier.basic;
       case UagSubscriptionTier.essential:

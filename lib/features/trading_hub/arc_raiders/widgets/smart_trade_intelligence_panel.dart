@@ -80,10 +80,10 @@ class _SmartTradeIntelligencePanelState
         context,
       ).showSnackBar(const SnackBar(content: Text('Smart listing created.')));
       await _refresh();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not create smart listing: $e')),
+        SnackBar(content: Text('Could not create smart listing. Try again.')),
       );
     } finally {
       if (mounted) setState(() => _creatingListing = false);
@@ -119,10 +119,10 @@ class _SmartTradeIntelligencePanelState
         context,
       ).showSnackBar(const SnackBar(content: Text('Smart offer created.')));
       await _refresh();
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not create smart offer: $e')),
+        SnackBar(content: Text('Could not create smart offer. Try again.')),
       );
     } finally {
       if (mounted) setState(() => _creatingOffer = false);
@@ -163,7 +163,7 @@ class _SmartTradeIntelligencePanelState
         if (snapshot.hasError) {
           return _shell(
             child: Text(
-              'Smart trading check failed: ${snapshot.error}',
+              'Smart trading check failed. Try again.',
               style: TextStyle(color: AppTheme.tradingDanger),
             ),
           );

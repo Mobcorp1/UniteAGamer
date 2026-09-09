@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_tactical_banner_ad.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -58,6 +59,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
   ArcScrappyFilter _selectedFilter = ArcScrappyFilter.all;
   late ArcScrappyTrackerMode _mode;
   bool _showFeedScrappy = false;
+  String _feedGoal = 'Overall';
+  String? _selectedBenchCategory;
   int _trackerCarouselIndex = 0;
 
   @override
@@ -73,6 +76,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       _mode = widget.initialMode;
       _selectedFilter = ArcScrappyFilter.all;
       _showFeedScrappy = false;
+      _selectedBenchCategory = null;
       _trackerCarouselIndex = 0;
       _expandedSections.clear();
     }
@@ -110,17 +114,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         return 'ARC Raiders Bench Operations';
       case ArcScrappyTrackerMode.quest:
         return 'Quest Tracker';
-    }
-  }
-
-  String get _headerDescription {
-    switch (_mode) {
-      case ArcScrappyTrackerMode.scrappy:
-        return 'Track Scrappy upgrade items by tier in a compact operations board.';
-      case ArcScrappyTrackerMode.bench:
-        return 'Track bench materials by station and tier in a compact operations board.';
-      case ArcScrappyTrackerMode.quest:
-        return 'Track quest collection items by status using a live progress board.';
     }
   }
 
@@ -252,6 +245,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     }
   }
 
+  String _separator() => ' ${String.fromCharCode(0x2022)} ';
+
   Future<void> _confirmClearSingleItem(
     ArcScrappyItem item,
     ArcScrappyState currentState,
@@ -280,10 +275,10 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('${item.name} cleared.')));
       setState(() {});
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not clear ${item.name}: $e')),
+        SnackBar(content: Text('Could not clear ${item.name}. Try again.')),
       );
     }
   }
@@ -328,11 +323,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('$_modeTitle reset.')));
       setState(() {});
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not reset tracker: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not reset tracker. Try again.')),
+      );
     }
   }
 
@@ -443,13 +438,13 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             .toDouble();
         const spacing = 5.0;
 
-        if (items.length == 1) {
-          return Center(child: tileFor(items.first, panelWidth));
-        }
-
-        final halfWidth = ((panelWidth - spacing) / 2)
-            .clamp(112.0, 180.0)
+        final compactTileWidth = ((panelWidth - (spacing * 2)) / 3)
+            .clamp(82.0, 148.0)
             .toDouble();
+
+        if (items.length == 1) {
+          return Center(child: tileFor(items.first, compactTileWidth));
+        }
 
         if (items.length == 2) {
           return Center(
@@ -458,9 +453,9 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  tileFor(items[0], halfWidth),
+                  tileFor(items[0], compactTileWidth),
                   const SizedBox(width: spacing),
-                  tileFor(items[1], halfWidth),
+                  tileFor(items[1], compactTileWidth),
                 ],
               ),
             ),
@@ -611,11 +606,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('$title completion saved.')));
       setState(() {});
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not complete $title: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not complete $title. Try again.')),
+      );
     }
   }
 
@@ -747,6 +742,153 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildScrappyHero(Map<ArcScrappyFilter, int> counts) {
+    return Container(
+      height: 188,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.42),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            errorBuilder: (_, _, _) => Container(
+              color: ArcUiTokens.surfacePanel,
+              child: Icon(
+                Icons.inventory_2_rounded,
+                size: 72,
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.30),
+              ),
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  Colors.black.withValues(alpha: 0.18),
+                  Colors.black.withValues(alpha: 0.62),
+                  Colors.black.withValues(alpha: 0.90),
+                ],
+                stops: const [0.0, 0.54, 1.0],
+              ),
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.12),
+                  Colors.black.withValues(alpha: 0.58),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 13, 14, 11),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ARC OPERATIONS',
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent)
+                      .copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.2,
+                      ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'SCRAPPY INTELLIGENCE',
+                  style: ArcUiTokens.pageTitle(
+                    color: ArcUiTokens.textPrimary,
+                  ).copyWith(fontSize: 25),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Track upgrades. Feed smarter. Plan the next tier.',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textSecondary,
+                  ).copyWith(fontSize: 13),
+                ),
+                const SizedBox(height: 10),
+                _buildScrappyFeedTabs(),
+                const SizedBox(height: 6),
+                if (_showFeedScrappy)
+                  _buildFeedGoalBar()
+                else
+                  ScrappyFilterBar(
+                    selectedFilter: _selectedFilter,
+                    counts: counts,
+                    onFilterSelected: (filter) {
+                      setState(() => _selectedFilter = filter);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedGoalBar() {
+    return SizedBox(
+      height: 32,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: ScrappyFeedQueueSection.goals.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (_, index) {
+          final goal = ScrappyFeedQueueSection.goals[index];
+          final selected = goal == _feedGoal;
+          return ChoiceChip(
+            selected: selected,
+            showCheckmark: false,
+            visualDensity: VisualDensity.compact,
+            label: Text(goal.toUpperCase()),
+            labelStyle: TextStyle(
+              color: selected
+                  ? ArcUiTokens.background
+                  : ArcUiTokens.textSecondary,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+            ),
+            selectedColor: ArcUiTokens.primaryAccent,
+            backgroundColor: Colors.black.withValues(alpha: 0.56),
+            side: BorderSide(
+              color: selected
+                  ? ArcUiTokens.primaryAccent
+                  : Colors.white.withValues(alpha: 0.12),
+            ),
+            onSelected: (_) => setState(() => _feedGoal = goal),
+          );
+        },
       ),
     );
   }
@@ -888,7 +1030,6 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     );
   }
 
-  // ignore: unused_element
   Widget _buildScrappyList(
     List<ArcScrappyItem> filtered,
     Map<String, ArcScrappyState> states,
@@ -900,307 +1041,406 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
       tierGroups.putIfAbsent(item.tier, () => <ArcScrappyItem>[]).add(item);
     }
 
+    ArcScrappyTier? activeTier;
+    for (final tier in ArcScrappyTier.values) {
+      final tierItems = _allItems.where((item) => item.tier == tier).toList();
+      if (tierItems.isNotEmpty &&
+          _completedCount(tierItems, states) < tierItems.length) {
+        activeTier = tier;
+        break;
+      }
+    }
+
+    final visibleTiers = ArcScrappyTier.values
+        .where(
+          (tier) => (tierGroups[tier] ?? const <ArcScrappyItem>[]).isNotEmpty,
+        )
+        .toList();
+    if (activeTier != null && visibleTiers.remove(activeTier)) {
+      visibleTiers.insert(0, activeTier);
+    }
+
     final cards = <Widget>[
-      for (final tier in ArcScrappyTier.values)
-        if ((tierGroups[tier] ?? const <ArcScrappyItem>[]).isNotEmpty)
-          _buildExpansionSection(
-            id: 'scrappy-${tier.name}',
-            title: _tierLabel(tier),
-            color: _tierColor(tier),
-            items: tierGroups[tier] ?? const <ArcScrappyItem>[],
-            states: states,
-          ),
+      for (final tier in visibleTiers)
+        Builder(
+          builder: (context) {
+            final tierItems = tierGroups[tier] ?? const <ArcScrappyItem>[];
+            final isActive = tier == activeTier;
+            final isComplete =
+                _completedCount(tierItems, states) == tierItems.length;
+            final card = _buildExpansionSection(
+              id: 'scrappy-${tier.name}',
+              title: isActive
+                  ? 'CURRENT${_separator()}${_tierLabel(tier)}'
+                  : isComplete
+                  ? 'COMPLETE${_separator()}${_tierLabel(tier)}'
+                  : 'PLAN AHEAD${_separator()}${_tierLabel(tier)}',
+              color: isActive ? ArcUiTokens.primaryAccent : _tierColor(tier),
+              items: tierItems,
+              states: states,
+            );
+            return isActive
+                ? _ElectricActiveTierCard(child: card)
+                : Opacity(opacity: isComplete ? .72 : .90, child: card);
+          },
+        ),
     ];
 
     final maxItemCount = tierGroups.values.fold<int>(
       0,
       (max, items) => items.length > max ? items.length : max,
     );
+    final allComplete = activeTier == null;
 
-    return _buildTrackerCarousel(cards, maxItemCount: maxItemCount);
-  }
-
-  Widget _buildScrappyBoard(
-    List<ArcScrappyItem> filtered,
-    Map<String, ArcScrappyState> states,
-  ) {
-    if (filtered.isEmpty) return _buildEmptyState();
-
-    final tierGroups = <ArcScrappyTier, List<ArcScrappyItem>>{};
-    for (final item in filtered) {
-      tierGroups.putIfAbsent(item.tier, () => <ArcScrappyItem>[]).add(item);
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final desktop = width >= 1040;
-        final tablet = width >= 700;
-        final columnWidth = desktop
-            ? (width - 36) / 4
-            : tablet
-            ? (width - 12) / 2
-            : width;
-
-        return Wrap(
-          spacing: 12,
-          runSpacing: 12,
+    return Column(
+      children: [
+        Row(
           children: [
-            for (final tier in ArcScrappyTier.values)
-              if ((tierGroups[tier] ?? const <ArcScrappyItem>[]).isNotEmpty)
-                SizedBox(
-                  width: columnWidth,
-                  child: _scrappyTierColumn(
-                    tier: tier,
-                    items: tierGroups[tier] ?? const <ArcScrappyItem>[],
-                    states: states,
-                  ),
-                ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _scrappyTierColumn({
-    required ArcScrappyTier tier,
-    required List<ArcScrappyItem> items,
-    required Map<String, ArcScrappyState> states,
-  }) {
-    final color = _tierColor(tier);
-    final complete = _completedCount(items, states);
-    final totalNeeded = items.fold<int>(
-      0,
-      (sum, item) => sum + item.neededCount,
-    );
-    final totalCollected = items.fold<int>(0, (sum, item) {
-      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
-      return sum + state.collectedCount.clamp(0, item.neededCount);
-    });
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        radius: ArcUiTokens.radiusM,
-        accent: color,
-        borderOpacity: 0.24,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: ArcUiTokens.surfaceDecoration(
-                  role: ArcSurfaceRole.interactive,
-                  radius: ArcUiTokens.radiusS,
-                  accent: color,
-                  borderOpacity: 0.34,
-                ),
-                child: Text(
-                  '${tier.index + 1}',
-                  style: ArcUiTokens.cardTitle(color: color, fontSize: 13),
+            Expanded(
+              child: Text(
+                allComplete
+                    ? 'ALL SCRAPPY TIERS COMPLETE'
+                    : 'SWIPE TO PLAN AHEAD${_separator()}ACTIVE TIER IS ELECTRIFIED',
+                style: ArcUiTokens.metadata(
+                  color: allComplete
+                      ? ArcUiTokens.success
+                      : ArcUiTokens.primaryAccent,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _tierLabel(tier).toUpperCase(),
-                      style: ArcUiTokens.label(color: color),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$complete/${items.length} upgrades ready',
-                      style: ArcUiTokens.metadata(
-                        color: ArcUiTokens.textTertiary,
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 30,
+              child: OutlinedButton.icon(
+                onPressed: allComplete
+                    ? null
+                    : () => _confirmMarkSectionComplete(
+                        title: 'all Scrappy tiers',
+                        items: _allItems,
+                        states: states,
+                      ),
+                icon: const Icon(Icons.done_all_rounded, size: 15),
+                label: const Text('COMPLETE ALL'),
+                style:
+                    ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.secondaryAccent,
+                    ).copyWith(
+                      padding: const WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 9),
                       ),
                     ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        _buildTrackerCarousel(
+          cards,
+          maxItemCount: maxItemCount < 3 ? 3 : maxItemCount,
+        ),
+      ],
+    );
+  }
+
+  List<String> _benchCategories(List<ArcScrappyItem> items) {
+    final categories = <String>[];
+    for (final item in items) {
+      if (!categories.contains(item.category)) {
+        categories.add(item.category);
+      }
+    }
+    return categories;
+  }
+
+  Widget _buildBenchHero(
+    List<ArcScrappyItem> allItems,
+    Map<String, ArcScrappyState> states,
+  ) {
+    final categories = _benchCategories(allItems);
+    if (categories.isNotEmpty &&
+        (_selectedBenchCategory == null ||
+            !categories.contains(_selectedBenchCategory))) {
+      _selectedBenchCategory = categories.first;
+    }
+    final selected = _selectedBenchCategory;
+    final stationItems = selected == null
+        ? const <ArcScrappyItem>[]
+        : allItems.where((item) => item.category == selected).toList();
+    final complete = stationItems.where((item) {
+      final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+      return state.ownedFor(item.neededCount);
+    }).length;
+
+    return Container(
+      height: 154,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.42),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/arc_raiders/hub/arc_hub_bench_tracker.webp',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            errorBuilder: (_, _, _) => Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    ArcUiTokens.surfacePanel,
+                    ArcUiTokens.surfaceBase,
+                    ArcUiTokens.secondaryAccent.withValues(alpha: 0.18),
                   ],
                 ),
               ),
-              _ProgressPill(text: '$totalCollected/$totalNeeded', color: color),
-            ],
-          ),
-          const SizedBox(height: 9),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: totalNeeded == 0 ? 0 : totalCollected / totalNeeded,
-              minHeight: 3,
-              backgroundColor: Colors.white.withValues(alpha: 0.06),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+              child: Icon(
+                Icons.handyman_rounded,
+                size: 84,
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.18),
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-          for (final item in items)
-            _scrappyInventoryRow(
-              item,
-              states[item.id] ?? ArcScrappyState.empty(item.id),
-              color,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  Colors.black.withValues(alpha: 0.20),
+                  Colors.black.withValues(alpha: 0.64),
+                  Colors.black.withValues(alpha: 0.92),
+                ],
+                stops: const [0.0, 0.52, 1.0],
+              ),
             ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.14),
+                  Colors.black.withValues(alpha: 0.66),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 13, 14, 11),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ARC WORKSHOP',
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent)
+                      .copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.2,
+                      ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'BENCH OPERATIONS',
+                  style: ArcUiTokens.pageTitle(
+                    color: ArcUiTokens.textPrimary,
+                  ).copyWith(fontSize: 25),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  selected == null
+                      ? 'Choose a station to plan its upgrade tiers.'
+                      : '$selected${_separator()}$complete / ${stationItems.length} materials complete',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textSecondary,
+                  ).copyWith(fontSize: 13),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 34,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 6),
+                    itemBuilder: (_, index) {
+                      final category = categories[index];
+                      final isSelected = category == selected;
+                      return ChoiceChip(
+                        selected: isSelected,
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        label: Text(category.toUpperCase()),
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? ArcUiTokens.background
+                              : ArcUiTokens.textSecondary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                        ),
+                        selectedColor: ArcUiTokens.primaryAccent,
+                        backgroundColor: Colors.black.withValues(alpha: 0.58),
+                        side: BorderSide(
+                          color: isSelected
+                              ? ArcUiTokens.primaryAccent
+                              : Colors.white.withValues(alpha: 0.12),
+                        ),
+                        onSelected: (_) => setState(() {
+                          _selectedBenchCategory = category;
+                          _trackerCarouselIndex = 0;
+                        }),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _scrappyInventoryRow(
-    ArcScrappyItem item,
-    ArcScrappyState state,
-    Color color,
-  ) {
-    final needed = item.neededCount <= 0 ? 1 : item.neededCount;
-    final collected = state.collectedCount.clamp(0, needed);
-    final complete = state.ownedFor(item.neededCount);
-    final surplus = state.surplusFor(item.neededCount);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 7),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
-        onTap: () => state.collectedCount > 0
-            ? _openItemEditor(item, state)
-            : _showMissingItemInfo(item, state),
-        onLongPress: () => _openItemEditor(item, state),
-        child: Container(
-          padding: const EdgeInsets.all(7),
-          decoration: ArcUiTokens.surfaceDecoration(
-            role: ArcSurfaceRole.interactive,
-            radius: ArcUiTokens.radiusS,
-            accent: complete ? ArcUiTokens.success : color,
-            borderOpacity: complete ? 0.28 : 0.12,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: ArcUiTokens.surfaceRaised,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: color.withValues(alpha: 0.20)),
-                ),
-                child: Image.asset(
-                  item.imageAsset,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => Icon(
-                    Icons.inventory_2_rounded,
-                    color: color.withValues(alpha: 0.65),
-                    size: 20,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ArcUiTokens.cardTitle(fontSize: 12),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      complete ? 'READY' : 'NEED ${needed - collected}',
-                      style: ArcUiTokens.metadata(
-                        color: complete
-                            ? ArcUiTokens.success
-                            : ArcUiTokens.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$collected/$needed',
-                    style: ArcUiTokens.label(
-                      color: complete ? ArcUiTokens.success : color,
-                    ),
-                  ),
-                  if (surplus > 0)
-                    Text(
-                      '+$surplus spare',
-                      style: ArcUiTokens.metadata(
-                        color: ArcUiTokens.attentionAccent,
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGroupedList(
-    List<ArcScrappyItem> filtered,
+  Widget _buildBenchCarousel(
+    List<ArcScrappyItem> allItems,
     Map<String, ArcScrappyState> states,
   ) {
-    if (filtered.isEmpty) return _buildEmptyState();
+    final categories = _benchCategories(allItems);
+    final selected =
+        (_selectedBenchCategory != null &&
+            categories.contains(_selectedBenchCategory))
+        ? _selectedBenchCategory!
+        : (categories.isEmpty ? '' : categories.first);
+    if (selected.isEmpty) return _buildEmptyState();
 
-    final grouped = <String, List<ArcScrappyItem>>{};
+    final stationItems = allItems
+        .where((item) => item.category == selected)
+        .toList();
+    final tiers = <String, List<ArcScrappyItem>>{};
+    for (final item in stationItems) {
+      final tier = _displayGroupTitle(item.category, item.group);
+      tiers.putIfAbsent(tier, () => <ArcScrappyItem>[]).add(item);
+    }
 
-    for (final item in filtered) {
-      final key = '${item.category}|||${item.group}';
-      grouped.putIfAbsent(key, () => <ArcScrappyItem>[]).add(item);
+    String? activeTier;
+    for (final entry in tiers.entries) {
+      final complete = entry.value.every((item) {
+        final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+        return state.ownedFor(item.neededCount);
+      });
+      if (!complete) {
+        activeTier = entry.key;
+        break;
+      }
+    }
+
+    final visibleTiers = tiers.keys.toList();
+    if (activeTier != null && visibleTiers.remove(activeTier)) {
+      visibleTiers.insert(0, activeTier);
     }
 
     final cards = <Widget>[
-      for (final entry in grouped.entries)
-        _buildExpansionSection(
-          id: '${_mode.name}-${entry.key}',
-          title: _mode == ArcScrappyTrackerMode.quest
-              ? (entry.value.first.group.trim().isEmpty
-                    ? 'Quest Items'
-                    : entry.value.first.group)
-              : '${entry.value.first.category} - ${_displayGroupTitle(entry.value.first.category, entry.value.first.group)}',
-          color: _mode == ArcScrappyTrackerMode.quest
-              ? Colors.amberAccent
-              : _groupColor(entry.value, entry.value.first.group),
-          items: entry.value,
-          states: states,
-          subtitle: _mode == ArcScrappyTrackerMode.quest
-              ? '${entry.value.length} collection items'
-              : '${entry.value.length} upgrade materials',
+      for (final tier in visibleTiers)
+        Builder(
+          builder: (context) {
+            final items = tiers[tier] ?? const <ArcScrappyItem>[];
+            final isActive = tier == activeTier;
+            final isComplete = items.every((item) {
+              final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+              return state.ownedFor(item.neededCount);
+            });
+            final card = _buildExpansionSection(
+              id: 'bench-$selected-$tier',
+              title: isActive
+                  ? 'CURRENT${_separator()}$tier'
+                  : isComplete
+                  ? 'COMPLETE${_separator()}$tier'
+                  : 'PLAN AHEAD${_separator()}$tier',
+              color: isActive
+                  ? ArcUiTokens.primaryAccent
+                  : _groupColor(items, items.first.group),
+              items: items,
+              states: states,
+              subtitle: '${items.length} upgrade materials',
+            );
+            return isActive
+                ? _ElectricActiveTierCard(child: card)
+                : Opacity(opacity: isComplete ? .72 : .90, child: card);
+          },
         ),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : MediaQuery.sizeOf(context).width;
-        final columns = width >= 1080
-            ? 3
-            : width >= 700
-            ? 2
-            : 1;
-        final cardWidth = columns == 1
-            ? width
-            : (width - ((columns - 1) * 10)) / columns;
+    final maxItemCount = tiers.values.fold<int>(
+      0,
+      (max, items) => items.length > max ? items.length : max,
+    );
+    final allComplete = activeTier == null;
 
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
+    return Column(
+      children: [
+        Row(
           children: [
-            for (final card in cards) SizedBox(width: cardWidth, child: card),
+            Expanded(
+              child: Text(
+                allComplete
+                    ? '$selected COMPLETE'
+                    : 'SWIPE TIERS${_separator()}CURRENT TIER IS ELECTRIFIED',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ArcUiTokens.metadata(
+                  color: allComplete
+                      ? ArcUiTokens.success
+                      : ArcUiTokens.primaryAccent,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 30,
+              child: OutlinedButton.icon(
+                onPressed: allComplete
+                    ? null
+                    : () => _confirmMarkSectionComplete(
+                        title: '$selected bench',
+                        items: stationItems,
+                        states: states,
+                      ),
+                icon: const Icon(Icons.done_all_rounded, size: 15),
+                label: const Text('COMPLETE ALL'),
+                style:
+                    ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.secondaryAccent,
+                    ).copyWith(
+                      padding: const WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 9),
+                      ),
+                    ),
+              ),
+            ),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 6),
+        _buildTrackerCarousel(
+          cards,
+          maxItemCount: maxItemCount < 3 ? 3 : maxItemCount,
+        ),
+      ],
     );
   }
 
@@ -1232,7 +1472,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             : MediaQuery.sizeOf(context).width;
         final columnWidth = width >= 900
             ? ((width - 24) / 3).clamp(248.0, 360.0)
-            : 258.0;
+            : 236.0;
 
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -1306,7 +1546,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             const SizedBox(height: 10),
             if (items.isEmpty)
               Text(
-                'No quest items here.',
+                'Clear.',
                 style: ArcUiTokens.metadata(color: ArcUiTokens.textTertiary),
               )
             else
@@ -1339,7 +1579,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             : _showMissingItemInfo(item, state),
         onLongPress: () => _openItemEditor(item, state),
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(7),
           decoration: ArcUiTokens.surfaceDecoration(
             role: ArcSurfaceRole.interactive,
             radius: ArcUiTokens.radiusS,
@@ -1350,8 +1590,8 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 34,
+                height: 34,
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: ArcUiTokens.surfaceRaised,
@@ -1364,11 +1604,11 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                   errorBuilder: (_, _, _) => Icon(
                     Icons.assignment_rounded,
                     color: color.withValues(alpha: 0.65),
-                    size: 21,
+                    size: 18,
                   ),
                 ),
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1377,7 +1617,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                       item.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: ArcUiTokens.cardTitle(fontSize: 12.5),
+                      style: ArcUiTokens.cardTitle(fontSize: 12),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -1388,7 +1628,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                         color: ArcUiTokens.textTertiary,
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 6),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
                       child: LinearProgressIndicator(
@@ -1415,7 +1655,7 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
                               ? 'COMPLETE'
                               : collected > 0
                               ? 'ACTIVE'
-                              : 'BLOCKED',
+                              : 'NEEDED',
                           style: ArcUiTokens.metadata(
                             color: complete ? ArcUiTokens.success : color,
                           ),
@@ -1458,14 +1698,16 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
     return Scaffold(
       extendBody: true,
       extendBodyBehindAppBar: true,
-      bottomNavigationBar: ArcCompanionBottomDock(
-        activeLabel: _mode == ArcScrappyTrackerMode.quest
-            ? 'Quest Tracker'
-            : 'Scrappy Intel',
+      bottomNavigationBar: UagEntitledAdAwareBottomDock(
+        child: ArcCompanionBottomDock(
+          activeLabel: _mode == ArcScrappyTrackerMode.quest
+              ? 'Quest Tracker'
+              : 'Scrappy Intel',
+        ),
       ),
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: ArcUiTokens.background.withValues(alpha: 0.98),
         title: Text(
           _modeTitle,
           style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
@@ -1481,69 +1723,91 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
             final states = snapshot.data ?? <String, ArcScrappyState>{};
             final filtered = _applyFilter(allItems, states);
             final counts = _buildCounts(allItems, states);
-            final ownedCount = counts[ArcScrappyFilter.owned] ?? 0;
-            final completion = allItems.isEmpty
+            final progressItems =
+                _mode == ArcScrappyTrackerMode.bench &&
+                    _selectedBenchCategory != null
+                ? allItems
+                      .where((item) => item.category == _selectedBenchCategory)
+                      .toList(growable: false)
+                : allItems;
+            final ownedCount = progressItems.where((item) {
+              final state = states[item.id] ?? ArcScrappyState.empty(item.id);
+              return state.ownedFor(item.neededCount);
+            }).length;
+            final completion = progressItems.isEmpty
                 ? 0.0
-                : ownedCount / allItems.length;
+                : ownedCount / progressItems.length;
             final landscape =
                 MediaQuery.of(context).orientation == Orientation.landscape;
 
             return ArcRaidersPageList(
               maxWidth: 1220,
               children: [
-                _buildScrappyFeedTabs(),
-                if (_mode == ArcScrappyTrackerMode.scrappy)
-                  const SizedBox(height: AppTheme.spaceM),
-                if (_mode == ArcScrappyTrackerMode.scrappy &&
-                    _showFeedScrappy) ...[
-                  const ScrappyFeedQueueSection(),
-                  const SizedBox(height: AppTheme.spaceS),
+                if (_mode == ArcScrappyTrackerMode.scrappy) ...[
+                  _buildScrappyHero(counts),
+                  const SizedBox(height: 6),
                   ScrappyProgressHeader(
                     completion: completion,
                     ownedCount: ownedCount,
-                    totalCount: allItems.length,
+                    totalCount: progressItems.length,
                     landscape: landscape,
-                    title: 'ARC Raiders Feed Scrappy',
+                    title: _showFeedScrappy
+                        ? 'Scrappy upgrade progress'
+                        : 'Scrappy tracker progress',
+                    description: _showFeedScrappy
+                        ? 'Upgrade progress stays visible while feed recommendations change.'
+                        : 'Live completion across Scrappy upgrade materials.',
+                    accentColor: _showFeedScrappy
+                        ? AppTheme.neonPink
+                        : _modeAccent(),
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                if (_mode == ArcScrappyTrackerMode.bench) ...[
+                  _buildBenchHero(allItems, states),
+                  const SizedBox(height: 6),
+                  ScrappyProgressHeader(
+                    completion: completion,
+                    ownedCount: ownedCount,
+                    totalCount: progressItems.length,
+                    landscape: landscape,
+                    title: _selectedBenchCategory == null
+                        ? 'Bench progress'
+                        : '${_selectedBenchCategory!} progress',
                     description:
-                        'Food queue items and quick location hints for feeding Scrappy.',
-                    footer:
-                        'Feed Scrappy is kept separate from tracker completion so food queue items do not affect upgrade totals.',
-                    accentColor: AppTheme.neonPink,
-                  ),
-                  const SizedBox(height: 74),
-                ] else ...[
-                  ScrappyFilterBar(
-                    selectedFilter: _selectedFilter,
-                    counts: counts,
-                    onFilterSelected: (filter) {
-                      setState(() => _selectedFilter = filter);
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spaceS),
-                  _mode == ArcScrappyTrackerMode.scrappy
-                      ? _buildScrappyBoard(filtered, states)
-                      : _mode == ArcScrappyTrackerMode.quest
-                      ? _buildQuestKanban(filtered, states)
-                      : _buildGroupedList(filtered, states),
-                  const SizedBox(height: AppTheme.spaceS),
-                  ScrappyProgressHeader(
-                    completion: completion,
-                    ownedCount: ownedCount,
-                    totalCount: allItems.length,
-                    landscape: landscape,
-                    title: _headerTitle,
-                    description: _headerDescription,
-                    footer: switch (_mode) {
-                      ArcScrappyTrackerMode.scrappy =>
-                        'Food queue and Scrappy upgrades stay separate from bench and quest totals.',
-                      ArcScrappyTrackerMode.bench =>
-                        'Bench materials are grouped into compact station and tier boards.',
-                      ArcScrappyTrackerMode.quest =>
-                        'Regular collection items only. Quest-only fixed-location objects are excluded by design.',
-                    },
+                        'Current station material completion and upgrade readiness.',
                     accentColor: _modeAccent(),
                   ),
-                  const SizedBox(height: 74),
+                  const SizedBox(height: 6),
+                ],
+                if (_mode == ArcScrappyTrackerMode.scrappy &&
+                    _showFeedScrappy) ...[
+                  ScrappyFeedQueueSection(
+                    goal: _feedGoal,
+                    onGoalChanged: (goal) => setState(() => _feedGoal = goal),
+                    showGoalBar: false,
+                  ),
+                  const SizedBox(height: AppTheme.spaceS),
+                ] else ...[
+                  if (_mode == ArcScrappyTrackerMode.quest) ...[
+                    ScrappyProgressHeader(
+                      completion: completion,
+                      ownedCount: ownedCount,
+                      totalCount: progressItems.length,
+                      landscape: landscape,
+                      title: _headerTitle,
+                      description: 'Needed / active / complete mission board.',
+                      footer: 'Fixed-location quest objects stay excluded.',
+                      accentColor: _modeAccent(),
+                    ),
+                    const SizedBox(height: AppTheme.spaceS),
+                  ],
+                  _mode == ArcScrappyTrackerMode.scrappy
+                      ? _buildScrappyList(filtered, states)
+                      : _mode == ArcScrappyTrackerMode.quest
+                      ? _buildQuestKanban(filtered, states)
+                      : _buildBenchCarousel(allItems, states),
+                  const SizedBox(height: AppTheme.spaceS),
                 ],
                 const SizedBox(height: AppTheme.spaceXL),
               ],
@@ -1551,6 +1815,64 @@ class _ScrappyGridScreenState extends State<ScrappyGridScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _ElectricActiveTierCard extends StatefulWidget {
+  const _ElectricActiveTierCard({required this.child});
+  final Widget child;
+
+  @override
+  State<_ElectricActiveTierCard> createState() =>
+      _ElectricActiveTierCardState();
+}
+
+class _ElectricActiveTierCardState extends State<_ElectricActiveTierCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      child: widget.child,
+      builder: (context, child) {
+        final phase = _controller.value;
+        return Container(
+          padding: const EdgeInsets.all(1.4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL + 2),
+            gradient: SweepGradient(
+              transform: GradientRotation(phase * 6.283185307179586),
+              colors: [
+                ArcUiTokens.primaryAccent.withValues(alpha: .18),
+                ArcUiTokens.primaryAccent.withValues(alpha: .95),
+                Colors.white.withValues(alpha: .72),
+                ArcUiTokens.secondaryAccent.withValues(alpha: .55),
+                ArcUiTokens.primaryAccent.withValues(alpha: .18),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: ArcUiTokens.primaryAccent.withValues(alpha: .20),
+                blurRadius: 18,
+                spreadRadius: .5,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
     );
   }
 }

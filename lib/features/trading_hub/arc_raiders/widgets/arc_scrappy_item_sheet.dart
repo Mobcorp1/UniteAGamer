@@ -91,7 +91,11 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save ${widget.item.name}: $e')),
+        SnackBar(
+          content: Text(
+            'Could not save ${widget.item.name}. Please try again.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -131,22 +135,36 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spaceM),
+        constraints: const BoxConstraints(minHeight: 74),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: AppTheme.tradingCardDecoration(
-          radius: 14,
-          borderColor: color.withValues(alpha: 0.24),
+          radius: 12,
+          borderColor: color.withValues(alpha: 0.28),
           backgroundColor: AppTheme.cardBackgroundAlt,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                label,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.15,
+                ),
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               value,
+              textAlign: TextAlign.center,
               style: AppTheme.tradingHeading(fontSize: 20, color: color),
             ),
           ],
@@ -167,15 +185,10 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Collected Quantity',
-            style: AppTheme.tradingHeading(fontSize: 18, color: Colors.white),
+            'Collected',
+            style: AppTheme.tradingHeading(fontSize: 17, color: Colors.white),
           ),
           const SizedBox(height: AppTheme.spaceS),
-          Text(
-            'Use plus and minus to track what you own. Anything above the target becomes tradeable surplus automatically.',
-            style: const TextStyle(color: Colors.white60, height: 1.35),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
           Row(
             children: [
               _quantityButton(
@@ -184,14 +197,6 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                 onPressed: _collectedCount <= 0
                     ? null
                     : () => _adjustCollectedCount(-1),
-              ),
-              const SizedBox(width: AppTheme.spaceS),
-              _quantityButton(
-                icon: Icons.keyboard_double_arrow_down_rounded,
-                tooltip: 'Remove 5',
-                onPressed: _collectedCount <= 0
-                    ? null
-                    : () => _adjustCollectedCount(-5),
               ),
               const SizedBox(width: AppTheme.spaceM),
               Expanded(
@@ -204,16 +209,10 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                   ),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setState(() {}),
-                  decoration: AppTheme.tradingInputDecoration(label: 'Amount'),
+                  decoration: AppTheme.tradingInputDecoration(label: 'Owned'),
                 ),
               ),
               const SizedBox(width: AppTheme.spaceM),
-              _quantityButton(
-                icon: Icons.keyboard_double_arrow_up_rounded,
-                tooltip: 'Add 5',
-                onPressed: () => _adjustCollectedCount(5),
-              ),
-              const SizedBox(width: AppTheme.spaceS),
               _quantityButton(
                 icon: Icons.add_rounded,
                 tooltip: 'Add 1',
@@ -221,27 +220,20 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
               ),
             ],
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: AppTheme.spaceS),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: TextButton(
                   onPressed: () => _setCollectedCount(0),
-                  child: const Text('Set 0'),
+                  child: const Text('CLEAR'),
                 ),
               ),
               const SizedBox(width: AppTheme.spaceS),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => _setCollectedCount(_itemNeeded),
-                  child: const Text('Set Target'),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spaceS),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _adjustCollectedCount(_itemNeeded),
-                  child: const Text('+ Target'),
+                  child: const Text('SET TO TARGET'),
                 ),
               ),
             ],
@@ -295,13 +287,6 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                 ),
-                if (widget.item.helperText.isNotEmpty) ...[
-                  const SizedBox(height: AppTheme.spaceM),
-                  Text(
-                    widget.item.helperText,
-                    style: const TextStyle(color: Colors.white60, height: 1.4),
-                  ),
-                ],
                 const SizedBox(height: AppTheme.spaceL),
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceM),
@@ -313,8 +298,8 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                   child: Row(
                     children: [
                       Container(
-                        width: 72,
-                        height: 72,
+                        width: 78,
+                        height: 78,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
@@ -329,52 +314,42 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                             ],
                           ),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(13),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: SizedBox.expand(
-                              child: Image.asset(
-                                widget.item.imageAsset,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.contain,
-                                alignment: Alignment.center,
-                                filterQuality: FilterQuality.high,
-                                isAntiAlias: true,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Center(
-                                    child: Icon(
-                                      Icons.inventory_2_rounded,
-                                      color: widget.tierColor,
-                                      size: 28,
-                                    ),
-                                  );
-                                },
-                              ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(7),
+                          child: Image.asset(
+                            widget.item.imageAsset,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
+                            errorBuilder: (_, _, _) => Icon(
+                              Icons.inventory_2_rounded,
+                              color: widget.tierColor,
+                              size: 28,
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: AppTheme.spaceM),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            Text(
-                              'Track total collected',
-                              style: AppTheme.tradingHeading(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
+                            _statCard(
+                              label: 'NEEDED',
+                              value: _itemNeeded.toString(),
+                              color: widget.tierColor,
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Plus/minus controls keep this quick on mobile and web.',
-                              style: const TextStyle(
-                                color: Colors.white60,
-                                height: 1.35,
-                              ),
+                            const SizedBox(width: AppTheme.spaceS),
+                            _statCard(
+                              label: 'OWNED',
+                              value: _collectedCount.toString(),
+                              color: AppTheme.neonCyan,
+                            ),
+                            const SizedBox(width: AppTheme.spaceS),
+                            _statCard(
+                              label: 'SURPLUS',
+                              value: _surplus.toString(),
+                              color: _surplus > 0
+                                  ? Colors.amberAccent
+                                  : Colors.white54,
                             ),
                           ],
                         ),
@@ -382,42 +357,8 @@ class _ArcScrappyItemSheetState extends State<ArcScrappyItemSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppTheme.spaceL),
-                _quantityControls(),
-                const SizedBox(height: AppTheme.spaceL),
-                Row(
-                  children: [
-                    _statCard(
-                      label: 'Needed Total',
-                      value: _itemNeeded.toString(),
-                      color: widget.tierColor,
-                    ),
-                    const SizedBox(width: AppTheme.spaceM),
-                    _statCard(
-                      label: 'Collected',
-                      value: _collectedCount.toString(),
-                      color: AppTheme.neonCyan,
-                    ),
-                  ],
-                ),
                 const SizedBox(height: AppTheme.spaceM),
-                Row(
-                  children: [
-                    _statCard(
-                      label: 'Still Needed',
-                      value: _remainingNeeded.toString(),
-                      color: _remainingNeeded > 0
-                          ? AppTheme.neonPink
-                          : Colors.lightGreenAccent,
-                    ),
-                    const SizedBox(width: AppTheme.spaceM),
-                    _statCard(
-                      label: 'Surplus',
-                      value: _surplus.toString(),
-                      color: _surplus > 0 ? Colors.amberAccent : Colors.white54,
-                    ),
-                  ],
-                ),
+                _quantityControls(),
                 const SizedBox(height: AppTheme.spaceL),
                 Container(
                   width: double.infinity,

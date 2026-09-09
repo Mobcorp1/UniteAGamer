@@ -471,11 +471,11 @@ class _OnboardingBasicProfileScreenState
       await prefs.setBool('hasCompletedProfileSetup', complete);
       await prefs.setBool('forceOnboarding', !complete);
       return true;
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not save onboarding: $error'),
+            content: Text('Could not save onboarding. Try again.'),
             behavior: SnackBarBehavior.floating,
           ),
         );

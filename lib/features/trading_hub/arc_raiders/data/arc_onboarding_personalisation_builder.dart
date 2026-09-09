@@ -38,7 +38,7 @@ ArcUserPersonalisationProfile buildArcOnboardingPersonalisation({
   return ArcUserPersonalisationProfile(
     completed: true,
     completedAt: completedAt ?? DateTime.now(),
-    source: 'progressive_onboarding_v4',
+    source: 'progressive_onboarding_v5',
     goals: goals,
     featureInterests: interests,
     commandCentre: ArcCommandCentrePreferenceSet(
@@ -50,12 +50,15 @@ ArcUserPersonalisationProfile buildArcOnboardingPersonalisation({
       socialActivity: goals.contains(ArcPersonalisationGoal.findSquads),
       progressionCards:
           goals.contains(ArcPersonalisationGoal.completeBlueprints) ||
+          goals.contains(ArcPersonalisationGoal.findBlueprintIntel) ||
           goals.contains(ArcPersonalisationGoal.progressQuests) ||
           goals.contains(ArcPersonalisationGoal.upgradeBench) ||
           goals.contains(ArcPersonalisationGoal.trackResources),
       upcomingAvailability: goals.contains(ArcPersonalisationGoal.findSquads),
       trackerSummaries: true,
-      raidPreparation: goals.contains(ArcPersonalisationGoal.planRaids),
+      raidPreparation:
+          goals.contains(ArcPersonalisationGoal.planRaids) ||
+          goals.contains(ArcPersonalisationGoal.huntARat),
       systemShortcuts: true,
     ),
     squadPreference: ArcSoloSquadPreference.flexible,
@@ -78,6 +81,12 @@ Set<ArcPersonalisationFeature> arcOnboardingFeaturesForGoal(
     case ArcPersonalisationGoal.completeBlueprints:
       return const {
         ArcPersonalisationFeature.blueprintTracker,
+        ArcPersonalisationFeature.blueprintIntelligence,
+        ArcPersonalisationFeature.blueprintWatches,
+        ArcPersonalisationFeature.raidIntelligence,
+      };
+    case ArcPersonalisationGoal.findBlueprintIntel:
+      return const {
         ArcPersonalisationFeature.blueprintIntelligence,
         ArcPersonalisationFeature.blueprintWatches,
         ArcPersonalisationFeature.raidIntelligence,
@@ -111,6 +120,13 @@ Set<ArcPersonalisationFeature> arcOnboardingFeaturesForGoal(
         ArcPersonalisationFeature.raidIntelligence,
         ArcPersonalisationFeature.huntTargets,
       };
+    case ArcPersonalisationGoal.huntARat:
+      return const {
+        ArcPersonalisationFeature.huntARat,
+        ArcPersonalisationFeature.ratRadar,
+        ArcPersonalisationFeature.huntTargets,
+        ArcPersonalisationFeature.communityIntel,
+      };
     case ArcPersonalisationGoal.findSquads:
       return const {
         ArcPersonalisationFeature.matchRider,
@@ -131,6 +147,11 @@ Set<ArcPersonalisationFeature> arcOnboardingFeaturesForGoal(
       };
     case ArcPersonalisationGoal.improveReputation:
       return const {ArcPersonalisationFeature.profile};
+    case ArcPersonalisationGoal.playLikeAPro:
+      return const {
+        ArcPersonalisationFeature.playLikeAPro,
+        ArcPersonalisationFeature.raidIntelligence,
+      };
   }
 }
 
@@ -138,6 +159,8 @@ String arcOnboardingRecommendedSystem(ArcPersonalisationGoal goal) {
   switch (goal) {
     case ArcPersonalisationGoal.completeBlueprints:
       return 'blueprintTracker';
+    case ArcPersonalisationGoal.findBlueprintIntel:
+      return 'blueprintIntelligence';
     case ArcPersonalisationGoal.tradeBlueprints:
       return 'trading';
     case ArcPersonalisationGoal.buildFavouriteLoadout:
@@ -150,6 +173,8 @@ String arcOnboardingRecommendedSystem(ArcPersonalisationGoal goal) {
       return 'scrappyTracker';
     case ArcPersonalisationGoal.planRaids:
       return 'raidIntelligence';
+    case ArcPersonalisationGoal.huntARat:
+      return 'huntARat';
     case ArcPersonalisationGoal.findSquads:
       return 'matchRider';
     case ArcPersonalisationGoal.followOperations:
@@ -160,6 +185,8 @@ String arcOnboardingRecommendedSystem(ArcPersonalisationGoal goal) {
       return 'communityIntel';
     case ArcPersonalisationGoal.improveReputation:
       return 'profile';
+    case ArcPersonalisationGoal.playLikeAPro:
+      return 'playLikeAPro';
     case ArcPersonalisationGoal.exploreEverything:
       return 'commandCentre';
   }

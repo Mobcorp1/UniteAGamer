@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_admin_broadcast_panel.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_ad_admin_controls_card.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_entitlement_test_mode_card.dart';
 import 'package:uag_arc_raiders_hub/features/release/widgets/uag_release_readiness_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trust/widgets/arc_raider_contracts_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_admin_control_config.dart';
@@ -284,6 +285,17 @@ class _AdminConsoleBody extends StatelessWidget {
                         },
                       ),
                     ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  _AdminExpandableSection(
+                    key: const Key('admin-section-test-account-mode'),
+                    header: _sectionHeader(
+                      title: 'Test Account Mode',
+                      subtitle:
+                          'Admin/dev entitlement simulator. Test Free, Essential, Premium and temporary Access Pass behaviour without changing your real subscription.',
+                    ),
+                    initiallyExpanded: true,
+                    children: [const UagEntitlementTestModeCard()],
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   _AdminExpandableSection(

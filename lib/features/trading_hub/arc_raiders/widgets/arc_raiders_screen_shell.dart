@@ -61,41 +61,33 @@ class ArcRaidersScreenShell extends StatelessWidget {
           showForTraderPro: showAdsForTraderPro,
         );
 
-    return Stack(
-      children: [
-        // The shared global cinematic/background layer sits below Navigator.
-        // Only page-local atmosphere is added here; no image or watermark.
-        Positioned.fill(
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    ArcUiTokens.primaryAccent.withValues(alpha: 0.045),
-                    Colors.transparent,
-                    ArcUiTokens.secondaryAccent.withValues(alpha: 0.040),
-                  ],
-                  stops: const [0.0, 0.52, 1.0],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            ArcUiTokens.primaryAccent.withValues(alpha: 0.045),
+            Colors.transparent,
+            ArcUiTokens.secondaryAccent.withValues(alpha: 0.040),
+          ],
+          stops: const [0.0, 0.52, 1.0],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: content),
+          if (shouldReserveAdSlot)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 76),
+              child: ArcAdBannerCard(
+                tier: adTier,
+                showForTraderPro: showAdsForTraderPro,
               ),
             ),
-          ),
-        ),
-        Positioned.fill(
-          child: Column(
-            children: [
-              Expanded(child: content),
-              if (shouldReserveAdSlot)
-                ArcAdBannerCard(
-                  tier: adTier,
-                  showForTraderPro: showAdsForTraderPro,
-                ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

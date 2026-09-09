@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/widgets/static_watermark.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -7,7 +7,7 @@ class UagVisualAssets {
   const UagVisualAssets._();
 
   static const arcBackground =
-      'assets/images/arc_raiders/hub/auth_bg_landscape.webp';
+      'assets/arc_raiders/hub/auth_bg_landscape.webp';
 }
 
 class UagCinematicBackground extends StatelessWidget {
@@ -88,3 +88,4 @@ class UagCinematicBackground extends StatelessWidget {
     );
   }
 }
+

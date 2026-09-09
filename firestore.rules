@@ -736,6 +736,37 @@ service cloud.firestore {
       }
     }
 
+    match /uag_creator_referred_subscriptions/{subscriptionId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.creatorUid == request.auth.uid);
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+
+    match /uag_community_referral_codes/{codeId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.code == codeId &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        request.resource.data.termsVersion is string &&
+        request.resource.data.termsVersion != '';
+      allow update, delete: if isAdminOrDev();
+    }
+
+    match /uag_referral_terms_acceptances/{uid} {
+      allow read: if isOwner(uid) || isAdminOrDev();
+      allow create, update: if isOwner(uid) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.version is string &&
+        request.resource.data.version != '' &&
+        request.resource.data.accepted == true;
+      allow delete: if isAdminOrDev();
+    }
+
+    match /uag_community_referral_validation_queue/{queueId} {
+      allow read, create, update, delete: if isAdminOrDev();
+    }
+
     match /uag_age_verification_requests/{requestId} {
       allow read: if isAdminOrDev() ||
         (isSignedIn() && resource.data.uid == request.auth.uid);
@@ -1004,6 +1035,26 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdminOrDev();
     }
+    match /uag_referral_reward_lockers/{userId} {
+      allow read: if isOwner(userId) || isAdminOrDev();
+      allow create, update, delete: if isAdminOrDev();
+
+      match /rewards/{rewardId} {
+        allow read: if isOwner(userId) || isAdminOrDev();
+        allow create, update, delete: if isAdminOrDev();
+      }
+    }
+
+    match /uag_referral_reward_activation_requests/{requestId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.rewardId is string &&
+        request.resource.data.rewardId != '';
+      allow update, delete: if isAdminOrDev();
+    }
 
     match /monetisation_events/{eventId} {
       allow read: if isAdminOrDev();
@@ -1049,9 +1100,29 @@ service cloud.firestore {
         );
     }
 
+    match /uag_community_suggestions/{suggestionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.status == 'open' &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() >= 3 &&
+        request.resource.data.title.size() <= 80;
+      allow update, delete: if isAdminOrDev();
+
+      match /votes/{voterUid} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && voterUid == request.auth.uid &&
+          request.resource.data.uid == request.auth.uid;
+        allow delete: if isSignedIn() && voterUid == request.auth.uid;
+        allow update: if false;
+      }
+    }
+
     match /wall_of_legends/{docId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdminOrDev();
     }
   }
 }
+

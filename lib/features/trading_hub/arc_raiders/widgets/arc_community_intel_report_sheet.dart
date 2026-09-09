@@ -172,11 +172,11 @@ class _ArcCommunityIntelReportSheetState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Community Intel submitted.')),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not submit Intel: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not submit Intel. Try again.')),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

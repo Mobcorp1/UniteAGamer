@@ -5,17 +5,20 @@ enum ArcPersonalisationInterestLevel { off, low, normal, high, primary }
 enum ArcPersonalisationGoal {
   exploreEverything,
   completeBlueprints,
+  findBlueprintIntel,
   tradeBlueprints,
   buildFavouriteLoadout,
   progressQuests,
   upgradeBench,
   trackResources,
   planRaids,
+  huntARat,
   findSquads,
   followOperations,
   manageCosmetics,
   receiveCommunityIntel,
   improveReputation,
+  playLikeAPro,
 }
 
 enum ArcPersonalisationFeature {
@@ -115,6 +118,8 @@ extension ArcPersonalisationGoalX on ArcPersonalisationGoal {
         return 'Explore Everything';
       case ArcPersonalisationGoal.completeBlueprints:
         return 'Complete Blueprints';
+      case ArcPersonalisationGoal.findBlueprintIntel:
+        return 'Find Blueprints and Map Intel';
       case ArcPersonalisationGoal.tradeBlueprints:
         return 'Trade Blueprints';
       case ArcPersonalisationGoal.buildFavouriteLoadout:
@@ -127,6 +132,8 @@ extension ArcPersonalisationGoalX on ArcPersonalisationGoal {
         return 'Track Resources';
       case ArcPersonalisationGoal.planRaids:
         return 'Plan Raids';
+      case ArcPersonalisationGoal.huntARat:
+        return 'HUNT A RAT';
       case ArcPersonalisationGoal.findSquads:
         return 'Find Squads';
       case ArcPersonalisationGoal.followOperations:
@@ -137,6 +144,8 @@ extension ArcPersonalisationGoalX on ArcPersonalisationGoal {
         return 'Receive Community Intel';
       case ArcPersonalisationGoal.improveReputation:
         return 'Improve Reputation';
+      case ArcPersonalisationGoal.playLikeAPro:
+        return 'Play Like A Pro';
     }
   }
 }

@@ -68,7 +68,7 @@ class _AuthScreenState extends State<AuthScreen> {
   String _selectedPlatform = 'PC';
   String _selectedTimeZone = 'Europe/London';
   String _selectedPayoutMethod = 'Bank Transfer';
-  String _selectedAccountTier = 'Raider';
+  String _selectedAccountTier = 'free';
 
   static const List<String> _countries = <String>[
     'United Kingdom',
@@ -234,14 +234,14 @@ class _AuthScreenState extends State<AuthScreen> {
           content: Text('Biometric unlock enabled for this device.'),
         ),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _biometricLoginEnabled = false);
       await UagSessionGateController.setBiometricRelockEnabled(enabled: false);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Biometric setup failed: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Biometric setup failed. Try again.')),
+      );
     }
   }
 
@@ -283,10 +283,10 @@ class _AuthScreenState extends State<AuthScreen> {
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(AppEntryGate.routeName, (_) => false);
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Biometric unlock failed: $error')),
+        SnackBar(content: Text('Biometric unlock failed. Try again.')),
       );
     }
   }
@@ -447,20 +447,12 @@ class _AuthScreenState extends State<AuthScreen> {
             'affiliateApplied': _applyForAffiliate,
             'preferredPayoutMethod': _selectedPayoutMethod,
             'referredByCode': _referralCodeController.text.trim(),
-            'subscriptionStatus': _selectedAccountTier == 'Raider'
+            'subscriptionStatus': _selectedAccountTier == 'free'
                 ? 'free'
                 : 'pending',
             'subscriptionTier': _selectedAccountTier,
-            'referralCommissionRate': _selectedAccountTier == 'Overseer'
-                ? 10
-                : _selectedAccountTier == 'Operator'
-                ? 5
-                : 0,
-            'referralCommissionCap': _selectedAccountTier == 'Overseer'
-                ? 25
-                : _selectedAccountTier == 'Operator'
-                ? 15
-                : 0,
+            'referralCommissionRate': 0,
+            'referralCommissionCap': 0,
             'basicProfile': {
               'displayName': riderName,
               'email': email,
@@ -508,12 +500,12 @@ class _AuthScreenState extends State<AuthScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? 'Authentication failed')),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not complete sign in: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not complete sign in. Try again.')),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -673,8 +665,8 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget _buildStepHeader() {
     final titles = ['Your Hub Profile', 'Legal Check', 'Login Details'];
     final subtitles = [
-      'Pick your account path and set your trader identity.',
-      'Review the essentials before entering the network.',
+      'Set your Raider identity and choose your access level.',
+      'Review the essentials before entering the Hub.',
       'Create the secure login for your UAG account.',
     ];
 
@@ -730,7 +722,7 @@ class _AuthScreenState extends State<AuthScreen> {
     required String tier,
     required String price,
     required String summary,
-    required String commission,
+    required String detail,
     required IconData icon,
     required Color accent,
   }) {
@@ -774,7 +766,11 @@ class _AuthScreenState extends State<AuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$tier - $price',
+                    '${tier == 'free'
+                        ? 'Free'
+                        : tier == 'essential'
+                        ? 'Essential'
+                        : 'Premium'} - $price',
                     style: TextStyle(
                       color: selected ? accent : Colors.white,
                       fontWeight: FontWeight.w900,
@@ -792,7 +788,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    commission,
+                    detail,
                     style: const TextStyle(
                       color: Colors.white54,
                       height: 1.22,
@@ -827,33 +823,31 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Start free, upgrade later, or join with referral progression ready from day one.',
+          'Start free and upgrade whenever you want more from UAG.',
           style: TextStyle(color: Colors.white60, height: 1.28),
         ),
         const SizedBox(height: AppTheme.spaceM),
         _tierOption(
-          tier: 'Raider',
+          tier: 'free',
           price: 'Free',
-          summary: 'Basic tracking, limited offers and starter matchmaking.',
-          commission: 'Referral boosts only. No cash commission.',
+          summary: 'Core UAG tools to get your Raider profile started.',
+          detail: 'Includes advertising.',
           icon: Icons.shield_outlined,
           accent: AppTheme.neonCyan,
         ),
         _tierOption(
-          tier: 'Operator',
-          price: 'Â£4.99/month',
-          summary:
-              'More listings, more offers, monthly operations and progression.',
-          commission: 'Starts at 5% commission path, can progress toward 15%.',
+          tier: 'essential',
+          price: '\u00A37.99/month',
+          summary: 'More UAG access with higher limits and expanded tools.',
+          detail: 'Light advertising: banner only.',
           icon: Icons.workspace_premium_outlined,
           accent: AppTheme.neonPink,
         ),
         _tierOption(
-          tier: 'Overseer',
-          price: 'Â£8.99/month',
-          summary:
-              'Priority trading, stronger referral tools and future smart assist.',
-          commission: 'Starts at 10% commission path, can progress toward 25%.',
+          tier: 'premium',
+          price: '\u00A39.99/month',
+          summary: 'Full UAG access with unlimited premium systems.',
+          detail: 'No advertising.',
           icon: Icons.military_tech_rounded,
           accent: Colors.amberAccent,
         ),
@@ -1360,7 +1354,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     Text(
                       _isLogin
                           ? 'Log in to access your operations hub.'
-                          : 'Three quick steps to enter the trader network.',
+                          : 'Three quick steps to set up your Raider profile.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white70,

@@ -63,6 +63,13 @@ void main() {
     expect(appEntry, contains("data['onboardingComplete'] == true"));
     expect(authLanding, contains('const AuthScreen(initialIsLogin: false)'));
     expect(onboarding, contains('markAuthenticatedWithStoredPreference'));
+    expect(
+      onboarding,
+      contains(
+        'String get _completionRouteName => ArcRaidersHubScreen.routeName;',
+      ),
+    );
+    expect(onboarding, isNot(contains(': ArcCommandCentreScreen.routeName')));
     expect(web, contains('interactive-widget=resizes-content'));
     expect(web, isNot(contains('flt-glass-pane,')));
     expect(web, isNot(contains('body {\n      position: fixed;')));

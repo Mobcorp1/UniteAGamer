@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
@@ -18,6 +19,9 @@ class MyIntelScreen extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'My Intel',
+      ),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -50,7 +54,7 @@ class MyIntelScreen extends StatelessWidget {
                       return _IntelMessage(
                         icon: Icons.warning_amber_rounded,
                         title: 'Could not load intel',
-                        message: snapshot.error.toString(),
+                        message: 'Could not load your intel reports.',
                         color: AppTheme.neonPink,
                       );
                     }
@@ -76,14 +80,13 @@ class MyIntelScreen extends StatelessWidget {
                       return const _IntelMessage(
                         icon: Icons.radar_rounded,
                         title: 'No intel reports yet',
-                        message:
-                            'Your latest 5 reports will appear here once you start submitting intel.',
+                        message: 'Your latest reports will appear here.',
                         color: AppTheme.neonCyan,
                       );
                     }
 
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(14, 16, 14, 30),
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 980),
@@ -148,13 +151,15 @@ class _IntelHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your Latest Intel',
+                  'LATEST INTEL',
                   style: ArcUiTokens.sectionTitle(fontSize: 17),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Review, correct or delete your last 5 submitted reports.',
-                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+                  'Review or correct your last five reports.',
+                  style: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -206,7 +211,7 @@ class _IntelReportCard extends StatelessWidget {
     final confirmations = _int('confirmationCount');
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
         accent: ArcUiTokens.primaryAccent,
@@ -226,8 +231,10 @@ class _IntelReportCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   blueprintId,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: ArcUiTokens.sectionTitle(
-                    fontSize: 16,
+                    fontSize: 14,
                     color: ArcUiTokens.primaryAccent,
                   ),
                 ),
@@ -250,7 +257,9 @@ class _IntelReportCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               notes,
-              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             ),
           ],
           const SizedBox(height: 12),

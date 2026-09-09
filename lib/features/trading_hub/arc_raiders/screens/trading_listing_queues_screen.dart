@@ -133,10 +133,10 @@ class _TradingListingQueuesScreenState
           ),
         ),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not release queue: $error')),
+        SnackBar(content: Text('Could not release queue. Try again.')),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -150,11 +150,11 @@ class _TradingListingQueuesScreenState
       } else {
         await _repository.pauseListingQueue(queue.id);
       }
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not update queue: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update queue. Try again.')),
+      );
     }
   }
 
@@ -165,11 +165,11 @@ class _TradingListingQueuesScreenState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Queue cancelled.')));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not cancel queue: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not cancel queue. Try again.')),
+      );
     }
   }
 

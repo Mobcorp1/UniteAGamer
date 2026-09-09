@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_form_surface.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -94,63 +96,13 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Widget heroCard() {
-      return Container(
-        padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.raised,
-          accent: ArcUiTokens.primaryAccent,
-          borderOpacity: 0.24,
-          radius: ArcUiTokens.radiusXL,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
-                border: Border.all(
-                  color: ArcUiTokens.primaryAccent.withValues(alpha: 0.45),
-                ),
-              ),
-              child: const Icon(
-                Icons.schedule_rounded,
-                color: ArcUiTokens.primaryAccent,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spaceM),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Set Availability',
-                    style: ArcUiTokens.pageTitle(
-                      fontSize: 24,
-                      color: ArcUiTokens.primaryAccent,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Let traders know your real raid windows without changing the data you already capture.',
-                    style: ArcUiTokens.body(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Availability'),
+      appBar: const UagAppBar(
+        title: 'Availability',
+        subtitle: 'Your usual ARC Raiders play windows.',
+        showLogout: false,
       ),
       body: ArcRaidersScreenShell(
         useSafeArea: false,
@@ -165,10 +117,15 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 900),
                     child: ListView(
-                      padding: const EdgeInsets.all(AppTheme.spaceL),
+                      padding: ArcUiTokens.compactPanelPadding,
                       children: [
-                        heroCard(),
-                        const SizedBox(height: AppTheme.spaceM),
+                        const ArcFormPageLead(
+                          icon: Icons.schedule_rounded,
+                          title: 'Play Windows',
+                          subtitle:
+                              'Set when you normally raid so UAG can improve squad timing.',
+                        ),
+                        const SizedBox(height: 12),
                         Container(
                           padding: const EdgeInsets.all(AppTheme.spaceL),
                           decoration: ArcUiTokens.surfaceDecoration(
@@ -233,8 +190,8 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
 
   Widget _weekCard(ArcAvailabilityWeek week, int weekIndex) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceL),
-      padding: const EdgeInsets.all(AppTheme.spaceL),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: ArcUiTokens.compactPanelPadding,
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
         accent: ArcUiTokens.secondaryAccent,
@@ -247,7 +204,7 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
           Text(
             week.label,
             style: ArcUiTokens.sectionTitle(
-              fontSize: 20,
+              fontSize: 16,
               color: ArcUiTokens.primaryAccent,
             ),
           ),

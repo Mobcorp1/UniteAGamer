@@ -46,11 +46,11 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Expedition reset complete.')),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Reset failed safely: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Reset could not run. Try again.')),
+      );
     } finally {
       if (mounted) setState(() => _applying = false);
     }
@@ -95,7 +95,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                   ArcRaidersSectionCard(
                     accent: ArcUiTokens.danger,
                     child: Text(
-                      'Reset preview could not load: ${snapshot.error}',
+                      'Reset preview could not load right now.',
                       style: ArcUiTokens.body(
                         fontSize: 14,
                         color: ArcUiTokens.textSecondary,

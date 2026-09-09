@@ -1022,12 +1022,12 @@ class _TradingCreateListingScreenState
         ),
       );
       navigator.pop();
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       setState(() => _isSaving = false);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Could not save listing: $error'),
+          content: Text('Could not save listing. Try again.'),
           backgroundColor: AppTheme.dangerRed,
         ),
       );

@@ -929,10 +929,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Intel confirmed.')));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not confirm Intel: $error')),
+        SnackBar(content: Text('Could not confirm Intel. Try again.')),
       );
     }
   }
@@ -944,10 +944,10 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Intel disputed.')));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not dispute Intel: $error')),
+        SnackBar(content: Text('Could not dispute Intel. Try again.')),
       );
     }
   }

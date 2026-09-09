@@ -9,17 +9,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/build/auth/uag_auth_autofill.dart';
 import 'package:uag_arc_raiders_hub/features/auth/session/uag_session_gate_controller.dart';
+import 'package:uag_arc_raiders_hub/features/onboarding/screens/uag_raider_agreement_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
-import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_legal_acceptance.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_personalisation_builder.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_setup.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_trader_profile_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_user_personalisation_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -93,13 +92,38 @@ class _ArcMandatoryOnboardingScreenState
   static const _goalOptions = <_GoalOption>[
     _GoalOption(
       ArcPersonalisationGoal.completeBlueprints,
-      'Complete my Blueprint grid',
+      'Complete my Blueprint collection',
       Icons.grid_view_rounded,
     ),
     _GoalOption(
-      ArcPersonalisationGoal.planRaids,
+      ArcPersonalisationGoal.findBlueprintIntel,
       'Find Blueprints and map intel',
       Icons.radar_rounded,
+    ),
+    _GoalOption(
+      ArcPersonalisationGoal.huntARat,
+      'HUNT A RAT',
+      Icons.pest_control_rodent_outlined,
+    ),
+    _GoalOption(
+      ArcPersonalisationGoal.buildFavouriteLoadout,
+      'Build my ideal loadout',
+      Icons.construction_rounded,
+    ),
+    _GoalOption(
+      ArcPersonalisationGoal.trackResources,
+      'Track Scrappy upgrades',
+      Icons.inventory_2_outlined,
+    ),
+    _GoalOption(
+      ArcPersonalisationGoal.planRaids,
+      'Plan my next raid',
+      Icons.map_outlined,
+    ),
+    _GoalOption(
+      ArcPersonalisationGoal.progressQuests,
+      'Track quests and projects',
+      Icons.flag_rounded,
     ),
     _GoalOption(
       ArcPersonalisationGoal.findSquads,
@@ -112,8 +136,18 @@ class _ArcMandatoryOnboardingScreenState
       Icons.swap_horiz_rounded,
     ),
     _GoalOption(
+      ArcPersonalisationGoal.playLikeAPro,
+      'Get better at ARC Raiders',
+      Icons.school_outlined,
+    ),
+    _GoalOption(
+      ArcPersonalisationGoal.receiveCommunityIntel,
+      'Explore Community Intel',
+      Icons.radar_outlined,
+    ),
+    _GoalOption(
       ArcPersonalisationGoal.exploreEverything,
-      'Explore everything',
+      'Show me everything',
       Icons.explore_rounded,
     ),
   ];
@@ -153,11 +187,7 @@ class _ArcMandatoryOnboardingScreenState
       _acceptedDataSecurity &&
       _acceptedAgeConfirmation;
 
-  String get _completionRouteName {
-    return shouldOpenBlueprintGridAfterArcOnboarding(_blueprintSetupChoice.name)
-        ? BlueprintGridScreen.routeName
-        : ArcCommandCentreScreen.routeName;
-  }
+  String get _completionRouteName => ArcRaidersHubScreen.routeName;
 
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
@@ -391,6 +421,21 @@ class _ArcMandatoryOnboardingScreenState
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _openRaiderAgreement() async {
+    final accepted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const UagRaiderAgreementScreen(),
+        fullscreenDialog: true,
+      ),
+    );
+    if (accepted != true || !mounted) return;
+    setState(() {
+      _acceptedTraderCode = true;
+      _acceptedTermsOfService = true;
+      _acceptedDataSecurity = true;
+    });
+  }
+
   Future<void> _openLegalDocument(Widget screen) {
     return Navigator.of(
       context,
@@ -483,7 +528,7 @@ class _ArcMandatoryOnboardingScreenState
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      _showMessage('Command Centre activation failed. Try again.');
+      _showMessage('ARC Systems activation failed. Try again.');
       debugPrint('Onboarding completion failed: $error');
     }
   }
@@ -584,9 +629,7 @@ class _ArcMandatoryOnboardingScreenState
                             onAgeConfirmationChanged: (value) => setState(
                               () => _acceptedAgeConfirmation = value,
                             ),
-                            openTraderCode: () => _openLegalDocument(
-                              const TraderCodeOfConductScreen(),
-                            ),
+                            openTraderCode: _openRaiderAgreement,
                             openTerms: () =>
                                 _openLegalDocument(const TermsOfUseScreen()),
                             openPrivacy: () =>
@@ -629,11 +672,11 @@ class _ArcMandatoryOnboardingScreenState
                           _saving
                               ? (_step == 0 && showsAccountCreationStep
                                     ? 'CREATING ACCOUNT...'
-                                    : 'INITIALISING COMMAND CENTRE...')
+                                    : 'INITIALISING ARC SYSTEMS...')
                               : _step == 3
                               ? (widget.adminPreview
                                     ? 'CLOSE PREVIEW'
-                                    : 'ENTER COMMAND CENTRE')
+                                    : 'ENTER UAG')
                               : 'CONTINUE',
                         ),
                       ),
@@ -845,7 +888,7 @@ class _AccountCreationStep extends StatelessWidget {
                 labelText: 'Password',
                 prefixIcon: const Icon(Icons.lock_outline_rounded),
                 errorText: passwordError,
-                helperText: '6+ characters Ã¢â‚¬Â¢ 1 capital Ã¢â‚¬Â¢ 1 number',
+                helperText: '6+ characters - 1 capital - 1 number',
                 helperMaxLines: 2,
                 suffixIcon: IconButton(
                   tooltip: showPassword ? 'Hide password' : 'Show password',
@@ -1032,6 +1075,7 @@ class _LegalStep extends StatelessWidget {
     required this.openTerms,
     required this.openPrivacy,
   });
+
   final bool traderCode;
   final bool terms;
   final bool dataSecurity;
@@ -1044,102 +1088,97 @@ class _LegalStep extends StatelessWidget {
   final VoidCallback openTerms;
   final VoidCallback openPrivacy;
 
+  bool get agreementAccepted => traderCode && terms && dataSecurity;
+
   @override
   Widget build(BuildContext context) {
+    // Keep the legacy callbacks referenced so older route wiring stays valid
+    // while the user-facing experience is one consolidated agreement.
+    final _ = (
+      onTraderCodeChanged,
+      onTermsChanged,
+      onDataChanged,
+      openTerms,
+      openPrivacy,
+    );
     return _StepFrame(
       icon: Icons.verified_user_outlined,
       title: 'COMMAND PROTOCOLS',
-      subtitle: 'Required account, legal and age confirmations.',
+      subtitle: 'Read the Raider Agreement and confirm adult eligibility.',
       child: Column(
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.neonPink.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
+              color: const Color(0xFF07111A).withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppTheme.neonPink.withValues(alpha: 0.24),
+                color: agreementAccepted
+                    ? Colors.greenAccent.withValues(alpha: 0.48)
+                    : AppTheme.neonCyan.withValues(alpha: 0.34),
               ),
             ),
-            child: const Text(
-              'UAG accounts are for adults only. These confirmations cover fair trading, unofficial fan-project status, privacy, community safety, ads, subscriptions, referrals, moderation and account restrictions during beta.',
-              style: TextStyle(color: Colors.white70, height: 1.35),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'RAIDER AGREEMENT',
+                  style: AppTheme.neonTextStyle(
+                    fontSize: 18,
+                    color: AppTheme.neonCyan,
+                    isBold: true,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Community Code, Terms, Privacy & Data, trading, payments, advertising, referrals, moderation, safety and UAG fan-project status are combined into one agreement.',
+                  style: TextStyle(color: Colors.white70, height: 1.4),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: openTraderCode,
+                    icon: Icon(
+                      agreementAccepted
+                          ? Icons.verified_user_rounded
+                          : Icons.article_outlined,
+                    ),
+                    label: Text(
+                      agreementAccepted
+                          ? 'AGREEMENT READ & ACCEPTED'
+                          : 'READ RAIDER AGREEMENT',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          _AgreementTile(
-            title: 'Community Code',
-            description:
-                'I will use accurate listings, honour agreed trades, report problems honestly, avoid scams, harassment, impersonation, pressure tactics, fake accounts, referral abuse, real-money item sales and account-access requests.',
-            value: traderCode,
-            onChanged: onTraderCodeChanged,
-            onOpen: openTraderCode,
-          ),
-          _AgreementTile(
-            title: 'Terms of Service',
-            description:
-                'I understand this is an unofficial beta companion, features may change, UAG does not escrow or guarantee trades, and account access can be restricted for misuse, safety, payment or legal review.',
-            value: terms,
-            onChanged: onTermsChanged,
-            onOpen: openTerms,
-          ),
-          _AgreementTile(
-            title: 'Privacy & Data',
-            description:
-                'I understand UAG stores account, profile, availability, trading, blueprint, loadout, intel, referral, ads, subscription, telemetry, moderation and safety data to run and improve the hub.',
-            value: dataSecurity,
-            onChanged: onDataChanged,
-            onOpen: openPrivacy,
-          ),
-          _AgreementTile(
-            title: '18+ Age Confirmation',
-            description:
-                'I confirm I am 18 or older and allowed to create a UAG account for trading, messaging, referrals, subscriptions and community features.',
-            value: ageConfirmation,
-            onChanged: onAgeConfirmationChanged,
-            onOpen: openTerms,
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF07111A).withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.neonCyan.withValues(alpha: 0.28),
+              ),
+            ),
+            child: CheckboxListTile(
+              value: ageConfirmation,
+              onChanged: (value) => onAgeConfirmationChanged(value == true),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              activeColor: AppTheme.neonPink,
+              title: const Text('18+ AGE CONFIRMATION'),
+              subtitle: const Text(
+                'I confirm I am 18 years of age or older and eligible to create a UAG account.',
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AgreementTile extends StatelessWidget {
-  const _AgreementTile({
-    required this.title,
-    required this.description,
-    required this.value,
-    required this.onChanged,
-    required this.onOpen,
-  });
-  final String title;
-  final String description;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.black26,
-      child: CheckboxListTile(
-        value: value,
-        onChanged: (next) => onChanged(next ?? false),
-        title: Text(title),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            description,
-            style: const TextStyle(color: Colors.white60, height: 1.28),
-          ),
-        ),
-        secondary: IconButton(
-          tooltip: 'Read document',
-          onPressed: onOpen,
-          icon: const Icon(Icons.open_in_new_rounded),
-        ),
       ),
     );
   }
@@ -1308,7 +1347,7 @@ class _PreviewBanner extends StatelessWidget {
         borderColor: AppTheme.neonPink,
       ),
       child: const Text(
-        'ADMIN PREVIEW Ã¢â‚¬â€ no live onboarding data will be changed.',
+        'ADMIN PREVIEW - no live onboarding data will be changed.',
         textAlign: TextAlign.center,
         style: TextStyle(color: AppTheme.neonPink),
       ),

@@ -316,7 +316,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             title: 'Feedback Unavailable',
             accent: ArcUiTokens.danger,
             child: Text(
-              'Could not load feedback: ${snapshot.error}',
+              'Could not load feedback right now.',
               style: ArcUiTokens.body(fontSize: 13),
             ),
           );

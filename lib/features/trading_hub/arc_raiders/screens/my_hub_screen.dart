@@ -156,8 +156,9 @@ class _MyHubScreenState extends State<MyHubScreen> {
       builder: (_) => const WallOfLegendsScreen(),
     ),
     _ArcHubFeature(
-      title: 'Referral Tools',
-      subtitle: 'Share your code, track signups and grow your trader network.',
+      title: 'Community Rewards',
+      subtitle:
+          'Referrals, Reward Locker, Community Growth and Creator earnings.',
       icon: Icons.hub_outlined,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
@@ -261,6 +262,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
         return FeatureAccessFlag.smartTradeAssist;
       case 'Subscriptions':
       case 'Plans & Referrals':
+      case 'Community Rewards':
       case 'Referral Tools':
       case 'Refer a Raider':
       case 'Operations':
@@ -422,7 +424,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'ARC systems, trades, hunts and profile actions are ready.',
+          'Next actions, alerts and personal tools are ready.',
           maxLines: compact ? 2 : 1,
           overflow: TextOverflow.ellipsis,
           style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
@@ -686,7 +688,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       _featureByTitle('My Loadout'),
       _featureByTitle('My Intel'),
       _featureByTitle('Profile & Reputation'),
-      _featureByTitle('Referral Tools'),
+      _featureByTitle('Community Rewards'),
       _featureByTitle('Play Like a Pro'),
       _featureByTitle('Operation Rewards'),
     ];
@@ -1017,7 +1019,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
         child: SafeArea(
           child: ArcRaidersPageList(
             maxWidth: 1240,
-            bottomPadding: 14,
+            bottomPadding: 96,
             children: [
               _referenceHeader(),
               const SizedBox(height: 8),
@@ -1341,7 +1343,7 @@ class _ArcHubRealAssetBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = feature.assetName.startsWith('assets/')
         ? feature.assetName
-        : 'assets/images/arc_raiders/hub/${feature.assetName}';
+        : 'assets/arc_raiders/hub/${feature.assetName}';
 
     return Stack(
       fit: StackFit.expand,
@@ -1772,6 +1774,7 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
         return FeatureAccessFlag.smartTradeAssist;
       case 'Subscriptions':
       case 'Plans & Referrals':
+      case 'Community Rewards':
       case 'Referral Tools':
       case 'Refer a Raider':
       case 'Operations':
@@ -2492,17 +2495,17 @@ class _ArcHubArtPainter extends CustomPainter {
 
 // ARC HUB WEBP ASSET MANIFEST
 // Drop generated/converted files here:
-// assets/images/arc_raiders/hub/arc_hub_match_a_raider.webp
-// assets/images/arc_raiders/hub/arc_hub_raid_planner.webp
-// assets/images/arc_raiders/hub/arc_hub_tracking.webp
-// assets/images/arc_raiders/hub/arc_hub_hunt_targets.webp
-// assets/images/arc_raiders/hub/arc_hub_trading.webp
-// assets/images/arc_raiders/hub/arc_hub_smart_trade.webp
-// assets/images/arc_raiders/hub/arc_hub_community_intel.webp
-// assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp
-// assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp
-// assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp
-// assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp
+// assets/arc_raiders/hub/arc_hub_match_a_raider.webp
+// assets/arc_raiders/hub/arc_hub_raid_planner.webp
+// assets/arc_raiders/hub/arc_hub_tracking.webp
+// assets/arc_raiders/hub/arc_hub_hunt_targets.webp
+// assets/arc_raiders/hub/arc_hub_trading.webp
+// assets/arc_raiders/hub/arc_hub_smart_trade.webp
+// assets/arc_raiders/hub/arc_hub_community_intel.webp
+// assets/arc_raiders/hub/arc_hub_blueprint_grid.webp
+// assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp
+// assets/arc_raiders/hub/arc_hub_bench_tracker.webp
+// assets/arc_raiders/hub/arc_hub_quest_tracker.webp
 enum _ArcHubArtKind {
   match,
   blueprints,

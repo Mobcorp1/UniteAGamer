@@ -1367,7 +1367,7 @@ class TradingRepository {
               '${effectiveScheduled.minute.toString().padLeft(2, '0')}';
 
     return 'ARC Raiders trade invite\n\n'
-        'Traders: ${session.traderOneName} â†” ${session.traderTwoName}\n'
+        'Traders: ${session.traderOneName} \u{2194} ${session.traderTwoName}\n'
         'When: $when (${session.timezone})\n'
         'Protocol: ${session.protocolLabel}\n'
         'Session ID: ${session.id}\n'

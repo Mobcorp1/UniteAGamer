@@ -995,8 +995,8 @@ class UagVoiceArcAssistantService extends ChangeNotifier {
         .watchMyEntitlement()
         .listen(
           (entitlement) {
-            _tier = entitlement.tier;
-            _adminBypass = entitlement.hasAdminBypass;
+            _tier = entitlement.effectiveTier;
+            _adminBypass = entitlement.hasCommercialAdminBypass;
 
             final selected = _selectedVoice;
             if (selected != null &&

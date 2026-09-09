@@ -98,11 +98,11 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
           backgroundColor: Colors.red.shade800,
         ),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Blueprint update failed: $error'),
+          content: Text('Blueprint update failed. Try again.'),
           backgroundColor: Colors.red.shade800,
         ),
       );

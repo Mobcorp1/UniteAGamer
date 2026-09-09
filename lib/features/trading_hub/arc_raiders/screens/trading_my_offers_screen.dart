@@ -136,9 +136,9 @@ class TradingMyOffersScreen extends StatelessWidget {
           builder: (_) => TradingMakeOfferScreen(listing: listing),
         ),
       );
-    } catch (error) {
+    } catch (_) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not open renegotiation: $error')),
+        SnackBar(content: Text('Could not open renegotiation. Try again.')),
       );
     }
   }
@@ -281,10 +281,12 @@ class TradingMyOffersScreen extends StatelessWidget {
                             messenger.showSnackBar(
                               const SnackBar(content: Text('Offer cancelled.')),
                             );
-                          } catch (error) {
+                          } catch (_) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Could not cancel offer: $error'),
+                                content: Text(
+                                  'Could not cancel offer. Try again.',
+                                ),
                               ),
                             );
                           }
@@ -310,11 +312,11 @@ class TradingMyOffersScreen extends StatelessWidget {
                             messenger.showSnackBar(
                               const SnackBar(content: Text('Offer declined.')),
                             );
-                          } catch (error) {
+                          } catch (_) {
                             messenger.showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Could not decline offer: $error',
+                                  'Could not decline offer. Try again.',
                                 ),
                               ),
                             );
@@ -345,10 +347,12 @@ class TradingMyOffersScreen extends StatelessWidget {
                                 ),
                               ),
                             );
-                          } catch (error) {
+                          } catch (_) {
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Could not accept offer: $error'),
+                                content: Text(
+                                  'Could not accept offer. Try again.',
+                                ),
                               ),
                             );
                           }
@@ -381,11 +385,11 @@ class TradingMyOffersScreen extends StatelessWidget {
                               content: Text('Pending offers declined.'),
                             ),
                           );
-                        } catch (error) {
+                        } catch (_) {
                           messenger.showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Could not decline all offers: $error',
+                                'Could not decline all offers. Try again.',
                               ),
                             ),
                           );

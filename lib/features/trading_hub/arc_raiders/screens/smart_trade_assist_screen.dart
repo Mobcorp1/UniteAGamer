@@ -232,8 +232,7 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
         acceptsSeeds: false,
         acceptsResources: !wantsBlueprint,
         seriousOffersOnly: true,
-        notes:
-            'Created from Smart Trade Assist. Duplicate available: $duplicateLabel. Wanted: $targetLabel.',
+        notes: 'Smart Trade draft: offering $duplicateLabel for $targetLabel.',
         expiryDuration: const Duration(days: 3),
         offeredBlueprintNames: [duplicateLabel],
         wantedBlueprintNames: wantsBlueprint ? [targetLabel] : const [],
@@ -258,12 +257,12 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
       });
 
       _showSnack('Listing created: $duplicateLabel for $targetLabel');
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
 
-      _showSnack('Could not create listing: $error');
+      _showSnack('Could not create listing. Try again.');
     } finally {
       if (mounted) {
         setState(() => _busyKeys.remove(key));
@@ -339,12 +338,12 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
       });
 
       _showSnack('Offer sent for $duplicateLabel.');
-    } catch (error) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
 
-      _showSnack('Could not send offer: $error');
+      _showSnack('Could not send offer. Try again.');
     } finally {
       if (mounted) {
         setState(() => _busyKeys.remove(key));
@@ -442,7 +441,7 @@ class _SmartTradeAssistScreenState extends State<SmartTradeAssistScreen> {
                 );
 
                 return ListView(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 112),
                   children: [
                     const _SmartTradeVisualLead(),
                     const SizedBox(height: AppTheme.spaceM),
@@ -519,8 +518,7 @@ class _SmartTradeVisualLead extends StatelessWidget {
         'Match intelligence, duplicate value and next-best trade actions.',
     accent: ArcUiTokens.secondaryAccent,
     child: ArcArtworkPlaceholder(
-      assetPath:
-          'assets/images/arc_raiders/trading/smart_trade_assist_hero.webp',
+      assetPath: 'assets/arc_raiders/hub/arc_hub_smart_trade.webp',
       height: 104,
       accent: ArcUiTokens.secondaryAccent,
     ),
@@ -543,7 +541,7 @@ class _IntroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElectricChargeBorder(
-      active: true,
+      active: onCreateAll != null,
       radius: 18,
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -552,26 +550,26 @@ class _IntroCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Inventory Value Engine',
+              'TRADE ENGINE',
               style: AppTheme.neonTextStyle(
-                fontSize: 24,
+                fontSize: 18,
                 color: AppTheme.neonPink,
                 isBold: true,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              'Live scan of your Blueprint Tracker dupes, Raid Planner active hunt targets, missing blueprints, and active marketplace listings.',
+              'Duplicate value, wanted targets and live market matches.',
               style: AppTheme.bodyTextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: AppTheme.tradingMutedText,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               '$duplicateTotal duplicate blueprints / $targetCount priority targets / $opportunityCount opportunities',
               style: AppTheme.bodyTextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: AppTheme.neonCyan,
                 isBold: true,
               ),
@@ -605,9 +603,9 @@ class _EmptyStateCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: AppTheme.tradingCardDecoration(radius: 16),
       child: Text(
-        'No smart trade opportunities yet. Mark duplicate blueprints in the tracker and set your 5 active hunt targets in Raid Planner.',
+        'No smart trades yet. Mark duplicates and set active hunt targets.',
         style: AppTheme.bodyTextStyle(
-          fontSize: 14,
+          fontSize: 12,
           color: AppTheme.tradingMutedText,
         ),
       ),
@@ -702,7 +700,7 @@ class _TradeIntelligenceSummaryCard extends StatelessWidget {
           const SizedBox(height: AppTheme.spaceM),
           if (topSuggestion == null)
             Text(
-              'No scored live match yet. Add duplicate blueprints and wanted targets to unlock stronger suggestions.',
+              'No scored live match yet.',
               style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
             )
           else ...[
@@ -721,6 +719,8 @@ class _TradeIntelligenceSummaryCard extends StatelessWidget {
             const SizedBox(height: AppTheme.spaceS),
             Text(
               topSuggestion.reason,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
             ),
           ],
@@ -830,6 +830,7 @@ class _OpportunityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasDirectMatch = directMatches.isNotEmpty;
+    final accent = hasDirectMatch ? AppTheme.neonCyan : AppTheme.neonPink;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -837,34 +838,66 @@ class _OpportunityCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.88),
         border: Border.all(
-          color: hasDirectMatch
-              ? AppTheme.neonCyan.withValues(alpha: 0.62)
-              : AppTheme.neonPink.withValues(alpha: 0.34),
+          color: accent.withValues(alpha: hasDirectMatch ? 0.62 : 0.34),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$duplicateLabel -> $targetLabel',
-            style: AppTheme.neonTextStyle(
-              fontSize: 17,
-              color: AppTheme.neonCyan,
-              isBold: true,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _tierLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.neonTextStyle(
+                    fontSize: 15,
+                    color: accent,
+                    isBold: true,
+                  ),
+                ),
+              ),
+              _TradeSignalPill(
+                label: hasDirectMatch ? 'MATCH' : 'DRAFT',
+                color: accent,
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            _tierLabel,
-            style: AppTheme.bodyTextStyle(
-              fontSize: 12,
-              color: AppTheme.neonPink,
-              isBold: true,
-            ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final give = _TradeSidePanel(
+                label: 'YOU GIVE',
+                value: duplicateLabel,
+                color: AppTheme.neonPink,
+                icon: Icons.upload_rounded,
+              );
+              final receive = _TradeSidePanel(
+                label: 'YOU RECEIVE',
+                value: targetLabel,
+                color: AppTheme.neonCyan,
+                icon: Icons.download_rounded,
+              );
+              if (constraints.maxWidth < 520) {
+                return Column(
+                  children: [give, const SizedBox(height: 8), receive],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: give),
+                  const SizedBox(width: 8),
+                  Expanded(child: receive),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Text(
             opportunity.reason,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: AppTheme.bodyTextStyle(
               fontSize: 12,
               color: AppTheme.tradingMutedText,
@@ -872,13 +905,15 @@ class _OpportunityCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Available dupes: ${opportunity.duplicateQuantityAvailable} / Priority rank: ${opportunity.priorityRank}',
+            '${opportunity.duplicateQuantityAvailable} dupes available / Priority ${opportunity.priorityRank}',
             style: AppTheme.bodyTextStyle(fontSize: 12, color: Colors.white70),
           ),
           if (hasDirectMatch) ...[
             const SizedBox(height: 8),
             Text(
-              'Direct match found: ${directMatches.first.traderDisplayLine}',
+              'Match: ${directMatches.first.traderDisplayLine}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTheme.bodyTextStyle(
                 fontSize: 12,
                 color: AppTheme.neonCyan,
@@ -898,7 +933,7 @@ class _OpportunityCard extends StatelessWidget {
                       ? Icons.check_circle_rounded
                       : Icons.add_business_rounded,
                 ),
-                label: Text(created ? 'Listing created' : 'Create listing'),
+                label: Text(created ? 'Created' : 'Create listing'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.neonPink,
                   foregroundColor: Colors.white,
@@ -910,13 +945,85 @@ class _OpportunityCard extends StatelessWidget {
                   icon: Icon(
                     offerSent ? Icons.check_circle_rounded : Icons.send_rounded,
                   ),
-                  label: Text(offerSent ? 'Offer sent' : 'Send offer'),
+                  label: Text(offerSent ? 'Sent' : 'Send offer'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.neonCyan,
                     side: BorderSide(color: AppTheme.neonCyan),
                   ),
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TradeSignalPill extends StatelessWidget {
+  const _TradeSignalPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: AppTheme.tradingPillDecoration(color: color),
+      child: Text(
+        label,
+        style: AppTheme.bodyTextStyle(fontSize: 11, color: color, isBold: true),
+      ),
+    );
+  }
+}
+
+class _TradeSidePanel extends StatelessWidget {
+  const _TradeSidePanel({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 62),
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: color,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.22,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: ArcUiTokens.label(color: color).copyWith(fontSize: 10),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(fontSize: 13),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -7,6 +7,8 @@ class ArcTraderProfile {
   final String uid;
   final String uagId;
   final String uagName;
+  final String avatarId;
+  final String avatarType;
   final String embarkId;
   final String region;
   final String serverPreference;
@@ -39,6 +41,8 @@ class ArcTraderProfile {
     required this.uid,
     required this.uagId,
     required this.uagName,
+    this.avatarId = 'shadow',
+    this.avatarType = 'preset',
     required this.embarkId,
     required this.region,
     required this.serverPreference,
@@ -73,6 +77,8 @@ class ArcTraderProfile {
       uid: uid,
       uagId: '',
       uagName: '',
+      avatarId: 'shadow',
+      avatarType: 'preset',
       embarkId: '',
       region: 'UK',
       serverPreference: 'Automatic',
@@ -157,6 +163,8 @@ class ArcTraderProfile {
       'uid': uid,
       'uagId': uagId,
       'uagName': uagName,
+      'avatarId': avatarId,
+      'avatarType': avatarType,
       'embarkId': embarkId,
       'region': region,
       'serverPreference': serverPreference,
@@ -215,6 +223,8 @@ class ArcTraderProfile {
       'uagId': uagId.trim(),
       'uagName': publicName,
       'displayName': publicName,
+      'avatarId': avatarId,
+      'avatarType': avatarType,
       'region': region.trim(),
       'platform': platform.trim(),
       'serverPreference': serverPreference.trim().isEmpty
@@ -258,6 +268,8 @@ class ArcTraderProfile {
       uid: _string(map['uid']),
       uagId: _string(map['uagId']),
       uagName: _string(map['uagName']),
+      avatarId: _string(map['avatarId'], 'shadow'),
+      avatarType: _string(map['avatarType'], 'preset'),
       embarkId: _string(map['embarkId']),
       region: _string(map['region'], 'UK'),
       serverPreference: _string(map['serverPreference'], 'Automatic'),
@@ -304,6 +316,8 @@ class ArcTraderProfile {
     String? uid,
     String? uagId,
     String? uagName,
+    String? avatarId,
+    String? avatarType,
     String? embarkId,
     String? region,
     String? serverPreference,
@@ -336,6 +350,8 @@ class ArcTraderProfile {
       uid: uid ?? this.uid,
       uagId: uagId ?? this.uagId,
       uagName: uagName ?? this.uagName,
+      avatarId: avatarId ?? this.avatarId,
+      avatarType: avatarType ?? this.avatarType,
       embarkId: embarkId ?? this.embarkId,
       region: region ?? this.region,
       serverPreference: serverPreference ?? this.serverPreference,

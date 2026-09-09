@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_trade_sessions_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
@@ -279,6 +280,9 @@ class _TradingNotificationsScreenState
               ],
             )
           : null,
+      bottomNavigationBar: widget.showAppBar
+          ? const ArcCompanionBottomDock(activeLabel: 'messages')
+          : null,
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: SafeArea(
@@ -291,7 +295,7 @@ class _TradingNotificationsScreenState
                   if (snapshot.hasError) {
                     return Center(
                       child: Text(
-                        'Could not load messages.\n${snapshot.error}',
+                        'Could not load messages right now.',
                         textAlign: TextAlign.center,
                         style: AppTheme.bodyTextStyle(
                           fontSize: 15,

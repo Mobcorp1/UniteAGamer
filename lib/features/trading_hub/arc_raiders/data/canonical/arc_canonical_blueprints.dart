@@ -23,7 +23,7 @@ class ArcCanonicalBlueprints {
       name: 'Extended Barrel II',
       aliases: ['extended barrel 2', 'barrel 2'],
       searchTerms: ['extended', 'barrel', 'weapon'],
-      imagePath: 'assets/images/arc_raiders/blueprints/extended-barrel-ii.webp',
+      imagePath: 'assets/arc_raiders/blueprints/extended-barrel-ii.webp',
       category: 'weapon_mod',
     ),
 
@@ -32,7 +32,7 @@ class ArcCanonicalBlueprints {
       name: 'Rascal',
       aliases: ['rascal weapon'],
       searchTerms: ['rascal', 'smg'],
-      imagePath: 'assets/images/arc_raiders/blueprints/rascal.webp',
+      imagePath: 'assets/arc_raiders/blueprints/rascal.webp',
       category: 'weapon',
     ),
   ];

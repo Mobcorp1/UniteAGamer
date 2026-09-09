@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'uag_ad_policy.dart';
+import 'uag_creator_temporary_entitlement.dart';
+import 'uag_entitlement_test_mode.dart';
 import 'uag_match_intelligence_copy.dart';
 import 'uag_plan_limits.dart';
+import 'uag_premium_pass_entitlement.dart';
 import 'uag_subscription_tier.dart';
 import 'uag_supporter_entitlement.dart';
 
@@ -20,7 +23,10 @@ class UagUserEntitlement {
     required this.referralDiscountPercent,
     required this.referralCommissionPercent,
     this.supporter = UagSupporterEntitlement.none,
+    this.premiumPass = UagPremiumPassEntitlement.none,
+    this.creatorRewardEntitlements = const <UagCreatorTemporaryEntitlement>[],
     this.currentPeriodEnd,
+    this.testMode = UagEntitlementTestMode.real,
   });
 
   final String uid;
@@ -35,37 +41,70 @@ class UagUserEntitlement {
   final int referralDiscountPercent;
   final int referralCommissionPercent;
   final UagSupporterEntitlement supporter;
+  final UagPremiumPassEntitlement premiumPass;
+  final List<UagCreatorTemporaryEntitlement> creatorRewardEntitlements;
   final DateTime? currentPeriodEnd;
+  final UagEntitlementTestMode testMode;
 
   bool get hasAdminBypass => isAdmin || isDev;
-  bool get isPaid => hasAdminBypass || tier.isPaid;
-  bool get isPremiumLike =>
-      hasAdminBypass || tier == UagSubscriptionTier.premium;
+
+  /// True when an admin/dev is intentionally simulating a customer tier.
+  /// Security identity remains unchanged; only commercial behaviour is
+  /// overridden.
+  bool get hasTestOverride =>
+      hasAdminBypass && testMode != UagEntitlementTestMode.real;
+
+  /// Admin/dev bypass is commercial only while REAL mode is active.
+  bool get hasCommercialAdminBypass => hasAdminBypass && !hasTestOverride;
+
+  bool get hasActivePremiumPass => premiumPass.active;
+  bool get hasActiveCreatorReward =>
+      creatorRewardEntitlements.any((grant) => grant.active);
+  DateTime? get nextCreatorRewardExpiryAt =>
+      nextCreatorRewardExpiry(creatorRewardEntitlements);
+
+  /// Canonical tier for every commercial decision in the app.
+  ///
+  /// Firestore/admin security must continue to use [isAdmin]/[isDev]. Ads,
+  /// limits, paid gates and premium-pass behaviour must use this value.
+  UagSubscriptionTier get effectiveTier {
+    if (hasTestOverride) {
+      return switch (testMode) {
+        UagEntitlementTestMode.free => UagSubscriptionTier.free,
+        UagEntitlementTestMode.essential => UagSubscriptionTier.essential,
+        UagEntitlementTestMode.premium ||
+        UagEntitlementTestMode.pass24Hour ||
+        UagEntitlementTestMode.pass7Day => UagSubscriptionTier.premium,
+        UagEntitlementTestMode.real => tier,
+      };
+    }
+
+    if (hasCommercialAdminBypass || hasActivePremiumPass) {
+      return UagSubscriptionTier.premium;
+    }
+    return highestCreatorRewardTier(creatorRewardEntitlements, tier);
+  }
+
+  bool get isPaid => effectiveTier.isPaid;
+  bool get isPremiumLike => effectiveTier == UagSubscriptionTier.premium;
   bool get hasSupporter => supporter.active;
   bool get hasFoundingSupporter =>
       supporter.active && supporter.foundingSupporter;
   int get futureSupporterDiscountPercent =>
       supporter.hasFutureDiscount ? supporter.discountPercent : 0;
 
-  UagPlanLimits get limits =>
-      hasAdminBypass ? UagPlanLimits.premium : UagPlanLimits.forTier(tier);
-
-  UagAdPolicy get adPolicy =>
-      hasAdminBypass ? UagAdPolicy.premium : UagAdPolicy.forTier(tier);
+  UagPlanLimits get limits => UagPlanLimits.forTier(effectiveTier);
+  UagAdPolicy get adPolicy => UagAdPolicy.forTier(effectiveTier);
   UagMatchIntelligenceTierCopy get matchIntelligence =>
-      UagMatchIntelligenceCopy.forTier(
-        hasAdminBypass ? UagSubscriptionTier.premium : tier,
-      );
+      UagMatchIntelligenceCopy.forTier(effectiveTier);
 
   bool get canShowAds => adPolicy.hasAnyAds;
-  bool get canUseTraderProAnalytics =>
-      hasAdminBypass || limits.hasTraderProAnalytics;
+  bool get canUseTraderProAnalytics => limits.hasTraderProAnalytics;
   bool get canUseAdvancedVoicePersonalities =>
-      hasAdminBypass || limits.hasAdvancedVoicePersonalities;
-  bool get canUseSmartAlerts => hasAdminBypass || limits.hasSmartAlerts;
-  bool get canUseUnlimitedSessions =>
-      hasAdminBypass || limits.hasUnlimitedSessions;
-  bool get canDisableAds => hasAdminBypass || limits.canDisableAds;
+      limits.hasAdvancedVoicePersonalities;
+  bool get canUseSmartAlerts => limits.hasSmartAlerts;
+  bool get canUseUnlimitedSessions => limits.hasUnlimitedSessions;
+  bool get canDisableAds => limits.canDisableAds;
 
   factory UagUserEntitlement.fromUserDoc({
     required String uid,
@@ -125,10 +164,40 @@ class UagUserEntitlement {
         (monetisation['supporter'] as Map?)?.cast<String, dynamic>() ??
             (data['supporter'] as Map?)?.cast<String, dynamic>(),
       ),
+      premiumPass: UagPremiumPassEntitlement.fromMap(
+        (monetisation['premiumPass'] as Map?)?.cast<String, dynamic>() ??
+            (data['premiumPass'] as Map?)?.cast<String, dynamic>(),
+      ),
+      creatorRewardEntitlements: _parseCreatorRewardEntitlements(
+        data['creatorRewardEntitlements'],
+      ),
       currentPeriodEnd: parseDate(
         data['subscriptionCurrentPeriodEnd'] ??
             monetisation['currentPeriodEnd'],
       ),
+      testMode: UagEntitlementTestMode.fromValue(
+        ((data['entitlementTest'] as Map?)?.cast<String, dynamic>() ??
+                const <String, dynamic>{})['mode']
+            ?.toString(),
+      ),
     );
   }
+}
+
+List<UagCreatorTemporaryEntitlement> _parseCreatorRewardEntitlements(
+  dynamic raw,
+) {
+  if (raw is! Map) return const <UagCreatorTemporaryEntitlement>[];
+  final grants = <UagCreatorTemporaryEntitlement>[];
+  for (final entry in raw.entries) {
+    final value = entry.value;
+    if (value is! Map) continue;
+    grants.add(
+      UagCreatorTemporaryEntitlement.fromMap(
+        entry.key.toString(),
+        Map<String, dynamic>.from(value),
+      ),
+    );
+  }
+  return List<UagCreatorTemporaryEntitlement>.unmodifiable(grants);
 }

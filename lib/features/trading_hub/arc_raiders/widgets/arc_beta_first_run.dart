@@ -469,11 +469,11 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Closed beta tool failed: $error'),
+          content: Text('Closed beta tool failed. Try again.'),
           backgroundColor: AppTheme.tradingDanger.withValues(alpha: 0.96),
           behavior: SnackBarBehavior.floating,
         ),
@@ -515,11 +515,11 @@ class _ArcBetaDeveloperToolsCardState extends State<ArcBetaDeveloperToolsCard> {
           ),
         ),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Onboarding preview failed: $error'),
+          content: Text('Onboarding preview failed. Try again.'),
           backgroundColor: AppTheme.tradingDanger.withValues(alpha: 0.96),
           behavior: SnackBarBehavior.floating,
         ),

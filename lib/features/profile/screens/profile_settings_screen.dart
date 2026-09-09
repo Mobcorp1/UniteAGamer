@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 
 import 'package:uag_arc_raiders_hub/features/notifications/widgets/uag_notification_preferences_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_personalisation_preferences_panel.dart';
@@ -144,14 +145,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        title: Text(
-          'Profile Settings',
-          style: ArcUiTokens.pageTitle(color: ArcUiTokens.primaryAccent),
-        ),
+      appBar: const UagAppBar(
+        title: 'Profile Settings',
+        subtitle: 'Region, crossplay, personalisation and notifications.',
+        showLogout: false,
       ),
       body: ArcTacticalPageList(
         width: ArcPageWidth.standard,
@@ -161,7 +158,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           ArcTacticalPanel(
             icon: Icons.manage_accounts_outlined,
             title: 'COMMAND PROFILE',
-            subtitle: 'Tune your trader preferences before you enter the hub.',
+            subtitle: 'Core settings that shape your UAG experience.',
             accent: ArcUiTokens.primaryAccent,
             child: Wrap(
               spacing: 10,
@@ -186,7 +183,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 ),
                 const SizedBox(height: ArcUiTokens.gapS),
                 Text(
-                  'Choose the closest server preference for smoother sessions, listings and squad matching.',
+                  'Choose your preferred region for matching and session planning.',
                   style: ArcUiTokens.bodySmall(
                     color: ArcUiTokens.textSecondary,
                   ),
@@ -219,14 +216,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           ),
           const ArcPersonalisationPreferencesPanel(),
           const UagNotificationPreferencesPanel(),
-          const ArcTacticalPanel(
-            icon: Icons.info_outline_rounded,
-            title: 'Profile Controls',
-            subtitle:
-                'More profile controls will unlock as the wider UAG systems go live.',
-            accent: ArcUiTokens.secondaryAccent,
-            child: SizedBox.shrink(),
-          ),
         ],
       ),
     );

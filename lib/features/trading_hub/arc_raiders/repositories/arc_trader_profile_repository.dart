@@ -421,6 +421,8 @@ class ArcTraderProfileRepository {
       uid: uid,
       uagId: uagId,
       uagName: uagName,
+      avatarId: _string(profileData['avatarId'], 'shadow'),
+      avatarType: _string(profileData['avatarType'], 'preset'),
       embarkId: _string(
         profileData['embarkId'],
         _string(traderProfile['embarkId'], _string(basicProfile['embarkId'])),
@@ -524,6 +526,10 @@ class ArcTraderProfileRepository {
       'uid': profile.uid,
       'uagId': profile.uagId.trim(),
       'uagName': profile.uagName.trim(),
+      'avatarId': profile.avatarId.trim().isEmpty
+          ? 'shadow'
+          : profile.avatarId.trim(),
+      'avatarType': 'preset',
       'embarkId': profile.embarkId.trim(),
       'region': profile.region.trim(),
       'serverPreference': profile.serverPreference.trim().isEmpty

@@ -138,7 +138,7 @@ Map<String, dynamic> buildArcOnboardingAccountProfilePayload({
       'embarkId': '',
     },
     'arcOnboarding': <String, dynamic>{
-      'version': 4,
+      'version': 5,
       'accountCreatedDuringOnboarding': true,
       'flow': <String>['account', 'legal', 'primaryGoal', 'blueprintSetup'],
     },
@@ -170,7 +170,7 @@ Map<String, dynamic> buildArcOnboardingCompletionPayload({
         'verifiedAt': FieldValue.serverTimestamp(),
       },
     'arcOnboarding': <String, dynamic>{
-      'version': 4,
+      'version': 5,
       'completedAt': FieldValue.serverTimestamp(),
       'flow': <String>[
         accountCreatedDuringOnboarding ? 'account' : 'identity',

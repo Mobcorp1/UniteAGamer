@@ -25,11 +25,11 @@ class TradingListingDetailScreen extends StatelessWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Collection request sent.')));
-    } catch (e) {
+    } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not send request: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not send request. Try again.')),
+      );
     }
   }
 
@@ -53,11 +53,11 @@ class TradingListingDetailScreen extends StatelessWidget {
           ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not update favourite: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update favourite. Try again.')),
+      );
     }
   }
 
@@ -84,10 +84,10 @@ class TradingListingDetailScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$blueprintName watch is active.')),
       );
-    } catch (error) {
+    } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not watch blueprint: $error')),
+        SnackBar(content: Text('Could not watch blueprint. Try again.')),
       );
     }
   }

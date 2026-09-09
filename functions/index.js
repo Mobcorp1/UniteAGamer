@@ -17,7 +17,7 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'essential',
     billingPeriod: 'monthly',
-    pricePence: 499,
+    pricePence: 799,
     stripePriceEnv: 'STRIPE_PRICE_ESSENTIAL_MONTHLY',
     creatorDiscountPercent: 10,
     creatorCommissionPercent: 10,
@@ -28,7 +28,7 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'essential',
     billingPeriod: 'yearly',
-    pricePence: 4999,
+    pricePence: 7999,
     stripePriceEnv: 'STRIPE_PRICE_ESSENTIAL_YEARLY',
     creatorDiscountPercent: 10,
     creatorCommissionPercent: 10,
@@ -39,7 +39,7 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'premium',
     billingPeriod: 'monthly',
-    pricePence: 799,
+    pricePence: 999,
     stripePriceEnv: 'STRIPE_PRICE_PREMIUM_MONTHLY',
     creatorDiscountPercent: 20,
     creatorCommissionPercent: 20,
@@ -50,7 +50,7 @@ const PLAN_CONFIG = {
     kind: 'core',
     tier: 'premium',
     billingPeriod: 'yearly',
-    pricePence: 7999,
+    pricePence: 9999,
     stripePriceEnv: 'STRIPE_PRICE_PREMIUM_YEARLY',
     creatorDiscountPercent: 20,
     creatorCommissionPercent: 20,
@@ -91,11 +91,53 @@ function getPlan(planId) {
 async function resolveReferral(referralCode) {
   const code = String(referralCode || '').trim().toUpperCase();
   if (!code) return null;
-  const snap = await db.collection('referral_codes').doc(code).get();
-  if (!snap.exists) return null;
-  const data = snap.data() || {};
-  if (data.active === false || !data.ownerUid) return null;
-  return { code, ownerUid: data.ownerUid };
+
+  const creatorCodeSnap = await db
+    .collection('uag_creator_campaign_code_requests')
+    .doc(code)
+    .get();
+
+  if (!creatorCodeSnap.exists) return null;
+
+  const creatorCode = creatorCodeSnap.data() || {};
+  if (
+    creatorCode.status !== 'approved' ||
+    !creatorCode.uid ||
+    String(creatorCode.code || '').trim().toUpperCase() !== code
+  ) {
+    return null;
+  }
+
+  const requestedDiscountPercent = Number(
+    creatorCode.subscriberDiscountPercent || 0,
+  );
+  const subscriberDiscountPercent =
+    Number.isFinite(requestedDiscountPercent) &&
+    requestedDiscountPercent > 0 &&
+    requestedDiscountPercent <= 50
+      ? requestedDiscountPercent
+      : 0;
+
+  return {
+    code,
+    ownerUid: creatorCode.uid,
+    source: 'uag_creator_programme',
+    subscriberDiscountPercent,
+    subscriberDiscountDuration:
+      creatorCode.subscriberDiscountDuration === 'forever'
+        ? 'forever'
+        : 'once',
+  };
+}
+
+async function approvedCreatorProgrammeApplication(uid) {
+  const snapshot = await db
+    .collection('uag_creator_applications')
+    .where('uid', '==', uid)
+    .where('status', '==', 'approved')
+    .limit(1)
+    .get();
+  return snapshot.empty ? null : snapshot.docs[0].data();
 }
 
 exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, async (req, res) => {
@@ -138,12 +180,50 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
 
     const referral = await resolveReferral(referralCode);
     const discounts = [];
-    if (referral && referral.ownerUid !== uid && plan.creatorDiscountPercent > 0) {
+    let creatorBenefitApplied = false;
+
+    // Approved active Creator Programme members can buy Premium monthly at the
+    // Essential monthly price: £9.99 - £2.00 = £7.99.
+    // This uses the real configured Premium Stripe Price ID; no invented Price
+    // ID or parallel product is required.
+    if (planId === 'premium_monthly') {
+      const creatorApplication = await approvedCreatorProgrammeApplication(uid);
+      if (creatorApplication) {
+        const creatorBenefitCoupon = await stripe.coupons.create({
+          amount_off: 200,
+          currency: 'gbp',
+          duration: 'forever',
+          name: 'UAG Approved Creator Premium Benefit',
+          metadata: {
+            uid,
+            benefit: 'approved_creator_premium_at_essential_price',
+            planId,
+          },
+        });
+        discounts.push({ coupon: creatorBenefitCoupon.id });
+        creatorBenefitApplied = true;
+      }
+    }
+
+    // Followers do not receive an automatic permanent discount simply for
+    // using a Creator code. A discount exists only when an approved Creator
+    // campaign code explicitly carries an admin-configured percentage.
+    if (
+      !creatorBenefitApplied &&
+      referral &&
+      referral.ownerUid !== uid &&
+      referral.subscriberDiscountPercent > 0
+    ) {
       const coupon = await stripe.coupons.create({
-        percent_off: plan.creatorDiscountPercent,
-        duration: 'forever',
-        name: `UAG ${plan.creatorDiscountPercent}% Creator Discount ${referral.code}`,
-        metadata: { referralCode: referral.code, ownerUid: referral.ownerUid, planId },
+        percent_off: referral.subscriberDiscountPercent,
+        duration: referral.subscriberDiscountDuration,
+        name: `UAG Creator Campaign ${referral.code}`,
+        metadata: {
+          referralCode: referral.code,
+          ownerUid: referral.ownerUid,
+          planId,
+          source: 'uag_creator_programme',
+        },
       });
       discounts.push({ coupon: coupon.id });
     }
@@ -163,7 +243,8 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
         tier: plan.tier,
         billingPeriod: plan.billingPeriod,
         referralCode: referral?.code || '',
-        referralOwnerUid: referral?.ownerUid || '',
+        referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : '',
+        creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
       },
       subscription_data: {
         metadata: {
@@ -172,7 +253,8 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
           tier: plan.tier,
           billingPeriod: plan.billingPeriod,
           referralCode: referral?.code || '',
-          referralOwnerUid: referral?.ownerUid || '',
+          referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : '',
+          creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
         },
       },
     });
@@ -184,7 +266,8 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       tier: plan.tier,
       billingPeriod: plan.billingPeriod,
       referralCode: referral?.code || null,
-      referralOwnerUid: referral?.ownerUid || null,
+      referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : null,
+      creatorBenefitApplied,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       status: session.status || 'created',
     });
@@ -192,7 +275,7 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
     res.status(200).json({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message || 'Checkout failed' });
+    res.status(500).json({ error: 'Unable to start checkout right now. Please try again.' });
   }
 });
 
@@ -218,7 +301,7 @@ exports.createUagCustomerPortalSession = onRequest({ secrets: [stripeSecretKey] 
     res.status(200).json({ portalUrl: session.url });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message || 'Customer portal failed' });
+    res.status(500).json({ error: 'Unable to open subscription management right now. Please try again.' });
   }
 });
 
@@ -245,6 +328,14 @@ exports.uagStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookS
     }
     if (event.type === 'invoice.paid') {
       await handleInvoicePaid(event.data.object);
+    }
+    if (event.type === 'charge.refunded') {
+      await handleChargeReversal(event.data.object, 'refund');
+    }
+    if (event.type === 'charge.dispute.created') {
+      const dispute = event.data.object;
+      const charge = dispute.charge ? await stripe.charges.retrieve(dispute.charge) : null;
+      if (charge) await handleChargeReversal(charge, 'chargeback');
     }
     res.status(200).json({ received: true });
   } catch (error) {
@@ -287,6 +378,18 @@ async function handleSubscriptionUpdated(subscription) {
   const uid = subscription.metadata?.uid;
   if (!uid) return;
   const plan = getPlan(subscription.metadata?.planId);
+  const referralOwnerUid = normalizeString(subscription.metadata?.referralOwnerUid);
+
+  if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
+    await upsertCreatorReferredSubscription({
+      subscription,
+      referredUid: uid,
+      creatorUid: referralOwnerUid,
+      plan,
+      active: subscription.status === 'active' || subscription.status === 'trialing',
+    });
+  }
+
   if (plan.kind === 'supporter') {
     await writeSupporterEntitlement({
       uid,
@@ -316,6 +419,16 @@ async function handleSubscriptionDeleted(subscription) {
   const uid = subscription.metadata?.uid;
   if (!uid) return;
   const plan = getPlan(subscription.metadata?.planId);
+  const referralOwnerUid = normalizeString(subscription.metadata?.referralOwnerUid);
+
+  if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
+    await beginCreatorSubscriptionGrace({
+      subscriptionId: subscription.id,
+      creatorUid: referralOwnerUid,
+      referredUid: uid,
+    });
+  }
+
   if (plan.kind === 'supporter') {
     await writeSupporterEntitlement({
       uid,
@@ -395,7 +508,28 @@ async function handleInvoicePaid(invoice) {
   const stripeFeePence = estimateStripeFeePence(grossPence);
   const referralOwnerUid = subscription.metadata?.referralOwnerUid || '';
   const referralCode = subscription.metadata?.referralCode || '';
-  const referralCommissionPence = referralOwnerUid ? Math.floor(grossPence * (plan.creatorCommissionPercent / 100)) : 0;
+  const eligibleNetAmountPence = eligibleNetSubscriptionRevenuePence(
+    invoice,
+    grossPence,
+    stripeFeePence,
+  );
+  const creatorCommissionRatePercent = referralOwnerUid
+    ? await authoritativeCreatorCommissionRate(referralOwnerUid)
+    : 0;
+  const referralCommissionPence = referralOwnerUid
+    ? Math.round(eligibleNetAmountPence * (creatorCommissionRatePercent / 100))
+    : 0;
+
+  if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
+    await upsertCreatorReferredSubscription({
+      subscription,
+      referredUid: uid,
+      creatorUid: referralOwnerUid,
+      plan,
+      active: subscription.status === 'active' || subscription.status === 'trialing',
+    });
+  }
+
   const netBeforeCharity = Math.max(0, grossPence - stripeFeePence - referralCommissionPence);
   const charityPence = Math.floor(netBeforeCharity * (plan.charityProfitPercent / 100));
   const netPlatformProfitPence = Math.max(0, netBeforeCharity - charityPence);
@@ -421,6 +555,9 @@ async function handleInvoicePaid(invoice) {
       referralCode: referralCode || null,
       stripeInvoiceId: invoice.id,
       stripeSubscriptionId: subscriptionId,
+      stripePaymentIntentId: normalizeString(invoice.payment_intent) || null,
+      eligibleNetAmountPence,
+      creatorCommissionRatePercent,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -463,10 +600,17 @@ async function handleInvoicePaid(invoice) {
         discountPence: invoice.total_discount_amounts && invoice.total_discount_amounts.length
           ? invoice.total_discount_amounts.reduce((total, discount) => total + (discount.amount || 0), 0)
           : 0,
-        netEligibleAmountPence: grossPence,
-        commissionRatePercent: plan.creatorCommissionPercent,
-        reason: 'Stripe invoice paid with creator referral attribution.',
+        netEligibleAmountPence: eligibleNetAmountPence,
+        eligibleNetAmountPence,
+        commissionRatePercent: creatorCommissionRatePercent,
+        creatorCommissionRatePercent,
+        commissionPence: referralCommissionPence,
+        eventType: 'subscriptionStarted',
+        lifecycleStatus: 'pendingValidation',
+        reason: 'Stripe invoice paid with Creator Programme attribution.',
+        stripePaymentIntentId: normalizeString(invoice.payment_intent) || null,
         qualificationDate: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        payableAtIso: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
@@ -494,6 +638,828 @@ async function handleInvoicePaid(invoice) {
   });
 }
 
+
+function creatorBaseCommissionRate(points) {
+  const value = Number(points || 0);
+  if (value >= 100) return 20;
+  if (value >= 60) return 17.5;
+  if (value >= 40) return 15;
+  if (value >= 25) return 12.5;
+  if (value >= 15) return 10;
+  if (value >= 8) return 7.5;
+  if (value >= 1) return 5;
+  return 0;
+}
+
+function communityCommissionUplift(qualifiedActiveUsers) {
+  const users = Number(qualifiedActiveUsers || 0);
+  if (users >= 250000) return 2.5;
+  if (users >= 100000) return 2.0;
+  if (users >= 50000) return 1.5;
+  if (users >= 25000) return 1.0;
+  if (users >= 10000) return 0.5;
+  return 0;
+}
+
+async function authoritativeCreatorCommissionRate(creatorUid) {
+  if (!creatorUid) return 0;
+  const [creatorSnap, growthSnap] = await Promise.all([
+    db.collection('uag_creator_dashboard_aggregates').doc(creatorUid).get(),
+    db.collection('app_config').doc('community_growth').get(),
+  ]);
+  const creator = creatorSnap.data() || {};
+  const growth = growthSnap.data() || {};
+  const points = Number(creator.creatorPoints ?? creator.points ?? 0);
+  const qualifiedActiveUsers = Number(growth.qualifiedActiveUsers || 0);
+  return creatorBaseCommissionRate(points) +
+    communityCommissionUplift(qualifiedActiveUsers);
+}
+
+function eligibleNetSubscriptionRevenuePence(invoice, grossPence, stripeFeePence) {
+  // Stripe's current Invoice object exposes total_excluding_tax / total_taxes.
+  // Keep the legacy total_tax_amounts fallback for older webhook fixtures.
+  let netBeforeProcessingFee = Number(invoice.total_excluding_tax);
+  if (!Number.isFinite(netBeforeProcessingFee)) {
+    const currentTaxes = Array.isArray(invoice.total_taxes)
+      ? invoice.total_taxes.reduce((sum, item) => sum + Number(item.amount || 0), 0)
+      : 0;
+    const legacyTaxes = Array.isArray(invoice.total_tax_amounts)
+      ? invoice.total_tax_amounts.reduce((sum, item) => sum + Number(item.amount || 0), 0)
+      : 0;
+    netBeforeProcessingFee = Math.max(
+      0,
+      grossPence - Math.max(currentTaxes, legacyTaxes),
+    );
+  }
+  return Math.max(0, Math.round(netBeforeProcessingFee) - stripeFeePence);
+}
+
+function rewardDurationDays(type) {
+  if (type === 'premium30Days') return 30;
+  if (type === 'premium365Days') return 365;
+  return 7;
+}
+
+function activeTemporaryPremium(userData, nowMillis) {
+  const grants = userData.creatorRewardEntitlements || {};
+  return Object.values(grants).some((grant) => {
+    if (!grant || String(grant.tier || '').toLowerCase() !== 'premium') return false;
+    const expiry = grant.expiresAt?.toMillis ? grant.expiresAt.toMillis() : Date.parse(grant.expiresAt || '');
+    return Number.isFinite(expiry) && expiry > nowMillis;
+  });
+}
+
+const CREATOR_CANCELLATION_GRACE_DAYS = 30;
+const COMMUNITY_REFERRAL_VALIDATION_DAYS = 30;
+
+function creatorPointsForTier(tier) {
+  const normalized = normalizeString(tier).toLowerCase();
+  if (normalized === 'premium') return 1.5;
+  if (normalized === 'essential') return 1;
+  return 0;
+}
+
+async function recomputeCreatorCommercialAggregate(creatorUid) {
+  if (!creatorUid) return;
+
+  const [subscriptions, ledger] = await Promise.all([
+    db.collection('uag_creator_referred_subscriptions')
+      .where('creatorUid', '==', creatorUid)
+      .get(),
+    db.collection('uag_creator_commission_ledgers')
+      .doc(creatorUid)
+      .collection('entries')
+      .get(),
+  ]);
+
+  const nowMillis = Date.now();
+  let essentialActive = 0;
+  let premiumActive = 0;
+  let creatorPoints = 0;
+  let pendingCommissionPence = 0;
+  let approvedCommissionPence = 0;
+  let paidCommissionPence = 0;
+  let reversedCommissionPence = 0;
+  let paidConversions = 0;
+  let cancelledSubscriptions = 0;
+
+  for (const doc of subscriptions.docs) {
+    const row = doc.data() || {};
+    const graceUntilMillis = row.graceUntil?.toMillis
+      ? row.graceUntil.toMillis()
+      : 0;
+    const qualifiesForCreatorLevel =
+      row.active === true ||
+      (row.inCancellationGrace === true && graceUntilMillis > nowMillis);
+    if (!qualifiesForCreatorLevel) continue;
+
+    const tier = normalizeString(row.tier).toLowerCase();
+    if (tier === 'essential') essentialActive += 1;
+    if (tier === 'premium') premiumActive += 1;
+    creatorPoints += creatorPointsForTier(tier);
+  }
+
+  for (const doc of ledger.docs) {
+    const row = doc.data() || {};
+    const amount = Number(row.commissionPence ?? row.amountPence ?? 0);
+    const status = normalizeString(row.lifecycleStatus || row.status);
+
+    if (status === 'pendingValidation' || status === 'qualifying') {
+      pendingCommissionPence += amount;
+    } else if (status === 'payable') {
+      approvedCommissionPence += amount;
+    } else if (status === 'paid') {
+      paidCommissionPence += amount;
+    } else if (status === 'reversed') {
+      reversedCommissionPence += amount;
+    }
+
+    if (row.eventType === 'subscriptionStarted' && status !== 'reversed') {
+      paidConversions += 1;
+    }
+    if (row.eventType === 'cancellation') {
+      cancelledSubscriptions += 1;
+    }
+  }
+
+  await db.collection('uag_creator_dashboard_aggregates').doc(creatorUid).set({
+    uid: creatorUid,
+    essentialActiveSubscribers: essentialActive,
+    premiumActiveSubscribers: premiumActive,
+    activeReferredSubscribers: essentialActive + premiumActive,
+    creatorPoints,
+    points: creatorPoints,
+    pendingCommissionPence,
+    approvedCommissionPence,
+    paidCommissionPence,
+    reversedCommissionPence,
+    paidConversions,
+    cancelledSubscriptions,
+    lastReconciledAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
+async function upsertCreatorReferredSubscription({
+  subscription,
+  referredUid,
+  creatorUid,
+  plan,
+  active,
+}) {
+  const ref = db
+    .collection('uag_creator_referred_subscriptions')
+    .doc(subscription.id);
+
+  await ref.set({
+    subscriptionId: subscription.id,
+    creatorUid,
+    referredUid,
+    tier: plan.tier,
+    billingPeriod: plan.billingPeriod,
+    points: creatorPointsForTier(plan.tier),
+    status: subscription.status,
+    active,
+    inCancellationGrace: false,
+    graceUntil: admin.firestore.FieldValue.delete(),
+    currentPeriodEnd: subscription.current_period_end
+      ? admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000)
+      : null,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  await recomputeCreatorCommercialAggregate(creatorUid);
+}
+
+async function beginCreatorSubscriptionGrace({
+  subscriptionId,
+  creatorUid,
+  referredUid,
+}) {
+  const ref = db
+    .collection('uag_creator_referred_subscriptions')
+    .doc(subscriptionId);
+  const graceUntil = admin.firestore.Timestamp.fromMillis(
+    Date.now() +
+      CREATOR_CANCELLATION_GRACE_DAYS * 24 * 60 * 60 * 1000,
+  );
+
+  await ref.set({
+    subscriptionId,
+    creatorUid,
+    referredUid,
+    active: false,
+    status: 'cancelled',
+    inCancellationGrace: true,
+    cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+    graceUntil,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  const cancellationId = `cancellation_${subscriptionId}`;
+  await db
+    .collection('uag_creator_commission_ledgers')
+    .doc(creatorUid)
+    .collection('entries')
+    .doc(cancellationId)
+    .set({
+      id: cancellationId,
+      creatorUid,
+      subscriptionId,
+      eventType: 'cancellation',
+      status: 'informational',
+      lifecycleStatus: 'informational',
+      commissionPence: 0,
+      amountPence: 0,
+      referredAccountRef: stableAnonymizedUserRef(referredUid),
+      graceUntil,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+  await recomputeCreatorCommercialAggregate(creatorUid);
+}
+
+async function resolveInvoiceIdForCharge(charge) {
+  // Older Stripe API versions expose charge.invoice directly. Newer Charge
+  // shapes reliably expose payment_intent, so support both.
+  const directInvoice = normalizeString(charge.invoice);
+  if (directInvoice) return directInvoice;
+
+  const paymentIntentId = normalizeString(charge.payment_intent);
+  if (!paymentIntentId) return '';
+
+  const match = await db
+    .collection('monetisation_events')
+    .where('stripePaymentIntentId', '==', paymentIntentId)
+    .limit(1)
+    .get();
+
+  return match.empty ? '' : match.docs[0].id;
+}
+
+function referralMilestoneReward(threshold, referrerUid) {
+  if (threshold === 1) {
+    return {
+      rewardId: `community_referral_${referrerUid}_1`,
+      type: 'premium7Days',
+    };
+  }
+  if (threshold === 3) {
+    return {
+      rewardId: `community_referral_${referrerUid}_3`,
+      type: 'premium30Days',
+    };
+  }
+  return null;
+}
+
+async function bankReferralRewardAuthoritatively({
+  uid,
+  rewardId,
+  type,
+  sourceRef,
+}) {
+  const lockerRef = db.collection('uag_referral_reward_lockers').doc(uid);
+  const rewardRef = lockerRef.collection('rewards').doc(rewardId);
+
+  await db.runTransaction(async (transaction) => {
+    const existing = await transaction.get(rewardRef);
+    if (existing.exists) return;
+
+    transaction.set(lockerRef, {
+      uid,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    transaction.set(rewardRef, {
+      id: rewardId,
+      uid,
+      type,
+      status: 'banked',
+      source: 'community_referral',
+      sourceRef,
+      earnedAt: admin.firestore.FieldValue.serverTimestamp(),
+      earnedAtIso: new Date().toISOString(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+}
+
+async function validateCommunityReferralAuthoritatively({
+  queueRef,
+  referredUid,
+}) {
+  const attributionRef = db
+    .collection('users')
+    .doc(referredUid)
+    .collection('monetisation_usage')
+    .doc('community_referral_attribution');
+
+  const attributionSnap = await attributionRef.get();
+  if (!attributionSnap.exists) {
+    await queueRef.set({
+      status: 'invalid',
+      reason: 'missing_attribution',
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return;
+  }
+
+  const attribution = attributionSnap.data() || {};
+  if (attribution.status !== 'pending_validation') {
+    await queueRef.set({
+      status: attribution.status === 'validated' ? 'completed' : 'invalid',
+      reason: `attribution_${normalizeString(attribution.status) || 'unknown'}`,
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return;
+  }
+
+  const referrerUid = normalizeString(attribution.referrerUid);
+  if (!referrerUid || referrerUid === referredUid) {
+    await queueRef.set({
+      status: 'invalid',
+      reason: 'invalid_referrer',
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return;
+  }
+
+  try {
+    const authUser = await admin.auth().getUser(referredUid);
+    if (authUser.disabled) {
+      await queueRef.set({
+        status: 'invalid',
+        reason: 'referred_account_disabled',
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return;
+    }
+  } catch (_) {
+    await queueRef.set({
+      status: 'invalid',
+      reason: 'referred_account_missing',
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return;
+  }
+
+  const referrerRef = db.collection('users').doc(referrerUid);
+  let newlyAwarded = [];
+
+  await db.runTransaction(async (transaction) => {
+    const [freshAttribution, referrerSnap, freshQueue] = await Promise.all([
+      transaction.get(attributionRef),
+      transaction.get(referrerRef),
+      transaction.get(queueRef),
+    ]);
+
+    if (
+      !freshAttribution.exists ||
+      freshAttribution.data()?.status !== 'pending_validation'
+    ) {
+      return;
+    }
+    if (!referrerSnap.exists) return;
+    if (freshQueue.exists && freshQueue.data()?.status === 'completed') return;
+
+    const referral = referrerSnap.data()?.communityReferral || {};
+    const previous = Number(referral.validatedReferrals || 0);
+    const next = previous + 1;
+    const alreadyAwarded = Array.isArray(referral.awardedMilestones)
+      ? referral.awardedMilestones.map(Number)
+      : [];
+
+    newlyAwarded = [1, 3, 5].filter(
+      (threshold) =>
+        previous < threshold &&
+        next >= threshold &&
+        !alreadyAwarded.includes(threshold),
+    );
+
+    const awardedMilestones = Array.from(
+      new Set([...alreadyAwarded, ...newlyAwarded]),
+    ).sort((a, b) => a - b);
+
+    transaction.set(attributionRef, {
+      status: 'validated',
+      validatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      validatedBy: 'server_retention_policy',
+      validationReason: '30-day retained account validation',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    transaction.set(referrerRef, {
+      'communityReferral.validatedReferrals': next,
+      'communityReferral.pendingReferrals': Math.max(
+        0,
+        Number(referral.pendingReferrals || 0) - 1,
+      ),
+      'communityReferral.awardedMilestones': awardedMilestones,
+      'communityReferral.creatorFastTrackUnlocked':
+        awardedMilestones.includes(5),
+      'communityReferral.updatedAt':
+        admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    transaction.set(queueRef, {
+      status: 'completed',
+      validatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+
+  for (const threshold of newlyAwarded) {
+    const reward = referralMilestoneReward(threshold, referrerUid);
+    if (!reward) continue;
+
+    await bankReferralRewardAuthoritatively({
+      uid: referrerUid,
+      rewardId: reward.rewardId,
+      type: reward.type,
+      sourceRef: `validated_referral:${referredUid}:milestone:${threshold}`,
+    });
+  }
+}
+
+async function handleChargeReversal(charge, reversalType) {
+  const invoiceId = await resolveInvoiceIdForCharge(charge);
+  if (!invoiceId) return;
+
+  const eventRef = db.collection('monetisation_events').doc(invoiceId);
+  const eventSnap = await eventRef.get();
+  if (!eventSnap.exists) return;
+  const event = eventSnap.data() || {};
+  const creatorUid = normalizeString(event.referralOwnerUid);
+  if (!creatorUid) return;
+
+  const ledgerRef = db
+    .collection('uag_creator_commission_ledgers')
+    .doc(creatorUid)
+    .collection('entries')
+    .doc(invoiceId);
+
+  let reversedAmountPence = 0;
+  let reversedFromStatus = '';
+
+  await db.runTransaction(async (transaction) => {
+    const ledger = await transaction.get(ledgerRef);
+    if (!ledger.exists) return;
+    const data = ledger.data() || {};
+    if (data.lifecycleStatus === 'reversed' || data.status === 'reversed') return;
+
+    reversedAmountPence = Number(
+      data.commissionPence ?? data.amountPence ?? 0,
+    );
+    reversedFromStatus =
+      data.lifecycleStatus || data.status || 'unknown';
+
+    transaction.set(ledgerRef, {
+      status: 'reversed',
+      lifecycleStatus: 'reversed',
+      reversedFromStatus,
+      reversalType,
+      reversalReason: `Stripe ${reversalType}`,
+      reversedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    transaction.set(eventRef, {
+      reversalType,
+      reversedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+
+  if (reversedAmountPence > 0) {
+    const walletPatch = {
+      reversedPence:
+        admin.firestore.FieldValue.increment(reversedAmountPence),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (
+      reversedFromStatus === 'pendingValidation' ||
+      reversedFromStatus === 'qualifying'
+    ) {
+      walletPatch.pendingPence =
+        admin.firestore.FieldValue.increment(-reversedAmountPence);
+    } else if (reversedFromStatus === 'payable') {
+      walletPatch.payablePence =
+        admin.firestore.FieldValue.increment(-reversedAmountPence);
+    }
+
+    await db.collection('referral_wallets').doc(creatorUid).set(
+      walletPatch,
+      { merge: true },
+    );
+  }
+
+  await recomputeCreatorCommercialAggregate(creatorUid);
+}
+
+exports.queueCommunityReferralValidation = onDocumentCreated(
+  'users/{referredUid}/monetisation_usage/community_referral_attribution',
+  async (event) => {
+    const referredUid = event.params.referredUid;
+    const data = event.data?.data() || {};
+    const referrerUid = normalizeString(data.referrerUid);
+
+    if (!referredUid || !referrerUid || referrerUid === referredUid) return;
+    if (data.status !== 'pending_validation') return;
+
+    const capturedAtMillis = data.capturedAt?.toMillis
+      ? data.capturedAt.toMillis()
+      : Date.now();
+    const dueAt = admin.firestore.Timestamp.fromMillis(
+      capturedAtMillis +
+        COMMUNITY_REFERRAL_VALIDATION_DAYS * 24 * 60 * 60 * 1000,
+    );
+
+    await db
+      .collection('uag_community_referral_validation_queue')
+      .doc(referredUid)
+      .set({
+        referredUid,
+        referrerUid,
+        status: 'pending',
+        dueAt,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+  },
+);
+
+exports.activateReferralRewardAuthoritatively = onDocumentCreated(
+  'uag_referral_reward_activation_requests/{requestId}',
+  async (event) => {
+    const request = event.data?.data() || {};
+    const requestRef = event.data?.ref;
+    if (!requestRef) return;
+
+    const uid = normalizeString(request.uid);
+    const rewardId = normalizeString(request.rewardId);
+    if (!uid || !rewardId || request.status !== 'pending') {
+      await requestRef.set({
+        status: 'rejected',
+        publicReason: 'Invalid reward activation request.',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return;
+    }
+
+    const lockerRef = db.collection('uag_referral_reward_lockers').doc(uid);
+    const rewardRef = lockerRef.collection('rewards').doc(rewardId);
+    const userRef = db.collection('users').doc(uid);
+
+    await db.runTransaction(async (transaction) => {
+      const [stateSnap, rewardSnap, userSnap] = await Promise.all([
+        transaction.get(lockerRef),
+        transaction.get(rewardRef),
+        transaction.get(userRef),
+      ]);
+
+      if (!rewardSnap.exists) {
+        transaction.set(requestRef, {
+          status: 'rejected',
+          publicReason: 'Reward was not found.',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      const reward = rewardSnap.data() || {};
+      const user = userSnap.data() || {};
+      const state = stateSnap.data() || {};
+      const now = Date.now();
+
+      if (reward.status !== 'banked') {
+        transaction.set(requestRef, {
+          status: reward.status === 'active' ? 'completed' : 'rejected',
+          publicReason: reward.status === 'active'
+            ? 'Reward is already active.'
+            : 'Reward is not available for activation.',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      const stateExpiry = state.activeUntil?.toMillis
+        ? state.activeUntil.toMillis()
+        : 0;
+      if (state.activeRewardId && stateExpiry > now) {
+        transaction.set(requestRef, {
+          status: 'rejected',
+          publicReason: 'Another banked reward is already active.',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      const paidTier = String(
+        user.monetisation?.tier || user.subscriptionTier || user.tier || 'free',
+      ).toLowerCase();
+      if (paidTier === 'premium' || activeTemporaryPremium(user, now)) {
+        transaction.set(requestRef, {
+          status: 'rejected',
+          publicReason: 'Premium is already active. Keep this reward banked for later.',
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        return;
+      }
+
+      const days = rewardDurationDays(reward.type);
+      const expiresAt = admin.firestore.Timestamp.fromMillis(
+        now + days * 24 * 60 * 60 * 1000,
+      );
+      const grantId = `referral_locker_${rewardId}`;
+
+      transaction.set(rewardRef, {
+        status: 'active',
+        activatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        expiresAt,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      transaction.set(lockerRef, {
+        uid,
+        activeRewardId: rewardId,
+        activeUntil: expiresAt,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      transaction.update(userRef, {
+        [`creatorRewardEntitlements.${grantId}`]: {
+          grantId,
+          tier: 'premium',
+          startedAt: admin.firestore.Timestamp.fromMillis(now),
+          expiresAt,
+          source: 'community_referral_locker',
+          sourceRef: rewardId,
+          rewardType: reward.type || 'premium7Days',
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+      });
+
+      transaction.set(requestRef, {
+        status: 'completed',
+        grantId,
+        expiresAt,
+        completedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+  },
+);
+
+exports.releaseCreatorCommissionDaily = onSchedule('every day 03:15', async () => {
+  const now = admin.firestore.Timestamp.now();
+
+  // A single range filter avoids the known composite-index dependency.
+  // Lifecycle state is rechecked transactionally before any release.
+  const candidates = await db
+    .collectionGroup('entries')
+    .where('qualificationDate', '<=', now)
+    .limit(500)
+    .get();
+
+  const creatorsToReconcile = new Set();
+
+  for (const doc of candidates.docs) {
+    let releasedAmountPence = 0;
+    let creatorUid = '';
+
+    await db.runTransaction(async (transaction) => {
+      const fresh = await transaction.get(doc.ref);
+      if (!fresh.exists) return;
+      const data = fresh.data() || {};
+      if (data.lifecycleStatus !== 'pendingValidation') return;
+
+      releasedAmountPence = Number(
+        data.commissionPence ?? data.amountPence ?? 0,
+      );
+      creatorUid = normalizeString(data.creatorUid);
+
+      transaction.set(doc.ref, {
+        status: 'payable',
+        lifecycleStatus: 'payable',
+        qualifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+
+    if (creatorUid && releasedAmountPence > 0) {
+      creatorsToReconcile.add(creatorUid);
+      await db.collection('referral_wallets').doc(creatorUid).set({
+        pendingPence:
+          admin.firestore.FieldValue.increment(-releasedAmountPence),
+        payablePence:
+          admin.firestore.FieldValue.increment(releasedAmountPence),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+  }
+
+  for (const creatorUid of creatorsToReconcile) {
+    await recomputeCreatorCommercialAggregate(creatorUid);
+  }
+});
+
+exports.expireCreatorCancellationGraceDaily = onSchedule(
+  'every day 03:45',
+  async () => {
+    const now = admin.firestore.Timestamp.now();
+    const expired = await db
+      .collection('uag_creator_referred_subscriptions')
+      .where('graceUntil', '<=', now)
+      .limit(500)
+      .get();
+
+    const creators = new Set();
+
+    for (const doc of expired.docs) {
+      const row = doc.data() || {};
+      if (row.inCancellationGrace !== true) continue;
+
+      const creatorUid = normalizeString(row.creatorUid);
+      await doc.ref.set({
+        inCancellationGrace: false,
+        graceExpiredAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      if (creatorUid) creators.add(creatorUid);
+    }
+
+    for (const creatorUid of creators) {
+      await recomputeCreatorCommercialAggregate(creatorUid);
+    }
+  },
+);
+
+exports.validateCommunityReferralsDaily = onSchedule(
+  'every day 04:15',
+  async () => {
+    const now = admin.firestore.Timestamp.now();
+    const due = await db
+      .collection('uag_community_referral_validation_queue')
+      .where('dueAt', '<=', now)
+      .limit(500)
+      .get();
+
+    for (const queueDoc of due.docs) {
+      const queue = queueDoc.data() || {};
+      if (queue.status !== 'pending') continue;
+      const referredUid = normalizeString(queue.referredUid || queueDoc.id);
+      if (!referredUid) continue;
+
+      await validateCommunityReferralAuthoritatively({
+        queueRef: queueDoc.ref,
+        referredUid,
+      });
+    }
+  },
+);
+
+exports.expireReferralRewardsHourly = onSchedule('every 60 minutes', async () => {
+  const now = admin.firestore.Timestamp.now();
+  const lockers = await db
+    .collection('uag_referral_reward_lockers')
+    .where('activeUntil', '<=', now)
+    .limit(250)
+    .get();
+
+  for (const locker of lockers.docs) {
+    const state = locker.data() || {};
+    const rewardId = normalizeString(state.activeRewardId);
+    if (!rewardId) continue;
+    const rewardRef = locker.ref.collection('rewards').doc(rewardId);
+    await db.runTransaction(async (transaction) => {
+      const freshLocker = await transaction.get(locker.ref);
+      const freshReward = await transaction.get(rewardRef);
+      if (!freshLocker.exists || !freshReward.exists) return;
+      const expiry = freshLocker.data()?.activeUntil;
+      if (!expiry || expiry.toMillis() > Date.now()) return;
+      transaction.set(rewardRef, {
+        status: 'consumed',
+        consumedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      transaction.set(locker.ref, {
+        activeRewardId: admin.firestore.FieldValue.delete(),
+        activeUntil: admin.firestore.FieldValue.delete(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    });
+  }
+});
 function normalizeString(value) {
   return String(value || '').trim();
 }
@@ -1985,3 +2951,4 @@ exports.processUagMessageOutbox = onDocumentCreated(
     });
   }
 );
+

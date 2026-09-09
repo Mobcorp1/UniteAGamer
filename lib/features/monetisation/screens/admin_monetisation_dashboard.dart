@@ -2,13 +2,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_entitlement_test_mode.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/models/uag_monetisation_models.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_entitlement_service.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/repositories/uag_monetisation_repository.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_impact_pots_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_admin_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_reward_admin_panel.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_entitlement_bridge_admin_panel.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/reg/onboarding_basic_profile_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_application_admin_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_commission_admin_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_referral_validation_admin_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_community_growth_admin_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_creator_commercial_integrity_admin_panel.dart';
 
 class AdminMonetisationDashboard extends StatelessWidget {
   const AdminMonetisationDashboard({super.key});
@@ -141,6 +156,19 @@ class AdminMonetisationDashboard extends StatelessWidget {
         const SizedBox(height: AppTheme.spaceL),
         const UagImpactPotsPanel(showAdminDetail: true),
         const SizedBox(height: AppTheme.spaceL),
+        const _EntitlementTestModeCard(),
+        const SizedBox(height: AppTheme.spaceL),
+        const UagCreatorAdminPanel(),
+        const SizedBox(height: AppTheme.spaceL),
+        const UagCreatorCommissionAdminPanel(),
+        const UagReferralValidationAdminPanel(),
+        const UagCommunityGrowthAdminPanel(),
+        const UagCreatorCommercialIntegrityAdminPanel(),
+        const UagCreatorApplicationAdminPanel(),
+        const UagCreatorRewardAdminPanel(),
+        const SizedBox(height: AppTheme.spaceL),
+        const UagCreatorEntitlementBridgeAdminPanel(),
+        const SizedBox(height: AppTheme.spaceL),
         const _OnboardingSimulatorCard(),
         const SizedBox(height: AppTheme.spaceL),
         _PaymentMethodCard(),
@@ -168,6 +196,96 @@ class AdminMonetisationDashboard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _EntitlementTestModeCard extends StatelessWidget {
+  const _EntitlementTestModeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final service = UagEntitlementService();
+    return StreamBuilder(
+      stream: service.watchMyEntitlement(),
+      builder: (context, snapshot) {
+        final entitlement = snapshot.data;
+        if (entitlement == null || !entitlement.hasAdminBypass) {
+          return const SizedBox.shrink();
+        }
+        return Container(
+          width: double.infinity,
+          padding: ArcUiTokens.panelPadding,
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            accent: AppTheme.warningAmber,
+            borderOpacity: 0.34,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ENTITLEMENT TEST MODE',
+                style: ArcUiTokens.sectionTitle(
+                  fontSize: 16,
+                  color: AppTheme.warningAmber,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Admin/dev only. Simulates access and advertising without changing your real subscription.',
+                style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: UagEntitlementTestMode.values.map((mode) {
+                  final selected = entitlement.testMode == mode;
+                  return ChoiceChip(
+                    selected: selected,
+                    label: Text(mode.label),
+                    onSelected: selected
+                        ? null
+                        : (_) async {
+                            try {
+                              await service.setMyEntitlementTestMode(mode);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Test access: ${mode.label}'),
+                                ),
+                              );
+                            } catch (_) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Could not change test access mode.',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: AppTheme.spaceM),
+              Text(
+                entitlement.testMode == UagEntitlementTestMode.real
+                    ? 'Using real entitlement: ${entitlement.tier.label}'
+                    : 'SIMULATING ${entitlement.testMode.label} - real entitlement remains ${entitlement.tier.label}',
+                style: ArcUiTokens.body(
+                  color: entitlement.testMode == UagEntitlementTestMode.real
+                      ? ArcUiTokens.textSecondary
+                      : AppTheme.warningAmber,
+                  weight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 
-const arcOnboardingLegalAcceptanceVersion = 4;
+const arcOnboardingLegalAcceptanceVersion = 5;
 
 Map<String, dynamic> buildOnboardingLegalAcceptedMap({
   required bool traderCodeAccepted,
@@ -21,6 +21,11 @@ Map<String, dynamic> buildOnboardingLegalAcceptedMap({
     'termsOfServiceAccepted': termsOfServiceAccepted,
     'dataSecurityAccepted': dataSecurityAccepted,
     'ageConfirmationAccepted': ageConfirmationAccepted,
+    'raiderAgreementAccepted':
+        traderCodeAccepted && termsOfServiceAccepted && dataSecurityAccepted,
+    'raiderAgreementVersion': arcOnboardingLegalAcceptanceVersion,
+    if (traderCodeAccepted && termsOfServiceAccepted && dataSecurityAccepted)
+      'raiderAgreementAcceptedAt': FieldValue.serverTimestamp(),
     'policies': <String, dynamic>{
       'trader_code_of_conduct': _policyAcceptance(
         policyId: 'trader_code_of_conduct',

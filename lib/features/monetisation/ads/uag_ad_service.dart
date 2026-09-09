@@ -20,8 +20,14 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
   static const Duration _coldStartWindow = Duration(seconds: 5);
   static const String _sessionCountKey = 'uag_ad_session_count_v1';
 
-  final UagEntitlementService _entitlements = UagEntitlementService();
-  final UagAdSettingsRepository _settingsRepository = UagAdSettingsRepository();
+  // Firebase-backed collaborators are intentionally lazy.
+  //
+  // UI can safely read UagAdService.instance / canShowBanner before Firebase
+  // has completed bootstrapping (notably during widget tests and the cinematic
+  // startup phase). They are only created once initialise() begins listening.
+  late final UagEntitlementService _entitlements = UagEntitlementService();
+  late final UagAdSettingsRepository _settingsRepository =
+      UagAdSettingsRepository();
 
   StreamSubscription<User?>? _authSub;
   StreamSubscription? _entitlementSub;
@@ -107,16 +113,19 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
       }
       _entitlementSub = _entitlements.watchMyEntitlement().listen(
         (entitlement) {
-          _policy = entitlement.hasAdminBypass
-              ? UagAdPolicy.premium
-              : entitlement.adPolicy;
+          // Commercial policy comes from the canonical effective entitlement.
+          // Admin/dev identity remains a security concern and must not force
+          // Premium while entitlement test mode is active.
+          _policy = entitlement.adPolicy;
           _disposeAdsThatAreNoLongerEligible();
           _preloadEligibleFullScreenAds();
           notifyListeners();
         },
         onError: (_) {
-          _policy = UagAdPolicy.free;
-          _preloadEligibleFullScreenAds();
+          // Fail closed for advertising: a temporary entitlement read failure
+          // must never expose ads to a paid/Premium user.
+          _policy = UagAdPolicy.premium;
+          _disposeAdsThatAreNoLongerEligible();
           notifyListeners();
         },
       );

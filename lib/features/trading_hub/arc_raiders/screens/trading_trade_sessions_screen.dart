@@ -94,6 +94,16 @@ class _TradingTradeSessionsScreenState
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  String _safeActionError(String message) {
+    final trimmed = message.trimRight();
+    if (trimmed.endsWith(':')) {
+      return '${trimmed.substring(0, trimmed.length - 1)}. Try again.';
+    }
+    return trimmed.endsWith('.')
+        ? '$trimmed Try again.'
+        : '$trimmed. Try again.';
+  }
+
   Future<void> _openSessionReadinessPanel(TradingSession session) async {
     final confirmedBooking = session.selectedBooking ?? session.scheduledAt;
     final isReady = _isTraderOne(session)
@@ -254,11 +264,11 @@ class _TradingTradeSessionsScreenState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(successMessage)));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('$errorPrefix$error')));
+      ).showSnackBar(SnackBar(content: Text(_safeActionError(errorPrefix))));
     }
   }
 
@@ -735,9 +745,9 @@ class _TradingTradeSessionsScreenState
 
                             if (!sheetContext.mounted) return;
                             Navigator.of(sheetContext).pop(true);
-                          } catch (error) {
+                          } catch (_) {
                             _showSnack(
-                              'Could not save booking options: $error',
+                              'Could not save booking options. Try again.',
                             );
                           }
                         },
@@ -1434,7 +1444,7 @@ class _TradingTradeSessionsScreenState
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                         child: Text(
-                          'Could not load trade sessions.\n${snapshot.error}',
+                          'Could not load trade sessions right now.',
                           textAlign: TextAlign.center,
                           style: AppTheme.bodyTextStyle(
                             fontSize: 15,

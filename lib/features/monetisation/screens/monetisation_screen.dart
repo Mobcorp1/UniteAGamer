@@ -9,6 +9,18 @@ import '../models/uag_subscription_plan.dart';
 import '../models/uag_subscription_tier.dart';
 import '../services/uag_entitlement_service.dart';
 import '../widgets/uag_match_intelligence_comparison_card.dart';
+import '../widgets/uag_creator_reward_access_panel.dart';
+import '../screens/uag_creator_programme_screen.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_refer_a_raider_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_referral_reward_locker_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_referral_progress_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_community_growth_live_panel.dart';
+
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/uag_benefits_community_rewards_screen.dart';
 
 class MonetisationScreen extends StatefulWidget {
   static const routeName = '/monetisation';
@@ -29,11 +41,11 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Referral code ready: $code')));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not create referral code. Try again.')),
+      );
     }
   }
 
@@ -44,11 +56,11 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Payout request submitted.')),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not submit payout request. Try again.')),
+      );
     }
   }
 
@@ -83,6 +95,40 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
             maxWidth: 1180,
             padding: ArcLayoutTokens.pagePadding(context),
             children: [
+              const UagReferARaiderPanel(),
+              const UagReferralRewardLockerPanel(),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'COMMUNITY REWARDS',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'See every Refer a Raider milestone, banked reward rule, Creator benefit and Community Growth unlock in one place.',
+                      ),
+                      const SizedBox(height: 10),
+                      FilledButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                const UagBenefitsCommunityRewardsScreen(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.groups_2_outlined),
+                        label: const Text('OPEN COMMUNITY REWARDS'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const UagReferralProgressPanel(),
+              const UagCommunityGrowthLivePanel(),
               const ArcTacticalPanel(
                 icon: Icons.workspace_premium_outlined,
                 title: 'Access Command',
@@ -91,6 +137,26 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                 accent: ArcUiTokens.primaryAccent,
                 child: SizedBox.shrink(),
               ),
+              ArcTacticalPanel(
+                icon: Icons.campaign_outlined,
+                title: 'Creator Programme',
+                subtitle:
+                    'Recurring commission, Creator Points, monthly community drops and seasonal campaign tools.',
+                accent: ArcUiTokens.secondaryAccent,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const UagCreatorProgrammeScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.open_in_new),
+                    label: const Text('OPEN CREATOR PROGRAMME'),
+                  ),
+                ),
+              ),
+              const SizedBox(height: ArcUiTokens.gapM),
               if (entitlement != null)
                 _CurrentPlanCard(
                   tier: entitlement.tier,
@@ -107,6 +173,8 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                       ? () => _requestPayout(entitlement.availableBalancePence)
                       : null,
                 ),
+              const UagCreatorRewardAccessPanel(),
+              const SizedBox(height: 14),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final wide = constraints.maxWidth >= 880;

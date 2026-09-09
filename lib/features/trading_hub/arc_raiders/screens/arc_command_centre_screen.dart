@@ -178,9 +178,7 @@ class _ArcCommandCentreScreenState extends State<ArcCommandCentreScreen>
         ],
       ),
       drawer: const AppDrawer(),
-      bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'command centre',
-      ),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'run'),
       body: ArcRaidersScreenShell(
         showAdBanner: true,
         child: KeyedSubtree(

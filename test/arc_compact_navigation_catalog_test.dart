@@ -12,6 +12,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
@@ -25,11 +26,14 @@ void main() {
   group('ArcCompactNavigationCatalog', () {
     test('exposes only the grouped primary drawer destinations', () {
       expect(ArcCompactNavigationCatalog.groups.map((group) => group.label), [
-        'COMMAND CENTRE',
-        'TRACK',
-        'PLAN',
-        'TRADE',
-        'PROFILE',
+        'DISCOVER & RUN',
+        'RAID & INTELLIGENCE',
+        'PROGRESSION & TRACKING',
+        'TRADE & INVENTORY',
+        'SQUAD & COMMUNITY',
+        'IMPROVE',
+        'FUTURE HUB',
+        'ACCOUNT & UAG',
       ]);
 
       final labels = ArcCompactNavigationCatalog.items
@@ -37,24 +41,35 @@ void main() {
           .toList(growable: false);
 
       expect(labels, [
+        'Discover UAG',
         'Command Centre',
-        'Blueprint Tracker',
-        'Progress Trackers',
         'Raid Intelligence',
         'Raid Planner',
+        'Hunt Targets',
+        'Report a Rat / Contracts',
+        'Blueprint Tracker',
+        'Scrappy Tracker',
+        'Bench Tracker',
+        'Quest Tracker',
+        'Progress Trackers',
         'Favourite Loadout',
+        'Operations',
         'Trading Hub',
+        'Smart Trade Assist',
+        'Nomadic Trader',
         'Match Raider',
-        'Report a Rat',
+        'Community Rewards',
+        'Wall of Legends',
         'My Hub',
+        'Play Like a Pro',
+        'Roadmap & Community Ideas',
+        'Profile & Reputation',
         'Settings',
       ]);
 
       for (final oldDrawerItem in const [
         'Intel Snapshot',
         'Tracking',
-        'Scrappy Tracker',
-        'Play Like a Pro',
         'Plans & Referrals',
         'Admin Console',
         'Beta Feedback',
@@ -68,33 +83,42 @@ void main() {
       'routes grouped secondary destinations to their primary drawer item',
       () {
         expect(
+          _item('Discover UAG').isSelected(ArcRaidersHubScreen.routeName),
+          isTrue,
+        );
+        expect(
           _item('Command Centre').isSelected(MyHubScreen.routeName),
+          isFalse,
+        );
+        expect(
+          _item('Scrappy Tracker').isSelected(ScrappyGridScreen.routeName),
           isTrue,
         );
         expect(
-          _item('Progress Trackers').isSelected(ScrappyGridScreen.routeName),
+          _item('Bench Tracker').isSelected(ScrappyGridScreen.benchRouteName),
+          isTrue,
+        );
+        expect(
+          _item('Quest Tracker').isSelected(ScrappyGridScreen.questRouteName),
           isTrue,
         );
         expect(
           _item(
-            'Progress Trackers',
-          ).isSelected(ScrappyGridScreen.benchRouteName),
-          isTrue,
-        );
-        expect(
-          _item(
-            'Progress Trackers',
+            'Hunt Targets',
           ).isSelected(RaidPlannerHuntTargetsScreen.routeName),
           isTrue,
         );
         expect(
-          _item('Trading Hub').isSelected(SmartTradeAssistScreen.routeName),
+          _item(
+            'Smart Trade Assist',
+          ).isSelected(SmartTradeAssistScreen.routeName),
           isTrue,
         );
         expect(
           _item('My Hub').isSelected(MyHubScreen.toolDeckRouteName),
           isTrue,
         );
+        expect(_item('My Hub').isSelected(MyHubScreen.routeName), isTrue);
       },
     );
 
@@ -104,6 +128,7 @@ void main() {
           .toSet();
 
       expect(routeNames, contains(ArcCommandCentreScreen.routeName));
+      expect(routeNames, contains(ArcRaidersHubScreen.routeName));
       expect(routeNames, contains(BlueprintGridScreen.routeName));
       expect(routeNames, contains(ArcProgressTrackersScreen.routeName));
       expect(routeNames, contains(ArcRaidIntelligenceScreen.routeName));
@@ -173,13 +198,15 @@ void main() {
       final groups = ArcCompactNavigationCatalog.groupsForPersonalisation(
         personalisation,
       );
-      final plan = groups.firstWhere((group) => group.label == 'PLAN');
+      final tracking = groups.firstWhere(
+        (group) => group.label == 'PROGRESSION & TRACKING',
+      );
       final labels = groups
           .expand((group) => group.items)
           .map((item) => item.label)
           .toList(growable: false);
 
-      expect(plan.items.first.label, 'Favourite Loadout');
+      expect(tracking.items.first.label, 'Favourite Loadout');
       expect(labels, containsAll(['Trading Hub', 'Match Raider', 'Settings']));
     });
   });

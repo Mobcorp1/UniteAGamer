@@ -22,11 +22,11 @@ class _UagAdAdminControlsCardState extends State<UagAdAdminControlsCard> {
           const SnackBar(content: Text('Advertising controls updated.')),
         );
       }
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not update advertising controls: $error'),
+            content: Text('Could not update advertising controls. Try again.'),
           ),
         );
       }

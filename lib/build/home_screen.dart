@@ -1,7 +1,7 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 
-import 'package:uag_arc_raiders_hub/build/trading_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
 import 'package:uag_arc_raiders_hub/widgets/animated_logo.dart';
 import 'package:uag_arc_raiders_hub/widgets/dose_action_button.dart';
@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'assets/images/arc_raiders/hub/auth_bg_landscape.webp',
+          'assets/arc_raiders/hub/auth_bg_landscape.webp',
           fit: BoxFit.cover,
           errorBuilder: (_, _, _) => const StaticWatermark(),
         ),
@@ -187,12 +187,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   maxWidth: 520,
                                 ),
                                 child: DoseActionButton(
-                                  label: 'Enter UAG Arc Raiders Hub',
+                                  label: 'Explore UAG Arc Raiders Hub',
                                   icon: Icons.swap_horiz_rounded,
                                   onPressed: () {
                                     Navigator.of(
                                       context,
-                                    ).pushNamed(TradingHubScreen.routeName);
+                                    ).pushNamed(ArcRaidersHubScreen.routeName);
                                   },
                                 ),
                               ),

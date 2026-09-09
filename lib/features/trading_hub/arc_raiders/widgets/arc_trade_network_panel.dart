@@ -84,10 +84,10 @@ class _ArcTradeNetworkPanelState extends State<ArcTradeNetworkPanel> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Trade preparation added to Watching.')),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not watch this trade: $error')),
+        SnackBar(content: Text('Could not watch this trade. Try again.')),
       );
     } finally {
       if (mounted) setState(() => _creatingWatch = false);

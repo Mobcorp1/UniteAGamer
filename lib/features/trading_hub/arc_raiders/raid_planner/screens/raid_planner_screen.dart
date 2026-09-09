@@ -45,8 +45,7 @@ class _RaidPlannerVisualLead extends StatelessWidget {
     title: 'Raid Planner',
     subtitle: 'Timeline intelligence, active operations and route preparation.',
     child: ArcArtworkPlaceholder(
-      assetPath:
-          'assets/images/arc_raiders/raid_planner/raid_planner_hero.webp',
+      assetPath: 'assets/arc_raiders/hub/arc_hub_raid_planner.webp',
       height: 104,
     ),
   );
@@ -136,11 +135,11 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
   String _tierHelp(RaidTargetTier tier, RaidPlannerEntitlement entitlement) {
     switch (tier) {
       case RaidTargetTier.activeHunt:
-        return 'Your top priority targets. Exact event windows are shown when these match Surge Coil, Canto or Dolabra. Your ${entitlement.tier.label} plan allows ${_tierLimit(tier, entitlement)} Active Operations slot${_tierLimit(tier, entitlement) == 1 ? '' : 's'}.';
+        return '${entitlement.tier.label} plan - ${_tierLimit(tier, entitlement)} active slot${_tierLimit(tier, entitlement) == 1 ? '' : 's'}.';
       case RaidTargetTier.nextUp:
-        return 'Backup targets. When Active Operations targets are owned or removed, these move up into the planner automatically.';
+        return 'Backup hunt queue.';
       case RaidTargetTier.later:
-        return 'Lower priority targets to keep parked for later.';
+        return 'Parked targets.';
     }
   }
 
@@ -444,18 +443,18 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             ? 'Seeded route enabled'
             : '${seededConditions.first} seeded route enabled');
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
         accent: _tierColor(target.tier),
-        radius: 16,
-        borderOpacity: 0.35,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.28,
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 15,
+            radius: 13,
             backgroundColor: _tierColor(target.tier).withValues(alpha: 0.16),
             child: Text(
               '${target.rank + 1}',
@@ -473,13 +472,17 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               children: [
                 Text(
                   blueprint?.name ?? target.blueprintId,
-                  style: AppTheme.tradingHeading(fontSize: 17),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(fontSize: 14),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   seededTimingLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: AppTheme.neonCyan,
                   ),
                 ),
@@ -540,16 +543,16 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           Text(
             _tierHelp(tier, entitlement),
             style: AppTheme.bodyTextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: AppTheme.tradingMutedText,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           if (displayTargets.isEmpty)
             Text(
-              'No ${tier.label} targets selected.',
+              'No ${tier.label} targets.',
               style: AppTheme.bodyTextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: AppTheme.tradingMutedText,
               ),
             )
@@ -580,13 +583,13 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         ? 'Ends in ${_durationLabel(opportunity.timeRemaining(utcNow))}'
         : 'Starts in ${_durationLabel(opportunity.timeUntil(utcNow))}';
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
         accent: live ? AppTheme.neonPink : AppTheme.neonCyan,
-        radius: 16,
-        borderOpacity: 0.35,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: live ? 0.34 : 0.20,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,6 +597,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           Icon(
             live ? Icons.flash_on_rounded : Icons.schedule_rounded,
             color: live ? AppTheme.neonPink : AppTheme.neonCyan,
+            size: 18,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -602,13 +606,17 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               children: [
                 Text(
                   '${opportunity.rule.blueprintName} - ${opportunity.slot.eventName}${opportunity.rule.isExactEventRule ? '' : ' boost'}',
-                  style: AppTheme.tradingHeading(fontSize: 17),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${opportunity.slot.mapName} - ${opportunity.slot.lane} - ${_clock(opportunity.startUtc)}-${_clock(opportunity.endUtc)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTheme.bodyTextStyle(
-                    fontSize: 13,
+                    fontSize: 11,
                     color: AppTheme.tradingMutedText,
                   ),
                 ),
@@ -618,7 +626,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   style: AppTheme.bodyTextStyle(
                     color: live ? AppTheme.neonPink : AppTheme.neonCyan,
                     isBold: true,
-                    fontSize: 13,
+                    fontSize: 11,
                   ),
                 ),
               ],
@@ -662,15 +670,15 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.interactive,
         accent: opportunity.insideSavedPlaytime
             ? AppTheme.neonCyan
             : AppTheme.neonPink,
-        radius: 14,
-        borderOpacity: opportunity.insideSavedPlaytime ? 0.38 : 0.28,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: opportunity.insideSavedPlaytime ? 0.30 : 0.22,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -680,7 +688,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               Expanded(
                 child: Text(
                   opportunity.target.label,
-                  style: AppTheme.tradingHeading(fontSize: 16),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(fontSize: 14),
                 ),
               ),
               if (opportunity.target.verifiedConditionLink)
@@ -694,8 +704,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(height: 5),
           Text(
             '${opportunity.condition.conditionName} - ${opportunity.condition.mapDisplayName}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTheme.bodyTextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: AppTheme.tradingMutedText,
               isBold: true,
             ),
@@ -704,15 +716,17 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           Text(
             '${_clock(opportunity.window.startUtc)}-${_clock(opportunity.window.endUtc)} - ${opportunity.region.label}',
             style: AppTheme.bodyTextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: AppTheme.neonCyan,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             '${_regionalStatusText(opportunity, utcNow)} - $playtimeText',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTheme.bodyTextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: opportunity.insideSavedPlaytime
                   ? AppTheme.neonCyan
                   : AppTheme.tradingMutedText,
@@ -721,8 +735,10 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(height: 4),
           Text(
             switchText,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTheme.bodyTextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: opportunity.shouldSwitchRegion
                   ? AppTheme.neonPink
                   : Colors.white70,
@@ -768,9 +784,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'UAG reads your missing Blueprint Tracker entries, your saved playtime and the regional ARC schedule. If your home region misses the window, it recommends the earliest server you can switch to.',
+                'Missing blueprints matched against regional windows and saved playtime.',
                 style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: AppTheme.tradingMutedText,
                 ),
               ),
@@ -818,7 +834,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               if (!data.isOfficialLive) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Live refresh was unavailable. UAG is showing the last official captured regional schedule until the source can be reached again.',
+                  'Showing the last captured official schedule.',
                   style: AppTheme.bodyTextStyle(
                     fontSize: 11,
                     color: AppTheme.tradingMutedText,
@@ -828,9 +844,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               const SizedBox(height: 14),
               if (recommendations.isEmpty)
                 Text(
-                  'No condition-linked missing Blueprint opportunities are available in the loaded schedule window.',
+                  'No matching blueprint windows in the loaded schedule.',
                   style: AppTheme.bodyTextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: AppTheme.tradingMutedText,
                   ),
                 )
@@ -873,9 +889,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Choose an in-game objective and UAG will resolve the condition, map window and best regional server against your playtime.',
+                'Pick an objective to resolve map windows and server timing.',
                 style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: AppTheme.tradingMutedText,
                 ),
               ),
@@ -898,9 +914,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                 const Center(child: CircularProgressIndicator())
               else if (selected != null && recommendations.isEmpty)
                 Text(
-                  'No matching regional condition is available in the loaded official schedule window.',
+                  'No matching condition in the loaded schedule.',
                   style: AppTheme.bodyTextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: AppTheme.tradingMutedText,
                   ),
                 )
@@ -954,9 +970,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Search a condition or map. UAG compares Europe, North America, Brazil, East Asia and Oceania and shows the earliest opportunities in your local time.',
+                'Search condition or map across regional windows.',
                 style: AppTheme.bodyTextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: AppTheme.tradingMutedText,
                 ),
               ),
@@ -1172,27 +1188,27 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         children: [
           Text(
             windows.isEmpty
-                ? 'No active play windows found in your availability. Set your availability in Your Hub Profile to unlock playtime planning.'
-                : 'Planner checks your saved availability and shows target events that overlap your usual gaming time.',
+                ? 'Set availability in Profile to unlock playtime planning.'
+                : 'Target windows matched to your saved playtime.',
             style: AppTheme.bodyTextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: AppTheme.tradingMutedText,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           Text(
-            'Target windows inside your playtime',
+            'IN YOUR PLAYTIME',
             style: AppTheme.tradingHeading(
-              fontSize: 18,
+              fontSize: 14,
               color: AppTheme.neonCyan,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           if (inPlaytime.isEmpty)
             Text(
-              'No selected Active Operations target events line up with your saved playtime in the next 7 days.',
+              'No active target windows match this week.',
               style: AppTheme.bodyTextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: AppTheme.tradingMutedText,
               ),
             )
@@ -1200,20 +1216,20 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
             ...inPlaytime.map(
               (opportunity) => _opportunityCard(opportunity, utcNow),
             ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           Text(
-            'Useful windows you may need to move for',
+            'OUTSIDE PLAYTIME',
             style: AppTheme.tradingHeading(
-              fontSize: 18,
+              fontSize: 14,
               color: AppTheme.neonPink,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           if (outsidePlaytime.isEmpty)
             Text(
-              'No missed high-priority windows found for your current targets.',
+              'No missed priority windows.',
               style: AppTheme.bodyTextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: AppTheme.tradingMutedText,
               ),
             )
@@ -1234,7 +1250,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       child: Text(
         '$label: $text',
         style: AppTheme.bodyTextStyle(
-          fontSize: 12,
+          fontSize: 11,
           color: AppTheme.tradingMutedText,
         ),
       ),
@@ -1251,13 +1267,13 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
       builder: (context, snapshot) {
         final intel = snapshot.data ?? ArcDropIntel.empty(target.blueprintId);
         return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(10),
           decoration: ArcUiTokens.surfaceDecoration(
             role: ArcSurfaceRole.interactive,
             accent: AppTheme.neonCyan,
-            radius: 16,
-            borderOpacity: 0.25,
+            radius: ArcUiTokens.radiusM,
+            borderOpacity: 0.20,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1273,7 +1289,9 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   Expanded(
                     child: Text(
                       blueprint?.name ?? target.blueprintId,
-                      style: AppTheme.tradingHeading(fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.tradingHeading(fontSize: 14),
                     ),
                   ),
                   Text(
@@ -1286,17 +1304,17 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               if (!intel.hasReports) ...[
                 Text(
-                  'No community intel yet. Using seeded blueprint rules until player reports create a stronger route.',
+                  'Seed route active until reports land.',
                   style: AppTheme.bodyTextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: AppTheme.tradingMutedText,
                   ),
                 ),
                 if (seededHint != null) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   _intelLine('Seed map', seededHint.likelyMaps.join(', ')),
                   _intelLine(
                     'Seed containers',
@@ -1319,7 +1337,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
                   Text(
                     'Best signal: ${intel.topCombinations.first.summaryLabel} (${intel.topCombinations.first.reportCount} weighted)',
                     style: AppTheme.bodyTextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: AppTheme.neonPink,
                       isBold: true,
                     ),
@@ -1341,18 +1359,18 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Every Active Operations target now starts with seeded blueprint rules. Community reports only override the baseline when real player intel exists.',
+            'Active targets use seeded routes first, then stronger community reports.',
             style: AppTheme.bodyTextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: AppTheme.tradingMutedText,
             ),
           ),
-          const SizedBox(height: AppTheme.spaceM),
+          const SizedBox(height: 10),
           if (activeTargets.isEmpty)
             Text(
-              'Add Active Operations targets to show seeded route guidance and community intel.',
+              'Add Active Operations targets for route intel.',
               style: AppTheme.bodyTextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: AppTheme.tradingMutedText,
               ),
             )
@@ -1405,7 +1423,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
           const SizedBox(height: 12),
           if (visible.isEmpty)
             Text(
-              'No selected target windows are scheduled in the next 7 days.',
+              'No target windows in the next 7 days.',
               style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
             )
           else
@@ -1455,7 +1473,7 @@ class _RaidPlannerScreenState extends State<RaidPlannerScreen> {
               ),
               Container(
                 width: 1,
-                height: 58,
+                height: 48,
                 color: ArcUiTokens.borderMedium.withValues(alpha: 0.70),
               ),
             ],

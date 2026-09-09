@@ -10,10 +10,12 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planne
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_command_centre_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_future_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/operations_command_screen.dart';
@@ -77,34 +79,64 @@ class ArcCompactNavigationCatalog {
 
   static const groups = <ArcCompactNavigationGroup>[
     ArcCompactNavigationGroup(
-      label: 'COMMAND CENTRE',
-      items: <ArcCompactNavigationItem>[
+      label: 'DISCOVER & RUN',
+      items: [
+        ArcCompactNavigationItem(
+          label: 'Discover UAG',
+          icon: Icons.explore_outlined,
+          routeName: ArcRaidersHubScreen.routeName,
+        ),
         ArcCompactNavigationItem(
           label: 'Command Centre',
           icon: Icons.dashboard_customize_outlined,
           routeName: ArcCommandCentreScreen.routeName,
-          selectedRouteNames: <String>[MyHubScreen.routeName],
-          personalisationFeature: ArcPersonalisationFeature.profile,
         ),
       ],
     ),
     ArcCompactNavigationGroup(
-      label: 'TRACK',
-      items: <ArcCompactNavigationItem>[
+      label: 'RAID & INTELLIGENCE',
+      items: [
+        ArcCompactNavigationItem(
+          label: 'Raid Intelligence',
+          icon: Icons.radar_rounded,
+          routeName: ArcRaidIntelligenceScreen.routeName,
+          accessFlag: FeatureAccessFlag.intelExplorer,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Raid Planner',
+          icon: Icons.route_rounded,
+          routeName: RaidPlannerScreen.routeName,
+          accessFlag: FeatureAccessFlag.raidPlanner,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Hunt Targets',
+          icon: Icons.track_changes_rounded,
+          routeName: RaidPlannerHuntTargetsScreen.routeName,
+          accessFlag: FeatureAccessFlag.raidPlanner,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Report a Rat / Contracts',
+          icon: Icons.gavel_rounded,
+          routeName: ArcRaiderContractsScreen.routeName,
+          accessFlag: FeatureAccessFlag.raiderContracts,
+        ),
+      ],
+    ),
+    ArcCompactNavigationGroup(
+      label: 'PROGRESSION & TRACKING',
+      items: [
         ArcCompactNavigationItem(
           label: 'Blueprint Tracker',
           icon: Icons.grid_on_rounded,
           routeName: BlueprintGridScreen.routeName,
           accessFlag: FeatureAccessFlag.blueprintTracker,
           badgeTarget: ArcDrawerBadgeTarget.blueprintTracker,
-          personalisationFeature: ArcPersonalisationFeature.blueprintTracker,
         ),
         ArcCompactNavigationItem(
           label: 'Scrappy Tracker',
           icon: Icons.recycling_rounded,
           routeName: ScrappyGridScreen.routeName,
           accessFlag: FeatureAccessFlag.scrappyTracker,
-          personalisationFeature: ArcPersonalisationFeature.scrappyTracker,
         ),
         ArcCompactNavigationItem(
           label: 'Bench Tracker',
@@ -122,38 +154,12 @@ class ArcCompactNavigationCatalog {
           label: 'Progress Trackers',
           icon: Icons.track_changes_rounded,
           routeName: ArcProgressTrackersScreen.routeName,
-          selectedRouteNames: <String>[
-            ScrappyGridScreen.routeName,
-            ScrappyGridScreen.benchRouteName,
-            ScrappyGridScreen.questRouteName,
-            RaidPlannerHuntTargetsScreen.routeName,
-          ],
-          visibilityAccessFlags: <String>[
+          visibilityAccessFlags: [
             FeatureAccessFlag.scrappyTracker,
             FeatureAccessFlag.benchTracker,
             FeatureAccessFlag.questTracker,
             FeatureAccessFlag.raidPlanner,
           ],
-          personalisationFeature: ArcPersonalisationFeature.scrappyTracker,
-        ),
-      ],
-    ),
-    ArcCompactNavigationGroup(
-      label: 'PLAN',
-      items: <ArcCompactNavigationItem>[
-        ArcCompactNavigationItem(
-          label: 'Raid Intelligence',
-          icon: Icons.radar_rounded,
-          routeName: ArcRaidIntelligenceScreen.routeName,
-          accessFlag: FeatureAccessFlag.intelExplorer,
-          personalisationFeature: ArcPersonalisationFeature.raidIntelligence,
-        ),
-        ArcCompactNavigationItem(
-          label: 'Raid Planner',
-          icon: Icons.route_rounded,
-          routeName: RaidPlannerScreen.routeName,
-          accessFlag: FeatureAccessFlag.raidPlanner,
-          personalisationFeature: ArcPersonalisationFeature.raidPlanner,
         ),
         ArcCompactNavigationItem(
           label: 'Favourite Loadout',
@@ -161,19 +167,23 @@ class ArcCompactNavigationCatalog {
           routeName: FavouriteLoadoutScreen.routeName,
           personalisationFeature: ArcPersonalisationFeature.favouriteLoadout,
         ),
+        ArcCompactNavigationItem(
+          label: 'Operations',
+          icon: Icons.military_tech_outlined,
+          routeName: OperationsCommandScreen.routeName,
+        ),
       ],
     ),
     ArcCompactNavigationGroup(
-      label: 'TRADE',
-      items: <ArcCompactNavigationItem>[
+      label: 'TRADE & INVENTORY',
+      items: [
         ArcCompactNavigationItem(
           label: 'Trading Hub',
           icon: Icons.storefront_rounded,
           routeName: TraderHubScreen.routeName,
           accessFlag: FeatureAccessFlag.traderHub,
           badgeTarget: ArcDrawerBadgeTarget.tradingHub,
-          personalisationFeature: ArcPersonalisationFeature.trading,
-          selectedRouteNames: <String>[
+          selectedRouteNames: [
             TradingListingsScreen.routeName,
             TradingCreateListingScreen.routeName,
             TradingActivityScreen.routeName,
@@ -183,7 +193,6 @@ class ArcCompactNavigationCatalog {
             TradingListingQueuesScreen.routeName,
             TradingTradeSessionsScreen.routeName,
             TradingNotificationsScreen.routeName,
-            SmartTradeAssistScreen.routeName,
           ],
         ),
         ArcCompactNavigationItem(
@@ -191,40 +200,28 @@ class ArcCompactNavigationCatalog {
           icon: Icons.auto_awesome_outlined,
           routeName: SmartTradeAssistScreen.routeName,
           accessFlag: FeatureAccessFlag.smartTradeAssist,
-          personalisationFeature: ArcPersonalisationFeature.trading,
         ),
         ArcCompactNavigationItem(
           label: 'Nomadic Trader',
           icon: Icons.local_shipping_outlined,
           routeName: NomadicTraderScreen.routeName,
-          personalisationFeature: ArcPersonalisationFeature.trading,
         ),
+      ],
+    ),
+    ArcCompactNavigationGroup(
+      label: 'SQUAD & COMMUNITY',
+      items: [
         ArcCompactNavigationItem(
           label: 'Match Raider',
           icon: Icons.groups_2_outlined,
           routeName: ArcMatchRiderScreen.routeName,
           accessFlag: FeatureAccessFlag.matchRaider,
           badgeTarget: ArcDrawerBadgeTarget.matchRider,
-          comingSoonWhenLocked: true,
-          personalisationFeature: ArcPersonalisationFeature.matchRider,
-        ),
-      ],
-    ),
-    ArcCompactNavigationGroup(
-      label: 'PROFILE',
-      items: <ArcCompactNavigationItem>[
-        ArcCompactNavigationItem(
-          label: 'Report a Rat',
-          icon: Icons.gavel_rounded,
-          routeName: ArcRaiderContractsScreen.routeName,
-          accessFlag: FeatureAccessFlag.raiderContracts,
-          personalisationFeature: ArcPersonalisationFeature.profile,
         ),
         ArcCompactNavigationItem(
-          label: 'Play Like a Pro',
-          icon: Icons.school_outlined,
-          routeName: PlayLikeAProScreen.routeName,
-          accessFlag: FeatureAccessFlag.playLockerPro,
+          label: 'Community Rewards',
+          icon: Icons.hub_outlined,
+          routeName: '/community-command',
         ),
         ArcCompactNavigationItem(
           label: 'Wall of Legends',
@@ -232,28 +229,46 @@ class ArcCompactNavigationCatalog {
           routeName: WallOfLegendsScreen.routeName,
         ),
         ArcCompactNavigationItem(
-          label: 'Operations',
-          icon: Icons.military_tech_outlined,
-          routeName: OperationsCommandScreen.routeName,
-        ),
-        ArcCompactNavigationItem(
           label: 'My Hub',
           icon: Icons.person_pin_circle_outlined,
           routeName: MyHubScreen.toolDeckRouteName,
-          selectedRouteNames: <String>[
-            MyHubScreen.toolDeckRouteName,
-            TradingProfileScreen.routeName,
-            PlayLikeAProScreen.routeName,
-            WallOfLegendsScreen.routeName,
-            OperationsCommandScreen.routeName,
-          ],
-          personalisationFeature: ArcPersonalisationFeature.profile,
+          selectedRouteNames: [MyHubScreen.routeName],
+        ),
+      ],
+    ),
+    ArcCompactNavigationGroup(
+      label: 'IMPROVE',
+      items: [
+        ArcCompactNavigationItem(
+          label: 'Play Like a Pro',
+          icon: Icons.school_outlined,
+          routeName: PlayLikeAProScreen.routeName,
+          accessFlag: FeatureAccessFlag.playLockerPro,
+        ),
+      ],
+    ),
+    ArcCompactNavigationGroup(
+      label: 'FUTURE HUB',
+      items: [
+        ArcCompactNavigationItem(
+          label: 'Roadmap & Community Ideas',
+          icon: Icons.explore_outlined,
+          routeName: ArcFutureHubScreen.routeName,
+        ),
+      ],
+    ),
+    ArcCompactNavigationGroup(
+      label: 'ACCOUNT & UAG',
+      items: [
+        ArcCompactNavigationItem(
+          label: 'Profile & Reputation',
+          icon: Icons.person_outline_rounded,
+          routeName: TradingProfileScreen.routeName,
         ),
         ArcCompactNavigationItem(
           label: 'Settings',
           icon: Icons.settings_outlined,
           routeName: ProfileSettingsScreen.routeName,
-          personalisationFeature: ArcPersonalisationFeature.settings,
         ),
       ],
     ),
@@ -266,7 +281,7 @@ class ArcCompactNavigationCatalog {
       for (final group in groups)
         ArcCompactNavigationGroup(
           label: group.label,
-          items: group.label == 'COMMAND CENTRE'
+          items: group.label == 'DISCOVER & RUN'
               ? group.items
               : _sortItems(group.items, personalisation),
         ),

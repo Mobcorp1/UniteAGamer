@@ -67,11 +67,11 @@ class _TradingBlueprintWatchesScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${blueprint.name} watch is active.')),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not create watch: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not create watch. Try again.')),
+      );
     }
   }
 
@@ -320,11 +320,11 @@ class _TradingBlueprintWatchesScreenState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Watch updated.')));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not update watch: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update watch. Try again.')),
+      );
     }
   }
 
@@ -335,11 +335,11 @@ class _TradingBlueprintWatchesScreenState
       } else {
         await _repository.resumeBlueprintWatch(watch.id);
       }
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not update watch: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update watch. Try again.')),
+      );
     }
   }
 
@@ -350,11 +350,11 @@ class _TradingBlueprintWatchesScreenState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Watch removed.')));
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not remove watch: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not remove watch. Try again.')),
+      );
     }
   }
 

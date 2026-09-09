@@ -524,7 +524,11 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                 children: [
                   Text(
                     '- ',
-                    style: ArcUiTokens.body(fontSize: 18, color: color, weight: FontWeight.w700),
+                    style: ArcUiTokens.body(
+                      fontSize: 18,
+                      color: color,
+                      weight: FontWeight.w700,
+                    ),
                   ),
                   Expanded(
                     child: Text(
@@ -603,7 +607,9 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
             return const Center(
-              child: CircularProgressIndicator(color: ArcUiTokens.primaryAccent),
+              child: CircularProgressIndicator(
+                color: ArcUiTokens.primaryAccent,
+              ),
             );
           }
 
@@ -619,7 +625,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                   borderOpacity: 0.30,
                 ),
                 child: Text(
-                  'Could not load Play Like a Pro: ${snapshot.error}',
+                  'Could not load Play Like a Pro right now.',
                   textAlign: TextAlign.center,
                   style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
                 ),

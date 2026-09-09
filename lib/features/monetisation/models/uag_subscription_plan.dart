@@ -77,7 +77,7 @@ class UagSubscriptionPlan {
           'The regular-player tier: higher limits, cleaner experience, smart alerts and stronger voice tools.',
       monthlyPricePence: 799,
       yearlyPricePence: 7999,
-      creatorOnboardingDiscountPercent: 20,
+      creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.essential,
       features: [
         UagMatchIntelligenceCopy.essentialDescription,
@@ -88,7 +88,7 @@ class UagSubscriptionPlan {
         'Smart item, trade and session alerts',
         'Raid Companion presets and 6 voice profiles',
         'Light advertising: banner only',
-        '10% follower discounts and 10% recurring creator commission',
+        'Creator Programme access with performance-based recurring commission',
       ],
       bestFor: [
         'regular players',
@@ -105,7 +105,7 @@ class UagSubscriptionPlan {
           'The power-user tier: unlimited systems, no ads, Trader Pro analytics and full automation.',
       monthlyPricePence: 999,
       yearlyPricePence: 9999,
-      creatorOnboardingDiscountPercent: 25,
+      creatorOnboardingDiscountPercent: 0,
       limits: UagPlanLimits.premium,
       features: [
         UagMatchIntelligenceCopy.premiumDescription,
@@ -116,7 +116,7 @@ class UagSubscriptionPlan {
         'All voice profiles, personalities and Raid Companion automation',
         'Unlimited saved raid plans and priority targets',
         'No ads',
-        '20% follower discounts and 20% recurring creator commission',
+        'Creator Programme access with performance-based recurring commission',
       ],
       bestFor: [
         'hardcore traders',

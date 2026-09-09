@@ -44,10 +44,10 @@ class _ArcPersonalisationPreferencesPanelState
         _draft = null;
         _message = 'Command Centre preferences saved.';
       });
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _message = 'Could not save preferences: $error';
+        _message = 'Could not save preferences. Try again.';
       });
     } finally {
       if (mounted) setState(() => _saving = false);

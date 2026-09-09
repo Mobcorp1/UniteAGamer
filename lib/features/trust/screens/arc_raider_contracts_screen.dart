@@ -7,8 +7,11 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_ma
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_trade_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_raid_intelligence_engine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_raid_intelligence_models.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/services/arc_text_sanitizer.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raid_intelligence_map.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/ads/uag_tactical_banner_ad.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -49,6 +52,9 @@ class _State extends State<ArcRaiderContractsScreen>
           'Report ratting privately, add evidence and optionally request a moderated contract.',
     ),
     drawer: const AppDrawer(),
+    bottomNavigationBar: const UagEntitledAdAwareBottomDock(
+      child: ArcCompanionBottomDock(activeLabel: 'Report a Rat'),
+    ),
     body: ArcRaidersScreenShell(
       showAdBanner: false,
       child: SafeArea(
@@ -69,15 +75,29 @@ class _State extends State<ArcRaiderContractsScreen>
               ),
               child: TabBar(
                 controller: tabs,
-                isScrollable: true,
+                isScrollable: false,
                 labelColor: ArcUiTokens.secondaryAccent,
                 unselectedLabelColor: ArcUiTokens.textSecondary,
                 indicatorColor: ArcUiTokens.secondaryAccent,
+                labelPadding: EdgeInsets.zero,
+                labelStyle: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.1,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.1,
+                ),
                 tabs: const [
-                  Tab(text: 'REPORT A RAT'),
-                  Tab(text: 'LIVE CONTRACTS'),
-                  Tab(text: 'MY ACTIVITY'),
-                  Tab(text: 'MY REWARDS'),
+                  Tab(icon: Icon(Icons.flag_outlined), text: 'REPORT'),
+                  Tab(icon: Icon(Icons.gps_fixed_rounded), text: 'CONTRACTS'),
+                  Tab(icon: Icon(Icons.history_rounded), text: 'ACTIVITY'),
+                  Tab(
+                    icon: Icon(Icons.workspace_premium_outlined),
+                    text: 'REWARDS',
+                  ),
                 ],
               ),
             ),
@@ -357,11 +377,11 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
         ),
       );
       _reset();
-    } catch (error) {
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not submit report. Try again.')),
+        );
       }
     } finally {
       if (mounted) {
@@ -417,9 +437,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
   Widget build(BuildContext context) => ListView(
     padding: AppTheme.pagePadding,
     children: [
-      _notice(
-        'Reports stay private until moderator review. Approved reports can contribute to anonymous Rat Activity intelligence; UAG does not publish accusations.',
-      ),
+      const _ReportRatHero(),
       const SizedBox(height: 14),
       _stageHeader(),
       const SizedBox(height: 14),
@@ -465,7 +483,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
   );
 
   Widget _stageHeader() {
-    const labels = ['Rat', 'Incident', 'Where & when', 'Contract', 'Review'];
+    const labels = ['TARGET', 'INCIDENT', 'LOCATION', 'CONTRACT', 'REVIEW'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -806,7 +824,9 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
               title: Text(item.name),
-              subtitle: Text('${entry.value} Ã— ${item.category}'),
+              subtitle: Text(
+                '${entry.value} ${ArcTextSanitizer.multiplication} ${item.category}',
+              ),
               trailing: IconButton(
                 tooltip: 'Remove reward',
                 onPressed: () => setState(() => rewards.remove(entry.key)),
@@ -841,7 +861,9 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
                 dense: true,
                 selected: selectedRewardItemId == item.id,
                 title: Text(item.name),
-                subtitle: Text('${item.category} â€¢ ${item.group}'),
+                subtitle: Text(
+                  ArcTextSanitizer.metadataLine([item.category, item.group]),
+                ),
                 onTap: () => setState(() {
                   selectedRewardItemId = item.id;
                   rewardSearch.text = item.name;
@@ -890,7 +912,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       key: const Key('report-rat-submit'),
       onPressed: busy ? null : submit,
       icon: const Icon(Icons.shield_outlined),
-      label: Text(busy ? 'Submittingâ€¦' : 'Submit privately for review'),
+      label: Text(busy ? 'Submitting...' : 'Submit privately for review'),
     ),
   ]);
 
@@ -932,9 +954,9 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
                   final item = ArcTradeCatalog.items.firstWhere(
                     (item) => item.id == e.key,
                   );
-                  return '${e.value}Ã— ${item.name}';
+                  return '${e.value}${ArcTextSanitizer.multiplication} ${item.name}';
                 })
-                .join(' â€¢ '),
+                .join(ArcTextSanitizer.separator()),
           ),
       ],
     );
@@ -1051,14 +1073,18 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       Expanded(
         child: OutlinedButton(
           onPressed: () => onChanged(true),
-          child: Text(atExtraction == true ? 'âœ“ Yes' : 'Yes'),
+          child: Text(
+            atExtraction == true ? '${ArcTextSanitizer.check} Yes' : 'Yes',
+          ),
         ),
       ),
       const SizedBox(width: 10),
       Expanded(
         child: OutlinedButton(
           onPressed: () => onChanged(false),
-          child: Text(atExtraction == false ? 'âœ“ No' : 'No'),
+          child: Text(
+            atExtraction == false ? '${ArcTextSanitizer.check} No' : 'No',
+          ),
         ),
       ),
     ],
@@ -1131,16 +1157,52 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
   };
 }
 
-Widget _notice(String text) => Container(
-  padding: AppTheme.sectionCardPadding,
-  decoration: AppTheme.tradingCardDecoration(
-    borderColor: AppTheme.neonCyan.withValues(alpha: .3),
-  ),
-  child: Text(
-    text,
-    style: AppTheme.bodyTextStyle(fontSize: 14, color: Colors.white70),
-  ),
-);
+class _TrustLoadProblem extends StatelessWidget {
+  const _TrustLoadProblem({required this.title, required this.message});
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: AppTheme.pagePadding,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            accent: ArcUiTokens.warning,
+            borderOpacity: 0.34,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.cloud_off_outlined,
+                size: 34,
+                color: ArcUiTokens.warning,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                title.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: AppTheme.tradingHeading(fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 Widget _card(String title, List<Widget> children) => Container(
   padding: AppTheme.sectionCardPadding,
@@ -1157,6 +1219,55 @@ Widget _card(String title, List<Widget> children) => Container(
   ),
 );
 
+class _ReportRatHero extends StatelessWidget {
+  const _ReportRatHero();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF07111A).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.38),
+        ),
+        image: const DecorationImage(
+          image: AssetImage('assets/arc_raiders/hub/arc_hub_hunt_a_rat.webp'),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(Color(0xD807111A), BlendMode.srcOver),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('REPORT A RAT', style: AppTheme.tradingHeading(fontSize: 24)),
+          const SizedBox(height: 8),
+          const Text(
+            'Private report. Moderator reviewed. No public accusation is created.',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Approved reports can contribute to anonymous Rat Activity intelligence and, where requested, a moderated Raider Contract.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Contracts extends StatelessWidget {
   const _Contracts({required this.repo, required this.live});
   final ArcRaiderContractsRepository repo;
@@ -1167,8 +1278,10 @@ class _Contracts extends StatelessWidget {
     stream: live ? repo.watchLiveContracts() : repo.watchMyContracts(),
     builder: (context, snapshot) {
       if (snapshot.hasError) {
-        return Center(
-          child: Text('Could not load contracts: ${snapshot.error}'),
+        return const _TrustLoadProblem(
+          title: 'Contracts unavailable',
+          message:
+              'We could not load Raider Contracts right now. Your report data has not been changed. Close and reopen this section, or try again shortly.',
         );
       }
       if (!snapshot.hasData) {
@@ -1352,7 +1465,11 @@ class _MyActivity extends StatelessWidget {
                 (r) => ListTile(
                   title: Text(r.targetDisplayName),
                   subtitle: Text(
-                    '${r.category.name} â€¢ ${r.status.name} â€¢ ${r.mapDisplayName}',
+                    ArcTextSanitizer.metadataLine([
+                      r.category.name,
+                      r.status.name,
+                      r.mapDisplayName,
+                    ]),
                   ),
                   trailing: r.canWithdraw
                       ? TextButton(
@@ -1389,8 +1506,10 @@ class _BlueprintRewardsState extends State<_BlueprintRewards> {
     stream: widget.repo.watchMyContracts(),
     builder: (context, snapshot) {
       if (snapshot.hasError) {
-        return Center(
-          child: Text('Unable to load Blueprint rewards: ${snapshot.error}'),
+        return const _TrustLoadProblem(
+          title: 'Rewards unavailable',
+          message:
+              'We could not load your Blueprint rewards right now. Your Blueprint Tracker and duplicates have not been changed.',
         );
       }
       if (!snapshot.hasData) {
@@ -1437,7 +1556,10 @@ class _BlueprintRewardsState extends State<_BlueprintRewards> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Blueprint reward â€¢ ${contract.targetDisplayName}',
+              ArcTextSanitizer.metadataLine([
+                'Blueprint reward',
+                contract.targetDisplayName,
+              ]),
               style: AppTheme.tradingHeading(fontSize: 17),
             ),
             const SizedBox(height: 6),
@@ -1449,9 +1571,7 @@ class _BlueprintRewardsState extends State<_BlueprintRewards> {
               future: widget.repo.loadEligibleBlueprintRewards(contract),
               builder: (context, candidatesSnapshot) {
                 if (candidatesSnapshot.hasError) {
-                  return Text(
-                    'Unable to refresh matches: ${candidatesSnapshot.error}',
-                  );
+                  return Text('Unable to refresh matches right now.');
                 }
                 if (!candidatesSnapshot.hasData) {
                   return const LinearProgressIndicator();
@@ -1533,11 +1653,11 @@ class _BlueprintRewardsState extends State<_BlueprintRewards> {
           ),
         ),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save Blueprint rewards. Try again.')),
+      );
     } finally {
       if (mounted) setState(() => saving.remove(contract.id));
     }

@@ -112,6 +112,14 @@ class PlayLikeAProRecommendationEngine {
                   guide.tags.contains('blueprints')
               ? 18
               : 0,
+        ArcPersonalisationGoal.findBlueprintIntel =>
+          {
+                PlayLikeAProCategory.blueprintRoutes,
+                PlayLikeAProCategory.mapRoutes,
+                PlayLikeAProCategory.lootRoutes,
+              }.contains(guide.category)
+              ? 18
+              : 0,
         ArcPersonalisationGoal.buildFavouriteLoadout =>
           guide.isLoadoutRelevant ||
                   {
@@ -147,8 +155,18 @@ class PlayLikeAProRecommendationEngine {
               }.contains(guide.category)
               ? 12
               : 0,
+        ArcPersonalisationGoal.huntARat =>
+          {
+                PlayLikeAProCategory.pvp,
+                PlayLikeAProCategory.combat,
+                PlayLikeAProCategory.positioning,
+                PlayLikeAProCategory.encounterDecisions,
+              }.contains(guide.category)
+              ? 18
+              : 0,
         ArcPersonalisationGoal.findSquads =>
           guide.category == PlayLikeAProCategory.squadTactics ? 18 : 0,
+        ArcPersonalisationGoal.playLikeAPro => 24,
         ArcPersonalisationGoal.exploreEverything => guide.featured ? 4 : 0,
         ArcPersonalisationGoal.tradeBlueprints ||
         ArcPersonalisationGoal.manageCosmetics ||

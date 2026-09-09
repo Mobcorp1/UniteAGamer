@@ -16,10 +16,13 @@ import '../raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import '../raid_planner/screens/raid_planner_screen.dart';
 import '../voice/voice_assistant_sheet.dart';
 import 'arc_market_intelligence_screen.dart';
+import 'arc_command_centre_screen.dart';
+import 'arc_future_hub_screen.dart';
+import 'play_like_a_pro_screen.dart';
+import '../../../trust/screens/arc_raider_contracts_screen.dart';
 import 'arc_profile_edit_screen.dart';
 import 'arc_match_rider_screen.dart';
 import 'blueprint_grid_screen.dart';
-import 'my_hub_screen.dart';
 import 'referral_tools_screen.dart';
 import 'scrappy_grid_screen.dart';
 import 'smart_trade_assist_screen.dart';
@@ -41,69 +44,26 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
 
   late final List<_ArcHubFeature> _features = [
     _ArcHubFeature(
-      title: 'My Hub',
+      title: 'Command Centre',
       subtitle:
-          'Your ARC command centre: loadouts, hunts, trades, intel and progression.',
+          'Your operational ARC dashboard: progress, alerts, intel and shortcuts.',
       icon: Icons.dashboard_customize_rounded,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
       assetName: 'my_hub_card.webp',
-      builder: (_) => const MyHubScreen(),
+      routeName: ArcCommandCentreScreen.routeName,
+      builder: (_) => const ArcCommandCentreScreen(),
     ),
     _ArcHubFeature(
-      title: 'Profile & Reputation',
-      subtitle: 'Edit Your Hub Profile, trust signals and raider identity.',
-      icon: Icons.verified_user_rounded,
-      accent: AppTheme.neonPink,
-      art: _ArcHubArtKind.intel,
-      assetName: 'arc_hub_profile_reputation.webp',
-      builder: (_) => const ArcProfileEditScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Refer a Raider',
+      title: 'Blueprint Tracker',
       subtitle:
-          'Community referrals, creator rewards and supporter growth tools.',
-      icon: Icons.campaign_rounded,
+          'See exactly what you own, what is missing and what you can trade.',
+      icon: Icons.grid_on_rounded,
       accent: AppTheme.neonCyan,
-      art: _ArcHubArtKind.smart,
-      assetName: 'arc_hub_referral_tools.webp',
-      builder: (_) => ReferralToolsScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Subscriptions',
-      subtitle: 'Premium access, supporter perks and account upgrade options.',
-      icon: Icons.workspace_premium_rounded,
-      accent: AppTheme.neonPink,
-      art: _ArcHubArtKind.trading,
-      assetName: 'arc_hub_subscriptions.webp',
-      builder: (_) => const MonetisationScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Match a Raider',
-      subtitle: 'Find squadmates, chill raiders and extraction partners.',
-      icon: Icons.groups_rounded,
-      accent: AppTheme.neonPink,
-      art: _ArcHubArtKind.match,
-      assetName: 'arc_hub_match_a_raider.webp',
-      builder: (_) => const ArcMatchRiderScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Raid Planner',
-      subtitle: 'Plan around active hunts, events and blueprint windows.',
-      icon: Icons.route_rounded,
-      accent: AppTheme.neonCyan,
-      art: _ArcHubArtKind.raid,
-      assetName: 'arc_hub_raid_planner.webp',
-      builder: (_) => const RaidPlannerScreen(),
-    ),
-    _ArcHubFeature(
-      title: 'Hunt Targets',
-      subtitle: 'Edit your 5 active blueprint hunts used by the planner.',
-      icon: Icons.track_changes_rounded,
-      accent: AppTheme.neonCyan,
-      art: _ArcHubArtKind.targets,
-      assetName: 'arc_hub_hunt_targets.webp',
-      builder: (_) => const RaidPlannerHuntTargetsScreen(),
+      art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_blueprint_grid.webp',
+      routeName: BlueprintGridScreen.routeName,
+      builder: (_) => const BlueprintGridScreen(),
     ),
     _ArcHubFeature(
       title: 'Trading',
@@ -112,6 +72,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
       assetName: 'arc_hub_trading.webp',
+      routeName: TraderHubScreen.routeName,
       builder: (_) => const TraderHubScreen(),
     ),
     _ArcHubFeature(
@@ -121,7 +82,70 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.smart,
       assetName: 'arc_hub_smart_trade.webp',
+      routeName: SmartTradeAssistScreen.routeName,
       builder: (_) => const SmartTradeAssistScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Raid Planner',
+      subtitle: 'Plan around active hunts, events and blueprint windows.',
+      icon: Icons.route_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.raid,
+      assetName: 'arc_hub_raid_planner.webp',
+      routeName: RaidPlannerScreen.routeName,
+      builder: (_) => const RaidPlannerScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Hunt Targets',
+      subtitle: 'Edit your 5 active blueprint hunts used by the planner.',
+      icon: Icons.track_changes_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.targets,
+      assetName: 'arc_hub_hunt_targets.webp',
+      routeName: RaidPlannerHuntTargetsScreen.routeName,
+      builder: (_) => const RaidPlannerHuntTargetsScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Match a Raider',
+      subtitle: 'Find squadmates, chill raiders and extraction partners.',
+      icon: Icons.groups_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.match,
+      assetName: 'arc_hub_match_a_raider.webp',
+      routeName: ArcMatchRiderScreen.routeName,
+      builder: (_) => const ArcMatchRiderScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Scrappy Tracker',
+      subtitle: 'Track Scrappy upgrades, requirements and progression.',
+      icon: Icons.recycling_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_scrappy_tracker.webp',
+      routeName: ScrappyGridScreen.routeName,
+      builder: (_) => const ScrappyGridScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Report a Rat',
+      subtitle:
+          'Report ratting, review activity and enter the moderated contracts system.',
+      icon: Icons.gavel_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.targets,
+      assetName: 'arc_hub_hunt_a_rat.webp',
+      routeName: ArcRaiderContractsScreen.routeName,
+      builder: (_) => const ArcRaiderContractsScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Play Like A Pro',
+      subtitle:
+          'Practical guidance to improve how you raid, fight and survive.',
+      icon: Icons.school_outlined,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_tracking.webp',
+      routeName: PlayLikeAProScreen.routeName,
+      builder: (_) => const PlayLikeAProScreen(),
     ),
     _ArcHubFeature(
       title: 'Community Intel',
@@ -130,7 +154,50 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.intel,
       assetName: 'arc_hub_community_intel.webp',
+      routeName: ArcMarketIntelligenceScreen.routeName,
       builder: (_) => const ArcMarketIntelligenceScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Profile & Reputation',
+      subtitle: 'Edit Your Hub Profile, trust signals and raider identity.',
+      icon: Icons.verified_user_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.intel,
+      assetName: 'arc_hub_profile_reputation.webp',
+      routeName: ArcProfileEditScreen.routeName,
+      builder: (_) => const ArcProfileEditScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Community Rewards',
+      subtitle:
+          'Referrals, Reward Locker, Community Growth and Creator earnings.',
+      icon: Icons.campaign_rounded,
+      accent: AppTheme.neonCyan,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_referral_tools.webp',
+      routeName: '/community-command',
+      builder: (_) => ReferralToolsScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Subscriptions',
+      subtitle: 'Premium access, supporter perks and account upgrade options.',
+      icon: Icons.workspace_premium_rounded,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.trading,
+      assetName: 'arc_hub_subscriptions.webp',
+      routeName: MonetisationScreen.routeName,
+      builder: (_) => const MonetisationScreen(),
+    ),
+    _ArcHubFeature(
+      title: 'Future Hub',
+      subtitle:
+          'Explore the UAG roadmap, community impact plans and vote on new ideas.',
+      icon: Icons.explore_outlined,
+      accent: AppTheme.neonPink,
+      art: _ArcHubArtKind.smart,
+      assetName: 'arc_hub_community_intel.webp',
+      routeName: ArcFutureHubScreen.routeName,
+      builder: (_) => const ArcFutureHubScreen(),
     ),
   ];
 
@@ -146,14 +213,20 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     if (!mounted) return;
 
     if (isAdminOrDev) {
-      navigator.push(MaterialPageRoute(builder: feature.builder));
+      _pushFeature(navigator, feature, bypassRouteGate: true);
       return;
     }
 
-    const betaOpenTitles = {'Nomadic Trader', 'My Hub'};
+    const betaOpenTitles = {
+      'Nomadic Trader',
+      'My Hub',
+      'Command Centre',
+      'Future Hub',
+      'Profile & Reputation',
+    };
 
     if (betaOpenTitles.contains(feature.title)) {
-      navigator.push(MaterialPageRoute(builder: feature.builder));
+      _pushFeature(navigator, feature);
       return;
     }
 
@@ -165,7 +238,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     if (!mounted) return;
 
     if (availability.isLive) {
-      navigator.push(MaterialPageRoute(builder: feature.builder));
+      _pushFeature(navigator, feature);
       return;
     }
 
@@ -179,6 +252,27 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
               ),
       ),
     );
+  }
+
+  void _pushFeature(
+    NavigatorState navigator,
+    _ArcHubFeature feature, {
+    bool bypassRouteGate = false,
+  }) {
+    final routeName = feature.routeName;
+    if (bypassRouteGate || routeName == null || routeName.isEmpty) {
+      navigator.push(
+        MaterialPageRoute(
+          builder: feature.builder,
+          settings: routeName == null || routeName.isEmpty
+              ? null
+              : RouteSettings(name: routeName),
+        ),
+      );
+      return;
+    }
+
+    navigator.pushNamed(routeName);
   }
 
   String? _featureAccessFlagForTitle(String title) {
@@ -212,11 +306,14 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
         return FeatureAccessFlag.smartTradeAssist;
       case 'Subscriptions':
       case 'Plans & Referrals':
+      case 'Community Rewards':
       case 'Referral Tools':
       case 'Refer a Raider':
       case 'Operations':
       case 'Operation Rewards':
         return FeatureAccessFlag.monetisation;
+      case 'Report a Rat':
+        return FeatureAccessFlag.raiderContracts;
       case 'Voice Assistant':
         return FeatureAccessFlag.voiceAssistant;
       case 'Play Like A Pro':
@@ -232,12 +329,14 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     final selected = _features[_selectedIndex];
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
       backgroundColor: Colors.transparent,
       drawer: const AppDrawer(),
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'systems'),
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'discover',
+      ),
       body: ArcRaidersScreenShell(
-        showAdBanner: false,
+        showAdBanner: true,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -334,18 +433,32 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final stageWidth = isWide
             ? math.min(constraints.maxWidth, 1180.0)
             : constraints.maxWidth;
-        final stageHeight = isPhone
-            ? math.min(constraints.maxHeight, 520.0)
-            : math.min(constraints.maxHeight, isTablet ? 620.0 : 510.0);
-
+        final availableHeight = math.max(constraints.maxHeight, 360.0);
+        final showQuickStrip = !isPhone || availableHeight >= 430;
         final centreCardHeight = isWide
             ? (isCompactHeight ? 336.0 : 388.0)
             : isTablet
             ? 408.0
-            : 418.0;
+            : math.min(
+                isCompactHeight ? 328.0 : 374.0,
+                math.max(
+                  248.0,
+                  availableHeight - (showQuickStrip ? 128.0 : 48.0),
+                ),
+              );
 
         final dotsTop = centreCardHeight + (isPhone ? 14.0 : 16.0);
         final stripTop = dotsTop + (isPhone ? 24.0 : 24.0);
+        final stripHeightEstimate = isPhone ? 62.0 : 72.0;
+        final stageHeight = math.min(
+          availableHeight,
+          showQuickStrip
+              ? math.max(
+                  centreCardHeight + 80.0,
+                  stripTop + stripHeightEstimate + 8.0,
+                )
+              : dotsTop + 28.0,
+        );
         final stripWidth = isPhone
             ? math.min(stageWidth - 38.0, 360.0)
             : math.min(stageWidth - 64.0, 560.0);
@@ -396,16 +509,17 @@ class _PremiumFeatureCarousel extends StatelessWidget {
                       accent: features[selectedIndex].accent,
                     ),
                   ),
-                  Positioned(
-                    top: stripTop,
-                    child: SizedBox(
-                      width: stripWidth,
-                      child: _HubQuickStrip(
-                        selected: features[selectedIndex],
-                        onOpen: () => onOpen(features[selectedIndex]),
+                  if (showQuickStrip)
+                    Positioned(
+                      top: stripTop,
+                      child: SizedBox(
+                        width: stripWidth,
+                        child: _HubQuickStrip(
+                          selected: features[selectedIndex],
+                          onOpen: () => onOpen(features[selectedIndex]),
+                        ),
                       ),
                     ),
-                  ),
                   Positioned(
                     left: arrowInset,
                     top: arrowTop,
@@ -466,11 +580,16 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         : isTablet
         ? 332.0
         : math.min(canvasWidth - 58.0, 322.0);
+    final availableHeight = math.max(canvasHeight, 320.0);
+    final showQuickStrip = !isPhone || availableHeight >= 430;
     final centerHeight = isWide
         ? (isCompactHeight ? 336.0 : 388.0)
         : isTablet
         ? 408.0
-        : 418.0;
+        : math.min(
+            isCompactHeight ? 328.0 : 374.0,
+            math.max(248.0, availableHeight - (showQuickStrip ? 128.0 : 48.0)),
+          );
 
     final nearWidth = isWide
         ? (isCompactHeight ? 196.0 : 214.0)
@@ -566,7 +685,7 @@ class _ArcHubRealAssetBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = feature.assetName.startsWith('assets/')
         ? feature.assetName
-        : 'assets/images/arc_raiders/hub/${feature.assetName}';
+        : 'assets/arc_raiders/hub/${feature.assetName}';
 
     return Stack(
       fit: StackFit.expand,
@@ -637,7 +756,7 @@ class _StaticRingFeatureCard extends StatelessWidget {
     final iconSize = selected ? (phone ? 25.0 : 29.0) : 21.0;
     final radius = selected ? ArcUiTokens.radiusXL : ArcUiTokens.radiusL;
 
-    return InkWell(
+    final card = InkWell(
       borderRadius: BorderRadius.circular(radius),
       onTap: onTap,
       child: Container(
@@ -740,13 +859,13 @@ class _StaticRingFeatureCard extends StatelessWidget {
                           ],
                         ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: selected ? 7 : 5),
                   Text(
                     feature.subtitle,
                     textAlign: phone && selected
                         ? TextAlign.center
                         : TextAlign.start,
-                    maxLines: phone ? 3 : (compact ? 3 : 4),
+                    maxLines: phone ? 2 : (compact ? 2 : 3),
                     overflow: TextOverflow.ellipsis,
                     style: AppTheme.bodyTextStyle(
                       fontSize: bodySize,
@@ -754,33 +873,44 @@ class _StaticRingFeatureCard extends StatelessWidget {
                       isBold: true,
                     ).copyWith(height: 1.22),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: phone && selected
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.touch_app_rounded,
-                        color: feature.accent,
-                        size: compact ? 14 : 17,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Tap to open',
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: compact ? 10 : 11,
-                          color: feature.accent,
-                          isBold: true,
-                        ),
-                      ),
-                    ],
-                  ),
+                  if (selected) ...[
+                    const SizedBox(height: 7),
+                    Align(
+                      alignment: phone
+                          ? Alignment.center
+                          : Alignment.centerLeft,
+                      child: _ArcHubOpenPill(accent: feature.accent),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+
+    return ElectricChargeBorder(active: selected, radius: radius, child: card);
+  }
+}
+
+class _ArcHubOpenPill extends StatelessWidget {
+  const _ArcHubOpenPill({required this.accent});
+
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(ArcUiTokens.radiusS),
+        border: Border.all(color: accent.withValues(alpha: 0.34)),
+      ),
+      child: Text(
+        'OPEN SYSTEM',
+        style: ArcUiTokens.label(color: accent).copyWith(fontSize: 9),
       ),
     );
   }
@@ -819,57 +949,69 @@ class _HubHeader extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 42,
-          child: Row(
-            children: [
-              SizedBox(
-                width: 76,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Builder(
-                    builder: (context) => compactIcon(
-                      icon: Icons.menu_rounded,
-                      tooltip: 'Open navigation',
-                      color: ArcUiTokens.primaryAccent,
-                      onPressed: () => Scaffold.of(context).openDrawer(),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final phone = constraints.maxWidth < 430;
+            final sideWidth = phone ? 58.0 : 104.0;
+            return SizedBox(
+              height: phone ? 42 : 48,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: sideWidth,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Builder(
+                        builder: (context) => compactIcon(
+                          icon: Icons.menu_rounded,
+                          tooltip: 'Open navigation',
+                          color: ArcUiTokens.primaryAccent,
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  'ARC Systems',
-                  textAlign: TextAlign.center,
-                  style: ArcUiTokens.pageTitle(
-                    color: ArcUiTokens.primaryAccent,
+                  Expanded(
+                    child: Text(
+                      'DISCOVER UAG',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.pageTitle(
+                        fontSize: phone ? 16 : 18,
+                        color: ArcUiTokens.primaryAccent,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(
-                width: 76,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    compactIcon(
-                      icon: Icons.feedback_outlined,
-                      tooltip: 'Feedback',
-                      onPressed: onFeedback,
+                  SizedBox(
+                    width: sideWidth,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        compactIcon(
+                          icon: Icons.feedback_outlined,
+                          tooltip: 'Feedback',
+                          onPressed: onFeedback,
+                        ),
+                        if (!phone)
+                          compactIcon(
+                            icon: Icons.center_focus_strong_rounded,
+                            tooltip: 'Open ARC assistant',
+                            onPressed: onAssistant,
+                          ),
+                      ],
                     ),
-                    compactIcon(
-                      icon: Icons.center_focus_strong_rounded,
-                      tooltip: 'Open ARC assistant',
-                      onPressed: onAssistant,
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
         Text(
-          'Your command centre',
+          'Choose your next ARC system',
           textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
         ),
       ],
@@ -891,11 +1033,9 @@ class _HubQuickStrip extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       child: Container(
         key: ValueKey(selected.title),
-        padding: EdgeInsets.fromLTRB(
-          phone ? AppTheme.spaceM : AppTheme.spaceL,
-          AppTheme.spaceM,
-          phone ? AppTheme.spaceM : AppTheme.spaceL,
-          AppTheme.spaceM,
+        padding: EdgeInsets.symmetric(
+          horizontal: phone ? 12 : 16,
+          vertical: phone ? 9 : 11,
         ),
         decoration: BoxDecoration(
           color: ArcUiTokens.surfacePanel.withValues(alpha: 0.96),
@@ -911,13 +1051,13 @@ class _HubQuickStrip extends StatelessWidget {
         child: Text(
           selected.subtitle,
           textAlign: TextAlign.center,
-          maxLines: phone ? 3 : 2,
+          maxLines: phone ? 2 : 2,
           overflow: TextOverflow.ellipsis,
           style: AppTheme.bodyTextStyle(
-            fontSize: phone ? 13 : 14,
+            fontSize: phone ? 11.5 : 13,
             color: AppTheme.tradingMutedText,
             isBold: true,
-          ).copyWith(height: 1.32),
+          ).copyWith(height: 1.22),
         ),
       ),
     );
@@ -991,7 +1131,13 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
       return;
     }
 
-    const betaOpenTitles = {'Nomadic Trader', 'My Hub'};
+    const betaOpenTitles = {
+      'Nomadic Trader',
+      'My Hub',
+      'Command Centre',
+      'Future Hub',
+      'Profile & Reputation',
+    };
 
     if (betaOpenTitles.contains(feature.title)) {
       navigator.push(MaterialPageRoute(builder: feature.builder));
@@ -1053,11 +1199,14 @@ class _TrackingMenuScreenState extends State<_TrackingMenuScreen> {
         return FeatureAccessFlag.smartTradeAssist;
       case 'Subscriptions':
       case 'Plans & Referrals':
+      case 'Community Rewards':
       case 'Referral Tools':
       case 'Refer a Raider':
       case 'Operations':
       case 'Operation Rewards':
         return FeatureAccessFlag.monetisation;
+      case 'Report a Rat':
+        return FeatureAccessFlag.raiderContracts;
       case 'Voice Assistant':
         return FeatureAccessFlag.voiceAssistant;
       case 'Play Like A Pro':
@@ -1757,20 +1906,20 @@ class _ArcHubArtPainter extends CustomPainter {
 
 // ARC HUB WEBP ASSET MANIFEST
 // Drop generated/converted files here:
-// assets/images/arc_raiders/hub/arc_hub_profile_reputation.webp
-// assets/images/arc_raiders/hub/arc_hub_referral_tools.webp
-// assets/images/arc_raiders/hub/arc_hub_subscriptions.webp
-// assets/images/arc_raiders/hub/arc_hub_match_a_raider.webp
-// assets/images/arc_raiders/hub/arc_hub_raid_planner.webp
-// assets/images/arc_raiders/hub/arc_hub_tracking.webp
-// assets/images/arc_raiders/hub/arc_hub_hunt_targets.webp
-// assets/images/arc_raiders/hub/arc_hub_trading.webp
-// assets/images/arc_raiders/hub/arc_hub_smart_trade.webp
-// assets/images/arc_raiders/hub/arc_hub_community_intel.webp
-// assets/images/arc_raiders/hub/arc_hub_blueprint_grid.webp
-// assets/images/arc_raiders/hub/arc_hub_scrappy_tracker.webp
-// assets/images/arc_raiders/hub/arc_hub_bench_tracker.webp
-// assets/images/arc_raiders/hub/arc_hub_quest_tracker.webp
+// assets/arc_raiders/hub/arc_hub_profile_reputation.webp
+// assets/arc_raiders/hub/arc_hub_referral_tools.webp
+// assets/arc_raiders/hub/arc_hub_subscriptions.webp
+// assets/arc_raiders/hub/arc_hub_match_a_raider.webp
+// assets/arc_raiders/hub/arc_hub_raid_planner.webp
+// assets/arc_raiders/hub/arc_hub_tracking.webp
+// assets/arc_raiders/hub/arc_hub_hunt_targets.webp
+// assets/arc_raiders/hub/arc_hub_trading.webp
+// assets/arc_raiders/hub/arc_hub_smart_trade.webp
+// assets/arc_raiders/hub/arc_hub_community_intel.webp
+// assets/arc_raiders/hub/arc_hub_blueprint_grid.webp
+// assets/arc_raiders/hub/arc_hub_scrappy_tracker.webp
+// assets/arc_raiders/hub/arc_hub_bench_tracker.webp
+// assets/arc_raiders/hub/arc_hub_quest_tracker.webp
 enum _ArcHubArtKind {
   match,
   blueprints,
@@ -1791,6 +1940,7 @@ class _ArcHubFeature {
     required this.art,
     required this.assetName,
     required this.builder,
+    this.routeName,
   });
 
   final String title;
@@ -1800,4 +1950,5 @@ class _ArcHubFeature {
   final _ArcHubArtKind art;
   final String assetName;
   final WidgetBuilder builder;
+  final String? routeName;
 }

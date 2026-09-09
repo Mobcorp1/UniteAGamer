@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_app_scroll_behavior.dart';
 import 'package:uag_arc_raiders_hub/widgets/arc_global_visual_system.dart';
+import 'package:uag_arc_raiders_hub/widgets/uag_cinematic_loading_screen.dart';
 
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,6 +14,7 @@ import 'package:uag_arc_raiders_hub/build/auth/auth_screen.dart';
 import 'package:uag_arc_raiders_hub/build/home_screen.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
 import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_creator_referral_bootstrap.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trust/screens/arc_raider_contracts_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/raid_planner/screens/raid_planner_hunt_targets_screen.dart';
@@ -27,11 +29,14 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_market_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_match_rider_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_progress_trackers_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_edit_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_profile_setup_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_raid_intelligence_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_smart_build_trade_draft_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_future_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/referral_tools_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_hub_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/my_intel_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/nomadic_trader_screen.dart';
@@ -64,10 +69,21 @@ import 'package:uag_arc_raiders_hub/screens/build/auth/auth_landing_screen.dart'
 import 'package:uag_arc_raiders_hub/screens/build/feedback_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
+import 'package:uag_arc_raiders_hub/features/monetisation/services/uag_community_referral_deep_link_bootstrap.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Render the approved UAG boot treatment immediately while Firebase and
+  // startup services initialise. This gives native mobile the same first
+  // impression as the web bootstrap instead of waiting on a blank frame.
+  runApp(const _UagBootstrapApp());
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await UagCreatorReferralBootstrap.instance.initialise();
+  await UagCommunityReferralDeepLinkBootstrap.instance.initialise();
+  UagCommunityReferralDeepLinkBootstrap.instance.captureWebRoute(Uri.base);
 
   runApp(const UAGTradersHubApp());
 
@@ -93,6 +109,19 @@ Future<void> main() async {
       debugPrintStack(stackTrace: st);
     }
   });
+}
+
+class _UagBootstrapApp extends StatelessWidget {
+  const _UagBootstrapApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.theme,
+      home: const UagCinematicLoadingScreen(),
+    );
+  }
 }
 
 class UAGTradersHubApp extends StatefulWidget {
@@ -156,6 +185,18 @@ class UAGTradersHubApp extends StatefulWidget {
       case TradingHubScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const TradingHubScreen(),
+          settings: settings,
+        );
+
+      case ArcFutureHubScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcFutureHubScreen(),
+          settings: settings,
+        );
+
+      case '/community-command':
+        return MaterialPageRoute(
+          builder: (_) => ReferralToolsScreen(),
           settings: settings,
         );
 
@@ -232,6 +273,12 @@ class UAGTradersHubApp extends StatefulWidget {
       case ArcProfileSetupScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ArcProfileSetupScreen(),
+          settings: settings,
+        );
+
+      case ArcProfileEditScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ArcProfileEditScreen(),
           settings: settings,
         );
 
@@ -460,8 +507,8 @@ class UAGTradersHubApp extends StatefulWidget {
         return MaterialPageRoute(
           builder: (_) => const FeatureAccessRouteGate(
             flag: FeatureAccessFlag.traderHub,
-            title: 'Trader Hub',
-            child: TraderHubScreen(initialIndex: 5),
+            title: 'Raider Profile',
+            child: TradingProfileScreen(),
           ),
           settings: settings,
         );
@@ -605,6 +652,9 @@ class _UAGTradersHubAppState extends State<UAGTradersHubApp>
     _stopSessionTracking();
     final now = DateTime.now();
     _sessionUid = user.uid;
+    unawaited(
+      UagCreatorReferralBootstrap.instance.captureForSignedInUser(user.uid),
+    );
     _sessionId = '${user.uid}-${now.toUtc().millisecondsSinceEpoch}';
     _lastSessionDurationRecordedAt = now;
     final operationsRepository = _operationsRepository;

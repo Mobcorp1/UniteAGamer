@@ -347,8 +347,7 @@ class ArcLoadoutSeedData {
     ArcSavedLoadoutSeed(
       name: 'Current Meta Watch',
       category: ArcLoadoutCategory.meta,
-      description:
-          'A placeholder meta slot ready for community-driven loadout trends.',
+      description: 'Community-driven loadout trends and high-signal picks.',
       augment: 'Survivor',
       primaryWeapon: 'Ferro',
       secondaryWeapon: 'Venator',

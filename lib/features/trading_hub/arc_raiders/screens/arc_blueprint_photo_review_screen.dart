@@ -165,10 +165,14 @@ class _ArcBlueprintPhotoReviewScreenState
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Blueprint import failed: $error')),
+        SnackBar(
+          content: Text(
+            'Blueprint import failed. Check the image and try again.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _saving = false);

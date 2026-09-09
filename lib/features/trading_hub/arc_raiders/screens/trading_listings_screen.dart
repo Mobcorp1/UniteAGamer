@@ -272,8 +272,10 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
         children: [
           Text(
             listing.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTheme.tradingHeading(
-              fontSize: 22,
+              fontSize: 18,
               color: AppTheme.neonCyan,
             ),
           ),
@@ -306,31 +308,34 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
               ),
             ),
           ],
-          const SizedBox(height: AppTheme.spaceM),
-          Text(
-            'Offering',
-            style: AppTheme.tradingHeading(
-              fontSize: 17,
-              color: AppTheme.neonPink,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            listing.offeredSummary,
-            style: const TextStyle(color: Colors.white),
-          ),
-          const SizedBox(height: AppTheme.spaceM),
-          Text(
-            'Looking for',
-            style: AppTheme.tradingHeading(
-              fontSize: 17,
-              color: AppTheme.neonPink,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            listing.wantedSummary,
-            style: const TextStyle(color: Colors.white),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final offered = _listingExchangePanel(
+                label: 'OFFERING',
+                value: listing.offeredSummary,
+                color: AppTheme.neonPink,
+                icon: Icons.upload_rounded,
+              );
+              final wanted = _listingExchangePanel(
+                label: 'WANTED',
+                value: listing.wantedSummary,
+                color: AppTheme.neonCyan,
+                icon: Icons.download_rounded,
+              );
+              if (constraints.maxWidth < 560) {
+                return Column(
+                  children: [offered, const SizedBox(height: 8), wanted],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: offered),
+                  const SizedBox(width: 8),
+                  Expanded(child: wanted),
+                ],
+              );
+            },
           ),
           if (subtitleBits.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spaceM),
@@ -348,6 +353,50 @@ class _TradingListingsScreenState extends State<TradingListingsScreen> {
             displayName: listing.traderName,
             subtitle: traderSubtitle,
             compact: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _listingExchangePanel({
+    required String label,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 62),
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: color,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.20,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: ArcUiTokens.label(color: color).copyWith(fontSize: 10),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.tradingHeading(fontSize: 13),
+                ),
+              ],
+            ),
           ),
         ],
       ),

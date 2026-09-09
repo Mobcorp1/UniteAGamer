@@ -374,6 +374,8 @@ class ArcCommandCentreEngine {
     switch (goal) {
       case ArcPersonalisationGoal.completeBlueprints:
         return 'Start in $systemLabel, then use Raid Intelligence for missing Blueprint runs.';
+      case ArcPersonalisationGoal.findBlueprintIntel:
+        return 'Start in $systemLabel for Blueprint Intelligence, map signals and watch targets.';
       case ArcPersonalisationGoal.tradeBlueprints:
         return 'Start in $systemLabel so watch matches, queue releases and offers are visible first.';
       case ArcPersonalisationGoal.buildFavouriteLoadout:
@@ -386,6 +388,8 @@ class ArcCommandCentreEngine {
         return 'Start in $systemLabel so farm targets and protected resources are clear.';
       case ArcPersonalisationGoal.planRaids:
         return 'Start in $systemLabel to generate Blueprint runs on calibrated maps.';
+      case ArcPersonalisationGoal.huntARat:
+        return 'Start in $systemLabel to surface rat targets, community signals and hunt routes.';
       case ArcPersonalisationGoal.findSquads:
         return 'Start in $systemLabel to tune availability and squad fit.';
       case ArcPersonalisationGoal.followOperations:
@@ -396,6 +400,8 @@ class ArcCommandCentreEngine {
         return 'Start in $systemLabel to review live route and community signals.';
       case ArcPersonalisationGoal.improveReputation:
         return 'Start in $systemLabel to finish public identity and reputation basics.';
+      case ArcPersonalisationGoal.playLikeAPro:
+        return 'Start in $systemLabel for tactics, routes, combat guidance and expert tips.';
       case ArcPersonalisationGoal.exploreEverything:
         return 'Start in $systemLabel and jump into the tool with the strongest live signal.';
     }
@@ -565,13 +571,13 @@ class ArcCommandCentreEngine {
         ArcCommandRecommendation(
           title: '${entry.label} Coming Soon',
           body:
-              'You have shown interest in ${entry.label}. It is visible during closed beta and will become launchable when admins mark it Live.',
+              '${entry.label} is queued in your roadmap. We will surface it here when it opens.',
           action: ArcCommandAction(
             label: 'View Status',
             intent: ArcCommandActionIntent.comingSoon,
             featureTitle: entry.label,
             placeholderMessage:
-                '${entry.label} is visible in closed beta because you expressed interest, but it cannot be launched until it is marked Live.',
+                '${entry.label} is queued for a later beta phase.',
           ),
         ),
       );

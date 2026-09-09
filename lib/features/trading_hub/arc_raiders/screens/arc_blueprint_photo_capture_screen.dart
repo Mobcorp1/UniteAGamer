@@ -142,7 +142,7 @@ class _ArcBlueprintPhotoCaptureScreenState
         return;
       }
       await _storePickedImage(response.files!.first);
-    } catch (error) {
+    } catch (_) {
       _showMessage(
         'An interrupted camera selection could not be recovered. Please choose the image again.',
         error: true,
@@ -183,7 +183,7 @@ class _ArcBlueprintPhotoCaptureScreenState
       await _reviewLiveScannerResult(result);
     } on PlatformException catch (error) {
       _showMessage(_pickerErrorMessage(error, ImageSource.camera), error: true);
-    } catch (error) {
+    } catch (_) {
       _showMessage(
         'The live Blueprint scanner could not complete the capture. Choose a screenshot or try again.',
         error: true,
@@ -499,8 +499,11 @@ class _ArcBlueprintPhotoCaptureScreenState
       Navigator.of(context).pop(true);
     } on FormatException catch (error) {
       _showMessage(error.message, error: true);
-    } catch (error) {
-      _showMessage('Blueprint import failed: $error', error: true);
+    } catch (_) {
+      _showMessage(
+        'Blueprint import failed. Check the image and try again.',
+        error: true,
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
