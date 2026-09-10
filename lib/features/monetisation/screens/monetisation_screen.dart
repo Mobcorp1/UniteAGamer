@@ -8,7 +8,9 @@ import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import '../models/uag_subscription_plan.dart';
 import '../models/uag_subscription_tier.dart';
 import '../services/uag_entitlement_service.dart';
+import '../services/uag_checkout_service.dart';
 import '../widgets/uag_match_intelligence_comparison_card.dart';
+import '../widgets/uag_beta_founder_offer_panel.dart';
 import '../widgets/uag_creator_reward_access_panel.dart';
 import '../screens/uag_creator_programme_screen.dart';
 
@@ -33,6 +35,30 @@ class MonetisationScreen extends StatefulWidget {
 
 class _MonetisationScreenState extends State<MonetisationScreen> {
   final UagEntitlementService _entitlementService = UagEntitlementService();
+  final UagCheckoutService _checkoutService = UagCheckoutService();
+  bool _checkoutBusy = false;
+
+  Future<void> _startCheckout(String planId) async {
+    if (_checkoutBusy) return;
+    setState(() => _checkoutBusy = true);
+    try {
+      await _checkoutService.startCheckout(planId: planId);
+    } on UagCheckoutException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Checkout could not be started. Try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _checkoutBusy = false);
+    }
+  }
 
   Future<void> _ensureReferralCode() async {
     try {
@@ -175,6 +201,14 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                 ),
               const UagCreatorRewardAccessPanel(),
               const SizedBox(height: 14),
+              if (entitlement != null) ...[
+                UagBetaFounderOfferPanel(
+                  entitlement: entitlement,
+                  checkoutBusy: _checkoutBusy,
+                  onCheckout: _startCheckout,
+                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+              ],
               LayoutBuilder(
                 builder: (context, constraints) {
                   final wide = constraints.maxWidth >= 880;
@@ -183,7 +217,10 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                         (plan) => _PlanCard(
                           plan: plan,
                           activeTier:
-                              entitlement?.tier ?? UagSubscriptionTier.free,
+                              entitlement?.effectiveTier ??
+                              UagSubscriptionTier.free,
+                          checkoutBusy: _checkoutBusy,
+                          onCheckout: _startCheckout,
                         ),
                       )
                       .toList(growable: false);
@@ -292,10 +329,17 @@ class _CurrentPlanCard extends StatelessWidget {
 }
 
 class _PlanCard extends StatelessWidget {
-  const _PlanCard({required this.plan, required this.activeTier});
+  const _PlanCard({
+    required this.plan,
+    required this.activeTier,
+    required this.checkoutBusy,
+    required this.onCheckout,
+  });
 
   final UagSubscriptionPlan plan;
   final UagSubscriptionTier activeTier;
+  final bool checkoutBusy;
+  final ValueChanged<String> onCheckout;
 
   @override
   Widget build(BuildContext context) {
@@ -355,26 +399,48 @@ class _PlanCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: ArcUiTokens.gapM),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: active || plan.tier == UagSubscriptionTier.free
-                  ? null
-                  : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Stripe checkout endpoint is wired in Cloud Functions. Add Stripe keys and price IDs before enabling live checkout.',
-                          ),
-                        ),
-                      );
-                    },
-              child: Text(active ? 'Current Plan' : 'Upgrade'),
+          if (plan.tier == UagSubscriptionTier.free)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: null,
+                child: Text(active ? 'Current Plan' : 'Free Access'),
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: active || checkoutBusy
+                        ? null
+                        : () => onCheckout(_checkoutPlanId('monthly')),
+                    child: const Text('MONTHLY'),
+                  ),
+                ),
+                const SizedBox(width: ArcUiTokens.gapS),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: active || checkoutBusy
+                        ? null
+                        : () => onCheckout(_checkoutPlanId('yearly')),
+                    child: Text(active ? 'CURRENT' : 'ANNUAL'),
+                  ),
+                ),
+              ],
             ),
-          ),
         ],
       ),
     );
+  }
+
+  String _checkoutPlanId(String period) {
+    final tier = switch (plan.tier) {
+      UagSubscriptionTier.essential => 'essential',
+      UagSubscriptionTier.premium => 'premium',
+      UagSubscriptionTier.free => 'free',
+    };
+    return '${tier}_$period';
   }
 }
 

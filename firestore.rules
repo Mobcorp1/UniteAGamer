@@ -152,8 +152,80 @@ service cloud.firestore {
         );
     }
 
+    function ownerUserCreateIsCommerciallySafe() {
+      return request.resource.data.get('isAdmin', false) != true &&
+        request.resource.data.get('isDev', false) != true &&
+        request.resource.data.get('isModerator', false) != true &&
+        request.resource.data.get('closedBetaParticipant', false) != true &&
+        request.resource.data.get('betaParticipant', false) != true &&
+        request.resource.data.get('beta', {}).get('pricingEligible', false) != true &&
+        request.resource.data.get('beta', {}).get('participant', false) != true &&
+        request.resource.data.get('foundingRaider', false) != true &&
+        request.resource.data.get('founder', false) != true &&
+        request.resource.data.get('founderEligible', false) != true &&
+        request.resource.data.get('wallOfLegendsEligible', false) != true &&
+        request.resource.data.get('wallOfLegendsInducted', false) != true &&
+        !(request.resource.data.get('subscriptionStatus', 'inactive') in ['active', 'trialing']) &&
+        !(request.resource.data.get('monetisation', {}).get('subscriptionStatus', 'inactive') in ['active', 'trialing']);
+    }
+
+    function ownerUserCommercialFieldsUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'isAdmin',
+          'isDev',
+          'isModerator',
+          'closedBetaParticipant',
+          'betaParticipant',
+          'beta',
+          'founderStatus',
+          'foundingRaider',
+          'founder',
+          'founderEligible',
+          'founderRateForfeited',
+          'founderRateForfeitedAt',
+          'wallOfLegendsEligible',
+          'wallOfLegendsInducted',
+          'subscriptionTier',
+          'tier',
+          'planTier',
+          'subscriptionStatus',
+          'premiumPass',
+          'supporter',
+          'creatorRewardEntitlements',
+          'referralAvailableBalancePence',
+          'referralPendingBalancePence',
+          'referralTotalEarnedPence',
+          'referralDiscountPercent',
+          'referralCommissionPercent'
+        ]) &&
+        !request.resource.data.get('monetisation', {}).diff(
+          resource.data.get('monetisation', {})
+        ).affectedKeys().hasAny([
+          'tier',
+          'subscriptionStatus',
+          'billingPeriod',
+          'stripeCustomerId',
+          'stripeSubscriptionId',
+          'currentPeriodEnd',
+          'premiumPass',
+          'supporter',
+          'founderRateForfeited',
+          'founderRateForfeitedAt',
+          'availableBalancePence',
+          'pendingBalancePence',
+          'totalEarnedPence',
+          'referralDiscountPercent',
+          'referralCommissionPercent'
+        ]);
+    }
+
     match /users/{userId} {
-      allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
+      allow read: if isOwner(userId) || isAdminOrDev();
+      allow create: if isAdminOrDev() ||
+        (isOwner(userId) && ownerUserCreateIsCommerciallySafe());
+      allow update: if isAdminOrDev() ||
+        (isOwner(userId) && ownerUserCommercialFieldsUnchanged());
+      allow delete: if isOwner(userId) || isAdminOrDev();
 
       match /arc_blueprints/{docId} {
         allow read, create, update, delete: if isOwner(userId) || isAdminOrDev();
@@ -1117,6 +1189,11 @@ service cloud.firestore {
         allow delete: if isSignedIn() && voterUid == request.auth.uid;
         allow update: if false;
       }
+    }
+
+    match /uag_commercial_recognition/{userId} {
+      allow read: if isOwner(userId) || isAdminOrDev();
+      allow create, update, delete: if isAdminOrDev();
     }
 
     match /wall_of_legends/{docId} {

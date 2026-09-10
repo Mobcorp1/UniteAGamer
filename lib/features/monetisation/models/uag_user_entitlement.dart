@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'uag_ad_policy.dart';
+import 'uag_beta_founder_pricing.dart';
 import 'uag_creator_temporary_entitlement.dart';
 import 'uag_entitlement_test_mode.dart';
 import 'uag_match_intelligence_copy.dart';
@@ -23,6 +24,7 @@ class UagUserEntitlement {
     required this.referralDiscountPercent,
     required this.referralCommissionPercent,
     this.supporter = UagSupporterEntitlement.none,
+    this.betaFounderStatus = UagBetaFounderStatus.none,
     this.premiumPass = UagPremiumPassEntitlement.none,
     this.creatorRewardEntitlements = const <UagCreatorTemporaryEntitlement>[],
     this.currentPeriodEnd,
@@ -41,6 +43,7 @@ class UagUserEntitlement {
   final int referralDiscountPercent;
   final int referralCommissionPercent;
   final UagSupporterEntitlement supporter;
+  final UagBetaFounderStatus betaFounderStatus;
   final UagPremiumPassEntitlement premiumPass;
   final List<UagCreatorTemporaryEntitlement> creatorRewardEntitlements;
   final DateTime? currentPeriodEnd;
@@ -56,6 +59,11 @@ class UagUserEntitlement {
 
   /// Admin/dev bypass is commercial only while REAL mode is active.
   bool get hasCommercialAdminBypass => hasAdminBypass && !hasTestOverride;
+
+  bool get hasActiveCoreSubscription {
+    final status = subscriptionStatus.trim().toLowerCase();
+    return status == 'active' || status == 'trialing';
+  }
 
   bool get hasActivePremiumPass => premiumPass.active;
   bool get hasActiveCreatorReward =>
@@ -82,7 +90,10 @@ class UagUserEntitlement {
     if (hasCommercialAdminBypass || hasActivePremiumPass) {
       return UagSubscriptionTier.premium;
     }
-    return highestCreatorRewardTier(creatorRewardEntitlements, tier);
+    final activeCoreTier = hasActiveCoreSubscription
+        ? tier
+        : UagSubscriptionTier.free;
+    return highestCreatorRewardTier(creatorRewardEntitlements, activeCoreTier);
   }
 
   bool get isPaid => effectiveTier.isPaid;
@@ -90,6 +101,9 @@ class UagUserEntitlement {
   bool get hasSupporter => supporter.active;
   bool get hasFoundingSupporter =>
       supporter.active && supporter.foundingSupporter;
+  bool get hasBetaPricing => betaFounderStatus.hasBetaPricing;
+  bool get hasFoundingRaiderRate => betaFounderStatus.hasFoundingRaiderRate;
+  bool get isWallOfLegendsInducted => betaFounderStatus.wallOfLegendsInducted;
   int get futureSupporterDiscountPercent =>
       supporter.hasFutureDiscount ? supporter.discountPercent : 0;
 
@@ -160,6 +174,7 @@ class UagUserEntitlement {
           (data['referralCommissionPercent'] as num?)?.toInt() ??
           (monetisation['referralCommissionPercent'] as num?)?.toInt() ??
           limits.referralCommissionPercent,
+      betaFounderStatus: UagBetaFounderStatus.fromUserDoc(data),
       supporter: UagSupporterEntitlement.fromMap(
         (monetisation['supporter'] as Map?)?.cast<String, dynamic>() ??
             (data['supporter'] as Map?)?.cast<String, dynamic>(),

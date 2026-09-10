@@ -57,6 +57,108 @@ const PLAN_CONFIG = {
     charityProfitPercent: 20,
     impactPotId: 'premium',
   },
+  beta_premium_monthly: {
+    kind: 'core',
+    tier: 'premium',
+    billingPeriod: 'monthly',
+    pricePence: 699,
+    inlinePrice: true,
+    offerAudience: 'beta',
+    offerId: 'closed_beta_monthly',
+    checkoutLabel: 'UAG Closed Beta Premium Monthly',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 20,
+    charityProfitPercent: 20,
+    impactPotId: 'premium',
+  },
+  beta_premium_yearly: {
+    kind: 'core',
+    tier: 'premium',
+    billingPeriod: 'yearly',
+    pricePence: 4999,
+    inlinePrice: true,
+    offerAudience: 'beta',
+    offerId: 'closed_beta_yearly',
+    checkoutLabel: 'UAG Closed Beta Premium Annual',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 20,
+    charityProfitPercent: 20,
+    impactPotId: 'premium',
+  },
+  founding_raider_premium_yearly: {
+    kind: 'core',
+    tier: 'premium',
+    billingPeriod: 'yearly',
+    pricePence: 2999,
+    inlinePrice: true,
+    offerAudience: 'founder',
+    offerId: 'founding_raider_lifetime_rate',
+    checkoutLabel: 'UAG Founding Raider Premium Annual',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 20,
+    charityProfitPercent: 20,
+    impactPotId: 'premium',
+  },
+  premium_pass_day: {
+    kind: 'pass',
+    tier: 'premium',
+    billingPeriod: 'pass_24_hour',
+    pricePence: 199,
+    inlinePrice: true,
+    passType: 'day24',
+    passDurationHours: 24,
+    checkoutLabel: 'UAG 24-Hour Premium Pass',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
+    impactPotId: 'premium_passes',
+  },
+  premium_pass_week: {
+    kind: 'pass',
+    tier: 'premium',
+    billingPeriod: 'pass_7_day',
+    pricePence: 249,
+    inlinePrice: true,
+    passType: 'week7',
+    passDurationHours: 168,
+    checkoutLabel: 'UAG 7-Day Premium Pass',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
+    impactPotId: 'premium_passes',
+  },
+  beta_premium_pass_day: {
+    kind: 'pass',
+    tier: 'premium',
+    billingPeriod: 'pass_24_hour',
+    pricePence: 149,
+    inlinePrice: true,
+    offerAudience: 'beta',
+    offerId: 'closed_beta_pass_day',
+    passType: 'day24',
+    passDurationHours: 24,
+    checkoutLabel: 'UAG Closed Beta 24-Hour Premium Pass',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
+    impactPotId: 'premium_passes',
+  },
+  beta_premium_pass_week: {
+    kind: 'pass',
+    tier: 'premium',
+    billingPeriod: 'pass_7_day',
+    pricePence: 249,
+    inlinePrice: true,
+    offerAudience: 'beta',
+    offerId: 'closed_beta_pass_week',
+    passType: 'week7',
+    passDurationHours: 168,
+    checkoutLabel: 'UAG Closed Beta 7-Day Premium Pass',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
+    impactPotId: 'premium_passes',
+  },
   founding_supporter_monthly: {
     kind: 'supporter',
     tier: 'supporter',
@@ -86,6 +188,167 @@ function getPlan(planId) {
   const plan = PLAN_CONFIG[planId];
   if (!plan) throw new Error(`Unknown UAG plan: ${planId}`);
   return plan;
+}
+
+function truthy(value) {
+  if (value === true) return true;
+  if (typeof value === 'number') return value !== 0;
+  const text = String(value || '').trim().toLowerCase();
+  return text === 'true' || text === '1' || text === 'yes';
+}
+
+function isClosedBetaUser(recognitionData) {
+  const beta = recognitionData?.beta || {};
+  return truthy(recognitionData?.betaTester) ||
+    truthy(recognitionData?.closedBetaParticipant) ||
+    truthy(beta.participant) ||
+    truthy(beta.pricingEligible);
+}
+
+function isFoundingRaider(recognitionData) {
+  const founderStatus = recognitionData?.founderStatus || {};
+  return truthy(recognitionData?.foundingRaider) ||
+    truthy(recognitionData?.founder) ||
+    truthy(founderStatus.active);
+}
+
+function founderRateForfeited(recognitionData) {
+  const founderStatus = recognitionData?.founderStatus || {};
+  return truthy(recognitionData?.founderRateForfeited) ||
+    truthy(founderStatus.rateForfeited);
+}
+
+function timestampMillis(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  const parsed = Date.parse(String(value));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function currentPremiumPass(userData) {
+  return userData?.monetisation?.premiumPass || userData?.premiumPass || {};
+}
+
+async function loadCommercialRecognition(uid) {
+  const snapshot = await db.collection('uag_commercial_recognition').doc(uid).get();
+  return snapshot.exists ? (snapshot.data() || {}) : {};
+}
+
+function activeCoreSubscription(userData) {
+  const monetisation = userData?.monetisation || {};
+  const status = String(
+    monetisation.subscriptionStatus || userData?.subscriptionStatus || '',
+  ).trim().toLowerCase();
+  const tier = String(
+    monetisation.tier || userData?.tier || userData?.subscriptionTier || '',
+  ).trim().toLowerCase();
+  return {
+    active: status === 'active' || status === 'trialing',
+    tier,
+  };
+}
+
+function assertPlanEligibility(plan, userData, recognitionData) {
+  const core = activeCoreSubscription(userData);
+  if (plan.kind === 'core' && core.active) {
+    const error = new Error('An active UAG subscription already exists on this account. Manage the current subscription before starting another.');
+    error.statusCode = 409;
+    throw error;
+  }
+  if (plan.kind === 'pass' && core.active && core.tier === 'premium') {
+    const error = new Error('Premium is already active on this account.');
+    error.statusCode = 409;
+    throw error;
+  }
+  if (plan.offerAudience === 'beta' && !isClosedBetaUser(recognitionData)) {
+    const error = new Error('This Closed Beta price is not available on this account.');
+    error.statusCode = 403;
+    throw error;
+  }
+  if (plan.offerAudience === 'founder') {
+    if (!isFoundingRaider(recognitionData)) {
+      const error = new Error('This Founding Raider price is not available on this account.');
+      error.statusCode = 403;
+      throw error;
+    }
+    if (founderRateForfeited(recognitionData)) {
+      const error = new Error('The Founding Raider lifetime rate was forfeited when the previous Founder subscription ended.');
+      error.statusCode = 403;
+      throw error;
+    }
+  }
+  if (plan.kind === 'pass') {
+    const pass = currentPremiumPass(userData);
+    const activeUntil = timestampMillis(pass.expiresAt);
+    if (activeUntil > Date.now()) {
+      const error = new Error('A Premium pass is already active on this account.');
+      error.statusCode = 409;
+      throw error;
+    }
+    if (plan.passType === 'day24' && truthy(pass.usedDay24)) {
+      const error = new Error('The introductory 24-hour Premium pass has already been used on this account.');
+      error.statusCode = 409;
+      throw error;
+    }
+    if (plan.passType === 'week7' && truthy(pass.usedWeek7)) {
+      const error = new Error('The introductory 7-day Premium pass has already been used on this account.');
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+}
+
+function safeCheckoutReturnUrl(value) {
+  const fallback = 'https://unite-a-gamer.web.app/';
+  try {
+    const url = new URL(String(value || fallback));
+    const allowed = url.origin === 'https://unite-a-gamer.web.app' ||
+      url.origin === 'https://unite-a-gamer.firebaseapp.com' ||
+      /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(url.origin);
+    return allowed ? url.toString() : fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function checkoutLineItem(plan, planId, configuredPriceId) {
+  if (configuredPriceId && !plan.inlinePrice) {
+    return { price: configuredPriceId, quantity: 1 };
+  }
+  const priceData = {
+    currency: 'gbp',
+    unit_amount: plan.pricePence,
+    product_data: {
+      name: plan.checkoutLabel || `UAG ${plan.tier} ${plan.billingPeriod}`,
+      metadata: {
+        uagPlanId: planId,
+        uagOfferId: plan.offerId || '',
+      },
+    },
+  };
+  if (plan.kind === 'core') {
+    priceData.recurring = {
+      interval: plan.billingPeriod === 'yearly' ? 'year' : 'month',
+    };
+  }
+  return { price_data: priceData, quantity: 1 };
+}
+
+function setCheckoutCors(req, res) {
+  const origin = String(req.headers.origin || '');
+  const allowed = origin === 'https://unite-a-gamer.web.app' ||
+    origin === 'https://unite-a-gamer.firebaseapp.com' ||
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  if (allowed) res.set('Access-Control-Allow-Origin', origin);
+  res.set('Vary', 'Origin');
+  res.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return true;
+  }
+  return false;
 }
 
 async function resolveReferral(referralCode) {
@@ -142,6 +405,7 @@ async function approvedCreatorProgrammeApplication(uid) {
 
 exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, async (req, res) => {
   try {
+    if (setCheckoutCors(req, res)) return;
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed');
       return;
@@ -149,23 +413,39 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
 
     const authHeader = req.headers.authorization || '';
     const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!idToken) {
+      res.status(401).json({ error: 'Sign in before starting checkout.' });
+      return;
+    }
     const decoded = await admin.auth().verifyIdToken(idToken);
     const uid = decoded.uid;
 
     const { planId, referralCode, successUrl, cancelUrl } = req.body || {};
     const plan = getPlan(planId);
-    const priceId = process.env[plan.stripePriceEnv];
-    if (!priceId) throw new Error(`Missing Stripe price env: ${plan.stripePriceEnv}`);
+    const priceId = plan.stripePriceEnv ? process.env[plan.stripePriceEnv] : null;
+    if (plan.stripePriceEnv && !priceId) {
+      throw new Error(`Missing Stripe price env: ${plan.stripePriceEnv}`);
+    }
 
     const userRef = db.collection('users').doc(uid);
-    const userSnap = await userRef.get();
+    const creatorAttributionRef = userRef
+      .collection('monetisation_usage')
+      .doc('creator_attribution');
+    const [userSnap, recognitionData, creatorAttributionSnap] = await Promise.all([
+      userRef.get(),
+      loadCommercialRecognition(uid),
+      creatorAttributionRef.get(),
+    ]);
     const userData = userSnap.data() || {};
+    const creatorAttribution = creatorAttributionSnap.data() || {};
     if (userData.ageVerification?.verifiedOver18 !== true) {
       res.status(403).json({
         error: '18+ verification is required before starting a paid subscription.',
       });
       return;
     }
+    assertPlanEligibility(plan, userData, recognitionData);
+
     let customerId = userData?.monetisation?.stripeCustomerId || userData.stripeCustomerId;
     const stripe = stripeClient();
 
@@ -175,17 +455,24 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
         metadata: { uid },
       });
       customerId = customer.id;
-      await userRef.set({ monetisation: { stripeCustomerId: customerId, updatedAt: admin.firestore.FieldValue.serverTimestamp() } }, { merge: true });
+      await userRef.set({
+        monetisation: {
+          stripeCustomerId: customerId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+      }, { merge: true });
     }
 
-    const referral = await resolveReferral(referralCode);
+    const effectiveReferralCode = String(
+      referralCode ||
+      creatorAttribution.code ||
+      userData.referredByCode ||
+      '',
+    ).trim();
+    const referral = await resolveReferral(effectiveReferralCode);
     const discounts = [];
     let creatorBenefitApplied = false;
 
-    // Approved active Creator Programme members can buy Premium monthly at the
-    // Essential monthly price: £9.99 - £2.00 = £7.99.
-    // This uses the real configured Premium Stripe Price ID; no invented Price
-    // ID or parallel product is required.
     if (planId === 'premium_monthly') {
       const creatorApplication = await approvedCreatorProgrammeApplication(uid);
       if (creatorApplication) {
@@ -205,10 +492,9 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       }
     }
 
-    // Followers do not receive an automatic permanent discount simply for
-    // using a Creator code. A discount exists only when an approved Creator
-    // campaign code explicitly carries an admin-configured percentage.
     if (
+      plan.kind === 'core' &&
+      !plan.offerId &&
       !creatorBenefitApplied &&
       referral &&
       referral.ownerUid !== uid &&
@@ -228,43 +514,49 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       discounts.push({ coupon: coupon.id });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const metadata = {
+      uid,
+      planId,
+      tier: plan.tier,
+      billingPeriod: plan.billingPeriod,
+      kind: plan.kind,
+      offerId: plan.offerId || '',
+      offerAudience: plan.offerAudience || '',
+      passType: plan.passType || '',
+      pricePence: String(plan.pricePence),
+      referralCode: referral?.code || '',
+      referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : '',
+      creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
+    };
+
+    const checkoutParams = {
       customer: customerId,
-      mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      mode: plan.kind === 'pass' ? 'payment' : 'subscription',
+      line_items: [checkoutLineItem(plan, planId, priceId)],
+      success_url: safeCheckoutReturnUrl(successUrl),
+      cancel_url: safeCheckoutReturnUrl(cancelUrl),
       client_reference_id: uid,
-      payment_method_types: ['card', 'bacs_debit'],
-      discounts,
-      metadata: {
-        uid,
-        planId,
-        tier: plan.tier,
-        billingPeriod: plan.billingPeriod,
-        referralCode: referral?.code || '',
-        referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : '',
-        creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
-      },
-      subscription_data: {
-        metadata: {
-          uid,
-          planId,
-          tier: plan.tier,
-          billingPeriod: plan.billingPeriod,
-          referralCode: referral?.code || '',
-          referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : '',
-          creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
-        },
-      },
-    });
+      payment_method_types: plan.kind === 'pass' ? ['card'] : ['card', 'bacs_debit'],
+      metadata,
+    };
+    if (discounts.length) checkoutParams.discounts = discounts;
+    if (plan.kind !== 'pass') {
+      checkoutParams.subscription_data = { metadata };
+    }
+
+    const session = await stripe.checkout.sessions.create(checkoutParams);
 
     await db.collection('monetisation_checkout_sessions').doc(session.id).set({
       id: session.id,
       uid,
       planId,
+      kind: plan.kind,
       tier: plan.tier,
       billingPeriod: plan.billingPeriod,
+      offerId: plan.offerId || null,
+      offerAudience: plan.offerAudience || null,
+      passType: plan.passType || null,
+      pricePence: plan.pricePence,
       referralCode: referral?.code || null,
       referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : null,
       creatorBenefitApplied,
@@ -274,13 +566,19 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
 
     res.status(200).json({ checkoutUrl: session.url, sessionId: session.id });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Unable to start checkout right now. Please try again.' });
+    console.error('UAG checkout failed', error);
+    const statusCode = Number(error?.statusCode || 500);
+    res.status(statusCode >= 400 && statusCode < 600 ? statusCode : 500).json({
+      error: statusCode >= 500
+        ? 'Unable to start checkout right now. Please try again.'
+        : (error.message || 'This offer is not available on this account.'),
+    });
   }
 });
 
 exports.createUagCustomerPortalSession = onRequest({ secrets: [stripeSecretKey] }, async (req, res) => {
   try {
+    if (setCheckoutCors(req, res)) return;
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed');
       return;
@@ -296,7 +594,7 @@ exports.createUagCustomerPortalSession = onRequest({ secrets: [stripeSecretKey] 
     const stripe = stripeClient();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: req.body?.returnUrl,
+      return_url: safeCheckoutReturnUrl(req.body?.returnUrl),
     });
     res.status(200).json({ portalUrl: session.url });
   } catch (error) {
@@ -347,7 +645,16 @@ exports.uagStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookS
 async function handleCheckoutCompleted(session) {
   const uid = session.metadata?.uid || session.client_reference_id;
   if (!uid) return;
-  const plan = getPlan(session.metadata?.planId);
+  const planId = session.metadata?.planId;
+  if (!planId) return;
+  const plan = getPlan(planId);
+
+  if (plan.kind === 'pass') {
+    if (session.payment_status !== 'paid') return;
+    await writePremiumPassEntitlement({ uid, plan, planId, session });
+    return;
+  }
+
   if (plan.kind === 'supporter') {
     await writeSupporterEntitlement({
       uid,
@@ -358,6 +665,7 @@ async function handleCheckoutCompleted(session) {
     });
     return;
   }
+
   await db.collection('users').doc(uid).set({
     monetisation: {
       tier: plan.tier,
@@ -367,6 +675,9 @@ async function handleCheckoutCompleted(session) {
       stripeSubscriptionId: session.subscription || null,
       referralCodeUsed: session.metadata?.referralCode || null,
       referredByUid: session.metadata?.referralOwnerUid || null,
+      commercialOfferId: plan.offerId || null,
+      founderRateActive: plan.offerAudience === 'founder',
+      betaRateActive: plan.offerAudience === 'beta',
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
     tier: plan.tier,
@@ -377,8 +688,11 @@ async function handleCheckoutCompleted(session) {
 async function handleSubscriptionUpdated(subscription) {
   const uid = subscription.metadata?.uid;
   if (!uid) return;
-  const plan = getPlan(subscription.metadata?.planId);
+  const planId = subscription.metadata?.planId;
+  if (!planId) return;
+  const plan = getPlan(planId);
   const referralOwnerUid = normalizeString(subscription.metadata?.referralOwnerUid);
+  const active = subscription.status === 'active' || subscription.status === 'trialing';
 
   if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
     await upsertCreatorReferredSubscription({
@@ -386,7 +700,7 @@ async function handleSubscriptionUpdated(subscription) {
       referredUid: uid,
       creatorUid: referralOwnerUid,
       plan,
-      active: subscription.status === 'active' || subscription.status === 'trialing',
+      active,
     });
   }
 
@@ -397,20 +711,24 @@ async function handleSubscriptionUpdated(subscription) {
       status: subscription.status,
       stripeSubscriptionId: subscription.id,
       currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
-      active: subscription.status === 'active' || subscription.status === 'trialing',
+      active,
     });
     return;
   }
+
   await db.collection('users').doc(uid).set({
     monetisation: {
-      tier: subscription.status === 'active' || subscription.status === 'trialing' ? plan.tier : 'free',
+      tier: active ? plan.tier : 'free',
       subscriptionStatus: subscription.status,
       billingPeriod: plan.billingPeriod,
       stripeSubscriptionId: subscription.id,
       currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
+      commercialOfferId: plan.offerId || null,
+      founderRateActive: active && plan.offerAudience === 'founder',
+      betaRateActive: active && plan.offerAudience === 'beta',
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
-    tier: subscription.status === 'active' || subscription.status === 'trialing' ? plan.tier : 'free',
+    tier: active ? plan.tier : 'free',
     subscriptionStatus: subscription.status,
   }, { merge: true });
 }
@@ -418,7 +736,9 @@ async function handleSubscriptionUpdated(subscription) {
 async function handleSubscriptionDeleted(subscription) {
   const uid = subscription.metadata?.uid;
   if (!uid) return;
-  const plan = getPlan(subscription.metadata?.planId);
+  const planId = subscription.metadata?.planId;
+  if (!planId) return;
+  const plan = getPlan(planId);
   const referralOwnerUid = normalizeString(subscription.metadata?.referralOwnerUid);
 
   if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
@@ -440,16 +760,98 @@ async function handleSubscriptionDeleted(subscription) {
     });
     return;
   }
-  await db.collection('users').doc(uid).set({
+
+  const voluntaryFounderCancellation =
+    plan.offerAudience === 'founder' &&
+    (subscription.cancellation_details?.reason === 'cancellation_requested' ||
+      subscription.cancel_at_period_end === true);
+
+  const userPatch = {
     monetisation: {
       tier: 'free',
       subscriptionStatus: 'cancelled',
       stripeSubscriptionId: subscription.id,
+      founderRateActive: false,
+      betaRateActive: false,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
     tier: 'free',
     subscriptionStatus: 'cancelled',
-  }, { merge: true });
+  };
+
+  if (voluntaryFounderCancellation) {
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    userPatch.founderRateForfeited = true;
+    userPatch.founderRateForfeitedAt = now;
+    userPatch.founderStatus = {
+      rateForfeited: true,
+      rateForfeitedAt: now,
+    };
+    userPatch.monetisation.founderRateForfeited = true;
+    userPatch.monetisation.founderRateForfeitedAt = now;
+
+    await db.collection('uag_commercial_recognition').doc(uid).set({
+      founderRateForfeited: true,
+      founderRateForfeitedAt: now,
+      founderStatus: {
+        rateForfeited: true,
+        rateForfeitedAt: now,
+      },
+      updatedAt: now,
+    }, { merge: true });
+  }
+
+  await db.collection('users').doc(uid).set(userPatch, { merge: true });
+}
+
+async function writePremiumPassEntitlement({ uid, plan, planId, session }) {
+  const userRef = db.collection('users').doc(uid);
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(userRef);
+    const userData = snapshot.data() || {};
+    const existing = currentPremiumPass(userData);
+    const nowMillis = Date.now();
+    const expiresAt = admin.firestore.Timestamp.fromMillis(
+      nowMillis + Number(plan.passDurationHours || 0) * 60 * 60 * 1000,
+    );
+    const startedAt = admin.firestore.Timestamp.fromMillis(nowMillis);
+    const passData = {
+      active: true,
+      type: plan.passType,
+      planId,
+      offerId: plan.offerId || null,
+      startedAt,
+      expiresAt,
+      paidPence: plan.pricePence,
+      usedDay24: truthy(existing.usedDay24) || plan.passType === 'day24',
+      usedWeek7: truthy(existing.usedWeek7) || plan.passType === 'week7',
+      stripeCheckoutSessionId: session.id,
+      stripePaymentIntentId: normalizeString(session.payment_intent) || null,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    transaction.set(userRef, {
+      monetisation: {
+        premiumPass: passData,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      premiumPass: passData,
+    }, { merge: true });
+    transaction.set(db.collection('monetisation_events').doc(session.id), {
+      id: session.id,
+      type: 'premium_pass_paid',
+      uid,
+      planId,
+      tier: 'premium',
+      billingPeriod: plan.billingPeriod,
+      offerId: plan.offerId || null,
+      passType: plan.passType,
+      grossPence: plan.pricePence,
+      stripeFeePence: estimateStripeFeePence(plan.pricePence),
+      stripeCheckoutSessionId: session.id,
+      stripePaymentIntentId: normalizeString(session.payment_intent) || null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: false });
+  });
 }
 
 async function writeSupporterEntitlement({
