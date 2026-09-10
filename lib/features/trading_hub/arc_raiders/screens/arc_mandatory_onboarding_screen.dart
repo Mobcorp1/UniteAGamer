@@ -562,14 +562,19 @@ class _ArcMandatoryOnboardingScreenState
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
+              constraints: const BoxConstraints(maxWidth: 920),
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: EdgeInsets.fromLTRB(
+                  MediaQuery.sizeOf(context).width < 600 ? 12 : 24,
+                  10,
+                  MediaQuery.sizeOf(context).width < 600 ? 12 : 24,
+                  12,
+                ),
                 child: Column(
                   children: [
                     if (widget.adminPreview) const _PreviewBanner(),
                     _TopBar(step: _step, onBack: _back),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     Expanded(
                       child: PageView(
                         controller: _pageController,
@@ -649,35 +654,48 @@ class _ArcMandatoryOnboardingScreenState
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    SizedBox(
+                    const SizedBox(height: 10),
+                    Container(
                       width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: _saving ? null : _next,
-                        icon: _saving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.neonCyan.withValues(alpha: 0.16),
+                            blurRadius: 22,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        height: 54,
+                        child: ElevatedButton.icon(
+                          onPressed: _saving ? null : _next,
+                          icon: _saving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  _step == 3
+                                      ? Icons.rocket_launch_rounded
+                                      : Icons.arrow_forward_rounded,
                                 ),
-                              )
-                            : Icon(
-                                _step == 3
-                                    ? Icons.rocket_launch_rounded
-                                    : Icons.arrow_forward_rounded,
-                              ),
-                        label: Text(
-                          _saving
-                              ? (_step == 0 && showsAccountCreationStep
-                                    ? 'CREATING ACCOUNT...'
-                                    : 'INITIALISING ARC SYSTEMS...')
-                              : _step == 3
-                              ? (widget.adminPreview
-                                    ? 'CLOSE PREVIEW'
-                                    : 'ENTER UAG')
-                              : 'CONTINUE',
+                          label: Text(
+                            _saving
+                                ? (_step == 0 && showsAccountCreationStep
+                                      ? 'CREATING ACCOUNT...'
+                                      : 'INITIALISING ARC SYSTEMS...')
+                                : _step == 3
+                                ? (widget.adminPreview
+                                      ? 'CLOSE PREVIEW'
+                                      : 'ENTER UAG')
+                                : 'CONTINUE',
+                          ),
                         ),
                       ),
                     ),
@@ -697,45 +715,143 @@ class _TopBar extends StatelessWidget {
   final int step;
   final VoidCallback onBack;
 
+  static const _labels = <String>[
+    'IDENTITY',
+    'AGREEMENTS',
+    'OBJECTIVE',
+    'BLUEPRINTS',
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        if (step > 0)
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_rounded),
-          )
-        else
-          const SizedBox(width: 48),
-        Expanded(
-          child: Column(
+    final compact = MediaQuery.sizeOf(context).width < 600;
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        compact ? 10 : 16,
+        10,
+        compact ? 10 : 16,
+        12,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xE70A1016),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.30)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonCyan.withValues(alpha: 0.08),
+            blurRadius: 20,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Text(
-                'RAIDER INITIALIZATION',
-                style: AppTheme.tradingHeading(
-                  fontSize: 20,
-                  color: AppTheme.neonCyan,
+              SizedBox(
+                width: 42,
+                child: step > 0
+                    ? IconButton(
+                        tooltip: 'Previous step',
+                        onPressed: onBack,
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      )
+                    : const Icon(
+                        Icons.hub_outlined,
+                        color: AppTheme.neonCyan,
+                        size: 20,
+                      ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'RAIDER INITIALIZATION',
+                      style: AppTheme.tradingHeading(
+                        fontSize: compact ? 18 : 21,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'UAG // ARC NETWORK  •  ${step + 1} OF 4',
+                      style: TextStyle(
+                        color: AppTheme.neonCyan.withValues(alpha: 0.82),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: List.generate(4, (index) {
-                  return Expanded(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      height: 3,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      color: index <= step ? AppTheme.neonCyan : Colors.white12,
+              SizedBox(
+                width: 42,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${((step + 1) * 25)}%',
+                    style: const TextStyle(
+                      color: AppTheme.neonPink,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
                     ),
-                  );
-                }),
+                  ),
+                ),
               ),
             ],
           ),
-        ),
-        const SizedBox(width: 48),
-      ],
+          const SizedBox(height: 10),
+          Row(
+            children: List.generate(4, (index) {
+              final active = index <= step;
+              final current = index == step;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: Column(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        height: current ? 4 : 3,
+                        decoration: BoxDecoration(
+                          color: active ? AppTheme.neonCyan : Colors.white12,
+                          borderRadius: BorderRadius.circular(99),
+                          boxShadow: current
+                              ? [
+                                  BoxShadow(
+                                    color: AppTheme.neonCyan.withValues(
+                                      alpha: 0.55,
+                                    ),
+                                    blurRadius: 8,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                      ),
+                      if (!compact) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          _labels[index],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: current ? Colors.white : Colors.white38,
+                            fontSize: 9,
+                            fontWeight: current
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                            letterSpacing: 0.7,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -754,29 +870,123 @@ class _StepFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 600;
     return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 4),
       child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: AppTheme.tradingCardDecoration(
-          borderColor: AppTheme.neonCyan.withValues(alpha: 0.38),
+        decoration: BoxDecoration(
+          color: const Color(0xF20A0F15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.34)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.42),
+              blurRadius: 26,
+              offset: const Offset(0, 12),
+            ),
+          ],
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
-            Icon(icon, size: 42, color: AppTheme.neonCyan),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTheme.tradingHeading(fontSize: 24, color: Colors.white),
+            Container(
+              width: double.infinity,
+              constraints: BoxConstraints(minHeight: compact ? 132 : 158),
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                    'assets/arc_raiders/hub/auth_bg_landscape.webp',
+                  ),
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                ),
+              ),
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 16 : 24,
+                  compact ? 18 : 24,
+                  compact ? 16 : 24,
+                  compact ? 16 : 22,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.28),
+                      const Color(0xF20A0F15),
+                    ],
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      width: compact ? 44 : 50,
+                      height: compact ? 44 : 50,
+                      decoration: BoxDecoration(
+                        color: const Color(0xD90A1118),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppTheme.neonCyan.withValues(alpha: 0.72),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                            blurRadius: 16,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        icon,
+                        size: compact ? 25 : 29,
+                        color: AppTheme.neonCyan,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: AppTheme.tradingHeading(
+                        fontSize: compact ? 22 : 27,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.68),
+                        fontSize: compact ? 12 : 13,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white60),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(
+                compact ? 14 : 22,
+                compact ? 14 : 20,
+                compact ? 14 : 22,
+                compact ? 16 : 22,
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.neonCyan.withValues(alpha: 0.035),
+                    Colors.transparent,
+                    AppTheme.neonPink.withValues(alpha: 0.025),
+                  ],
+                ),
+              ),
+              child: child,
             ),
-            const SizedBox(height: 20),
-            child,
           ],
         ),
       ),
@@ -1207,37 +1417,53 @@ class _GoalStep extends StatelessWidget {
       icon: Icons.track_changes_rounded,
       title: 'YOUR FIRST OBJECTIVE',
       subtitle: 'Pick one. The Command Centre will adapt around it.',
-      child: Column(
-        children: [
-          for (final option in options)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(
-                    color: selected == option.goal
-                        ? AppTheme.neonCyan
-                        : Colors.white12,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final useGrid = constraints.maxWidth >= 620;
+          final tiles = options
+              .map(
+                (option) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: selected == option.goal
+                            ? AppTheme.neonCyan
+                            : Colors.white12,
+                      ),
+                    ),
+                    tileColor: selected == option.goal
+                        ? AppTheme.neonCyan.withValues(alpha: 0.10)
+                        : Colors.black26,
+                    leading: Icon(option.icon, color: AppTheme.neonCyan),
+                    title: Text(option.title),
+                    trailing: Icon(
+                      selected == option.goal
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: selected == option.goal
+                          ? AppTheme.neonCyan
+                          : Colors.white38,
+                    ),
+                    onTap: () => onSelected(option.goal),
                   ),
                 ),
-                tileColor: selected == option.goal
-                    ? AppTheme.neonCyan.withValues(alpha: 0.10)
-                    : Colors.black26,
-                leading: Icon(option.icon, color: AppTheme.neonCyan),
-                title: Text(option.title),
-                trailing: Icon(
-                  selected == option.goal
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: selected == option.goal
-                      ? AppTheme.neonCyan
-                      : Colors.white38,
-                ),
-                onTap: () => onSelected(option.goal),
-              ),
-            ),
-        ],
+              )
+              .toList(growable: false);
+
+          if (!useGrid) return Column(children: tiles);
+
+          return GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 3.55,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 2,
+            children: tiles,
+          );
+        },
       ),
     );
   }

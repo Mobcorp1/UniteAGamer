@@ -40,11 +40,11 @@ void main() {
 
   test('report workflow includes incident location contract and review stages', () {
     for (final label in <String>[
-      "'Rat'",
-      "'Incident'",
-      "'Where & when'",
-      "'Contract'",
-      "'Review'",
+      "'TARGET'",
+      "'INCIDENT'",
+      "'LOCATION'",
+      "'CONTRACT'",
+      "'REVIEW'",
     ]) {
       expect(screen, contains(label));
     }

@@ -24,6 +24,7 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
   ArcAwayStatus _awayStatus = ArcAwayStatus.initial();
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -38,12 +39,24 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
   }
 
   Future<void> _load() async {
-    final status = await _repository.getAwayStatus();
-    _noteController.text = status.note;
-    if (mounted) {
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    try {
+      final status = await _repository.getAwayStatus();
+      _noteController.text = status.note;
+      if (mounted) {
+        setState(() {
+          _awayStatus = status;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
-        _awayStatus = status;
         _isLoading = false;
+        _loadFailed = true;
       });
     }
   }
@@ -90,6 +103,11 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save away mode. Try again.')),
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -131,6 +149,31 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                   color: ArcUiTokens.primaryAccent,
                 ),
               )
+            : _loadFailed
+            ? SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Padding(
+                      padding: ArcUiTokens.compactPanelPadding,
+                      child: ArcRaidersStatePanel(
+                        title: 'Away status unavailable',
+                        message: 'Your away settings could not load right now.',
+                        icon: Icons.cloud_off_rounded,
+                        accent: ArcUiTokens.warning,
+                        action: TextButton.icon(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.primaryAccent,
+                          ),
+                          onPressed: _load,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
             : SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -143,6 +186,35 @@ class _ArcAwayScreenState extends State<ArcAwayScreen> {
                           title: 'Away Mode',
                           subtitle:
                               'Pause discovery while you are unavailable.',
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ArcTacticalStatTile(
+                              label: 'Status',
+                              value: _awayStatus.isAway ? 'Away' : 'Available',
+                              icon: _awayStatus.isAway
+                                  ? Icons.do_not_disturb_on_outlined
+                                  : Icons.verified_rounded,
+                              accent: _awayStatus.isAway
+                                  ? ArcUiTokens.warning
+                                  : ArcUiTokens.success,
+                            ),
+                            ArcTacticalStatTile(
+                              label: 'From',
+                              value: _format(_awayStatus.from),
+                              icon: Icons.login_rounded,
+                              accent: ArcUiTokens.primaryAccent,
+                            ),
+                            ArcTacticalStatTile(
+                              label: 'To',
+                              value: _format(_awayStatus.to),
+                              icon: Icons.logout_rounded,
+                              accent: ArcUiTokens.secondaryAccent,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         actionCard(

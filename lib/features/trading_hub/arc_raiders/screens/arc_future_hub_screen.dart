@@ -28,16 +28,16 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
     (
       'TRADE LOCKER',
       'SURPLUS & DUPLICATE INVENTORY',
-      'Maintain what you own, what you will trade and what you need once — then let Smart Trade use it.',
+      'Track what you own, what you will trade and what you still need.',
       Icons.inventory_2_outlined,
-      'PLANNED',
+      'EXPLORING',
     ),
     (
       'UAG GIVES',
       'COMMUNITY IMPACT',
       'Start with tangible giving such as verified hospital wish lists, then publish what the UAG community actually helped provide.',
       Icons.volunteer_activism_outlined,
-      'ROADMAP',
+      'EXPLORING',
     ),
     (
       'COMMUNITY IDEAS',
@@ -54,8 +54,21 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: ArcUiTokens.surface,
-        title: const Text('Suggest a UAG feature'),
+        backgroundColor: ArcUiTokens.surfaceOverlay,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
+          side: BorderSide(
+            color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.34),
+          ),
+        ),
+        title: Text(
+          'SUGGEST A UAG FEATURE',
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 18,
+            color: ArcUiTokens.secondaryAccent,
+          ),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -63,66 +76,121 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
               TextField(
                 controller: controller,
                 maxLength: 80,
-                decoration: const InputDecoration(labelText: 'Idea title'),
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(
+                  labelText: 'Idea title',
+                  hintText: 'What should UAG add?',
+                  prefixIcon: Icons.lightbulb_outline_rounded,
+                ),
               ),
+              const SizedBox(height: 10),
               TextField(
                 controller: details,
                 maxLength: 500,
                 maxLines: 5,
-                decoration: const InputDecoration(
+                style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                decoration: ArcUiTokens.inputDecoration(
                   labelText: 'What should it do?',
-                ),
+                  hintText: 'Describe the player problem and the useful outcome.',
+                  prefixIcon: Icons.notes_rounded,
+                ).copyWith(alignLabelWithHint: true),
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.textSecondary,
+            ),
             onPressed: () => Navigator.pop(context, false),
             child: const Text('CANCEL'),
           ),
           FilledButton(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+              primary: true,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('SUBMIT'),
           ),
         ],
       ),
     );
-    if (result != true || controller.text.trim().length < 3) return;
+
+    final title = controller.text.trim();
+    final detailText = details.text.trim();
+    controller.dispose();
+    details.dispose();
+
+    if (result != true || title.length < 3) return;
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    await FirebaseFirestore.instance
-        .collection('uag_community_suggestions')
-        .add({
-          'title': controller.text.trim(),
-          'details': details.text.trim(),
-          'uid': user.uid,
-          'status': 'open',
-          'createdAt': FieldValue.serverTimestamp(),
-          'voteCount': 0,
-        });
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Suggestion submitted.')));
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in to submit a community idea.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('uag_community_suggestions')
+          .add({
+            'title': title,
+            'details': detailText,
+            'uid': user.uid,
+            'status': 'open',
+            'createdAt': FieldValue.serverTimestamp(),
+            'voteCount': 0,
+          });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Suggestion submitted.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not submit your suggestion. Try again.'),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _toggleVote(String id, bool voted) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in to vote on community ideas.')),
+        );
+      }
+      return;
+    }
     final ref = FirebaseFirestore.instance
         .collection('uag_community_suggestions')
         .doc(id)
         .collection('votes')
         .doc(user.uid);
-    if (voted) {
-      await ref.delete();
-    } else {
-      await ref.set({
-        'uid': user.uid,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    try {
+      if (voted) {
+        await ref.delete();
+      } else {
+        await ref.set({
+          'uid': user.uid,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update your vote. Try again.')),
+        );
+      }
     }
   }
 
@@ -137,57 +205,95 @@ class _ArcFutureHubScreenState extends State<ArcFutureHubScreen> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, c) {
-              final width = c.maxWidth > 980 ? 980.0 : c.maxWidth;
+              final width = c.maxWidth > 1180 ? 1180.0 : c.maxWidth;
               return Center(
                 child: SizedBox(
                   width: width,
                   child: ListView(
                     padding: ArcUiTokens.screenPadding,
                     children: [
-                      Text(
-                        'FUTURE HUB',
-                        style: AppTheme.heroTextStyle(
-                          fontSize: 32,
-                          color: AppTheme.neonCyan,
-                        ),
+                      const ArcRaidersPageHeader(
+                        title: 'FUTURE HUB',
+                        subtitle: 'Roadmap signals and community ideas.',
+                        icon: Icons.timeline_rounded,
+                        accent: ArcUiTokens.secondaryAccent,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'WHAT UAG IS BUILDING TOWARD',
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 13,
-                          color: AppTheme.neonPink,
-                          isBold: true,
-                        ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      const ArcRaidersHeroBanner(
+                        title: 'WHAT UAG BUILDS NEXT',
+                        subtitle:
+                            'Roadmap systems, community suggestions and player-voted priorities in one place.',
+                        accent: ArcUiTokens.secondaryAccent,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Not everything here is another app feature. The roadmap includes smarter ARC tools, stronger community systems and a wider positive impact as UAG grows.',
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 14,
-                          color: AppTheme.tradingMutedText,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ..._ideas.map((idea) => _RoadmapCard(idea: idea)),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'COMMUNITY SUGGESTIONS',
-                              style: AppTheme.heroTextStyle(
-                                fontSize: 22,
-                                color: AppTheme.neonCyan,
-                              ),
-                            ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: const [
+                          ArcTacticalStatusPill(
+                            label: 'Roadmap',
+                            icon: Icons.route_rounded,
+                            accent: ArcUiTokens.warning,
                           ),
-                          FilledButton.icon(
-                            onPressed: _suggest,
-                            icon: const Icon(Icons.add),
-                            label: const Text('SUGGEST'),
+                          ArcTacticalStatusPill(
+                            label: 'Community votes',
+                            icon: Icons.how_to_vote_rounded,
+                            accent: ArcUiTokens.primaryAccent,
+                          ),
+                          ArcTacticalStatusPill(
+                            label: 'Identity safe',
+                            icon: Icons.verified_user_outlined,
+                            accent: ArcUiTokens.success,
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final columns = constraints.maxWidth >= 980
+                              ? 4
+                              : constraints.maxWidth >= 640
+                              ? 2
+                              : 1;
+                          const spacing = 10.0;
+                          final cardWidth =
+                              (constraints.maxWidth - spacing * (columns - 1)) /
+                              columns;
+                          return Wrap(
+                            spacing: spacing,
+                            runSpacing: spacing,
+                            children: [
+                              for (final idea in _ideas)
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _RoadmapCard(idea: idea),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      ArcRaidersSectionCard(
+                        accent: ArcUiTokens.primaryAccent,
+                        padding: const EdgeInsets.all(ArcUiTokens.gapM),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'COMMUNITY SUGGESTIONS',
+                                style: ArcUiTokens.sectionTitle(
+                                  fontSize: 18,
+                                  color: ArcUiTokens.textPrimary,
+                                ),
+                              ),
+                            ),
+                            FilledButton.icon(
+                              onPressed: _suggest,
+                              icon: const Icon(Icons.add),
+                              label: const Text('SUGGEST'),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 8),
                       _SuggestionsFeed(onToggleVote: _toggleVote),
@@ -208,19 +314,18 @@ class _RoadmapCard extends StatelessWidget {
   const _RoadmapCard({required this.idea});
   final (String, String, String, IconData, String) idea;
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: ArcUiTokens.surface.withValues(alpha: .82),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: AppTheme.neonCyan.withValues(alpha: .22)),
-    ),
+  Widget build(BuildContext context) => ArcRaidersSectionCard(
+    accent: idea.$5 == 'LIVE'
+        ? ArcUiTokens.success
+        : idea.$5 == 'IN DEVELOPMENT'
+        ? ArcUiTokens.secondaryAccent
+        : ArcUiTokens.primaryAccent,
+    padding: const EdgeInsets.all(ArcUiTokens.gapM),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(idea.$4, color: AppTheme.neonCyan, size: 30),
-        const SizedBox(width: 12),
+        Icon(idea.$4, color: ArcUiTokens.primaryAccent, size: 24),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,7 +336,7 @@ class _RoadmapCard extends StatelessWidget {
                     child: Text(
                       idea.$1,
                       style: AppTheme.heroTextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         color: Colors.white,
                       ),
                     ),
@@ -243,7 +348,7 @@ class _RoadmapCard extends StatelessWidget {
                 idea.$2,
                 style: AppTheme.bodyTextStyle(
                   fontSize: 11,
-                  color: AppTheme.neonPink,
+                  color: ArcUiTokens.secondaryAccent,
                   isBold: true,
                 ),
               ),
@@ -297,23 +402,31 @@ class _SuggestionsFeed extends StatelessWidget {
           .limit(30)
           .snapshots(),
       builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting && !snap.hasData) {
+          return const ArcRaidersStatePanel(
+            title: 'Loading suggestions',
+            message: 'Checking the current community queue.',
+            icon: Icons.sync_rounded,
+            compact: true,
+          );
+        }
         if (snap.hasError) {
-          return Text(
-            'Suggestions are temporarily unavailable.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 13,
-              color: AppTheme.tradingMutedText,
-            ),
+          return const ArcRaidersStatePanel(
+            title: 'Suggestions unavailable',
+            message: 'Community suggestions could not load right now.',
+            icon: Icons.cloud_off_rounded,
+            accent: ArcUiTokens.warning,
+            compact: true,
           );
         }
         final docs = snap.data?.docs ?? const [];
         if (docs.isEmpty) {
-          return Text(
-            'No suggestions yet. Be the first Raider to add one.',
-            style: AppTheme.bodyTextStyle(
-              fontSize: 13,
-              color: AppTheme.tradingMutedText,
-            ),
+          return const ArcRaidersStatePanel(
+            title: 'No suggestions yet',
+            message: 'Add the first idea for the next UAG system.',
+            icon: Icons.lightbulb_outline_rounded,
+            accent: ArcUiTokens.primaryAccent,
+            compact: true,
           );
         }
         return Column(
@@ -325,13 +438,12 @@ class _SuggestionsFeed extends StatelessWidget {
                 final votes = votesSnap.data?.docs ?? const [];
                 final voted =
                     uid != null && votes.any((vote) => vote.id == uid);
-                return Container(
+                return ArcRaidersSectionCard(
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: ArcUiTokens.surface.withValues(alpha: .72),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  padding: const EdgeInsets.all(ArcUiTokens.gapM),
+                  accent: voted
+                      ? ArcUiTokens.secondaryAccent
+                      : ArcUiTokens.primaryAccent,
                   child: Row(
                     children: [
                       Column(

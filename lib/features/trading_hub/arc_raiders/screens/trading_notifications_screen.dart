@@ -293,21 +293,35 @@ class _TradingNotificationsScreenState
                 stream: _repository.watchNotifications(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Could not load messages right now.',
-                        textAlign: TextAlign.center,
-                        style: AppTheme.bodyTextStyle(
-                          fontSize: 15,
-                          color: AppTheme.tradingDanger,
+                    return const Center(
+                      child: Padding(
+                        padding: ArcUiTokens.compactPanelPadding,
+                        child: ArcRaidersStatePanel(
+                          title: 'Communications unavailable',
+                          message:
+                              'Your messages could not be loaded right now.',
+                          icon: Icons.cloud_off_rounded,
+                          accent: ArcUiTokens.warning,
                         ),
                       ),
                     );
                   }
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.neonCyan,
+                      child: Padding(
+                        padding: ArcUiTokens.compactPanelPadding,
+                        child: ArcRaidersStatePanel(
+                          title: 'Syncing communications',
+                          message:
+                              'Checking trade alerts, operations and community updates.',
+                          icon: Icons.sync_rounded,
+                          accent: ArcUiTokens.primaryAccent,
+                          action: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
                       ),
                     );
                   }
@@ -316,6 +330,16 @@ class _TradingNotificationsScreenState
                   final visible = all.where(_matches).toList(growable: false);
                   return Column(
                     children: [
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(14, 12, 14, 0),
+                        child: ArcRaidersPageHeader(
+                          title: 'COMMUNICATIONS CENTRE',
+                          subtitle:
+                              'Trade responses, system alerts and community signals.',
+                          icon: Icons.mark_email_unread_outlined,
+                          accent: ArcUiTokens.primaryAccent,
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                         child: Row(
@@ -362,15 +386,17 @@ class _TradingNotificationsScreenState
                             ? Center(
                                 child: Padding(
                                   padding: const EdgeInsets.all(24),
-                                  child: Text(
-                                    all.isEmpty
-                                        ? 'Your messages, alerts, broadcasts and system updates will appear here.'
-                                        : 'No messages match this filter.',
-                                    textAlign: TextAlign.center,
-                                    style: AppTheme.bodyTextStyle(
-                                      fontSize: 16,
-                                      color: AppTheme.tradingMutedText,
-                                    ),
+                                  child: ArcRaidersStatePanel(
+                                    title: all.isEmpty
+                                        ? 'No communications yet'
+                                        : 'No matching communications',
+                                    message: all.isEmpty
+                                        ? 'Trade responses, broadcasts and system updates will appear here.'
+                                        : 'Change the filter to view other messages.',
+                                    icon: all.isEmpty
+                                        ? Icons.inbox_outlined
+                                        : Icons.filter_alt_off_outlined,
+                                    accent: ArcUiTokens.textTertiary,
                                   ),
                                 ),
                               )

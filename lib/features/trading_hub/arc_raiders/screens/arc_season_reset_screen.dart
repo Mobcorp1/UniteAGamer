@@ -67,7 +67,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Command'),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'RUN'),
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         showAdBanner: true,
@@ -76,8 +76,11 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                child: CircularProgressIndicator(
-                  color: ArcUiTokens.primaryAccent,
+                child: ArcRaidersStatePanel(
+                  title: 'Preparing reset preview',
+                  message: 'Auditing season, tracker and reward state.',
+                  icon: Icons.sync_rounded,
+                  accent: ArcUiTokens.primaryAccent,
                 ),
               );
             }
@@ -170,7 +173,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
                 checkColor: ArcUiTokens.background,
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  'I understand this archives blueprint, tracker and current-season Operation progress. Profile, reputation, legal consent and permanent rewards remain.',
+                  'I understand this archives current-season progress. Profile, reputation, legal consent and permanent rewards remain.',
                   style: ArcUiTokens.body(
                     fontSize: 13,
                     color: ArcUiTokens.textSecondary,
@@ -297,16 +300,61 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
         spacing: AppTheme.spaceM,
         runSpacing: AppTheme.spaceM,
         children: [
-          _metricTile('Current season', preview.currentSeasonId),
-          _metricTile('Next season', preview.nextSeasonId),
-          _metricTile('Reset version', preview.resetVersion.toString()),
-          _metricTile('Reset status', state.resetStatus.name),
-          _metricTile('Blueprints', preview.blueprintStateCount.toString()),
-          _metricTile('Scrappy docs', preview.scrappyStateCount.toString()),
-          _metricTile('Quest docs', preview.questStateCount.toString()),
-          _metricTile('Bench docs', preview.benchStateCount.toString()),
-          _metricTile('Operations', preview.operationProgressCount.toString()),
-          _metricTile('Vault rewards', preview.rewardCount.toString()),
+          ArcTacticalStatTile(
+            label: 'Current',
+            value: preview.currentSeasonId,
+            icon: Icons.flag_outlined,
+          ),
+          ArcTacticalStatTile(
+            label: 'Next',
+            value: preview.nextSeasonId,
+            icon: Icons.flag_rounded,
+            accent: ArcUiTokens.secondaryAccent,
+          ),
+          ArcTacticalStatTile(
+            label: 'Version',
+            value: preview.resetVersion.toString(),
+            icon: Icons.numbers_rounded,
+          ),
+          ArcTacticalStatTile(
+            label: 'Status',
+            value: state.resetStatus.name,
+            icon: Icons.info_outline_rounded,
+            accent: state.resetStatus == ArcSeasonResetStatus.inProgress
+                ? ArcUiTokens.warning
+                : ArcUiTokens.success,
+          ),
+          ArcTacticalStatTile(
+            label: 'Blueprints',
+            value: preview.blueprintStateCount.toString(),
+            icon: Icons.grid_view_rounded,
+          ),
+          ArcTacticalStatTile(
+            label: 'Scrappy',
+            value: preview.scrappyStateCount.toString(),
+            icon: Icons.inventory_2_outlined,
+          ),
+          ArcTacticalStatTile(
+            label: 'Quests',
+            value: preview.questStateCount.toString(),
+            icon: Icons.task_alt_rounded,
+          ),
+          ArcTacticalStatTile(
+            label: 'Bench',
+            value: preview.benchStateCount.toString(),
+            icon: Icons.build_circle_outlined,
+          ),
+          ArcTacticalStatTile(
+            label: 'Operations',
+            value: preview.operationProgressCount.toString(),
+            icon: Icons.military_tech_outlined,
+          ),
+          ArcTacticalStatTile(
+            label: 'Rewards',
+            value: preview.rewardCount.toString(),
+            icon: Icons.workspace_premium_outlined,
+            accent: ArcUiTokens.warning,
+          ),
         ],
       ),
     );
@@ -325,7 +373,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
         children: [
           Text(
             title,
-            style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
+            style: ArcUiTokens.sectionTitle(fontSize: 17, color: accent),
           ),
           const SizedBox(height: AppTheme.spaceM),
           for (final impact in impacts) _impactRow(impact, accent),
@@ -347,7 +395,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
         children: [
           Text(
             title,
-            style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
+            style: ArcUiTokens.sectionTitle(fontSize: 17, color: accent),
           ),
           const SizedBox(height: AppTheme.spaceM),
           Wrap(
@@ -355,14 +403,7 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
             runSpacing: 8,
             children: [
               for (final item in items)
-                Chip(
-                  label: Text(item),
-                  backgroundColor: ArcUiTokens.surfaceInteractive,
-                  side: BorderSide(color: accent.withValues(alpha: 0.28)),
-                  labelStyle: ArcUiTokens.bodySmall(
-                    color: ArcUiTokens.textSecondary,
-                  ),
-                ),
+                ArcTacticalStatusPill(label: item, accent: accent),
             ],
           ),
         ],
@@ -404,40 +445,6 @@ class _ArcSeasonResetScreenState extends State<ArcSeasonResetScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _metricTile(String label, String value) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 140, maxWidth: 210),
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.spaceM),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.interactive,
-          accent: ArcUiTokens.primaryAccent,
-          borderOpacity: 0.16,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label.toUpperCase(),
-              style: ArcUiTokens.label(color: ArcUiTokens.textTertiary),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: ArcUiTokens.cardTitle(
-                fontSize: 16,
-                color: ArcUiTokens.textPrimary,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

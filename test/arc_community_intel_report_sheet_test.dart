@@ -61,12 +61,12 @@ void main() {
       ),
     );
 
-    expect(find.text('1/4 • Intel type'), findsOneWidget);
+    expect(find.text('1/4 - Intel type'), findsOneWidget);
     await tester.tap(find.text('High Value'));
     await tester.pumpAndSettle();
 
-    expect(find.text('2/4 • Location'), findsOneWidget);
-    expect(find.text('No listed POI — use exact dropped pin'), findsOneWidget);
+    expect(find.text('2/4 - Location'), findsOneWidget);
+    expect(find.text('No listed POI - use exact dropped pin'), findsOneWidget);
     expect(find.text('Attach to Nearby POI'), findsOneWidget);
 
     final exactPin = find.byKey(
@@ -81,7 +81,7 @@ void main() {
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
 
-    expect(find.text('4/4 • Review'), findsOneWidget);
+    expect(find.text('4/4 - Review'), findsOneWidget);
     expect(find.textContaining('Exact pin 51.0, 49.0'), findsOneWidget);
 
     await tester.tap(find.text('Submit Intel'));

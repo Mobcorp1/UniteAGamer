@@ -132,7 +132,7 @@ void main() {
       );
       expect(recommendation.action.intent, ArcCommandActionIntent.comingSoon);
       expect(recommendation.action.featureTitle, 'Raid Intelligence');
-      expect(recommendation.action.placeholderMessage, contains('cannot be'));
+      expect(recommendation.action.placeholderMessage, contains('later beta phase'));
     });
 
     test('completed onboarding surfaces the saved first system', () {

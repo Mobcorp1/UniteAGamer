@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('scanner restores persistent adjustable frame and capture contract', () {
+  test('scanner keeps persistent frame with live automatic scan contract', () {
     final source = File(
       'lib/features/trading_hub/arc_raiders/screens/'
       'arc_blueprint_live_scanner_screen.dart',
@@ -13,22 +13,13 @@ void main() {
       source,
       contains('final ManualAlignmentController _alignmentController'),
     );
-    expect(source, contains('.autoAlignFromDetection('));
-    expect(source, contains('_DragTarget.topLeft'));
-    expect(source, contains('_DragTarget.topRight'));
-    expect(source, contains('_DragTarget.bottomLeft'));
-    expect(source, contains('_DragTarget.bottomRight'));
     expect(source, contains('ArcBlueprintPerspectiveCropper().rectify('));
 
-    expect(
-      source,
-      contains(
-        "key: const Key(\n                                  "
-        "'blueprint-live-scanner-capture'",
-      ),
-    );
-    expect(source, contains('canStartCapture('));
-    expect(source, contains('? _capture'));
+    expect(source, isNot(contains("'blueprint-live-scanner-capture'")));
+    expect(source, contains("'blueprint-live-scanner-begin-bottom'"));
+    expect(source, contains('No photo capture is required.'));
+    expect(source, contains('AUTO FRAMING BLUEPRINT GRID'));
+    // Still capture remains available only as a recovery fallback.
     expect(source, contains('await controller.takePicture()'));
 
     expect(source, isNot(contains('ArcBlueprintLiveTargetingOverlay(')));
@@ -36,10 +27,8 @@ void main() {
       source,
       isNot(contains('for (var column = 1; column < 10; column++)')),
     );
-    expect(
-      source,
-      contains('Do not\n    // paint a synthetic 10x5 grid over it'),
-    );
+    expect(source, contains('_BlueprintAutoFrameOverlay('));
+    expect(source, contains('detection: _latestDetection'));
   });
 
   test('both captures share the same manual alignment frame', () {

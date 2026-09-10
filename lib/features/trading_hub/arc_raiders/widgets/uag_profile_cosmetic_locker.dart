@@ -25,14 +25,14 @@ class _LockerCatalogueItem {
 
 const _lockerCatalogue = <_LockerCatalogueItem>[
   _LockerCatalogueItem(
-    id: 'beta_access_badge',
+    id: 'beta_access',
     label: 'Beta Access Badge',
     type: ArcOperationRewardType.badge,
     rarity: ArcCosmeticRarity.closedBeta,
     assetPath: 'assets/arc_raiders/operations/badges/beta_access_plus.png',
   ),
   _LockerCatalogueItem(
-    id: 'founding_raider_badge',
+    id: 'founding_raider',
     label: 'Founding Raider Badge',
     type: ArcOperationRewardType.badge,
     rarity: ArcCosmeticRarity.founder,
@@ -53,35 +53,35 @@ const _lockerCatalogue = <_LockerCatalogueItem>[
     assetPath: 'assets/arc_raiders/operations/badges/trailblazer.png',
   ),
   _LockerCatalogueItem(
-    id: 'trade_pioneer_badge',
+    id: 'trade_pioneer',
     label: 'Trade Pioneer Badge',
     type: ArcOperationRewardType.badge,
     rarity: ArcCosmeticRarity.rare,
     assetPath: 'assets/arc_raiders/operations/badges/golden_pathfinder.png',
   ),
   _LockerCatalogueItem(
-    id: 'intel_officer_badge',
+    id: 'intel_officer',
     label: 'Intel Officer Badge',
     type: ArcOperationRewardType.badge,
     rarity: ArcCosmeticRarity.rare,
     assetPath: 'assets/arc_raiders/operations/badges/pathfinder.png',
   ),
   _LockerCatalogueItem(
-    id: 'community_raider_badge',
+    id: 'community_raider',
     label: 'Community Raider Badge',
     type: ArcOperationRewardType.badge,
     rarity: ArcCosmeticRarity.community,
     assetPath: 'assets/arc_raiders/operations/badges/community_heart.png',
   ),
   _LockerCatalogueItem(
-    id: 'og_legend_badge',
+    id: 'og_legend',
     label: 'OG Legend Badge',
     type: ArcOperationRewardType.badge,
     rarity: ArcCosmeticRarity.legendary,
     assetPath: 'assets/arc_raiders/operations/badges/og_legend.png',
   ),
   _LockerCatalogueItem(
-    id: 'inner_circle_badge',
+    id: 'inner_circle',
     label: 'UAG Inner Circle Badge',
     type: ArcOperationRewardType.badge,
     rarity: ArcCosmeticRarity.founder,
@@ -110,7 +110,7 @@ const _lockerCatalogue = <_LockerCatalogueItem>[
   ),
 
   _LockerCatalogueItem(
-    id: 'field_tester_title',
+    id: 'field_tester',
     label: 'FIELD TESTER',
     type: ArcOperationRewardType.title,
     rarity: ArcCosmeticRarity.closedBeta,
@@ -307,7 +307,7 @@ class _UagProfileCosmeticLockerState extends State<UagProfileCosmeticLocker> {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: AppTheme.tradingPillDecoration(color: AppTheme.neonPink),
       child: Text(
-        '$owned EARNED',
+        '$owned OWNED TOTAL',
         style: const TextStyle(
           color: AppTheme.neonPink,
           fontSize: 9,
@@ -570,13 +570,18 @@ class _UagProfileCosmeticLockerState extends State<UagProfileCosmeticLocker> {
           else
             LayoutBuilder(
               builder: (context, constraints) {
-                final cardWidth = type == ArcOperationRewardType.profileBanner
-                    ? (constraints.maxWidth >= 520
-                          ? 232.0
-                          : constraints.maxWidth)
-                    : (constraints.maxWidth >= 520
-                          ? 158.0
-                          : (constraints.maxWidth - 8) / 2);
+                final availableWidth = constraints.maxWidth;
+                final columns = type == ArcOperationRewardType.profileBanner
+                    ? (availableWidth >= 900 ? 3 : availableWidth >= 560 ? 2 : 1)
+                    : (availableWidth >= 1180
+                          ? 5
+                          : availableWidth >= 900
+                          ? 4
+                          : availableWidth >= 620
+                          ? 3
+                          : 2);
+                final totalSpacing = 8.0 * (columns - 1);
+                final cardWidth = (availableWidth - totalSpacing) / columns;
                 return Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -699,8 +704,7 @@ class _UagProfileCosmeticLockerState extends State<UagProfileCosmeticLocker> {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const Spacer(),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
           Container(
             height: 28,
             alignment: Alignment.center,

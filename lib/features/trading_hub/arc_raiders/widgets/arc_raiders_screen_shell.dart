@@ -357,24 +357,222 @@ class ArcRaidersSectionCard extends StatelessWidget {
     this.accent = ArcUiTokens.primaryAccent,
     this.padding = const EdgeInsets.all(AppTheme.spaceS),
     this.radius = 14,
+    this.selected = false,
+    this.onTap,
+    this.margin,
   });
 
   final Widget child;
   final Color accent;
   final EdgeInsetsGeometry padding;
   final double radius;
+  final bool selected;
+  final VoidCallback? onTap;
+  final EdgeInsetsGeometry? margin;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
+      margin: margin,
       padding: padding,
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
         radius: radius,
         accent: accent,
         borderOpacity: 0.28,
+        selected: selected,
+        glow: selected,
       ),
       child: child,
+    );
+
+    if (onTap == null) return content;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(radius),
+        onTap: onTap,
+        child: content,
+      ),
+    );
+  }
+}
+
+class ArcTacticalStatusPill extends StatelessWidget {
+  const ArcTacticalStatusPill({
+    super.key,
+    required this.label,
+    this.icon,
+    this.accent = ArcUiTokens.primaryAccent,
+    this.selected = false,
+  });
+
+  final String label;
+  final IconData? icon;
+  final Color accent;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: ArcUiTokens.chipPadding,
+      decoration: ArcUiTokens.chipDecoration(color: accent, selected: selected),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 13, color: accent),
+            const SizedBox(width: 5),
+          ],
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: Text(
+              label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.label(color: accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ArcTacticalStatTile extends StatelessWidget {
+  const ArcTacticalStatTile({
+    super.key,
+    required this.label,
+    required this.value,
+    this.icon,
+    this.accent = ArcUiTokens.primaryAccent,
+    this.minWidth = 132,
+    this.maxWidth = 210,
+  });
+
+  final String label;
+  final String value;
+  final IconData? icon;
+  final Color accent;
+  final double minWidth;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minWidth, maxWidth: maxWidth),
+      child: Container(
+        padding: const EdgeInsets.all(ArcUiTokens.gapM),
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.interactive,
+          accent: accent,
+          borderOpacity: 0.18,
+          radius: ArcUiTokens.radiusM,
+        ),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: accent, size: 17),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.label(),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    value,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: ArcUiTokens.cardTitle(
+                      fontSize: 15,
+                      color: ArcUiTokens.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ArcRaidersStatePanel extends StatelessWidget {
+  const ArcRaidersStatePanel({
+    super.key,
+    required this.title,
+    required this.message,
+    this.icon = Icons.info_outline_rounded,
+    this.accent = ArcUiTokens.primaryAccent,
+    this.action,
+    this.compact = false,
+  });
+
+  final String title;
+  final String message;
+  final IconData icon;
+  final Color accent;
+  final Widget? action;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArcRaidersSectionCard(
+      accent: accent,
+      padding: EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: compact ? 34 : 40,
+            height: compact ? 34 : 40,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+              border: Border.all(color: accent.withValues(alpha: 0.30)),
+            ),
+            child: Icon(icon, color: accent, size: compact ? 18 : 22),
+          ),
+          const SizedBox(width: ArcUiTokens.gapM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: compact ? 15 : 17,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message,
+                  style: ArcUiTokens.body(
+                    fontSize: compact ? 12 : 13,
+                    color: ArcUiTokens.textSecondary,
+                  ),
+                ),
+                if (action != null) ...[
+                  const SizedBox(height: ArcUiTokens.gapM),
+                  action!,
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

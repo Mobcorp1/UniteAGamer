@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:uag_arc_raiders_hub/widgets/theme.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 
 import '../models/arc_trade_listing.dart';
 import '../models/arc_trader_profile.dart';
@@ -36,6 +36,8 @@ class _ArcCreateTradeListingScreenState
   final TextEditingController _noteController = TextEditingController();
 
   ArcTraderProfile? _profile;
+  bool _loadingProfile = true;
+  bool _profileLoadFailed = false;
   bool _saving = false;
 
   @override
@@ -45,11 +47,33 @@ class _ArcCreateTradeListingScreenState
   }
 
   Future<void> _loadProfile() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    final profile = await _profileRepository.getProfile();
-    if (!mounted) return;
-    setState(() => _profile = profile);
+    setState(() {
+      _loadingProfile = true;
+      _profileLoadFailed = false;
+    });
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        if (!mounted) return;
+        setState(() {
+          _loadingProfile = false;
+          _profile = null;
+        });
+        return;
+      }
+      final profile = await _profileRepository.getProfile();
+      if (!mounted) return;
+      setState(() {
+        _profile = profile;
+        _loadingProfile = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadingProfile = false;
+        _profileLoadFailed = true;
+      });
+    }
   }
 
   @override
@@ -63,7 +87,8 @@ class _ArcCreateTradeListingScreenState
   }
 
   Future<void> _save() async {
-    if (_profile == null) return;
+    final profile = _profile;
+    if (profile == null || _saving) return;
     setState(() => _saving = true);
 
     final listing = ArcTradeListing(
@@ -73,16 +98,43 @@ class _ArcCreateTradeListingScreenState
       offeredBlueprintName: _offeredBlueprintNameController.text.trim(),
       wantedBlueprintId: _wantedBlueprintIdController.text.trim(),
       wantedBlueprintName: _wantedBlueprintNameController.text.trim(),
-      region: _profile!.region,
-      platform: _profile!.platform,
+      region: profile.region,
+      platform: profile.platform,
       status: 'open',
       note: _noteController.text.trim(),
     );
 
-    await _listingRepository.createListing(listing);
+    try {
+      await _listingRepository.createListing(listing);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not create this listing. Try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
-    if (!mounted) return;
-    Navigator.pop(context, true);
+  Widget _blueprintField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputAction? textInputAction,
+  }) {
+    return TextField(
+      controller: controller,
+      textInputAction: textInputAction,
+      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+      decoration: ArcUiTokens.inputDecoration(
+        labelText: label,
+        prefixIcon: icon,
+      ),
+    );
   }
 
   @override
@@ -94,68 +146,187 @@ class _ArcCreateTradeListingScreenState
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Create Trade Listing'),
+        title: Text(
+          'Create Trade Listing',
+          style: ArcUiTokens.sectionTitle(fontSize: 22),
+        ),
       ),
       body: ArcRaidersScreenShell(
-        useSafeArea: true,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-              children: [
-                if (profile == null)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: Text('Load or complete Your Hub Profile first.'),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      'Listing will use ${profile.region} - ${profile.platform}',
+        showAdBanner: false,
+        child: SafeArea(
+          child: ArcRaidersPageList(
+            maxWidth: 860,
+            bottomPadding: 112,
+            children: [
+              const ArcRaidersPageHeader(
+                title: 'TRADE REQUEST',
+                subtitle:
+                    'Declare what you can offer and what you need in return.',
+                icon: Icons.swap_horiz_rounded,
+                accent: ArcUiTokens.secondaryAccent,
+              ),
+              const SizedBox(height: ArcUiTokens.gapM),
+              if (_loadingProfile)
+                const ArcRaidersStatePanel(
+                  title: 'Loading trader identity',
+                  message: 'Linking this listing to your region and platform.',
+                  icon: Icons.sync_rounded,
+                  accent: ArcUiTokens.primaryAccent,
+                  action: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else if (_profileLoadFailed)
+                ArcRaidersStatePanel(
+                  title: 'Trader profile unavailable',
+                  message:
+                      'Your profile could not be loaded, so the listing cannot be published safely yet.',
+                  icon: Icons.cloud_off_rounded,
+                  accent: ArcUiTokens.warning,
+                  action: TextButton.icon(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.primaryAccent,
+                    ),
+                    onPressed: _loadProfile,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                )
+              else if (profile == null)
+                const ArcRaidersStatePanel(
+                  title: 'Complete your Hub Profile first',
+                  message:
+                      'Trade listings need a Raider identity, region and platform before they can go live.',
+                  icon: Icons.person_off_outlined,
+                  accent: ArcUiTokens.warning,
+                )
+              else ...[
+                Wrap(
+                  spacing: ArcUiTokens.gapS,
+                  runSpacing: ArcUiTokens.gapS,
+                  children: [
+                    ArcTacticalStatusPill(
+                      label: profile.region.isEmpty
+                          ? 'Region not set'
+                          : profile.region,
+                      icon: Icons.public_rounded,
+                      accent: ArcUiTokens.primaryAccent,
+                    ),
+                    ArcTacticalStatusPill(
+                      label: profile.platform.isEmpty
+                          ? 'Platform not set'
+                          : profile.platform,
+                      icon: Icons.sports_esports_rounded,
+                      accent: ArcUiTokens.secondaryAccent,
+                    ),
+                    const ArcTacticalStatusPill(
+                      label: 'Open listing',
+                      icon: Icons.radio_button_checked_rounded,
+                      accent: ArcUiTokens.success,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+                ArcRaidersSectionCard(
+                  accent: ArcUiTokens.secondaryAccent,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'YOU OFFER',
+                        style: ArcUiTokens.sectionTitle(
+                          fontSize: 16,
+                          color: ArcUiTokens.secondaryAccent,
+                        ),
+                      ),
+                      const SizedBox(height: ArcUiTokens.gapS),
+                      _blueprintField(
+                        controller: _offeredBlueprintNameController,
+                        label: 'Offered Blueprint Name',
+                        icon: Icons.inventory_2_outlined,
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: ArcUiTokens.gapS),
+                      _blueprintField(
+                        controller: _offeredBlueprintIdController,
+                        label: 'Offered Blueprint ID',
+                        icon: Icons.tag_rounded,
+                        textInputAction: TextInputAction.next,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+                ArcRaidersSectionCard(
+                  accent: ArcUiTokens.primaryAccent,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'YOU NEED',
+                        style: ArcUiTokens.sectionTitle(
+                          fontSize: 16,
+                          color: ArcUiTokens.primaryAccent,
+                        ),
+                      ),
+                      const SizedBox(height: ArcUiTokens.gapS),
+                      _blueprintField(
+                        controller: _wantedBlueprintNameController,
+                        label: 'Wanted Blueprint Name',
+                        icon: Icons.search_rounded,
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: ArcUiTokens.gapS),
+                      _blueprintField(
+                        controller: _wantedBlueprintIdController,
+                        label: 'Wanted Blueprint ID',
+                        icon: Icons.tag_rounded,
+                        textInputAction: TextInputAction.next,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: ArcUiTokens.gapM),
+                ArcRaidersSectionCard(
+                  accent: ArcUiTokens.textTertiary,
+                  child: TextField(
+                    controller: _noteController,
+                    maxLines: 4,
+                    maxLength: 300,
+                    style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                    decoration: ArcUiTokens.inputDecoration(
+                      labelText: 'Trade note',
+                      hintText:
+                          'Add useful context such as preferred timing or equivalent offers.',
+                      prefixIcon: Icons.notes_rounded,
                     ),
                   ),
-                TextField(
-                  controller: _offeredBlueprintIdController,
-                  decoration: AppTheme.tradingInputDecoration(
-                    label: 'Offered Blueprint ID',
+                ),
+                const SizedBox(height: ArcUiTokens.gapL),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: ArcUiTokens.secondaryAccent,
+                      primary: true,
+                    ),
+                    onPressed: _saving ? null : _save,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.publish_rounded),
+                    label: Text(
+                      _saving ? 'Publishing...' : 'Publish Trade Listing',
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _offeredBlueprintNameController,
-                  decoration: AppTheme.tradingInputDecoration(
-                    label: 'Offered Blueprint Name',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _wantedBlueprintIdController,
-                  decoration: AppTheme.tradingInputDecoration(
-                    label: 'Wanted Blueprint ID',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _wantedBlueprintNameController,
-                  decoration: AppTheme.tradingInputDecoration(
-                    label: 'Wanted Blueprint Name',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _noteController,
-                  maxLines: 4,
-                  decoration: AppTheme.tradingInputDecoration(label: 'Notes'),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _saving || profile == null ? null : _save,
-                  child: Text(_saving ? 'Saving...' : 'Create Listing'),
                 ),
               ],
-            ),
+            ],
           ),
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/trading_listing.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/trading_repository.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -81,14 +82,33 @@ class TradingMyListingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppTheme.spaceS),
           ],
-          Text(
-            'Offering: ${listing.offeredSummary}',
-            style: const TextStyle(color: Colors.white),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Wanted: ${listing.wantedSummary}',
-            style: TextStyle(color: AppTheme.tradingMutedText),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final offered = _exchangePanel(
+                label: 'YOU OFFER',
+                value: listing.offeredSummary,
+                icon: Icons.upload_rounded,
+                accent: ArcUiTokens.secondaryAccent,
+              );
+              final wanted = _exchangePanel(
+                label: 'YOU WANT',
+                value: listing.wantedSummary,
+                icon: Icons.download_rounded,
+                accent: ArcUiTokens.primaryAccent,
+              );
+              if (constraints.maxWidth < 560) {
+                return Column(
+                  children: [offered, const SizedBox(height: 8), wanted],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: offered),
+                  const SizedBox(width: 8),
+                  Expanded(child: wanted),
+                ],
+              );
+            },
           ),
           if (formatBits.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -140,6 +160,48 @@ class TradingMyListingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _exchangePanel({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color accent,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: accent,
+        borderOpacity: 0.20,
+        radius: ArcUiTokens.radiusM,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: accent, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: ArcUiTokens.label(color: accent)),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.cardTitle(
+                    fontSize: 13,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBody(BuildContext context, TradingRepository repository) {
     return ArcRaidersScreenShell(
       showAdBanner: false,
@@ -158,13 +220,12 @@ class TradingMyListingsScreen extends StatelessWidget {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                  child: Text(
-                    'No listings yet. Create your first listing from the Trader Hub.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppTheme.tradingMutedText,
-                      fontSize: 16,
-                    ),
+                  child: const ArcRaidersStatePanel(
+                    title: 'No listings yet',
+                    message:
+                        'Create a trade listing from Trader Hub when you have items to offer.',
+                    icon: Icons.inventory_2_outlined,
+                    accent: ArcUiTokens.secondaryAccent,
                   ),
                 ),
               );

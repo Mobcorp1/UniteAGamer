@@ -420,7 +420,7 @@ class _TradingBlueprintWatchesScreenState
           const SizedBox(height: AppTheme.spaceS),
           Text(
             matches.isNotEmpty
-                ? '${matches.length} live listing ${matches.length == 1 ? 'matches' : 'matches'} this watch.'
+                ? '${matches.length} live ${matches.length == 1 ? 'listing matches' : 'listings match'} this watch.'
                 : watch.active
                 ? 'No current live listing match. This watch remains active.'
                 : 'Paused watches do not trigger match alerts.',
@@ -493,39 +493,21 @@ class _TradingBlueprintWatchesScreenState
     return Center(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.add_alert_outlined,
-              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.72),
-              size: 42,
+        child: ArcRaidersStatePanel(
+          title: 'No active watches',
+          message:
+              'Add a blueprint watch to surface matching traders and listings.',
+          icon: Icons.add_alert_outlined,
+          accent: ArcUiTokens.primaryAccent,
+          action: ElevatedButton.icon(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+              primary: true,
             ),
-            const SizedBox(height: AppTheme.spaceM),
-            Text(
-              'NO ACTIVE WATCHES',
-              style: ArcUiTokens.sectionTitle(
-                fontSize: 22,
-                color: ArcUiTokens.primaryAccent,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceS),
-            Text(
-              'Add a blueprint watch to surface matching traders, listings and Intel.',
-              textAlign: TextAlign.center,
-              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            ElevatedButton.icon(
-              style: ArcUiTokens.textButtonStyle(
-                accent: ArcUiTokens.secondaryAccent,
-                primary: true,
-              ),
-              onPressed: _showCreateSheet,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Watch'),
-            ),
-          ],
+            onPressed: _showCreateSheet,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add Watch'),
+          ),
         ),
       ),
     );
@@ -549,8 +531,11 @@ class _TradingBlueprintWatchesScreenState
                 if (watchSnapshot.connectionState == ConnectionState.waiting &&
                     watchSnapshot.data == null) {
                   return const Center(
-                    child: CircularProgressIndicator(
-                      color: ArcUiTokens.primaryAccent,
+                    child: ArcRaidersStatePanel(
+                      title: 'Loading watches',
+                      message: 'Checking watched blueprints and live matches.',
+                      icon: Icons.sync_rounded,
+                      accent: ArcUiTokens.primaryAccent,
                     ),
                   );
                 }
@@ -562,12 +547,12 @@ class _TradingBlueprintWatchesScreenState
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            'Blueprint Watches',
-                            style: ArcUiTokens.sectionTitle(
-                              fontSize: 22,
-                              color: ArcUiTokens.primaryAccent,
-                            ),
+                          child: ArcRaidersPageHeader(
+                            title: 'BLUEPRINT WATCHES',
+                            subtitle:
+                                '${watches.length} watched blueprints. ${listings.length} live market listings.',
+                            icon: Icons.add_alert_outlined,
+                            accent: ArcUiTokens.primaryAccent,
                           ),
                         ),
                         OutlinedButton.icon(

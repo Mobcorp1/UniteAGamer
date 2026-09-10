@@ -185,7 +185,9 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
       builder: (context, snapshot) {
         final notifications = snapshot.data ?? const <TradingNotification>[];
         final unreadCount = notifications.where((item) => !item.read).length;
-        final useRail = MediaQuery.sizeOf(context).width >= 1100;
+        final viewportWidth = MediaQuery.sizeOf(context).width;
+        final useRail = viewportWidth >= 1100;
+        final compactBottomNav = viewportWidth < 720;
         final content = IndexedStack(
           index: _currentIndex,
           children: List.generate(
@@ -315,8 +317,9 @@ class _TraderHubScreenState extends State<TraderHubScreen> {
                 : NavigationBar(
                     selectedIndex: _currentIndex,
                     onDestinationSelected: _onTap,
-                    labelBehavior:
-                        NavigationDestinationLabelBehavior.alwaysShow,
+                    labelBehavior: compactBottomNav
+                        ? NavigationDestinationLabelBehavior.onlyShowSelected
+                        : NavigationDestinationLabelBehavior.alwaysShow,
                     backgroundColor: ArcUiTokens.surfaceOverlay,
                     indicatorColor: ArcUiTokens.primaryAccent.withValues(
                       alpha: 0.14,

@@ -11,7 +11,7 @@ void main() {
       );
 
       expect(profile.completed, isTrue);
-      expect(profile.source, 'progressive_onboarding_v4');
+      expect(profile.source, 'progressive_onboarding_v5');
       expect(
         profile.featureInterests[ArcPersonalisationFeature.blueprintTracker],
         ArcPersonalisationInterestLevel.primary,

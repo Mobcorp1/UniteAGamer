@@ -29,6 +29,7 @@ void main() {
       expect(source, contains("'$label'"));
     }
     expect(source, contains('equipCosmetic(item)'));
-    expect(source, contains('ART INCOMING'));
+    expect(source, contains('_cataloguePreview('));
+    expect(source, contains('_lockedCatalogueCard('));
   });
 }

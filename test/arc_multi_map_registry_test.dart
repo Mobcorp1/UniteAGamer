@@ -34,10 +34,10 @@ void main() {
       'assets/arc_raiders/maps/buried_city/buried_city_master.webp',
     );
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
-    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
     expect(
       ArcMapAssetRegistry.statusFor('buried_city'),
-      'Provisional map image',
+      'Calibrated',
     );
   });
 
@@ -63,11 +63,11 @@ void main() {
     );
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
     expect(map.hasRenderableLayer(ArcRaidMapLayer.underground), isTrue);
-    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
-    expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isFalse);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isTrue);
     expect(
       ArcMapAssetRegistry.statusFor('stella_montis'),
-      'Provisional map image',
+      'Calibrated',
     );
   });
 
@@ -81,10 +81,10 @@ void main() {
     );
     expect(map.availableLayers, [ArcRaidMapLayer.surface]);
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
-    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
     expect(
       ArcMapAssetRegistry.statusFor('dam_battlegrounds'),
-      'Provisional Alignment',
+      'Calibrated',
     );
   });
 
@@ -110,9 +110,9 @@ void main() {
     );
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
     expect(map.hasRenderableLayer(ArcRaidMapLayer.underground), isTrue);
-    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
-    expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isFalse);
-    expect(ArcMapAssetRegistry.statusFor('spaceport'), 'Provisional Alignment');
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.underground), isTrue);
+    expect(ArcMapAssetRegistry.statusFor('spaceport'), 'Calibrated');
   });
 
   test('Riven Tides renders its master image but remains provisional', () {
@@ -124,10 +124,10 @@ void main() {
       'assets/arc_raiders/maps/riven_tides/riven_tides_master.webp',
     );
     expect(map.hasRenderableLayer(ArcRaidMapLayer.surface), isTrue);
-    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isFalse);
+    expect(map.hasCalibratedLayer(ArcRaidMapLayer.surface), isTrue);
     expect(
       ArcMapAssetRegistry.statusFor('riven_tides'),
-      'Provisional map image',
+      'Calibrated',
     );
   });
 

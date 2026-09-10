@@ -216,35 +216,7 @@ class TradingMyOffersScreen extends StatelessWidget {
                 compact: true,
               ),
               const SizedBox(height: 12),
-              Text(
-                'Blueprints: ${offer.offeredBlueprintText.isEmpty ? 'None listed' : offer.offeredBlueprintText}',
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Seeds: ${_bundleText(offer)}',
-                style: TextStyle(color: AppTheme.tradingMutedText),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Resources: ${offer.includesResources ? offer.resourcesText : 'None'}',
-                style: TextStyle(color: AppTheme.tradingMutedText),
-              ),
-              if (offer.note.trim().isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  'Message: ${offer.note}',
-                  style: TextStyle(color: AppTheme.tradingFaintText),
-                ),
-              ],
-              const SizedBox(height: 6),
-              Text(
-                'Listing ID: ${offer.listingId}',
-                style: TextStyle(
-                  color: AppTheme.tradingFaintText,
-                  fontSize: 12,
-                ),
-              ),
+              _offerPayloadGrid(offer),
               if (offer.status == TradingOfferStatus.accepted) ...[
                 const SizedBox(height: 14),
                 OutlinedButton.icon(
@@ -420,6 +392,103 @@ class TradingMyOffersScreen extends StatelessWidget {
     );
   }
 
+  Widget _offerPayloadGrid(TradingOffer offer) {
+    final panels = [
+      _payloadPanel(
+        label: 'BLUEPRINTS',
+        value: offer.offeredBlueprintText.isEmpty
+            ? 'None listed'
+            : offer.offeredBlueprintText,
+        icon: Icons.grid_view_rounded,
+        accent: ArcUiTokens.secondaryAccent,
+      ),
+      _payloadPanel(
+        label: 'SEEDS',
+        value: _bundleText(offer),
+        icon: Icons.grain_rounded,
+        accent: ArcUiTokens.warning,
+      ),
+      _payloadPanel(
+        label: 'RESOURCES',
+        value: offer.includesResources ? offer.resourcesText : 'None',
+        icon: Icons.inventory_2_outlined,
+        accent: ArcUiTokens.primaryAccent,
+      ),
+      if (offer.note.trim().isNotEmpty)
+        _payloadPanel(
+          label: 'MESSAGE',
+          value: offer.note.trim(),
+          icon: Icons.chat_bubble_outline_rounded,
+          accent: ArcUiTokens.info,
+        ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoColumns = constraints.maxWidth >= 620;
+        if (!twoColumns) {
+          return Column(
+            children: [
+              for (final panel in panels) ...[
+                panel,
+                if (panel != panels.last) const SizedBox(height: 8),
+              ],
+            ],
+          );
+        }
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final panel in panels)
+              SizedBox(width: (constraints.maxWidth - 8) / 2, child: panel),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _payloadPanel({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color accent,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.interactive,
+        accent: accent,
+        borderOpacity: 0.18,
+        radius: ArcUiTokens.radiusM,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: accent, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: ArcUiTokens.label(color: accent)),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBody(BuildContext context, TradingRepository repository) {
     return ArcRaidersScreenShell(
       showAdBanner: false,
@@ -438,13 +507,12 @@ class TradingMyOffersScreen extends StatelessWidget {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-                  child: Text(
-                    'No offers yet. Send offers from listing details and manage them here.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppTheme.tradingMutedText,
-                      fontSize: 16,
-                    ),
+                  child: const ArcRaidersStatePanel(
+                    title: 'No active offers',
+                    message:
+                        'Send offers from listing details and manage replies here.',
+                    icon: Icons.local_offer_outlined,
+                    accent: ArcUiTokens.secondaryAccent,
                   ),
                 ),
               );

@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/play
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/play_like_a_pro_routine.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_mixtape_player_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class PlayLikeAProRoutineScreen extends StatefulWidget {
@@ -97,7 +98,7 @@ class _PlayLikeAProRoutineScreenState extends State<PlayLikeAProRoutineScreen> {
           ),
           const SizedBox(height: AppTheme.spaceS),
           const Text(
-            'Prepare deliberately, play inside a planned window, then come back down instead of carrying the session into the rest of the day.',
+            'Prep, play inside the window, then recover cleanly.',
             style: TextStyle(color: Colors.white70, height: 1.4),
           ),
           const SizedBox(height: AppTheme.spaceM),
@@ -120,10 +121,12 @@ class _PlayLikeAProRoutineScreenState extends State<PlayLikeAProRoutineScreen> {
   Widget _hero(PlayLikeAProMixtape preMix) {
     final completed = _completed.length;
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceL),
-      decoration: AppTheme.tradingCardDecoration(
-        borderColor: AppTheme.neonCyan.withValues(alpha: 0.34),
-        radius: 24,
+      padding: const EdgeInsets.all(ArcUiTokens.gapL),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.30,
+        radius: ArcUiTokens.radiusXL,
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -140,7 +143,7 @@ class _PlayLikeAProRoutineScreenState extends State<PlayLikeAProRoutineScreen> {
               ),
               const SizedBox(height: AppTheme.spaceXS),
               Text(
-                'PREPARE • PERFORM • RECOVER',
+                'PREPARE - PERFORM - RECOVER',
                 style: AppTheme.tradingHeading(
                   fontSize: 17,
                   color: AppTheme.neonPink,
@@ -148,7 +151,7 @@ class _PlayLikeAProRoutineScreenState extends State<PlayLikeAProRoutineScreen> {
               ),
               const SizedBox(height: AppTheme.spaceM),
               const Text(
-                'Build the kind of repeatable pre-game and post-game routine used around serious performance: readiness, hydration, food, movement, warm-up, focus cues, session discipline and recovery.',
+                'A repeatable prep, focus and recovery loop for serious sessions.',
                 style: TextStyle(color: Colors.white70, height: 1.45),
               ),
               const SizedBox(height: AppTheme.spaceM),
@@ -194,9 +197,11 @@ class _PlayLikeAProRoutineScreenState extends State<PlayLikeAProRoutineScreen> {
   }
 
   Widget _setupCard() => Container(
-    padding: const EdgeInsets.all(AppTheme.spaceL),
-    decoration: AppTheme.tradingCardDecoration(
-      borderColor: AppTheme.tradingSoftBorder,
+    padding: const EdgeInsets.all(ArcUiTokens.gapM),
+    decoration: ArcUiTokens.surfaceDecoration(
+      role: ArcSurfaceRole.panel,
+      accent: ArcUiTokens.secondaryAccent,
+      borderOpacity: 0.16,
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,12 +298,14 @@ class _PlayLikeAProRoutineScreenState extends State<PlayLikeAProRoutineScreen> {
     PlayLikeAProRoutinePhase phase,
     List<PlayLikeAProRoutineTask> tasks,
   ) => Container(
-    padding: const EdgeInsets.all(AppTheme.spaceM),
-    decoration: AppTheme.tradingCardDecoration(
-      borderColor: phase == PlayLikeAProRoutinePhase.recovery
-          ? AppTheme.neonPink.withValues(alpha: 0.25)
-          : AppTheme.neonCyan.withValues(alpha: 0.22),
-      radius: 18,
+    padding: const EdgeInsets.all(ArcUiTokens.gapM),
+    decoration: ArcUiTokens.surfaceDecoration(
+      role: ArcSurfaceRole.panel,
+      accent: phase == PlayLikeAProRoutinePhase.recovery
+          ? ArcUiTokens.secondaryAccent
+          : ArcUiTokens.primaryAccent,
+      borderOpacity: 0.18,
+      radius: ArcUiTokens.radiusL,
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -15,9 +15,9 @@ void main() {
     expect(stateLoad, greaterThanOrEqualTo(0));
     expect(calibration, greaterThan(stateLoad));
     expect(classify, greaterThan(calibration));
-    expect(source, contains('samples: calibration.samples'));
-    expect(source, contains('personalAnchors='));
-    expect(source, contains('adaptiveFloor='));
+    expect(source, contains('samples: merged.samples'));
+    expect(source, contains(r'anchors=${calibrated.knownOwnedAnchors}'));
+    expect(source, contains(r'personalSuppressed=${calibrated.suppressedCandidateCount}'));
   });
 
   test('PASS 339 does not alter camera or merge implementation', () {

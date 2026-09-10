@@ -56,7 +56,7 @@ void main() {
       for (final tab in ['AVATARS', 'BADGES', 'TITLES', 'FRAMES', 'BANNERS']) {
         expect(source, contains("'$tab'"));
       }
-      expect(source, contains("id: 'founding_raider_badge'"));
+      expect(source, contains("id: 'founding_raider'"));
       expect(source, contains("id: 'trusted_trader_title'"));
       expect(source, contains("id: 'pathfinder_frame'"));
       expect(source, contains("id: 'beta_command_banner'"));

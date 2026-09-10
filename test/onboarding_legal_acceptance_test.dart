@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uag_arc_raiders_hub/features/legal/models/uag_policy_catalog.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_onboarding_legal_acceptance.dart';
 
 void main() {
@@ -22,16 +23,28 @@ void main() {
       expect(map['platform'], 'web');
       expect(map['appVersion'], 'closed-beta');
       expect(map['traderCodeAccepted'], isTrue);
-      expect(map['traderCodeVersion'], 1);
+      expect(
+        map['traderCodeVersion'],
+        UagPolicyCatalog.byId('trader_code_of_conduct').version,
+      );
       expect(map['traderCodeAcceptedAt'], isA<FieldValue>());
       expect(map['termsOfServiceAccepted'], isTrue);
-      expect(map['termsOfServiceVersion'], 1);
+      expect(
+        map['termsOfServiceVersion'],
+        UagPolicyCatalog.byId('terms_of_use').version,
+      );
       expect(map['termsOfServiceAcceptedAt'], isA<FieldValue>());
       expect(map['dataSecurityAccepted'], isTrue);
-      expect(map['dataSecurityVersion'], 1);
+      expect(
+        map['dataSecurityVersion'],
+        UagPolicyCatalog.byId('privacy_policy').version,
+      );
       expect(map['dataSecurityAcceptedAt'], isA<FieldValue>());
       expect(map['ageConfirmationAccepted'], isTrue);
-      expect(map['ageRestrictionVersion'], 1);
+      expect(
+        map['ageRestrictionVersion'],
+        UagPolicyCatalog.byId('age_restriction_policy').version,
+      );
       expect(map['ageConfirmationAcceptedAt'], isA<FieldValue>());
 
       final policies = map['policies'] as Map<String, dynamic>;

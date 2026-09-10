@@ -36,7 +36,8 @@ void main() {
       'lib/features/trading_hub/arc_raiders/screens/arc_blueprint_photo_capture_screen.dart',
     ).readAsStringSync();
 
-    expect('loadMyBlueprintStates()'.allMatches(source), hasLength(1));
+    // One load belongs to photo classification and one to the live-scanner result handoff.
+    expect('loadMyBlueprintStates()'.allMatches(source), hasLength(2));
     expect(
       source.indexOf('loadMyBlueprintStates()'),
       lessThan(source.indexOf('engine.classify(')),

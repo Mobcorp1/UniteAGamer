@@ -7,6 +7,6 @@ void main() {
     final item = ArcCompactNavigationCatalog.items
         .where((e) => e.routeName == ArcRaiderContractsScreen.routeName)
         .single;
-    expect(item.label, 'Report a Rat');
+    expect(item.label, 'Report a Rat / Contracts');
   });
 }

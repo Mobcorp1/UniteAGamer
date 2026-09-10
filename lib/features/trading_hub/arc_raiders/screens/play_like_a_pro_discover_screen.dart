@@ -11,6 +11,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/play_like_a_pro_guide_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/play_like_a_pro_guide_detail_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class PlayLikeAProDiscoverScreen extends StatefulWidget {
@@ -105,35 +106,26 @@ class _PlayLikeAProDiscoverScreenState
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: ArcRaidersStatePanel(
+                title: 'Loading guidance',
+                message: 'Building your ARC tactics library.',
+                icon: Icons.sync_rounded,
+                accent: ArcUiTokens.primaryAccent,
+              ),
+            );
           }
           if (snapshot.hasError) {
             return Center(
-              child: Container(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                decoration: AppTheme.tradingCardDecoration(
-                  borderColor: Colors.redAccent.withValues(alpha: .35),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.cloud_off_rounded,
-                      size: 38,
-                      color: Colors.redAccent,
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    const Text(
-                      'Guidance could not be loaded.',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: AppTheme.spaceM),
-                    OutlinedButton.icon(
-                      onPressed: _retry,
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Retry'),
-                    ),
-                  ],
+              child: ArcRaidersStatePanel(
+                title: 'Guidance unavailable',
+                message: 'The tactics library could not load right now.',
+                icon: Icons.cloud_off_rounded,
+                accent: ArcUiTokens.warning,
+                action: OutlinedButton.icon(
+                  onPressed: _retry,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
                 ),
               ),
             );
@@ -179,9 +171,9 @@ class _PlayLikeAProDiscoverScreenState
                 const SizedBox(height: AppTheme.spaceS),
                 Text(
                   _favouriteLoadout == null
-                      ? 'Ranked from your onboarding goals and squad preference.'
-                      : 'Ranked from your goals, squad preference and Favourite Loadout.',
-                  style: const TextStyle(color: Colors.white60),
+                      ? 'Ranked from your goals and squad preference.'
+                      : 'Ranked from your goals, squad and Favourite Loadout.',
+                  style: ArcUiTokens.bodySmall(),
                 ),
                 const SizedBox(height: AppTheme.spaceM),
                 _responsiveCards(
@@ -215,29 +207,15 @@ class _PlayLikeAProDiscoverScreenState
               ),
               const SizedBox(height: AppTheme.spaceM),
               if (filtered.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceXL),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: AppTheme.tradingSoftBorder,
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.manage_search_rounded,
-                        size: 42,
-                        color: AppTheme.neonCyan,
-                      ),
-                      const SizedBox(height: AppTheme.spaceM),
-                      const Text(
-                        'No guidance matches those filters.',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      const SizedBox(height: AppTheme.spaceS),
-                      TextButton(
-                        onPressed: _clearFilters,
-                        child: const Text('Clear filters'),
-                      ),
-                    ],
+                ArcRaidersStatePanel(
+                  title: 'No guidance matches',
+                  message: 'Clear filters or search for a broader tactic.',
+                  icon: Icons.manage_search_rounded,
+                  accent: ArcUiTokens.warning,
+                  action: TextButton.icon(
+                    onPressed: _clearFilters,
+                    icon: const Icon(Icons.filter_alt_off_rounded),
+                    label: const Text('Clear filters'),
                   ),
                 )
               else
@@ -260,10 +238,12 @@ class _PlayLikeAProDiscoverScreenState
   }
 
   Widget _hero() => Container(
-    padding: const EdgeInsets.all(AppTheme.spaceL),
-    decoration: AppTheme.tradingCardDecoration(
-      borderColor: AppTheme.neonCyan.withValues(alpha: .32),
-      radius: 24,
+    padding: const EdgeInsets.all(ArcUiTokens.gapL),
+    decoration: ArcUiTokens.surfaceDecoration(
+      role: ArcSurfaceRole.raised,
+      accent: ArcUiTokens.primaryAccent,
+      borderOpacity: 0.28,
+      radius: ArcUiTokens.radiusXL,
     ),
     child: LayoutBuilder(
       builder: (context, constraints) {
@@ -289,7 +269,7 @@ class _PlayLikeAProDiscoverScreenState
             ),
             const SizedBox(height: AppTheme.spaceS),
             const Text(
-              'Browse combat, extraction, routes, loadouts, solo and squad decision-making. UAG personalises the order using your saved goals and build.',
+              'Combat, extraction, routes, loadouts, solo and squad decision-making.',
               style: TextStyle(color: Colors.white70, height: 1.4),
             ),
           ],
@@ -321,9 +301,11 @@ class _PlayLikeAProDiscoverScreenState
   );
 
   Widget _searchAndFilters() => Container(
-    padding: const EdgeInsets.all(AppTheme.spaceM),
-    decoration: AppTheme.tradingCardDecoration(
-      borderColor: AppTheme.tradingSoftBorder,
+    padding: const EdgeInsets.all(ArcUiTokens.gapM),
+    decoration: ArcUiTokens.surfaceDecoration(
+      role: ArcSurfaceRole.panel,
+      accent: ArcUiTokens.primaryAccent,
+      borderOpacity: 0.16,
     ),
     child: Column(
       children: [
@@ -530,7 +512,7 @@ class _GuideCard extends StatelessWidget {
             const SizedBox(height: AppTheme.spaceS),
             Text(
               guide.summary,
-              maxLines: 4,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white60, height: 1.35),
             ),

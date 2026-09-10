@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -19,28 +21,23 @@ class MyIntelScreen extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      bottomNavigationBar: const ArcCompanionBottomDock(
-        activeLabel: 'My Intel',
-      ),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'My Intel',
-          style: ArcUiTokens.sectionTitle(
-            fontSize: 18,
-            color: ArcUiTokens.primaryAccent,
-          ),
-        ),
+      drawer: const AppDrawer(),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'My Intel'),
+      appBar: const UagAppBar(
+        title: 'My Intel',
+        subtitle: 'Your submitted ARC intelligence reports',
+        showLogout: false,
       ),
       body: ArcRaidersScreenShell(
         showAdBanner: false,
         child: SafeArea(
           child: user == null
               ? const Center(
-                  child: Text(
-                    'Log in to view your intel reports.',
-                    style: TextStyle(color: ArcUiTokens.textSecondary),
+                  child: ArcRaidersStatePanel(
+                    title: 'Sign in required',
+                    message: 'Sign in to review the intelligence reports linked to your Raider profile.',
+                    icon: Icons.lock_person_outlined,
+                    accent: ArcUiTokens.warning,
                   ),
                 )
               : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -61,8 +58,12 @@ class MyIntelScreen extends StatelessWidget {
 
                     if (!snapshot.hasData) {
                       return const Center(
-                        child: CircularProgressIndicator(
-                          color: ArcUiTokens.primaryAccent,
+                        child: ArcRaidersStatePanel(
+                          title: 'Syncing your intel',
+                          message: 'Loading your latest submitted field reports.',
+                          icon: Icons.radar_rounded,
+                          accent: ArcUiTokens.primaryAccent,
+                          compact: true,
                         ),
                       );
                     }
@@ -93,7 +94,36 @@ class MyIntelScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const _IntelHero(),
+                              const ArcRaidersPageHeader(
+                                title: 'MY INTEL',
+                                subtitle: 'Recent reports attached to your Raider identity.',
+                                icon: Icons.radar_rounded,
+                                accent: ArcUiTokens.primaryAccent,
+                              ),
+                              const SizedBox(height: AppTheme.spaceM),
+                              _IntelHero(totalReports: docs.length),
+                              const SizedBox(height: AppTheme.spaceM),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  ArcTacticalStatusPill(
+                                    label: '${docs.length} submitted',
+                                    icon: Icons.article_outlined,
+                                    accent: ArcUiTokens.primaryAccent,
+                                  ),
+                                  ArcTacticalStatusPill(
+                                    label: '${latest.length} shown',
+                                    icon: Icons.history_rounded,
+                                    accent: ArcUiTokens.secondaryAccent,
+                                  ),
+                                  const ArcTacticalStatusPill(
+                                    label: 'Raider linked',
+                                    icon: Icons.verified_user_outlined,
+                                    accent: ArcUiTokens.success,
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 16),
                               for (final doc in latest) ...[
                                 _IntelReportCard(doc: doc),
@@ -125,7 +155,9 @@ class MyIntelScreen extends StatelessWidget {
 }
 
 class _IntelHero extends StatelessWidget {
-  const _IntelHero();
+  const _IntelHero({required this.totalReports});
+
+  final int totalReports;
 
   @override
   Widget build(BuildContext context) {
@@ -151,12 +183,12 @@ class _IntelHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LATEST INTEL',
+                  'LATEST INTEL // $totalReports REPORT${totalReports == 1 ? '' : 'S'}',
                   style: ArcUiTokens.sectionTitle(fontSize: 17),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Review or correct your last five reports.',
+                  'Review or correct your latest field reports before they feed your personal intelligence history.',
                   style: ArcUiTokens.bodySmall(
                     color: ArcUiTokens.textSecondary,
                   ),

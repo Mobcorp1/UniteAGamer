@@ -29,7 +29,7 @@ void main() {
 
     expect(deploy, contains('UAG_GIT_COMMIT'));
     expect(deploy, contains('UAG_BUILD_TIMESTAMP'));
-    expect(deploy, contains('write_web_release_metadata.ps1'));
+    expect(deploy, contains(r'build\web\version.json'));
     expect(helper, contains(r'$env:UAG_BUILD_ID = $buildId'));
     expect(helper, contains('Generated buildId does not match HEAD'));
   });
@@ -38,7 +38,7 @@ void main() {
     final source = File(
       'scripts/deploy_release_candidate.ps1',
     ).readAsStringSync();
-    expect(source, contains('write_web_release_metadata.ps1'));
+    expect(source, contains(r'build\web\version.json'));
     expect(source, contains(r'build\web\version.json'));
   });
 

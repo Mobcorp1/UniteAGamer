@@ -4,8 +4,10 @@ import 'package:uag_arc_raiders_hub/features/legal/screens/privacy_policy_screen
 import 'package:uag_arc_raiders_hub/features/legal/screens/terms_of_use_screen.dart';
 import 'package:uag_arc_raiders_hub/features/legal/screens/trader_code_of_conduct_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_help_centre_catalog.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class ArcHelpCentreArgs {
@@ -70,16 +72,11 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       drawer: const AppDrawer(),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        title: Text(
-          'Help Centre',
-          style: AppTheme.tradingHeading(
-            fontSize: 24,
-            color: AppTheme.neonCyan,
-          ),
-        ),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'profile'),
+      appBar: const UagAppBar(
+        title: 'Help Centre',
+        subtitle: 'Support, safety and account guidance',
+        showLogout: false,
       ),
       body: ArcRaidersScreenShell(
         useSafeArea: true,
@@ -88,7 +85,48 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
           maxWidth: 1180,
           bottomPadding: 96,
           children: [
+            ArcRaidersPageHeader(
+              title: 'HELP CENTRE',
+              subtitle: 'Support, safety and account guidance.',
+              icon: Icons.support_agent_rounded,
+              accent: ArcUiTokens.primaryAccent,
+              trailing: ArcTacticalStatusPill(
+                label: '${ArcHelpCentreCatalog.categories.length} topics',
+                icon: Icons.library_books_outlined,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+            const ArcRaidersHeroBanner(
+              title: 'FIELD SUPPORT // UAG NETWORK',
+              subtitle:
+                  'Search practical answers, jump directly into the relevant system, or open the legal and safety policies that govern the network.',
+              accent: ArcUiTokens.primaryAccent,
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: const [
+                ArcTacticalStatusPill(
+                  label: 'Searchable guidance',
+                  icon: Icons.manage_search_rounded,
+                  accent: ArcUiTokens.primaryAccent,
+                ),
+                ArcTacticalStatusPill(
+                  label: 'Safety policies',
+                  icon: Icons.shield_outlined,
+                  accent: ArcUiTokens.success,
+                ),
+                ArcTacticalStatusPill(
+                  label: 'Direct system routes',
+                  icon: Icons.alt_route_rounded,
+                  accent: ArcUiTokens.secondaryAccent,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spaceM),
             _buildSearch(),
+            const SizedBox(height: AppTheme.spaceM),
             LayoutBuilder(
               builder: (context, constraints) {
                 final wide = constraints.maxWidth >= 860;
@@ -123,16 +161,16 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
   }
 
   Widget _buildSearch() {
-    return TradingCard(
-      compact: true,
+    return ArcRaidersSectionCard(
+      padding: const EdgeInsets.all(ArcUiTokens.gapM),
       child: TextField(
         onChanged: (value) => setState(() => _query = value),
-        style: const TextStyle(color: Colors.white),
-        decoration: AppTheme.tradingInputDecoration(label: 'Search Help Centre')
-            .copyWith(
-              prefixIcon: const Icon(Icons.search_rounded),
-              hintText: 'Search Help Centre',
-            ),
+        style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+        decoration: ArcUiTokens.inputDecoration(
+          labelText: 'Search Help Centre',
+          hintText: 'Try “trade”, “report”, “account” or “privacy”',
+          prefixIcon: Icons.search_rounded,
+        ),
       ),
     );
   }
@@ -142,11 +180,11 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
     ArcHelpCategory active,
   ) {
     if (categories.isEmpty) {
-      return _helpPanel(
-        child: const Text(
-          'No help topics match that search.',
-          style: TextStyle(color: Colors.white70, height: 1.35),
-        ),
+      return const ArcRaidersStatePanel(
+        title: 'No matching topics',
+        message: 'Try another keyword or clear the search.',
+        icon: Icons.manage_search_rounded,
+        compact: true,
       );
     }
 
@@ -187,7 +225,7 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
                 child: Text(
                   category.title,
                   style: AppTheme.tradingHeading(
-                    fontSize: 24,
+                    fontSize: 21,
                     color: AppTheme.neonCyan,
                   ),
                 ),
@@ -265,24 +303,34 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
 
   Widget _buildLegalStrip() {
     return _helpPanel(
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _textAction(
-            label: 'Terms',
-            icon: Icons.description_outlined,
-            onTap: () => _openLegal(const TermsOfUseScreen()),
+          Text(
+            'LEGAL & SAFETY',
+            style: ArcUiTokens.label(color: ArcUiTokens.textTertiary),
           ),
-          _textAction(
-            label: 'Privacy',
-            icon: Icons.privacy_tip_outlined,
-            onTap: () => _openLegal(const PrivacyPolicyScreen()),
-          ),
-          _textAction(
-            label: 'Code of Conduct',
-            icon: Icons.verified_user_outlined,
-            onTap: () => _openLegal(const TraderCodeOfConductScreen()),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _textAction(
+                label: 'Terms',
+                icon: Icons.description_outlined,
+                onTap: () => _openLegal(const TermsOfUseScreen()),
+              ),
+              _textAction(
+                label: 'Privacy',
+                icon: Icons.privacy_tip_outlined,
+                onTap: () => _openLegal(const PrivacyPolicyScreen()),
+              ),
+              _textAction(
+                label: 'Code of Conduct',
+                icon: Icons.verified_user_outlined,
+                onTap: () => _openLegal(const TraderCodeOfConductScreen()),
+              ),
+            ],
           ),
         ],
       ),
@@ -290,7 +338,10 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
   }
 
   Widget _helpPanel({required Widget child}) {
-    return TradingCard(compact: true, child: child);
+    return ArcRaidersSectionCard(
+      padding: const EdgeInsets.all(ArcUiTokens.gapM),
+      child: child,
+    );
   }
 
   Widget _textAction({
@@ -324,13 +375,15 @@ class _HelpCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppTheme.neonPink : AppTheme.neonCyan;
+    final color = selected
+        ? ArcUiTokens.secondaryAccent
+        : ArcUiTokens.primaryAccent;
 
-    return TradingCard(
-      onTap: onTap,
+    return ArcRaidersSectionCard(
       accent: color,
+      padding: const EdgeInsets.all(ArcUiTokens.gapM),
       selected: selected,
-      compact: true,
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

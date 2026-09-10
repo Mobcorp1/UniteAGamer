@@ -52,6 +52,7 @@ class ArcPersonalItemIntelligenceEngine {
     final tradeOpportunities = _tradeOpportunitiesFor(
       record: record,
       activeListings: activeListings,
+      now: effectiveNow,
     );
     final resourceEntry = _resourceEntryFor(record, resourceIntelligence);
     final blueprint = _blueprintFor(record);
@@ -648,6 +649,7 @@ class ArcPersonalItemIntelligenceEngine {
   List<ArcPersonalItemTradeOpportunity> _tradeOpportunitiesFor({
     required ArcPersonalItemRecord record,
     required List<TradingListing> activeListings,
+    required DateTime now,
   }) {
     if (activeListings.isEmpty) {
       return const <ArcPersonalItemTradeOpportunity>[];
@@ -657,10 +659,9 @@ class ArcPersonalItemIntelligenceEngine {
       record.name,
       ...record.aliases,
     }.map(_key).where((value) => value.isNotEmpty).toSet();
-    final now = DateTime.now();
     final results = <ArcPersonalItemTradeOpportunity>[];
     for (final listing in activeListings) {
-      if (!listing.isLive || listing.expiresAt.isBefore(now)) continue;
+      if (!listing.active || !listing.expiresAt.isAfter(now)) continue;
       if (listing.ownerUid.trim().isEmpty) continue;
       if (_listingWantsAny(listing, aliases)) {
         results.add(

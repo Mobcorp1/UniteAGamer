@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
+import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_wall_of_legends_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_wall_of_legends_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
@@ -24,17 +27,13 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(
-          'Wall of Legends',
-          style: AppTheme.neonTextStyle(
-            fontSize: 24,
-            color: AppTheme.neonCyan,
-            isBold: true,
-          ),
-        ),
+      appBar: const UagAppBar(
+        title: 'Wall of Legends',
+        subtitle: 'Permanent recognition across the UAG network',
+        showLogout: false,
       ),
+      drawer: const AppDrawer(),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'DISCOVER'),
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         showAdBanner: false,
@@ -43,7 +42,15 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting &&
                 !snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: ArcRaidersStatePanel(
+                  title: 'Loading legends',
+                  message: 'Syncing approved UAG recognition records.',
+                  icon: Icons.sync_rounded,
+                  accent: ArcUiTokens.primaryAccent,
+                  compact: true,
+                ),
+              );
             }
 
             if (snapshot.hasError) {
@@ -71,6 +78,36 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
                       'Admin-curated recognition for founders, beta Raiders, trusted traders, guardians, creators and community heroes.',
                   icon: Icons.emoji_events_rounded,
                   accent: AppTheme.neonCyan,
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                ArcRaidersHeroBanner(
+                  title: 'IMMORTALISED IN THE UAG NETWORK',
+                  subtitle: entries.isEmpty
+                      ? 'Founders, beta Raiders, creators, guardians and community contributors can be permanently recognised here once approved.'
+                      : '${entries.length} approved ${entries.length == 1 ? 'legend' : 'legends'} currently recorded across the UAG community.',
+                  accent: ArcUiTokens.warning,
+                ),
+                const SizedBox(height: AppTheme.spaceM),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ArcTacticalStatusPill(
+                      label: '${entries.length} recognised',
+                      icon: Icons.workspace_premium_outlined,
+                      accent: ArcUiTokens.warning,
+                    ),
+                    ArcTacticalStatusPill(
+                      label: _selectedCategory?.label ?? 'All categories',
+                      icon: Icons.filter_alt_outlined,
+                      accent: ArcUiTokens.primaryAccent,
+                    ),
+                    const ArcTacticalStatusPill(
+                      label: 'Admin curated',
+                      icon: Icons.verified_user_outlined,
+                      accent: ArcUiTokens.success,
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppTheme.spaceM),
                 _categoryFilters(),
@@ -146,12 +183,19 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
       padding: const EdgeInsets.only(right: AppTheme.spaceS),
       child: ChoiceChip(
         selected: selected,
+        showCheckmark: false,
         label: Text(label),
-        selectedColor: AppTheme.neonCyan.withValues(alpha: 0.20),
+        selectedColor: AppTheme.neonCyan.withValues(alpha: 0.18),
+        backgroundColor: ArcUiTokens.surfaceRaised.withValues(alpha: 0.82),
         side: BorderSide(
           color: selected
               ? AppTheme.neonCyan
               : Colors.white.withValues(alpha: 0.16),
+        ),
+        labelStyle: ArcUiTokens.body(
+          fontSize: 12,
+          color: selected ? AppTheme.neonCyan : ArcUiTokens.textSecondary,
+          weight: FontWeight.w700,
         ),
         onSelected: (_) {
           if (onSelected != null) {

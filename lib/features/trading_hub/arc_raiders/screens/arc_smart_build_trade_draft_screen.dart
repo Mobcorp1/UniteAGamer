@@ -68,7 +68,10 @@ class _ArcSmartBuildTradeDraftScreenState
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Smart Build Trade Draft'),
+        title: Text(
+          'Smart Build Trade Draft',
+          style: ArcUiTokens.sectionTitle(fontSize: 22),
+        ),
         backgroundColor: Colors.transparent,
       ),
       body: ArcRaidersScreenShell(
@@ -76,8 +79,23 @@ class _ArcSmartBuildTradeDraftScreenState
         child: StreamBuilder(
           stream: _loadouts.watchFavouriteLoadout(),
           builder: (context, loadoutSnapshot) {
+            if (loadoutSnapshot.hasError) {
+              return _statePanel(
+                icon: Icons.cloud_off_rounded,
+                title: 'Smart Build unavailable',
+                message:
+                    'Your saved loadout could not be read right now. Return and try again.',
+                accent: ArcUiTokens.warning,
+              );
+            }
             if (loadoutSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return _statePanel(
+                icon: Icons.sync_rounded,
+                title: 'Loading Smart Build',
+                message: 'Linking your saved loadout to live Blueprint state.',
+                accent: ArcUiTokens.primaryAccent,
+                loading: true,
+              );
             }
 
             final loadout = loadoutSnapshot.data;
@@ -98,6 +116,27 @@ class _ArcSmartBuildTradeDraftScreenState
             return StreamBuilder<Map<String, ArcBlueprintState>>(
               stream: _blueprints.watchMyBlueprintStates(),
               builder: (context, blueprintSnapshot) {
+                if (blueprintSnapshot.hasError) {
+                  return _statePanel(
+                    icon: Icons.grid_off_rounded,
+                    title: 'Blueprint state unavailable',
+                    message:
+                        'UAG could not compare this build against your Blueprint inventory.',
+                    accent: ArcUiTokens.warning,
+                  );
+                }
+                if (blueprintSnapshot.connectionState ==
+                        ConnectionState.waiting &&
+                    !blueprintSnapshot.hasData) {
+                  return _statePanel(
+                    icon: Icons.radar_rounded,
+                    title: 'Checking build readiness',
+                    message:
+                        'Comparing your Smart Build against owned Blueprints and resources.',
+                    accent: ArcUiTokens.secondaryAccent,
+                    loading: true,
+                  );
+                }
                 final states =
                     blueprintSnapshot.data ??
                     const <String, ArcBlueprintState>{};
@@ -109,6 +148,14 @@ class _ArcSmartBuildTradeDraftScreenState
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 104),
                   children: [
+                    const ArcRaidersPageHeader(
+                      title: 'SMART BUILD // TRADE DRAFT',
+                      subtitle:
+                          'Turn current build gaps into an exact trading brief.',
+                      icon: Icons.auto_awesome_rounded,
+                      accent: ArcUiTokens.secondaryAccent,
+                    ),
+                    const SizedBox(height: 14),
                     _header(plan, integration),
                     const SizedBox(height: 14),
                     _section(
@@ -343,6 +390,38 @@ class _ArcSmartBuildTradeDraftScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _statePanel({
+    required IconData icon,
+    required String title,
+    required String message,
+    required Color accent,
+    bool loading = false,
+  }) {
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: Padding(
+            padding: ArcUiTokens.compactPanelPadding,
+            child: ArcRaidersStatePanel(
+              title: title,
+              message: message,
+              icon: icon,
+              accent: accent,
+              action: loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+            ),
+          ),
+        ),
       ),
     );
   }

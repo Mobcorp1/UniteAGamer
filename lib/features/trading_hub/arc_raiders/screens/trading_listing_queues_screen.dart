@@ -295,32 +295,15 @@ class _TradingListingQueuesScreenState
   }
 
   Widget _emptyState() {
-    return Center(
+    return const Center(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.dynamic_feed_outlined,
-              color: AppTheme.neonCyan.withValues(alpha: 0.72),
-              size: 42,
-            ),
-            const SizedBox(height: AppTheme.spaceM),
-            Text(
-              'NO LISTING QUEUES',
-              style: AppTheme.tradingHeading(
-                fontSize: 22,
-                color: AppTheme.neonCyan,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceS),
-            Text(
+        padding: EdgeInsets.fromLTRB(14, 12, 14, 104),
+        child: ArcRaidersStatePanel(
+          title: 'No listing queues',
+          message:
               'Enable queued release when creating a duplicate blueprint listing.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.tradingMutedText, height: 1.35),
-            ),
-          ],
+          icon: Icons.dynamic_feed_outlined,
+          accent: ArcUiTokens.primaryAccent,
         ),
       ),
     );
@@ -352,8 +335,11 @@ class _TradingListingQueuesScreenState
                             ConnectionState.waiting &&
                         queueSnapshot.data == null) {
                       return const Center(
-                        child: CircularProgressIndicator(
-                          color: AppTheme.neonCyan,
+                        child: ArcRaidersStatePanel(
+                          title: 'Loading queues',
+                          message: 'Checking queued blueprint releases.',
+                          icon: Icons.sync_rounded,
+                          accent: ArcUiTokens.primaryAccent,
                         ),
                       );
                     }
@@ -362,12 +348,31 @@ class _TradingListingQueuesScreenState
                     return ListView(
                       padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
                       children: [
-                        Text(
-                          'Listing Queues',
-                          style: AppTheme.tradingHeading(
-                            fontSize: 22,
-                            color: AppTheme.neonCyan,
-                          ),
+                        ArcRaidersPageHeader(
+                          title: 'LISTING QUEUES',
+                          subtitle:
+                              '${queues.length} duplicate-release queue records.',
+                          icon: Icons.dynamic_feed_outlined,
+                          accent: ArcUiTokens.primaryAccent,
+                        ),
+                        const SizedBox(height: AppTheme.spaceM),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ArcTacticalStatusPill(
+                              label:
+                                  '${queues.where((queue) => queue.status == ArcTradeListingQueueStatus.active).length} active',
+                              icon: Icons.play_circle_outline,
+                              accent: ArcUiTokens.success,
+                            ),
+                            ArcTacticalStatusPill(
+                              label:
+                                  '${queues.where((queue) => queue.status == ArcTradeListingQueueStatus.blocked).length} blocked',
+                              icon: Icons.warning_amber_rounded,
+                              accent: ArcUiTokens.warning,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: AppTheme.spaceM),
                         for (final queue in queues)

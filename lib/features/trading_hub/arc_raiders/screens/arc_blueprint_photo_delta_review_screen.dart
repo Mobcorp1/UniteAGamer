@@ -130,70 +130,84 @@ class _ArcBlueprintPhotoDeltaReviewScreenState
         maxWidth: 960,
         padding: EdgeInsets.zero,
         scrollable: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: ArcLayoutTokens.pagePadding(
-                context,
-              ).copyWith(bottom: 10),
-              child: ArcTacticalPanel(
-                icon: Icons.playlist_add_check_circle_outlined,
-                title: 'Detected Blueprint Additions',
-                accent: ArcUiTokens.primaryAccent,
-                child: Text(
-                  '${widget.proposedAdditions.length} confidently detected '
-                  'Blueprint${widget.proposedAdditions.length == 1 ? '' : 's'} '
-                  'are not currently marked owned. Uncheck anything the scan '
-                  'got wrong. ${widget.uncertainIgnoredCount} uncertain slot'
-                  '${widget.uncertainIgnoredCount == 1 ? '' : 's'} will be '
-                  'ignored and left exactly as they are.',
-                  style: ArcUiTokens.body(fontSize: 13),
+        child: SizedBox.expand(
+          child: Column(
+            children: [
+              Padding(
+                padding: ArcLayoutTokens.pagePadding(
+                  context,
+                ).copyWith(bottom: 10),
+                child: ArcTacticalPanel(
+                  icon: Icons.playlist_add_check_circle_outlined,
+                  title: 'Detected Blueprint Additions',
+                  accent: ArcUiTokens.primaryAccent,
+                  child: Text(
+                    '${widget.proposedAdditions.length} confidently detected '
+                    'Blueprint${widget.proposedAdditions.length == 1 ? '' : 's'} '
+                    'are not currently marked owned. Uncheck anything the scan '
+                    'got wrong. ${widget.uncertainIgnoredCount} uncertain slot'
+                    '${widget.uncertainIgnoredCount == 1 ? '' : 's'} will be '
+                    'ignored and left exactly as they are.',
+                    style: ArcUiTokens.body(fontSize: 13),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-                itemCount: widget.proposedAdditions.length,
-                itemBuilder: (context, index) {
-                  final decision = widget.proposedAdditions[index];
-                  final selected = _selectedIds.contains(decision.blueprintId);
-                  return Card(
-                    color: ArcUiTokens.surfacePanel,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
-                      side: BorderSide(
-                        color: selected
-                            ? ArcUiTokens.primaryAccent.withValues(alpha: 0.42)
-                            : ArcUiTokens.borderMedium,
-                      ),
-                    ),
-                    child: CheckboxListTile(
-                      key: ValueKey('delta-${decision.blueprintId}'),
-                      value: selected,
-                      onChanged: _saving
-                          ? null
-                          : (value) => _setSelected(
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final decision in widget.proposedAdditions)
+                        Builder(
+                          builder: (context) {
+                            final selected = _selectedIds.contains(
                               decision.blueprintId,
-                              value == true,
-                            ),
-                      activeColor: ArcUiTokens.primaryAccent,
-                      checkColor: Colors.black,
-                      title: Text(
-                        _nameFor(decision.blueprintId),
-                        style: ArcUiTokens.cardTitle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        '${_positionFor(decision)} - '
-                        '${(decision.confidence * 100).round()}% confidence',
-                        style: ArcUiTokens.bodySmall(),
-                      ),
-                    ),
-                  );
-                },
+                            );
+                            return Card(
+                              color: ArcUiTokens.surfacePanel,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  ArcUiTokens.radiusL,
+                                ),
+                                side: BorderSide(
+                                  color: selected
+                                      ? ArcUiTokens.primaryAccent.withValues(
+                                          alpha: 0.42,
+                                        )
+                                      : ArcUiTokens.borderMedium,
+                                ),
+                              ),
+                              child: CheckboxListTile(
+                                key: ValueKey('delta-${decision.blueprintId}'),
+                                value: selected,
+                                onChanged: _saving
+                                    ? null
+                                    : (value) => _setSelected(
+                                        decision.blueprintId,
+                                        value == true,
+                                      ),
+                                activeColor: ArcUiTokens.primaryAccent,
+                                checkColor: Colors.black,
+                                title: Text(
+                                  _nameFor(decision.blueprintId),
+                                  style: ArcUiTokens.cardTitle(fontSize: 14),
+                                ),
+                                subtitle: Text(
+                                  '${_positionFor(decision)} - '
+                                  '${(decision.confidence * 100).round()}% confidence',
+                                  style: ArcUiTokens.bodySmall(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(

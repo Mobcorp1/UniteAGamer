@@ -5,6 +5,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/tra
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_listing_queues_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_listings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trading_my_offers_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/electric_charge_border.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -104,43 +105,68 @@ class _TradingActivityScreenState extends State<TradingActivityScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Track your live trading flow in one place.',
-                    style: AppTheme.bodyTextStyle(
-                      fontSize: 14,
-                      color: AppTheme.tradingMutedText,
-                    ),
+                  const ArcRaidersPageHeader(
+                    title: 'TRADING ACTIVITY',
+                    subtitle: 'Listings, offers, watches and queue releases.',
+                    icon: Icons.swap_horiz_rounded,
+                    accent: ArcUiTokens.secondaryAccent,
                   ),
-                  const SizedBox(height: AppTheme.spaceM),
+                  const SizedBox(height: AppTheme.spaceS),
                   Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      _toggleButton(
-                        label: 'My Listings',
-                        icon: Icons.inventory_2_outlined,
-                        selected: _selectedIndex == 0,
-                        onTap: () => setState(() => _selectedIndex = 0),
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: const [
+                      ArcTacticalStatusPill(
+                        label: 'Live flow',
+                        icon: Icons.bolt_rounded,
+                        accent: ArcUiTokens.secondaryAccent,
                       ),
-                      _toggleButton(
-                        label: 'My Offers',
-                        icon: Icons.local_offer_outlined,
-                        selected: _selectedIndex == 1,
-                        onTap: () => setState(() => _selectedIndex = 1),
+                      ArcTacticalStatusPill(
+                        label: 'Trade safety',
+                        icon: Icons.verified_user_outlined,
+                        accent: ArcUiTokens.success,
                       ),
-                      _toggleButton(
-                        label: 'Blueprint Watches',
+                      ArcTacticalStatusPill(
+                        label: 'Blueprint demand',
                         icon: Icons.add_alert_outlined,
-                        selected: _selectedIndex == 2,
-                        onTap: () => setState(() => _selectedIndex = 2),
-                      ),
-                      _toggleButton(
-                        label: 'Listing Queues',
-                        icon: Icons.dynamic_feed_outlined,
-                        selected: _selectedIndex == 3,
-                        onTap: () => setState(() => _selectedIndex = 3),
+                        accent: ArcUiTokens.primaryAccent,
                       ),
                     ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceM),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _toggleButton(
+                          label: 'Listings',
+                          icon: Icons.inventory_2_outlined,
+                          selected: _selectedIndex == 0,
+                          onTap: () => setState(() => _selectedIndex = 0),
+                        ),
+                        const SizedBox(width: 10),
+                        _toggleButton(
+                          label: 'Offers',
+                          icon: Icons.local_offer_outlined,
+                          selected: _selectedIndex == 1,
+                          onTap: () => setState(() => _selectedIndex = 1),
+                        ),
+                        const SizedBox(width: 10),
+                        _toggleButton(
+                          label: 'Watches',
+                          icon: Icons.add_alert_outlined,
+                          selected: _selectedIndex == 2,
+                          onTap: () => setState(() => _selectedIndex = 2),
+                        ),
+                        const SizedBox(width: 10),
+                        _toggleButton(
+                          label: 'Queues',
+                          icon: Icons.dynamic_feed_outlined,
+                          selected: _selectedIndex == 3,
+                          onTap: () => setState(() => _selectedIndex = 3),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

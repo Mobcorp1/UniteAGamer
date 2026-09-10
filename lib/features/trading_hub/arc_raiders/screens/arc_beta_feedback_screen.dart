@@ -134,124 +134,182 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
       ),
       body: ArcRaidersScreenShell(
         showAdBanner: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 820),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _section(
-                      title: 'What are you reporting?',
-                      child: Wrap(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: ArcUiTokens.screenPadding,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 920),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const ArcRaidersPageHeader(
+                        title: 'BETA FEEDBACK',
+                        subtitle: 'Send a reproducible report with device context.',
+                        icon: Icons.bug_report_outlined,
+                        accent: ArcUiTokens.secondaryAccent,
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      const ArcRaidersHeroBanner(
+                        title: 'HELP HARDEN THE ARC NETWORK',
+                        subtitle:
+                            'Tell us exactly what happened. Route, platform and viewport diagnostics are attached automatically so the report is useful immediately.',
+                        accent: ArcUiTokens.secondaryAccent,
+                      ),
+                      const SizedBox(height: AppTheme.spaceM),
+                      Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: ArcBetaFeedbackCategory.values.map((value) {
-                          return ChoiceChip(
-                            selected: value == _category,
-                            label: Text(value.label),
-                            onSelected: (_) {
-                              setState(() => _category = value);
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _section(
-                      title: 'Impact',
-                      child: narrow
-                          ? Column(
-                              children: [
-                                _severityField(),
-                                const SizedBox(height: 12),
-                                _reproducibilityField(),
-                              ],
-                            )
-                          : Row(
-                              children: [
-                                Expanded(child: _severityField()),
-                                const SizedBox(width: 12),
-                                Expanded(child: _reproducibilityField()),
-                              ],
-                            ),
-                    ),
-                    const SizedBox(height: 12),
-                    _section(
-                      title: 'Tell us what happened',
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _descriptionController,
-                            minLines: 5,
-                            maxLines: 9,
-                            decoration: const InputDecoration(
-                              labelText: 'What happened?',
-                              hintText:
-                                  'Include what you tapped, what appeared, and what stopped you.',
-                              alignLabelWithHint: true,
-                            ),
-                            validator: (value) {
-                              if ((value ?? '').trim().length < 12) {
-                                return 'Please provide at least 12 characters.';
-                              }
-                              return null;
-                            },
+                        children: const [
+                          ArcTacticalStatusPill(
+                            label: 'Private beta report',
+                            icon: Icons.lock_outline_rounded,
+                            accent: ArcUiTokens.success,
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _expectedController,
-                            minLines: 2,
-                            maxLines: 5,
-                            decoration: const InputDecoration(
-                              labelText: 'What did you expect? (optional)',
-                              alignLabelWithHint: true,
-                            ),
+                          ArcTacticalStatusPill(
+                            label: 'Diagnostics attached',
+                            icon: Icons.memory_rounded,
+                            accent: ArcUiTokens.primaryAccent,
+                          ),
+                          ArcTacticalStatusPill(
+                            label: 'No screenshot required',
+                            icon: Icons.mobile_friendly_rounded,
+                            accent: ArcUiTokens.warning,
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _section(
-                      title: 'Attached automatically',
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _diagnosticChip(Icons.route, widget.sourceRoute),
-                          _diagnosticChip(
-                            Icons.devices_rounded,
-                            _platformLabel(),
-                          ),
-                          _diagnosticChip(
-                            Icons.aspect_ratio_rounded,
-                            '${MediaQuery.sizeOf(context).width.round()} x '
-                            '${MediaQuery.sizeOf(context).height.round()}',
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Center(
-                      child: FilledButton.icon(
-                        onPressed: _submitting ? null : _submit,
-                        icon: _submitting
-                            ? const SizedBox.square(
-                                dimension: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.send_rounded),
-                        label: Text(
-                          _submitting ? 'Sending...' : 'Send beta feedback',
+                      const SizedBox(height: AppTheme.spaceM),
+                      _section(
+                        title: '01  WHAT ARE YOU REPORTING?',
+                        accent: ArcUiTokens.secondaryAccent,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: ArcBetaFeedbackCategory.values.map((value) {
+                            final selected = value == _category;
+                            return ChoiceChip(
+                              selected: selected,
+                              showCheckmark: false,
+                              label: Text(value.label),
+                              selectedColor: ArcUiTokens.secondaryAccent.withValues(alpha: 0.18),
+                              backgroundColor: ArcUiTokens.surfaceRaised.withValues(alpha: 0.78),
+                              side: BorderSide(
+                                color: selected
+                                    ? ArcUiTokens.secondaryAccent.withValues(alpha: 0.72)
+                                    : ArcUiTokens.borderMedium,
+                              ),
+                              labelStyle: ArcUiTokens.body(
+                                fontSize: 12,
+                                color: selected
+                                    ? ArcUiTokens.secondaryAccent
+                                    : ArcUiTokens.textSecondary,
+                                weight: FontWeight.w700,
+                              ),
+                              onSelected: (_) => setState(() => _category = value),
+                            );
+                          }).toList(),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      _section(
+                        title: '02  IMPACT',
+                        child: narrow
+                            ? Column(
+                                children: [
+                                  _severityField(),
+                                  const SizedBox(height: 12),
+                                  _reproducibilityField(),
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  Expanded(child: _severityField()),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _reproducibilityField()),
+                                ],
+                              ),
+                      ),
+                      const SizedBox(height: 12),
+                      _section(
+                        title: '03  WHAT HAPPENED?',
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _descriptionController,
+                              minLines: 5,
+                              maxLines: 9,
+                              style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                              decoration: ArcUiTokens.inputDecoration(
+                                labelText: 'What happened?',
+                                hintText:
+                                    'Include what you tapped, what appeared, and what stopped you.',
+                                prefixIcon: Icons.report_problem_outlined,
+                              ).copyWith(alignLabelWithHint: true),
+                              validator: (value) {
+                                if ((value ?? '').trim().length < 12) {
+                                  return 'Please provide at least 12 characters.';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _expectedController,
+                              minLines: 2,
+                              maxLines: 5,
+                              style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                              decoration: ArcUiTokens.inputDecoration(
+                                labelText: 'What did you expect? (optional)',
+                                hintText: 'Describe the result you expected to see.',
+                                prefixIcon: Icons.flag_outlined,
+                              ).copyWith(alignLabelWithHint: true),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _section(
+                        title: '04  ATTACHED AUTOMATICALLY',
+                        accent: ArcUiTokens.success,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _diagnosticChip(Icons.route, widget.sourceRoute),
+                            _diagnosticChip(Icons.devices_rounded, _platformLabel()),
+                            _diagnosticChip(
+                              Icons.aspect_ratio_rounded,
+                              '${MediaQuery.sizeOf(context).width.round()} x '
+                              '${MediaQuery.sizeOf(context).height.round()}',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.secondaryAccent,
+                            primary: true,
+                          ),
+                          onPressed: _submitting ? null : _submit,
+                          icon: _submitting
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.send_rounded),
+                          label: Text(
+                            _submitting ? 'SENDING REPORT...' : 'SEND BETA FEEDBACK',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -264,7 +322,10 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
   Widget _severityField() {
     return DropdownButtonFormField<ArcBetaFeedbackSeverity>(
       initialValue: _severity,
-      decoration: const InputDecoration(labelText: 'Severity'),
+      decoration: ArcUiTokens.inputDecoration(
+        labelText: 'Severity',
+        prefixIcon: Icons.priority_high_rounded,
+      ),
       items: ArcBetaFeedbackSeverity.values
           .map(
             (value) => DropdownMenuItem(value: value, child: Text(value.label)),
@@ -281,7 +342,10 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
   Widget _reproducibilityField() {
     return DropdownButtonFormField<ArcBetaFeedbackReproducibility>(
       initialValue: _reproducibility,
-      decoration: const InputDecoration(labelText: 'Reproducibility'),
+      decoration: ArcUiTokens.inputDecoration(
+        labelText: 'Reproducibility',
+        prefixIcon: Icons.replay_rounded,
+      ),
       items: ArcBetaFeedbackReproducibility.values
           .map(
             (value) => DropdownMenuItem(value: value, child: Text(value.label)),
@@ -295,24 +359,20 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
     );
   }
 
-  Widget _section({required String title, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.22)),
-      ),
+  Widget _section({
+    required String title,
+    required Widget child,
+    Color accent = ArcUiTokens.primaryAccent,
+  }) {
+    return ArcRaidersSectionCard(
+      accent: accent,
+      padding: const EdgeInsets.all(ArcUiTokens.gapL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             title,
-            style: AppTheme.neonTextStyle(
-              fontSize: 16,
-              color: AppTheme.neonCyan,
-              isBold: true,
-            ),
+            style: ArcUiTokens.sectionTitle(fontSize: 16, color: accent),
           ),
           const SizedBox(height: 12),
           child,
@@ -322,9 +382,24 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
   }
 
   Widget _diagnosticChip(IconData icon, String label) {
-    return Chip(
-      avatar: Icon(icon, size: 16, color: AppTheme.neonCyan),
-      label: Text(label),
+    return Container(
+      padding: ArcUiTokens.chipPadding,
+      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.success),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(width: 1),
+          Icon(icon, size: 15, color: ArcUiTokens.success),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

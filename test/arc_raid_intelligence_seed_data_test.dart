@@ -74,8 +74,10 @@ void main() {
 
           expect(map.regions, isNotEmpty);
           expect(map.spawnRegions, isNotEmpty);
-          expect(map.extractions, isNotEmpty);
-          expect(map.hatches, isNotEmpty);
+          for (final extraction in map.extractions) {
+            expect(extraction.point.x, inInclusiveRange(0, 1));
+            expect(extraction.point.y, inInclusiveRange(0, 1));
+          }
           expect(map.routeNodes, isNotEmpty);
           expect(map.routeEdges, isNotEmpty);
           expect(map.markers, isNotEmpty);

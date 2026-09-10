@@ -35,7 +35,7 @@ void main() {
       expect(loadingSource, contains('INITIALISING SYSTEMS'));
       expect(
         loadingSource,
-        contains('assets/images/arc_raiders/hub/auth_bg_landscape.webp'),
+        contains('assets/arc_raiders/hub/auth_bg_landscape.webp'),
       );
     },
   );

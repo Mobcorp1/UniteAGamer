@@ -23,6 +23,7 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
   ArcAvailability _availability = ArcAvailability.initial();
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _loadFailed = false;
 
   static const Map<String, String> _dayLabels = {
     'mon': 'Mon',
@@ -41,11 +42,23 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
   }
 
   Future<void> _load() async {
-    final data = await _repository.getAvailability();
-    if (mounted) {
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    try {
+      final data = await _repository.getAvailability();
+      if (mounted) {
+        setState(() {
+          _availability = data;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
-        _availability = data;
         _isLoading = false;
+        _loadFailed = true;
       });
     }
   }
@@ -56,6 +69,13 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
       await _repository.saveAvailability(_availability);
       if (!mounted) return;
       Navigator.of(context).pop(true);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save availability. Try again.'),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -112,6 +132,31 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                   color: ArcUiTokens.primaryAccent,
                 ),
               )
+            : _loadFailed
+            ? SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Padding(
+                      padding: ArcUiTokens.compactPanelPadding,
+                      child: ArcRaidersStatePanel(
+                        title: 'Availability unavailable',
+                        message: 'Your play windows could not load right now.',
+                        icon: Icons.cloud_off_rounded,
+                        accent: ArcUiTokens.warning,
+                        action: TextButton.icon(
+                          style: ArcUiTokens.textButtonStyle(
+                            accent: ArcUiTokens.primaryAccent,
+                          ),
+                          onPressed: _load,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
             : SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -124,6 +169,35 @@ class _ArcAvailabilityScreenState extends State<ArcAvailabilityScreen> {
                           title: 'Play Windows',
                           subtitle:
                               'Set when you normally raid so UAG can improve squad timing.',
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ArcTacticalStatTile(
+                              label: 'Schedule',
+                              value: _availability.scheduleType,
+                              icon: Icons.repeat_rounded,
+                              accent: ArcUiTokens.primaryAccent,
+                            ),
+                            ArcTacticalStatTile(
+                              label: 'Weeks',
+                              value: _availability.weeks.length.toString(),
+                              icon: Icons.view_week_outlined,
+                              accent: ArcUiTokens.secondaryAccent,
+                            ),
+                            ArcTacticalStatTile(
+                              label: 'Active days',
+                              value: _availability.weeks
+                                  .expand((week) => week.slots)
+                                  .where((slot) => slot.enabled)
+                                  .length
+                                  .toString(),
+                              icon: Icons.check_circle_outline,
+                              accent: ArcUiTokens.success,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         Container(

@@ -29,5 +29,13 @@ void main() {
     }
     expect(l, contains('return _avatarPanel();'));
     expect(l, contains('final catalogue = _lockerCatalogue'));
+    // Android/mobile reward cards live inside a Wrap with unbounded vertical
+    // constraints. A Spacer here collapses the non-avatar tab body at runtime.
+    expect(l, isNot(contains('const Spacer();')));
+    expect(l, contains("id: 'beta_access',"));
+    expect(l, contains("id: 'founding_raider',"));
+    expect(l, contains("id: 'field_tester',"));
+    expect(l, contains("'\$owned OWNED TOTAL'"));
+    expect(l, contains('final totalSpacing = 8.0 * (columns - 1);'));
   });
 }

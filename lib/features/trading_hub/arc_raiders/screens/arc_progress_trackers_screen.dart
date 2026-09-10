@@ -6,7 +6,6 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/scr
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -25,7 +24,7 @@ class ArcProgressTrackersScreen extends StatelessWidget {
         showLogout: true,
       ),
       drawer: const AppDrawer(),
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Raid'),
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'RUN'),
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         showAdBanner: true,
@@ -40,6 +39,41 @@ class ArcProgressTrackersScreen extends StatelessWidget {
               icon: Icons.track_changes_rounded,
               accent: ArcUiTokens.primaryAccent,
             ),
+            const SizedBox(height: AppTheme.spaceM),
+            const ArcRaidersHeroBanner(
+              title: 'TRACK WHAT MOVES THE RAID',
+              subtitle:
+                  'Scrappy, bench, quest and hunt-target progress stay split into focused tools.',
+              accent: ArcUiTokens.primaryAccent,
+            ),
+            const SizedBox(height: AppTheme.spaceM),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: const [
+                ArcTacticalStatusPill(
+                  label: 'Scrappy resources',
+                  icon: Icons.egg_alt_rounded,
+                  accent: ArcUiTokens.secondaryAccent,
+                ),
+                ArcTacticalStatusPill(
+                  label: 'Bench readiness',
+                  icon: Icons.build_rounded,
+                  accent: ArcUiTokens.primaryAccent,
+                ),
+                ArcTacticalStatusPill(
+                  label: 'Quest blockers',
+                  icon: Icons.assignment_rounded,
+                  accent: ArcUiTokens.warning,
+                ),
+                ArcTacticalStatusPill(
+                  label: 'Hunt targets',
+                  icon: Icons.my_location_rounded,
+                  accent: ArcUiTokens.success,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spaceM),
             ArcRaidersSectionCard(
               accent: ArcUiTokens.primaryAccent,
               padding: const EdgeInsets.all(12),
@@ -50,11 +84,11 @@ class ArcProgressTrackersScreen extends StatelessWidget {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting &&
                       !snapshot.hasData) {
-                    return const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: LinearProgressIndicator(
-                        color: ArcUiTokens.primaryAccent,
-                      ),
+                    return const ArcRaidersStatePanel(
+                      title: 'Loading trackers',
+                      message: 'Checking active tracker access.',
+                      icon: Icons.sync_rounded,
+                      compact: true,
                     );
                   }
                   final availability =
@@ -167,7 +201,7 @@ class _TrackerLinkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = link.accent;
-    return TradingCard(
+    return ArcRaidersSectionCard(
       onTap: () {
         if (availability.canOpenFeature) {
           Navigator.of(context).pushNamed(link.routeName);
@@ -183,7 +217,7 @@ class _TrackerLinkCard extends StatelessWidget {
         );
       },
       accent: accent,
-      compact: true,
+      padding: const EdgeInsets.all(ArcUiTokens.gapM),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 104),
         child: Row(
@@ -262,28 +296,13 @@ class _TrackerEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TradingCard(
-      compact: true,
+    return const ArcRaidersStatePanel(
+      title: 'Trackers hidden',
+      message:
+          'Progress trackers are hidden for this beta configuration. Admin can reopen them from Feature Access.',
+      icon: Icons.visibility_off_rounded,
       accent: ArcUiTokens.secondaryAccent,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.visibility_off_rounded,
-            color: ArcUiTokens.secondaryAccent,
-          ),
-          const SizedBox(width: AppTheme.spaceS),
-          Expanded(
-            child: Text(
-              'Progress trackers are hidden for this beta configuration. Adjust Feature Access in Admin Console to reopen them.',
-              style: ArcUiTokens.body(
-                fontSize: 13,
-                color: ArcUiTokens.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
+      compact: true,
     );
   }
 }

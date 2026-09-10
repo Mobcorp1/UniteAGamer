@@ -43,18 +43,32 @@ void main() {
       },
     );
 
-    test('essential is ad-free and premium price is aligned', () {
-      expect(UagAdPolicy.essential.hasAnyAds, isFalse);
-      expect(
-        UagSubscriptionPlan.forTier(UagSubscriptionTier.essential).adsLabel,
-        'No ads',
-      );
-      expect(
-        UagSubscriptionPlan.forTier(
-          UagSubscriptionTier.premium,
-        ).monthlyPricePence,
-        799,
-      );
-    });
+    test(
+      'essential keeps banner-only ads and current paid pricing is aligned',
+      () {
+        expect(UagAdPolicy.essential.hasAnyAds, isTrue);
+        expect(UagAdPolicy.essential.showBannerAds, isTrue);
+        expect(UagAdPolicy.essential.showInterstitialAds, isFalse);
+        expect(UagAdPolicy.essential.showAppOpenAds, isFalse);
+        expect(UagAdPolicy.essential.showRewardedAds, isFalse);
+        expect(
+          UagSubscriptionPlan.forTier(UagSubscriptionTier.essential).adsLabel,
+          'Reduced passive ads',
+        );
+        expect(
+          UagSubscriptionPlan.forTier(
+            UagSubscriptionTier.essential,
+          ).monthlyPricePence,
+          799,
+        );
+        expect(
+          UagSubscriptionPlan.forTier(
+            UagSubscriptionTier.premium,
+          ).monthlyPricePence,
+          999,
+        );
+        expect(UagAdPolicy.premium.hasAnyAds, isFalse);
+      },
+    );
   });
 }

@@ -7,6 +7,11 @@ void main() {
   testWidgets('delta review defaults proposed additions selected', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1200, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       const MaterialApp(
         home: ArcBlueprintPhotoDeltaReviewScreen(
@@ -25,13 +30,18 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('REVIEW NEW BLUEPRINTS'), findsOneWidget);
     expect(find.textContaining('25 uncertain slots'), findsOneWidget);
     expect(find.text('Update Blueprint Grid'), findsOneWidget);
 
-    await tester.tap(find.byType(Checkbox));
-    await tester.pumpAndSettle();
+    final tile = find.byType(CheckboxListTile);
+    expect(tile, findsOneWidget);
+    final checkbox = tester.widget<CheckboxListTile>(tile);
+    expect(checkbox.value, isTrue);
+    checkbox.onChanged!(false);
+    await tester.pump();
 
     expect(find.text('Keep Tracker Unchanged'), findsOneWidget);
   });

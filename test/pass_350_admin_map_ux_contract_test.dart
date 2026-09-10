@@ -12,7 +12,7 @@ void main() {
       expect(source, contains("Key('admin-console-precision-scroll')"));
       expect(source, contains('scrollScale: 0.25'));
       expect(source, contains('showScrollbar: true'));
-      expect(source, contains('initiallyExpanded: false'));
+      expect(source, contains('this.initiallyExpanded = false'));
       expect(source, contains('_AdminExpandableSection'));
     },
   );
@@ -46,14 +46,14 @@ void main() {
       'great_mullein.webp',
       'lemons.webp',
       'moss.webp',
-      'mushroom.webp',
+      'mushrooms.webp',
       'olives.webp',
       'prickly_pears.webp',
       'roots.webp',
     ]) {
       expect(source, contains(asset));
       expect(
-        File('assets/arc_raiders/items/$asset').existsSync(),
+        File('assets/arc_raiders/scrappy_resources/$asset').existsSync(),
         isTrue,
         reason: 'Missing canonical nature asset: $asset',
       );

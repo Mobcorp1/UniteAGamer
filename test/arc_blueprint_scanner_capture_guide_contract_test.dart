@@ -19,7 +19,9 @@ void main() {
       isNot(contains('for (var column = 1; column < 10; column++)')),
     );
     expect(source, isNot(contains('for (var row = 1; row < 5; row++)')));
-    expect(source, contains('_DragTarget.topLeft'));
-    expect(source, contains('_DragTarget.bottomRight'));
+    expect(source, contains('_BlueprintAutoFrameOverlay('));
+    expect(source, contains('detection: _latestDetection'));
+    expect(source, contains('Fill the large guide with the complete Blueprint grid.'));
+    expect(source, contains('shrink the guide onto the detected outer grid automatically'));
   });
 }

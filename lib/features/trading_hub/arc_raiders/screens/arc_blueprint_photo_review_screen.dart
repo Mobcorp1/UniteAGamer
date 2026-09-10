@@ -203,88 +203,94 @@ class _ArcBlueprintPhotoReviewScreenState
         maxWidth: 960,
         padding: EdgeInsets.zero,
         scrollable: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: ArcLayoutTokens.pagePadding(context).copyWith(bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (widget.analysisWarnings.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.45),
+        child: SizedBox.expand(
+          child: Column(
+            children: [
+              Padding(
+                padding: ArcLayoutTokens.pagePadding(
+                  context,
+                ).copyWith(bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (widget.analysisWarnings.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.amber.withValues(alpha: 0.45),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        widget.analysisWarnings.join('\n'),
-                        style: ArcUiTokens.body(
-                          color: ArcUiTokens.warning,
-                          weight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  Row(
-                    children: [
-                      Expanded(
                         child: Text(
-                          uncertainCount == 0
-                              ? 'All ${_decisions.length} slots are ready to confirm.'
-                              : '$uncertainCount uncertain slots need your decision.',
-                          style: ArcUiTokens.body(fontSize: 13),
+                          widget.analysisWarnings.join('\n'),
+                          style: ArcUiTokens.body(
+                            color: ArcUiTokens.warning,
+                            weight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      FilterChip(
-                        key: const Key('blueprint-review-uncertain-filter'),
-                        label: const Text('Uncertain only'),
-                        selected: _showUncertainOnly,
-                        onSelected: (value) {
-                          setState(() => _showUncertainOnly = value);
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: visible.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No uncertain slots remain. Turn off the filter to review the full import.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: ArcUiTokens.textSecondary),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
-                      itemCount: visible.length,
-                      itemBuilder: (context, index) {
-                        final decision = visible[index];
-                        return _DecisionCard(
-                          key: ValueKey(
-                            'blueprint-review-${decision.blueprintId}',
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            uncertainCount == 0
+                                ? 'All ${_decisions.length} slots are ready to confirm.'
+                                : '$uncertainCount uncertain slots need your decision.',
+                            style: ArcUiTokens.body(fontSize: 13),
                           ),
-                          name: _nameFor(decision.blueprintId),
-                          decision: decision,
-                          onOwned: () => _setDecision(
-                            decision,
-                            ArcBlueprintPhotoCellState.owned,
-                          ),
-                          onMissing: () => _setDecision(
-                            decision,
-                            ArcBlueprintPhotoCellState.missing,
-                          ),
-                        );
-                      },
+                        ),
+                        FilterChip(
+                          key: const Key('blueprint-review-uncertain-filter'),
+                          label: const Text('Uncertain only'),
+                          selected: _showUncertainOnly,
+                          onSelected: (value) {
+                            setState(() => _showUncertainOnly = value);
+                          },
+                        ),
+                      ],
                     ),
-            ),
-          ],
+                  ],
+                ),
+              ),
+              Expanded(
+                child: visible.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No uncertain slots remain. Turn off the filter to review the full import.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: ArcUiTokens.textSecondary),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final decision in visible)
+                              _DecisionCard(
+                                key: ValueKey(
+                                  'blueprint-review-${decision.blueprintId}',
+                                ),
+                                name: _nameFor(decision.blueprintId),
+                                decision: decision,
+                                onOwned: () => _setDecision(
+                                  decision,
+                                  ArcBlueprintPhotoCellState.owned,
+                                ),
+                                onMissing: () => _setDecision(
+                                  decision,
+                                  ArcBlueprintPhotoCellState.missing,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(

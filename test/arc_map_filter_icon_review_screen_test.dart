@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_icon_registry.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_filter_taxonomy.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_map_filter_icon_review_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_map_filter_icon.dart';
@@ -22,14 +21,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final iconCount =
-        ArcMapFilterTaxonomy.all.length +
-        ArcMapFilterIconRegistry.uagCommunityIconKeys.length;
+    // The atlas reviews the seven canonical map groups, then adds the single
+    // UAG-owned Report A Rat icon as its own community audit section.
+    final canonicalEntries = ArcMapFilterTaxonomy.all
+        .where((entry) => entry.groupId != 'community')
+        .toList(growable: false);
+    final iconCount = canonicalEntries.length + 1;
 
     expect(find.text('Map Filter Icon Atlas'), findsOneWidget);
     expect(find.byType(ArcMapFilterIcon), findsNWidgets(iconCount * 5));
 
-    for (final entry in ArcMapFilterTaxonomy.all) {
+    for (final entry in canonicalEntries) {
       expect(
         find.byKey(ValueKey<String>('map-icon-review-${entry.iconKey}')),
         findsOneWidget,

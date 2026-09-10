@@ -58,7 +58,7 @@ void main() {
       expect(payload.containsKey('ageVerification'), isFalse);
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
-      expect(onboarding['version'], 4);
+      expect(onboarding['version'], 5);
       expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
       expect(onboarding['accountCreatedAt'], isA<FieldValue>());
       expect(onboarding['flow'], [
@@ -182,7 +182,7 @@ void main() {
       },
     );
 
-    test('builds the essential version 4 completion payload', () {
+    test('builds the essential version 5 completion payload', () {
       final payload = buildArcOnboardingCompletionPayload(
         riderName: '  Mike  ',
         primaryGoal: 'completeBlueprints',
@@ -207,7 +207,7 @@ void main() {
       expect(ageVerification['verifiedAt'], isA<FieldValue>());
 
       final onboarding = payload['arcOnboarding'] as Map<String, dynamic>;
-      expect(onboarding['version'], 4);
+      expect(onboarding['version'], 5);
       expect(onboarding['accountCreatedDuringOnboarding'], isTrue);
       expect(onboarding['flow'], [
         'account',

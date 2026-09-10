@@ -607,27 +607,24 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: ArcUiTokens.primaryAccent,
+              child: ArcRaidersStatePanel(
+                title: 'Loading session coach',
+                message: 'Checking your latest prep and review data.',
+                icon: Icons.sync_rounded,
+                accent: ArcUiTokens.primaryAccent,
               ),
             );
           }
 
           if (snapshot.hasError) {
             return Center(
-              child: Container(
-                margin: const EdgeInsets.all(AppTheme.spaceL),
+              child: Padding(
                 padding: const EdgeInsets.all(AppTheme.spaceL),
-                decoration: ArcUiTokens.surfaceDecoration(
-                  role: ArcSurfaceRole.warning,
-                  accent: ArcUiTokens.danger,
-                  radius: ArcUiTokens.radiusXL,
-                  borderOpacity: 0.30,
-                ),
-                child: Text(
-                  'Could not load Play Like a Pro right now.',
-                  textAlign: TextAlign.center,
-                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
+                child: const ArcRaidersStatePanel(
+                  title: 'Session coach unavailable',
+                  message: 'Play Like A Pro could not load right now.',
+                  icon: Icons.cloud_off_rounded,
+                  accent: ArcUiTokens.warning,
                 ),
               ),
             );
@@ -664,7 +661,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Esports-style session prep without the cringe.',
+                            'SESSION COACH',
                             style: ArcUiTokens.sectionTitle(
                               fontSize: 22,
                               color: ArcUiTokens.primaryAccent,
@@ -672,7 +669,7 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                           ),
                           const SizedBox(height: AppTheme.spaceS),
                           Text(
-                            'Track how you feel before you queue, reset yourself when the session starts slipping, and log how you actually performed after the raid. The app then turns that into cleaner prep and fewer throwaway sessions.',
+                            'Track pre-raid state, reset during rough sessions, and log the review after.',
                             style: ArcUiTokens.body(
                               color: ArcUiTokens.textSecondary,
                             ),
@@ -1115,20 +1112,31 @@ class _PlayLikeAProScreenState extends State<PlayLikeAProScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            '',
-                                            style: AppTheme.bodyTextStyle(
+                                            '${DateFormat('dd MMM - HH:mm').format(entry.createdAt)} - ${_goalLabel(entry.goal)}',
+                                            style: ArcUiTokens.body(
                                               fontSize: 14,
-                                              color: AppTheme.neonCyan,
-                                              isBold: true,
+                                              color: ArcUiTokens.primaryAccent,
+                                              weight: FontWeight.w700,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            'Perf /5 - Enjoyment /5 - Tilt Control /5',
-                                            style: const TextStyle(
-                                              color: Colors.white60,
+                                            'Perf ${entry.performance}/5 - Enjoyment ${entry.enjoyment}/5 - Tilt ${entry.tiltControl}/5',
+                                            style: ArcUiTokens.bodySmall(
+                                              color: ArcUiTokens.textSecondary,
                                             ),
                                           ),
+                                          if (entry.notes
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              entry.notes.trim(),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: ArcUiTokens.bodySmall(),
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),

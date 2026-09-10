@@ -6,6 +6,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/blueprint_grid_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/favourite_loadout_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class PlayLikeAProGuideDetailScreen extends StatelessWidget {
@@ -19,6 +20,12 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
   final PlayLikeAProGuide guide;
   final List<PlayLikeAProGuide> allGuides;
   final ValueChanged<PlayLikeAProGuide> onOpenGuide;
+
+  String _authorLabel() {
+    final title = guide.author.creatorTitle?.trim();
+    if (title == null || title.isEmpty) return 'By ${guide.author.displayName}';
+    return 'By ${guide.author.displayName} - $title';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +45,12 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
         child: ListView(
           children: [
             Container(
-              padding: const EdgeInsets.all(AppTheme.spaceL),
-              decoration: AppTheme.tradingCardDecoration(
-                borderColor: AppTheme.neonCyan.withValues(alpha: 0.32),
-                radius: 22,
+              padding: const EdgeInsets.all(ArcUiTokens.gapL),
+              decoration: ArcUiTokens.surfaceDecoration(
+                role: ArcSurfaceRole.raised,
+                accent: ArcUiTokens.primaryAccent,
+                borderOpacity: 0.30,
+                radius: ArcUiTokens.radiusXL,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +85,7 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppTheme.spaceM),
                   Text(
-                    'By ${guide.author.displayName}${guide.author.creatorTitle?.trim().isNotEmpty == true ? ' • ${guide.author.creatorTitle}' : ''}',
+                    _authorLabel(),
                     style: AppTheme.bodyTextStyle(
                       fontSize: 13,
                       color: AppTheme.neonCyan,
@@ -91,9 +100,11 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
               (section) => Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spaceM),
                 child: Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceL),
-                  decoration: AppTheme.tradingCardDecoration(
-                    borderColor: AppTheme.tradingSoftBorder,
+                  padding: const EdgeInsets.all(ArcUiTokens.gapL),
+                  decoration: ArcUiTokens.surfaceDecoration(
+                    role: ArcSurfaceRole.panel,
+                    accent: ArcUiTokens.primaryAccent,
+                    borderOpacity: 0.16,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,9 +165,11 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
                 guide.isLoadoutRelevant ||
                 guide.category == PlayLikeAProCategory.blueprintRoutes) ...[
               Container(
-                padding: const EdgeInsets.all(AppTheme.spaceL),
-                decoration: AppTheme.tradingCardDecoration(
-                  borderColor: AppTheme.neonPink.withValues(alpha: 0.25),
+                padding: const EdgeInsets.all(ArcUiTokens.gapL),
+                decoration: ArcUiTokens.surfaceDecoration(
+                  role: ArcSurfaceRole.panel,
+                  accent: ArcUiTokens.secondaryAccent,
+                  borderOpacity: 0.20,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,24 +232,50 @@ class PlayLikeAProGuideDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppTheme.spaceS),
               ...related.map(
-                (item) => Card(
-                  color: Colors.transparent,
-                  child: ListTile(
-                    title: Text(
-                      item.title,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    subtitle: Text(
-                      item.summary,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white60),
-                    ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: AppTheme.neonCyan,
-                    ),
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spaceS),
+                  child: ArcRaidersSectionCard(
                     onTap: () => onOpenGuide(item),
+                    accent: ArcUiTokens.primaryAccent,
+                    padding: const EdgeInsets.all(ArcUiTokens.gapM),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.auto_stories_outlined,
+                          color: ArcUiTokens.primaryAccent,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: ArcUiTokens.cardTitle(
+                                  color: ArcUiTokens.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                item.summary,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: ArcUiTokens.bodySmall(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: ArcUiTokens.primaryAccent,
+                          size: 18,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
