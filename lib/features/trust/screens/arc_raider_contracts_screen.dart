@@ -71,7 +71,8 @@ class _State extends State<ArcRaiderContractsScreen>
               decoration: ArcUiTokens.surfaceDecoration(
                 role: ArcSurfaceRole.panel,
                 accent: ArcUiTokens.secondaryAccent,
-                borderOpacity: 0.24,
+                borderOpacity: 0.34,
+                glow: true,
               ),
               child: TabBar(
                 controller: tabs,
@@ -81,7 +82,7 @@ class _State extends State<ArcRaiderContractsScreen>
                 indicatorColor: ArcUiTokens.secondaryAccent,
                 labelPadding: EdgeInsets.zero,
                 labelStyle: const TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.1,
                 ),
@@ -435,7 +436,7 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
 
   @override
   Widget build(BuildContext context) => ListView(
-    padding: AppTheme.pagePadding,
+    padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
     children: [
       const _ReportRatHero(),
       const SizedBox(height: 14),
@@ -484,13 +485,45 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
 
   Widget _stageHeader() {
     const labels = ['TARGET', 'INCIDENT', 'LOCATION', 'CONTRACT', 'REVIEW'];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(labels[stage], style: AppTheme.tradingHeading(fontSize: 18)),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(value: (stage + 1) / _stageCount),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: stage.isEven ? ArcUiTokens.primaryAccent : ArcUiTokens.secondaryAccent,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.28,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('0${stage + 1}', style: ArcUiTokens.display(fontSize: 30, color: ArcUiTokens.secondaryAccent)),
+              const SizedBox(width: 10),
+              Expanded(child: Text(labels[stage], style: ArcUiTokens.sectionTitle(fontSize: 21, color: ArcUiTokens.textPrimary))),
+              Text('${stage + 1}/$_stageCount', style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: List.generate(_stageCount, (index) {
+              final active = index <= stage;
+              return Expanded(
+                child: Container(
+                  height: 3,
+                  margin: EdgeInsets.only(right: index == _stageCount - 1 ? 0 : 5),
+                  decoration: BoxDecoration(
+                    color: active
+                        ? (index.isEven ? ArcUiTokens.primaryAccent : ArcUiTokens.secondaryAccent)
+                        : ArcUiTokens.borderSubtle.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 

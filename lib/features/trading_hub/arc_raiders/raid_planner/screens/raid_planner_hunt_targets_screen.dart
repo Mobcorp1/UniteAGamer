@@ -489,7 +489,7 @@ class _RaidPlannerHuntTargetsScreenState
           'Active Hunt Targets',
           style: ArcUiTokens.sectionTitle(
             fontSize: 22,
-            color: ArcUiTokens.primaryAccent,
+            color: ArcUiTokens.secondaryAccent,
           ),
         ),
       ),
@@ -555,9 +555,21 @@ class _RaidPlannerHuntTargetsScreenState
                   return ListView(
                     padding: const EdgeInsets.all(AppTheme.spaceM),
                     children: [
-                      const _ExpeditionResetFocusPanel(),
-                      const SizedBox(height: AppTheme.spaceM),
-                      const _NomadicRiderGuidancePanel(),
+                      _HuntGuidanceAccordion(
+                        title: 'EXPEDITION RESET FOCUS',
+                        subtitle: 'What to prioritise before the reset',
+                        icon: Icons.restart_alt_rounded,
+                        accent: ArcUiTokens.primaryAccent,
+                        child: const _ExpeditionResetFocusPanel(),
+                      ),
+                      const SizedBox(height: AppTheme.spaceS),
+                      _HuntGuidanceAccordion(
+                        title: 'NOMADIC RAIDER PATH',
+                        subtitle: 'Long-term storage, efficiency and reward route',
+                        icon: Icons.explore_rounded,
+                        accent: ArcUiTokens.secondaryAccent,
+                        child: const _NomadicRiderGuidancePanel(),
+                      ),
                       const SizedBox(height: AppTheme.spaceM),
                       ElectricChargeBorder(
                         active: true,
@@ -574,9 +586,9 @@ class _RaidPlannerHuntTargetsScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Raid Planner Source of Truth',
+                                'HUNT CONTROL',
                                 style: ArcUiTokens.sectionTitle(
-                                  fontSize: 24,
+                                  fontSize: 28,
                                   color: ArcUiTokens.secondaryAccent,
                                 ),
                               ),
@@ -681,6 +693,47 @@ class _RaidPlannerHuntTargetsScreenState
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HuntGuidanceAccordion extends StatelessWidget {
+  const _HuntGuidanceAccordion({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: accent,
+        radius: ArcUiTokens.radiusL,
+        borderOpacity: 0.22,
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          leading: Icon(icon, color: accent),
+          iconColor: accent,
+          collapsedIconColor: ArcUiTokens.textSecondary,
+          title: Text(title, style: ArcUiTokens.sectionTitle(fontSize: 19, color: accent)),
+          subtitle: Text(subtitle, style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary)),
+          children: [child],
         ),
       ),
     );

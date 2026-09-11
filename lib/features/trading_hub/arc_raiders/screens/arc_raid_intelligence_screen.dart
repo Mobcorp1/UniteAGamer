@@ -206,7 +206,7 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        title: const Text('Raid Intelligence'),
+        title: Text('RAID INTELLIGENCE', style: ArcUiTokens.display(fontSize: 26, color: ArcUiTokens.secondaryAccent)),
         actions: [
           IconButton(
             tooltip: 'Open Blueprint Tracker',
@@ -552,17 +552,80 @@ class _ArcRaidIntelligenceScreenState extends State<ArcRaidIntelligenceScreen> {
             const SizedBox(height: 2),
           ],
           _hero(intelligence),
-          const SizedBox(height: 12),
-          _setupSection(intelligence),
-          const SizedBox(height: 12),
-          _filterSection(),
-          const SizedBox(height: 12),
-          _communityIntelSection(intelligence.map, communityReports),
-          const SizedBox(height: 12),
-          _selectedMarkerSection(intelligence),
-          const SizedBox(height: 12),
-          _routeSection(intelligence),
+          const SizedBox(height: 10),
+          _raidAccordion(
+            title: 'RAID SETUP',
+            subtitle: 'Map, spawn, extraction and blueprint run',
+            icon: Icons.tune_rounded,
+            accent: ArcUiTokens.primaryAccent,
+            initiallyExpanded: true,
+            child: _setupSection(intelligence),
+          ),
+          const SizedBox(height: 8),
+          _raidAccordion(
+            title: 'INTEL FILTERS',
+            subtitle: 'Objectives, intel type and quality',
+            icon: Icons.filter_alt_rounded,
+            accent: ArcUiTokens.secondaryAccent,
+            child: _filterSection(),
+          ),
+          const SizedBox(height: 8),
+          _raidAccordion(
+            title: 'COMMUNITY INTEL',
+            subtitle: '${communityReports.length} reports on this map',
+            icon: Icons.radar_rounded,
+            accent: ArcUiTokens.secondaryAccent,
+            child: _communityIntelSection(intelligence.map, communityReports),
+          ),
+          const SizedBox(height: 8),
+          _raidAccordion(
+            title: 'SELECTED INTEL',
+            subtitle: _selectedMarker == null ? 'Tap a map marker to inspect it' : 'Marker selected',
+            icon: Icons.location_searching_rounded,
+            accent: ArcUiTokens.primaryAccent,
+            child: _selectedMarkerSection(intelligence),
+          ),
+          const SizedBox(height: 8),
+          _raidAccordion(
+            title: 'ROUTE PLAN',
+            subtitle: intelligence.routePlan == null ? 'No route generated yet' : 'Active run ready',
+            icon: Icons.route_rounded,
+            accent: ArcUiTokens.secondaryAccent,
+            child: _routeSection(intelligence),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _raidAccordion({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accent,
+    required Widget child,
+    bool initiallyExpanded = false,
+  }) {
+    return Container(
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.panel,
+        accent: accent,
+        radius: ArcUiTokens.radiusM,
+        borderOpacity: 0.22,
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+          leading: Icon(icon, color: accent, size: 19),
+          iconColor: accent,
+          collapsedIconColor: ArcUiTokens.textSecondary,
+          title: Text(title, style: ArcUiTokens.sectionTitle(fontSize: 18, color: accent)),
+          subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary)),
+          children: [child],
+        ),
       ),
     );
   }

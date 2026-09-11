@@ -32,10 +32,8 @@ void main() {
     final source = File(
       'lib/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart',
     ).readAsStringSync();
-    expect(
-      source,
-      contains('color: ArcUiTokens.secondaryAccent'),
-    );
-    expect(source, contains('isCompactHeight ? 300.0 : 338.0'));
+    expect(source, contains('color: ArcUiTokens.secondaryAccent'));
+    expect(source, contains('isCompactHeight ? 286.0 : 320.0'));
+    expect(source, contains('showQuickStrip ? 92.0 : 32.0'));
   });
 }
