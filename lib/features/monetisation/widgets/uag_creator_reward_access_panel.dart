@@ -45,18 +45,18 @@ class UagCreatorRewardAccessPanel extends StatelessWidget {
                 ),
               if (expired.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'RECENTLY EXPIRED',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                  style: ArcUiTokens.label(color: ArcUiTokens.textTertiary),
                 ),
                 const SizedBox(height: 6),
                 for (final grant in expired)
                   _GrantRow(grant: grant, compact: true),
               ],
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Creator rewards never overwrite your paid subscription. When a reward expires, access automatically falls back to your underlying plan.',
-                style: TextStyle(fontSize: 12),
+                style: ArcUiTokens.bodySmall(),
               ),
             ],
           ),
@@ -117,19 +117,17 @@ class _GrantRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+                  style: ArcUiTokens.cardTitle(fontSize: compact ? 12 : 13),
                 ),
                 const SizedBox(height: 2),
-                Text(status, style: const TextStyle(fontSize: 11)),
+                Text(status, style: ArcUiTokens.metadata()),
               ],
             ),
           ),
           if (!compact)
             Text(
               grant.tier.label.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+              style: ArcUiTokens.label(
                 color: active
                     ? ArcUiTokens.secondaryAccent
                     : ArcUiTokens.mutedText,

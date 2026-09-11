@@ -16,7 +16,7 @@ enum UagPremiumPassType {
 
   int get pricePence => switch (this) {
     UagPremiumPassType.day24 => 199,
-    UagPremiumPassType.week7 => 249,
+    UagPremiumPassType.week7 => 349,
   };
 
   Duration get duration => switch (this) {
@@ -58,10 +58,7 @@ class UagPremiumPassEntitlement {
 
   int get upgradeCreditPence => active ? paidPence.clamp(0, 999) : 0;
 
-  bool canPurchase(UagPremiumPassType requested) => switch (requested) {
-    UagPremiumPassType.day24 => !usedDay24,
-    UagPremiumPassType.week7 => !usedWeek7,
-  };
+  bool canPurchase(UagPremiumPassType requested) => !active;
 
   Duration get remaining {
     final expiry = expiresAt;

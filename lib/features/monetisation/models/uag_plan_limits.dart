@@ -104,7 +104,7 @@ class UagPlanLimits {
     hasAdvancedVoicePersonalities: false,
     hasSmartAlerts: false,
     hasUnlimitedSessions: false,
-    referralDiscountPercent: 0,
+    referralDiscountPercent: 10,
     referralCommissionPercent: 0,
     monthlyReferralBonusActionCap: 8,
     payoutThresholdPence: 2500,
@@ -133,7 +133,7 @@ class UagPlanLimits {
     hasSmartAlerts: true,
     hasUnlimitedSessions: false,
     referralDiscountPercent: 10,
-    referralCommissionPercent: 10,
+    referralCommissionPercent: 0,
     monthlyReferralBonusActionCap: 25,
     payoutThresholdPence: 2500,
   );
@@ -160,8 +160,8 @@ class UagPlanLimits {
     hasAdvancedVoicePersonalities: true,
     hasSmartAlerts: true,
     hasUnlimitedSessions: true,
-    referralDiscountPercent: 20,
-    referralCommissionPercent: 20,
+    referralDiscountPercent: 10,
+    referralCommissionPercent: 0,
     monthlyReferralBonusActionCap: 999,
     payoutThresholdPence: 2500,
   );

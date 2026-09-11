@@ -2,13 +2,12 @@ class UagCreatorCommissionRatePolicy {
   const UagCreatorCommissionRatePolicy._();
 
   static double baseRatePercent(double points) {
-    if (points >= 100) return 20;
-    if (points >= 60) return 17.5;
-    if (points >= 40) return 15;
-    if (points >= 25) return 12.5;
-    if (points >= 15) return 10;
-    if (points >= 8) return 7.5;
-    if (points >= 1) return 5;
+    if (points >= 60) return 20;
+    if (points >= 40) return 17.5;
+    if (points >= 25) return 15;
+    if (points >= 15) return 12.5;
+    if (points >= 8) return 10;
+    if (points >= 1) return 7.5;
     return 0;
   }
 
@@ -26,6 +25,7 @@ class UagCreatorCommissionRatePolicy {
     required int qualifiedActiveUsers,
   }) {
     final base = baseRatePercent(points);
+    if (base <= 0) return 0;
     final uplift = communityUpliftPercent(qualifiedActiveUsers);
     return base + uplift;
   }

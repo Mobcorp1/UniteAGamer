@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 import '../models/uag_community_referral_policy.dart';
 import '../repositories/uag_referral_validation_repository.dart';
@@ -18,39 +20,46 @@ class UagReferralProgressPanel extends StatelessWidget {
         final pending = (data['pendingReferrals'] as num?)?.toInt() ?? 0;
         final next = UagCommunityReferralPolicy.nextMilestone(validated);
         final fastTrack = data['creatorFastTrackUnlocked'] == true;
-
         final target = next?.validatedReferrals ?? validated;
         final progress = next == null || target == 0
             ? 1.0
             : (validated / target).clamp(0.0, 1.0);
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'REFERRAL PROGRESS',
-                  style: Theme.of(context).textTheme.titleMedium,
+        return ArcTacticalPanel(
+          icon: Icons.route_outlined,
+          title: 'REFERRAL PROGRESS',
+          subtitle: '$validated validated • $pending pending',
+          accent: ArcUiTokens.primaryAccent,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 7,
+                  color: ArcUiTokens.primaryAccent,
+                  backgroundColor:
+                      ArcUiTokens.primaryAccent.withValues(alpha: 0.12),
                 ),
-                const SizedBox(height: 6),
-                Text('$validated validated • $pending pending'),
-                const SizedBox(height: 10),
-                LinearProgressIndicator(value: progress),
-                const SizedBox(height: 8),
-                if (next != null)
-                  Text(
-                    'Next reward at ${next.validatedReferrals}: ${next.label}',
-                  )
-                else
-                  const Text('All current Refer a Raider milestones unlocked.'),
-                if (fastTrack) ...[
-                  const SizedBox(height: 10),
-                  const Text('Creator Programme fast-track review unlocked.'),
-                ],
+              ),
+              const SizedBox(height: ArcUiTokens.gapS),
+              Text(
+                next != null
+                    ? 'Next community reward at ${next.validatedReferrals}: ${next.label}'
+                    : 'All current Refer a Raider community milestones unlocked.',
+                style: ArcUiTokens.bodySmall(),
+              ),
+              if (fastTrack) ...[
+                const SizedBox(height: ArcUiTokens.gapS),
+                Text(
+                  'Creator Programme fast-track review unlocked.',
+                  style: ArcUiTokens.metadata(
+                    color: ArcUiTokens.secondaryAccent,
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         );
       },

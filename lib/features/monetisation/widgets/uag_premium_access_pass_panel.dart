@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 import '../models/uag_premium_pass_entitlement.dart';
 
@@ -14,44 +16,45 @@ class UagPremiumAccessPassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('PREMIUM ACCESS PASSES', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 6),
+    return ArcTacticalPanel(
+      icon: Icons.timer_outlined,
+      title: 'SHORT-TERM PREMIUM',
+      subtitle:
+          'Need Premium for a raid day, a weekend or a week off? Buy a pass whenever you need one.',
+      accent: ArcUiTokens.secondaryAccent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (pass.active) ...[
             Text(
-              pass.active
-                  ? '${pass.type!.label} active - Premium access is enabled.'
-                  : 'Try every Premium system without starting a subscription.',
+              '${pass.type!.label} active • Premium access is enabled.',
+              style: ArcUiTokens.metadata(color: ArcUiTokens.success),
             ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _PassButton(
-                  type: UagPremiumPassType.day24,
-                  enabled: pass.canPurchase(UagPremiumPassType.day24),
-                  onPressed: onSelect,
-                ),
-                _PassButton(
-                  type: UagPremiumPassType.week7,
-                  enabled: pass.canPurchase(UagPremiumPassType.week7),
-                  recommended: true,
-                  onPressed: onSelect,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'One introductory purchase of each pass per account. Active passes unlock Premium limits and remove ads. Pass purchase value is recorded for a future first-month Premium upgrade credit.',
-            ),
+            const SizedBox(height: ArcUiTokens.gapM),
           ],
-        ),
+          Wrap(
+            spacing: ArcUiTokens.gapM,
+            runSpacing: ArcUiTokens.gapM,
+            children: [
+              _PassButton(
+                type: UagPremiumPassType.day24,
+                enabled: pass.canPurchase(UagPremiumPassType.day24),
+                onPressed: onSelect,
+              ),
+              _PassButton(
+                type: UagPremiumPassType.week7,
+                enabled: pass.canPurchase(UagPremiumPassType.week7),
+                recommended: true,
+                onPressed: onSelect,
+              ),
+            ],
+          ),
+          const SizedBox(height: ArcUiTokens.gapM),
+          Text(
+            'Passes are reusable. You can buy another after the current Premium pass or subscription ends. Active passes unlock Premium limits and remove ads.',
+            style: ArcUiTokens.bodySmall(),
+          ),
+        ],
       ),
     );
   }
@@ -72,22 +75,40 @@ class _PassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = recommended
+        ? ArcUiTokens.secondaryAccent
+        : ArcUiTokens.primaryAccent;
     final price = '£${(type.pricePence / 100).toStringAsFixed(2)}';
-    return SizedBox(
-      width: 230,
-      child: OutlinedButton(
-        onPressed: enabled && onPressed != null ? () => onPressed!(type) : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Column(
-            children: [
-              Text(type.label),
-              Text(price),
-              if (recommended) const Text('BEST WAY TO TRY PREMIUM'),
-              if (!enabled) const Text('INTRODUCTORY PASS USED'),
-            ],
+    return Container(
+      width: 250,
+      padding: ArcUiTokens.panelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: accent,
+        borderOpacity: recommended ? 0.4 : 0.24,
+        glow: recommended,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(type.label, style: ArcUiTokens.cardTitle(color: accent)),
+          const SizedBox(height: ArcUiTokens.gapS),
+          Text(price, style: ArcUiTokens.numeric(fontSize: 22, color: accent)),
+          const SizedBox(height: ArcUiTokens.gapS),
+          Text(
+            recommended ? 'BEST VALUE FOR A FULL WEEK' : 'FULL PREMIUM FOR 24 HOURS',
+            style: ArcUiTokens.label(color: ArcUiTokens.textTertiary),
           ),
-        ),
+          const SizedBox(height: ArcUiTokens.gapM),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              style: ArcUiTokens.textButtonStyle(accent: accent),
+              onPressed: enabled && onPressed != null ? () => onPressed!(type) : null,
+              child: Text(enabled ? 'SELECT PASS' : 'PREMIUM ACTIVE'),
+            ),
+          ),
+        ],
       ),
     );
   }

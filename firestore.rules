@@ -815,6 +815,22 @@ service cloud.firestore {
     }
 
 
+    match /uag_community_referral_paid_subscriptions/{subscriptionId} {
+      allow read: if isAdminOrDev() ||
+        (isSignedIn() && resource.data.referrerUid == request.auth.uid);
+      allow create, update, delete: if isAdminOrDev();
+    }
+
+    match /uag_community_referral_commission_ledgers/{referrerUid} {
+      allow read: if isOwner(referrerUid) || isAdminOrDev();
+      allow create, update, delete: if isAdminOrDev();
+
+      match /entries/{entryId} {
+        allow read: if isOwner(referrerUid) || isAdminOrDev();
+        allow create, update, delete: if isAdminOrDev();
+      }
+    }
+
     match /uag_community_referral_codes/{codeId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() &&

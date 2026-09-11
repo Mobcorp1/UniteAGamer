@@ -19,20 +19,21 @@ const PLAN_CONFIG = {
     billingPeriod: 'monthly',
     pricePence: 799,
     stripePriceEnv: 'STRIPE_PRICE_ESSENTIAL_MONTHLY',
-    creatorDiscountPercent: 10,
-    creatorCommissionPercent: 10,
-    charityProfitPercent: 10,
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     impactPotId: 'essential',
   },
   essential_yearly: {
     kind: 'core',
     tier: 'essential',
     billingPeriod: 'yearly',
-    pricePence: 7999,
-    stripePriceEnv: 'STRIPE_PRICE_ESSENTIAL_YEARLY',
-    creatorDiscountPercent: 10,
-    creatorCommissionPercent: 10,
-    charityProfitPercent: 10,
+    pricePence: 6999,
+    inlinePrice: true,
+    checkoutLabel: 'UAG Essential Annual',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     impactPotId: 'essential',
   },
   premium_monthly: {
@@ -41,20 +42,21 @@ const PLAN_CONFIG = {
     billingPeriod: 'monthly',
     pricePence: 999,
     stripePriceEnv: 'STRIPE_PRICE_PREMIUM_MONTHLY',
-    creatorDiscountPercent: 20,
-    creatorCommissionPercent: 20,
-    charityProfitPercent: 20,
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     impactPotId: 'premium',
   },
   premium_yearly: {
     kind: 'core',
     tier: 'premium',
     billingPeriod: 'yearly',
-    pricePence: 9999,
-    stripePriceEnv: 'STRIPE_PRICE_PREMIUM_YEARLY',
-    creatorDiscountPercent: 20,
-    creatorCommissionPercent: 20,
-    charityProfitPercent: 20,
+    pricePence: 8999,
+    inlinePrice: true,
+    checkoutLabel: 'UAG Premium Annual',
+    creatorDiscountPercent: 0,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     impactPotId: 'premium',
   },
   beta_premium_monthly: {
@@ -67,8 +69,8 @@ const PLAN_CONFIG = {
     offerId: 'closed_beta_monthly',
     checkoutLabel: 'UAG Closed Beta Premium Monthly',
     creatorDiscountPercent: 0,
-    creatorCommissionPercent: 20,
-    charityProfitPercent: 20,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     impactPotId: 'premium',
   },
   beta_premium_yearly: {
@@ -81,8 +83,8 @@ const PLAN_CONFIG = {
     offerId: 'closed_beta_yearly',
     checkoutLabel: 'UAG Closed Beta Premium Annual',
     creatorDiscountPercent: 0,
-    creatorCommissionPercent: 20,
-    charityProfitPercent: 20,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     impactPotId: 'premium',
   },
   founding_raider_premium_yearly: {
@@ -95,8 +97,8 @@ const PLAN_CONFIG = {
     offerId: 'founding_raider_lifetime_rate',
     checkoutLabel: 'UAG Founding Raider Premium Annual',
     creatorDiscountPercent: 0,
-    creatorCommissionPercent: 20,
-    charityProfitPercent: 20,
+    creatorCommissionPercent: 0,
+    charityProfitPercent: 0,
     impactPotId: 'premium',
   },
   premium_pass_day: {
@@ -117,7 +119,7 @@ const PLAN_CONFIG = {
     kind: 'pass',
     tier: 'premium',
     billingPeriod: 'pass_7_day',
-    pricePence: 249,
+    pricePence: 349,
     inlinePrice: true,
     passType: 'week7',
     passDurationHours: 168,
@@ -286,16 +288,6 @@ function assertPlanEligibility(plan, userData, recognitionData) {
       error.statusCode = 409;
       throw error;
     }
-    if (plan.passType === 'day24' && truthy(pass.usedDay24)) {
-      const error = new Error('The introductory 24-hour Premium pass has already been used on this account.');
-      error.statusCode = 409;
-      throw error;
-    }
-    if (plan.passType === 'week7' && truthy(pass.usedWeek7)) {
-      const error = new Error('The introductory 7-day Premium pass has already been used on this account.');
-      error.statusCode = 409;
-      throw error;
-    }
   }
 }
 
@@ -355,42 +347,57 @@ async function resolveReferral(referralCode) {
   const code = String(referralCode || '').trim().toUpperCase();
   if (!code) return null;
 
-  const creatorCodeSnap = await db
-    .collection('uag_creator_campaign_code_requests')
-    .doc(code)
-    .get();
+  const [creatorCodeSnap, communityCodeSnap] = await Promise.all([
+    db.collection('uag_creator_campaign_code_requests').doc(code).get(),
+    db.collection('uag_community_referral_codes').doc(code).get(),
+  ]);
 
-  if (!creatorCodeSnap.exists) return null;
+  if (creatorCodeSnap.exists) {
+    const creatorCode = creatorCodeSnap.data() || {};
+    if (
+      creatorCode.status === 'approved' &&
+      creatorCode.uid &&
+      String(creatorCode.code || '').trim().toUpperCase() === code
+    ) {
+      const requestedDiscountPercent = Number(
+        creatorCode.subscriberDiscountPercent || 0,
+      );
+      const subscriberDiscountPercent =
+        Number.isFinite(requestedDiscountPercent) &&
+        requestedDiscountPercent > 0 &&
+        requestedDiscountPercent <= 50
+          ? requestedDiscountPercent
+          : 10;
 
-  const creatorCode = creatorCodeSnap.data() || {};
-  if (
-    creatorCode.status !== 'approved' ||
-    !creatorCode.uid ||
-    String(creatorCode.code || '').trim().toUpperCase() !== code
-  ) {
-    return null;
+      return {
+        code,
+        ownerUid: creatorCode.uid,
+        source: 'uag_creator_programme',
+        subscriberDiscountPercent,
+        subscriberDiscountDuration:
+          creatorCode.subscriberDiscountDuration === 'forever'
+            ? 'forever'
+            : 'once',
+      };
+    }
   }
 
-  const requestedDiscountPercent = Number(
-    creatorCode.subscriberDiscountPercent || 0,
-  );
-  const subscriberDiscountPercent =
-    Number.isFinite(requestedDiscountPercent) &&
-    requestedDiscountPercent > 0 &&
-    requestedDiscountPercent <= 50
-      ? requestedDiscountPercent
-      : 0;
+  if (communityCodeSnap.exists) {
+    const communityCode = communityCodeSnap.data() || {};
+    const ownerUid = normalizeString(communityCode.ownerUid);
+    const canonical = normalizeString(communityCode.code).toUpperCase();
+    if (ownerUid && canonical === code) {
+      return {
+        code,
+        ownerUid,
+        source: 'uag_community_referral',
+        subscriberDiscountPercent: 10,
+        subscriberDiscountDuration: 'once',
+      };
+    }
+  }
 
-  return {
-    code,
-    ownerUid: creatorCode.uid,
-    source: 'uag_creator_programme',
-    subscriberDiscountPercent,
-    subscriberDiscountDuration:
-      creatorCode.subscriberDiscountDuration === 'forever'
-        ? 'forever'
-        : 'once',
-  };
+  return null;
 }
 
 async function approvedCreatorProgrammeApplication(uid) {
@@ -431,13 +438,23 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
     const creatorAttributionRef = userRef
       .collection('monetisation_usage')
       .doc('creator_attribution');
-    const [userSnap, recognitionData, creatorAttributionSnap] = await Promise.all([
+    const communityAttributionRef = userRef
+      .collection('monetisation_usage')
+      .doc('community_referral_attribution');
+    const [
+      userSnap,
+      recognitionData,
+      creatorAttributionSnap,
+      communityAttributionSnap,
+    ] = await Promise.all([
       userRef.get(),
       loadCommercialRecognition(uid),
       creatorAttributionRef.get(),
+      communityAttributionRef.get(),
     ]);
     const userData = userSnap.data() || {};
     const creatorAttribution = creatorAttributionSnap.data() || {};
+    const communityAttribution = communityAttributionSnap.data() || {};
     if (userData.ageVerification?.verifiedOver18 !== true) {
       res.status(403).json({
         error: '18+ verification is required before starting a paid subscription.',
@@ -466,6 +483,7 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
     const effectiveReferralCode = String(
       referralCode ||
       creatorAttribution.code ||
+      communityAttribution.code ||
       userData.referredByCode ||
       '',
     ).trim();
@@ -503,12 +521,14 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       const coupon = await stripe.coupons.create({
         percent_off: referral.subscriberDiscountPercent,
         duration: referral.subscriberDiscountDuration,
-        name: `UAG Creator Campaign ${referral.code}`,
+        name: referral.source === 'uag_community_referral'
+          ? `UAG Refer a Raider ${referral.code}`
+          : `UAG Creator Campaign ${referral.code}`,
         metadata: {
           referralCode: referral.code,
           ownerUid: referral.ownerUid,
           planId,
-          source: 'uag_creator_programme',
+          source: referral.source,
         },
       });
       discounts.push({ coupon: coupon.id });
@@ -526,6 +546,7 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       pricePence: String(plan.pricePence),
       referralCode: referral?.code || '',
       referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : '',
+      referralSource: referral?.source || '',
       creatorBenefitApplied: creatorBenefitApplied ? 'true' : 'false',
     };
 
@@ -559,6 +580,7 @@ exports.createUagCheckoutSession = onRequest({ secrets: [stripeSecretKey] }, asy
       pricePence: plan.pricePence,
       referralCode: referral?.code || null,
       referralOwnerUid: referral && referral.ownerUid !== uid ? referral.ownerUid : null,
+      referralSource: referral?.source || null,
       creatorBenefitApplied,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       status: session.status || 'created',
@@ -694,14 +716,25 @@ async function handleSubscriptionUpdated(subscription) {
   const referralOwnerUid = normalizeString(subscription.metadata?.referralOwnerUid);
   const active = subscription.status === 'active' || subscription.status === 'trialing';
 
+  const referralSource = normalizeString(subscription.metadata?.referralSource);
   if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
-    await upsertCreatorReferredSubscription({
-      subscription,
-      referredUid: uid,
-      creatorUid: referralOwnerUid,
-      plan,
-      active,
-    });
+    if (referralSource === 'uag_community_referral') {
+      await syncCommunityPaidReferralSubscription({
+        subscription,
+        referredUid: uid,
+        referrerUid: referralOwnerUid,
+        plan,
+        active,
+      });
+    } else {
+      await upsertCreatorReferredSubscription({
+        subscription,
+        referredUid: uid,
+        creatorUid: referralOwnerUid,
+        plan,
+        active,
+      });
+    }
   }
 
   if (plan.kind === 'supporter') {
@@ -741,12 +774,23 @@ async function handleSubscriptionDeleted(subscription) {
   const plan = getPlan(planId);
   const referralOwnerUid = normalizeString(subscription.metadata?.referralOwnerUid);
 
+  const referralSource = normalizeString(subscription.metadata?.referralSource);
   if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
-    await beginCreatorSubscriptionGrace({
-      subscriptionId: subscription.id,
-      creatorUid: referralOwnerUid,
-      referredUid: uid,
-    });
+    if (referralSource === 'uag_community_referral') {
+      await syncCommunityPaidReferralSubscription({
+        subscription,
+        referredUid: uid,
+        referrerUid: referralOwnerUid,
+        plan,
+        active: false,
+      });
+    } else {
+      await beginCreatorSubscriptionGrace({
+        subscriptionId: subscription.id,
+        creatorUid: referralOwnerUid,
+        referredUid: uid,
+      });
+    }
   }
 
   if (plan.kind === 'supporter') {
@@ -910,31 +954,51 @@ async function handleInvoicePaid(invoice) {
   const stripeFeePence = estimateStripeFeePence(grossPence);
   const referralOwnerUid = subscription.metadata?.referralOwnerUid || '';
   const referralCode = subscription.metadata?.referralCode || '';
+  const referralSource = subscription.metadata?.referralSource || '';
   const eligibleNetAmountPence = eligibleNetSubscriptionRevenuePence(
     invoice,
     grossPence,
     stripeFeePence,
   );
+
+  if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
+    const active = subscription.status === 'active' || subscription.status === 'trialing';
+    if (referralSource === 'uag_community_referral') {
+      // Sync before calculating the rate so a first successful paid referral
+      // earns the first 5% band even if invoice.paid arrives before the
+      // subscription.updated webhook.
+      await syncCommunityPaidReferralSubscription({
+        subscription,
+        referredUid: uid,
+        referrerUid: referralOwnerUid,
+        plan,
+        active,
+      });
+    } else {
+      await upsertCreatorReferredSubscription({
+        subscription,
+        referredUid: uid,
+        creatorUid: referralOwnerUid,
+        plan,
+        active,
+      });
+    }
+  }
+
   const creatorCommissionRatePercent = referralOwnerUid
-    ? await authoritativeCreatorCommissionRate(referralOwnerUid)
+    ? referralSource === 'uag_community_referral'
+      ? await authoritativeCommunityCommissionRate(referralOwnerUid)
+      : await authoritativeCreatorCommissionRate(referralOwnerUid)
     : 0;
   const referralCommissionPence = referralOwnerUid
     ? Math.round(eligibleNetAmountPence * (creatorCommissionRatePercent / 100))
     : 0;
 
-  if (referralOwnerUid && referralOwnerUid !== uid && plan.kind === 'core') {
-    await upsertCreatorReferredSubscription({
-      subscription,
-      referredUid: uid,
-      creatorUid: referralOwnerUid,
-      plan,
-      active: subscription.status === 'active' || subscription.status === 'trialing',
-    });
-  }
-
-  const netBeforeCharity = Math.max(0, grossPence - stripeFeePence - referralCommissionPence);
-  const charityPence = Math.floor(netBeforeCharity * (plan.charityProfitPercent / 100));
-  const netPlatformProfitPence = Math.max(0, netBeforeCharity - charityPence);
+  const charityPence = 0;
+  const netPlatformProfitPence = Math.max(
+    0,
+    grossPence - stripeFeePence - referralCommissionPence,
+  );
 
   const eventRef = db.collection('monetisation_events').doc(invoice.id);
   await db.runTransaction(async (transaction) => {
@@ -955,6 +1019,7 @@ async function handleInvoicePaid(invoice) {
       netPlatformProfitPence,
       referralOwnerUid: referralOwnerUid || null,
       referralCode: referralCode || null,
+      referralSource: referralSource || null,
       stripeInvoiceId: invoice.id,
       stripeSubscriptionId: subscriptionId,
       stripePaymentIntentId: normalizeString(invoice.payment_intent) || null,
@@ -965,14 +1030,19 @@ async function handleInvoicePaid(invoice) {
 
     if (referralOwnerUid && referralCommissionPence > 0) {
       const walletRef = db.collection('referral_wallets').doc(referralOwnerUid);
-      const creatorLedgerRef = db
-        .collection('uag_creator_commission_ledgers')
-        .doc(referralOwnerUid)
-        .collection('entries')
-        .doc(invoice.id);
-      const creatorAggregateRef = db
-        .collection('uag_creator_dashboard_aggregates')
-        .doc(referralOwnerUid);
+      const isCommunity = referralSource === 'uag_community_referral';
+      const commissionLedgerRef = isCommunity
+        ? db
+            .collection('uag_community_referral_commission_ledgers')
+            .doc(referralOwnerUid)
+            .collection('entries')
+            .doc(invoice.id)
+        : db
+            .collection('uag_creator_commission_ledgers')
+            .doc(referralOwnerUid)
+            .collection('entries')
+            .doc(invoice.id);
+
       transaction.set(walletRef, {
         uid: referralOwnerUid,
         pendingPence: admin.firestore.FieldValue.increment(referralCommissionPence),
@@ -981,17 +1051,25 @@ async function handleInvoicePaid(invoice) {
       }, { merge: true });
       transaction.set(walletRef.collection('ledger').doc(invoice.id), {
         id: invoice.id,
-        type: 'commission_pending',
+        type: isCommunity
+          ? 'community_commission_pending'
+          : 'creator_commission_pending',
+        source: referralSource || 'uag_creator_programme',
         amountPence: referralCommissionPence,
         referredUid: uid,
         planId,
         referralCode,
-        releaseAfter: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        commissionRatePercent: creatorCommissionRatePercent,
+        releaseAfter: admin.firestore.Timestamp.fromMillis(
+          Date.now() + 30 * 24 * 60 * 60 * 1000,
+        ),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-      transaction.set(creatorLedgerRef, {
+      }, { merge: true });
+      transaction.set(commissionLedgerRef, {
         id: invoice.id,
         creatorUid: referralOwnerUid,
+        ownerUid: referralOwnerUid,
+        source: referralSource || 'uag_creator_programme',
         status: 'qualifying',
         amountPence: referralCommissionPence,
         currency: normalizeString(invoice.currency || 'gbp').toLowerCase() || 'gbp',
@@ -1009,47 +1087,129 @@ async function handleInvoicePaid(invoice) {
         commissionPence: referralCommissionPence,
         eventType: 'subscriptionStarted',
         lifecycleStatus: 'pendingValidation',
-        reason: 'Stripe invoice paid with Creator Programme attribution.',
+        reason: isCommunity
+          ? 'Stripe invoice paid with Refer a Raider attribution.'
+          : 'Stripe invoice paid with Creator Programme attribution.',
         stripePaymentIntentId: normalizeString(invoice.payment_intent) || null,
-        qualificationDate: admin.firestore.Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        payableAtIso: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        qualificationDate: admin.firestore.Timestamp.fromMillis(
+          Date.now() + 30 * 24 * 60 * 60 * 1000,
+        ),
+        payableAtIso: new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
-      transaction.set(creatorAggregateRef, {
-        uid: referralOwnerUid,
-        paidConversions: admin.firestore.FieldValue.increment(1),
-        pendingCommissionPence: admin.firestore.FieldValue.increment(referralCommissionPence),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
+
+      if (!isCommunity) {
+        const creatorAggregateRef = db
+          .collection('uag_creator_dashboard_aggregates')
+          .doc(referralOwnerUid);
+        transaction.set(creatorAggregateRef, {
+          uid: referralOwnerUid,
+          paidConversions: admin.firestore.FieldValue.increment(1),
+          pendingCommissionPence: admin.firestore.FieldValue.increment(referralCommissionPence),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
     }
 
-    if (charityPence > 0) {
-      const potRef = db.collection('impact_pots').doc(plan.impactPotId);
-      transaction.set(potRef, {
-        id: plan.impactPotId,
-        label: plan.tier === 'essential' ? 'Essential Impact Pot' : 'Premium Impact Pot',
-        sortOrder: plan.tier === 'essential' ? 10 : 20,
-        monthlyPence: admin.firestore.FieldValue.increment(charityPence),
-        allTimePence: admin.firestore.FieldValue.increment(charityPence),
-        contributingUsers: admin.firestore.FieldValue.increment(1),
-        lastAllocatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+
+  });
+}
+
+
+function communityBaseCommissionRate(activePaidReferrals) {
+  const count = Number(activePaidReferrals || 0);
+  if (count >= 100) return 15;
+  if (count >= 50) return 12.5;
+  if (count >= 25) return 10;
+  if (count >= 5) return 7.5;
+  if (count >= 1) return 5;
+  return 0;
+}
+
+function premiumReferralBoost(userData) {
+  const monetisation = userData?.monetisation || {};
+  const tier = normalizeString(
+    monetisation.tier || userData?.subscriptionTier || userData?.tier,
+  ).toLowerCase();
+  const status = normalizeString(
+    monetisation.subscriptionStatus || userData?.subscriptionStatus,
+  ).toLowerCase();
+  return tier === 'premium' && ['active', 'trialing', 'trial', 'paid'].includes(status)
+    ? 2.5
+    : 0;
+}
+
+async function authoritativeCommunityCommissionRate(referrerUid) {
+  if (!referrerUid) return 0;
+  const [userSnap, referralStateSnap] = await Promise.all([
+    db.collection('users').doc(referrerUid).get(),
+    db.collection('uag_community_referral_paid_subscriptions')
+      .where('referrerUid', '==', referrerUid)
+      .get(),
+  ]);
+  const data = userSnap.data() || {};
+  const activePaidReferrals = referralStateSnap.docs
+    .filter((doc) => truthy(doc.data()?.active))
+    .length;
+  const base = communityBaseCommissionRate(activePaidReferrals);
+  if (base <= 0) return 0;
+  return base + premiumReferralBoost(data);
+}
+
+async function syncCommunityPaidReferralSubscription({
+  subscription,
+  referredUid,
+  referrerUid,
+  plan,
+  active,
+}) {
+  if (!subscription?.id || !referredUid || !referrerUid || referrerUid === referredUid) {
+    return;
+  }
+  const stateRef = db
+    .collection('uag_community_referral_paid_subscriptions')
+    .doc(subscription.id);
+  const referrerRef = db.collection('users').doc(referrerUid);
+
+  await db.runTransaction(async (transaction) => {
+    const existing = await transaction.get(stateRef);
+    const previousActive = existing.exists && truthy(existing.data()?.active);
+    const delta = active === previousActive ? 0 : (active ? 1 : -1);
+
+    transaction.set(stateRef, {
+      subscriptionId: subscription.id,
+      referrerUid,
+      referredUid,
+      tier: plan.tier,
+      active,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: existing.exists
+        ? existing.data()?.createdAt || admin.firestore.FieldValue.serverTimestamp()
+        : admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    if (delta !== 0) {
+      transaction.set(referrerRef, {
+        'communityReferral.activePaidReferrals':
+          admin.firestore.FieldValue.increment(delta),
+        'communityReferral.updatedAt':
+          admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
     }
   });
 }
 
-
 function creatorBaseCommissionRate(points) {
   const value = Number(points || 0);
-  if (value >= 100) return 20;
-  if (value >= 60) return 17.5;
-  if (value >= 40) return 15;
-  if (value >= 25) return 12.5;
-  if (value >= 15) return 10;
-  if (value >= 8) return 7.5;
-  if (value >= 1) return 5;
+  if (value >= 60) return 20;
+  if (value >= 40) return 17.5;
+  if (value >= 25) return 15;
+  if (value >= 15) return 12.5;
+  if (value >= 8) return 10;
+  if (value >= 1) return 7.5;
   return 0;
 }
 
@@ -1073,8 +1233,9 @@ async function authoritativeCreatorCommissionRate(creatorUid) {
   const growth = growthSnap.data() || {};
   const points = Number(creator.creatorPoints ?? creator.points ?? 0);
   const qualifiedActiveUsers = Number(growth.qualifiedActiveUsers || 0);
-  return creatorBaseCommissionRate(points) +
-    communityCommissionUplift(qualifiedActiveUsers);
+  const base = creatorBaseCommissionRate(points);
+  if (base <= 0) return 0;
+  return base + communityCommissionUplift(qualifiedActiveUsers);
 }
 
 function eligibleNetSubscriptionRevenuePence(invoice, grossPence, stripeFeePence) {
@@ -1501,9 +1662,13 @@ async function handleChargeReversal(charge, reversalType) {
   const event = eventSnap.data() || {};
   const creatorUid = normalizeString(event.referralOwnerUid);
   if (!creatorUid) return;
+  const referralSource = normalizeString(event.referralSource);
+  const ledgerCollection = referralSource === 'uag_community_referral'
+    ? 'uag_community_referral_commission_ledgers'
+    : 'uag_creator_commission_ledgers';
 
   const ledgerRef = db
-    .collection('uag_creator_commission_ledgers')
+    .collection(ledgerCollection)
     .doc(creatorUid)
     .collection('entries')
     .doc(invoiceId);
@@ -1564,7 +1729,9 @@ async function handleChargeReversal(charge, reversalType) {
     );
   }
 
-  await recomputeCreatorCommercialAggregate(creatorUid);
+  if (referralSource !== 'uag_community_referral') {
+    await recomputeCreatorCommercialAggregate(creatorUid);
+  }
 }
 
 exports.queueCommunityReferralValidation = onDocumentCreated(
@@ -1758,7 +1925,8 @@ exports.releaseCreatorCommissionDaily = onSchedule('every day 03:15', async () =
     });
 
     if (creatorUid && releasedAmountPence > 0) {
-      creatorsToReconcile.add(creatorUid);
+      const source = normalizeString(doc.data()?.source);
+      if (source !== 'uag_community_referral') creatorsToReconcile.add(creatorUid);
       await db.collection('referral_wallets').doc(creatorUid).set({
         pendingPence:
           admin.firestore.FieldValue.increment(-releasedAmountPence),

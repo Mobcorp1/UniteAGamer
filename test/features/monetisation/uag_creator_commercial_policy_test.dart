@@ -7,26 +7,26 @@ void main() {
   });
 
   test('commission ladder resolves all agreed boundaries', () {
-    expect(UagCreatorCommercialPolicy.levelForPoints(1)?.commissionPercent, 5);
+    expect(UagCreatorCommercialPolicy.levelForPoints(1)?.commissionPercent, 7.5);
     expect(
       UagCreatorCommercialPolicy.levelForPoints(8)?.commissionPercent,
-      7.5,
-    );
-    expect(
-      UagCreatorCommercialPolicy.levelForPoints(15)?.commissionPercent,
       10,
     );
     expect(
-      UagCreatorCommercialPolicy.levelForPoints(25)?.commissionPercent,
+      UagCreatorCommercialPolicy.levelForPoints(15)?.commissionPercent,
       12.5,
     );
     expect(
-      UagCreatorCommercialPolicy.levelForPoints(40)?.commissionPercent,
+      UagCreatorCommercialPolicy.levelForPoints(25)?.commissionPercent,
       15,
     );
     expect(
-      UagCreatorCommercialPolicy.levelForPoints(60)?.commissionPercent,
+      UagCreatorCommercialPolicy.levelForPoints(40)?.commissionPercent,
       17.5,
+    );
+    expect(
+      UagCreatorCommercialPolicy.levelForPoints(60)?.commissionPercent,
+      20,
     );
     expect(
       UagCreatorCommercialPolicy.levelForPoints(100)?.commissionPercent,
@@ -40,7 +40,7 @@ void main() {
         eligibleNetRevenuePence: 10000,
         creatorPoints: 25,
       ),
-      1250,
+      1500,
     );
   });
 

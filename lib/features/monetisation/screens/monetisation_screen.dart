@@ -7,22 +7,11 @@ import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 import '../models/uag_subscription_plan.dart';
 import '../models/uag_subscription_tier.dart';
-import '../services/uag_entitlement_service.dart';
-import '../services/uag_checkout_service.dart';
-import '../widgets/uag_match_intelligence_comparison_card.dart';
-import '../widgets/uag_beta_founder_offer_panel.dart';
-import '../widgets/uag_creator_reward_access_panel.dart';
+import '../screens/uag_benefits_community_rewards_screen.dart';
 import '../screens/uag_creator_programme_screen.dart';
-
-import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_refer_a_raider_panel.dart';
-
-import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_referral_reward_locker_panel.dart';
-
-import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_referral_progress_panel.dart';
-
-import 'package:uag_arc_raiders_hub/features/monetisation/widgets/uag_community_growth_live_panel.dart';
-
-import 'package:uag_arc_raiders_hub/features/monetisation/screens/uag_benefits_community_rewards_screen.dart';
+import '../services/uag_checkout_service.dart';
+import '../services/uag_entitlement_service.dart';
+import '../widgets/uag_beta_founder_offer_panel.dart';
 
 class MonetisationScreen extends StatefulWidget {
   static const routeName = '/monetisation';
@@ -45,33 +34,16 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
       await _checkoutService.startCheckout(planId: planId);
     } on UagCheckoutException catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Checkout could not be started. Try again.'),
-        ),
+        const SnackBar(content: Text('Checkout could not be started. Try again.')),
       );
     } finally {
       if (mounted) setState(() => _checkoutBusy = false);
-    }
-  }
-
-  Future<void> _ensureReferralCode() async {
-    try {
-      final code = await _entitlementService.ensureMyReferralCode();
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Referral code ready: $code')));
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not create referral code. Try again.')),
-      );
     }
   }
 
@@ -85,7 +57,7 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not submit payout request. Try again.')),
+        const SnackBar(content: Text('Could not submit payout request. Try again.')),
       );
     }
   }
@@ -96,7 +68,7 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
       backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
         title: 'Plans & Referrals',
-        subtitle: 'Free, Essential, Premium, referrals and wallet.',
+        subtitle: 'Choose your access. Raid more. Earn when you grow UAG.',
       ),
       drawer: const AppDrawer(),
       body: StreamBuilder(
@@ -116,92 +88,36 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
             );
           }
 
+          final activeTier =
+              entitlement?.effectiveTier ?? UagSubscriptionTier.free;
+
           return ArcTacticalPageList(
             width: ArcPageWidth.wide,
             maxWidth: 1180,
             padding: ArcLayoutTokens.pagePadding(context),
             children: [
-              const UagReferARaiderPanel(),
-              const UagReferralRewardLockerPanel(),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'COMMUNITY REWARDS',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'See every Refer a Raider milestone, banked reward rule, Creator benefit and Community Growth unlock in one place.',
-                      ),
-                      const SizedBox(height: 10),
-                      FilledButton.icon(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                const UagBenefitsCommunityRewardsScreen(),
-                          ),
-                        ),
-                        icon: const Icon(Icons.groups_2_outlined),
-                        label: const Text('OPEN COMMUNITY REWARDS'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const UagReferralProgressPanel(),
-              const UagCommunityGrowthLivePanel(),
-              const ArcTacticalPanel(
-                icon: Icons.workspace_premium_outlined,
-                title: 'Access Command',
-                subtitle:
-                    'Plan limits, referrals, wallet state and launch entitlement controls.',
-                accent: ArcUiTokens.primaryAccent,
-                child: SizedBox.shrink(),
-              ),
-              ArcTacticalPanel(
-                icon: Icons.campaign_outlined,
-                title: 'Creator Programme',
-                subtitle:
-                    'Recurring commission, Creator Points, monthly community drops and seasonal campaign tools.',
-                accent: ArcUiTokens.secondaryAccent,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const UagCreatorProgrammeScreen(),
-                      ),
-                    ),
-                    icon: const Icon(Icons.open_in_new),
-                    label: const Text('OPEN CREATOR PROGRAMME'),
-                  ),
-                ),
-              ),
+              _CommercialHero(activeTier: activeTier),
               const SizedBox(height: ArcUiTokens.gapM),
-              if (entitlement != null)
-                _CurrentPlanCard(
-                  tier: entitlement.tier,
+              if (entitlement != null) ...[
+                _CurrentAccessCard(
+                  tier: activeTier,
                   subscriptionStatus: entitlement.subscriptionStatus,
-                  referralCode: entitlement.referralCode,
                   pendingPence: entitlement.pendingBalancePence,
                   availablePence: entitlement.availableBalancePence,
                   totalEarnedPence: entitlement.totalEarnedPence,
                   hasAdminBypass: entitlement.hasAdminBypass,
-                  onGenerateReferralCode: _ensureReferralCode,
                   onRequestPayout:
                       entitlement.availableBalancePence >=
                           entitlement.limits.payoutThresholdPence
                       ? () => _requestPayout(entitlement.availableBalancePence)
                       : null,
+                  onOpenCommunity: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const UagBenefitsCommunityRewardsScreen(),
+                    ),
+                  ),
                 ),
-              const UagCreatorRewardAccessPanel(),
-              const SizedBox(height: 14),
-              if (entitlement != null) ...[
+                const SizedBox(height: ArcUiTokens.gapM),
                 UagBetaFounderOfferPanel(
                   entitlement: entitlement,
                   checkoutBusy: _checkoutBusy,
@@ -209,16 +125,20 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                 ),
                 const SizedBox(height: ArcUiTokens.gapM),
               ],
+              _SectionHeading(
+                title: 'CHOOSE YOUR ACCESS',
+                subtitle:
+                    'Free keeps the network moving. Essential raises the limits. Premium is the complete UAG experience.',
+              ),
+              const SizedBox(height: ArcUiTokens.gapS),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 880;
+                  final wide = constraints.maxWidth >= 900;
                   final cards = UagSubscriptionPlan.plans
                       .map(
                         (plan) => _PlanCard(
                           plan: plan,
-                          activeTier:
-                              entitlement?.effectiveTier ??
-                              UagSubscriptionTier.free,
+                          activeTier: activeTier,
                           checkoutBusy: _checkoutBusy,
                           onCheckout: _startCheckout,
                         ),
@@ -246,8 +166,19 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
                   );
                 },
               ),
-              const UagMatchIntelligenceComparisonCard(),
-              _LaunchNotesCard(),
+              const SizedBox(height: ArcUiTokens.gapM),
+              _EarnGateway(
+                onCommunity: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const UagBenefitsCommunityRewardsScreen(),
+                  ),
+                ),
+                onCreator: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const UagCreatorProgrammeScreen(),
+                  ),
+                ),
+              ),
             ],
           );
         },
@@ -256,69 +187,94 @@ class _MonetisationScreenState extends State<MonetisationScreen> {
   }
 }
 
-class _CurrentPlanCard extends StatelessWidget {
-  const _CurrentPlanCard({
+class _CommercialHero extends StatelessWidget {
+  const _CommercialHero({required this.activeTier});
+
+  final UagSubscriptionTier activeTier;
+
+  @override
+  Widget build(BuildContext context) {
+    return ArcTacticalPanel(
+      icon: Icons.workspace_premium_rounded,
+      title: 'UAG ACCESS COMMAND',
+      subtitle: 'Simple plans. Flexible Premium passes. Real recurring referral earnings.',
+      accent: ArcUiTokens.secondaryAccent,
+      child: Wrap(
+        spacing: ArcUiTokens.gapS,
+        runSpacing: ArcUiTokens.gapS,
+        children: [
+          _Tag('${activeTier.label.toUpperCase()} ACTIVE', ArcUiTokens.primaryAccent),
+          const _Tag('PREMIUM £9.99 / MONTH', ArcUiTokens.secondaryAccent),
+          const _Tag('REFER & EARN 5% → 15%', ArcUiTokens.secondaryAccent),
+          const _Tag('PREMIUM REFERRAL BOOST +2.5PP', ArcUiTokens.primaryAccent),
+        ],
+      ),
+    );
+  }
+}
+
+class _CurrentAccessCard extends StatelessWidget {
+  const _CurrentAccessCard({
     required this.tier,
     required this.subscriptionStatus,
-    required this.referralCode,
     required this.pendingPence,
     required this.availablePence,
     required this.totalEarnedPence,
     required this.hasAdminBypass,
-    required this.onGenerateReferralCode,
     required this.onRequestPayout,
+    required this.onOpenCommunity,
   });
 
   final UagSubscriptionTier tier;
   final String subscriptionStatus;
-  final String? referralCode;
   final int pendingPence;
   final int availablePence;
   final int totalEarnedPence;
   final bool hasAdminBypass;
-  final VoidCallback onGenerateReferralCode;
   final VoidCallback? onRequestPayout;
+  final VoidCallback onOpenCommunity;
 
   @override
   Widget build(BuildContext context) {
     return ArcTacticalPanel(
       icon: Icons.account_balance_wallet_outlined,
-      title: 'Current Access',
+      title: 'CURRENT ACCESS',
+      subtitle: hasAdminBypass
+          ? 'Admin/dev bypass active.'
+          : '${tier.label} • ${subscriptionStatus.toUpperCase()}',
       accent: ArcUiTokens.primaryAccent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            hasAdminBypass
-                ? 'Admin/dev bypass active. You can access everything while testing.'
-                : '${tier.label} - $subscriptionStatus',
-            style: ArcUiTokens.body(fontSize: 13),
-          ),
-          const SizedBox(height: ArcUiTokens.gapM),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: ArcUiTokens.gapS,
+            runSpacing: ArcUiTokens.gapS,
             children: [
-              _Pill('Referral Code', referralCode ?? 'Not generated'),
-              _Pill('Pending', _money(pendingPence)),
-              _Pill('Available', _money(availablePence)),
-              _Pill('Total Earned', _money(totalEarnedPence)),
+              _WalletStat('PENDING', _money(pendingPence)),
+              _WalletStat('AVAILABLE', _money(availablePence)),
+              _WalletStat('LIFETIME', _money(totalEarnedPence)),
             ],
           ),
           const SizedBox(height: ArcUiTokens.gapM),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: ArcUiTokens.gapS,
+            runSpacing: ArcUiTokens.gapS,
             children: [
               OutlinedButton.icon(
-                onPressed: onGenerateReferralCode,
-                icon: const Icon(Icons.qr_code_2_outlined),
-                label: const Text('Create Referral Code'),
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.secondaryAccent,
+                ),
+                onPressed: onOpenCommunity,
+                icon: const Icon(Icons.groups_2_outlined),
+                label: const Text('OPEN COMMUNITY COMMAND'),
               ),
               OutlinedButton.icon(
+                style: ArcUiTokens.textButtonStyle(
+                  accent: ArcUiTokens.primaryAccent,
+                ),
                 onPressed: onRequestPayout,
                 icon: const Icon(Icons.payments_outlined),
-                label: const Text('Request Payout'),
+                label: const Text('REQUEST PAYOUT'),
               ),
             ],
           ),
@@ -344,48 +300,65 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = plan.tier == activeTier;
-    final highlight = plan.tier == UagSubscriptionTier.premium;
-    final accent = active
-        ? ArcUiTokens.warning
-        : highlight
+    final premium = plan.tier == UagSubscriptionTier.premium;
+    final accent = premium
         ? ArcUiTokens.secondaryAccent
-        : ArcUiTokens.primaryAccent;
+        : plan.tier == UagSubscriptionTier.essential
+        ? ArcUiTokens.primaryAccent
+        : ArcUiTokens.textTertiary;
+    final annualSavingPence = plan.monthlyPricePence <= 0
+        ? 0
+        : (plan.monthlyPricePence * 12) - plan.yearlyPricePence;
 
-    return ArcTacticalPanel(
-      accent: accent,
+    return Container(
       padding: const EdgeInsets.all(ArcUiTokens.gapL),
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: accent,
+        borderOpacity: premium ? 0.44 : 0.24,
+        selected: active,
+        glow: premium,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            plan.name,
-            style: ArcUiTokens.sectionTitle(fontSize: 20, color: accent),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  plan.shortName.toUpperCase(),
+                  style: ArcUiTokens.sectionTitle(fontSize: 19, color: accent),
+                ),
+              ),
+              if (premium)
+                const _Tag('BEST UAG', ArcUiTokens.secondaryAccent),
+            ],
           ),
           const SizedBox(height: ArcUiTokens.gapXS),
           Text(
-            '${plan.monthlyPriceLabel} - ${plan.yearlyPriceLabel}',
-            style: ArcUiTokens.body(
-              fontSize: 15,
-              color: ArcUiTokens.textPrimary,
-              weight: FontWeight.w700,
-            ),
+            plan.monthlyPriceLabel,
+            style: ArcUiTokens.numeric(fontSize: 23, color: accent),
           ),
-          if (plan.creatorOnboardingDiscountPercent > 0) ...[
-            const SizedBox(height: ArcUiTokens.gapXS),
+          Text(
+            plan.yearlyPriceLabel,
+            style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+          ),
+          if (annualSavingPence > 0)
             Text(
-              '${plan.creatorOnboardingDiscountPercent}% creator onboarding discount available for approved early creators.',
-              style: ArcUiTokens.bodySmall(),
+              'Annual saves ${_money(annualSavingPence)} vs monthly.',
+              style: ArcUiTokens.metadata(color: ArcUiTokens.success),
             ),
-          ],
           const SizedBox(height: ArcUiTokens.gapM),
-          ...plan.features.map(
-            (feature) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+          Text(plan.positioning, style: ArcUiTokens.bodySmall()),
+          const SizedBox(height: ArcUiTokens.gapM),
+          for (final feature in plan.features.take(5))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.check_circle_outline, size: 18, color: accent),
-                  const SizedBox(width: 8),
+                  Icon(Icons.check_rounded, size: 17, color: accent),
+                  const SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       feature,
@@ -397,14 +370,14 @@ class _PlanCard extends StatelessWidget {
                 ],
               ),
             ),
-          ),
           const SizedBox(height: ArcUiTokens.gapM),
           if (plan.tier == UagSubscriptionTier.free)
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: OutlinedButton(
+                style: ArcUiTokens.textButtonStyle(accent: accent),
                 onPressed: null,
-                child: Text(active ? 'Current Plan' : 'Free Access'),
+                child: Text(active ? 'CURRENT ACCESS' : 'FREE ACCESS'),
               ),
             )
           else
@@ -412,6 +385,7 @@ class _PlanCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
+                    style: ArcUiTokens.textButtonStyle(accent: accent),
                     onPressed: active || checkoutBusy
                         ? null
                         : () => onCheckout(_checkoutPlanId('monthly')),
@@ -420,7 +394,11 @@ class _PlanCard extends StatelessWidget {
                 ),
                 const SizedBox(width: ArcUiTokens.gapS),
                 Expanded(
-                  child: ElevatedButton(
+                  child: FilledButton(
+                    style: ArcUiTokens.textButtonStyle(
+                      accent: accent,
+                      primary: true,
+                    ),
                     onPressed: active || checkoutBusy
                         ? null
                         : () => onCheckout(_checkoutPlanId('yearly')),
@@ -444,23 +422,90 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
-class _LaunchNotesCard extends StatelessWidget {
+class _EarnGateway extends StatelessWidget {
+  const _EarnGateway({required this.onCommunity, required this.onCreator});
+
+  final VoidCallback onCommunity;
+  final VoidCallback onCreator;
+
   @override
   Widget build(BuildContext context) {
     return ArcTacticalPanel(
-      icon: Icons.campaign_outlined,
-      title: 'Launch Model',
-      accent: ArcUiTokens.warning,
-      child: Text(
-        'Launch model: Free users get strict weekly limits and ads. Essential users get 5x weekly limits, no ads, 10% follower discounts and 10% recurring referral commission. Premium users get unlimited access, no ads, 20% follower discounts and 20% recurring referral commission. Referral payouts stay pending for 30 days and become withdrawable after refund risk has passed.',
-        style: ArcUiTokens.body(fontSize: 13),
+      icon: Icons.hub_outlined,
+      title: 'GROW UAG. SHARE THE VALUE.',
+      subtitle:
+          'Every Raider can refer. Approved Creators unlock the advanced programme and higher creator tooling.',
+      accent: ArcUiTokens.secondaryAccent,
+      child: Wrap(
+        spacing: ArcUiTokens.gapS,
+        runSpacing: ArcUiTokens.gapS,
+        children: [
+          FilledButton.icon(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.secondaryAccent,
+              primary: true,
+            ),
+            onPressed: onCommunity,
+            icon: const Icon(Icons.groups_2_outlined),
+            label: const Text('REFER & EARN'),
+          ),
+          OutlinedButton.icon(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
+            ),
+            onPressed: onCreator,
+            icon: const Icon(Icons.campaign_outlined),
+            label: const Text('CREATOR PROGRAMME'),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill(this.label, this.value);
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 17,
+            color: ArcUiTokens.secondaryAccent,
+          ),
+        ),
+        const SizedBox(height: ArcUiTokens.gapXS),
+        Text(subtitle, style: ArcUiTokens.bodySmall()),
+      ],
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  const _Tag(this.label, this.color);
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: ArcUiTokens.chipPadding,
+      decoration: ArcUiTokens.chipDecoration(color: color),
+      child: Text(label, style: ArcUiTokens.label(color: color)),
+    );
+  }
+}
+
+class _WalletStat extends StatelessWidget {
+  const _WalletStat(this.label, this.value);
 
   final String label;
   final String value;
@@ -468,14 +513,29 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: ArcUiTokens.chipPadding,
-      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.primaryAccent),
-      child: Text(
-        '$label: $value',
-        style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+      constraints: const BoxConstraints(minWidth: 118),
+      padding: ArcUiTokens.compactPanelPadding,
+      decoration: ArcUiTokens.surfaceDecoration(
+        role: ArcSurfaceRole.raised,
+        accent: ArcUiTokens.primaryAccent,
+        borderOpacity: 0.2,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: ArcUiTokens.label()),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: ArcUiTokens.numeric(
+              fontSize: 17,
+              color: ArcUiTokens.primaryAccent,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-String _money(int pence) => 'GBP ${(pence / 100).toStringAsFixed(2)}';
+String _money(int pence) => '£${(pence / 100).toStringAsFixed(2)}';

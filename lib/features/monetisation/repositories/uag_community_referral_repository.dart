@@ -30,9 +30,18 @@ class UagCommunityReferralRepository {
     return _profile(uid).snapshots().map((snapshot) {
       final data = snapshot.data() ?? const <String, dynamic>{};
       final referral = data['communityReferral'];
-      return referral is Map
+      final summary = referral is Map
           ? Map<String, dynamic>.from(referral)
+          : <String, dynamic>{};
+      final monetisation = data['monetisation'];
+      final monetisationMap = monetisation is Map
+          ? Map<String, dynamic>.from(monetisation)
           : const <String, dynamic>{};
+      summary['_subscriptionTier'] =
+          data['subscriptionTier'] ?? data['tier'] ?? monetisationMap['tier'];
+      summary['_subscriptionStatus'] =
+          data['subscriptionStatus'] ?? monetisationMap['subscriptionStatus'];
+      return summary;
     });
   }
 

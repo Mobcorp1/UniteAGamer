@@ -106,7 +106,7 @@ class UagBetaFounderOfferPanel extends StatelessWidget {
                     suffix: '',
                     planId:
                         UagBetaCommercialOffer.premiumDayPass.checkoutPlanId,
-                    detail: 'One introductory 24-hour pass per account.',
+                    detail: 'Reusable 24-hour Premium access when no other Premium access is active.',
                     enabled: entitlement.premiumPass.canPurchase(
                       UagPremiumPassType.day24,
                     ),
@@ -117,7 +117,7 @@ class UagBetaFounderOfferPanel extends StatelessWidget {
                     suffix: '',
                     planId:
                         UagBetaCommercialOffer.premiumWeekPass.checkoutPlanId,
-                    detail: 'One introductory 7-day pass per account.',
+                    detail: 'Reusable 7-day Premium access when no other Premium access is active.',
                     enabled: entitlement.premiumPass.canPurchase(
                       UagPremiumPassType.week7,
                     ),
@@ -245,7 +245,7 @@ class UagBetaFounderOfferPanel extends StatelessWidget {
             children: [
               Text(label),
               Text('£${(pricePence / 100).toStringAsFixed(2)}'),
-              if (!enabled) const Text('INTRODUCTORY PASS USED'),
+              if (!enabled) const Text('PREMIUM ACTIVE'),
             ],
           ),
         ),
@@ -284,7 +284,7 @@ class _OfferData {
     required this.detail,
     this.recommended = false,
     this.enabled = true,
-    this.disabledLabel = 'INTRODUCTORY PASS USED',
+    this.disabledLabel = 'PREMIUM ACTIVE',
   });
 
   final String title;

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 
 import '../models/uag_creator_commission_rate_policy.dart';
 import '../repositories/uag_community_growth_repository.dart';
@@ -19,34 +21,41 @@ class UagCommunityGrowthLivePanel extends StatelessWidget {
         );
         final nextTarget = _nextTarget(users);
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'COMMUNITY GROWTH',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 6),
-                Text('$users qualified active Raiders'),
-                const SizedBox(height: 8),
-                Text(
-                  uplift > 0
-                      ? 'Creator community commission uplift: +${uplift.toStringAsFixed(1)}%'
-                      : 'First Creator commission uplift unlocks at 10,000 qualified active Raiders.',
-                ),
-                if (nextTarget != null) ...[
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
+        return ArcTacticalPanel(
+          icon: Icons.groups_3_outlined,
+          title: 'COMMUNITY GROWTH',
+          subtitle: '$users qualified active Raiders',
+          accent: ArcUiTokens.secondaryAccent,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                uplift > 0
+                    ? 'Creator community uplift: +${_pct(uplift)} percentage points.'
+                    : 'Creator community uplift begins at 10,000 qualified active Raiders.',
+                style: ArcUiTokens.bodySmall(),
+              ),
+              if (nextTarget != null) ...[
+                const SizedBox(height: ArcUiTokens.gapS),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
                     value: (users / nextTarget).clamp(0.0, 1.0),
+                    minHeight: 7,
+                    color: ArcUiTokens.secondaryAccent,
+                    backgroundColor:
+                        ArcUiTokens.secondaryAccent.withValues(alpha: 0.12),
                   ),
-                  const SizedBox(height: 6),
-                  Text('Next community target: $nextTarget'),
-                ],
+                ),
+                const SizedBox(height: ArcUiTokens.gapXS),
+                Text(
+                  'Next community target: $nextTarget',
+                  style: ArcUiTokens.metadata(
+                    color: ArcUiTokens.textTertiary,
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         );
       },
@@ -61,3 +70,7 @@ class UagCommunityGrowthLivePanel extends StatelessWidget {
     return null;
   }
 }
+
+String _pct(double value) => value == value.roundToDouble()
+    ? value.toStringAsFixed(0)
+    : value.toStringAsFixed(1);

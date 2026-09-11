@@ -128,14 +128,14 @@ class UagPlans {
   static const essential = UagPlanDefinition(
     tier: UagPlanTier.essential,
     monthlyPricePence: 799,
-    yearlyPricePence: 7999,
+    yearlyPricePence: 6999,
     weeklyTrades: 50,
     weeklyMatchSearches: 50,
     weeklyIntelHints: 40,
     prioritySlots: 10,
     creatorDiscountPercent: 0,
     creatorCommissionPercent: 0,
-    charityProfitPercent: 10,
+    charityProfitPercent: 0,
     adsLabel: 'Light ads: banner only',
     benefits: [
       UagMatchIntelligenceCopy.essentialDescription,
@@ -147,21 +147,20 @@ class UagPlans {
       'Raid Companion presets and enhanced voice profiles',
       'Performance-based UAG Creator Programme benefits',
       'Light advertising: banner only',
-      '10% of net platform profit goes into the Essential Impact Pot',
     ],
   );
 
   static const premium = UagPlanDefinition(
     tier: UagPlanTier.premium,
     monthlyPricePence: 999,
-    yearlyPricePence: 9999,
+    yearlyPricePence: 8999,
     weeklyTrades: -1,
     weeklyMatchSearches: -1,
     weeklyIntelHints: -1,
     prioritySlots: -1,
     creatorDiscountPercent: 0,
     creatorCommissionPercent: 0,
-    charityProfitPercent: 20,
+    charityProfitPercent: 0,
     adsLabel: 'No ads',
     benefits: [
       UagMatchIntelligenceCopy.premiumDescription,
@@ -173,7 +172,6 @@ class UagPlans {
       'Unlimited Raid Companion automation and saved raid plans',
       'No ads anywhere',
       'Performance-based UAG Creator Programme benefits',
-      '20% of net platform profit goes into the Premium Impact Pot',
     ],
   );
 
