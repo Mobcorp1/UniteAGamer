@@ -74,9 +74,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
-  Widget _sectionShell({required Widget child}) {
-    return ArcTacticalPanel(accent: ArcUiTokens.primaryAccent, child: child);
-  }
+
 
   Widget _crossplayCard() {
     final activeColor = crossplay
@@ -141,6 +139,45 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
+
+  Widget _accordion({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accent,
+    required Widget child,
+    bool initiallyExpanded = false,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: Container(
+        decoration: ArcUiTokens.surfaceDecoration(
+          role: ArcSurfaceRole.panel,
+          radius: ArcUiTokens.radiusL,
+          accent: accent,
+          borderOpacity: 0.28,
+        ),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          iconColor: accent,
+          collapsedIconColor: accent,
+          leading: Icon(icon, color: accent, size: 20),
+          title: Text(
+            title,
+            style: ArcUiTokens.sectionTitle(fontSize: 17, color: accent),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
+          ),
+          children: [child],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -170,25 +207,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               ],
             ),
           ),
-          _sectionShell(
+          _accordion(
+            title: 'REGION & CROSSPLAY',
+            subtitle: 'Server routing and cross-platform matchmaking.',
+            icon: Icons.public_rounded,
+            accent: ArcUiTokens.primaryAccent,
+            initiallyExpanded: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'REGION ROUTING',
-                  style: ArcUiTokens.sectionTitle(
-                    fontSize: 16,
-                    color: ArcUiTokens.primaryAccent,
-                  ),
-                ),
-                const SizedBox(height: ArcUiTokens.gapS),
-                Text(
-                  'Choose your preferred region for matching and session planning.',
-                  style: ArcUiTokens.bodySmall(
-                    color: ArcUiTokens.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: ArcUiTokens.gapL),
                 DropdownButtonFormField<String>(
                   initialValue: server,
                   dropdownColor: ArcUiTokens.surfaceOverlay,
@@ -214,8 +241,20 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               ],
             ),
           ),
-          const ArcPersonalisationPreferencesPanel(),
-          const UagNotificationPreferencesPanel(),
+          _accordion(
+            title: 'PERSONALISATION',
+            subtitle: 'Tune how UAG adapts recommendations and discovery.',
+            icon: Icons.auto_awesome_rounded,
+            accent: ArcUiTokens.secondaryAccent,
+            child: const ArcPersonalisationPreferencesPanel(),
+          ),
+          _accordion(
+            title: 'NOTIFICATIONS',
+            subtitle: 'Control relevance, alerts and beta updates.',
+            icon: Icons.notifications_active_outlined,
+            accent: ArcUiTokens.secondaryAccent,
+            child: const UagNotificationPreferencesPanel(),
+          ),
         ],
       ),
     );

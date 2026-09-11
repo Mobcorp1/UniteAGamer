@@ -107,8 +107,8 @@ class ArcUiTokens {
   static TextStyle display({double fontSize = 32, Color color = textPrimary}) {
     return TextStyle(
       fontSize: fontSize,
-      fontFamily: AppTheme.headingFontFamily,
-      fontWeight: FontWeight.w800,
+      fontFamily: AppTheme.heroFontFamily,
+      fontWeight: FontWeight.w400,
       letterSpacing: 0,
       height: 1.04,
       color: color,
@@ -122,9 +122,9 @@ class ArcUiTokens {
   static TextStyle sectionTitle({double fontSize = 16, Color? color}) {
     return TextStyle(
       fontSize: fontSize,
-      fontFamily: AppTheme.headingFontFamily,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0,
+      fontFamily: AppTheme.heroFontFamily,
+      fontWeight: FontWeight.w400,
+      letterSpacing: 0.45,
       height: 1.15,
       color: color ?? textPrimary,
     );

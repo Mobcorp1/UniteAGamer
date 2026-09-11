@@ -114,17 +114,19 @@ class ArcTacticalPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 620;
-    return Container(
-      padding:
-          padding ??
-          EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        radius: ArcUiTokens.radiusL,
-        accent: accent,
-        borderOpacity: 0.24,
-      ),
-      child: Column(
+    return Stack(
+      children: [
+        Container(
+          padding:
+              padding ??
+              EdgeInsets.all(compact ? ArcUiTokens.gapM : ArcUiTokens.gapL),
+          decoration: ArcUiTokens.surfaceDecoration(
+            role: ArcSurfaceRole.panel,
+            radius: ArcUiTokens.radiusL,
+            accent: accent,
+            borderOpacity: 0.24,
+          ),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -172,6 +174,23 @@ class ArcTacticalPanel extends StatelessWidget {
           child,
         ],
       ),
+        ),
+        Positioned(
+          top: 0,
+          right: 18,
+          child: Container(
+            width: compact ? 42 : 58,
+            height: 2,
+            decoration: BoxDecoration(
+              color: ArcUiTokens.secondaryAccent.withValues(alpha: 0.92),
+              boxShadow: ArcUiTokens.glow(
+                ArcUiTokens.secondaryAccent,
+                strength: 0.8,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
