@@ -8,6 +8,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositorie
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/repositories/arc_saved_loadout_repository.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/smart_trade_assist_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/trader_hub_screen.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
@@ -66,13 +67,19 @@ class _ArcSmartBuildTradeDraftScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: Colors.transparent,
+      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'Trading'),
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           'Smart Build Trade Draft',
-          style: ArcUiTokens.sectionTitle(fontSize: 22),
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 20,
+            color: ArcUiTokens.primaryAccent,
+          ),
         ),
-        backgroundColor: Colors.transparent,
       ),
       body: ArcRaidersScreenShell(
         showAdBanner: false,
@@ -306,16 +313,15 @@ class _ArcSmartBuildTradeDraftScreenState
               children: [
                 Text(
                   plan.displayName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
+                  style: ArcUiTokens.sectionTitle(
                     fontSize: 18,
+                    color: ArcUiTokens.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   integration.nextMove,
-                  style: const TextStyle(color: Colors.white70, height: 1.3),
+                  style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
                 ),
               ],
             ),
@@ -331,14 +337,10 @@ class _ArcSmartBuildTradeDraftScreenState
     required Color accent,
     required List<Widget> children,
   }) {
-    return Container(
+    return ArcRaidersSectionCard(
+      accent: accent,
+      radius: 14,
       padding: const EdgeInsets.all(14),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        accent: accent,
-        radius: 14,
-        borderOpacity: 0.35,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -348,11 +350,7 @@ class _ArcSmartBuildTradeDraftScreenState
               const SizedBox(width: 8),
               Text(
                 title.toUpperCase(),
-                style: TextStyle(
-                  color: accent,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.8,
-                ),
+                style: ArcUiTokens.label(color: accent),
               ),
             ],
           ),
@@ -377,14 +375,16 @@ class _ArcSmartBuildTradeDraftScreenState
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                  style: ArcUiTokens.body(
+                    color: ArcUiTokens.textPrimary,
+                    weight: FontWeight.w800,
                   ),
                 ),
                 Text(
                   detail,
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                  style: ArcUiTokens.bodySmall(
+                    color: ArcUiTokens.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -435,29 +435,20 @@ class _ArcSmartBuildTradeDraftScreenState
   }) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppTheme.neonCyan, size: 48),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 20,
-              ),
+        padding: const EdgeInsets.all(18),
+        child: ArcRaidersStatePanel(
+          title: title,
+          message: message,
+          icon: icon,
+          accent: ArcUiTokens.primaryAccent,
+          action: TextButton.icon(
+            style: ArcUiTokens.textButtonStyle(
+              accent: ArcUiTokens.primaryAccent,
             ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: onAction, child: Text(actionLabel)),
-          ],
+            onPressed: onAction,
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: Text(actionLabel),
+          ),
         ),
       ),
     );

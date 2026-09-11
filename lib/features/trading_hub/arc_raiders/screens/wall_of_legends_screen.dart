@@ -33,7 +33,9 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
         showLogout: false,
       ),
       drawer: const AppDrawer(),
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'DISCOVER'),
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'DISCOVER',
+      ),
       body: ArcRaidersScreenShell(
         useSafeArea: true,
         showAdBanner: false,
@@ -54,11 +56,17 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
             }
 
             if (snapshot.hasError) {
-              return _statePanel(
-                icon: Icons.error_outline_rounded,
-                title: 'Could not load legends',
-                copy: 'Could not load legends right now.',
-                accent: Colors.redAccent,
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(18),
+                  child: ArcRaidersStatePanel(
+                    title: 'Wall of Legends unavailable',
+                    message:
+                        'Recognised community entries could not load right now.',
+                    icon: Icons.cloud_off_rounded,
+                    accent: ArcUiTokens.warning,
+                  ),
+                ),
               );
             }
 
@@ -113,20 +121,20 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
                 _categoryFilters(),
                 const SizedBox(height: AppTheme.spaceM),
                 if (entries.isEmpty)
-                  _statePanel(
+                  const ArcRaidersStatePanel(
+                    title: 'Legends awaiting curation',
+                    message:
+                        'Approved historical entries will appear here as the Wall of Legends grows.',
                     icon: Icons.workspace_premium_outlined,
-                    title: 'Legends are awaiting admin curation',
-                    copy:
-                        'This read-only beta surface appears when approved historical entries are published.',
-                    accent: AppTheme.neonCyan,
+                    accent: ArcUiTokens.primaryAccent,
                   )
                 else if (filtered.isEmpty)
-                  _statePanel(
-                    icon: Icons.filter_alt_off_rounded,
+                  const ArcRaidersStatePanel(
                     title: 'No legends in this category yet',
-                    copy:
-                        'Try another category or check back after the next community update.',
-                    accent: AppTheme.neonPink,
+                    message:
+                        'Choose another category or check back after the next community update.',
+                    icon: Icons.filter_alt_off_rounded,
+                    accent: ArcUiTokens.secondaryAccent,
                   )
                 else
                   LayoutBuilder(
@@ -181,43 +189,36 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
   }) {
     return Padding(
       padding: const EdgeInsets.only(right: AppTheme.spaceS),
-      child: ChoiceChip(
-        selected: selected,
-        showCheckmark: false,
-        label: Text(label),
-        selectedColor: AppTheme.neonCyan.withValues(alpha: 0.18),
-        backgroundColor: ArcUiTokens.surfaceRaised.withValues(alpha: 0.82),
-        side: BorderSide(
-          color: selected
-              ? AppTheme.neonCyan
-              : Colors.white.withValues(alpha: 0.16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: () {
+            if (onSelected != null) {
+              onSelected();
+            } else {
+              setState(() => _selectedCategory = null);
+            }
+          },
+          child: ArcTacticalStatusPill(
+            label: label,
+            icon: selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+            accent: selected
+                ? ArcUiTokens.primaryAccent
+                : ArcUiTokens.textTertiary,
+            selected: selected,
+          ),
         ),
-        labelStyle: ArcUiTokens.body(
-          fontSize: 12,
-          color: selected ? AppTheme.neonCyan : ArcUiTokens.textSecondary,
-          weight: FontWeight.w700,
-        ),
-        onSelected: (_) {
-          if (onSelected != null) {
-            onSelected();
-          } else {
-            setState(() => _selectedCategory = null);
-          }
-        },
       ),
     );
   }
 
   Widget _legendCard(ArcWallOfLegendsEntry entry) {
     final accent = _categoryAccent(entry.category);
-    return Container(
+    return ArcRaidersSectionCard(
+      accent: accent,
+      radius: 16,
       padding: const EdgeInsets.all(AppTheme.spaceM),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        accent: accent,
-        radius: 16,
-        borderOpacity: 0.24,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -242,9 +243,9 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
                       entry.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTheme.tradingHeading(
+                      style: ArcUiTokens.cardTitle(
                         fontSize: 18,
-                        color: Colors.white,
+                        color: ArcUiTokens.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -252,9 +253,9 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
                       entry.subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: ArcUiTokens.body(
                         color: accent,
-                        fontWeight: FontWeight.w800,
+                        weight: FontWeight.w800,
                       ),
                     ),
                   ],
@@ -277,7 +278,7 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
             const SizedBox(height: AppTheme.spaceM),
             Text(
               entry.reason,
-              style: const TextStyle(color: Colors.white70, height: 1.35),
+              style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
             ),
           ],
         ],
@@ -286,55 +287,7 @@ class _WallOfLegendsScreenState extends State<WallOfLegendsScreen> {
   }
 
   Widget _pill(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceS,
-        vertical: 6,
-      ),
-      decoration: ArcUiTokens.chipDecoration(color: color),
-      child: Text(
-        label,
-        style: AppTheme.bodyTextStyle(fontSize: 12, color: color, isBold: true),
-      ),
-    );
-  }
-
-  Widget _statePanel({
-    required IconData icon,
-    required String title,
-    required String copy,
-    required Color accent,
-  }) {
-    return Center(
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppTheme.spaceL),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.raised,
-          accent: accent,
-          radius: 16,
-          borderOpacity: 0.24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: accent, size: 34),
-            const SizedBox(height: AppTheme.spaceM),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTheme.tradingHeading(fontSize: 20, color: Colors.white),
-            ),
-            const SizedBox(height: AppTheme.spaceS),
-            Text(
-              copy,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, height: 1.35),
-            ),
-          ],
-        ),
-      ),
-    );
+    return ArcTacticalStatusPill(label: label, accent: color);
   }
 
   Color _categoryAccent(ArcWallOfLegendsCategory category) {

@@ -139,13 +139,30 @@ class _TradingNotificationsScreenState
     setState(() => _busy = true);
     try {
       await _repository.markAllNotificationsRead();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not mark messages as read. Try again.'),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _openNotification(TradingNotification notification) async {
-    await _repository.markNotificationRead(notification.id);
+    try {
+      await _repository.markNotificationRead(notification.id);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message opened, but read status could not sync.'),
+          ),
+        );
+      }
+    }
     if (!mounted) return;
     final route = notification.route.trim().isNotEmpty
         ? notification.route.trim()
@@ -252,11 +269,194 @@ class _TradingNotificationsScreenState
   }
 
   Future<void> _deleteNotification(TradingNotification notification) async {
-    await _repository.deleteNotification(notification.id);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Message deleted.')));
+    try {
+      await _repository.deleteNotification(notification.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Message deleted.')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not delete the message. Try again.'),
+        ),
+      );
+    }
+  }
+
+  IconData _filterIcon(_InboxFilter filter) => switch (filter) {
+    _InboxFilter.all => Icons.inbox_outlined,
+    _InboxFilter.unread => Icons.mark_email_unread_outlined,
+    _InboxFilter.trading => Icons.swap_horiz_rounded,
+    _InboxFilter.matchmaking => Icons.groups_2_outlined,
+    _InboxFilter.operations => Icons.radar_rounded,
+    _InboxFilter.community => Icons.forum_outlined,
+    _InboxFilter.announcements => Icons.campaign_outlined,
+  };
+
+  Color _filterAccent(_InboxFilter filter) => switch (filter) {
+    _InboxFilter.unread => ArcUiTokens.secondaryAccent,
+    _InboxFilter.trading => ArcUiTokens.primaryAccent,
+    _InboxFilter.matchmaking => ArcUiTokens.secondaryAccent,
+    _InboxFilter.operations => ArcUiTokens.attentionAccent,
+    _InboxFilter.community => ArcUiTokens.success,
+    _InboxFilter.announcements => ArcUiTokens.warning,
+    _InboxFilter.all => ArcUiTokens.primaryAccent,
+  };
+
+  Widget _buildFilterStrip() {
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        scrollDirection: Axis.horizontal,
+        itemCount: _InboxFilter.values.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final filter = _InboxFilter.values[index];
+          final selected = _filter == filter;
+          final accent = _filterAccent(filter);
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: () => setState(() => _filter = filter),
+              child: ArcTacticalStatusPill(
+                label: _filterLabel(filter),
+                icon: _filterIcon(filter),
+                accent: accent,
+                selected: selected,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNotificationCard(TradingNotification item) {
+    final color = _typeColor(item.type);
+
+    return Dismissible(
+      key: ValueKey(item.id),
+      direction: item.read
+          ? DismissDirection.endToStart
+          : DismissDirection.none,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: AppTheme.tradingDanger.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Icon(
+          Icons.delete_outline_rounded,
+          color: AppTheme.tradingDanger,
+        ),
+      ),
+      onDismissed: (_) => _deleteNotification(item),
+      child: ElectricChargeBorder(
+        active: !item.read,
+        radius: 18,
+        child: ArcRaidersSectionCard(
+          accent: color,
+          radius: 18,
+          selected: false,
+          padding: const EdgeInsets.all(14),
+          onTap: () => _openNotification(item),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withValues(alpha: 0.30)),
+                ),
+                child: Icon(
+                  item.read
+                      ? Icons.mail_outline_rounded
+                      : Icons.mark_email_unread_rounded,
+                  color: color,
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: ArcUiTokens.cardTitle(
+                              fontSize: 16,
+                              color: ArcUiTokens.textPrimary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: ArcUiTokens.textTertiary,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
+                      children: [
+                        ArcTacticalStatusPill(
+                          label: item.typeLabel,
+                          accent: color,
+                          selected: !item.read,
+                        ),
+                        ArcTacticalStatusPill(
+                          label: item.read ? 'Read' : 'Unread',
+                          icon: item.read
+                              ? Icons.done_rounded
+                              : Icons.fiber_manual_record_rounded,
+                          accent: item.read
+                              ? ArcUiTokens.textTertiary
+                              : ArcUiTokens.secondaryAccent,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 9),
+                    Text(
+                      item.body,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: ArcUiTokens.body(
+                        fontSize: 13,
+                        color: ArcUiTokens.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _formatDate(item.createdAt),
+                      style: ArcUiTokens.metadata(
+                        color: ArcUiTokens.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -267,9 +467,13 @@ class _TradingNotificationsScreenState
       appBar: widget.showAppBar
           ? AppBar(
               backgroundColor: Colors.transparent,
+              elevation: 0,
               title: Text(
                 'Communications Centre',
-                style: AppTheme.tradingHeading(fontSize: 25),
+                style: ArcUiTokens.sectionTitle(
+                  fontSize: 20,
+                  color: ArcUiTokens.primaryAccent,
+                ),
               ),
               actions: [
                 IconButton(
@@ -288,271 +492,145 @@ class _TradingNotificationsScreenState
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 920),
+              constraints: const BoxConstraints(maxWidth: 980),
               child: StreamBuilder<List<TradingNotification>>(
                 stream: _repository.watchNotifications(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
-                    return const Center(
-                      child: Padding(
-                        padding: ArcUiTokens.compactPanelPadding,
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
                         child: ArcRaidersStatePanel(
                           title: 'Communications unavailable',
                           message:
-                              'Your messages could not be loaded right now.',
+                              'Messages and alerts could not load right now.',
                           icon: Icons.cloud_off_rounded,
                           accent: ArcUiTokens.warning,
                         ),
                       ),
                     );
                   }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Padding(
-                        padding: ArcUiTokens.compactPanelPadding,
+
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
                         child: ArcRaidersStatePanel(
                           title: 'Syncing communications',
                           message:
-                              'Checking trade alerts, operations and community updates.',
+                              'Checking trade replies, squad signals and UAG updates.',
                           icon: Icons.sync_rounded,
-                          accent: ArcUiTokens.primaryAccent,
-                          action: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
+                          compact: true,
                         ),
                       ),
                     );
                   }
+
                   final all = snapshot.data ?? const <TradingNotification>[];
                   final unread = all.where((item) => !item.read).length;
                   final visible = all.where(_matches).toList(growable: false);
+
                   return Column(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(14, 12, 14, 0),
-                        child: ArcRaidersPageHeader(
-                          title: 'COMMUNICATIONS CENTRE',
-                          subtitle:
-                              'Trade responses, system alerts and community signals.',
-                          icon: Icons.mark_email_unread_outlined,
-                          accent: ArcUiTokens.primaryAccent,
-                        ),
-                      ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                        child: Row(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Expanded(
-                              child: Text(
-                                '$unread unread - ${all.length} total',
-                                style: ArcUiTokens.body(
-                                  fontSize: 13,
-                                  color: ArcUiTokens.textSecondary,
+                            const ArcRaidersHeroBanner(
+                              title: 'COMMUNICATIONS CENTRE',
+                              subtitle:
+                                  'Trade replies, Match Raider signals, operations updates and UAG broadcasts in one command feed.',
+                              accent: ArcUiTokens.primaryAccent,
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                ArcTacticalStatTile(
+                                  label: 'Unread',
+                                  value: unread.toString(),
+                                  icon: Icons.mark_email_unread_outlined,
+                                  accent: unread > 0
+                                      ? ArcUiTokens.secondaryAccent
+                                      : ArcUiTokens.success,
+                                ),
+                                ArcTacticalStatTile(
+                                  label: 'Total',
+                                  value: all.length.toString(),
+                                  icon: Icons.inbox_outlined,
+                                  accent: ArcUiTokens.primaryAccent,
+                                ),
+                                ArcTacticalStatTile(
+                                  label: 'View',
+                                  value: _filterLabel(_filter),
+                                  icon: _filterIcon(_filter),
+                                  accent: _filterAccent(_filter),
+                                ),
+                              ],
+                            ),
+                            if (unread > 0) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  style: ArcUiTokens.textButtonStyle(
+                                    accent: ArcUiTokens.primaryAccent,
+                                  ),
+                                  onPressed: _busy ? null : _markAllRead,
+                                  icon: const Icon(Icons.done_all_rounded),
+                                  label: Text(
+                                    _busy ? 'Updating...' : 'Mark all read',
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (unread > 0)
-                              TextButton.icon(
-                                onPressed: _busy ? null : _markAllRead,
-                                icon: const Icon(Icons.done_all_rounded),
-                                label: const Text('Mark all read'),
-                              ),
+                            ],
                           ],
                         ),
                       ),
-                      SizedBox(
-                        height: 48,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _InboxFilter.values.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final filter = _InboxFilter.values[index];
-                            return ChoiceChip(
-                              label: Text(_filterLabel(filter)),
-                              selected: _filter == filter,
-                              onSelected: (_) =>
-                                  setState(() => _filter = filter),
-                            );
-                          },
-                        ),
-                      ),
+                      _buildFilterStrip(),
+                      const SizedBox(height: 4),
                       Expanded(
                         child: visible.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(24),
-                                  child: ArcRaidersStatePanel(
-                                    title: all.isEmpty
-                                        ? 'No communications yet'
-                                        : 'No matching communications',
-                                    message: all.isEmpty
-                                        ? 'Trade responses, broadcasts and system updates will appear here.'
-                                        : 'Change the filter to view other messages.',
-                                    icon: all.isEmpty
-                                        ? Icons.inbox_outlined
-                                        : Icons.filter_alt_off_outlined,
-                                    accent: ArcUiTokens.textTertiary,
-                                  ),
-                                ),
-                              )
-                            : ListView.builder(
+                            ? Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                   14,
                                   12,
                                   14,
                                   104,
                                 ),
+                                child: Center(
+                                  child: ArcRaidersStatePanel(
+                                    title: all.isEmpty
+                                        ? 'No communications yet'
+                                        : 'No matching messages',
+                                    message: all.isEmpty
+                                        ? 'Messages, alerts, broadcasts and system updates will appear here.'
+                                        : 'Choose another communications filter to widen the feed.',
+                                    icon: all.isEmpty
+                                        ? Icons.inbox_outlined
+                                        : Icons.filter_alt_off_outlined,
+                                    accent: all.isEmpty
+                                        ? ArcUiTokens.primaryAccent
+                                        : _filterAccent(_filter),
+                                    compact: true,
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.fromLTRB(
+                                  14,
+                                  10,
+                                  14,
+                                  104,
+                                ),
                                 itemCount: visible.length,
-                                itemBuilder: (context, index) {
-                                  final item = visible[index];
-                                  final color = _typeColor(item.type);
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 14),
-                                    child: Dismissible(
-                                      key: ValueKey(item.id),
-                                      direction: item.read
-                                          ? DismissDirection.endToStart
-                                          : DismissDirection.none,
-                                      background: Container(
-                                        alignment: Alignment.centerRight,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.tradingDanger
-                                              .withValues(alpha: 0.22),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.delete_outline_rounded,
-                                          color: AppTheme.tradingDanger,
-                                        ),
-                                      ),
-                                      onDismissed: (_) =>
-                                          _deleteNotification(item),
-                                      child: ElectricChargeBorder(
-                                        active: !item.read,
-                                        radius: 20,
-                                        child: InkWell(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          onTap: () => _openNotification(item),
-                                          child: Container(
-                                            padding:
-                                                AppTheme.sectionCardPadding,
-                                            decoration:
-                                                AppTheme.tradingCardDecoration(
-                                                  borderColor: !item.read
-                                                      ? color.withValues(
-                                                          alpha: 0.45,
-                                                        )
-                                                      : AppTheme
-                                                            .tradingCardBorder,
-                                                ),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Container(
-                                                  width: 10,
-                                                  height: 10,
-                                                  margin: const EdgeInsets.only(
-                                                    top: 6,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: !item.read
-                                                        ? color
-                                                        : AppTheme
-                                                              .tradingFaintText,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Wrap(
-                                                        spacing: 8,
-                                                        runSpacing: 8,
-                                                        children: [
-                                                          Text(
-                                                            item.title,
-                                                            style:
-                                                                AppTheme.tradingHeading(
-                                                                  fontSize: 20,
-                                                                  color: Colors
-                                                                      .white,
-                                                                ),
-                                                          ),
-                                                          Container(
-                                                            padding: AppTheme
-                                                                .pillPadding,
-                                                            decoration:
-                                                                AppTheme.tradingPillDecoration(
-                                                                  color: color,
-                                                                ),
-                                                            child: Text(
-                                                              item.typeLabel,
-                                                              style:
-                                                                  AppTheme.bodyTextStyle(
-                                                                    fontSize:
-                                                                        12,
-                                                                    color:
-                                                                        color,
-                                                                    isBold:
-                                                                        true,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      Text(
-                                                        item.body,
-                                                        style: AppTheme.bodyTextStyle(
-                                                          fontSize: 14,
-                                                          color: AppTheme
-                                                              .tradingMutedText,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      Text(
-                                                        _formatDate(
-                                                          item.createdAt,
-                                                        ),
-                                                        style: AppTheme.bodyTextStyle(
-                                                          fontSize: 12,
-                                                          color: AppTheme
-                                                              .tradingFaintText,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Icon(
-                                                  Icons.chevron_right_rounded,
-                                                  color:
-                                                      AppTheme.tradingFaintText,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: 10),
+                                itemBuilder: (context, index) =>
+                                    _buildNotificationCard(visible[index]),
                               ),
                       ),
                     ],

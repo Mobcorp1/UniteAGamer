@@ -91,7 +91,7 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
             ),
           ),
           content: Text(
-            'Report ${id.substring(0, 8).toUpperCase()} was sent with screen and device context.',
+            'Report ${id.length <= 8 ? id.toUpperCase() : id.substring(0, 8).toUpperCase()} was sent with screen and device context.',
             style: ArcUiTokens.body(color: ArcUiTokens.textSecondary),
           ),
           actions: [
@@ -147,7 +147,8 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                     children: [
                       const ArcRaidersPageHeader(
                         title: 'BETA FEEDBACK',
-                        subtitle: 'Send a reproducible report with device context.',
+                        subtitle:
+                            'Send a reproducible report with device context.',
                         icon: Icons.bug_report_outlined,
                         accent: ArcUiTokens.secondaryAccent,
                       ),
@@ -189,25 +190,22 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                           runSpacing: 8,
                           children: ArcBetaFeedbackCategory.values.map((value) {
                             final selected = value == _category;
-                            return ChoiceChip(
-                              selected: selected,
-                              showCheckmark: false,
-                              label: Text(value.label),
-                              selectedColor: ArcUiTokens.secondaryAccent.withValues(alpha: 0.18),
-                              backgroundColor: ArcUiTokens.surfaceRaised.withValues(alpha: 0.78),
-                              side: BorderSide(
-                                color: selected
-                                    ? ArcUiTokens.secondaryAccent.withValues(alpha: 0.72)
-                                    : ArcUiTokens.borderMedium,
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(999),
+                                onTap: () => setState(() => _category = value),
+                                child: ArcTacticalStatusPill(
+                                  label: value.label,
+                                  icon: selected
+                                      ? Icons.check_circle_rounded
+                                      : Icons.circle_outlined,
+                                  accent: selected
+                                      ? ArcUiTokens.secondaryAccent
+                                      : ArcUiTokens.textTertiary,
+                                  selected: selected,
+                                ),
                               ),
-                              labelStyle: ArcUiTokens.body(
-                                fontSize: 12,
-                                color: selected
-                                    ? ArcUiTokens.secondaryAccent
-                                    : ArcUiTokens.textSecondary,
-                                weight: FontWeight.w700,
-                              ),
-                              onSelected: (_) => setState(() => _category = value),
                             );
                           }).toList(),
                         ),
@@ -240,7 +238,9 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                               controller: _descriptionController,
                               minLines: 5,
                               maxLines: 9,
-                              style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                              ),
                               decoration: ArcUiTokens.inputDecoration(
                                 labelText: 'What happened?',
                                 hintText:
@@ -259,10 +259,13 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                               controller: _expectedController,
                               minLines: 2,
                               maxLines: 5,
-                              style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+                              style: ArcUiTokens.body(
+                                color: ArcUiTokens.textPrimary,
+                              ),
                               decoration: ArcUiTokens.inputDecoration(
                                 labelText: 'What did you expect? (optional)',
-                                hintText: 'Describe the result you expected to see.',
+                                hintText:
+                                    'Describe the result you expected to see.',
                                 prefixIcon: Icons.flag_outlined,
                               ).copyWith(alignLabelWithHint: true),
                             ),
@@ -278,7 +281,10 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                           runSpacing: 8,
                           children: [
                             _diagnosticChip(Icons.route, widget.sourceRoute),
-                            _diagnosticChip(Icons.devices_rounded, _platformLabel()),
+                            _diagnosticChip(
+                              Icons.devices_rounded,
+                              _platformLabel(),
+                            ),
                             _diagnosticChip(
                               Icons.aspect_ratio_rounded,
                               '${MediaQuery.sizeOf(context).width.round()} x '
@@ -299,11 +305,15 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
                           icon: _submitting
                               ? const SizedBox.square(
                                   dimension: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.send_rounded),
                           label: Text(
-                            _submitting ? 'SENDING REPORT...' : 'SEND BETA FEEDBACK',
+                            _submitting
+                                ? 'SENDING REPORT...'
+                                : 'SEND BETA FEEDBACK',
                           ),
                         ),
                       ),
@@ -322,6 +332,9 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
   Widget _severityField() {
     return DropdownButtonFormField<ArcBetaFeedbackSeverity>(
       initialValue: _severity,
+      dropdownColor: ArcUiTokens.surfaceOverlay,
+      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+      iconEnabledColor: ArcUiTokens.secondaryAccent,
       decoration: ArcUiTokens.inputDecoration(
         labelText: 'Severity',
         prefixIcon: Icons.priority_high_rounded,
@@ -342,6 +355,9 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
   Widget _reproducibilityField() {
     return DropdownButtonFormField<ArcBetaFeedbackReproducibility>(
       initialValue: _reproducibility,
+      dropdownColor: ArcUiTokens.surfaceOverlay,
+      style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
+      iconEnabledColor: ArcUiTokens.secondaryAccent,
       decoration: ArcUiTokens.inputDecoration(
         labelText: 'Reproducibility',
         prefixIcon: Icons.replay_rounded,
@@ -382,24 +398,10 @@ class _ArcBetaFeedbackScreenState extends State<ArcBetaFeedbackScreen> {
   }
 
   Widget _diagnosticChip(IconData icon, String label) {
-    return Container(
-      padding: ArcUiTokens.chipPadding,
-      decoration: ArcUiTokens.chipDecoration(color: ArcUiTokens.success),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(width: 1),
-          Icon(icon, size: 15, color: ArcUiTokens.success),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
-            ),
-          ),
-        ],
-      ),
+    return ArcTacticalStatusPill(
+      label: label,
+      icon: icon,
+      accent: ArcUiTokens.success,
     );
   }
 }

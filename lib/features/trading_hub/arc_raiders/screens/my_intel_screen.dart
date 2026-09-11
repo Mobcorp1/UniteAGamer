@@ -22,7 +22,9 @@ class MyIntelScreen extends StatelessWidget {
       extendBody: true,
       backgroundColor: Colors.transparent,
       drawer: const AppDrawer(),
-      bottomNavigationBar: const ArcCompanionBottomDock(activeLabel: 'My Intel'),
+      bottomNavigationBar: const ArcCompanionBottomDock(
+        activeLabel: 'My Intel',
+      ),
       appBar: const UagAppBar(
         title: 'My Intel',
         subtitle: 'Your submitted ARC intelligence reports',
@@ -35,7 +37,8 @@ class MyIntelScreen extends StatelessWidget {
               ? const Center(
                   child: ArcRaidersStatePanel(
                     title: 'Sign in required',
-                    message: 'Sign in to review the intelligence reports linked to your Raider profile.',
+                    message:
+                        'Sign in to review the intelligence reports linked to your Raider profile.',
                     icon: Icons.lock_person_outlined,
                     accent: ArcUiTokens.warning,
                   ),
@@ -48,22 +51,33 @@ class MyIntelScreen extends StatelessWidget {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return _IntelMessage(
-                        icon: Icons.warning_amber_rounded,
-                        title: 'Could not load intel',
-                        message: 'Could not load your intel reports.',
-                        color: AppTheme.neonPink,
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(18),
+                          child: ArcRaidersStatePanel(
+                            title: 'My Intel unavailable',
+                            message:
+                                'Your submitted reports could not load right now.',
+                            icon: Icons.cloud_off_rounded,
+                            accent: ArcUiTokens.warning,
+                          ),
+                        ),
                       );
                     }
 
-                    if (!snapshot.hasData) {
+                    if (snapshot.connectionState == ConnectionState.waiting &&
+                        !snapshot.hasData) {
                       return const Center(
-                        child: ArcRaidersStatePanel(
-                          title: 'Syncing your intel',
-                          message: 'Loading your latest submitted field reports.',
-                          icon: Icons.radar_rounded,
-                          accent: ArcUiTokens.primaryAccent,
-                          compact: true,
+                        child: Padding(
+                          padding: EdgeInsets.all(18),
+                          child: ArcRaidersStatePanel(
+                            title: 'Syncing your intel',
+                            message:
+                                'Loading your latest submitted field reports.',
+                            icon: Icons.radar_rounded,
+                            accent: ArcUiTokens.primaryAccent,
+                            compact: true,
+                          ),
                         ),
                       );
                     }
@@ -78,11 +92,17 @@ class MyIntelScreen extends StatelessWidget {
                     final latest = docs.take(5).toList();
 
                     if (latest.isEmpty) {
-                      return const _IntelMessage(
-                        icon: Icons.radar_rounded,
-                        title: 'No intel reports yet',
-                        message: 'Your latest reports will appear here.',
-                        color: AppTheme.neonCyan,
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(18),
+                          child: ArcRaidersStatePanel(
+                            title: 'No intel reports yet',
+                            message:
+                                'Your latest community intelligence submissions will appear here.',
+                            icon: Icons.radar_rounded,
+                            accent: ArcUiTokens.primaryAccent,
+                          ),
+                        ),
                       );
                     }
 
@@ -96,7 +116,8 @@ class MyIntelScreen extends StatelessWidget {
                             children: [
                               const ArcRaidersPageHeader(
                                 title: 'MY INTEL',
-                                subtitle: 'Recent reports attached to your Raider identity.',
+                                subtitle:
+                                    'Recent reports attached to your Raider identity.',
                                 icon: Icons.radar_rounded,
                                 accent: ArcUiTokens.primaryAccent,
                               ),
@@ -242,14 +263,10 @@ class _IntelReportCard extends StatelessWidget {
     final notes = _text('notes', fallback: '');
     final confirmations = _int('confirmationCount');
 
-    return Container(
+    return ArcRaidersSectionCard(
+      accent: ArcUiTokens.primaryAccent,
+      radius: ArcUiTokens.radiusL,
       padding: const EdgeInsets.all(12),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        accent: ArcUiTokens.primaryAccent,
-        radius: ArcUiTokens.radiusL,
-        borderOpacity: 0.18,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -532,17 +549,10 @@ class _IntelChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: ArcUiTokens.chipDecoration(color: AppTheme.neonCyan),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: AppTheme.neonCyan, size: 16),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white70)),
-        ],
-      ),
+    return ArcTacticalStatusPill(
+      label: label,
+      icon: icon,
+      accent: ArcUiTokens.primaryAccent,
     );
   }
 }
@@ -554,64 +564,10 @@ class _IntelBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: ArcUiTokens.chipDecoration(color: AppTheme.neonPink),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: AppTheme.neonPink,
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
-class _IntelMessage extends StatelessWidget {
-  const _IntelMessage({
-    required this.icon,
-    required this.title,
-    required this.message,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(18),
-        padding: const EdgeInsets.all(20),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.raised,
-          accent: color,
-          radius: 22,
-          borderOpacity: 0.24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 42),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: AppTheme.tradingHeading(fontSize: 24, color: color),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, height: 1.35),
-            ),
-          ],
-        ),
-      ),
+    return ArcTacticalStatusPill(
+      label: label,
+      icon: Icons.verified_outlined,
+      accent: ArcUiTokens.secondaryAccent,
     );
   }
 }

@@ -41,11 +41,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           'Intel Explorer',
-          style: AppTheme.tradingHeading(
-            fontSize: 25,
-            color: AppTheme.neonCyan,
+          style: ArcUiTokens.sectionTitle(
+            fontSize: 20,
+            color: ArcUiTokens.primaryAccent,
           ),
         ),
       ),
@@ -55,9 +56,11 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
           children: [
-            Text(
-              'Pick a blueprint to see the strongest player-confirmed signals instead of scrolling through individual reports.',
-              style: ArcUiTokens.body(),
+            const ArcRaidersHeroBanner(
+              title: 'INTEL EXPLORER',
+              subtitle:
+                  'Pick a blueprint and collapse community reports into the strongest current map, area, container and event signals.',
+              accent: ArcUiTokens.primaryAccent,
             ),
             const SizedBox(height: AppTheme.spaceM),
             _buildBlueprintSelector(context),
@@ -70,6 +73,27 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
                   _selectedBlueprint!.id,
                 ),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const ArcRaidersStatePanel(
+                      title: 'Community intel unavailable',
+                      message:
+                          'Player-confirmed signals could not load right now.',
+                      icon: Icons.cloud_off_rounded,
+                      accent: ArcUiTokens.warning,
+                    );
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
+                    return ArcRaidersStatePanel(
+                      title: 'Building intel picture',
+                      message:
+                          'Checking community reports for ${_selectedBlueprint!.name}.',
+                      icon: Icons.sync_rounded,
+                      compact: true,
+                    );
+                  }
+
                   final intel =
                       snapshot.data ??
                       ArcDropIntel.empty(_selectedBlueprint!.id);
@@ -83,59 +107,70 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
   }
 
   Widget _buildBlueprintSelector(BuildContext context) {
-    return InkWell(
+    return ArcRaidersSectionCard(
+      accent: ArcUiTokens.primaryAccent,
+      radius: ArcUiTokens.radiusL,
+      padding: const EdgeInsets.all(16),
+      selected: _selectedBlueprint != null,
       onTap: () async {
         final picked = await _showBlueprintPicker(context);
         if (!mounted || picked == null) return;
         setState(() => _selectedBlueprint = picked);
       },
-      borderRadius: BorderRadius.circular(ArcUiTokens.radiusL),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.interactive,
-          accent: ArcUiTokens.primaryAccent,
-          radius: ArcUiTokens.radiusL,
-          borderOpacity: 0.35,
-          glow: true,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Blueprint', style: ArcUiTokens.label()),
-                  const SizedBox(height: 6),
-                  Text(
-                    _selectedBlueprint?.name ?? 'Select Blueprint',
-                    style: ArcUiTokens.body(
-                      color: ArcUiTokens.textPrimary,
-                      weight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: ArcUiTokens.primaryAccent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+              border: Border.all(
+                color: ArcUiTokens.primaryAccent.withValues(alpha: 0.28),
               ),
             ),
-            const Icon(Icons.search_rounded, color: ArcUiTokens.textSecondary),
-          ],
-        ),
+            child: const Icon(
+              Icons.search_rounded,
+              color: ArcUiTokens.primaryAccent,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('BLUEPRINT SIGNAL', style: ArcUiTokens.label()),
+                const SizedBox(height: 5),
+                Text(
+                  _selectedBlueprint?.name ?? 'Select a blueprint',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.cardTitle(
+                    fontSize: 16,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(
+            Icons.expand_more_rounded,
+            color: ArcUiTokens.textSecondary,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        radius: ArcUiTokens.radiusL,
-        borderOpacity: 0.10,
-      ),
-      child: Text(
-        'Select a blueprint and the app will summarise where players most commonly report finding it, plus the best confirmed combinations.',
-        style: ArcUiTokens.body(),
-      ),
+    return const ArcRaidersStatePanel(
+      title: 'Choose a blueprint',
+      message:
+          'UAG will summarise where players most often report finding it and surface the strongest confirmed combinations.',
+      icon: Icons.radar_rounded,
+      accent: ArcUiTokens.primaryAccent,
     );
   }
 
@@ -145,17 +180,12 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
     ArcDropIntel intel,
   ) {
     if (!intel.hasReports) {
-      return Container(
-        padding: const EdgeInsets.all(18),
-        decoration: ArcUiTokens.surfaceDecoration(
-          role: ArcSurfaceRole.panel,
-          radius: ArcUiTokens.radiusL,
-          borderOpacity: 0.10,
-        ),
-        child: Text(
-          'No community intel for ${blueprint.name} yet. The first reports will start building the percentages here.',
-          style: ArcUiTokens.body(),
-        ),
+      return ArcRaidersStatePanel(
+        title: 'No community intel yet',
+        message:
+            'No confirmed reports exist for ${blueprint.name} yet. The first submissions will begin building the signal picture here.',
+        icon: Icons.travel_explore_rounded,
+        accent: ArcUiTokens.secondaryAccent,
       );
     }
 
@@ -245,14 +275,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
     ArcBlueprint blueprint,
     ArcDropIntel intel,
   ) {
-    return Container(
+    return ArcRaidersSectionCard(
+      accent: ArcUiTokens.secondaryAccent,
+      radius: ArcUiTokens.radiusL,
       padding: const EdgeInsets.all(18),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
-        accent: ArcUiTokens.secondaryAccent,
-        radius: ArcUiTokens.radiusL,
-        borderOpacity: 0.16,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -308,15 +334,11 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         intel.topMapEventLabel ??
         'No map event signal yet';
 
-    return Container(
+    return ArcRaidersSectionCard(
+      accent: ArcUiTokens.secondaryAccent,
+      radius: ArcUiTokens.radiusL,
       padding: const EdgeInsets.all(18),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.raised,
-        accent: ArcUiTokens.secondaryAccent,
-        radius: ArcUiTokens.radiusL,
-        borderOpacity: 0.30,
-        glow: true,
-      ),
+      selected: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -466,13 +488,10 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
               .toList()
         : summaryRows;
 
-    return Container(
+    return ArcRaidersSectionCard(
+      accent: ArcUiTokens.primaryAccent,
+      radius: ArcUiTokens.radiusL,
       padding: const EdgeInsets.all(18),
-      decoration: ArcUiTokens.surfaceDecoration(
-        role: ArcSurfaceRole.panel,
-        radius: ArcUiTokens.radiusL,
-        borderOpacity: 0.08,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -577,7 +596,7 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
     final controller = TextEditingController();
     var filtered = List<ArcBlueprint>.from(_blueprints);
 
-    return showModalBottomSheet<ArcBlueprint>(
+    final picked = await showModalBottomSheet<ArcBlueprint>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -607,6 +626,25 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.radar_rounded,
+                          color: ArcUiTokens.primaryAccent,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'SELECT BLUEPRINT SIGNAL',
+                            style: ArcUiTokens.sectionTitle(
+                              fontSize: 16,
+                              color: ArcUiTokens.primaryAccent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: controller,
                       style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
@@ -617,33 +655,72 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
                     ),
                     const SizedBox(height: 12),
                     Flexible(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, _) =>
-                            Divider(height: 1, color: ArcUiTokens.borderSubtle),
-                        itemBuilder: (context, index) {
-                          final blueprint = filtered[index];
-                          return ListTile(
-                            leading: Icon(
-                              blueprint.icon,
-                              color: AppTheme.neonCyan,
+                      child: filtered.isEmpty
+                          ? const ArcRaidersStatePanel(
+                              title: 'No blueprint matches',
+                              message:
+                                  'Try a shorter or different blueprint name.',
+                              icon: Icons.search_off_rounded,
+                              accent: ArcUiTokens.warning,
+                              compact: true,
+                            )
+                          : ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 6),
+                              itemBuilder: (context, index) {
+                                final blueprint = filtered[index];
+                                return ArcRaidersSectionCard(
+                                  accent: ArcUiTokens.primaryAccent,
+                                  radius: ArcUiTokens.radiusM,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  onTap: () =>
+                                      Navigator.of(context).pop(blueprint),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        blueprint.icon,
+                                        color: ArcUiTokens.primaryAccent,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              blueprint.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: ArcUiTokens.body(
+                                                color: ArcUiTokens.textPrimary,
+                                                weight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              blueprint.category,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: ArcUiTokens.bodySmall(),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: ArcUiTokens.textTertiary,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
-                            title: Text(
-                              blueprint.name,
-                              style: ArcUiTokens.body(
-                                color: ArcUiTokens.textPrimary,
-                                weight: FontWeight.w700,
-                              ),
-                            ),
-                            subtitle: Text(
-                              blueprint.category,
-                              style: ArcUiTokens.bodySmall(),
-                            ),
-                            onTap: () => Navigator.of(context).pop(blueprint),
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),
@@ -653,6 +730,9 @@ class _ArcIntelExplorerScreenState extends State<ArcIntelExplorerScreen> {
         );
       },
     );
+
+    controller.dispose();
+    return picked;
   }
 }
 
