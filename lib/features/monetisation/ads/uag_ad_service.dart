@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/uag_ad_policy.dart';
 import '../services/uag_entitlement_service.dart';
 import 'uag_ad_runtime_settings.dart';
+import 'uag_ad_placement_policy.dart';
+import 'uag_ad_consent_controller.dart';
 import 'uag_admob_config.dart';
 
 class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
@@ -34,7 +36,7 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
   StreamSubscription<UagAdRuntimeSettings>? _settingsSub;
 
   UagAdRuntimeSettings _settings = UagAdRuntimeSettings.defaults;
-  UagAdPolicy _policy = UagAdPolicy.free;
+  UagAdPolicy _policy = UagAdPolicy.premium;
   bool _signedIn = false;
   bool _initialised = false;
   bool _fullScreenShowing = false;
@@ -58,8 +60,16 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
   bool get signedIn => _signedIn;
   String? get currentRoute => _currentRoute;
 
+  bool get _consentAllowsRequests => UagAdPlacementPolicy.permitsAdRequests(
+    isReleaseBuild: kReleaseMode,
+    hasCompletedConsentFlow:
+        UagAdConsentController.instance.hasCompletedConsentFlow,
+    canRequestAds: UagAdConsentController.instance.canRequestAds,
+  );
+
   bool get canShowBanner =>
       _initialised &&
+      _consentAllowsRequests &&
       _signedIn &&
       _settings.adsEnabled &&
       _settings.bannerEnabled &&
@@ -67,7 +77,12 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
       !_routeBlocksAds(_currentRoute);
 
   Future<void> initialise() async {
-    if (_initialised || kIsWeb || !UagAdMobConfig.isAndroid) return;
+    if (_initialised ||
+        kIsWeb ||
+        !UagAdMobConfig.isAndroid ||
+        !_consentAllowsRequests) {
+      return;
+    }
     _initialised = true;
     _initialisedAt = DateTime.now();
     WidgetsBinding.instance.addObserver(this);
@@ -103,10 +118,13 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
     _authSub?.cancel();
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       _signedIn = user != null;
+      _policy = UagAdPolicy.premium;
+      _disposeFullScreenAds();
+      notifyListeners();
       _entitlementSub?.cancel();
       _entitlementSub = null;
       if (user == null) {
-        _policy = UagAdPolicy.free;
+        _policy = UagAdPolicy.premium;
         _disposeFullScreenAds();
         notifyListeners();
         return;
@@ -152,18 +170,22 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
 
   bool get _canUseInterstitials =>
       _initialised &&
+      _consentAllowsRequests &&
       _signedIn &&
       _settings.adsEnabled &&
       _settings.interstitialEnabled &&
-      _policy.showInterstitialAds;
+      _policy.showInterstitialAds &&
+      UagAdPlacementPolicy.permitsInterstitial(_currentRoute);
 
   bool get _canUseAppOpen =>
       _initialised &&
+      _consentAllowsRequests &&
       _signedIn &&
       _settings.adsEnabled &&
       _settings.appOpenEnabled &&
       _policy.showAppOpenAds &&
-      _sessionCount >= _settings.minimumSessionsBeforeAppOpen;
+      _sessionCount >= _settings.minimumSessionsBeforeAppOpen &&
+      UagAdPlacementPolicy.permitsAppOpen(_currentRoute);
 
   void _preloadEligibleFullScreenAds() {
     if (_canUseAppOpen) _loadAppOpen();
@@ -316,34 +338,8 @@ class UagAdService extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  bool _routeBlocksAds(String? routeName) {
-    final route = (routeName ?? '').toLowerCase();
-    if (route.isEmpty || route == '/') return false;
-    const blockedFragments = <String>[
-      'auth',
-      'login',
-      'register',
-      'onboarding',
-      'consent',
-      'terms',
-      'privacy',
-      'legal',
-      'contract',
-      'monetisation',
-      'subscription',
-      'checkout',
-      'payment',
-      'profile-setup',
-      'availability',
-      'camera',
-      'scanner',
-      'create-listing',
-      'feedback',
-      'admin',
-      'report',
-    ];
-    return blockedFragments.any(route.contains);
-  }
+  bool _routeBlocksAds(String? routeName) =>
+      !UagAdPlacementPolicy.permitsBanner(routeName);
 
   bool _routeIsMainContent(String? routeName) {
     final route = (routeName ?? '').toLowerCase();

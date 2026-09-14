@@ -35,11 +35,8 @@ class UagAdPolicy {
     allowVoiceAssistantAds: false,
     allowMidSessionAds: false,
     bannerPlacement: 'Bottom banner on eligible non-critical screens.',
-    rewardedBoosts: [
-      'Unlock Premium Intel Snapshot for 12 hours',
-      'Unlock one extra trade listing for 24 hours',
-      'Unlock one advanced route/raid-planner insight',
-    ],
+    // Reward inventory is disabled until a capped, non-premium reward is ready.
+    rewardedBoosts: <String>[],
   );
 
   static const essential = UagAdPolicy(
