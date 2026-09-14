@@ -1,3 +1,8 @@
+import 'dart:async';
+import '../models/arc_admin_map_marker.dart';
+import '../data/arc_published_report_pois.dart';
+import '../data/arc_map_asset_registry.dart';
+import '../repositories/arc_admin_map_editor_repository.dart';
 import 'package:flutter/material.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_blueprint_seed_data.dart';
@@ -23,6 +28,7 @@ class ArcBlueprintDropReportSheet extends StatefulWidget {
     required this.rarityColor,
     this.onSaved,
     this.onClear,
+    this.markerRepository,
   });
 
   final ArcBlueprint blueprint;
@@ -31,6 +37,7 @@ class ArcBlueprintDropReportSheet extends StatefulWidget {
   final Color rarityColor;
   final VoidCallback? onSaved;
   final Future<void> Function()? onClear;
+  final ArcAdminMapEditorRepository? markerRepository;
 
   @override
   State<ArcBlueprintDropReportSheet> createState() =>
@@ -62,6 +69,56 @@ class _ArcBlueprintDropReportSheetState
   ArcTimeOfDay? _timeOfDay;
   final List<_AdditionalBlueprintReportEntry> _additionalReports = [];
   bool _isSaving = false;
+  StreamSubscription<List<ArcAdminMapMarker>>? _poiSubscription;
+  List<ArcAdminMapMarker> _publishedPois = [];
+  bool _poisLoading = false;
+  String? _poiError;
+
+  void _watchPois(String mapName) {
+    _poiSubscription?.cancel();
+    setState(() {
+      _publishedPois = [];
+      _poisLoading = true;
+      _poiError = null;
+    });
+    _poiSubscription =
+        (widget.markerRepository ?? ArcAdminMapEditorRepository())
+            .watchPublishedMap(
+              ArcMapAssetRegistry.canonicalMapIdFor(mapName) ?? mapName,
+            )
+            .listen(
+              (markers) {
+                if (!mounted || _selectedMap != mapName) return;
+                setState(() {
+                  _publishedPois = ArcPublishedReportPois.forMap(
+                    mapName,
+                    markers,
+                  );
+                  _poisLoading = false;
+                  _poiError = null;
+                  if (!_publishedPois.any((m) => m.id == _selectedPoiId)) {
+                    _selectedPoiId = null;
+                  }
+                  for (final entry in _additionalReports) {
+                    if (!_publishedPois.any((m) => m.id == entry.poiId)) {
+                      entry.poiId = null;
+                    }
+                  }
+                });
+              },
+              onError: (_) {
+                if (!mounted || _selectedMap != mapName) return;
+                setState(() {
+                  _publishedPois = [];
+                  _selectedPoiId = null;
+                  _poisLoading = false;
+                  _poiError =
+                      'Could not load published locations. Tap to retry.';
+                });
+              },
+            );
+  }
+
   late final DateTime _capturedReportTime;
   late final int _capturedTimezoneOffsetMinutes;
 
@@ -85,6 +142,7 @@ class _ArcBlueprintDropReportSheetState
 
   @override
   void dispose() {
+    _poiSubscription?.cancel();
     _dupesController.dispose();
     _notesController.dispose();
     _localTimeController.dispose();
@@ -105,11 +163,7 @@ class _ArcBlueprintDropReportSheetState
     return ArcDropReportOptionsResolver.forMap(map);
   }
 
-  List<ArcPoiData> get _poiOptions {
-    final map = _selectedMap;
-    if (map == null || map.isEmpty) return const <ArcPoiData>[];
-    return ArcPoiDataStore.blueprintReportPoisForMap(map);
-  }
+  List<ArcAdminMapMarker> get _poiOptions => _publishedPois;
 
   List<String> get _availableMaps {
     final maps = List<String>.from(ArcPoiDataStore.availableMaps);
@@ -275,12 +329,14 @@ class _ArcBlueprintDropReportSheetState
         ArcBlueprint blueprint, {
         String? poiId,
         String? poiName,
+        ArcAdminMapMarker? publishedPoi,
         ArcContainerType? containerType,
       }) {
         final isDolabra = isRaidReport && blueprint.id == 'dolabra';
 
         return widget.repository.addDropReport(
           blueprintId: blueprint.id,
+          publishedMarkerId: publishedPoi?.id,
           mapName: isRaidReport ? _selectedMap! : 'Not Raid Specific',
           sourceType: isRaidReport
               ? (isDolabra ? ArcDropSourceType.enemy : ArcDropSourceType.poi)
@@ -339,7 +395,8 @@ class _ArcBlueprintDropReportSheetState
 
       await saveReportForBlueprint(
         widget.blueprint,
-        poiId: selectedPoi?.id,
+        publishedPoi: selectedPoi,
+        poiId: selectedPoi?.seedReferenceId,
         poiName: selectedPoi?.name,
         containerType: isRaidReport ? _selectedContainerType : null,
       );
@@ -348,7 +405,7 @@ class _ArcBlueprintDropReportSheetState
         final blueprint = entry.blueprint;
         if (blueprint == null) continue;
 
-        ArcPoiData? additionalPoi;
+        ArcAdminMapMarker? additionalPoi;
         ArcContainerType? effectiveContainerType;
 
         if (isRaidReport) {
@@ -365,7 +422,8 @@ class _ArcBlueprintDropReportSheetState
 
         await saveReportForBlueprint(
           blueprint,
-          poiId: additionalPoi?.id,
+          publishedPoi: additionalPoi,
+          poiId: additionalPoi?.seedReferenceId,
           poiName: additionalPoi?.name,
           containerType: effectiveContainerType,
         );
@@ -576,11 +634,17 @@ class _ArcBlueprintDropReportSheetState
         _timeOfDay = _timeOfDayForLocalLabel(_localTimeController.text);
       }
     });
+    _watchPois(selection);
     _scrollToNextStep();
   }
 
   Future<void> _pickPoi() async {
-    final selection = await _showSearchPicker<ArcPoiData>(
+    if (_poiError != null) {
+      _watchPois(_selectedMap!);
+      return;
+    }
+    if (_poisLoading) return;
+    final selection = await _showSearchPicker<ArcAdminMapMarker>(
       title: 'Area / POI',
       items: _poiOptions,
       labelBuilder: (item) => item.name,
@@ -599,7 +663,7 @@ class _ArcBlueprintDropReportSheetState
   }
 
   Future<void> _pickAdditionalPoi(int index) async {
-    final selection = await _showSearchPicker<ArcPoiData>(
+    final selection = await _showSearchPicker<ArcAdminMapMarker>(
       title: 'Additional Area / POI',
       items: _poiOptions,
       labelBuilder: (item) => item.name,
@@ -932,7 +996,7 @@ class _ArcBlueprintDropReportSheetState
     final entry = _additionalReports[index];
     final selectedPoi = entry.useSamePoi || entry.poiId == null
         ? null
-        : _poiOptions.cast<ArcPoiData?>().firstWhere(
+        : _poiOptions.cast<ArcAdminMapMarker?>().firstWhere(
             (item) => item?.id == entry.poiId,
             orElse: () => null,
           );
@@ -1063,7 +1127,7 @@ class _ArcBlueprintDropReportSheetState
     );
   }
 
-  Widget _buildRaidDetailsFields(ArcPoiData? selectedPoi) {
+  Widget _buildRaidDetailsFields(ArcAdminMapMarker? selectedPoi) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1095,8 +1159,14 @@ class _ArcBlueprintDropReportSheetState
         const SizedBox(height: AppTheme.spaceM),
         _buildSelectorField(
           label: 'Area / POI *',
-          value: selectedPoi == null ? 'Select Area / POI' : selectedPoi.name,
-          onTap: _selectedMap == null ? null : _pickPoi,
+          value:
+              _poiError ??
+              (_poisLoading
+                  ? 'Loading published locations...'
+                  : (_selectedMap != null && _poiOptions.isEmpty
+                        ? 'No published locations yet'
+                        : selectedPoi?.name ?? 'Select Area / POI')),
+          onTap: _selectedMap == null || _poisLoading ? null : _pickPoi,
         ),
         const SizedBox(height: AppTheme.spaceM),
         _buildSelectorField(
@@ -1210,7 +1280,7 @@ class _ArcBlueprintDropReportSheetState
   Widget build(BuildContext context) {
     final selectedPoi = _selectedPoiId == null
         ? null
-        : _poiOptions.cast<ArcPoiData?>().firstWhere(
+        : _poiOptions.cast<ArcAdminMapMarker?>().firstWhere(
             (item) => item?.id == _selectedPoiId,
             orElse: () => null,
           );

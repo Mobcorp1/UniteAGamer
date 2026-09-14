@@ -1,3 +1,5 @@
+import '../models/arc_admin_map_marker.dart';
+import '../data/arc_published_report_pois.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -401,6 +403,7 @@ class ArcBlueprintRepository {
         ArcBlueprintReportConfidence.standard,
     String? poiId,
     String? poiName,
+    String? publishedMarkerId,
     String? enemySourceId,
     String? enemySourceName,
     String? containerTypeId,
@@ -419,6 +422,27 @@ class ArcBlueprintRepository {
     final uid = currentUid;
     if (uid == null) throw Exception('You must be signed in.');
 
+    ArcAdminMapMarker? publishedPoi;
+    if (publishedMarkerId != null) {
+      final markerDoc = await _firestore
+          .collection('arc_admin_map_markers')
+          .doc(publishedMarkerId)
+          .get();
+      if (markerDoc.exists) {
+        final candidate = ArcAdminMapMarker.fromMap({
+          ...markerDoc.data()!,
+          'id': markerDoc.id,
+        });
+        if (ArcPublishedReportPois.forMap(mapName, [candidate]).isNotEmpty) {
+          publishedPoi = candidate;
+        }
+      }
+      if (publishedPoi == null) {
+        throw StateError(
+          'This location is no longer published. Choose another POI.',
+        );
+      }
+    }
     final trimmedMapName = mapName.trim();
     final trimmedPoiId = poiId?.trim();
     final normalizedPoi = (trimmedPoiId != null && trimmedPoiId.isNotEmpty)
@@ -457,8 +481,13 @@ class ArcBlueprintRepository {
               ? selectedCondition.label
               : null);
 
-    final normalizedPoiId = normalizedPoi?.id ?? trimmedPoiId;
-    final normalizedPoiName = normalizedPoi?.name ?? poiName?.trim();
+    final normalizedPoiId =
+        publishedPoi?.seedReferenceId ??
+        publishedPoi?.id ??
+        normalizedPoi?.id ??
+        trimmedPoiId;
+    final normalizedPoiName =
+        publishedPoi?.name ?? normalizedPoi?.name ?? poiName?.trim();
     final normalizedEnemyId = enemySourceId?.trim();
     final normalizedEnemyName = enemySourceName?.trim();
     final normalizedContainerTypeId = containerTypeId?.trim();
@@ -469,7 +498,7 @@ class ArcBlueprintRepository {
       blueprintId: blueprintId,
       mapName: trimmedMapName,
       sourceType: sourceType,
-      poiId: normalizedPoiId,
+      poiId: publishedPoi?.id ?? normalizedPoiId,
       enemySourceId: normalizedEnemyId,
       containerTypeId: normalizedContainerTypeId,
       weatherConditionId: resolvedWeatherConditionId,
@@ -499,6 +528,14 @@ class ArcBlueprintRepository {
       );
 
       final updatePayload = <String, dynamic>{
+        if (publishedPoi != null) ...{
+          'markerId': publishedPoi.id,
+          'poiId': normalizedPoiId,
+          'poiName': publishedPoi.name,
+          'intelligenceLayer': publishedPoi.layer.storageValue,
+          if (existingReport.historicalPoint == null)
+            'historicalPoint': publishedPoi.point.toMap(),
+        },
         'lastConfirmedAt': Timestamp.fromDate(now),
         'foundAt': Timestamp.fromDate(foundAt ?? now),
       };
@@ -531,6 +568,9 @@ class ArcBlueprintRepository {
       userId: uid,
       mapName: trimmedMapName,
       sourceType: sourceType,
+      markerId: publishedPoi?.id,
+      poiLayer: publishedPoi?.layer,
+      historicalPoint: publishedPoi?.point,
       poiId: normalizedPoiId,
       poiName: normalizedPoiName,
       enemySourceId: normalizedEnemyId,

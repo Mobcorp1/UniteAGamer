@@ -101,9 +101,7 @@ class ArcBlueprintOpportunityEngine {
           .where((value) => value.isNotEmpty)
           .toSet()
           .toList(growable: false);
-      final locationLabel = _intelligenceLocationName(first).trim().isEmpty
-          ? pointResolution.label
-          : _intelligenceLocationName(first).trim();
+      final locationLabel = pointResolution.label;
 
       final evidence = [
         for (final report in group)
@@ -195,58 +193,11 @@ class ArcBlueprintOpportunityEngine {
     );
   }
 
-  int _compareMarkerQuality(ArcRaidMapMarker a, ArcRaidMapMarker b) {
-    if (a.approximate != b.approximate) {
-      return a.approximate ? 1 : -1;
-    }
-
-    final confidenceCompare = b.confidence.index.compareTo(a.confidence.index);
-    if (confidenceCompare != 0) return confidenceCompare;
-
-    final poiCompare = (b.category == ArcRaidMapMarkerCategory.poi ? 1 : 0)
-        .compareTo(a.category == ArcRaidMapMarkerCategory.poi ? 1 : 0);
-    if (poiCompare != 0) return poiCompare;
-
-    return a.id.compareTo(b.id);
-  }
-
-  bool _markerMatchesPoiId({
-    required ArcRaidMapMarker marker,
-    required String poiId,
-  }) {
-    if (marker.payloadId == poiId || marker.id == poiId) return true;
-
-    final canonicalMarkerId = marker.id.replaceFirst('_poi_', '_');
-    if (canonicalMarkerId == poiId) return true;
-
-    final normalizedPoiId = _normalize(poiId);
-    return _normalize(marker.id) == normalizedPoiId ||
-        _normalize(canonicalMarkerId) == normalizedPoiId;
-  }
-
-  ArcRaidMapLayer layerForCluster(ArcRaidMap map, ArcRaidIntelCluster cluster) {
-    final poiId = cluster.poiId;
-    if (poiId != null) {
-      final matches =
-          map.markers
-              .where(
-                (marker) => _markerMatchesPoiId(marker: marker, poiId: poiId),
-              )
-              .toList(growable: false)
-            ..sort(_compareMarkerQuality);
-
-      if (matches.isNotEmpty) {
-        return matches.first.layer;
-      }
-    }
-    final normalizedLabel = _normalize(cluster.label);
-    for (final marker in map.markers) {
-      if (normalizedLabel.contains(_normalize(marker.label))) {
-        return marker.layer;
-      }
-    }
-    return ArcRaidMapLayer.surface;
-  }
+  /// Cluster location is already resolved against the current published POI.
+  ArcRaidMapLayer layerForCluster(
+    ArcRaidMap map,
+    ArcRaidIntelCluster cluster,
+  ) => cluster.layer;
 
   ArcRaidIntelConfidence _confidence({
     required int reportCount,
@@ -286,6 +237,8 @@ class ArcBlueprintOpportunityEngine {
   }
 
   String _locationKey(ArcBlueprintDropReport report) {
+    final markerId = report.markerId?.trim();
+    if (markerId != null && markerId.isNotEmpty) return 'marker:$markerId';
     final poiId = report.intelligencePoiId?.trim();
     if (poiId != null && poiId.isNotEmpty) return 'poi:$poiId';
     final poiName = report.intelligencePoiName?.trim();
@@ -299,14 +252,6 @@ class ArcBlueprintOpportunityEngine {
       return 'enemy_name:${_normalize(enemyName)}';
     }
     return 'source:${report.sourceType.name}';
-  }
-
-  String _intelligenceLocationName(ArcBlueprintDropReport report) {
-    final poiName = report.intelligencePoiName?.trim();
-    if (poiName != null && poiName.isNotEmpty) return poiName;
-    final poiId = report.intelligencePoiId?.trim();
-    if (poiId != null && poiId.isNotEmpty) return poiId;
-    return report.locationName;
   }
 
   String _claimSummary({

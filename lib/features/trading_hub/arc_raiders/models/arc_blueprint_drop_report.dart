@@ -21,6 +21,7 @@ class ArcBlueprintDropReport {
     required this.confirmedByUserIds,
     this.poiId,
     this.markerId,
+    this.poiLayer,
     this.poiName,
     this.historicalPoint,
     this.enemySourceId,
@@ -63,6 +64,7 @@ class ArcBlueprintDropReport {
   final ArcDropSourceType sourceType;
   final String? poiId;
   final String? markerId;
+  final ArcRaidMapLayer? poiLayer;
   final String? poiName;
   final ArcNormalizedPoint? historicalPoint;
   final String? enemySourceId;
@@ -236,7 +238,7 @@ class ArcBlueprintDropReport {
 
   ArcRaidMapLayer get intelligenceLayer => hasOriginalFindLocation
       ? (originalFindLayer ?? ArcRaidMapLayer.surface)
-      : ArcRaidMapLayer.surface;
+      : (poiLayer ?? ArcRaidMapLayer.surface);
 
   String get areaKey {
     final sourceKey = switch (sourceType) {
@@ -257,6 +259,7 @@ class ArcBlueprintDropReport {
     ArcDropSourceType? sourceType,
     String? poiId,
     String? markerId,
+    ArcRaidMapLayer? poiLayer,
     String? poiName,
     ArcNormalizedPoint? historicalPoint,
     String? enemySourceId,
@@ -306,6 +309,7 @@ class ArcBlueprintDropReport {
       sourceType: sourceType ?? this.sourceType,
       poiId: poiId ?? this.poiId,
       markerId: markerId ?? this.markerId,
+      poiLayer: poiLayer ?? this.poiLayer,
       poiName: poiName ?? this.poiName,
       historicalPoint: historicalPoint ?? this.historicalPoint,
       enemySourceId: enemySourceId ?? this.enemySourceId,
@@ -364,6 +368,7 @@ class ArcBlueprintDropReport {
       'sourceType': sourceType.name,
       'poiId': poiId,
       'markerId': markerId,
+      'intelligenceLayer': intelligenceLayer.storageValue,
       'poiName': poiName,
       'historicalPoint': historicalPoint?.toMap(),
       'enemySourceId': enemySourceId,
@@ -476,8 +481,9 @@ class ArcBlueprintDropReport {
       sourceType: sourceType,
       poiId: poiId,
       markerId: markerId,
+      poiLayer: _layerFromStorage(map['intelligenceLayer'] as String?),
       poiName:
-          canonicalPoiName ??
+          (markerId != null ? poiName : canonicalPoiName) ??
           poiName ??
           (sourceType == ArcDropSourceType.poi ? legacyLocation : null),
       historicalPoint: _historicalPointFrom(map),

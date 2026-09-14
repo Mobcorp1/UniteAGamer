@@ -42,6 +42,25 @@ class ArcIntelligenceLocationResolution {
   bool get canBackfillCanonicalReference =>
       resolvedFromCanonicalMarker && !needsAdminReview && confidence >= 0.78;
 
+  /// Reviewable compatibility patch only; callers choose whether to persist it.
+  /// Existing marker identity and original audit coordinates are never replaced.
+  Map<String, dynamic> canonicalBackfillPatch({
+    required String? existingMarkerId,
+  }) {
+    if (existingMarkerId?.trim().isNotEmpty == true ||
+        !canBackfillCanonicalReference) {
+      return {};
+    }
+    final marker = canonicalMarker!;
+    return {
+      'markerId': marker.id,
+      'poiName': marker.name,
+      'intelligenceLayer': marker.layer.storageValue,
+      if (marker.seedReferenceId?.isNotEmpty == true)
+        'poiId': marker.seedReferenceId,
+    };
+  }
+
   bool get approximate {
     final marker = canonicalMarker;
     if (marker != null) return !marker.adminVerified;
@@ -86,6 +105,15 @@ class ArcIntelligenceLocationResolver {
         .where((marker) => marker.mapId == map.id && marker.isPublished)
         .toList(growable: false);
 
+    final published = _firstCanonicalMarker(
+      liveMarkers,
+      source: ArcIntelligenceLocationResolutionSource.publishedMarkerId,
+      matches: (marker) =>
+          normalizedPublishedMarkerId != null &&
+          marker.id == publishedMarkerId?.trim(),
+    );
+    if (published != null) return published;
+
     final canonical = _firstCanonicalMarker(
       liveMarkers,
       source: ArcIntelligenceLocationResolutionSource.canonicalPoiId,
@@ -94,15 +122,6 @@ class ArcIntelligenceLocationResolver {
           _markerCanonicalIds(marker).contains(normalizedCanonicalPoiId),
     );
     if (canonical != null) return canonical;
-
-    final published = _firstCanonicalMarker(
-      liveMarkers,
-      source: ArcIntelligenceLocationResolutionSource.publishedMarkerId,
-      matches: (marker) =>
-          normalizedPublishedMarkerId != null &&
-          _normalize(marker.id) == normalizedPublishedMarkerId,
-    );
-    if (published != null) return published;
 
     final seed = _firstCanonicalMarker(
       liveMarkers,
@@ -123,25 +142,46 @@ class ArcIntelligenceLocationResolver {
     );
     if (sourceRecord != null) return sourceRecord;
 
-    final currentName = _firstCanonicalMarker(
-      liveMarkers,
-      source: ArcIntelligenceLocationResolutionSource.currentPoiName,
-      matches: (marker) =>
-          normalizedLabels.isNotEmpty &&
-          normalizedLabels.contains(_normalize(marker.name)),
+    final namedCandidates = liveMarkers
+        .where(
+          (marker) =>
+              marker.kind.isSeedDefinition &&
+              (normalizedLabels.contains(_normalize(marker.name)) ||
+                  marker.aliases.any(
+                    (value) => normalizedLabels.contains(_normalize(value)),
+                  )),
+        )
+        .toList();
+    if (namedCandidates.length > 1) {
+      final fallback = resolve(
+        map: map,
+        currentPoiName: currentPoiName,
+        historicalAlias: historicalAlias,
+        legacyPoint: legacyPoint,
+        preferredLayer: preferredLayer,
+      );
+      if (fallback == null) return null;
+      return ArcIntelligenceLocationResolution(
+        point: fallback.point,
+        layer: fallback.layer,
+        label: fallback.label,
+        source: fallback.source,
+        confidence: fallback.confidence,
+        staticMarker: fallback.staticMarker,
+        legacyPoi: fallback.legacyPoi,
+        needsAdminReview: true,
+      );
+    }
+    final named = _firstCanonicalMarker(
+      namedCandidates,
+      source:
+          namedCandidates.isNotEmpty &&
+              normalizedLabels.contains(_normalize(namedCandidates.first.name))
+          ? ArcIntelligenceLocationResolutionSource.currentPoiName
+          : ArcIntelligenceLocationResolutionSource.historicalAlias,
+      matches: (_) => true,
     );
-    if (currentName != null) return currentName;
-
-    final alias = _firstCanonicalMarker(
-      liveMarkers,
-      source: ArcIntelligenceLocationResolutionSource.historicalAlias,
-      matches: (marker) =>
-          normalizedLabels.isNotEmpty &&
-          marker.aliases.any(
-            (value) => normalizedLabels.contains(_normalize(value)),
-          ),
-    );
-    if (alias != null) return alias;
+    if (named != null) return named;
 
     final staticMarker = _resolveStaticMarker(
       map: map,
@@ -216,8 +256,8 @@ class ArcIntelligenceLocationResolver {
   }) {
     final candidates = markers.where(matches).toList(growable: false)
       ..sort(_compareCanonicalMarkerQuality);
-    if (candidates.isEmpty) return null;
-    final marker = candidates.first;
+    if (candidates.length != 1) return null;
+    final marker = candidates.single;
     return ArcIntelligenceLocationResolution(
       point: marker.point,
       layer: marker.layer,
