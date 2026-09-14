@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 import '../widgets/foundation/uag_profile_glyph.dart';
 
@@ -366,29 +367,33 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
       decoration: BoxDecoration(
         color: AppTheme.cardBackground.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.neonCyan.withValues(alpha: 0.18)),
+        border: Border.all(color: AppTheme.neonPink.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.neonPink.withValues(alpha: 0.06),
+            blurRadius: 18,
+          ),
+        ],
       ),
       child: Row(
         children: List.generate(labels.length, (index) {
           final selected = _selectedProfileTab == index;
+          final accent = index.isEven ? AppTheme.neonCyan : AppTheme.neonPink;
           return Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () => setState(() => _selectedProfileTab = index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 11,
-                  horizontal: 3,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 3),
                 decoration: BoxDecoration(
                   color: selected
-                      ? AppTheme.neonCyan.withValues(alpha: 0.12)
+                      ? accent.withValues(alpha: 0.13)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border(
                     bottom: BorderSide(
-                      color: selected ? AppTheme.neonCyan : Colors.transparent,
+                      color: selected ? accent : Colors.transparent,
                       width: 2,
                     ),
                   ),
@@ -399,9 +404,10 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.fade,
                   style: TextStyle(
-                    color: selected ? AppTheme.neonCyan : Colors.white60,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
+                    fontFamily: AppTheme.headingFontFamily,
+                    color: selected ? accent : Colors.white60,
+                    fontSize: selected ? 14 : 12,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 0.35,
                   ),
                 ),
@@ -1464,9 +1470,13 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
                       title.toUpperCase(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTheme.tradingHeading(
-                        fontSize: compact ? 22 : 30,
-                        color: AppTheme.neonCyan,
+                      style: TextStyle(
+                        fontFamily: AppTheme.headingFontFamily,
+                        fontSize: compact ? 28 : 36,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.35,
+                        color: AppTheme.neonPink,
+                        height: 0.95,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -2221,6 +2231,15 @@ class _TradingProfileScreenState extends State<TradingProfileScreen> {
             const SizedBox(height: AppTheme.spaceM),
             _detailRow('Referral Code', profile.referralCode),
           ],
+          const SizedBox(height: AppTheme.spaceS),
+          _actionTile(
+            icon: Icons.workspace_premium_rounded,
+            title: 'Plans & Referrals',
+            subtitle:
+                'View Premium plans, beta and Founder pricing, passes and referral rewards.',
+            onTap: () =>
+                Navigator.of(context).pushNamed(MonetisationScreen.routeName),
+          ),
           const SizedBox(height: AppTheme.spaceS),
           _actionTile(
             icon: Icons.emoji_events_rounded,

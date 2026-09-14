@@ -166,8 +166,9 @@ class _MyHubScreenState extends State<MyHubScreen> {
       builder: (_) => const ReferralToolsScreen(),
     ),
     _ArcHubFeature(
-      title: 'Subscriptions',
-      subtitle: 'Premium features will unlock in a future beta phase.',
+      title: 'Plans & Referrals',
+      subtitle:
+          'Premium access, beta and Founder pricing, passes and referrals.',
       icon: Icons.workspace_premium_outlined,
       accent: AppTheme.neonCyan,
       art: _ArcHubArtKind.trading,
@@ -689,6 +690,7 @@ class _MyHubScreenState extends State<MyHubScreen> {
       _featureByTitle('My Intel'),
       _featureByTitle('Profile & Reputation'),
       _featureByTitle('Community Rewards'),
+      _featureByTitle('Plans & Referrals'),
       _featureByTitle('Play Like a Pro'),
       _featureByTitle('Operation Rewards'),
     ];
@@ -1112,14 +1114,14 @@ class _PremiumFeatureCarousel extends StatelessWidget {
             ? math.min(constraints.maxWidth, 1180.0)
             : constraints.maxWidth;
         final stageHeight = isPhone
-            ? math.min(constraints.maxHeight, 520.0)
-            : math.min(constraints.maxHeight, isTablet ? 620.0 : 510.0);
+            ? math.min(constraints.maxHeight, 462.0)
+            : math.min(constraints.maxHeight, isTablet ? 560.0 : 474.0);
 
         final centreCardHeight = isWide
-            ? (isCompactHeight ? 278.0 : 304.0)
+            ? (isCompactHeight ? 268.0 : 292.0)
             : isTablet
-            ? 350.0
-            : 356.0;
+            ? 332.0
+            : 318.0;
 
         final dotsTop = centreCardHeight + (isPhone ? 14.0 : 16.0);
         final stripTop = dotsTop + (isPhone ? 24.0 : 24.0);
@@ -1570,28 +1572,58 @@ class _HubHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final wide = ArcResponsiveChrome.width(context) >= 1100;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppTheme.spaceM,
-        ArcResponsiveChrome.width(context) >= 1100
-            ? AppTheme.spaceS
-            : AppTheme.spaceM,
+        wide ? 4 : 8,
         AppTheme.spaceM,
         0,
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              'My Hub',
-              style: AppTheme.neonTextStyle(
-                fontSize: ArcResponsiveChrome.width(context) >= 1100 ? 21 : 25,
-                color: selected.accent,
-                isBold: true,
+          Container(
+            width: 4,
+            height: wide ? 34 : 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(99),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  ArcUiTokens.secondaryAccent,
+                  ArcUiTokens.primaryAccent,
+                ],
               ),
             ),
           ),
-          _TinySystemChip(label: 'BETA', accent: selected.accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'MY HUB',
+                  style: TextStyle(
+                    fontFamily: AppTheme.headingFontFamily,
+                    fontSize: wide ? 28 : 32,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: ArcUiTokens.secondaryAccent,
+                  ),
+                ),
+                Text(
+                  selected.title.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.label(
+                    color: ArcUiTokens.primaryAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _TinySystemChip(label: 'BETA', accent: ArcUiTokens.secondaryAccent),
         ],
       ),
     );
@@ -1613,10 +1645,10 @@ class _HubQuickStrip extends StatelessWidget {
       child: Container(
         key: ValueKey(selected.title),
         padding: EdgeInsets.fromLTRB(
-          phone ? AppTheme.spaceM : AppTheme.spaceL,
-          AppTheme.spaceM,
-          phone ? AppTheme.spaceM : AppTheme.spaceL,
-          AppTheme.spaceM,
+          phone ? 12 : AppTheme.spaceM,
+          phone ? 9 : 11,
+          phone ? 12 : AppTheme.spaceM,
+          phone ? 9 : 11,
         ),
         decoration: BoxDecoration(
           color: AppTheme.cardBackgroundDeep.withValues(alpha: 0.78),

@@ -29,7 +29,7 @@ class UagDrawerNavTile extends StatelessWidget {
       child: ListTile(
         dense: true,
         minLeadingWidth: 22,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         tileColor: selected
             ? accent.withValues(alpha: 0.08)
             : Colors.transparent,
@@ -45,10 +45,10 @@ class UagDrawerNavTile extends StatelessWidget {
         title: Text(
           title,
           style: AppTheme.bodyTextStyle(
-            fontSize: 13,
+            fontSize: 14,
             color: selected ? accent : ArcUiTokens.textSecondary,
             isBold: selected,
-          ),
+          ).copyWith(height: 1.08),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

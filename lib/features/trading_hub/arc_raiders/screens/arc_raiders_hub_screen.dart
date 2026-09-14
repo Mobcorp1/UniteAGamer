@@ -12,6 +12,7 @@ import '../../../../build/app_drawer.dart';
 import '../../../../widgets/electric_charge_border.dart';
 import '../../../../widgets/theme.dart';
 import '../../../../widgets/arc_responsive_chrome.dart';
+import '../data/arc_compact_navigation_catalog.dart';
 import '../raid_planner/screens/raid_planner_hunt_targets_screen.dart';
 import '../raid_planner/screens/raid_planner_screen.dart';
 import '../voice/voice_assistant_sheet.dart';
@@ -28,6 +29,7 @@ import 'scrappy_grid_screen.dart';
 import 'smart_trade_assist_screen.dart';
 import '../../../../features/feature_access_gate.dart';
 import 'trader_hub_screen.dart';
+import 'trading_notifications_screen.dart';
 
 class ArcRaidersHubScreen extends StatefulWidget {
   static const routeName = '/trading-hub/arc-raiders';
@@ -41,8 +43,10 @@ class ArcRaidersHubScreen extends StatefulWidget {
 class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   final PageController _controller = PageController(viewportFraction: 0.52);
   int _selectedIndex = 0;
+  String? _activeGroupLabel;
+  bool _isAdminOrDev = false;
 
-  late final List<_ArcHubFeature> _features = [
+  late final List<_ArcHubFeature> _featureLibrary = [
     _ArcHubFeature(
       title: 'Command Centre',
       subtitle:
@@ -179,8 +183,9 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       builder: (_) => ReferralToolsScreen(),
     ),
     _ArcHubFeature(
-      title: 'Subscriptions',
-      subtitle: 'Premium access, supporter perks and account upgrade options.',
+      title: 'Plans & Referrals',
+      subtitle:
+          'Premium access, beta and Founder pricing, passes and referrals.',
       icon: Icons.workspace_premium_rounded,
       accent: AppTheme.neonPink,
       art: _ArcHubArtKind.trading,
@@ -202,18 +207,329 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _resolveAdminAccess();
+  }
+
+  Future<void> _resolveAdminAccess() async {
+    final value = await FeatureAccess.isAdminOrDev();
+    if (!mounted) return;
+    setState(() => _isAdminOrDev = value);
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _openFeature(_ArcHubFeature feature) async {
-    final navigator = Navigator.of(context);
-    final isAdminOrDev = await FeatureAccess.isAdminOrDev();
-    if (!mounted) return;
+  int _groupPriority(String label) {
+    switch (label) {
+      case 'ACCOUNT & UAG':
+        return 0;
+      case 'DISCOVER & RUN':
+        return 10;
+      case 'COMMUNICATIONS':
+        return 20;
+      case 'RAID & INTELLIGENCE':
+        return 30;
+      case 'PROGRESSION & TRACKING':
+        return 40;
+      case 'TRADE & INVENTORY':
+        return 50;
+      case 'SQUAD & COMMUNITY':
+        return 60;
+      case 'IMPROVE':
+        return 70;
+      case 'FUTURE HUB':
+        return 80;
+      case 'ADMIN':
+        return 100;
+      default:
+        return 90;
+    }
+  }
 
-    if (isAdminOrDev) {
-      _pushFeature(navigator, feature, bypassRouteGate: true);
+  List<_ArcHubGroup> _buildHubGroups() {
+    final catalogGroups =
+        List<ArcCompactNavigationGroup>.from(
+          ArcCompactNavigationCatalog.groups,
+        )..sort(
+          (left, right) =>
+              _groupPriority(left.label).compareTo(_groupPriority(right.label)),
+        );
+
+    final groups = <_ArcHubGroup>[
+      for (final group in catalogGroups)
+        _ArcHubGroup(
+          label: group.label,
+          overview: _groupOverviewFeature(group.label, group.items.length),
+          features: [
+            for (final item in group.items)
+              _featureForNavigationItem(item, group.label),
+          ],
+        ),
+    ];
+
+    groups.add(
+      _ArcHubGroup(
+        label: 'COMMUNICATIONS',
+        overview: _groupOverviewFeature('COMMUNICATIONS', 1),
+        features: [
+          _ArcHubFeature(
+            title: 'Communications Centre',
+            subtitle:
+                'Notifications, trade activity and UAG messages that need your attention.',
+            icon: Icons.notifications_active_outlined,
+            accent: AppTheme.neonCyan,
+            art: _ArcHubArtKind.intel,
+            assetName: 'arc_hub_community_intel.webp',
+            routeName: TradingNotificationsScreen.routeName,
+            builder: (_) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+
+    if (_isAdminOrDev) {
+      groups.add(
+        _ArcHubGroup(
+          label: 'ADMIN',
+          overview: _groupOverviewFeature('ADMIN', 1),
+          features: [
+            _ArcHubFeature(
+              title: 'Admin Console',
+              subtitle:
+                  'Feature controls, moderation and operational administration.',
+              icon: Icons.admin_panel_settings_outlined,
+              accent: AppTheme.neonPink,
+              art: _ArcHubArtKind.smart,
+              assetName: 'my_hub_card.webp',
+              routeName: '/admin-console',
+              builder: (_) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      );
+    }
+
+    groups.sort(
+      (left, right) =>
+          _groupPriority(left.label).compareTo(_groupPriority(right.label)),
+    );
+    return groups;
+  }
+
+  _ArcHubFeature _groupOverviewFeature(String label, int itemCount) {
+    final visual = _visualForGroup(label);
+    return _ArcHubFeature(
+      title: label,
+      subtitle:
+          '${itemCount == 1 ? '1 system' : '$itemCount systems'} • ${_groupSubtitle(label)}',
+      icon: visual.icon,
+      accent: visual.accent,
+      art: visual.art,
+      assetName: visual.assetName,
+      builder: (_) => const SizedBox.shrink(),
+      groupLabel: label,
+      openLabel: 'OPEN GROUP',
+    );
+  }
+
+  _ArcHubFeature _featureForNavigationItem(
+    ArcCompactNavigationItem item,
+    String groupLabel,
+  ) {
+    _ArcHubFeature? known;
+    for (final feature in _featureLibrary) {
+      if (feature.routeName != null && feature.routeName == item.routeName) {
+        known = feature;
+        break;
+      }
+    }
+
+    final visual = _visualForGroup(groupLabel);
+    final base = known;
+
+    return _ArcHubFeature(
+      title: item.label,
+      subtitle: base?.subtitle ?? _subtitleForItem(item.label),
+      icon: item.icon,
+      accent: base?.accent ?? visual.accent,
+      art: base?.art ?? visual.art,
+      assetName: base?.assetName ?? visual.assetName,
+      routeName: item.routeName,
+      builder: base?.builder ?? (_) => const SizedBox.shrink(),
+      accessFlag: item.accessFlag,
+      groupLabel: groupLabel,
+    );
+  }
+
+  _ArcHubVisualSpec _visualForGroup(String label) {
+    switch (label) {
+      case 'ACCOUNT & UAG':
+        return const _ArcHubVisualSpec(
+          icon: Icons.person_outline_rounded,
+          accent: AppTheme.neonPink,
+          art: _ArcHubArtKind.intel,
+          assetName: 'arc_hub_profile_reputation.webp',
+        );
+      case 'DISCOVER & RUN':
+        return const _ArcHubVisualSpec(
+          icon: Icons.explore_outlined,
+          accent: AppTheme.neonCyan,
+          art: _ArcHubArtKind.smart,
+          assetName: 'my_hub_card.webp',
+        );
+      case 'COMMUNICATIONS':
+        return const _ArcHubVisualSpec(
+          icon: Icons.notifications_active_outlined,
+          accent: AppTheme.neonCyan,
+          art: _ArcHubArtKind.intel,
+          assetName: 'arc_hub_community_intel.webp',
+        );
+      case 'RAID & INTELLIGENCE':
+        return const _ArcHubVisualSpec(
+          icon: Icons.radar_rounded,
+          accent: AppTheme.neonCyan,
+          art: _ArcHubArtKind.raid,
+          assetName: 'arc_hub_raid_planner.webp',
+        );
+      case 'PROGRESSION & TRACKING':
+        return const _ArcHubVisualSpec(
+          icon: Icons.track_changes_rounded,
+          accent: AppTheme.neonPink,
+          art: _ArcHubArtKind.blueprints,
+          assetName: 'arc_hub_tracking.webp',
+        );
+      case 'TRADE & INVENTORY':
+        return const _ArcHubVisualSpec(
+          icon: Icons.storefront_rounded,
+          accent: AppTheme.neonPink,
+          art: _ArcHubArtKind.trading,
+          assetName: 'arc_hub_trading.webp',
+        );
+      case 'SQUAD & COMMUNITY':
+        return const _ArcHubVisualSpec(
+          icon: Icons.groups_2_outlined,
+          accent: AppTheme.neonPink,
+          art: _ArcHubArtKind.match,
+          assetName: 'arc_hub_match_a_raider.webp',
+        );
+      case 'IMPROVE':
+        return const _ArcHubVisualSpec(
+          icon: Icons.school_outlined,
+          accent: AppTheme.neonCyan,
+          art: _ArcHubArtKind.intel,
+          assetName: 'arc_hub_tracking.webp',
+        );
+      case 'FUTURE HUB':
+        return const _ArcHubVisualSpec(
+          icon: Icons.explore_outlined,
+          accent: AppTheme.neonPink,
+          art: _ArcHubArtKind.smart,
+          assetName: 'arc_hub_community_intel.webp',
+        );
+      case 'ADMIN':
+        return const _ArcHubVisualSpec(
+          icon: Icons.admin_panel_settings_outlined,
+          accent: AppTheme.neonPink,
+          art: _ArcHubArtKind.smart,
+          assetName: 'my_hub_card.webp',
+        );
+      default:
+        return const _ArcHubVisualSpec(
+          icon: Icons.hub_outlined,
+          accent: AppTheme.neonCyan,
+          art: _ArcHubArtKind.smart,
+          assetName: 'my_hub_card.webp',
+        );
+    }
+  }
+
+  String _groupSubtitle(String label) {
+    switch (label) {
+      case 'ACCOUNT & UAG':
+        return 'Your identity, access, settings and UAG account.';
+      case 'DISCOVER & RUN':
+        return 'Core command surfaces and the main UAG entry points.';
+      case 'COMMUNICATIONS':
+        return 'Notifications, activity and messages that need attention.';
+      case 'RAID & INTELLIGENCE':
+        return 'Plan raids, inspect intel, hunt targets and handle contracts.';
+      case 'PROGRESSION & TRACKING':
+        return 'Blueprints, Scrappy, bench, quests, loadouts and operations.';
+      case 'TRADE & INVENTORY':
+        return 'Trading, Smart Trade and Nomadic Trader tools.';
+      case 'SQUAD & COMMUNITY':
+        return 'Find Raiders, community rewards, My Hub and legacy recognition.';
+      case 'IMPROVE':
+        return 'Guidance and tools designed to improve your play.';
+      case 'FUTURE HUB':
+        return 'Roadmap, community ideas and what UAG builds next.';
+      case 'ADMIN':
+        return 'Administration, moderation and feature controls.';
+      default:
+        return 'Open the systems in this UAG area.';
+    }
+  }
+
+  String _subtitleForItem(String label) {
+    switch (label) {
+      case 'Discover UAG':
+        return 'Return to the UAG system index and choose another area.';
+      case 'Raid Intelligence':
+        return 'Live map conditions, locations and raid intelligence in one place.';
+      case 'Report a Rat / Contracts':
+        return 'Report ratting, review activity and enter the moderated contracts system.';
+      case 'Bench Tracker':
+        return 'Track bench tiers, upgrade materials and missing requirements.';
+      case 'Quest Tracker':
+        return 'Track trader quest items, hand-ins and collection progress.';
+      case 'Progress Trackers':
+        return 'Open the combined progression view across your active trackers.';
+      case 'Favourite Loadout':
+        return 'Build and manage your preferred weapons, attachments and quick-use kit.';
+      case 'Operations':
+        return 'Follow active UAG operations, objectives and reward progress.';
+      case 'Nomadic Trader':
+        return 'Track Nomadic Trader activity and useful trade opportunities.';
+      case 'Wall of Legends':
+        return 'View the permanent UAG recognition wall for notable Raiders.';
+      case 'My Hub':
+        return 'Open your personalised UAG tools, shortcuts and Raider workspace.';
+      case 'Settings':
+        return 'Manage your UAG account, preferences and profile settings.';
+      default:
+        return 'Open $label and continue your UAG workflow.';
+    }
+  }
+
+  void _openGroup(_ArcHubGroup group) {
+    setState(() {
+      _activeGroupLabel = group.label;
+      _selectedIndex = 0;
+    });
+  }
+
+  void _backToGroups() {
+    setState(() {
+      _activeGroupLabel = null;
+      _selectedIndex = 0;
+    });
+  }
+
+  Future<void> _openFeature(_ArcHubFeature feature) async {
+    if (feature.routeName == ArcRaidersHubScreen.routeName) {
+      _backToGroups();
+      return;
+    }
+
+    final navigator = Navigator.of(context);
+
+    if (_isAdminOrDev) {
+      _pushFeature(navigator, feature);
       return;
     }
 
@@ -221,19 +537,21 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
       'Nomadic Trader',
       'My Hub',
       'Command Centre',
+      'Roadmap & Community Ideas',
       'Future Hub',
       'Profile & Reputation',
+      'Settings',
+      'Wall of Legends',
     };
 
-    if (betaOpenTitles.contains(feature.title)) {
+    if (betaOpenTitles.contains(feature.title) || feature.accessFlag == null) {
       _pushFeature(navigator, feature);
       return;
     }
 
-    final flag = _featureAccessFlagForTitle(feature.title);
-    final availability = flag == null
-        ? FeatureAvailability.hidden
-        : await FeatureAccess.getAvailability(flag);
+    final availability = await FeatureAccess.getAvailability(
+      feature.accessFlag!,
+    );
 
     if (!mounted) return;
 
@@ -254,79 +572,38 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     );
   }
 
-  void _pushFeature(
-    NavigatorState navigator,
-    _ArcHubFeature feature, {
-    bool bypassRouteGate = false,
-  }) {
+  void _pushFeature(NavigatorState navigator, _ArcHubFeature feature) {
     final routeName = feature.routeName;
-    if (bypassRouteGate || routeName == null || routeName.isEmpty) {
-      navigator.push(
-        MaterialPageRoute(
-          builder: feature.builder,
-          settings: routeName == null || routeName.isEmpty
-              ? null
-              : RouteSettings(name: routeName),
-        ),
-      );
+    if (routeName != null && routeName.isNotEmpty) {
+      navigator.pushNamed(routeName);
       return;
     }
 
-    navigator.pushNamed(routeName);
-  }
-
-  String? _featureAccessFlagForTitle(String title) {
-    switch (title) {
-      case 'Blueprint Tracker':
-      case 'Blueprint Tracker Beta':
-      case 'Blueprint Grid':
-        return FeatureAccessFlag.blueprintTracker;
-      case 'Scrappy Tracker':
-        return FeatureAccessFlag.scrappyTracker;
-      case 'Bench Tracker':
-        return FeatureAccessFlag.benchTracker;
-      case 'Quest Tracker':
-        return FeatureAccessFlag.questTracker;
-      case 'Trading':
-      case 'Trading Overview':
-      case 'Trader Hub':
-        return FeatureAccessFlag.traderHub;
-      case 'Match a Raider':
-      case 'Match Raider':
-        return FeatureAccessFlag.matchRaider;
-      case 'Raid Planner':
-      case 'Hunt Targets':
-        return FeatureAccessFlag.raidPlanner;
-      case 'Community Intel':
-      case 'My Intel':
-      case 'Intel Explorer':
-        return FeatureAccessFlag.intelExplorer;
-      case 'Smart Trade':
-      case 'Smart Trade Assist':
-        return FeatureAccessFlag.smartTradeAssist;
-      case 'Subscriptions':
-      case 'Plans & Referrals':
-      case 'Community Rewards':
-      case 'Referral Tools':
-      case 'Refer a Raider':
-      case 'Operations':
-      case 'Operation Rewards':
-        return FeatureAccessFlag.monetisation;
-      case 'Report a Rat':
-        return FeatureAccessFlag.raiderContracts;
-      case 'Voice Assistant':
-        return FeatureAccessFlag.voiceAssistant;
-      case 'Play Like A Pro':
-      case 'Play Locker Pro':
-        return FeatureAccessFlag.playLockerPro;
-      default:
-        return null;
-    }
+    navigator.push(MaterialPageRoute(builder: feature.builder));
   }
 
   @override
   Widget build(BuildContext context) {
-    final selected = _features[_selectedIndex];
+    final groups = _buildHubGroups();
+    _ArcHubGroup? activeGroup;
+    if (_activeGroupLabel != null) {
+      for (final group in groups) {
+        if (group.label == _activeGroupLabel) {
+          activeGroup = group;
+          break;
+        }
+      }
+    }
+
+    final features = activeGroup == null
+        ? groups.map((group) => group.overview).toList(growable: false)
+        : activeGroup.features;
+
+    if (features.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final safeIndex = _selectedIndex.clamp(0, features.length - 1).toInt();
 
     return Scaffold(
       extendBody: false,
@@ -348,7 +625,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                       context,
                     );
 
-                    return Padding(
+                    final content = Padding(
                       padding: ArcUiTokens.screenPadding,
                       child: Center(
                         child: ConstrainedBox(
@@ -356,7 +633,10 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                           child: Column(
                             children: [
                               _HubHeader(
-                                selected: selected,
+                                activeGroupLabel: activeGroup?.label,
+                                onBack: activeGroup == null
+                                    ? null
+                                    : _backToGroups,
                                 onFeedback: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -367,17 +647,30 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                                 onAssistant: () =>
                                     UagVoiceArcAssistantSheet.show(context),
                               ),
-                              const SizedBox(height: AppTheme.spaceS),
+                              const SizedBox(height: 4),
                               Expanded(
                                 child: Center(
                                   child: _PremiumFeatureCarousel(
                                     controller: _controller,
-                                    selectedIndex: _selectedIndex,
-                                    features: _features,
+                                    selectedIndex: safeIndex,
+                                    features: features,
                                     onPageChanged: (index) {
                                       setState(() => _selectedIndex = index);
                                     },
-                                    onOpen: _openFeature,
+                                    onOpen: (feature) {
+                                      if (activeGroup == null) {
+                                        final label = feature.groupLabel;
+                                        if (label == null) return;
+                                        for (final group in groups) {
+                                          if (group.label == label) {
+                                            _openGroup(group);
+                                            return;
+                                          }
+                                        }
+                                        return;
+                                      }
+                                      _openFeature(feature);
+                                    },
                                   ),
                                 ),
                               ),
@@ -386,6 +679,14 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
                         ),
                       ),
                     );
+                    // Short landscape viewports need vertical travel so the
+                    // group/system CTA stays reachable below the header.
+                    if (constraints.maxHeight < 420) {
+                      return SingleChildScrollView(
+                        child: SizedBox(height: 540, child: content),
+                      );
+                    }
+                    return content;
                   },
                 ),
               ),
@@ -433,32 +734,32 @@ class _PremiumFeatureCarousel extends StatelessWidget {
         final stageWidth = isWide
             ? math.min(constraints.maxWidth, 1180.0)
             : constraints.maxWidth;
-        final availableHeight = math.max(constraints.maxHeight, 360.0);
+        final availableHeight = math.max(constraints.maxHeight, 320.0);
         final showQuickStrip = !isPhone || availableHeight >= 430;
+        final phoneReservedHeight = showQuickStrip ? 104.0 : 34.0;
         final centreCardHeight = isWide
             ? (isCompactHeight ? 336.0 : 388.0)
             : isTablet
             ? 408.0
-            : math.min(
-                isCompactHeight ? 328.0 : 374.0,
-                math.max(
-                  248.0,
-                  availableHeight - (showQuickStrip ? 128.0 : 48.0),
-                ),
-              );
+            : math.max(248.0, availableHeight - phoneReservedHeight);
 
-        final dotsTop = centreCardHeight + (isPhone ? 14.0 : 16.0);
-        final stripTop = dotsTop + (isPhone ? 24.0 : 24.0);
-        final stripHeightEstimate = isPhone ? 62.0 : 72.0;
-        final stageHeight = math.min(
-          availableHeight,
-          showQuickStrip
-              ? math.max(
-                  centreCardHeight + 80.0,
-                  stripTop + stripHeightEstimate + 8.0,
-                )
-              : dotsTop + 28.0,
-        );
+        final dotsTop = centreCardHeight + (isPhone ? 12.0 : 16.0);
+        final stripTop = dotsTop + (isPhone ? 20.0 : 24.0);
+        final stripHeightEstimate = isPhone ? 54.0 : 64.0;
+        // On phones the stage consumes the full height handed to the carousel.
+        // This prevents a fixed-height card stack from being vertically centred
+        // with a large dead zone on taller devices.
+        final stageHeight = isPhone
+            ? availableHeight
+            : math.min(
+                availableHeight,
+                showQuickStrip
+                    ? math.max(
+                        centreCardHeight + 80.0,
+                        stripTop + stripHeightEstimate + 8.0,
+                      )
+                    : dotsTop + 28.0,
+              );
         final stripWidth = isPhone
             ? math.min(stageWidth - 38.0, 360.0)
             : math.min(stageWidth - 64.0, 560.0);
@@ -582,14 +883,12 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         : math.min(canvasWidth - 58.0, 322.0);
     final availableHeight = math.max(canvasHeight, 320.0);
     final showQuickStrip = !isPhone || availableHeight >= 430;
+    final phoneReservedHeight = showQuickStrip ? 104.0 : 34.0;
     final centerHeight = isWide
         ? (isCompactHeight ? 336.0 : 388.0)
         : isTablet
         ? 408.0
-        : math.min(
-            isCompactHeight ? 328.0 : 374.0,
-            math.max(248.0, availableHeight - (showQuickStrip ? 128.0 : 48.0)),
-          );
+        : math.max(248.0, availableHeight - phoneReservedHeight);
 
     final nearWidth = isWide
         ? (isCompactHeight ? 196.0 : 214.0)
@@ -600,7 +899,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
         ? (isCompactHeight ? 226.0 : 248.0)
         : isTablet
         ? 294.0
-        : 302.0;
+        : math.max(232.0, centerHeight * 0.82);
 
     final outerWidth = isWide ? (isCompactHeight ? 124.0 : 138.0) : 0.0;
     final outerHeight = isWide ? (isCompactHeight ? 172.0 : 192.0) : 0.0;
@@ -637,7 +936,7 @@ class _StaticRingFeatureSlot extends StatelessWidget {
               ? (isCompactHeight ? 34.0 : 30.0)
               : isTablet
               ? 42.0
-              : 38.0)
+              : 28.0)
         : (isCompactHeight ? 62.0 : 58.0);
 
     final opacity = selected
@@ -844,17 +1143,16 @@ class _StaticRingFeatureCard extends StatelessWidget {
                     maxLines: phone ? 2 : (compact ? 2 : 3),
                     overflow: TextOverflow.ellipsis,
                     style:
-                        AppTheme.neonTextStyle(
+                        ArcUiTokens.cardTitle(
                           fontSize: titleSize,
-                          color: Colors.white,
-                          isBold: true,
+                          color: ArcUiTokens.textPrimary,
                         ).copyWith(
-                          letterSpacing: 0,
-                          height: 1.02,
+                          letterSpacing: 0.35,
+                          height: 1.05,
                           shadows: [
                             Shadow(
-                              color: feature.accent.withValues(alpha: 0.80),
-                              blurRadius: selected ? 10 : 6,
+                              color: feature.accent.withValues(alpha: 0.72),
+                              blurRadius: selected ? 9 : 5,
                             ),
                           ],
                         ),
@@ -867,10 +1165,10 @@ class _StaticRingFeatureCard extends StatelessWidget {
                         : TextAlign.start,
                     maxLines: phone ? 2 : (compact ? 2 : 3),
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.bodyTextStyle(
+                    style: ArcUiTokens.body(
                       fontSize: bodySize,
-                      color: Colors.white.withValues(alpha: 0.84),
-                      isBold: true,
+                      color: ArcUiTokens.textSecondary,
+                      weight: FontWeight.w600,
                     ).copyWith(height: 1.22),
                   ),
                   if (selected) ...[
@@ -879,7 +1177,10 @@ class _StaticRingFeatureCard extends StatelessWidget {
                       alignment: phone
                           ? Alignment.center
                           : Alignment.centerLeft,
-                      child: _ArcHubOpenPill(accent: feature.accent),
+                      child: _ArcHubOpenPill(
+                        accent: feature.accent,
+                        label: feature.openLabel,
+                      ),
                     ),
                   ],
                 ],
@@ -895,9 +1196,10 @@ class _StaticRingFeatureCard extends StatelessWidget {
 }
 
 class _ArcHubOpenPill extends StatelessWidget {
-  const _ArcHubOpenPill({required this.accent});
+  const _ArcHubOpenPill({required this.accent, required this.label});
 
   final Color accent;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -909,7 +1211,7 @@ class _ArcHubOpenPill extends StatelessWidget {
         border: Border.all(color: accent.withValues(alpha: 0.34)),
       ),
       child: Text(
-        'OPEN SYSTEM',
+        label,
         style: ArcUiTokens.label(color: accent).copyWith(fontSize: 9),
       ),
     );
@@ -918,12 +1220,14 @@ class _ArcHubOpenPill extends StatelessWidget {
 
 class _HubHeader extends StatelessWidget {
   const _HubHeader({
-    required this.selected,
+    required this.activeGroupLabel,
+    required this.onBack,
     required this.onFeedback,
     required this.onAssistant,
   });
 
-  final _ArcHubFeature selected;
+  final String? activeGroupLabel;
+  final VoidCallback? onBack;
   final VoidCallback onFeedback;
   final VoidCallback onAssistant;
 
@@ -978,8 +1282,8 @@ class _HubHeader extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: ArcUiTokens.pageTitle(
-                        fontSize: phone ? 16 : 18,
-                        color: ArcUiTokens.primaryAccent,
+                        fontSize: phone ? 22 : 26,
+                        color: ArcUiTokens.secondaryAccent,
                       ),
                     ),
                   ),
@@ -1007,12 +1311,46 @@ class _HubHeader extends StatelessWidget {
             );
           },
         ),
-        Text(
-          'Choose your next ARC system',
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: ArcUiTokens.metadata(color: ArcUiTokens.textSecondary),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: activeGroupLabel == null
+              ? Text(
+                  'Choose a UAG system group',
+                  key: const ValueKey('all-systems'),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ArcUiTokens.metadata(color: ArcUiTokens.primaryAccent),
+                )
+              : Row(
+                  key: ValueKey(activeGroupLabel),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      tooltip: 'Back to all systems',
+                      onPressed: onBack,
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      color: ArcUiTokens.primaryAccent,
+                      iconSize: 17,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 28,
+                        minHeight: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'DISCOVER UAG  >  $activeGroupLabel',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: ArcUiTokens.metadata(
+                          color: ArcUiTokens.primaryAccent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ],
     );
@@ -1053,10 +1391,10 @@ class _HubQuickStrip extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: phone ? 2 : 2,
           overflow: TextOverflow.ellipsis,
-          style: AppTheme.bodyTextStyle(
+          style: ArcUiTokens.body(
             fontSize: phone ? 11.5 : 13,
-            color: AppTheme.tradingMutedText,
-            isBold: true,
+            color: ArcUiTokens.textSecondary,
+            weight: FontWeight.w600,
           ).copyWith(height: 1.22),
         ),
       ),
@@ -1941,6 +2279,9 @@ class _ArcHubFeature {
     required this.assetName,
     required this.builder,
     this.routeName,
+    this.accessFlag,
+    this.groupLabel,
+    this.openLabel = 'OPEN SYSTEM',
   });
 
   final String title;
@@ -1951,4 +2292,33 @@ class _ArcHubFeature {
   final String assetName;
   final WidgetBuilder builder;
   final String? routeName;
+  final String? accessFlag;
+  final String? groupLabel;
+  final String openLabel;
+}
+
+class _ArcHubGroup {
+  const _ArcHubGroup({
+    required this.label,
+    required this.overview,
+    required this.features,
+  });
+
+  final String label;
+  final _ArcHubFeature overview;
+  final List<_ArcHubFeature> features;
+}
+
+class _ArcHubVisualSpec {
+  const _ArcHubVisualSpec({
+    required this.icon,
+    required this.accent,
+    required this.art,
+    required this.assetName,
+  });
+
+  final IconData icon;
+  final Color accent;
+  final _ArcHubArtKind art;
+  final String assetName;
 }

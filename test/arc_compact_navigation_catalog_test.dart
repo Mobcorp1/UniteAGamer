@@ -64,13 +64,13 @@ void main() {
         'Play Like a Pro',
         'Roadmap & Community Ideas',
         'Profile & Reputation',
+        'Plans & Referrals',
         'Settings',
       ]);
 
       for (final oldDrawerItem in const [
         'Intel Snapshot',
         'Tracking',
-        'Plans & Referrals',
         'Admin Console',
         'Beta Feedback',
         'Help Centre',

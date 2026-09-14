@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_command_centre_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_expedition_state_models.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/screens/arc_season_reset_screen.dart';
@@ -248,16 +249,30 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 900;
-        final primary = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [_actionConsole(commandMoves)],
-        );
+        final primary = _actionConsole(commandMoves);
         final secondary = _dailyChecklist(commandState.checklist);
 
         if (!desktop) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [primary, const SizedBox(height: 8), secondary],
+            children: [
+              _commandAccordion(
+                title: 'PRIORITY MOVES',
+                subtitle: '${commandMoves.length} live actions',
+                icon: Icons.bolt_rounded,
+                accent: AppTheme.neonPink,
+                initiallyExpanded: true,
+                child: primary,
+              ),
+              const SizedBox(height: 8),
+              _commandAccordion(
+                title: 'DAILY CHECKLIST',
+                subtitle: 'Collapse routine tasks when you do not need them',
+                icon: Icons.checklist_rounded,
+                accent: AppTheme.neonCyan,
+                child: secondary,
+              ),
+            ],
           );
         }
 
@@ -280,9 +295,22 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _systemCarousel(carouselTiles),
+              _commandAccordion(
+                title: 'ARC SYSTEMS',
+                subtitle: 'Jump into your active tools and trackers',
+                icon: Icons.hub_rounded,
+                accent: AppTheme.neonCyan,
+                initiallyExpanded: true,
+                child: _systemCarousel(carouselTiles),
+              ),
               const SizedBox(height: 8),
-              _seasonResetEntry(),
+              _commandAccordion(
+                title: 'EXPEDITION RESET',
+                subtitle: 'Season status and reset controls',
+                icon: Icons.restart_alt_rounded,
+                accent: AppTheme.neonPink,
+                child: _seasonResetEntry(),
+              ),
             ],
           );
         }
@@ -296,6 +324,54 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
           ],
         );
       },
+    );
+  }
+
+  Widget _commandAccordion({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accent,
+    required Widget child,
+    bool initiallyExpanded = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(color: accent.withValues(alpha: 0.06), blurRadius: 18),
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          leading: Icon(icon, color: accent, size: 19),
+          iconColor: accent,
+          collapsedIconColor: Colors.white54,
+          title: Text(
+            title,
+            style: TextStyle(
+              fontFamily: AppTheme.headingFontFamily,
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.35,
+              color: accent,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.bodyTextStyle(fontSize: 10, color: Colors.white54),
+          ),
+          children: [child],
+        ),
+      ),
     );
   }
 
@@ -943,6 +1019,12 @@ class _ArcCommandCentreContentState extends State<ArcCommandCentreContent> {
         title: 'Wall of Legends',
         detail: 'Community recognition and Raider achievements.',
         routeName: WallOfLegendsScreen.routeName,
+        image: _operationAsset('arc_command_centre_background.webp'),
+      ),
+      routeTile(
+        title: 'Plans & Referrals',
+        detail: 'Premium plans, beta and Founder offers, passes and referrals.',
+        routeName: MonetisationScreen.routeName,
         image: _operationAsset('arc_command_centre_background.webp'),
       ),
       _tileFromPanel(

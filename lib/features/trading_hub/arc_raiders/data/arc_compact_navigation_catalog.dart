@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uag_arc_raiders_hub/features/feature_access_gate.dart';
+import 'package:uag_arc_raiders_hub/features/monetisation/screens/monetisation_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/models/arc_user_personalisation_profile.dart';
 import 'package:uag_arc_raiders_hub/features/profile/screens/profile_settings_screen.dart';
 import 'package:uag_arc_raiders_hub/features/trust/screens/arc_raider_contracts_screen.dart';
@@ -264,6 +265,11 @@ class ArcCompactNavigationCatalog {
           label: 'Profile & Reputation',
           icon: Icons.person_outline_rounded,
           routeName: TradingProfileScreen.routeName,
+        ),
+        ArcCompactNavigationItem(
+          label: 'Plans & Referrals',
+          icon: Icons.workspace_premium_outlined,
+          routeName: MonetisationScreen.routeName,
         ),
         ArcCompactNavigationItem(
           label: 'Settings',
