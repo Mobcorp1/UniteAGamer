@@ -1,0 +1,4 @@
+flutter test exit: 1
+flutter analyze exit: 0
+flutter build web exit: 0
+flutter build apk exit: 0
