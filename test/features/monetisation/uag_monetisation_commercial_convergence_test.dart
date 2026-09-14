@@ -54,8 +54,9 @@ void main() {
       expect(plans, isNot(contains('10% follower')));
       expect(plans, isNot(contains('20% follower')));
       expect(plans, contains('GROW UAG. SHARE THE VALUE'));
-      expect(community, contains('COMMUNITY COMMAND'));
-      expect(creator, contains('CREATOR COMMAND CENTRE'));
+      expect(community, contains('COMMUNITY REWARDS'));
+      expect(community, contains('COUNTRY LEADERBOARD · PLANNED'));
+      expect(creator, contains('UAG CREATOR PROGRAM'));
     },
   );
 }

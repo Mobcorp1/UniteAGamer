@@ -10,6 +10,7 @@ import '../models/uag_creator_live_models.dart';
 import '../models/uag_creator_programme_models.dart';
 import '../repositories/uag_creator_live_repository.dart';
 import '../widgets/uag_creator_application_panel.dart';
+import '../widgets/uag_programme_section.dart';
 import '../widgets/uag_creator_commission_ledger_panel.dart';
 import '../widgets/uag_creator_commission_rate_panel.dart';
 import '../widgets/uag_creator_community_arsenal_panel.dart';
@@ -24,7 +25,7 @@ class UagCreatorProgrammeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: const UagAppBar(
-        title: 'Creator Programme',
+        title: 'UAG Creator Program',
         subtitle: 'Creator earnings • campaigns • community arsenal',
       ),
       drawer: const AppDrawer(),
@@ -35,7 +36,7 @@ class UagCreatorProgrammeScreen extends StatelessWidget {
         children: [
           const ArcTacticalPanel(
             icon: Icons.campaign_outlined,
-            title: 'CREATOR COMMAND CENTRE',
+            title: 'UAG CREATOR PROGRAM',
             subtitle:
                 'A dedicated commercial programme for approved creators who drive genuine paid UAG growth.',
             accent: ArcUiTokens.secondaryAccent,
@@ -44,18 +45,29 @@ class UagCreatorProgrammeScreen extends StatelessWidget {
               runSpacing: ArcUiTokens.gapS,
               children: [
                 _Chip('7.5% → 20% BASE', ArcUiTokens.secondaryAccent),
-                _Chip('UP TO +2.5PP COMMUNITY UPLIFT', ArcUiTokens.secondaryAccent),
+                _Chip(
+                  'UP TO +2.5PP COMMUNITY UPLIFT',
+                  ArcUiTokens.secondaryAccent,
+                ),
                 _Chip('30-DAY VALIDATION', ArcUiTokens.primaryAccent),
                 _Chip('PREMIUM CREATOR PRICE £7.99', ArcUiTokens.primaryAccent),
               ],
             ),
           ),
-          const SizedBox(height: ArcUiTokens.gapM),
           _LiveCreatorCommandCentre(repository: repository),
-          const SizedBox(height: ArcUiTokens.gapM),
-          const _LevelGrid(),
-          const SizedBox(height: ArcUiTokens.gapM),
-          const _CreatorTerms(),
+          const UagProgrammeSection(
+            title: 'PROGRESS & COMMISSION TIERS',
+            subtitle: 'How Creator Points shape your base rate and next tier.',
+            icon: Icons.stacked_line_chart_rounded,
+            child: _LevelGrid(),
+          ),
+          const UagProgrammeSection(
+            title: 'PROGRAM RULES',
+            subtitle:
+                'Qualifying activity, validation and commercial protections.',
+            icon: Icons.shield_outlined,
+            child: _CreatorTerms(),
+          ),
         ],
       ),
     );
@@ -71,6 +83,19 @@ class _LiveCreatorCommandCentre extends StatelessWidget {
     return StreamBuilder<UagCreatorProgrammeApplication?>(
       stream: repository.watchMyApplication(),
       builder: (context, appSnapshot) {
+        if (appSnapshot.hasError) {
+          return const _CreatorDataState(
+            message:
+                'Creator status could not be loaded. Reopen the program to try again.',
+          );
+        }
+        if (appSnapshot.connectionState == ConnectionState.waiting &&
+            !appSnapshot.hasData) {
+          return const _CreatorDataState(
+            message: 'Loading your creator status…',
+            loading: true,
+          );
+        }
         final application = appSnapshot.data;
         if (application == null) {
           return const UagCreatorApplicationPanel();
@@ -78,17 +103,33 @@ class _LiveCreatorCommandCentre extends StatelessWidget {
         return StreamBuilder<UagCreatorLiveDashboard>(
           stream: repository.watchMyDashboard(),
           builder: (context, dashSnapshot) {
-            final dash =
-                dashSnapshot.data ??
-                UagCreatorLiveDashboard(
-                  uid: application.uid,
-                  creatorId: application.creatorId,
-                );
+            if (dashSnapshot.hasError) {
+              return const _CreatorDataState(
+                message:
+                    'Creator activity could not be loaded. Reopen the program to try again.',
+              );
+            }
+            if (!dashSnapshot.hasData) {
+              return const _CreatorDataState(
+                message: 'Loading your creator activity…',
+                loading: true,
+              );
+            }
+            final dash = dashSnapshot.requireData;
+            UagCreatorLevel? nextLevel;
+            for (final level in UagCreatorCommercialPolicy.levels) {
+              if (level.minPoints > dash.creatorPoints) {
+                nextLevel = level;
+                break;
+              }
+            }
             final approved =
                 application.status == UagCreatorApplicationStatus.approved;
             return ArcTacticalPanel(
               icon: Icons.radar_rounded,
-              title: approved ? 'LIVE CREATOR DASHBOARD' : 'CREATOR APPLICATION',
+              title: approved
+                  ? 'LIVE CREATOR DASHBOARD'
+                  : 'CREATOR APPLICATION',
               subtitle: approved
                   ? 'Identity, points, active paid audience, rate and earnings.'
                   : application.status.label,
@@ -109,12 +150,19 @@ class _LiveCreatorCommandCentre extends StatelessWidget {
                             : application.creatorId,
                       ),
                       _Metric(
-                        'POINTS',
+                        'CREATOR POINTS',
                         dash.creatorPoints.toStringAsFixed(
                           dash.creatorPoints % 1 == 0 ? 0 : 1,
                         ),
                       ),
+                      _Metric('STATUS', application.status.label),
                       _Metric('LEVEL', dash.level?.name ?? 'Unranked'),
+                      _Metric(
+                        'NEXT TIER',
+                        nextLevel == null
+                            ? 'Highest tier reached'
+                            : '${nextLevel.name} · ${_pct(nextLevel.minPoints - dash.creatorPoints)} points to go',
+                      ),
                       _Metric(
                         'BASE RATE',
                         '${_pct(dash.commissionPercent)}%',
@@ -135,15 +183,37 @@ class _LiveCreatorCommandCentre extends StatelessWidget {
                       creatorPoints: dash.creatorPoints,
                     ),
                     const SizedBox(height: ArcUiTokens.gapM),
-                    UagCreatorCommunityArsenalPanel(
-                      inventory: dash.monthlyInventory,
+                    UagProgrammeSection(
+                      title: 'COMMUNITY ARSENAL',
+                      subtitle:
+                          'Your available creator rewards and community tools.',
+                      icon: Icons.card_giftcard_outlined,
+                      child: UagCreatorCommunityArsenalPanel(
+                        inventory: dash.monthlyInventory,
+                      ),
                     ),
                     const SizedBox(height: ArcUiTokens.gapM),
-                    const UagCreatorCommissionLedgerPanel(),
+                    const UagProgrammeSection(
+                      title: 'EARNINGS & ACTIVITY',
+                      subtitle:
+                          'Review commission history and validation status.',
+                      icon: Icons.receipt_long_outlined,
+                      child: UagCreatorCommissionLedgerPanel(),
+                    ),
                     const SizedBox(height: ArcUiTokens.gapM),
-                    const UagCreatorRewardAccessPanel(),
+                    const UagProgrammeSection(
+                      title: 'REWARD ACCESS',
+                      subtitle: 'Your temporary creator reward access.',
+                      icon: Icons.workspace_premium_outlined,
+                      child: UagCreatorRewardAccessPanel(),
+                    ),
                     const SizedBox(height: ArcUiTokens.gapM),
-                    _CampaignCodes(repository: repository),
+                    UagProgrammeSection(
+                      title: 'CAMPAIGN CODES',
+                      subtitle: 'Review your requested campaign codes.',
+                      icon: Icons.campaign_outlined,
+                      child: _CampaignCodes(repository: repository),
+                    ),
                   ] else ...[
                     const SizedBox(height: ArcUiTokens.gapM),
                     const UagCreatorApplicationPanel(),
@@ -168,7 +238,19 @@ class _CampaignCodes extends StatelessWidget {
     return StreamBuilder<List<UagCreatorCodeRecord>>(
       stream: repository.watchMyCodeRequests(),
       builder: (context, snapshot) {
-        final codes = snapshot.data ?? const <UagCreatorCodeRecord>[];
+        if (snapshot.hasError) {
+          return const _CreatorDataState(
+            message:
+                'Campaign codes could not be loaded. Reopen this section to try again.',
+          );
+        }
+        if (!snapshot.hasData) {
+          return const _CreatorDataState(
+            message: 'Loading campaign codes…',
+            loading: true,
+          );
+        }
+        final codes = snapshot.requireData;
         return Container(
           width: double.infinity,
           padding: ArcUiTokens.panelPadding,
@@ -182,9 +264,7 @@ class _CampaignCodes extends StatelessWidget {
             children: [
               Text(
                 'CAMPAIGN CODES',
-                style: ArcUiTokens.cardTitle(
-                  color: ArcUiTokens.primaryAccent,
-                ),
+                style: ArcUiTokens.cardTitle(color: ArcUiTokens.primaryAccent),
               ),
               const SizedBox(height: ArcUiTokens.gapS),
               if (codes.isEmpty)
@@ -238,7 +318,10 @@ class _LevelGrid extends StatelessWidget {
             runSpacing: ArcUiTokens.gapS,
             children: [
               for (final level in UagCreatorCommercialPolicy.levels)
-                SizedBox(width: width, child: _LevelCard(level: level)),
+                SizedBox(
+                  width: width,
+                  child: _LevelCard(level: level),
+                ),
             ],
           );
         },
@@ -303,11 +386,19 @@ class _CreatorTerms extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Rule('Commission is calculated from eligible net subscription revenue actually received.'),
-          _Rule('Refunds, chargebacks, self-referrals and fraudulent referrals do not qualify.'),
+          _Rule(
+            'Commission is calculated from eligible net subscription revenue actually received.',
+          ),
+          _Rule(
+            'Refunds, chargebacks, self-referrals and fraudulent referrals do not qualify.',
+          ),
           _Rule('Commission validates for 30 days before becoming payable.'),
-          _Rule('Creator campaign discounts are separate from commission and do not stack unless UAG explicitly permits it.'),
-          _Rule('A 30-day grace period protects Creator tier status from normal short-term subscriber churn.'),
+          _Rule(
+            'Creator campaign discounts are separate from commission and do not stack unless UAG explicitly permits it.',
+          ),
+          _Rule(
+            'A 30-day grace period protects Creator tier status from normal short-term subscriber churn.',
+          ),
         ],
       ),
     );
@@ -388,3 +479,16 @@ class _Rule extends StatelessWidget {
 String _pct(double value) => value == value.roundToDouble()
     ? value.toStringAsFixed(0)
     : value.toStringAsFixed(1);
+
+class _CreatorDataState extends StatelessWidget {
+  const _CreatorDataState({required this.message, this.loading = false});
+  final String message;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) => ArcTacticalPanel(
+    icon: loading ? Icons.sync_rounded : Icons.cloud_off_outlined,
+    title: loading ? 'LOADING CREATOR DATA' : 'CREATOR DATA UNAVAILABLE',
+    child: Text(message, style: ArcUiTokens.bodySmall()),
+  );
+}
