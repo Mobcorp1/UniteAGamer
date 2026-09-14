@@ -11,7 +11,9 @@ void main() {
   });
 
   test('shared tactical panels carry the secondary UAG accent', () {
-    final source = File('lib/widgets/arc_tactical_page.dart').readAsStringSync();
+    final source = File(
+      'lib/widgets/arc_tactical_page.dart',
+    ).readAsStringSync();
     expect(
       source,
       contains('ArcUiTokens.secondaryAccent.withValues(alpha: 0.92)'),
@@ -33,7 +35,7 @@ void main() {
       'lib/features/trading_hub/arc_raiders/screens/arc_raiders_hub_screen.dart',
     ).readAsStringSync();
     expect(source, contains('color: ArcUiTokens.secondaryAccent'));
-    expect(source, contains('isCompactHeight ? 286.0 : 320.0'));
-    expect(source, contains('showQuickStrip ? 92.0 : 32.0'));
+    expect(source, contains('isCompactHeight ? 336.0 : 388.0'));
+    expect(source, contains('showQuickStrip ? 104.0 : 34.0'));
   });
 }

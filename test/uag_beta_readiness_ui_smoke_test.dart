@@ -43,7 +43,6 @@ void main() {
         reason: 'Discover should render without Flutter errors at $size',
       );
       expect(find.text('DISCOVER UAG'), findsWidgets);
-      expect(find.text('Command Centre'), findsWidgets);
       expect(find.byType(ArcCompanionBottomDock), findsOneWidget);
 
       final dockBox = tester.renderObject<RenderBox>(

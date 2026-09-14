@@ -213,7 +213,14 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
   }
 
   Future<void> _resolveAdminAccess() async {
-    final value = await FeatureAccess.isAdminOrDev();
+    var value = false;
+    try {
+      value = await FeatureAccess.isAdminOrDev();
+    } catch (_) {
+      // Admin access must fail closed. A temporary auth/Firebase problem must
+      // never prevent the main ARC Raiders Hub from rendering.
+      value = false;
+    }
     if (!mounted) return;
     setState(() => _isAdminOrDev = value);
   }
@@ -326,7 +333,7 @@ class _ArcRaidersHubScreenState extends State<ArcRaidersHubScreen> {
     return _ArcHubFeature(
       title: label,
       subtitle:
-          '${itemCount == 1 ? '1 system' : '$itemCount systems'} • ${_groupSubtitle(label)}',
+          '${itemCount == 1 ? '1 system' : '$itemCount systems'} â€¢ ${_groupSubtitle(label)}',
       icon: visual.icon,
       accent: visual.accent,
       art: visual.art,
