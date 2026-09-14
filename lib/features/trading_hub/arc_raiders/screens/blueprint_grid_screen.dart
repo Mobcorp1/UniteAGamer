@@ -610,7 +610,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not clear ${blueprint.name}: $e')),
+        SnackBar(
+          content: Text('Could not clear ${blueprint.name}. Try again.'),
+        ),
       );
     }
   }
@@ -785,7 +787,9 @@ class _BlueprintGridScreenState extends State<BlueprintGridScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update Favourite Loadout: $error')),
+        const SnackBar(
+          content: Text('Could not update Favourite Loadout. Try again.'),
+        ),
       );
     }
   }

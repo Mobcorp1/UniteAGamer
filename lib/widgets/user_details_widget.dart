@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
 class UserDetailsWidget extends StatelessWidget {
   final String username;
@@ -18,8 +19,8 @@ class UserDetailsWidget extends StatelessWidget {
         Text(
           'Username: $username',
           style: const TextStyle(
-            color: Color.fromARGB(255, 255, 20, 147),
-            fontFamily: 'VT323',
+            color: AppTheme.neonPink,
+            fontFamily: AppTheme.bodyFontFamily,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -28,8 +29,8 @@ class UserDetailsWidget extends StatelessWidget {
         Text(
           'Email: $email',
           style: const TextStyle(
-            color: Color.fromARGB(255, 255, 20, 147),
-            fontFamily: 'VT323',
+            color: AppTheme.neonPink,
+            fontFamily: AppTheme.bodyFontFamily,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),

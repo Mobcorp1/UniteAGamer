@@ -127,53 +127,78 @@ class ArcTacticalPanel extends StatelessWidget {
             borderOpacity: 0.24,
           ),
           child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (title != null || subtitle != null || trailing != null) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, color: accent, size: compact ? 20 : 22),
-                  const SizedBox(width: ArcUiTokens.gapS),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (title != null)
-                        Text(
-                          title!,
-                          style: ArcUiTokens.sectionTitle(
-                            fontSize: compact ? 15 : 17,
-                            color: accent,
-                          ),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (title != null || subtitle != null || trailing != null) ...[
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final stackAction =
+                        constraints.maxWidth < 480 ||
+                        MediaQuery.textScalerOf(context).scale(16) > 24;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (icon != null) ...[
+                              Icon(
+                                icon,
+                                color: accent,
+                                size: compact ? 20 : 22,
+                              ),
+                              const SizedBox(width: ArcUiTokens.gapS),
+                            ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (title != null)
+                                    Text(
+                                      title!,
+                                      style: ArcUiTokens.sectionTitle(
+                                        fontSize: compact ? 15 : 17,
+                                        color: accent,
+                                      ),
+                                    ),
+                                  if (subtitle != null &&
+                                      subtitle!.trim().isNotEmpty) ...[
+                                    const SizedBox(height: ArcUiTokens.gapXS),
+                                    Text(
+                                      subtitle!,
+                                      style: ArcUiTokens.bodySmall(
+                                        color: ArcUiTokens.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            if (trailing != null && !stackAction) ...[
+                              const SizedBox(width: ArcUiTokens.gapS),
+                              trailing!,
+                            ],
+                          ],
                         ),
-                      if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-                        const SizedBox(height: ArcUiTokens.gapXS),
-                        Text(
-                          subtitle!,
-                          style: ArcUiTokens.bodySmall(
-                            color: ArcUiTokens.textSecondary,
+                        if (trailing != null && stackAction) ...[
+                          const SizedBox(height: ArcUiTokens.gapS),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: trailing!,
                           ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
+                    );
+                  },
                 ),
-                if (trailing != null) ...[
-                  const SizedBox(width: ArcUiTokens.gapS),
-                  trailing!,
-                ],
+                const SizedBox(height: ArcUiTokens.gapM),
               ],
-            ),
-            const SizedBox(height: ArcUiTokens.gapM),
-          ],
-          child,
-        ],
-      ),
+              child,
+            ],
+          ),
         ),
         Positioned(
           top: 0,

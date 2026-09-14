@@ -18,26 +18,48 @@ class ArcSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    final heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
+        Text(
+          title.toUpperCase(),
+          style: ArcUiTokens.sectionTitle(color: accent),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: ArcUiTokens.gapXS),
+          Text(subtitle!, style: ArcUiTokens.bodySmall()),
+        ],
+      ],
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use the panel's width, including when it is inside a desktop grid.
+        final stacked =
+            constraints.maxWidth < 480 ||
+            MediaQuery.textScalerOf(context).scale(16) > 24;
+        if (stacked) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: ArcUiTokens.sectionTitle(color: accent),
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: ArcUiTokens.gapXS),
-                Text(subtitle!, style: ArcUiTokens.bodySmall()),
+              heading,
+              if (trailing != null) ...[
+                const SizedBox(height: ArcUiTokens.gapS),
+                trailing!,
               ],
             ],
-          ),
-        ),
-        ?trailing,
-      ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(child: heading),
+            if (trailing != null) ...[
+              const SizedBox(width: ArcUiTokens.gapM),
+              trailing!,
+            ],
+          ],
+        );
+      },
     );
   }
 }

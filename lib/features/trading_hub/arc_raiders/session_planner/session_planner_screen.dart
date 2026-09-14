@@ -7,7 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_pla
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_creation_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_model.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/session_planner/session_repository.dart';
-import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/trading_card.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/voice/voice_assistant_sheet.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
@@ -24,9 +24,20 @@ class SessionPlannerScreen extends StatefulWidget {
 
 class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
   final UagSessionRepository _repository = UagSessionRepository();
+  late Stream<List<UagSession>> _sessionsStream;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionsStream = _repository.streamMySessions();
+  }
+
+  void _retrySessions() {
+    setState(() => _sessionsStream = _repository.streamMySessions());
+  }
 
   List<UagSession> _sessionsForDay(List<UagSession> sessions, DateTime day) {
     return sessions
@@ -122,16 +133,32 @@ class _SessionPlannerScreenState extends State<SessionPlannerScreen> {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Session'),
       ),
-      body: ArcRaidersScreenShell(
+      body: ArcTacticalPageBody(
         showAdBanner: false,
+        scrollable: false,
+        maxWidth: 900,
+        padding: EdgeInsets.zero,
         child: StreamBuilder<List<UagSession>>(
-          stream: _repository.streamMySessions(),
+          stream: _sessionsStream,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Center(
-                child: Text(
-                  'Could not load sessions: ${snapshot.error}',
-                  style: ArcUiTokens.body(),
+              return ArcTacticalStatePanel(
+                icon: Icons.cloud_off_outlined,
+                title: 'SESSIONS UNAVAILABLE',
+                message: 'Your sessions could not be loaded. Please try again.',
+                action: TextButton.icon(
+                  onPressed: _retrySessions,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('TRY AGAIN'),
+                ),
+              );
+            }
+
+            if (!snapshot.hasData &&
+                snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  semanticsLabel: 'Loading sessions',
                 ),
               );
             }

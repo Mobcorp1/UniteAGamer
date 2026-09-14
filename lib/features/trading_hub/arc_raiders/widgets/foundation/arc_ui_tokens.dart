@@ -108,9 +108,9 @@ class ArcUiTokens {
     return TextStyle(
       fontSize: fontSize,
       fontFamily: AppTheme.heroFontFamily,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w600,
       letterSpacing: 0,
-      height: 1.04,
+      height: 1.15,
       color: color,
     );
   }
@@ -123,8 +123,8 @@ class ArcUiTokens {
     return TextStyle(
       fontSize: fontSize,
       fontFamily: AppTheme.heroFontFamily,
-      fontWeight: FontWeight.w400,
-      letterSpacing: 0.45,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0,
       height: 1.15,
       color: color ?? textPrimary,
     );

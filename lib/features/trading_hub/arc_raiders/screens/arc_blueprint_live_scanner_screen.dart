@@ -1281,7 +1281,7 @@ class _ArcBlueprintLiveScannerScreenState
                                       scanStep,
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontFamily: 'VT323',
+                                        fontFamily: AppTheme.headingFontFamily,
                                         fontSize: 22,
                                       ),
                                     ),
@@ -1333,7 +1333,7 @@ class _ArcBlueprintLiveScannerScreenState
                                 lockStatusText,
                                 style: TextStyle(
                                   color: statusColor,
-                                  fontFamily: 'VT323',
+                                  fontFamily: AppTheme.headingFontFamily,
                                   fontSize: 16,
                                 ),
                               ),
@@ -1357,7 +1357,7 @@ class _ArcBlueprintLiveScannerScreenState
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white,
-                                fontFamily: 'VT323',
+                                fontFamily: AppTheme.headingFontFamily,
                                 fontSize: 18,
                               ),
                             ),
@@ -1417,7 +1417,8 @@ class _ArcBlueprintLiveScannerScreenState
                                               : 'AUTO FRAMING BLUEPRINT GRID',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontFamily: 'VT323',
+                                            fontFamily:
+                                                AppTheme.headingFontFamily,
                                             fontSize: 17,
                                           ),
                                         ),

@@ -7,6 +7,7 @@ import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_he
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_companion_bottom_dock.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/arc_raiders_screen_shell.dart';
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_ui_tokens.dart';
+import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/widgets/foundation/arc_section_header.dart';
 import 'package:uag_arc_raiders_hub/screens/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/widgets/theme.dart';
 
@@ -31,7 +32,19 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
   late ArcHelpCategory _selected = ArcHelpCentreCatalog.resolve(
     widget.initialCategoryId,
   );
+  final _searchController = TextEditingController();
   String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _query = '');
+  }
 
   List<ArcHelpCategory> get _filteredCategories {
     final query = _query.trim().toLowerCase();
@@ -129,8 +142,11 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
             const SizedBox(height: AppTheme.spaceM),
             LayoutBuilder(
               builder: (context, constraints) {
-                final wide = constraints.maxWidth >= 860;
+                final wide =
+                    constraints.maxWidth >= 860 &&
+                    MediaQuery.textScalerOf(context).scale(16) <= 24;
                 final categoryPanel = _buildCategoryGrid(categories, active);
+                if (categories.isEmpty) return categoryPanel;
                 final answerPanel = _buildAnswers(active);
 
                 if (!wide) {
@@ -164,13 +180,23 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
     return ArcRaidersSectionCard(
       padding: const EdgeInsets.all(ArcUiTokens.gapM),
       child: TextField(
+        controller: _searchController,
         onChanged: (value) => setState(() => _query = value),
         style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-        decoration: ArcUiTokens.inputDecoration(
-          labelText: 'Search Help Centre',
-          hintText: 'Try “trade”, “report”, “account” or “privacy”',
-          prefixIcon: Icons.search_rounded,
-        ),
+        decoration:
+            ArcUiTokens.inputDecoration(
+              labelText: 'Search Help Centre',
+              hintText: 'Try “trade”, “report”, “account” or “privacy”',
+              prefixIcon: Icons.search_rounded,
+            ).copyWith(
+              suffixIcon: _query.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Clear search',
+                      onPressed: _clearSearch,
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+            ),
       ),
     );
   }
@@ -219,58 +245,32 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  category.title,
-                  style: AppTheme.tradingHeading(
-                    fontSize: 21,
-                    color: AppTheme.neonCyan,
-                  ),
-                ),
-              ),
-              if (category.routeName != null)
-                IconButton(
-                  tooltip: 'Open ${category.title}',
-                  onPressed: () => _openRoute(category.routeName),
-                  icon: const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: AppTheme.neonCyan,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            category.summary,
-            style: const TextStyle(color: Colors.white70, height: 1.35),
-          ),
+          ArcSectionHeader(title: category.title, subtitle: category.summary),
           const SizedBox(height: AppTheme.spaceM),
           for (final answer in category.answers)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: ExpansionTile(
+                key: ValueKey('${category.id}:${answer.question}'),
                 tilePadding: const EdgeInsets.symmetric(horizontal: 10),
                 childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
                 collapsedShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
+                  side: BorderSide(color: ArcUiTokens.borderSubtle),
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(ArcUiTokens.radiusM),
                   side: BorderSide(
-                    color: AppTheme.neonCyan.withValues(alpha: 0.20),
+                    color: ArcUiTokens.primaryAccent.withValues(alpha: 0.20),
                   ),
                 ),
-                iconColor: AppTheme.neonCyan,
-                collapsedIconColor: Colors.white54,
+                iconColor: ArcUiTokens.primaryAccent,
+                collapsedIconColor: ArcUiTokens.textTertiary,
                 title: Text(
                   answer.question,
-                  style: AppTheme.bodyTextStyle(
+                  style: ArcUiTokens.body(
                     fontSize: 14,
-                    color: Colors.white,
-                    isBold: true,
+                    weight: FontWeight.w600,
                   ),
                 ),
                 children: [
@@ -278,10 +278,9 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       answer.answer,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
+                      style: ArcUiTokens.body(
+                        color: ArcUiTokens.textSecondary,
+                      ).copyWith(height: 1.4),
                     ),
                   ),
                 ],
@@ -353,11 +352,7 @@ class _ArcHelpCentreScreenState extends State<ArcHelpCentreScreen> {
       onPressed: onTap,
       icon: Icon(icon, size: 16),
       label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppTheme.neonCyan,
-        side: BorderSide(color: AppTheme.neonCyan.withValues(alpha: 0.42)),
-        textStyle: const TextStyle(fontWeight: FontWeight.w800),
-      ),
+      style: ArcUiTokens.textButtonStyle(),
     );
   }
 }
@@ -394,13 +389,7 @@ class _HelpCategoryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   category.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTheme.bodyTextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                    isBold: true,
-                  ),
+                  style: ArcUiTokens.cardTitle(fontSize: 15),
                 ),
               ),
             ],
@@ -408,13 +397,7 @@ class _HelpCategoryCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             category.summary,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: AppTheme.tradingFaintText,
-              fontSize: 12,
-              height: 1.25,
-            ),
+            style: ArcUiTokens.bodySmall(color: ArcUiTokens.textSecondary),
           ),
         ],
       ),

@@ -11,7 +11,8 @@ class AppTheme {
   static const Color dangerRed = Color.fromARGB(255, 255, 80, 80);
   static const Color warningAmber = Color.fromARGB(255, 255, 190, 70);
 
-  static const String heroFontFamily = 'VT323';
+  // ARC display text shares the bundled modern heading family.
+  static const String heroFontFamily = headingFontFamily;
   static const String headingFontFamily = 'SpaceGrotesk';
   static const String bodyFontFamily = 'Inter';
 
@@ -74,6 +75,7 @@ class AppTheme {
   static ThemeData get theme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: bodyFontFamily,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: Colors.transparent,
       primaryColor: darkBackground,
@@ -339,9 +341,9 @@ class AppTheme {
     return TextStyle(
       fontSize: fontSize,
       fontFamily: heroFontFamily,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w600,
       letterSpacing: heroLetterSpacing,
-      height: 1.0,
+      height: 1.15,
       color: color,
       shadows: [
         Shadow(color: color.withValues(alpha: 0.30), blurRadius: glowStrong),
