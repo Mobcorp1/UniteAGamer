@@ -109,14 +109,20 @@ service firebase.storage {
     }
 
     match /contract_evidence/{contractId}/{uid}/{fileName} {
-      allow read: if isOwner(uid) || isAdminOrModerator();
-      allow create: if isOwner(uid) &&
-        isAgeVerified() &&
-        isEvidenceUpload(25 * 1024 * 1024, fileName);
-      allow update: if false;
-      allow delete: if isAdminOrModerator();
+      function contract() {
+        return firestore.get(/databases/(default)/documents/arc_raider_contracts/$(contractId)).data;
+      }
+      allow read: if isSignedIn() &&
+        (contract().hunterUid == request.auth.uid || contract().reporterUid == request.auth.uid || isAdminOrModerator());
+      allow create: if isOwner(uid) && isAgeVerified() &&
+        contract().hunterUid == uid && contract().reporterUid != uid &&
+        (contract().status == 'inProgress' ||
+          (contract().status == 'evidenceSubmitted' && contract().verificationStatus == 'rejected')) &&
+        fileName.matches('[A-Za-z0-9_-]{1,128}\\.mp4') &&
+        request.resource != null && request.resource.contentType == 'video/mp4' &&
+        request.resource.size >= 12 && request.resource.size <= 25 * 1024 * 1024;
+      allow update, delete: if false;
     }
-
     match /legal_exports/{uid}/{fileName} {
       allow read: if isOwner(uid) || isAdminOrModerator();
       allow create, update, delete: if isAdminOrModerator();
@@ -127,3 +133,4 @@ service firebase.storage {
     }
   }
 }
+

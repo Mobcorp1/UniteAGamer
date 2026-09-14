@@ -3522,3 +3522,13 @@ exports.processUagMessageOutbox = onDocumentCreated(
   }
 );
 
+
+// Issuer-confirmed Hunter contracts; no client completion/stat authority.
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { createContractVerification } = require('./raider_contract_verification');
+const raiderContractVerification = createContractVerification({
+  db, bucket: admin.storage().bucket(), HttpsError,
+  timestamp: () => admin.firestore.FieldValue.serverTimestamp(),
+});
+exports.submitRaiderContractEvidence = onCall(raiderContractVerification.submit);
+exports.reviewRaiderContractEvidence = onCall(raiderContractVerification.review);

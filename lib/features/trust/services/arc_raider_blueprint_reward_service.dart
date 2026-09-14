@@ -101,12 +101,12 @@ class ArcRaiderBlueprintRewardService {
       if (contract.hunterUid.isEmpty) {
         throw StateError('The contract has no claimant.');
       }
-      if (!{
-        ArcRaiderContractStatus.evidenceSubmitted,
-        ArcRaiderContractStatus.disputed,
-      }.contains(contract.status)) {
-        throw StateError('Invalid contract completion state.');
+      if (!contract.isVerifiedComplete) {
+        throw StateError(
+          'Issuer video verification is required before settlement.',
+        );
       }
+      if (contractSnapshot.data()?['blueprintRewardsSettled'] == true) return;
 
       final selected = contract.blueprintRewardSelection.toSet().toList();
       if (selected.length != contract.blueprintRewardCount) {
@@ -179,7 +179,6 @@ class ArcRaiderBlueprintRewardService {
       }
 
       tx.update(contractRef, {
-        'status': ArcRaiderContractStatus.completed.name,
         'resolution': resolution.trim(),
         'moderatedByUid': moderatorUid,
         'resolvedAt': FieldValue.serverTimestamp(),

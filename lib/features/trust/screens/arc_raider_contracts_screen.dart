@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:uag_arc_raiders_hub/widgets/arc_tactical_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uag_arc_raiders_hub/build/app_bar.dart';
 import 'package:uag_arc_raiders_hub/build/app_drawer.dart';
@@ -489,7 +492,9 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
       padding: const EdgeInsets.all(12),
       decoration: ArcUiTokens.surfaceDecoration(
         role: ArcSurfaceRole.panel,
-        accent: stage.isEven ? ArcUiTokens.primaryAccent : ArcUiTokens.secondaryAccent,
+        accent: stage.isEven
+            ? ArcUiTokens.primaryAccent
+            : ArcUiTokens.secondaryAccent,
         radius: ArcUiTokens.radiusM,
         borderOpacity: 0.28,
       ),
@@ -498,10 +503,27 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
         children: [
           Row(
             children: [
-              Text('0${stage + 1}', style: ArcUiTokens.display(fontSize: 30, color: ArcUiTokens.secondaryAccent)),
+              Text(
+                '0${stage + 1}',
+                style: ArcUiTokens.display(
+                  fontSize: 30,
+                  color: ArcUiTokens.secondaryAccent,
+                ),
+              ),
               const SizedBox(width: 10),
-              Expanded(child: Text(labels[stage], style: ArcUiTokens.sectionTitle(fontSize: 21, color: ArcUiTokens.textPrimary))),
-              Text('${stage + 1}/$_stageCount', style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent)),
+              Expanded(
+                child: Text(
+                  labels[stage],
+                  style: ArcUiTokens.sectionTitle(
+                    fontSize: 21,
+                    color: ArcUiTokens.textPrimary,
+                  ),
+                ),
+              ),
+              Text(
+                '${stage + 1}/$_stageCount',
+                style: ArcUiTokens.label(color: ArcUiTokens.primaryAccent),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -511,10 +533,14 @@ class _ProgressiveReportState extends State<_ProgressiveReport> {
               return Expanded(
                 child: Container(
                   height: 3,
-                  margin: EdgeInsets.only(right: index == _stageCount - 1 ? 0 : 5),
+                  margin: EdgeInsets.only(
+                    right: index == _stageCount - 1 ? 0 : 5,
+                  ),
                   decoration: BoxDecoration(
                     color: active
-                        ? (index.isEven ? ArcUiTokens.primaryAccent : ArcUiTokens.secondaryAccent)
+                        ? (index.isEven
+                              ? ArcUiTokens.primaryAccent
+                              : ArcUiTokens.secondaryAccent)
                         : ArcUiTokens.borderSubtle.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(99),
                   ),
@@ -1302,9 +1328,14 @@ class _ReportRatHero extends StatelessWidget {
 }
 
 class _Contracts extends StatelessWidget {
-  const _Contracts({required this.repo, required this.live});
+  const _Contracts({
+    required this.repo,
+    required this.live,
+    this.embedded = false,
+  });
   final ArcRaiderContractsRepository repo;
   final bool live;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) => StreamBuilder<List<ArcRaiderContract>>(
@@ -1314,7 +1345,7 @@ class _Contracts extends StatelessWidget {
         return const _TrustLoadProblem(
           title: 'Contracts unavailable',
           message:
-              'We could not load Raider Contracts right now. Your report data has not been changed. Close and reopen this section, or try again shortly.',
+              'We could not load Raider Contracts. Reopen this section to try again.',
         );
       }
       if (!snapshot.hasData) {
@@ -1322,163 +1353,599 @@ class _Contracts extends StatelessWidget {
       }
       final items = snapshot.data!;
       if (items.isEmpty) {
-        return const Center(child: Text('No Raider Contracts here yet.'));
+        return const Padding(
+          padding: ArcUiTokens.panelPadding,
+          child: Text('No Raider Contracts here yet.'),
+        );
       }
-      return ListView(
-        padding: AppTheme.pagePadding,
-        children: items
-            .map(
-              (contract) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        contract.targetDisplayName,
-                        style: AppTheme.tradingHeading(fontSize: 22),
-                      ),
-                      Text(
-                        contract.status.name,
-                        style: const TextStyle(color: AppTheme.neonCyan),
-                      ),
-                      if (contract.rewardSummary.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'REWARD: ${contract.rewardSummary}',
-                          style: const TextStyle(color: Colors.amberAccent),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      Text(
-                        contract.evidenceRequirements,
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 10),
-                      if (live)
-                        FilledButton(
-                          onPressed: () => repo.acceptContract(contract.id),
-                          child: const Text('Accept contract'),
-                        )
-                      else ...[
-                        if (contract.status == ArcRaiderContractStatus.accepted)
-                          FilledButton(
-                            onPressed: () => repo.startContract(contract.id),
-                            child: const Text('Start hunt'),
-                          ),
-                        if (contract.status ==
-                            ArcRaiderContractStatus.inProgress)
-                          OutlinedButton(
-                            onPressed: () =>
-                                _evidenceDialog(context, repo, contract),
-                            child: const Text('Submit evidence'),
-                          ),
-                        if (contract.status ==
-                            ArcRaiderContractStatus.evidenceSubmitted)
-                          OutlinedButton(
-                            onPressed: () => repo.disputeContract(
-                              contract.id,
-                              'Participant requested moderator review.',
-                            ),
-                            child: const Text('Request review'),
-                          ),
-                      ],
-                    ],
+      return ListView.separated(
+        shrinkWrap: embedded,
+        physics: embedded ? const NeverScrollableScrollPhysics() : null,
+        padding: embedded ? EdgeInsets.zero : AppTheme.pagePadding,
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(height: ArcUiTokens.gapM),
+        itemBuilder: (context, index) {
+          final contract = items[index];
+          return ArcHunterContractCard(
+            contract: contract,
+            onAccept: live ? () => repo.acceptContract(contract.id) : null,
+            onStart: live ? null : () => repo.startContract(contract.id),
+            onSubmit: live
+                ? null
+                : () => _evidenceDialog(context, repo, contract),
+            onOpenEvidence: () => _openContractVideo(contract),
+            onDispute: live
+                ? null
+                : () => repo.disputeContract(
+                    contract.id,
+                    'Participant requested moderator review.',
                   ),
-                ),
-              ),
-            )
-            .toList(),
+          );
+        },
       );
     },
   );
+}
+
+/// Private contract detail presentation; callbacks keep verification authority
+/// in the repository/server and allow the actual review UX to be widget tested.
+class ArcHunterContractCard extends StatefulWidget {
+  const ArcHunterContractCard({
+    super.key,
+    required this.contract,
+    this.issuer = false,
+    this.onAccept,
+    this.onStart,
+    this.onSubmit,
+    this.onOpenEvidence,
+    this.onReview,
+    this.onDispute,
+  });
+
+  final ArcRaiderContract contract;
+  final bool issuer;
+  final Future<void> Function()? onAccept;
+  final Future<void> Function()? onStart;
+  final Future<void> Function()? onSubmit;
+  final Future<void> Function()? onOpenEvidence;
+  final Future<void> Function()? onDispute;
+  final Future<void> Function(bool confirmed, String reason)? onReview;
+
+  @override
+  State<ArcHunterContractCard> createState() => _ArcHunterContractCardState();
+}
+
+class _ArcHunterContractCardState extends State<ArcHunterContractCard> {
+  bool _busy = false;
+  String? _error;
+  String? _notice;
+
+  Future<void> _run(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+      _notice = null;
+    });
+    try {
+      await action();
+    } catch (_) {
+      if (mounted)
+        setState(
+          () =>
+              _error = 'That action could not be completed. Please try again.',
+        );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _review(bool confirmed) async {
+    if (_busy || widget.onReview == null) return;
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _IssuerReviewDialog(
+        confirmed: confirmed,
+        onSubmit: (reason) => widget.onReview!(confirmed, reason),
+      ),
+    );
+    if (result == true && mounted) {
+      setState(
+        () => _notice = confirmed
+            ? 'Completion confirmed. Your contract is updating.'
+            : 'Evidence rejected. The hunter can submit a new clip.',
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final contract = widget.contract;
+    final rejected = contract.verificationStatus == 'rejected';
+    final hasVideo = contract.evidence.any(
+      (item) => item.kind == 'video' && item.storagePath.isNotEmpty,
+    );
+    final status = contract.isVerifiedComplete
+        ? 'VERIFIED COMPLETE'
+        : contract.isAwaitingIssuerReview
+        ? 'AWAITING ISSUER REVIEW'
+        : rejected
+        ? 'EVIDENCE REJECTED'
+        : contract.status == ArcRaiderContractStatus.completed
+        ? 'COMPLETED · NOT ISSUER VERIFIED'
+        : switch (contract.status) {
+            ArcRaiderContractStatus.available => 'AVAILABLE',
+            ArcRaiderContractStatus.accepted => 'ACCEPTED',
+            ArcRaiderContractStatus.inProgress => 'HUNT IN PROGRESS',
+            ArcRaiderContractStatus.evidenceSubmitted =>
+              'EVIDENCE SUBMITTED · NOT VERIFIED',
+            ArcRaiderContractStatus.rejected => 'CONTRACT REJECTED',
+            ArcRaiderContractStatus.disputed => 'UNDER REVIEW',
+            ArcRaiderContractStatus.expired => 'EXPIRED',
+            ArcRaiderContractStatus.cancelled => 'CANCELLED',
+            ArcRaiderContractStatus.completed => 'COMPLETED',
+          };
+    return ArcTacticalPanel(
+      icon: contract.isVerifiedComplete
+          ? Icons.verified_outlined
+          : Icons.radar_rounded,
+      title: contract.targetDisplayName,
+      subtitle: status,
+      accent: contract.isVerifiedComplete
+          ? ArcUiTokens.success
+          : rejected
+          ? ArcUiTokens.warning
+          : ArcUiTokens.primaryAccent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (contract.rewardSummary.isNotEmpty) ...[
+            Text(
+              'Reward: ${contract.rewardSummary}',
+              style: ArcUiTokens.body(),
+            ),
+            const SizedBox(height: ArcUiTokens.gapS),
+          ],
+          Text(contract.evidenceRequirements, style: ArcUiTokens.bodySmall()),
+          if (contract.evidenceSubmittedAt != null) ...[
+            const SizedBox(height: ArcUiTokens.gapS),
+            Text(
+              'Clip submitted: ${MaterialLocalizations.of(context).formatShortDate(contract.evidenceSubmittedAt!.toLocal())}',
+              style: ArcUiTokens.metadata(),
+            ),
+          ],
+          if (rejected) ...[
+            const SizedBox(height: ArcUiTokens.gapS),
+            Text(
+              contract.rejectionReason.isEmpty
+                  ? 'The issuer requested a new evidence clip.'
+                  : contract.rejectionReason,
+              style: ArcUiTokens.body(color: ArcUiTokens.warning),
+            ),
+            if (!widget.issuer && contract.canSubmitVideoEvidence)
+              Text(
+                'Submit a new MP4 clip to request another review. Rejected evidence does not count as a verified completion.',
+                style: ArcUiTokens.bodySmall(),
+              ),
+          ],
+          if (contract.isAwaitingIssuerReview && !widget.issuer) ...[
+            const SizedBox(height: ArcUiTokens.gapS),
+            Text(
+              'Your clip is submitted. Only confirmation from the contract issuer makes this a verified completion.',
+              style: ArcUiTokens.bodySmall(),
+            ),
+          ],
+          if (contract.isVerifiedComplete) ...[
+            const SizedBox(height: ArcUiTokens.gapS),
+            Text(
+              'The contract issuer confirmed this completion. The submitted evidence is locked.',
+              style: ArcUiTokens.bodySmall(),
+            ),
+          ],
+          const SizedBox(height: ArcUiTokens.gapM),
+          Wrap(
+            spacing: ArcUiTokens.gapS,
+            runSpacing: ArcUiTokens.gapS,
+            children: [
+              if (hasVideo && widget.onOpenEvidence != null)
+                OutlinedButton.icon(
+                  onPressed: _busy ? null : () => _run(widget.onOpenEvidence!),
+                  icon: const Icon(Icons.play_circle_outline_rounded),
+                  label: const Text('OPEN SUBMITTED VIDEO'),
+                ),
+              if (!widget.issuer && widget.onAccept != null)
+                FilledButton(
+                  onPressed: _busy ? null : () => _run(widget.onAccept!),
+                  child: const Text('ACCEPT CONTRACT'),
+                ),
+              if (!widget.issuer &&
+                  contract.status == ArcRaiderContractStatus.accepted &&
+                  widget.onStart != null)
+                FilledButton(
+                  onPressed: _busy ? null : () => _run(widget.onStart!),
+                  child: const Text('START HUNT'),
+                ),
+              if (!widget.issuer &&
+                  contract.canSubmitVideoEvidence &&
+                  widget.onSubmit != null)
+                FilledButton.icon(
+                  onPressed: _busy ? null : () => _run(widget.onSubmit!),
+                  icon: const Icon(Icons.video_file_outlined),
+                  label: Text(
+                    rejected ? 'SUBMIT NEW VIDEO' : 'SUBMIT VIDEO EVIDENCE',
+                  ),
+                ),
+              if (!widget.issuer &&
+                  contract.status ==
+                      ArcRaiderContractStatus.evidenceSubmitted &&
+                  widget.onDispute != null)
+                OutlinedButton(
+                  onPressed: _busy ? null : () => _run(widget.onDispute!),
+                  child: const Text('REQUEST MODERATOR REVIEW'),
+                ),
+              if (widget.issuer &&
+                  contract.isAwaitingIssuerReview &&
+                  widget.onReview != null) ...[
+                FilledButton.icon(
+                  onPressed: _busy || !hasVideo || _notice != null
+                      ? null
+                      : () => _review(true),
+                  icon: const Icon(Icons.check_circle_outline_rounded),
+                  label: const Text('CONFIRM COMPLETION'),
+                ),
+                OutlinedButton(
+                  onPressed: _busy || _notice != null
+                      ? null
+                      : () => _review(false),
+                  child: const Text('REJECT EVIDENCE'),
+                ),
+              ],
+            ],
+          ),
+          if (_busy)
+            const Padding(
+              padding: EdgeInsets.only(top: ArcUiTokens.gapS),
+              child: LinearProgressIndicator(),
+            ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: ArcUiTokens.gapS),
+              child: Text(
+                _error!,
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.danger),
+              ),
+            ),
+          if (_notice != null)
+            Padding(
+              padding: const EdgeInsets.only(top: ArcUiTokens.gapS),
+              child: Text(
+                _notice!,
+                style: ArcUiTokens.bodySmall(color: ArcUiTokens.success),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IssuerReviewDialog extends StatefulWidget {
+  const _IssuerReviewDialog({required this.confirmed, required this.onSubmit});
+  final bool confirmed;
+  final Future<void> Function(String reason) onSubmit;
+  @override
+  State<_IssuerReviewDialog> createState() => _IssuerReviewDialogState();
+}
+
+class _IssuerReviewDialogState extends State<_IssuerReviewDialog> {
+  final _reason = TextEditingController();
+  bool _busy = false;
+  bool _acknowledged = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    if (!widget.confirmed && _reason.text.trim().isEmpty) {
+      setState(
+        () => _error = 'Explain why this clip does not confirm completion.',
+      );
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.onSubmit(_reason.text.trim());
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (_) {
+      if (mounted)
+        setState(
+          () => _error =
+              'Review could not be saved. Your feedback is still here. Try again or reopen the contract if it has changed.',
+        );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+    canPop: !_busy,
+    child: AlertDialog(
+      backgroundColor: ArcUiTokens.surfaceOverlay,
+      scrollable: true,
+      title: Text(
+        widget.confirmed ? 'Confirm this completion?' : 'Reject this evidence?',
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.confirmed
+                ? 'Confirm only after reviewing the submitted video against this contract. Confirmation locks the evidence and records a verified completion.'
+                : 'Tell the hunter what is missing so they can submit a new clip. Rejected evidence does not count towards verified results.',
+            style: ArcUiTokens.bodySmall(),
+          ),
+          const SizedBox(height: ArcUiTokens.gapM),
+          if (widget.confirmed)
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _acknowledged,
+              onChanged: _busy
+                  ? null
+                  : (value) => setState(() => _acknowledged = value ?? false),
+              title: const Text(
+                'I reviewed the video and confirm the contract was completed.',
+              ),
+            )
+          else
+            TextField(
+              controller: _reason,
+              enabled: !_busy,
+              minLines: 3,
+              maxLines: 6,
+              maxLength: 1000,
+              decoration: ArcUiTokens.inputDecoration(
+                labelText: 'Rejection reason (required)',
+              ),
+            ),
+          if (_error != null)
+            Text(
+              _error!,
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.danger),
+            ),
+          if (_busy) const LinearProgressIndicator(),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.of(context).pop(false),
+          child: const Text('CANCEL'),
+        ),
+        FilledButton(
+          onPressed: _busy || (widget.confirmed && !_acknowledged)
+              ? null
+              : _submit,
+          child: Text(
+            widget.confirmed ? 'YES, CONFIRM COMPLETION' : 'SEND REJECTION',
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _openContractVideo(ArcRaiderContract contract) async {
+  final video = contract.evidence.firstWhere(
+    (item) => item.kind == 'video' && item.storagePath.isNotEmpty,
+  );
+  final expectedPrefix =
+      'contract_evidence/${contract.id}/${contract.hunterUid}/';
+  if (!video.storagePath.startsWith(expectedPrefix))
+    throw StateError('Invalid evidence reference.');
+  final url = await FirebaseStorage.instance
+      .ref(video.storagePath)
+      .getDownloadURL();
+  final uri = Uri.parse(url);
+  if (uri.scheme != 'https' || !await launchUrl(uri))
+    throw StateError('Could not open evidence.');
 }
 
 Future<void> _evidenceDialog(
   BuildContext context,
   ArcRaiderContractsRepository repo,
   ArcRaiderContract contract,
-) async {
-  final url = TextEditingController();
-  final social = TextEditingController();
-  await showDialog<void>(
-    context: context,
-    builder: (d) => AlertDialog(
+) => showDialog<void>(
+  context: context,
+  barrierDismissible: false,
+  builder: (_) => _ContractVideoDialog(repo: repo, contract: contract),
+);
+
+class _ContractVideoDialog extends StatefulWidget {
+  const _ContractVideoDialog({required this.repo, required this.contract});
+  final ArcRaiderContractsRepository repo;
+  final ArcRaiderContract contract;
+  @override
+  State<_ContractVideoDialog> createState() => _ContractVideoDialogState();
+}
+
+class _ContractVideoDialogState extends State<_ContractVideoDialog> {
+  XFile? _clip;
+  ArcRaiderEvidence? _uploaded;
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _pick() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final file = await ImagePicker().pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: const Duration(seconds: 30),
+      );
+      if (file == null) return;
+      final length = await file.length();
+      if (!file.name.toLowerCase().endsWith('.mp4') ||
+          length == 0 ||
+          length > 25 * 1024 * 1024) {
+        if (mounted)
+          setState(
+            () => _error = 'Choose a nonempty MP4 clip, 25 MB or smaller.',
+          );
+        return;
+      }
+      if (mounted)
+        setState(() {
+          _clip = file;
+          _uploaded = null;
+        });
+    } catch (_) {
+      if (mounted)
+        setState(
+          () => _error = 'Could not open that video. Please choose it again.',
+        );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_busy || _clip == null) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      _uploaded ??= await widget.repo.uploadContractVideoEvidence(
+        contractId: widget.contract.id,
+        file: _clip!,
+      );
+      await widget.repo.submitEvidence(
+        widget.contract.id,
+        evidence: [_uploaded!],
+      );
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted)
+        setState(
+          () => _error =
+              'The clip could not be submitted. Retry with this clip, or reopen the contract if its status changed.',
+        );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+    canPop: !_busy,
+    child: AlertDialog(
+      scrollable: true,
       backgroundColor: ArcUiTokens.surfaceOverlay,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ArcUiTokens.radiusXL),
-        side: BorderSide(
-          color: ArcUiTokens.primaryAccent.withValues(alpha: 0.28),
-        ),
-      ),
-      title: Text(
-        'Submit contract evidence',
-        style: ArcUiTokens.sectionTitle(
-          fontSize: 18,
-          color: ArcUiTokens.primaryAccent,
-        ),
-      ),
+      title: const Text('Submit completion video'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: url,
-            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-            decoration: ArcUiTokens.inputDecoration(
-              labelText: 'Evidence URL *',
-            ),
+          Text(
+            'Choose an MP4 clip, 25 MB or smaller. Show the encounter and outcome clearly. The contract issuer must confirm your evidence before it counts.',
+            style: ArcUiTokens.bodySmall(),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: social,
-            style: ArcUiTokens.body(color: ArcUiTokens.textPrimary),
-            decoration: ArcUiTokens.inputDecoration(
-              labelText: 'Optional TikTok / social URL',
-            ),
+          const SizedBox(height: ArcUiTokens.gapM),
+          OutlinedButton.icon(
+            onPressed: _busy ? null : _pick,
+            icon: const Icon(Icons.video_library_outlined),
+            label: Text(_clip == null ? 'CHOOSE VIDEO' : 'CHANGE VIDEO'),
           ),
+          if (_clip != null) Text(_clip!.name, style: ArcUiTokens.bodySmall()),
+          if (_error != null)
+            Text(
+              _error!,
+              style: ArcUiTokens.bodySmall(color: ArcUiTokens.danger),
+            ),
+          if (_busy) const LinearProgressIndicator(),
         ],
       ),
       actions: [
         TextButton(
-          style: ArcUiTokens.textButtonStyle(accent: ArcUiTokens.primaryAccent),
-          onPressed: () => Navigator.pop(d),
-          child: const Text('Cancel'),
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+          child: const Text('CANCEL'),
         ),
-        TextButton(
-          style: ArcUiTokens.textButtonStyle(
-            accent: ArcUiTokens.primaryAccent,
-            primary: true,
-          ),
-          onPressed: () async {
-            if (url.text.trim().isEmpty) {
-              return;
-            }
-            await repo.submitEvidence(
-              contract.id,
-              evidence: [
-                ArcRaiderEvidence(
-                  id: DateTime.now().microsecondsSinceEpoch.toString(),
-                  submittedByUid: repo.uid,
-                  kind: 'link',
-                  url: url.text.trim(),
-                  caption: 'Contract completion evidence',
-                  createdAt: DateTime.now(),
-                ),
-              ],
-              socialContentUrl: social.text,
-            );
-            if (d.mounted) {
-              Navigator.pop(d);
-            }
-          },
-          child: const Text('Submit'),
+        FilledButton(
+          onPressed: _busy || _clip == null ? null : _submit,
+          child: const Text('SUBMIT FOR ISSUER REVIEW'),
         ),
       ],
     ),
   );
-  url.dispose();
-  social.dispose();
+}
+
+class _IssuedContracts extends StatelessWidget {
+  const _IssuedContracts({required this.repo});
+  final ArcRaiderContractsRepository repo;
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<List<ArcRaiderContract>>(
+    stream: repo.watchIssuedContracts(),
+    builder: (context, snapshot) {
+      if (snapshot.hasError)
+        return const _TrustLoadProblem(
+          title: 'Issuer review unavailable',
+          message: 'Reopen Activity to reload your issued contracts.',
+        );
+      if (!snapshot.hasData) return const LinearProgressIndicator();
+      final contracts = snapshot.requireData.toList()
+        ..sort((a, b) {
+          if (a.isAwaitingIssuerReview != b.isAwaitingIssuerReview)
+            return a.isAwaitingIssuerReview ? -1 : 1;
+          return (b.updatedAt ?? DateTime(1970)).compareTo(
+            a.updatedAt ?? DateTime(1970),
+          );
+        });
+      if (contracts.isEmpty)
+        return const Padding(
+          padding: ArcUiTokens.panelPadding,
+          child: Text(
+            'No issued contracts yet. Evidence from your hunters will appear here for review.',
+          ),
+        );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final contract in contracts) ...[
+            ArcHunterContractCard(
+              key: ValueKey(
+                '${contract.id}:${contract.evidenceSubmissionId}:${contract.verificationStatus}',
+              ),
+              contract: contract,
+              issuer: true,
+              onOpenEvidence: () => _openContractVideo(contract),
+              onReview: (confirmed, reason) => repo.reviewEvidence(
+                contractId: contract.id,
+                submissionId: contract.evidenceSubmissionId,
+                confirmed: confirmed,
+                reason: reason,
+              ),
+            ),
+            const SizedBox(height: ArcUiTokens.gapM),
+          ],
+        ],
+      );
+    },
+  );
 }
 
 class _MyActivity extends StatelessWidget {
@@ -1489,35 +1956,55 @@ class _MyActivity extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: AppTheme.pagePadding,
     children: [
+      Text(
+        'YOUR ISSUED CONTRACTS',
+        style: AppTheme.tradingHeading(fontSize: 20),
+      ),
+      Text(
+        'Evidence awaiting your review appears first.',
+        style: ArcUiTokens.bodySmall(),
+      ),
+      const SizedBox(height: ArcUiTokens.gapM),
+      _IssuedContracts(repo: repo),
+      const Divider(),
+      Text('YOUR HUNTS', style: AppTheme.tradingHeading(fontSize: 20)),
+      const SizedBox(height: ArcUiTokens.gapM),
+      _Contracts(repo: repo, live: false, embedded: true),
+      const Divider(),
       Text('MY REPORTS', style: AppTheme.tradingHeading(fontSize: 20)),
       StreamBuilder<List<ArcRaiderReport>>(
         stream: repo.watchMyReports(),
-        builder: (context, snapshot) => Column(
-          children: (snapshot.data ?? const <ArcRaiderReport>[])
-              .map(
-                (r) => ListTile(
-                  title: Text(r.targetDisplayName),
-                  subtitle: Text(
-                    ArcTextSanitizer.metadataLine([
-                      r.category.name,
-                      r.status.name,
-                      r.mapDisplayName,
-                    ]),
+        builder: (context, snapshot) {
+          if (snapshot.hasError)
+            return const _TrustLoadProblem(
+              title: 'Reports unavailable',
+              message: 'Reopen Activity to reload your reports.',
+            );
+          if (!snapshot.hasData) return const LinearProgressIndicator();
+          return Column(
+            children: snapshot.requireData
+                .map(
+                  (r) => ListTile(
+                    title: Text(r.targetDisplayName),
+                    subtitle: Text(
+                      ArcTextSanitizer.metadataLine([
+                        r.category.name,
+                        r.status.name,
+                        r.mapDisplayName,
+                      ]),
+                    ),
+                    trailing: r.canWithdraw
+                        ? TextButton(
+                            onPressed: () => repo.withdrawReport(r.id),
+                            child: const Text('Withdraw'),
+                          )
+                        : null,
                   ),
-                  trailing: r.canWithdraw
-                      ? TextButton(
-                          onPressed: () => repo.withdrawReport(r.id),
-                          child: const Text('Withdraw'),
-                        )
-                      : null,
-                ),
-              )
-              .toList(),
-        ),
+                )
+                .toList(),
+          );
+        },
       ),
-      const Divider(),
-      Text('MY CONTRACTS', style: AppTheme.tradingHeading(fontSize: 20)),
-      SizedBox(height: 500, child: _Contracts(repo: repo, live: false)),
     ],
   );
 }

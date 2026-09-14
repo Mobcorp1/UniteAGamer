@@ -374,6 +374,12 @@ class ArcRaiderContract {
     this.moderationNotes = '',
     this.moderatedByUid = '',
     this.socialContentUrl = '',
+    this.verificationStatus = '',
+    this.evidenceSubmissionId = '',
+    this.verifiedByUid = '',
+    this.rejectionReason = '',
+    this.verifiedAt,
+    this.rejectedAt,
     this.createdAt,
     this.updatedAt,
     this.acceptedAt,
@@ -398,6 +404,39 @@ class ArcRaiderContract {
   final String moderationNotes;
   final String moderatedByUid;
   final String socialContentUrl;
+  final String verificationStatus;
+  final String evidenceSubmissionId;
+  final String verifiedByUid;
+  final String rejectionReason;
+  final DateTime? verifiedAt;
+  final DateTime? rejectedAt;
+
+  // Legacy completed records are deliberately excluded. Server rules protect
+  // these attestation fields; this predicate is a display/consumer boundary.
+  bool get isVerifiedComplete =>
+      status == ArcRaiderContractStatus.completed &&
+      verificationStatus == 'verified' &&
+      reporterUid.isNotEmpty &&
+      hunterUid.isNotEmpty &&
+      hunterUid != reporterUid &&
+      verifiedByUid == reporterUid &&
+      verifiedAt != null &&
+      evidenceSubmissionId.isNotEmpty &&
+      evidence.length == 1 &&
+      evidence.single.kind == 'video' &&
+      evidence.single.submittedByUid == hunterUid &&
+      evidence.single.storagePath.startsWith(
+        'contract_evidence/$id/$hunterUid/',
+      );
+
+  bool get isAwaitingIssuerReview =>
+      status == ArcRaiderContractStatus.evidenceSubmitted &&
+      verificationStatus == 'pending';
+
+  bool get canSubmitVideoEvidence =>
+      status == ArcRaiderContractStatus.inProgress ||
+      (status == ArcRaiderContractStatus.evidenceSubmitted &&
+          verificationStatus == 'rejected');
   final int reputationReward;
   final ArcRaiderContractStatus status;
   final List<ArcRaiderEvidence> evidence;
@@ -421,6 +460,9 @@ class ArcRaiderContract {
       status == ArcRaiderContractStatus.available && !isExpired;
 
   bool canTransitionTo(ArcRaiderContractStatus next) {
+    if (next == ArcRaiderContractStatus.completed && !isAwaitingIssuerReview) {
+      return false;
+    }
     const allowed = <ArcRaiderContractStatus, Set<ArcRaiderContractStatus>>{
       ArcRaiderContractStatus.available: {
         ArcRaiderContractStatus.accepted,
@@ -470,6 +512,12 @@ class ArcRaiderContract {
     'moderationNotes': moderationNotes,
     'moderatedByUid': moderatedByUid,
     'socialContentUrl': socialContentUrl,
+    'verificationStatus': verificationStatus,
+    'evidenceSubmissionId': evidenceSubmissionId,
+    'verifiedByUid': verifiedByUid,
+    'rejectionReason': rejectionReason,
+    if (verifiedAt != null) 'verifiedAt': Timestamp.fromDate(verifiedAt!),
+    if (rejectedAt != null) 'rejectedAt': Timestamp.fromDate(rejectedAt!),
     if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
     if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     if (acceptedAt != null) 'acceptedAt': Timestamp.fromDate(acceptedAt!),
@@ -530,6 +578,12 @@ class ArcRaiderContract {
     moderationNotes: '${map['moderationNotes'] ?? ''}',
     moderatedByUid: '${map['moderatedByUid'] ?? ''}',
     socialContentUrl: '${map['socialContentUrl'] ?? ''}',
+    verificationStatus: '${map['verificationStatus'] ?? ''}',
+    evidenceSubmissionId: '${map['evidenceSubmissionId'] ?? ''}',
+    verifiedByUid: '${map['verifiedByUid'] ?? ''}',
+    rejectionReason: '${map['rejectionReason'] ?? ''}',
+    verifiedAt: _date(map['verifiedAt']),
+    rejectedAt: _date(map['rejectedAt']),
     createdAt: _date(map['createdAt']),
     updatedAt: _date(map['updatedAt']),
     acceptedAt: _date(map['acceptedAt']),

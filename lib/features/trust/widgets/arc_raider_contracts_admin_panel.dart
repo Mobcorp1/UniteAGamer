@@ -144,19 +144,10 @@ class ArcRaiderContractsAdminPanel extends StatelessWidget {
                               ),
                               child: const Text('Reject evidence'),
                             ),
-                            const SizedBox(width: 8),
-                            TextButton(
-                              style: ArcUiTokens.textButtonStyle(
-                                accent: ArcUiTokens.success,
-                                primary: true,
+                            const Flexible(
+                              child: Text(
+                                'Completion requires issuer video review.',
                               ),
-                              onPressed: () => repo.resolveContract(
-                                x.id,
-                                completed: true,
-                                resolution:
-                                    'Moderator approved submitted evidence.',
-                              ),
-                              child: const Text('Complete contract'),
                             ),
                           ],
                         ),

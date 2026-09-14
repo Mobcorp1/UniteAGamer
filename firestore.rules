@@ -221,10 +221,10 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdminOrDev();
-      allow create: if isAdminOrDev() ||
-        (isOwner(userId) && ownerUserCreateIsCommerciallySafe());
-      allow update: if isAdminOrDev() ||
-        (isOwner(userId) && ownerUserCommercialFieldsUnchanged());
+      allow create: if !request.resource.data.keys().hasAny(['raiderContractStats']) &&
+        (isAdminOrDev() || (isOwner(userId) && ownerUserCreateIsCommerciallySafe()));
+      allow update: if !request.resource.data.diff(resource.data).affectedKeys().hasAny(['raiderContractStats']) &&
+        (isAdminOrDev() || (isOwner(userId) && ownerUserCommercialFieldsUnchanged()));
       allow delete: if isOwner(userId) || isAdminOrDev();
 
       match /arc_blueprints/{docId} {
@@ -334,53 +334,61 @@ service cloud.firestore {
          resource.data.reporterUid == request.auth.uid ||
          resource.data.hunterUid == request.auth.uid ||
          isTrustModerator());
-      allow create: if isTrustModerator();
-      allow update: if isTrustModerator() || (isSignedIn() &&
-        request.resource.data.id == resource.data.id &&
-        request.resource.data.reportId == resource.data.reportId &&
-        request.resource.data.reporterUid == resource.data.reporterUid &&
-        request.resource.data.targetUid == resource.data.targetUid &&
-        request.resource.data.targetDisplayName == resource.data.targetDisplayName &&
-        request.resource.data.rewardItems == resource.data.rewardItems &&
-        request.resource.data.rewardSummary == resource.data.rewardSummary &&
-        request.resource.data.blueprintRewardCount == resource.data.blueprintRewardCount &&
+      allow create: if isTrustModerator() &&
+        request.resource.data.status == 'available' &&
+        request.resource.data.hunterUid == '' &&
+        request.resource.data.evidence.size() == 0 &&
+        !request.resource.data.keys().hasAny(['verificationStatus', 'evidenceSubmissionId',
+          'verifiedByUid', 'verifiedAt', 'rejectedAt', 'rejectionReason']);
+      allow update: if isSignedIn() &&
         request.resource.data.blueprintRewardPool == resource.data.blueprintRewardPool &&
-        request.resource.data.reputationReward == resource.data.reputationReward &&
-        request.resource.data.evidenceRequirements == resource.data.evidenceRequirements &&
-        request.resource.data.moderatedByUid == resource.data.moderatedByUid &&
-        (
-          (resource.data.hunterUid == request.auth.uid &&
-            request.resource.data.hunterUid == resource.data.hunterUid &&
-            request.resource.data.status == resource.data.status &&
-            (resource.data.status == 'accepted' ||
-             resource.data.status == 'inProgress' ||
-             resource.data.status == 'evidenceSubmitted' ||
-             resource.data.status == 'disputed') &&
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blueprintRewardSelection', 'updatedAt']) &&
-            request.resource.data.blueprintRewardSelection is list &&
-            request.resource.data.blueprintRewardSelection.size() == resource.data.blueprintRewardCount &&
-            resource.data.blueprintRewardPool.toSet().hasAll(request.resource.data.blueprintRewardSelection.toSet())) ||
-          (resource.data.status == 'available' &&
-            request.resource.data.blueprintRewardSelection == resource.data.blueprintRewardSelection &&
-            request.resource.data.status == 'accepted' &&
-            request.resource.data.hunterUid == request.auth.uid &&
-            request.auth.uid != resource.data.reporterUid &&
-            request.auth.uid != resource.data.targetUid) ||
-          (resource.data.hunterUid == request.auth.uid &&
-            request.resource.data.hunterUid == resource.data.hunterUid &&
-            request.resource.data.blueprintRewardSelection == resource.data.blueprintRewardSelection &&
-            ((resource.data.status == 'accepted' && request.resource.data.status == 'inProgress') ||
-             (resource.data.status == 'inProgress' && request.resource.data.status == 'evidenceSubmitted') ||
-             ((resource.data.status == 'inProgress' || resource.data.status == 'evidenceSubmitted') &&
-                request.resource.data.status == 'disputed'))) ||
-          (resource.data.reporterUid == request.auth.uid &&
-            request.resource.data.blueprintRewardSelection == resource.data.blueprintRewardSelection &&
-            (resource.data.status == 'inProgress' || resource.data.status == 'evidenceSubmitted') &&
-            request.resource.data.status == 'disputed')
-        ));
+        request.resource.data.blueprintRewardCount == resource.data.blueprintRewardCount && (
+        (resource.data.status == 'available' &&
+          request.resource.data.status == 'accepted' &&
+          request.resource.data.hunterUid == request.auth.uid &&
+          request.auth.uid != resource.data.reporterUid &&
+          request.auth.uid != resource.data.targetUid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+            ['status', 'hunterUid', 'acceptedAt', 'updatedAt'])) ||
+        (resource.data.hunterUid == request.auth.uid &&
+          resource.data.status == 'accepted' && request.resource.data.status == 'inProgress' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+        ((resource.data.hunterUid == request.auth.uid || resource.data.reporterUid == request.auth.uid) &&
+          resource.data.status in ['inProgress', 'evidenceSubmitted'] &&
+          request.resource.data.status == 'disputed' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'resolution', 'updatedAt'])) ||
+        (resource.data.hunterUid == request.auth.uid &&
+          resource.data.status in ['accepted', 'inProgress', 'evidenceSubmitted', 'disputed'] &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blueprintRewardSelection', 'updatedAt']) &&
+          request.resource.data.blueprintRewardSelection is list &&
+          request.resource.data.blueprintRewardSelection.size() == resource.data.blueprintRewardCount &&
+          request.resource.data.blueprintRewardSelection.toSet().size() == resource.data.blueprintRewardCount &&
+          resource.data.blueprintRewardPool.toSet().hasAll(request.resource.data.blueprintRewardSelection.toSet())) ||
+        (isTrustModerator() && resource.data.status in ['available', 'accepted', 'inProgress', 'evidenceSubmitted', 'disputed'] &&
+          request.resource.data.status in ['rejected', 'cancelled', 'expired'] &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+            ['status', 'resolution', 'moderationNotes', 'moderatedByUid', 'resolvedAt', 'updatedAt'])) ||
+        (isAdminOrDev() && resource.data.status == 'completed' &&
+          resource.data.get('verificationStatus', '') == 'verified' &&
+          resource.data.get('verifiedByUid', '') == resource.data.reporterUid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+            ['blueprintRewardsSettled', 'resolution', 'moderatedByUid', 'resolvedAt', 'updatedAt']) &&
+          resource.data.get('blueprintRewardsSettled', false) == false &&
+          request.resource.data.blueprintRewardsSettled == true)
+      );
       allow delete: if false;
+      match /verification_audit/{eventId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/arc_raider_contracts/$(contractId)).data.reporterUid == request.auth.uid ||
+          get(/databases/$(database)/documents/arc_raider_contracts/$(contractId)).data.hunterUid == request.auth.uid || isTrustModerator());
+        allow write: if false;
+      }
     }
 
+    match /raider_verified_results/{contractId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
     match /arc_blueprint_drop_reports/{reportId} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn();
@@ -1218,4 +1226,6 @@ service cloud.firestore {
     }
   }
 }
+
+
 

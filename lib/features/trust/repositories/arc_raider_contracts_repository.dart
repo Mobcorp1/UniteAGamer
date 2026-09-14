@@ -1,9 +1,14 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/arc_raider_contract_models.dart';
+import '../models/arc_hunter_verified_result.dart';
 import '../services/arc_raider_blueprint_reward_service.dart';
 
 class ArcRaiderContractsRepository {
@@ -31,6 +36,29 @@ class ArcRaiderContractsRepository {
       _db.collection('arc_raider_reports');
   CollectionReference<Map<String, dynamic>> get _contracts =>
       _db.collection('arc_raider_contracts');
+
+  Stream<List<ArcHunterVerifiedResult>> watchVerifiedResults({
+    String? countryCode,
+    String? hunterUid,
+  }) {
+    Query<Map<String, dynamic>> query = _db.collection(
+      'raider_verified_results',
+    );
+    if (countryCode != null) {
+      query = query.where('countryCode', isEqualTo: countryCode.toUpperCase());
+    } else if (hunterUid != null) {
+      query = query.where('hunterUid', isEqualTo: hunterUid);
+    }
+    return query.snapshots().map(
+      (snapshot) => snapshot.docs
+          .map(
+            (doc) =>
+                ArcHunterVerifiedResult.fromServerRecord(doc.id, doc.data()),
+          )
+          .whereType<ArcHunterVerifiedResult>()
+          .toList(growable: false),
+    );
+  }
 
   Stream<List<ArcRaiderReport>> watchMyReports() => _reports
       .where('reporterUid', isEqualTo: uid)
@@ -61,6 +89,104 @@ class ArcRaiderContractsRepository {
       .map(
         (s) => s.docs.map((d) => ArcRaiderContract.fromMap(d.data())).toList(),
       );
+
+  Stream<List<ArcRaiderContract>> watchIssuedContracts() => _contracts
+      .where('reporterUid', isEqualTo: uid)
+      .snapshots()
+      .map((snapshot) {
+        final contracts = snapshot.docs
+            .map(
+              (doc) => ArcRaiderContract.fromMap({...doc.data(), 'id': doc.id}),
+            )
+            .toList();
+        contracts.sort(
+          (a, b) => (b.updatedAt ?? DateTime(1970)).compareTo(
+            a.updatedAt ?? DateTime(1970),
+          ),
+        );
+        return contracts;
+      });
+
+  Future<ArcRaiderEvidence> uploadContractVideoEvidence({
+    required String contractId,
+    required XFile file,
+  }) async {
+    final actor = uid;
+    final snapshot = await _contracts.doc(contractId).get();
+    final contract = ArcRaiderContract.fromMap(snapshot.data() ?? {});
+    if (contract.hunterUid != actor || !contract.canSubmitVideoEvidence) {
+      throw StateError('This contract cannot receive a new clip.');
+    }
+    if (!file.name.toLowerCase().endsWith('.mp4')) {
+      throw ArgumentError('Choose an MP4 video.');
+    }
+    if (await file.length() > 25 * 1024 * 1024) {
+      throw ArgumentError('Video must be no larger than 25 MB.');
+    }
+    final bytes = await file.readAsBytes();
+    if (bytes.length < 12 ||
+        bytes.length > 25 * 1024 * 1024 ||
+        ascii.decode(bytes.sublist(4, 8), allowInvalid: true) != 'ftyp') {
+      throw ArgumentError('Choose a valid MP4 video, up to 25 MB.');
+    }
+    final submissionId = const Uuid().v4();
+    final path = 'contract_evidence/$contractId/$actor/$submissionId.mp4';
+    await _storage
+        .ref(path)
+        .putData(bytes, SettableMetadata(contentType: 'video/mp4'));
+    return ArcRaiderEvidence(
+      id: submissionId,
+      submittedByUid: actor,
+      kind: 'video',
+      url: '',
+      storagePath: path,
+    );
+  }
+
+  // Firebase callable wire protocol, using the existing HTTP dependency.
+  // The server authenticates the ID token and is the sole verification writer.
+  Future<void> _verificationCall(String name, Map<String, dynamic> data) async {
+    final token = await _auth.currentUser?.getIdToken();
+    if (token == null || token.isEmpty) throw StateError('Sign in required.');
+    final project = _db.app.options.projectId;
+    final response = await http
+        .post(
+          Uri.https('us-central1-$project.cloudfunctions.net', '/$name'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'data': data}),
+        )
+        .timeout(const Duration(seconds: 60));
+    final decoded = jsonDecode(response.body);
+    if (response.statusCode != 200 ||
+        decoded is! Map ||
+        decoded['error'] != null) {
+      throw StateError(
+        'The server could not save this decision. Refresh and retry.',
+      );
+    }
+  }
+
+  Future<void> reviewEvidence({
+    required String contractId,
+    required String submissionId,
+    required bool confirmed,
+    String reason = '',
+  }) async {
+    if (submissionId.isEmpty)
+      throw ArgumentError('No video submission to review.');
+    if (!confirmed && reason.trim().isEmpty) {
+      throw ArgumentError('Explain why the evidence needs replacing.');
+    }
+    await _verificationCall('reviewRaiderContractEvidence', {
+      'contractId': contractId,
+      'submissionId': submissionId,
+      'decision': confirmed ? 'confirm' : 'reject',
+      'reason': reason.trim(),
+    });
+  }
 
   Stream<List<ArcRaiderReport>> watchModerationReports() => _reports
       .where('status', whereIn: const ['submitted', 'pendingReview'])
@@ -447,29 +573,17 @@ class ArcRaiderContractsRepository {
     required List<ArcRaiderEvidence> evidence,
     String socialContentUrl = '',
   }) async {
-    if (evidence.isEmpty) {
-      throw ArgumentError('At least one evidence item is required.');
+    if (evidence.length != 1 ||
+        evidence.single.kind != 'video' ||
+        evidence.single.storagePath.isEmpty ||
+        evidence.single.submittedByUid != uid) {
+      throw ArgumentError('One uploaded contract video is required.');
     }
-    final snapshot = await _contracts.doc(id).get();
-    final contract = ArcRaiderContract.fromMap(snapshot.data() ?? {});
-    if (contract.hunterUid != uid ||
-        !contract.canTransitionTo(ArcRaiderContractStatus.evidenceSubmitted)) {
-      throw StateError('Evidence cannot be submitted.');
-    }
-    await _contracts.doc(id).update({
-      'status': 'evidenceSubmitted',
-      'evidence': evidence.map((e) => e.toMap()).toList(),
-      'socialContentUrl': socialContentUrl.trim(),
-      'evidenceSubmittedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+    await _verificationCall('submitRaiderContractEvidence', {
+      'contractId': id,
+      'storagePath': evidence.single.storagePath,
+      'submissionId': evidence.single.id,
     });
-    await _notify(
-      targetUid: contract.reporterUid,
-      title: 'Contract evidence submitted',
-      body: 'Evidence has been submitted for your Raider Contract.',
-      entityId: id,
-      type: 'operations',
-    );
   }
 
   Future<void> disputeContract(String id, String reason) async {
@@ -509,9 +623,15 @@ class ArcRaiderContractsRepository {
     final next = completed
         ? ArcRaiderContractStatus.completed
         : ArcRaiderContractStatus.rejected;
-    if (!contract.canTransitionTo(next)) {
+    if (completed && !contract.isVerifiedComplete) {
+      throw StateError(
+        'Only the issuer can verify completion after video review.',
+      );
+    }
+    if (!completed && !contract.canTransitionTo(next)) {
       throw StateError('Invalid resolution transition.');
     }
+    if (completed && contract.blueprintRewardCount <= 0) return;
     if (completed && contract.blueprintRewardCount > 0) {
       final authority =
           (await _db.collection('users').doc(uid).get()).data() ??
@@ -536,15 +656,6 @@ class ArcRaiderContractsRepository {
         'resolvedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-    }
-    if (completed && contract.hunterUid.isNotEmpty) {
-      await _db.collection('users').doc(contract.hunterUid).set({
-        'raiderContractStats': {
-          'completed': FieldValue.increment(1),
-          'reputationEarned': FieldValue.increment(contract.reputationReward),
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-      }, SetOptions(merge: true));
     }
     await _notify(
       targetUid: contract.hunterUid,
