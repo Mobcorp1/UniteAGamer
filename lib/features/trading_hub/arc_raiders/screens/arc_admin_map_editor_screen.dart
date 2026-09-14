@@ -284,8 +284,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       final cachedImports = await _repository.loadImportCache(_mapId, _layer);
       final merged = <String, ArcAdminMapMarker>{
         for (final marker in seedMarkers) marker.id: marker,
-        for (final marker in drafts) marker.id: marker,
         for (final marker in cachedImports) marker.id: marker,
+        for (final marker in drafts) marker.id: marker,
       };
 
       if (!mounted) return;
@@ -983,6 +983,7 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       context: context,
       builder: (context) => _NewMarkerDialog(
         title: 'Edit POI',
+        supportedLayers: _map.availableLayers,
         actionLabel: 'Apply Edit',
         mapName: _map.displayName,
         initialMarker: selected,
@@ -991,8 +992,8 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
     );
     if (result == null) return;
 
-    _snapshotUndo();
     final edited = selected.copyWith(
+      layer: result.layer ?? selected.layer,
       kind: result.kind,
       name: result.name,
       aliases: result.aliases,
@@ -1006,6 +1007,57 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
       sourceLabel: result.sourceLabel,
       confidence: result.confidence,
     );
+    if (edited.layer != selected.layer) {
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Move marker'),
+          content: Text(
+            'Move ${selected.name} from ${selected.layer.label} to ${edited.layer.label}?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Move marker'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      setState(() => _saving = true);
+      try {
+        final saved = await _repository.updateMarker(
+          original: selected,
+          edited: edited,
+        );
+        if (!mounted) return;
+        setState(() {
+          _markers = [
+            for (final marker in _markers)
+              if (marker.id == selected.id) saved else marker,
+          ];
+          _selected = null;
+          // Undo snapshots must not reintroduce a persisted old layer.
+          _undoStack.clear();
+        });
+        _message('${saved.name} moved to ${saved.layer.label}.');
+      } catch (error) {
+        if (mounted) {
+          _message(
+            'Could not move ${selected.name}. Original marker retained. $error',
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
+      return;
+    }
+    _snapshotUndo();
     setState(() {
       _markers = [
         for (final marker in _markers)
@@ -1312,21 +1364,24 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                     ),
                   ),
               ],
-              onChanged: (value) {
-                if (value == null || value == _mapId) return;
-                final next = ArcRaidIntelligenceSeedData.mapById(value);
-                final nextLayer = next.availableLayers.isEmpty
-                    ? ArcRaidMapLayer.surface
-                    : ArcMapAssetRegistry.resolveLayer(
-                        next.availableLayers.first.name,
-                      );
-                setState(() {
-                  _mapId =
-                      ArcMapAssetRegistry.canonicalMapIdFor(value) ?? value;
-                  _layer = nextLayer;
-                });
-                unawaited(_load());
-              },
+              onChanged: _saving
+                  ? null
+                  : (value) {
+                      if (value == null || value == _mapId) return;
+                      final next = ArcRaidIntelligenceSeedData.mapById(value);
+                      final nextLayer = next.availableLayers.isEmpty
+                          ? ArcRaidMapLayer.surface
+                          : ArcMapAssetRegistry.resolveLayer(
+                              next.availableLayers.first.name,
+                            );
+                      setState(() {
+                        _mapId =
+                            ArcMapAssetRegistry.canonicalMapIdFor(value) ??
+                            value;
+                        _layer = nextLayer;
+                      });
+                      unawaited(_load());
+                    },
             ),
           ),
           SizedBox(
@@ -1342,11 +1397,13 @@ class _ArcAdminMapEditorScreenState extends State<ArcAdminMapEditorScreen> {
                     child: Text(layer.label),
                   ),
               ],
-              onChanged: (value) {
-                if (value == null || value == _layer) return;
-                setState(() => _layer = value);
-                unawaited(_load());
-              },
+              onChanged: _saving
+                  ? null
+                  : (value) {
+                      if (value == null || value == _layer) return;
+                      setState(() => _layer = value);
+                      unawaited(_load());
+                    },
             ),
           ),
           FilterChip(
@@ -2446,8 +2503,10 @@ class _NewMarkerResult {
     this.subtypeId,
     this.subtypeLabel,
     this.blueprintId,
+    this.layer,
   });
 
+  final ArcRaidMapLayer? layer;
   final ArcAdminMapMarkerKind kind;
   final String name;
   final List<String> aliases;
@@ -2469,6 +2528,7 @@ class _NewMarkerDialog extends StatefulWidget {
     this.includeSeedKinds = false,
     this.requireBlueprint = false,
     this.initialSourceLabel = 'Mike / Admin Intel',
+    this.supportedLayers = const [],
   });
 
   final String title;
@@ -2479,6 +2539,7 @@ class _NewMarkerDialog extends StatefulWidget {
   final bool includeSeedKinds;
   final bool requireBlueprint;
   final String initialSourceLabel;
+  final List<ArcRaidMapLayer> supportedLayers;
 
   @override
   State<_NewMarkerDialog> createState() => _NewMarkerDialogState();
@@ -2495,12 +2556,14 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
   bool _customSubtypeEnabled = false;
   ArcRaidIntelConfidence _confidence = ArcRaidIntelConfidence.confirmed;
   String? _blueprintId;
+  ArcRaidMapLayer? _markerLayer;
 
   @override
   void initState() {
     super.initState();
     _source = TextEditingController(text: widget.initialSourceLabel);
     final initial = widget.initialMarker;
+    _markerLayer = initial?.layer;
     _kind = initial?.kind ?? widget.initialKind;
     if (initial != null) {
       _name.text = initial.name;
@@ -2546,6 +2609,17 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              if (widget.supportedLayers.length > 1)
+                DropdownButtonFormField<ArcRaidMapLayer>(
+                  key: const Key('edit-marker-layer'),
+                  initialValue: _markerLayer,
+                  decoration: const InputDecoration(labelText: 'Layer'),
+                  items: [
+                    for (final layer in widget.supportedLayers)
+                      DropdownMenuItem(value: layer, child: Text(layer.label)),
+                  ],
+                  onChanged: (value) => setState(() => _markerLayer = value),
+                ),
               DropdownButtonFormField<ArcAdminMapMarkerKind>(
                 isExpanded: true,
                 initialValue: _kind,
@@ -2736,12 +2810,35 @@ class _NewMarkerDialogState extends State<_NewMarkerDialog> {
               context,
               _NewMarkerResult(
                 kind: _kind,
-                name: name,
-                aliases: aliases,
-                description: _description.text.trim(),
-                subtypeId: subtype?.id,
-                subtypeLabel: subtype?.label,
-                sourceLabel: _source.text.trim().isEmpty
+                layer: _markerLayer,
+                name: _name.text == widget.initialMarker?.name
+                    ? widget.initialMarker!.name
+                    : name,
+                aliases:
+                    _aliases.text == widget.initialMarker?.aliases.join(', ')
+                    ? widget.initialMarker!.aliases
+                    : aliases,
+                description:
+                    _description.text == widget.initialMarker?.description
+                    ? widget.initialMarker!.description
+                    : _description.text.trim(),
+                subtypeId:
+                    widget.initialMarker?.kind == _kind &&
+                        _subtypeId == widget.initialMarker?.subtypeId &&
+                        _customSubtype.text ==
+                            (widget.initialMarker?.subtypeLabel ?? '')
+                    ? widget.initialMarker?.subtypeId
+                    : subtype?.id,
+                subtypeLabel:
+                    widget.initialMarker?.kind == _kind &&
+                        _subtypeId == widget.initialMarker?.subtypeId &&
+                        _customSubtype.text ==
+                            (widget.initialMarker?.subtypeLabel ?? '')
+                    ? widget.initialMarker?.subtypeLabel
+                    : subtype?.label,
+                sourceLabel: _source.text == widget.initialMarker?.sourceLabel
+                    ? widget.initialMarker!.sourceLabel
+                    : _source.text.trim().isEmpty
                     ? 'Admin Intel'
                     : _source.text.trim(),
                 confidence: _confidence,

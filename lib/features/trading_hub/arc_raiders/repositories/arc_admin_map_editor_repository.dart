@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:uag_arc_raiders_hub/features/trading_hub/arc_raiders/data/arc_map_asset_registry.dart';
@@ -47,7 +48,6 @@ class ArcAdminMapEditorRepository {
     final snapshot = await _firestore
         .collection(collectionName)
         .where('mapId', isEqualTo: mapId)
-        .where('layer', isEqualTo: layer.name)
         .get();
     final firestoreMarkers = _markersFromSnapshot(snapshot);
     if (firestoreMarkers.isNotEmpty) return firestoreMarkers;
@@ -71,6 +71,93 @@ class ArcAdminMapEditorRepository {
               ArcAdminMapMarker.fromMap(Map<String, dynamic>.from(value)),
         )
         .toList(growable: false);
+  }
+
+  /// Patch one existing document. Unknown/future fields and published state
+  /// survive because this never serializes/replaces the complete marker.
+  Future<ArcAdminMapMarker> updateMarker({
+    required ArcAdminMapMarker original,
+    required ArcAdminMapMarker edited,
+  }) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('Admin sign-in is required.');
+    final patch = markerEditPatch(original: original, edited: edited);
+    final ref = _firestore.collection(collectionName).doc(original.id);
+    final saved = await _firestore.runTransaction((tx) async {
+      final snapshot = await tx.get(ref);
+      if (!snapshot.exists) {
+        throw StateError('Save this marker before moving it.');
+      }
+      final current = snapshot.data()!;
+      if (current['mapId'] != original.mapId ||
+          current['layer'] != original.layer.name ||
+          current['state'] != original.state.name) {
+        throw StateError('Marker changed. Reload before editing.');
+      }
+      final before = original.toMap();
+      final persisted = ArcAdminMapMarker.fromMap({
+        ...current,
+        'id': snapshot.id,
+      }).toMap();
+      for (final key in [..._editableMarkerFields, 'point']) {
+        if (!_markerValueEquals(persisted[key], before[key])) {
+          throw StateError(
+            'Save pending marker edits or reload the changed marker before moving it.',
+          );
+        }
+      }
+      tx.update(ref, {
+        ...patch,
+        'updatedByUid': uid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return ArcAdminMapMarker.fromMap({
+        ...current,
+        ...patch,
+        'id': snapshot.id,
+        'updatedByUid': uid,
+      });
+    });
+    // Firestore succeeded. Cache maintenance must not report a false rollback.
+    try {
+      for (final layer in {original.layer, edited.layer}) {
+        final cached = await _loadLegacyLocalDrafts(original.mapId, layer);
+        await _saveLegacyLocalDrafts(original.mapId, layer, [
+          for (final marker in cached)
+            if (marker.id != original.id) marker,
+          if (layer == saved.layer) saved,
+        ]);
+        final imports = await loadImportCache(original.mapId, layer);
+        await saveImportCache(
+          original.mapId,
+          layer,
+          imports.where((marker) => marker.id != original.id),
+        );
+      }
+    } catch (_) {
+      /* Canonical Firestore data wins over caches on reload. */
+    }
+    return saved;
+  }
+
+  static Map<String, dynamic> markerEditPatch({
+    required ArcAdminMapMarker original,
+    required ArcAdminMapMarker edited,
+  }) {
+    if (original.id != edited.id || original.mapId != edited.mapId) {
+      throw ArgumentError('Marker and map IDs must remain unchanged.');
+    }
+    if (!ArcMapAssetRegistry.assetsFor(
+      original.mapId,
+    ).containsKey(edited.layer)) {
+      throw ArgumentError('This map does not support the selected layer.');
+    }
+    final before = original.toMap();
+    final after = edited.toMap();
+    return {
+      for (final key in _editableMarkerFields)
+        if (!_markerValueEquals(before[key], after[key])) key: after[key],
+    };
   }
 
   Future<void> saveDrafts(
@@ -449,4 +536,23 @@ class ArcAdminMapEditorSaveResult {
   final String collectionPath;
   final int savedCount;
   final DateTime savedAt;
+}
+
+const _editableMarkerFields = [
+  'layer',
+  'kind',
+  'name',
+  'aliases',
+  'description',
+  'subtypeId',
+  'subtypeLabel',
+  'blueprintId',
+  'sourceLabel',
+  'confidence',
+];
+
+bool _markerValueEquals(dynamic a, dynamic b) {
+  if (a is List && b is List) return listEquals(a, b);
+  if (a is Map && b is Map) return mapEquals(a, b);
+  return a == b;
 }

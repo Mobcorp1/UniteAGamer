@@ -15,6 +15,19 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
   });
 
   final List<ArcAdminMapMarker> initialMarkers;
+  ArcAdminMapMarker? movedMarker;
+  bool failMove = false;
+
+  @override
+  Future<ArcAdminMapMarker> updateMarker({
+    required ArcAdminMapMarker original,
+    required ArcAdminMapMarker edited,
+  }) async {
+    if (failMove) throw StateError("Persistence failed");
+    movedMarker = edited;
+    return edited;
+  }
+
   final List<ArcAdminMapMarker> savedMarkers = <ArcAdminMapMarker>[];
 
   @override
@@ -22,9 +35,10 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
     String mapId,
     ArcRaidMapLayer layer,
   ) async {
-    return initialMarkers
-        .where((marker) => marker.mapId == mapId && marker.layer == layer)
-        .toList(growable: false);
+    return [
+      for (final marker in initialMarkers)
+        if (marker.id == movedMarker?.id) movedMarker! else marker,
+    ].where((marker) => marker.mapId == mapId).toList(growable: false);
   }
 
   @override
@@ -103,6 +117,102 @@ class _FakeAdminMapEditorRepository extends ArcAdminMapEditorRepository {
 }
 
 void main() {
+  for (final outcome in ['cancel', 'success', 'failure']) {
+    testWidgets('cross-layer edit $outcome preserves canonical marker', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      const marker = ArcAdminMapMarker(
+        id: 'stable_published_poi',
+        mapId: 'stella_montis',
+        layer: ArcRaidMapLayer.surface,
+        kind: ArcAdminMapMarkerKind.poi,
+        name: 'Move Test POI',
+        point: ArcNormalizedPoint(x: .25, y: .25),
+        state: ArcAdminMapMarkerState.published,
+        aliases: [' Old POI ', 'Old POI'],
+        sourceLabel: '',
+        subtypeId: 'future.catalogue.id',
+        subtypeLabel: 'Future catalogue label',
+        description: 'Keep description',
+        seedReferenceId: 'canonical_poi',
+      );
+      final repo = _FakeAdminMapEditorRepository(initialMarkers: [marker])
+        ..failMove = outcome == 'failure';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ArcAdminMapEditorScreen(
+            repository: repo,
+            appBar: AppBar(title: const Text('Editor')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final mapField = find.byType(DropdownButtonFormField<String>).first;
+      await tester.tap(mapField);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Stella Montis').last);
+      await tester.pumpAndSettle();
+      final pin = find.byKey(
+        const ValueKey('admin-map-marker-stable_published_poi'),
+      );
+      await tester.tap(pin);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit Marker').first);
+      await tester.pumpAndSettle();
+      final layerField = find.byKey(const Key('edit-marker-layer'));
+      final field = tester.widget<DropdownButtonFormField<ArcRaidMapLayer>>(
+        layerField,
+      );
+      expect(field.initialValue, ArcRaidMapLayer.surface);
+      await tester.tap(layerField);
+      await tester.pumpAndSettle();
+      expect(find.text('Layer 3'), findsNothing);
+      await tester.tap(find.text('Level 2').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apply Edit'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Move Move Test POI from Surface to Level 2?'),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.widgetWithText(
+          outcome == 'cancel' ? TextButton : FilledButton,
+          outcome == 'cancel' ? 'Cancel' : 'Move marker',
+        ),
+      );
+      await tester.pumpAndSettle();
+      if (outcome == 'success') {
+        expect(pin, findsNothing);
+        final saved = repo.movedMarker!;
+        expect(saved.id, marker.id);
+        expect(saved.state, ArcAdminMapMarkerState.published);
+        expect(saved.point.toMap(), marker.point.toMap());
+        expect(saved.aliases, marker.aliases);
+        expect(saved.sourceLabel, marker.sourceLabel);
+        expect(saved.subtypeId, marker.subtypeId);
+        expect(saved.subtypeLabel, marker.subtypeLabel);
+        expect(saved.seedReferenceId, marker.seedReferenceId);
+        final layerSelector = find.byType(
+          DropdownButtonFormField<ArcRaidMapLayer>,
+        );
+        await tester.tap(layerSelector.first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Level 2').last);
+        await tester.pumpAndSettle();
+        expect(pin, findsOneWidget);
+      } else {
+        expect(repo.movedMarker, isNull);
+        expect(pin, findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('Admin Map Editor exposes calibration and Intel controls', (
     tester,
   ) async {
@@ -230,6 +340,13 @@ void main() {
     );
     expect(markerFinder, findsOneWidget);
 
+    await tester.tap(markerFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit Marker').first);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('edit-marker-layer')), findsNothing);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
     await tester.drag(markerFinder, const Offset(120, 80));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save Changes'));
